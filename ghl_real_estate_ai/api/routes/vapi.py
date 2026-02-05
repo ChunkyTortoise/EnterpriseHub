@@ -23,6 +23,9 @@ from ghl_real_estate_ai.services.security_framework import verify_webhook
 logger = get_logger(__name__)
 router = APIRouter(prefix="/vapi/tools", tags=["vapi"])
 
+def get_vapi_scheduler() -> CalendarScheduler:
+    """Dependency wrapper to avoid FastAPI inspecting get_smart_scheduler params."""
+    return get_smart_scheduler()
 
 class ToolCallPayload(BaseModel):
     """Payload from Vapi tool call."""
@@ -35,7 +38,7 @@ class ToolCallPayload(BaseModel):
 async def vapi_check_availability(
     request: Request,
     payload: ToolCallPayload,
-    scheduler: CalendarScheduler = Depends(get_smart_scheduler)
+    scheduler: CalendarScheduler = Depends(get_vapi_scheduler)
 ):
     """
     Vapi Tool: Checks Jorge's calendar for open slots.
@@ -89,7 +92,7 @@ async def vapi_check_availability(
 async def vapi_book_tour(
     request: Request,
     payload: ToolCallPayload,
-    scheduler: CalendarScheduler = Depends(get_smart_scheduler)
+    scheduler: CalendarScheduler = Depends(get_vapi_scheduler)
 ):
     """
     Vapi Tool: Finalizes the appointment in GHL.

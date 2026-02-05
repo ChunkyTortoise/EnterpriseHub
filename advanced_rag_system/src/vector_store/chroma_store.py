@@ -67,15 +67,12 @@ class ChromaVectorStore(VectorStore):
     async def initialize(self) -> None:
         """Initialize ChromaDB client and collection."""
         try:
-            # Configure ChromaDB settings
-            chroma_settings = ChromaSettings(
-                chroma_db_impl="duckdb+parquet",
-                persist_directory=self._persist_directory,
-                anonymized_telemetry=False,
+            # Configure ChromaDB settings (v1.4.1+ uses new client API)
+            # Use PersistentClient for local storage
+            self._client = chromadb.PersistentClient(
+                path=self._persist_directory,
+                settings=ChromaSettings(anonymized_telemetry=False),
             )
-
-            # Create client
-            self._client = chromadb.Client(chroma_settings)
 
             # Get or create collection
             self._collection = self._client.get_or_create_collection(

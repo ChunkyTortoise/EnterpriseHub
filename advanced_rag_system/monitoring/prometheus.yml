@@ -1,0 +1,84 @@
+# Prometheus Configuration for Advanced RAG System Monitoring
+# This configuration defines scrape targets for all services in the production environment
+
+global:
+  # Default scrape interval for all jobs
+  scrape_interval: 15s
+  # Default evaluation interval for rules
+  evaluation_interval: 15s
+  # External labels applied to all metrics
+  external_labels:
+    cluster: 'rag-production'
+    environment: 'production'
+
+# Scrape configurations for all services
+scrape_configs:
+  # RAG API Service
+  # Main API service for the RAG system
+  - job_name: 'rag-api'
+    scrape_interval: 15s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['rag-api:8000']
+        labels:
+          service: 'rag-api'
+          environment: 'production'
+
+  # ChromaDB Vector Database
+  # Vector database for storing embeddings
+  - job_name: 'chromadb'
+    scrape_interval: 30s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['chromadb:8001']
+        labels:
+          service: 'chromadb'
+          environment: 'production'
+
+  # Redis Exporter
+  # Metrics exporter for Redis cache
+  - job_name: 'redis'
+    scrape_interval: 15s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+        labels:
+          service: 'redis'
+          environment: 'production'
+
+  # Prometheus Self-Monitoring
+  # Prometheus monitors itself for internal metrics
+  - job_name: 'prometheus'
+    scrape_interval: 15s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['prometheus:9090']
+        labels:
+          service: 'prometheus'
+          environment: 'production'
+
+  # Node Exporter
+  # System-level metrics for the host machine
+  - job_name: 'node'
+    scrape_interval: 15s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          service: 'node-exporter'
+          environment: 'production'
+
+# Alerting Configuration
+# Configure alertmanager endpoints for alert routing
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+          # Example: ['alertmanager:9093']
+          # Uncomment and configure alertmanager target when available
+
+# Rule Files
+# Load alerting and recording rules from external files
+# rule_files:
+#   - 'alerts/*.yml'
+#   - 'rules/*.yml'

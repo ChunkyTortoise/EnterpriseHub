@@ -7,6 +7,7 @@ Matches lead preferences to available property listings.
 import json
 import asyncio
 import aiofiles
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Type
 from datetime import datetime, timedelta
@@ -15,6 +16,7 @@ import time
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.core.llm_client import LLMClient
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.jorge_config import CURRENT_MARKET
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.property_matching_strategy import (
     PropertyMatchingStrategy,
@@ -48,14 +50,7 @@ class PropertyMatcher:
         """
         Initialize the Property Matcher.
         """
-        self.listings_path = (
-            Path(listings_path)
-            if listings_path
-            else Path(__file__).parent.parent
-            / "data"
-            / "knowledge_base"
-            / "property_listings.json"
-        )
+        self.listings_path = self._resolve_listings_path(listings_path)
         self._sample_data_path = (
             Path(__file__).parent.parent / "data" / "sample_properties.json"
         )
@@ -68,6 +63,30 @@ class PropertyMatcher:
         
         # Initialize Shared Resource Pool
         self._init_shared_resources()
+
+    def _resolve_listings_path(self, listings_path: Optional[str]) -> Path:
+        """Resolve listings path with env overrides and market defaults."""
+        if listings_path:
+            return Path(listings_path)
+
+        env_path = os.getenv("JORGE_PROPERTY_LISTINGS_PATH")
+        if env_path:
+            return Path(env_path)
+
+        if CURRENT_MARKET == "rancho_cucamonga":
+            return (
+                Path(__file__).parent.parent
+                / "data"
+                / "knowledge_base"
+                / "property_listings_rancho.json"
+            )
+
+        return (
+            Path(__file__).parent.parent
+            / "data"
+            / "knowledge_base"
+            / "property_listings.json"
+        )
 
     def _init_shared_resources(self):
         """

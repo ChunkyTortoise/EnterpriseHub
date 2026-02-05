@@ -226,6 +226,13 @@ class JorgeRanchoConfig:
         ]
     }
 
+    # ========== INITIAL OUTREACH (TAG-ADDED) ==========
+    INITIAL_OUTREACH_MESSAGES = [
+        "Hi {name}, this is Jorge. I saw your home inquiry and can help you get clear on value and timing. What has you thinking about selling?",
+        "Hey {name}, Jorge here. I work with Rancho Cucamonga sellers and can walk you through pricing and timing. What got you considering a move?",
+        "Hi {name}, Jorge. I help homeowners in Rancho Cucamonga sell quickly and for strong prices. What would make selling worth it for you?"
+    ]
+
     # ========== CALIFORNIA FOLLOW-UP TEMPLATES ==========
     CA_FOLLOW_UP_SEQUENCES = {
         "day_2": "Hi {name}! Just wanted to follow up about your home in {neighborhood}. The Inland Empire market is really active right now.",

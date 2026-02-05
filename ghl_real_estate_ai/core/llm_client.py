@@ -38,6 +38,7 @@ class LLMProvider(str, Enum):
     GEMINI = "gemini"
     CLAUDE = "claude"
     PERPLEXITY = "perplexity"
+    OPENROUTER = "openrouter"
     MOCK = "mock"
 
 
@@ -100,6 +101,8 @@ class LLMClient:
             self.model = settings.gemini_model
         elif self.provider == LLMProvider.PERPLEXITY:
             self.model = settings.perplexity_model
+        elif self.provider == LLMProvider.OPENROUTER:
+            self.model = settings.openrouter_default_model
         else:
             self.model = settings.claude_model
 
@@ -131,6 +134,8 @@ class LLMClient:
             self._init_gemini()
         elif self.provider == LLMProvider.PERPLEXITY:
             self._init_perplexity()
+        elif self.provider == LLMProvider.OPENROUTER:
+            self._init_openrouter()
         else:
             self._init_claude()
 
@@ -149,6 +154,9 @@ class LLMClient:
             self._async_client = self._client
         elif self.provider == LLMProvider.PERPLEXITY:
             self._init_perplexity()
+            self._async_client = self._client
+        elif self.provider == LLMProvider.OPENROUTER:
+            self._init_openrouter()
             self._async_client = self._client
 
     def _init_gemini(self) -> None:
@@ -201,6 +209,34 @@ class LLMClient:
             logger.info(f"Perplexity client initialized with model: {self.model}")
         except Exception as e:
             logger.error(f"Failed to initialize Perplexity: {e}")
+
+    def _init_openrouter(self) -> None:
+        """Initialize OpenRouter client."""
+        api_key = self.api_key or settings.openrouter_api_key
+        if not api_key:
+            logger.warning("OPENROUTER_API_KEY not set - OpenRouter unavailable")
+            return
+
+        try:
+            from ghl_real_estate_ai.core.llm_providers import OpenRouterClient
+            
+            fallback_models = [
+                m.strip() for m in settings.openrouter_fallback_models.split(",")
+                if m.strip()
+            ]
+            
+            self._client = OpenRouterClient(
+                api_key=api_key,
+                default_model=settings.openrouter_default_model,
+                app_name=settings.openrouter_app_name,
+                fallback_models=fallback_models,
+                enable_cost_tracking=settings.openrouter_enable_cost_tracking
+            )
+            logger.info(f"OpenRouter client initialized: model={self.model}")
+        except ImportError:
+            logger.error("OpenRouterClient not found")
+        except Exception as e:
+            logger.error(f"Failed to initialize OpenRouter: {e}")
 
     def is_available(self) -> bool:
         """Check if the client is properly initialized."""
@@ -342,6 +378,8 @@ class LLMClient:
             )
         elif self.provider == LLMProvider.PERPLEXITY:
             response = self._generate_perplexity(prompt, system_prompt, history, max_tokens, temperature, model_override=target_model)
+        elif self.provider == LLMProvider.OPENROUTER:
+            response = self._generate_openrouter(prompt, system_prompt, max_tokens, temperature, model_override=target_model)
         else:
             response = self._generate_claude(prompt, system_prompt, history, max_tokens, temperature, model_override=target_model)
 
@@ -1058,3 +1096,35 @@ def get_llm_client() -> LLMClient:
     """Get a default LLM client instance."""
     # TODO: Implement proper singleton or factory pattern
     return LLMClient(provider=LLMProvider.CLAUDE)
+    def _generate_openrouter(
+        self,
+        prompt: str,
+        system_prompt: Optional[str],
+        max_tokens: int,
+        temperature: float,
+        model_override: Optional[str] = None
+    ) -> LLMResponse:
+        """Generate response using OpenRouter."""
+        target_model = model_override or self.model
+        
+        try:
+            result = self._client.generate(
+                prompt=prompt,
+                system_prompt=system_prompt,
+                model=target_model,
+                max_tokens=max_tokens,
+                temperature=temperature
+            )
+            
+            return LLMResponse(
+                content=result["content"],
+                provider=self.provider,
+                model=result["model"],
+                input_tokens=result["usage"].prompt_tokens,
+                output_tokens=result["usage"].completion_tokens,
+                tokens_used=result["usage"].total_tokens,
+                finish_reason="stop"
+            )
+        except Exception as e:
+            logger.error(f"OpenRouter generation failed: {e}")
+            raise

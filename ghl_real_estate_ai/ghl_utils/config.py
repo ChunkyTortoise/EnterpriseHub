@@ -38,6 +38,13 @@ class Settings(BaseSettings):
     google_api_key: Optional[str] = None
     perplexity_api_key: Optional[str] = None
     perplexity_model: str = "sonar"
+    
+    # OpenRouter Configuration
+    openrouter_api_key: Optional[str] = None
+    openrouter_default_model: str = "anthropic/claude-3.5-sonnet"
+    openrouter_app_name: str = "EnterpriseHub-Real-Estate-AI"
+    openrouter_fallback_models: str = "anthropic/claude-3-sonnet,openai/gpt-4-turbo"
+    openrouter_enable_cost_tracking: bool = True
 
     # LLM Costs (per 1M tokens)
     claude_input_cost_per_1m: float = 3.00
@@ -46,6 +53,9 @@ class Settings(BaseSettings):
     gemini_output_cost_per_1m: float = 3.75
     perplexity_input_cost_per_1m: float = 1.00
     perplexity_output_cost_per_1m: float = 1.00
+    # OpenRouter costs are dynamic and returned in response headers
+    openrouter_input_cost_per_1m: float = 0.0  # Updated from API response
+    openrouter_output_cost_per_1m: float = 0.0  # Updated from API response
 
     # Database Configuration
     database_url: Optional[str] = None  # PostgreSQL (Railway auto-provides)

@@ -40,7 +40,8 @@ class GovernanceAuditor:
         
         entry = f"\n## 🚨 [{timestamp}] SECURITY VIOLATION: {agent_name}\n"
         entry += f"- **Type**: {violation_type}\n"
-        entry += f"- **Content Snippet**: {content[:200].replace('\n', ' ')}...\n"
+        snippet = content[:200].replace("\n", " ")
+        entry += f"- **Content Snippet**: {snippet}...\n"
         entry += "\n"
         
         self._write_to_manifest(entry)

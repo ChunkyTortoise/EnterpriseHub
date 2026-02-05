@@ -22,6 +22,7 @@ import json
 import time
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Any, Optional, Set
+from urllib.parse import urlparse
 from dataclasses import dataclass, asdict
 import logging
 
@@ -35,6 +36,7 @@ import redis.asyncio as redis
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.property_alert_engine import get_property_alert_engine, AlertType
 from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.ghl_utils.config import settings
 
 logger = get_logger(__name__)
 
@@ -70,23 +72,27 @@ class PropertyScoringPipeline:
     - Monitor performance and handle errors
     """
 
-    def __init__(self, redis_url: str = "redis://localhost:6379/0"):
+    def __init__(self, redis_url: Optional[str] = None):
         # Core services
         self.property_alert_engine = get_property_alert_engine()
         self.cache_service = get_cache_service()
 
         # Redis configuration
-        self.redis_url = redis_url
+        self.redis_url = redis_url or settings.redis_url or "redis://localhost:6379/0"
         self.redis_client: Optional[redis.Redis] = None
 
         # APScheduler configuration
         self.scheduler: Optional[AsyncIOScheduler] = None
+        parsed = urlparse(self.redis_url)
+        redis_host = parsed.hostname or "localhost"
+        redis_port = parsed.port or 6379
+        redis_password = parsed.password
         self.job_store_config = {
             'default': RedisJobStore(
-                host='localhost',
-                port=6379,
+                host=redis_host,
+                port=redis_port,
                 db=1,  # Use separate DB from cache
-                password=None
+                password=redis_password
             )
         }
         self.executor_config = {

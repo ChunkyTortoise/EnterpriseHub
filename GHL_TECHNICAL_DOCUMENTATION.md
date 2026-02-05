@@ -214,7 +214,7 @@ class GHLClient:
 #### **Webhook Configuration**
 ```python
 # Webhook handler for real-time updates
-@app.post("/webhooks/ghl")
+@app.post("/ghl/webhook")
 async def handle_ghl_webhook(request: Request):
     """Process incoming GHL webhooks"""
     payload = await request.json()
@@ -231,6 +231,17 @@ async def handle_ghl_webhook(request: Request):
     elif event_type == "ContactUpdate":
         await process_contact_update(payload["data"])
 
+    return {"status": "processed"}
+```
+
+#### **Tag-Added Webhook (Initial Outreach)**
+```python
+# Tag-added handler for proactive outreach
+@app.post("/ghl/tag-webhook")
+async def handle_ghl_tag_webhook(request: Request):
+    """Process GHL tag-added webhooks"""
+    payload = await request.json()
+    # If tag == "Needs Qualifying" and no prior history, send initial outreach SMS
     return {"status": "processed"}
 ```
 

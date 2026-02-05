@@ -1,0 +1,367 @@
+version: '3.8'
+
+# =============================================================================
+# Advanced RAG System - Production Docker Compose Configuration
+# =============================================================================
+# This configuration sets up the complete monitoring infrastructure for the
+# Advanced RAG System including metrics collection, visualization, and
+# distributed tracing capabilities.
+#
+# Services:
+# - rag-api: Main RAG API service
+# - chromadb: Vector database for embeddings storage
+# - redis: Cache layer for performance optimization
+# - redis-exporter: Redis metrics exporter for Prometheus
+# - prometheus: Metrics collection and storage
+# - grafana: Visualization dashboard for metrics
+# - jaeger: Distributed tracing for request tracking
+# - node-exporter: System metrics exporter
+# =============================================================================
+
+networks:
+  rag-network:
+    driver: bridge
+    name: rag-network
+
+volumes:
+  chroma_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+services:
+  # =============================================================================
+  # RAG API Service
+  # =============================================================================
+  rag-api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: rag-api
+    ports:
+      - "8000:8000"
+    environment:
+      # Application Configuration
+      - ENVIRONMENT=production
+      - LOG_LEVEL=info
+      - PYTHONUNBUFFERED=1
+      
+      # Database Configuration
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8001
+      - CHROMA_PERSIST_DIRECTORY=/data/chroma
+      
+      # Redis Configuration
+      - REDIS_URL=redis://redis:6379/0
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis-password}
+      
+      # Monitoring Configuration
+      - PROMETHEUS_ENABLED=true
+      - PROMETHEUS_PORT=9090
+      - TRACING_ENABLED=true
+      - JAEGER_AGENT_HOST=jaeger
+      - JAEGER_AGENT_PORT=6831
+      - JAEGER_SAMPLER_TYPE=probabilistic
+      - JAEGER_SAMPLER_PARAM=0.1
+      
+      # API Configuration
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - WORKERS=${API_WORKERS:-4}
+      - MAX_REQUESTS=${MAX_REQUESTS:-1000}
+      - MAX_REQUESTS_JITTER=${MAX_REQUESTS_JITTER:-50}
+    volumes:
+      - chroma_data:/data/chroma
+    depends_on:
+      chromadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - rag-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # =============================================================================
+  # ChromaDB - Vector Database
+  # =============================================================================
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: chromadb
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    environment:
+      - CHROMA_SERVER_HOST=0.0.0.0
+      - CHROMA_SERVER_HTTP_PORT=8000
+      - CHROMA_SERVER_AUTH_CREDENTIALS_PROVIDER=chromadb.auth.token.TokenAuthServerProvider
+      - CHROMA_SERVER_AUTH_CREDENTIALS=${CHROMA_AUTH_TOKEN:-chromadb-token}
+      - CHROMA_SERVER_AUTH_CREDENTIALS_FILE=/chroma/auth_token.txt
+      - CHROMA_LOG_LEVEL=INFO
+    networks:
+      - rag-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # =============================================================================
+  # Redis - Cache Layer
+  # =============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis-password} --maxmemory 256mb --maxmemory-policy allkeys-lru
+    networks:
+      - rag-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+
+  # =============================================================================
+  # Redis Exporter - Prometheus Metrics Exporter for Redis
+  # =============================================================================
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: redis-exporter
+    ports:
+      - "9121:9121"
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis-password}
+      - REDIS_EXPORTER_LOG_FORMAT=txt
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - rag-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9121/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+
+  # =============================================================================
+  # Prometheus - Metrics Collection and Storage
+  # =============================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    networks:
+      - rag-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # =============================================================================
+  # Grafana - Visualization Dashboard
+  # =============================================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ../monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    environment:
+      # Admin Configuration
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      
+      # Server Configuration
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+      - GF_SERVER_SERVE_FROM_SUB_PATH=false
+      
+      # Security Configuration
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SECURITY_DISABLE_GRAVATAR=true
+      
+      # Plugins Configuration
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+      
+      # Analytics Configuration
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      
+      # Logging Configuration
+      - GF_LOG_MODE=console
+      - GF_LOG_LEVEL=info
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    networks:
+      - rag-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+
+  # =============================================================================
+  # Jaeger - Distributed Tracing
+  # =============================================================================
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "6831:6831/udp"   # Jaeger agent UDP thrift compact
+      - "5778:5778"       # Jaeger agent HTTP
+      - "16686:16686"     # Jaeger UI
+      - "14268:14268"     # Jaeger collector HTTP thrift
+      - "14250:14250"     # Jaeger collector gRPC
+      - "9411:9411"       # Zipkin compatible endpoint
+    environment:
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+      - COLLECTOR_OTLP_ENABLED=true
+      - SPAN_STORAGE_TYPE=memory
+      - JAEGER_DISABLED=false
+      - JAEGER_SAMPLER_TYPE=probabilistic
+      - JAEGER_SAMPLER_PARAM=0.1
+      - JAEGER_AGENT_HOST=jaeger
+      - JAEGER_AGENT_PORT=6831
+      - JAEGER_REPORTER_MAX_QUEUE_SIZE=1000
+      - JAEGER_REPORTER_FLUSH_INTERVAL=1s
+      - JAEGER_LOG_LEVEL=info
+    networks:
+      - rag-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:16686"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+
+  # =============================================================================
+  # Node Exporter - System Metrics Exporter
+  # =============================================================================
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    ports:
+      - "9100:9100"
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - rag-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9100/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          cpus: '0.1'
+          memory: 64M

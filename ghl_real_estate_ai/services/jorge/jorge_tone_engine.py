@@ -14,7 +14,7 @@ Created: 2026-01-19
 """
 
 import re
-from typing import Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
 from enum import Enum
 

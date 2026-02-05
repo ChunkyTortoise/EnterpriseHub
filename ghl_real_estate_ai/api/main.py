@@ -102,6 +102,7 @@ from ghl_real_estate_ai.api.routes import (
     rc_market_intelligence,
     export_engine,
     commission_forecast,
+    sms_compliance,
 )
 from ghl_real_estate_ai.api.mobile.mobile_router import router as mobile_router
 from ghl_real_estate_ai.api.middleware import (
@@ -285,6 +286,7 @@ def _setup_routers(app: FastAPI):
     app.include_router(leads.router, prefix="/api")
     app.include_router(lead_lifecycle.router, prefix="/api")
     app.include_router(health.router, prefix="/api")
+    app.include_router(sms_compliance.router, prefix="/api")
 
     # Enterprise Authentication Router
     enterprise_auth_router = APIRouter(prefix="/api/enterprise/auth", tags=["enterprise_authentication"])
@@ -663,6 +665,18 @@ async def root():
             if settings.environment == "development"
             else "disabled in production"
         ),
+    }
+
+# Lightweight health endpoint for load balancers (Fly.io)
+@app.get("/health")
+async def root_health():
+    """Minimal liveness check for infrastructure health probes."""
+    return {
+        "status": "healthy",
+        "timestamp": time.time(),
+        "environment": settings.environment,
+        "service": settings.app_name,
+        "version": settings.version,
     }
 
 

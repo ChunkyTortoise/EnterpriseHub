@@ -10,6 +10,7 @@ from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta
 from dataclasses import dataclass
 import logging
+from urllib.parse import urlparse
 
 from ghl_real_estate_ai.services.lead_sequence_state_service import (
     get_sequence_service,
@@ -22,6 +23,7 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.agent_state_sync import sync_service
 from ghl_real_estate_ai.services.ghl_client import GHLClient
 from ghl_real_estate_ai.api.schemas.ghl import MessageType
+from ghl_real_estate_ai.ghl_utils.config import settings
 
 logger = get_logger(__name__)
 
@@ -51,12 +53,17 @@ class LeadSequenceScheduler:
             self.ghl_client = GHLClient()
 
             # Configure APScheduler with Redis persistence
+            redis_url = settings.redis_url or "redis://localhost:6379/0"
+            parsed = urlparse(redis_url)
+            redis_host = parsed.hostname or "localhost"
+            redis_port = parsed.port or 6379
+            redis_password = parsed.password
             jobstores = {
                 'default': RedisJobStore(
-                    host='localhost',
-                    port=6379,
+                    host=redis_host,
+                    port=redis_port,
                     db=1,
-                    password=None
+                    password=redis_password
                 )
             }
             executors = {

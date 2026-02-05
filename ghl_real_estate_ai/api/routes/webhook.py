@@ -15,6 +15,8 @@ Flow:
 """
 
 from datetime import datetime, timezone
+import random
+import re
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 from pydantic import BaseModel
 
@@ -22,6 +24,7 @@ from ghl_real_estate_ai.api.schemas.ghl import (
     ActionType,
     GHLAction,
     GHLWebhookEvent,
+    GHLTagWebhookEvent,
     GHLWebhookResponse,
     MessageType,
     MessageDirection,
@@ -44,6 +47,7 @@ from ghl_real_estate_ai.services.compliance_guard import compliance_guard, Compl
 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
 from ghl_real_estate_ai.services.mls_client import MLSClient
 from ghl_real_estate_ai.api.schemas.billing import UsageRecordRequest
+from ghl_real_estate_ai.ghl_utils.jorge_rancho_config import rancho_config
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/ghl", tags=["ghl"])
@@ -69,6 +73,131 @@ attribution_analytics = AttributionAnalytics()
 subscription_manager = SubscriptionManager()
 handoff_service = JorgeHandoffService(analytics_service=analytics_service)
 mls_client = MLSClient()
+
+
+# P3 FIX: Safe wrappers for background tasks to prevent silent delivery failures
+async def safe_send_message(ghl_client, contact_id: str, message: str, channel=None):
+    """Wrapper for send_message that handles errors and tags contact on failure."""
+    try:
+        await ghl_client.send_message(contact_id, message, channel=channel)
+    except Exception as e:
+        logger.error(f"Message delivery failed for contact {contact_id}: {e}")
+        try:
+            await ghl_client.add_tags(contact_id, ["Delivery-Failed"])
+        except Exception as tag_error:
+            logger.error(f"Failed to add Delivery-Failed tag for {contact_id}: {tag_error}")
+
+
+async def safe_apply_actions(ghl_client, contact_id: str, actions: list):
+    """Wrapper for apply_actions that handles errors and tags contact on failure."""
+    try:
+        await ghl_client.apply_actions(contact_id, actions)
+    except Exception as e:
+        logger.error(f"Action application failed for contact {contact_id}: {e}")
+        try:
+            await ghl_client.add_tags(contact_id, ["Delivery-Failed"])
+        except Exception as tag_error:
+            logger.error(f"Failed to add Delivery-Failed tag for {contact_id}: {tag_error}")
+
+
+def _format_slot_options(options: list[dict]) -> str:
+    lines = [f"{opt['label']}) {opt['display']}" for opt in options]
+    return "Reply with 1, 2, or 3.\n" + "\n".join(lines)
+
+
+def _select_slot_from_message(message: str, options: list[dict]) -> dict | None:
+    msg = message.lower()
+    digits = re.findall(r"\b([1-3])\b", msg)
+    if len(digits) == 1:
+        for opt in options:
+            if opt.get("label") == digits[0]:
+                return opt
+    for opt in options:
+        if opt.get("display", "").lower() in msg:
+            return opt
+    return None
+
+
+async def _get_tenant_ghl_client(location_id: str) -> GHLClient:
+    tenant_config = await tenant_service.get_tenant_config(location_id)
+    if tenant_config and tenant_config.get("ghl_api_key"):
+        return GHLClient(api_key=tenant_config["ghl_api_key"], location_id=location_id)
+    return ghl_client_default
+
+
+@router.post("/tag-webhook", response_model=GHLWebhookResponse)
+@verify_webhook("ghl")
+async def handle_ghl_tag_webhook(
+    request: Request,
+    event: GHLTagWebhookEvent,
+    background_tasks: BackgroundTasks
+):
+    """
+    Handle tag-added webhook from GoHighLevel.
+
+    Sends initial outreach when "Needs Qualifying" is applied
+    and no prior conversation exists.
+    """
+    contact_id = event.contact_id
+    location_id = event.location_id
+    tag = event.tag
+
+    if tag != "Needs Qualifying":
+        return GHLWebhookResponse(
+            success=True,
+            message="Tag ignored",
+            actions=[]
+        )
+
+    context = await conversation_manager.get_context(contact_id, location_id)
+    if context.get("initial_outreach_sent"):
+        return GHLWebhookResponse(
+            success=True,
+            message="Initial outreach already sent",
+            actions=[]
+        )
+
+    if context.get("conversation_history"):
+        return GHLWebhookResponse(
+            success=True,
+            message="Conversation already started",
+            actions=[]
+        )
+
+    contact_name = event.contact.first_name if event.contact and event.contact.first_name else "there"
+    outreach_template = random.choice(rancho_config.INITIAL_OUTREACH_MESSAGES)
+    outreach_message = outreach_template.format(name=contact_name)
+
+    current_ghl_client = await _get_tenant_ghl_client(location_id)
+
+    # Send SMS outreach
+    background_tasks.add_task(
+        safe_send_message,
+        current_ghl_client,
+        contact_id,
+        outreach_message,
+        MessageType.SMS,
+    )
+
+    # Track analytics
+    background_tasks.add_task(
+        analytics_service.track_event,
+        event_type="initial_outreach_sent",
+        location_id=location_id,
+        contact_id=contact_id,
+        data={"tag": tag}
+    )
+
+    # Persist idempotency flag
+    context["initial_outreach_sent"] = True
+    context["initial_outreach_sent_at"] = datetime.utcnow().isoformat()
+    await conversation_manager.memory_service.save_context(contact_id, context, location_id=location_id)
+
+    return GHLWebhookResponse(
+        success=True,
+        message=outreach_message,
+        actions=[]
+    )
 
 
 @router.post("/webhook", response_model=GHLWebhookResponse)
@@ -207,6 +336,179 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             actions=[GHLAction(type=ActionType.ADD_TAG, tag="AI-Off")],
         )
 
+    # Pending appointment selection flow (slot offer -> confirmation)
+    context = await conversation_manager.get_context(contact_id, location_id)
+    pending_appointment = context.get("pending_appointment")
+    if pending_appointment and pending_appointment.get("status") == "awaiting_selection":
+        try:
+            from ghl_real_estate_ai.services.calendar_scheduler import (
+                get_smart_scheduler,
+                TimeSlot,
+                AppointmentType
+            )
+
+            # Initialize GHL client with tenant config if available
+            current_ghl_client = await _get_tenant_ghl_client(location_id)
+
+            selected = _select_slot_from_message(user_message, pending_appointment.get("options", []))
+            if selected:
+                start_time = datetime.fromisoformat(selected["start_time"])
+                end_time = datetime.fromisoformat(selected["end_time"])
+                appointment_type = AppointmentType(selected["appointment_type"])
+
+                time_slot = TimeSlot(
+                    start_time=start_time,
+                    end_time=end_time,
+                    duration_minutes=int((end_time - start_time).total_seconds() / 60),
+                    appointment_type=appointment_type
+                )
+
+                scheduler = get_smart_scheduler(current_ghl_client)
+                extracted_data = context.get("seller_preferences", {})
+                contact_info = {
+                    "contact_id": contact_id,
+                    "first_name": event.contact.first_name or "Lead",
+                    "last_name": event.contact.last_name,
+                    "phone": event.contact.phone,
+                    "email": event.contact.email
+                }
+
+                booking_result = await scheduler.book_appointment(
+                    contact_id=contact_id,
+                    contact_info=contact_info,
+                    time_slot=time_slot,
+                    lead_score=extracted_data.get("questions_answered", 0),
+                    extracted_data=extracted_data
+                )
+
+                if booking_result.success:
+                    response_message = (
+                        f"Perfect, I have you down for {selected['display']}. "
+                        "You'll get a confirmation text shortly."
+                    )
+
+                    background_tasks.add_task(
+                        safe_send_message,
+                        current_ghl_client,
+                        contact_id,
+                        response_message,
+                        event.message.type,
+                    )
+
+                    if booking_result.confirmation_actions:
+                        background_tasks.add_task(
+                            safe_apply_actions,
+                            current_ghl_client,
+                            contact_id,
+                            booking_result.confirmation_actions,
+                        )
+
+                    context["pending_appointment"] = None
+                    await conversation_manager.memory_service.save_context(contact_id, context, location_id=location_id)
+
+                    background_tasks.add_task(
+                        analytics_service.track_event,
+                        event_type="appointment_slot_confirmed",
+                        location_id=location_id,
+                        contact_id=contact_id,
+                        data={"appointment_time": selected["display"]}
+                    )
+
+                    return GHLWebhookResponse(
+                        success=True,
+                        message=response_message,
+                        actions=booking_result.confirmation_actions,
+                    )
+
+                # Booking failed -> manual fallback
+                fallback_message = (
+                    "I had trouble booking that time. I'll manually check Jorge's calendar "
+                    "and get back to you with options."
+                )
+                background_tasks.add_task(
+                    safe_send_message,
+                    current_ghl_client,
+                    contact_id,
+                    fallback_message,
+                    event.message.type,
+                )
+                background_tasks.add_task(
+                    safe_apply_actions,
+                    current_ghl_client,
+                    contact_id,
+                    [GHLAction(type=ActionType.ADD_TAG, tag="Needs-Manual-Scheduling")],
+                )
+
+                context["pending_appointment"] = None
+                await conversation_manager.memory_service.save_context(contact_id, context, location_id=location_id)
+
+                background_tasks.add_task(
+                    analytics_service.track_event,
+                    event_type="appointment_slot_escalated_manual",
+                    location_id=location_id,
+                    contact_id=contact_id,
+                    data={"reason": "booking_failed"}
+                )
+
+                return GHLWebhookResponse(
+                    success=True,
+                    message=fallback_message,
+                    actions=[GHLAction(type=ActionType.ADD_TAG, tag="Needs-Manual-Scheduling")],
+                )
+
+            # No selection parsed: re-offer or escalate
+            attempts = int(pending_appointment.get("attempts", 0)) + 1
+            pending_appointment["attempts"] = attempts
+            context["pending_appointment"] = pending_appointment
+            await conversation_manager.memory_service.save_context(contact_id, context, location_id=location_id)
+
+            if attempts <= 2:
+                options_message = _format_slot_options(pending_appointment.get("options", []))
+                response_message = "Which time works for you?\n" + options_message
+                background_tasks.add_task(
+                    safe_send_message,
+                    current_ghl_client,
+                    contact_id,
+                    response_message,
+                    event.message.type,
+                )
+                return GHLWebhookResponse(success=True, message=response_message, actions=[])
+
+            fallback_message = (
+                "No worries, I'll manually check Jorge's calendar and follow up with options."
+            )
+            background_tasks.add_task(
+                safe_send_message,
+                current_ghl_client,
+                contact_id,
+                fallback_message,
+                event.message.type,
+            )
+            background_tasks.add_task(
+                safe_apply_actions,
+                current_ghl_client,
+                contact_id,
+                [GHLAction(type=ActionType.ADD_TAG, tag="Needs-Manual-Scheduling")],
+            )
+            context["pending_appointment"] = None
+            await conversation_manager.memory_service.save_context(contact_id, context, location_id=location_id)
+
+            background_tasks.add_task(
+                analytics_service.track_event,
+                event_type="appointment_slot_escalated_manual",
+                location_id=location_id,
+                contact_id=contact_id,
+                data={"reason": "no_selection"}
+            )
+
+            return GHLWebhookResponse(
+                success=True,
+                message=fallback_message,
+                actions=[GHLAction(type=ActionType.ADD_TAG, tag="Needs-Manual-Scheduling")],
+            )
+        except Exception as e:
+            logger.error(f"Pending appointment handling failed for {contact_id}: {e}", exc_info=True)
+
     # Step -0.5: Check for Jorge's Seller Mode (Needs Qualifying tag + JORGE_SELLER_MODE)
     jorge_seller_mode = (
         "Needs Qualifying" in tags and
@@ -330,20 +632,22 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 }
             )
 
-            # Send the seller response via GHL API (background task)
+            # Send the seller response via GHL API (background task) - P3 FIX: Use safe wrapper
             background_tasks.add_task(
-                current_ghl_client.send_message,
-                contact_id=contact_id,
-                message=final_seller_msg,
-                channel=event.message.type,
+                safe_send_message,
+                current_ghl_client,
+                contact_id,
+                final_seller_msg,
+                event.message.type,
             )
 
-            # Apply tags and actions via GHL API (background task)
+            # Apply tags and actions via GHL API (background task) - P3 FIX: Use safe wrapper
             if actions:
                 background_tasks.add_task(
-                    current_ghl_client.apply_actions,
-                    contact_id=contact_id,
-                    actions=actions,
+                    safe_apply_actions,
+                    current_ghl_client,
+                    contact_id,
+                    actions,
                 )
 
             return GHLWebhookResponse(
@@ -353,8 +657,19 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             )
 
         except Exception as e:
-            logger.error(f"Jorge seller mode processing failed: {str(e)}", exc_info=True)
-            # Fall back to normal processing if Jorge mode fails
+            logger.error(f"Jorge seller mode processing failed for contact {contact_id}: {str(e)}", exc_info=True)
+            # P1 FIX: Add return statement to prevent fall-through to buyer mode
+            # Tag contact with Bot-Fallback-Active for monitoring
+            try:
+                await ghl_client_default.add_tags(contact_id, ["Bot-Fallback-Active"])
+            except Exception as tag_error:
+                logger.error(f"Failed to add Bot-Fallback-Active tag: {tag_error}")
+            
+            return GHLWebhookResponse(
+                success=True,
+                message="I'm here to help! Let me connect you with the right specialist.",
+                actions=[GHLAction(type=ActionType.ADD_TAG, tag="Bot-Fallback-Active")],
+            )
 
     # Step -0.4: Check for Jorge's Buyer Mode (Buyer-Lead tag + JORGE_BUYER_MODE)
     jorge_buyer_mode = (
@@ -472,20 +787,22 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 }
             )
 
-            # Send the buyer response via GHL API (background task)
+            # Send the buyer response via GHL API (background task) - P3 FIX: Use safe wrapper
             background_tasks.add_task(
-                current_ghl_client.send_message,
-                contact_id=contact_id,
-                message=final_buyer_msg,
-                channel=event.message.type,
+                safe_send_message,
+                current_ghl_client,
+                contact_id,
+                final_buyer_msg,
+                event.message.type,
             )
 
-            # Apply tags and actions via GHL API (background task)
+            # Apply tags and actions via GHL API (background task) - P3 FIX: Use safe wrapper
             if actions:
                 background_tasks.add_task(
-                    current_ghl_client.apply_actions,
-                    contact_id=contact_id,
-                    actions=actions,
+                    safe_apply_actions,
+                    current_ghl_client,
+                    contact_id,
+                    actions,
                 )
 
             return GHLWebhookResponse(
@@ -495,8 +812,19 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             )
 
         except Exception as e:
-            logger.error(f"Jorge buyer mode processing failed: {str(e)}", exc_info=True)
-            # Fall back to normal processing if Jorge buyer mode fails
+            logger.error(f"Jorge buyer mode processing failed for contact {contact_id}: {str(e)}", exc_info=True)
+            # P1 FIX: Add return statement to prevent fall-through to lead mode
+            # Tag contact with Bot-Fallback-Active for monitoring
+            try:
+                await ghl_client_default.add_tags(contact_id, ["Bot-Fallback-Active"])
+            except Exception as tag_error:
+                logger.error(f"Failed to add Bot-Fallback-Active tag: {tag_error}")
+            
+            return GHLWebhookResponse(
+                success=True,
+                message="I'm here to help! Let me connect you with the right specialist.",
+                actions=[GHLAction(type=ActionType.ADD_TAG, tag="Bot-Fallback-Active")],
+            )
 
     # Step -0.3: Check for Jorge's Lead Mode (LEAD_ACTIVATION_TAG + JORGE_LEAD_MODE)
     jorge_lead_mode = (
@@ -820,15 +1148,20 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     elif ha["type"] == "remove_tag":
                         actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=ha["tag"]))
 
+        # P3 FIX: Use safe wrappers for background tasks to handle delivery failures
         background_tasks.add_task(
-            current_ghl_client.send_message,
-            contact_id=contact_id,
-            message=final_message,
-            channel=event.message.type,
+            safe_send_message,
+            current_ghl_client,
+            contact_id,
+            final_message,
+            event.message.type,
         )
 
         background_tasks.add_task(
-            current_ghl_client.apply_actions, contact_id=contact_id, actions=actions
+            safe_apply_actions,
+            current_ghl_client,
+            contact_id,
+            actions
         )
 
         logger.info(

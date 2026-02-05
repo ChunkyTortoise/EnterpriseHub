@@ -1220,6 +1220,19 @@ class JorgeBuyerBot:
 
             result["is_qualified"] = is_qualified
 
+            # P0 FIX: Extract handoff signals for cross-bot handoff detection
+            # Get the last user message for intent analysis
+            user_message = ""
+            if conversation_history:
+                for msg in reversed(conversation_history):
+                    if msg.get("role") == "user":
+                        user_message = msg.get("content", "")
+                        break
+            
+            from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+            handoff_signals = JorgeHandoffService.extract_intent_signals(user_message)
+            result["handoff_signals"] = handoff_signals
+
             # Emit final qualification result
             await self.event_publisher.publish_buyer_qualification_complete(
                 contact_id=buyer_id,
@@ -1237,7 +1250,8 @@ class JorgeBuyerBot:
                 "buyer_id": buyer_id,
                 "error": str(e),
                 "qualification_status": "error",
-                "response_content": "I'm having technical difficulties. Let me connect you with Jorge directly."
+                "response_content": "I'm having technical difficulties. Let me connect you with Jorge directly.",
+                "handoff_signals": {}  # P0 FIX: Include empty handoff_signals in error case
             }
 
     # ================================

@@ -1029,12 +1029,18 @@ Consider conversation momentum, engagement patterns, and buying signals.
         intent_history = ""
         if thread.intent_evolution:
             recent_intents = thread.intent_evolution[-5:]
-            intent_history = f"\\nIntent Evolution: {', '.join([f'{timestamp.strftime('%H:%M')}:{intent:.2f}' for timestamp, intent in recent_intents])}"
+            formatted_intents = ", ".join(
+                [f"{timestamp.strftime('%H:%M')}:{intent:.2f}" for timestamp, intent in recent_intents]
+            )
+            intent_history = f"\\nIntent Evolution: {formatted_intents}"
 
         emotional_history = ""
         if thread.emotional_journey:
             recent_emotions = thread.emotional_journey[-3:]
-            emotional_history = f"\\nEmotional Journey: {', '.join([f'{timestamp.strftime('%H:%M')}:{emotion}({intensity:.1f})' for timestamp, emotion, intensity in recent_emotions])}"
+            formatted_emotions = ", ".join(
+                [f"{timestamp.strftime('%H:%M')}:{emotion}({intensity:.1f})" for timestamp, emotion, intensity in recent_emotions]
+            )
+            emotional_history = f"\\nEmotional Journey: {formatted_emotions}"
 
         context_text = ""
         if lead_context:

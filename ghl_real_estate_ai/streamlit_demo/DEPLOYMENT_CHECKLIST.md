@@ -87,7 +87,7 @@
 ```bash
 cd /Users/cave/enterprisehub/ghl-real-estate-ai
 source venv/bin/activate
-streamlit run streamlit_demo/app.py
+streamlit run streamlit_demo/jorge_delivery_dashboard.py
 ```
 - [ ] Opens at http://localhost:8501
 - [ ] No errors in terminal
@@ -104,7 +104,7 @@ streamlit run streamlit_demo/app.py
 2. [ ] Click "New app"
 3. [ ] Connect GitHub repository
 4. [ ] Select branch: `main`
-5. [ ] Main file path: `streamlit_demo/app.py`
+5. [ ] Main file path: `streamlit_demo/jorge_delivery_dashboard.py`
 6. [ ] Click "Deploy"
 7. [ ] Wait for deployment (2-5 minutes)
 8. [ ] Test deployed app

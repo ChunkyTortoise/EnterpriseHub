@@ -3,8 +3,11 @@
 
 [project]
 name = "EnterpriseHub"
-version = "5.0.1"
+version = "5.1.1"
 description = "Enterprise-Grade Real Estate Intelligence with Mobile-First Architecture"
+status = "p0-execution"
+current_phase = "jorge-p0-fixes"
+plan_id = "904587f9-597e-4d5a-a904-1062fc6b6674"
 
 [conductor]
 # Paths to context-defining markdown files

@@ -34,7 +34,7 @@ primary_region = 'lax'
   timeout = '10s'
 
 [processes]
-  app = "sh -c 'PYTHONPATH=/app:$PYTHONPATH uvicorn ghl_real_estate_ai.api.main:app --host 0.0.0.0 --port 8000 --workers 1 --log-level info --proxy-headers --forwarded-allow-ips=\"*\"'"
+  app = "/app/start-api.sh"
 
 [[vm]]
   size = 'shared-cpu-1x'

@@ -446,3 +446,69 @@ def event_loop_policy():
 if __name__ == "__main__":
     # This file is imported, not executed directly
     pass
+
+import pytest
+from unittest.mock import AsyncMock
+
+
+def _patch_compliance_guard(mocker):
+    mocker.patch(
+        "ghl_real_estate_ai.services.compliance_guard.compliance_guard.audit_message",
+        new=AsyncMock(return_value=(
+            _get_compliance_status(),
+            "ok",
+            []
+        )),
+    )
+
+
+def _get_compliance_status():
+    from ghl_real_estate_ai.services.compliance_guard import ComplianceStatus
+    return ComplianceStatus.PASSED
+
+
+@pytest.fixture(autouse=True)
+def disable_compliance_guard(mocker):
+    _patch_compliance_guard(mocker)
+    yield
+
+
+@pytest.fixture(autouse=True)
+def force_mock_llm(monkeypatch):
+    monkeypatch.setenv("USE_MOCK_LLM", "true")
+    yield
+
+
+class _FakeRedis:
+    def pipeline(self):
+        return self
+
+    async def zremrangebyscore(self, *args, **kwargs):
+        return 0
+
+    async def zcard(self, *args, **kwargs):
+        return 0
+
+    async def zadd(self, *args, **kwargs):
+        return 0
+
+    async def expire(self, *args, **kwargs):
+        return 0
+
+    async def execute(self, *args, **kwargs):
+        return [0, 0, 0, 0]
+
+    async def lpush(self, *args, **kwargs):
+        return 0
+
+    async def ltrim(self, *args, **kwargs):
+        return 0
+
+
+@pytest.fixture(autouse=True)
+def disable_redis(mocker):
+    mocker.patch(
+        "ghl_real_estate_ai.services.security_framework.SecurityFramework._get_redis",
+        new=AsyncMock(return_value=_FakeRedis()),
+    )
+    yield

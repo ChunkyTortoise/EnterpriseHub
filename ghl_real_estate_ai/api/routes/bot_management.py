@@ -23,6 +23,7 @@ from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.performance_monitor import get_performance_monitor
+from ghl_real_estate_ai.services.conversation_session_manager import get_session_manager
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -183,6 +184,7 @@ async def stream_bot_conversation(
     if bot_id not in ["jorge-seller-bot", "lead-bot", "intent-decoder"]:
         raise HTTPException(status_code=404, detail=f"Bot {bot_id} not found")
 
+    session_manager = get_session_manager()
     conversation_id = request.conversationId or str(uuid.uuid4())
 
     async def generate_stream() -> AsyncGenerator[str, None]:
@@ -190,16 +192,25 @@ async def stream_bot_conversation(
         event_publisher = get_event_publisher()
 
         try:
-            # Send start event
+            # Get or create conversation session
+            resolved_conversation_id = conversation_id
+            session = await session_manager.get_session(resolved_conversation_id)
+            if not session:
+                resolved_conversation_id = await session_manager.create_session(
+                    bot_type=bot_id,
+                    lead_id=request.leadId or "unknown",
+                    lead_name=request.leadName or "Unknown Lead",
+                )
+
+            conversation_history = await session_manager.get_history(resolved_conversation_id)
+            current_history = conversation_history + [{"role": "user", "content": request.content}]
+
+            # Send start event after session resolution
             yield _format_sse({
                 "type": "start",
-                "conversationId": conversation_id,
+                "conversationId": resolved_conversation_id,
                 "botType": bot_id
             })
-
-            # Get conversation history
-            # TODO: Get from ConversationSessionManager when built
-            conversation_history = []
 
             # Execute bot workflow based on type
             if bot_id == "jorge-seller-bot":
@@ -207,7 +218,7 @@ async def stream_bot_conversation(
                 result = await bot.process_seller_message(
                     request.leadId or "unknown",
                     request.leadName,
-                    conversation_history
+                    current_history
                 )
                 bot_response = result.get("response_content", "I'm analyzing your situation...")
 
@@ -222,7 +233,7 @@ async def stream_bot_conversation(
                     "contact_phone": "+1234567890",
                     "contact_email": None,
                     "property_address": None,
-                    "conversation_history": conversation_history,
+                    "conversation_history": current_history,
                     "intent_profile": None,
                     "current_step": "initial",
                     "engagement_status": "new",
@@ -240,7 +251,7 @@ async def stream_bot_conversation(
 
             else:  # intent-decoder
                 bot = get_intent_decoder()
-                profile = bot.analyze_lead(request.leadId or "unknown", conversation_history)
+                profile = bot.analyze_lead(request.leadId or "unknown", current_history)
                 bot_response = (
                     f"Intent Analysis: {profile.frs.classification} "
                     f"(FRS: {profile.frs.total_score:.0f}, PCS: {profile.pcs.total_score:.0f}). "
@@ -288,6 +299,9 @@ async def stream_bot_conversation(
 
             # Track metrics in background
             background_tasks.add_task(_track_conversation_metrics, bot_id, processing_time)
+            # Persist conversation messages
+                await session_manager.add_message(resolved_conversation_id, "user", request.content)
+                await session_manager.add_message(resolved_conversation_id, "bot", bot_response)
 
         except Exception as e:
             logger.error(f"Streaming error for {bot_id}: {e}")
@@ -364,7 +378,12 @@ async def start_jorge_qualification(request: JorgeStartRequest):
     Frontend: "Start Qualification" button in lead dashboard
     """
     try:
-        conversation_id = str(uuid.uuid4())
+        session_manager = get_session_manager()
+        conversation_id = await session_manager.create_session(
+            bot_type="jorge-seller-bot",
+            lead_id=request.leadId,
+            lead_name=request.leadName,
+        )
         jorge_bot = get_jorge_bot()
 
         # Generate Jorge's opening message
@@ -373,9 +392,6 @@ async def start_jorge_qualification(request: JorgeStartRequest):
             f"{'at ' + request.propertyAddress if request.propertyAddress else 'your property'}. "
             "Let's cut through the BS—what's your actual timeline? 30 days, 60 days, or 'someday'?"
         )
-
-        # TODO: Create session in ConversationSessionManager
-        # await session_manager.create_session(bot_type="jorge-seller-bot", ...)
 
         # Track activity
         await _increment_conversation_count("jorge-seller-bot")
@@ -466,8 +482,11 @@ async def get_lead_intent_score(leadId: str):
         intent_decoder = get_intent_decoder()
         event_publisher = get_event_publisher()
 
-        # TODO: Fetch real conversation history from ConversationSessionManager
+        session_manager = get_session_manager()
         conversation_history = []
+        conversation_ids = await session_manager.get_lead_conversations(leadId)
+        if conversation_ids:
+            conversation_history = await session_manager.get_history(conversation_ids[-1])
 
         start_time = time.time()
 
@@ -596,8 +615,18 @@ async def process_seller_message(request: SellerChatRequest):
             "email": request.contact_info.get("email") if request.contact_info else None,
         }
 
-        # TODO: Get conversation history from ConversationSessionManager
+        session_manager = get_session_manager()
         conversation_history = [{"role": "user", "content": request.message}]
+        conversation_ids = await session_manager.get_lead_conversations(request.contact_id)
+        if conversation_ids:
+            conversation_history = await session_manager.get_history(conversation_ids[-1]) + conversation_history
+            conversation_id = conversation_ids[-1]
+        else:
+            conversation_id = await session_manager.create_session(
+                bot_type="jorge-seller-bot",
+                lead_id=request.contact_id,
+                lead_name=lead_info.get("name", "Unknown Lead"),
+            )
 
         # Process seller message using unified bot with enhancements
         result = await jorge_bot.process_seller_with_enhancements({
@@ -664,6 +693,10 @@ async def process_seller_message(request: SellerChatRequest):
         )
 
         logger.info(f"Processed seller message for {request.contact_id}: {response.seller_temperature} temperature, {processing_time:.2f}ms")
+
+        # Persist conversation messages
+        await session_manager.add_message(conversation_id, "user", request.message)
+        await session_manager.add_message(conversation_id, "bot", response.response_message)
 
         return response
 
@@ -1055,8 +1088,11 @@ async def get_jorge_qualification_progress(lead_id: str):
         # Get intent decoder for FRS/PCS scores
         intent_decoder = get_intent_decoder()
 
-        # TODO: Get real conversation history from ConversationSessionManager
+        session_manager = get_session_manager()
         conversation_history = []
+        conversation_ids = await session_manager.get_lead_conversations(lead_id)
+        if conversation_ids:
+            conversation_history = await session_manager.get_history(conversation_ids[-1])
 
         # Analyze lead intent
         profile = intent_decoder.analyze_lead(lead_id, conversation_history)
@@ -1089,12 +1125,15 @@ async def get_jorge_conversation_state(conversation_id: str):
     Expected by frontend: jorge-seller-api.ts line 149
     """
     try:
-        # TODO: Get from ConversationSessionManager when implemented
-        # For now, return mock data in expected format
+        session_manager = get_session_manager()
+        summary = await session_manager.get_conversation_summary(conversation_id)
+        if not summary:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+
         return {
             "conversation_id": conversation_id,
-            "lead_id": conversation_id.split("_")[0] if "_" in conversation_id else conversation_id,
-            "lead_name": "Lead",
+            "lead_id": summary.get("lead_id"),
+            "lead_name": summary.get("lead_name"),
             "stage": "qualification",
             "current_tone": "CONFRONTATIONAL",
             "stall_detected": False,
@@ -1102,8 +1141,8 @@ async def get_jorge_conversation_state(conversation_id: str):
             "seller_temperature": "warm",
             "psychological_commitment": 65,
             "is_qualified": False,
-            "questions_answered": 2,
-            "current_question": 3,
+            "questions_answered": summary.get("user_messages", 0),
+            "current_question": summary.get("user_messages", 0) + 1,
             "ml_confidence": 0.85
         }
     except Exception as e:
