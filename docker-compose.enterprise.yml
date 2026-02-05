@@ -32,8 +32,6 @@ services:
       - api-primary-1
       - api-primary-2
       - api-primary-3
-      - api-secondary-1
-      - api-secondary-2
     deploy:
       resources:
         limits:
