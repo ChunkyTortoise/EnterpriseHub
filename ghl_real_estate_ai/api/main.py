@@ -235,7 +235,7 @@ def _verify_admin_api_key():
     """Dependency that guards admin endpoints with an API key in production."""
     from fastapi import Depends, Header
 
-    async def _check(x_admin_key: str = Header(alias="X-Admin-Key")):
+    async def _check(x_admin_key: str | None = Header(default=None, alias="X-Admin-Key")):
         expected = os.getenv("ADMIN_API_KEY")
         if not expected:
             # No key configured → admin routes disabled in production
