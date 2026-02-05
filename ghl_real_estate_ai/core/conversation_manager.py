@@ -49,8 +49,8 @@ class AIResponse:
     """AI-generated response with extracted data."""
     message: str
     extracted_data: Dict[str, Any]
-    reasoning: str
-    lead_score: int
+    reasoning: str = ""
+    lead_score: int = 0
     predictive_score: Optional[Dict[str, Any]] = None
     input_tokens: Optional[int] = None
     output_tokens: Optional[int] = None

@@ -18,6 +18,9 @@ import asyncio
 import aiosqlite
 from pathlib import Path
 
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -27,6 +30,7 @@ class UserRole(Enum):
     ADMIN = "admin"      # Full system access
     AGENT = "agent"      # Lead and deal management
     VIEWER = "viewer"    # Read-only access
+    SUPER_ADMIN = "super_admin"  # Reserved for enterprise ops
 
 @dataclass
 class User:
@@ -338,3 +342,31 @@ def get_auth_service() -> AuthService:
     if _auth_service is None:
         _auth_service = AuthService()
     return _auth_service
+
+
+# FastAPI dependency for routes that import from auth_service directly
+_security = HTTPBearer(auto_error=False)
+
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(_security),
+) -> Dict[str, Any]:
+    """FastAPI dependency to get current authenticated user as dict."""
+    if credentials is None:
+        raise HTTPException(status_code=401, detail="Authorization required")
+
+    auth_service = get_auth_service()
+    payload = auth_service.verify_token(credentials.credentials)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    user = await auth_service.get_user_by_id(payload["user_id"])
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    return {
+        "user_id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "role": user.role.value,
+    }

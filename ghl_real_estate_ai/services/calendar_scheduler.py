@@ -92,8 +92,8 @@ class TimeSlot(BaseModel):
 
     def format_for_lead(self) -> str:
         """Format time slot for display to leads."""
-        austin_time = self.to_austin_time()
-        return austin_time.strftime("%A, %B %d at %I:%M %p CT")
+        local_time = self.start_time.astimezone(RC_TZ)
+        return local_time.strftime("%A, %B %d at %I:%M %p PT")
 
 
 class AppointmentBooking(BaseModel):
@@ -1077,13 +1077,16 @@ Looking forward to helping you with your real estate needs!
 _scheduler_instance: Optional[CalendarScheduler] = None
 
 
-def get_smart_scheduler() -> CalendarScheduler:
+def get_smart_scheduler(ghl_client: Optional[GHLClient] = None) -> CalendarScheduler:
     """
     Get or create a global instance of CalendarScheduler.
     
     Returns:
         CalendarScheduler instance
     """
+    if ghl_client is not None:
+        return CalendarScheduler(ghl_client)
+
     global _scheduler_instance
     if _scheduler_instance is None:
         _scheduler_instance = CalendarScheduler()

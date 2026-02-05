@@ -33,6 +33,7 @@ FROM python:3.11-slim-bullseye AS runtime
 RUN apt-get update && apt-get install -y \
     curl \
     postgresql-client \
+    redis-tools \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security
@@ -56,8 +57,10 @@ COPY .env.example ./
 # Create necessary directories
 RUN mkdir -p /app/logs /app/data /app/cache
 
-# Set proper ownership
 RUN chown -R jorge:jorge /app
+
+# Create startup script for Socket.IO integration
+COPY --chown=jorge:jorge --chmod=755 scripts/start-api.sh /app/start-api.sh
 
 # Switch to non-root user
 USER jorge
@@ -75,10 +78,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 
 # Expose port
 EXPOSE 8000
-
-# Create startup script for Socket.IO integration
-COPY scripts/start-api.sh /app/start-api.sh
-RUN chmod +x /app/start-api.sh
 
 # Command to run the application with Socket.IO
 CMD ["/app/start-api.sh"]

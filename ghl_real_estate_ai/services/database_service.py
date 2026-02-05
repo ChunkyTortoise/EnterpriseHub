@@ -215,7 +215,7 @@ class DatabaseService:
     
     async def _run_migrations(self) -> None:
         """Run database migrations."""
-        async with self.get_connection() as conn:
+        async with self.connection_manager.get_connection() as conn:
             # Create migrations tracking table
             await conn.execute("""
                 CREATE TABLE IF NOT EXISTS migrations (
@@ -897,7 +897,7 @@ class DatabaseService:
 
     async def _create_indexes(self) -> None:
         """Create database indexes for performance including Service 6 critical optimizations."""
-        async with self.get_connection() as conn:
+        async with self.connection_manager.get_connection() as conn:
             # Service 6 Critical Performance Indexes (90%+ improvement potential)
             critical_indexes = [
                 # *** CRITICAL PRIORITY - Lead scoring optimization (eliminates full table scans) ***
@@ -908,11 +908,11 @@ class DatabaseService:
                 # *** COMMUNICATION PERFORMANCE (70%+ improvement) ***
                 "CREATE INDEX IF NOT EXISTS idx_comm_followup_history ON communication_logs(lead_id, direction, sent_at DESC) WHERE direction = 'outbound'",
                 "CREATE INDEX IF NOT EXISTS idx_comm_response_tracking ON communication_logs(lead_id, direction, sent_at DESC) WHERE direction = 'inbound'",
-                "CREATE INDEX IF NOT EXISTS idx_comm_recent_activity ON communication_logs(lead_id, sent_at DESC, channel, status) WHERE sent_at >= NOW() - INTERVAL '30 days'",
+                "CREATE INDEX IF NOT EXISTS idx_comm_recent_activity ON communication_logs(lead_id, sent_at DESC, channel, status)",
 
                 # *** COVERING INDEXES (90% I/O reduction) ***
                 "CREATE INDEX IF NOT EXISTS idx_leads_profile_covering ON leads(id, first_name, last_name, email, phone, status, score, temperature, created_at, last_interaction_at)",
-                "CREATE INDEX IF NOT EXISTS idx_comm_history_covering ON communication_logs(lead_id, channel, direction, sent_at, status, content) WHERE sent_at >= NOW() - INTERVAL '30 days'"
+                "CREATE INDEX IF NOT EXISTS idx_comm_history_covering ON communication_logs(lead_id, channel, direction, sent_at, status, content)"
             ]
 
             # Standard performance indexes

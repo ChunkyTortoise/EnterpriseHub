@@ -322,31 +322,49 @@ class JorgeSellerEngine:
 
             # 6. Generate response based on temperature, progress, ML insights, and persona
             try:
-                # Phase 7: Autonomous Scheduling for Hot Sellers
+                # Phase 7: Slot-Offer Scheduling for Hot Sellers
                 booking_message = ""
                 booking_actions = []
-                
-                if temperature == "hot":
-                    from ghl_real_estate_ai.services.calendar_scheduler import get_smart_scheduler
-                    scheduler = get_smart_scheduler(self.ghl_client)
-                    
-                    # Prepare contact info for scheduler
-                    contact_info = {
-                        "contact_id": contact_id,
-                        "first_name": extracted_seller_data.get("contact_name", "Lead"),
-                        "phone": extracted_seller_data.get("phone"),
-                        "email": extracted_seller_data.get("email")
-                    }
-                    
-                    # Handle appointment request autonomously
-                    booked, booking_message, booking_actions = await scheduler.handle_appointment_request(
-                        contact_id=contact_id,
-                        contact_info=contact_info,
-                        lead_score=extracted_seller_data.get("questions_answered", 0),
-                        extracted_data=extracted_seller_data,
-                        message_content=user_message
+                pending_appointment_data = None
+
+                if temperature == "hot" and not context.get("pending_appointment"):
+                    from ghl_real_estate_ai.services.calendar_scheduler import (
+                        get_smart_scheduler,
+                        AppointmentType
                     )
-                
+                    scheduler = get_smart_scheduler(self.ghl_client)
+
+                    available_slots = await scheduler.get_available_slots(
+                        appointment_type=AppointmentType.LISTING_APPOINTMENT,
+                        days_ahead=7
+                    )
+
+                    if available_slots:
+                        options = []
+                        lines = []
+                        for i, slot in enumerate(available_slots[:3], 1):
+                            display = slot.format_for_lead()
+                            options.append({
+                                "label": str(i),
+                                "display": display,
+                                "start_time": slot.start_time.isoformat(),
+                                "end_time": slot.end_time.isoformat(),
+                                "appointment_type": slot.appointment_type.value
+                            })
+                            lines.append(f"{i}) {display}")
+
+                        booking_message = (
+                            "I can get you on Jorge's calendar. Reply with 1, 2, or 3.\n"
+                            + "\n".join(lines)
+                        )
+
+                        pending_appointment_data = {
+                            "status": "awaiting_selection",
+                            "options": options,
+                            "attempts": 0,
+                            "expires_at": (datetime.utcnow().isoformat())
+                        }
+
                 if booking_message:
                     final_message = booking_message
                 else:
@@ -397,6 +415,16 @@ class JorgeSellerEngine:
                 persona_full=persona_data
             )
 
+            if pending_appointment_data:
+                context = await self.conversation_manager.get_context(contact_id, location_id)
+                context["pending_appointment"] = pending_appointment_data
+                await self.conversation_manager.memory_service.save_context(contact_id, context, location_id=location_id)
+                await self._track_seller_interaction(
+                    contact_id=contact_id,
+                    location_id=location_id,
+                    interaction_data={"appointment_slot_offer_sent": True}
+                )
+
             # 8. Log analytics data including ROI insights
             await self._track_seller_interaction(
                 contact_id=contact_id,
@@ -413,12 +441,17 @@ class JorgeSellerEngine:
                 }
             )
 
+            # P0 FIX: Extract handoff signals for cross-bot handoff detection
+            from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+            handoff_signals = JorgeHandoffService.extract_intent_signals(user_message)
+
             return {
                 "message": final_message,
                 "actions": actions,
                 "temperature": temperature,
                 "seller_data": extracted_seller_data,
                 "questions_answered": extracted_seller_data.get("questions_answered", 0),
+                "handoff_signals": handoff_signals,  # P0 FIX: Add handoff signals to return dict
                 "analytics": {
                     **temperature_result["analytics"],
                     "closing_probability": predictive_result.closing_probability,
@@ -440,7 +473,8 @@ class JorgeSellerEngine:
                 "message": safe_msg,
                 "actions": [],
                 "temperature": "cold",
-                "error": str(e)
+                "error": str(e),
+                "handoff_signals": {}  # P0 FIX: Include empty handoff_signals in error case
             }
 
     async def handle_vapi_booking(self, contact_id: str, location_id: str, booking_details: Dict[str, Any]) -> bool:
@@ -1040,7 +1074,8 @@ class JorgeSellerEngine:
             # Final SMS compliance check
             adapted = self.tone_engine._ensure_sms_compliance(adapted)
             return adapted
-        except Exception:
+        except Exception as e:
+            self.logger.warning(f"Persona adaptation failed for contact {contact_id}: {e}")  # P4 FIX: Add logging
             return message
 
     async def _get_market_insight(self, location: str) -> str:
@@ -1188,7 +1223,7 @@ class JorgeSellerEngine:
                                     f"Vapi Call attempt {attempt + 1} failed for contact {contact_id}. "
                                     f"Retrying in {delay}s..."
                                 )
-                                time.sleep(delay)
+                                await asyncio.sleep(delay)  # P2 FIX: Non-blocking async sleep
                             else:
                                 self.logger.error(
                                     f"Vapi Call failed after {max_retries} attempts for contact {contact_id}"
@@ -1200,7 +1235,7 @@ class JorgeSellerEngine:
                                 f"Vapi Call attempt {attempt + 1} raised exception for contact {contact_id}: {e}. "
                                 f"Retrying in {delay}s..."
                             )
-                            time.sleep(delay)
+                            await asyncio.sleep(delay)  # P2 FIX: Non-blocking async sleep
                         else:
                             self.logger.error(
                                 f"Vapi Call raised exception after {max_retries} attempts for contact {contact_id}: {e}"

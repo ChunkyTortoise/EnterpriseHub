@@ -60,9 +60,25 @@ class GHLWebhookEvent(BaseModel):
     contact_id: str = Field(..., alias="contactId")
     location_id: str = Field(..., alias="locationId")
     message: GHLMessage
-    contact: GHLContact
+    contact: Optional[GHLContact] = None
 
     model_config = ConfigDict(populate_by_name=True)  # Allow both snake_case and camelCase
+
+
+class GHLTagWebhookEvent(BaseModel):
+    """
+    Tag-added webhook event from GoHighLevel.
+
+    Used to trigger proactive outreach when "Needs Qualifying" is applied.
+    """
+
+    type: str  # "ContactTagAdded" or similar
+    contact_id: str = Field(..., alias="contactId")
+    location_id: str = Field(..., alias="locationId")
+    tag: str
+    contact: GHLContact
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class ActionType(str, Enum):
