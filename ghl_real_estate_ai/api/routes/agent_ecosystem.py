@@ -17,7 +17,7 @@ from ghl_real_estate_ai.agents.customer_journey_orchestrator import get_customer
 from ghl_real_estate_ai.agents.adaptive_jorge_seller_bot import get_adaptive_jorge_bot
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.api.middleware.enhanced_auth import get_current_user
+from ghl_real_estate_ai.api.middleware.enhanced_auth import get_current_user_optional
 
 # Import unified agents for real status collection
 from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
@@ -48,6 +48,13 @@ class AgentStatus(BaseModel):
     coordination: Optional[Dict[str, Any]] = None
     lastActivity: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
+
+class SimpleAgentStatus(BaseModel):
+    """Lightweight agent status for dashboard polling."""
+    name: str
+    status: str
+    last_run_ts: str
+    current_task: Optional[str] = None
 
 class AgentMetrics(BaseModel):
     """Agent metrics matching frontend interface."""
@@ -470,7 +477,7 @@ async def get_real_agent_statuses() -> List[AgentStatus]:
 
 @router.get("/statuses", response_model=List[AgentStatus])
 async def get_agent_statuses(
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Get current status of all agents in the ecosystem.
@@ -489,9 +496,32 @@ async def get_agent_statuses(
         logger.error(f"Error fetching agent statuses: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch agent statuses")
 
+@router.get("/status", response_model=List[SimpleAgentStatus])
+async def get_simple_agent_statuses(
+    current_user = Depends(get_current_user_optional)
+):
+    """
+    Lightweight agent status endpoint for dashboard polling.
+    Returns name, status, last_run_ts, and current_task.
+    """
+    try:
+        agent_data = await get_real_agent_statuses()
+        return [
+            SimpleAgentStatus(
+                name=agent.name,
+                status=agent.status,
+                last_run_ts=agent.lastActivity or datetime.now().isoformat(),
+                current_task=agent.currentTask
+            )
+            for agent in agent_data
+        ]
+    except Exception as e:
+        logger.error(f"Error fetching simple agent statuses: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch agent status summary")
+
 @router.get("/metrics", response_model=AgentMetrics)
 async def get_agent_metrics(
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Get aggregated metrics for the agent ecosystem.
@@ -532,7 +562,7 @@ async def get_agent_metrics(
 @router.get("/{agent_id}", response_model=AgentStatus)
 async def get_agent_by_id(
     agent_id: str,
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Get detailed status for a specific agent.
@@ -560,7 +590,7 @@ async def get_agent_by_id(
 async def update_agent_status(
     agent_id: str,
     status_update: Dict[str, str],
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Update agent status (pause, resume, etc.).
@@ -599,7 +629,7 @@ async def update_agent_status(
 @router.get("/../platform/activities", response_model=List[PlatformActivity])
 async def get_platform_activities(
     limit: int = Query(default=50, ge=1, le=1000),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Get recent platform activities across all agents.
@@ -625,7 +655,7 @@ async def get_platform_activities(
 
 @router.get("/coordinations/active", response_model=List[AgentCoordination])
 async def get_active_coordinations(
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Get active agent coordinations and handoffs.
@@ -646,7 +676,7 @@ async def get_active_coordinations(
 @router.post("/coordinations")
 async def initiate_handoff(
     handoff_request: Dict[str, Any],
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Initiate a handoff between agents.
@@ -693,7 +723,7 @@ async def initiate_handoff(
 @router.post("/{agent_id}/pause")
 async def pause_agent(
     agent_id: str,
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Pause a specific agent.
@@ -720,7 +750,7 @@ async def pause_agent(
 @router.post("/{agent_id}/resume")
 async def resume_agent(
     agent_id: str,
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Resume a paused agent.
@@ -747,7 +777,7 @@ async def resume_agent(
 @router.post("/{agent_id}/restart")
 async def restart_agent(
     agent_id: str,
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Restart a specific agent.
@@ -778,7 +808,7 @@ async def restart_agent(
 @router.get("/performance")
 async def get_performance_metrics(
     timeframe: str = Query(default="hour", pattern="^(Union[hour, day]|week)$"),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Get performance metrics for agents over specified timeframe.
@@ -812,7 +842,7 @@ async def get_performance_metrics(
 
 @router.get("/../system/health")
 async def get_system_health(
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Get overall system health status.

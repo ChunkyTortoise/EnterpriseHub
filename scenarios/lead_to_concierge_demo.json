@@ -1,0 +1,48 @@
+{
+  "scenario": "Lead -> Jorge -> Lead Bot -> Concierge",
+  "lead": {
+    "contact_id": "demo_lead_1001",
+    "location_id": "demo_location_austin",
+    "name": "Alex Morgan",
+    "phone": "+15125550123",
+    "email": "alex.morgan@example.com"
+  },
+  "jorge_seller_message": "I'm thinking about selling my home in Austin in the next 60 days. What's the process like?",
+  "lead_bot_automation": {
+    "automation_type": "day_3",
+    "trigger_data": {
+      "showing_date": "2026-02-10",
+      "property_id": "prop_demo_2201",
+      "feedback": "Interested in pricing guidance"
+    }
+  },
+  "concierge_context": {
+    "currentPage": "agent-ecosystem",
+    "userRole": "agent",
+    "sessionId": "demo_session_1001",
+    "activeLeads": [
+      {
+        "id": "demo_lead_1001",
+        "name": "Alex Morgan",
+        "status": "qualified"
+      }
+    ],
+    "botStatuses": {
+      "jorge-seller-bot": "active",
+      "lead-bot": "active",
+      "intent-decoder": "active"
+    },
+    "businessMetrics": {
+      "pipelineValue": 847000,
+      "avgResponseTime": "2.3 min",
+      "handoffSuccess": "94%"
+    },
+    "priorityActions": [
+      {
+        "type": "follow_up",
+        "description": "Schedule valuation call within 24 hours"
+      }
+    ]
+  },
+  "concierge_message": "Summarize this lead and recommend the next best action."
+}

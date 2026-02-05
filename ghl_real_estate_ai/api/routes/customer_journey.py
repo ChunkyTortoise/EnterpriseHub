@@ -13,7 +13,7 @@ import uuid
 from ghl_real_estate_ai.agents.customer_journey_orchestrator import get_customer_journey_orchestrator
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.api.middleware.enhanced_auth import get_current_user
+from ghl_real_estate_ai.api.middleware.enhanced_auth import get_current_user_optional
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/api/customer-journey", tags=["customer-journey"])
@@ -504,7 +504,7 @@ async def get_journeys(
     assignedAgent: Optional[str] = Query(default=None),
     limit: int = Query(default=50, ge=1, le=1000),
     offset: int = Query(default=0, ge=0),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Get customer journeys with optional filtering.
@@ -552,7 +552,7 @@ async def get_journeys(
 @router.get("/journeys/{journey_id}", response_model=CustomerJourney)
 async def get_journey(
     journey_id: str,
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Get a specific customer journey by ID.
@@ -579,7 +579,7 @@ async def get_journey(
 @router.post("/journeys", response_model=CustomerJourney)
 async def create_journey(
     request: CreateJourneyRequest,
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Create a new customer journey.
@@ -644,7 +644,7 @@ async def create_journey(
 async def update_journey(
     journey_id: str,
     request: UpdateJourneyRequest,
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Update an existing customer journey.
@@ -690,7 +690,7 @@ async def update_journey(
 @router.delete("/journeys/{journey_id}")
 async def delete_journey(
     journey_id: str,
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Delete a customer journey.
@@ -724,7 +724,7 @@ async def update_step(
     journey_id: str,
     step_id: str,
     updates: Dict[str, Any],
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Update a specific journey step.
@@ -755,7 +755,7 @@ async def complete_step(
     journey_id: str,
     step_id: str,
     output: Optional[Dict[str, Any]] = None,
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Mark a journey step as completed.
@@ -797,7 +797,7 @@ async def complete_step(
 @router.get("/analytics", response_model=JourneyAnalytics)
 async def get_analytics(
     timeframe: str = Query(default="week", pattern="^(Union[day, week]|Union[month, quarter])$"),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Get journey analytics for specified timeframe.
@@ -822,7 +822,7 @@ async def get_analytics(
 @router.get("/templates", response_model=List[JourneyTemplate])
 async def get_templates(
     type: Optional[str] = Query(default=None),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Get journey templates, optionally filtered by type.

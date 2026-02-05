@@ -46,7 +46,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Call real FastAPI backend - Lead Bot automation endpoint
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000'
+    const backendUrl =
+      process.env.ENTERPRISE_API_BASE_URL ||
+      process.env.BACKEND_URL ||
+      'http://localhost:8000'
     const backendRequest = {
       contact_id: body.contact_id,
       location_id: body.location_id,
@@ -127,7 +130,10 @@ export async function GET(request: NextRequest) {
 
   try {
     // Get lead bot status from FastAPI backend
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000'
+    const backendUrl =
+      process.env.ENTERPRISE_API_BASE_URL ||
+      process.env.BACKEND_URL ||
+      'http://localhost:8000'
 
     // Try to get lead bot status (use existing bot status endpoint)
     const statusResponse = await fetch(`${backendUrl}/api/bots/lead-bot/status`, {

@@ -478,6 +478,7 @@ class EnhancedJWTAuth:
 # Initialize enhanced auth
 enhanced_auth = EnhancedJWTAuth()
 security = HTTPBearer()
+optional_security = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
@@ -529,11 +530,36 @@ async def get_current_user(
         )
 
 
+async def get_current_user_optional(
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(optional_security)
+) -> Dict[str, Any]:
+    """
+    Optional authentication dependency for demo-safe endpoints.
+    In non-production environments, missing credentials fall back to a demo user.
+    """
+    if credentials is None:
+        if getattr(settings, "environment", "development") != "production":
+            return {
+                "user_id": "demo-user",
+                "payload": {"role": "demo", "scope": "demo"},
+                "token_id": "demo"
+            }
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    return await get_current_user(request, credentials)
+
+
 # Export enhanced authentication
 __all__ = [
     'EnhancedJWTAuth',
     'enhanced_auth',
     'get_current_user',
+    'get_current_user_optional',
     'AuthenticationError',
     'RateLimitError'
 ]
