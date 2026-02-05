@@ -19,7 +19,7 @@ from ghl_real_estate_ai.services.claude_concierge_orchestrator import (
     IntelligenceScope
 )
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.api.middleware.enhanced_auth import get_current_user
+from ghl_real_estate_ai.api.middleware.enhanced_auth import get_current_user_optional
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/api/claude-concierge", tags=["claude-concierge-integration"])
@@ -224,7 +224,7 @@ def generate_mock_suggestions() -> List[ProactiveSuggestion]:
 @router.post("/chat", response_model=ConciergeResponse)
 async def send_message(
     request: ChatRequest,
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Send a message to Claude Concierge and get a response.
@@ -385,7 +385,7 @@ async def send_message(
 
 @router.get("/insights", response_model=List[ConciergeInsight])
 async def get_realtime_insights(
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Get real-time insights from the concierge.
@@ -446,7 +446,7 @@ async def get_realtime_insights(
 
 @router.get("/suggestions", response_model=List[ProactiveSuggestion])
 async def get_proactive_suggestions(
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Get proactive suggestions from the concierge.
@@ -514,7 +514,7 @@ async def get_proactive_suggestions(
 @router.post("/suggestions/{suggestion_id}/apply")
 async def apply_suggestion(
     suggestion_id: str,
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Apply a proactive suggestion.
@@ -561,7 +561,7 @@ async def apply_suggestion(
 async def dismiss_suggestion(
     suggestion_id: str,
     dismiss_reason: Dict[str, str],
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Dismiss a proactive suggestion.
@@ -596,7 +596,7 @@ async def dismiss_suggestion(
 
 @router.get("/analyze/platform")
 async def analyze_platform_performance(
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Analyze overall platform performance.
@@ -641,7 +641,7 @@ async def analyze_platform_performance(
 
 @router.get("/analyze/coordination")
 async def analyze_agent_coordination(
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Analyze agent coordination efficiency.
@@ -676,7 +676,7 @@ async def analyze_agent_coordination(
 
 @router.get("/analyze/journeys")
 async def analyze_customer_journeys(
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Analyze customer journey performance.
@@ -716,7 +716,7 @@ async def update_context(
 
     context_update: Dict[str, Any],
 
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 
 ):
 
@@ -792,7 +792,7 @@ async def get_context(
 
     session_id: str,
 
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 
 ):
 

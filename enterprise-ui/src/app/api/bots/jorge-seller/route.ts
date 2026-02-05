@@ -46,7 +46,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Call unified Jorge Seller Bot backend with enterprise features
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000'
+    const backendUrl =
+      process.env.ENTERPRISE_API_BASE_URL ||
+      process.env.BACKEND_URL ||
+      'http://localhost:8000'
 
     const response = await fetch(`${backendUrl}/api/jorge-seller/process`, {
       method: 'POST',
@@ -128,7 +131,10 @@ export async function GET(request: NextRequest) {
 
   try {
     // Get seller state from FastAPI backend
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000'
+    const backendUrl =
+      process.env.ENTERPRISE_API_BASE_URL ||
+      process.env.BACKEND_URL ||
+      'http://localhost:8000'
 
     // Try to get intent analysis first (this gives us FRS/PCS scores and classification)
     const intentResponse = await fetch(`${backendUrl}/api/intent-decoder/${contact_id}/score`, {
