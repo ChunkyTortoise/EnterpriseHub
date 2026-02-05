@@ -18,36 +18,22 @@
 - **Proactive Retention Scripts:** Claude generates high-conversion SMS/Email scripts for leads flagged as high-risk in the Churn Dashboard.
 - **Prompt Lab:** Experiment and optimize your AI's personality using Claude's own reasoning engine.
 
-### 5 Integrated Hubs (All-in-One Command Center)
+### Focused Jorge Command Center (Single Dashboard)
 
-1.  **🏢 Executive Command Center**
-    *   **Purpose:** Bird's-eye view of your business health.
-    *   **Key Features:** Multi-tenant dashboard, real-time revenue tracking, system health monitoring, and strategic AI insights.
-
-2.  **🧠 Lead Intelligence Hub**
-    *   **Purpose:** Deep understanding of every prospect.
-    *   **Key Features:** AI-powered lead scoring (0-100), real-time engagement metrics, behavioral analysis, intent detection, and "Hot Lead" identification.
-
-3.  **🤖 Automation Studio**
-    *   **Purpose:** Control center for your AI workforce.
-    *   **Key Features:** Visual workflow builder, AI qualification toggle (ON/OFF), auto-followup sequence management, and behavioral trigger configuration.
-
-4.  **💰 Sales Copilot**
-    *   **Purpose:** Your personal deal-closing assistant.
-    *   **Key Features:** Deal pipeline management, AI document generator (CMA, Listings), meeting prep assistant, and Commission & ROI calculator.
-
-5.  **📈 Ops & Optimization**
-    *   **Purpose:** Continuous improvement for your team.
-    *   **Key Features:** Quality assurance scoring, team performance benchmarks, revenue attribution analysis, and automated agent coaching.
+**4 Tabs:**
+1. **Lead Pipeline** — New → Qualifying → Hot/Warm/Cold
+2. **Bot Activity** — Recent conversations and response activity
+3. **Temperature Map** — Hot/Warm/Cold breakdown and trend
+4. **Follow-Up Queue** — Upcoming + overdue follow-ups
 
 ---
 
 ## ⚡ Quick Start Guide
 
 1.  **Access the System:** Click the **Deployed URL** above to open your secure command center.
-2.  **Select a Hub:** Use the sidebar navigation to switch between the 5 hubs.
+2.  **Open the Dashboard:** Use the sidebar to switch between the 4 tabs.
 3.  **Explore Data:** The system is pre-loaded with demonstration data (leads, conversations, metrics) to showcase capabilities immediately.
-4.  **Test AI:** Navigate to the **Lead Intelligence Hub**, select a lead like "Sarah Johnson", and see the AI analyze her intent and score her in real-time.
+4.  **Test AI:** Navigate to **Lead Pipeline** and review recent lead activity and temperature.
 
 ---
 
@@ -60,8 +46,15 @@ To connect this AI system to your live GoHighLevel account:
 2.  Create a new workflow (e.g., "AI Lead Route").
 3.  Add a **Webhook** action.
 4.  Method: `POST`
-5.  URL: `[Your Streamlit App URL]/webhooks/ghl` (or your custom domain)
+5.  URL: `[Your Streamlit App URL]/ghl/webhook` (or your custom domain)
 6.  Save and Publish.
+
+### Step 1b: Tag-Added Webhook (Initial Outreach)
+1.  Add a **Tag Added** webhook in GHL.
+2.  Method: `POST`
+3.  URL: `[Your Streamlit App URL]/ghl/tag-webhook`
+4.  Trigger: Tag = `Needs Qualifying`
+5.  Save and Publish.
 
 ### Step 2: Import Leads (Optional)
 *   Use the **Ops & Optimization** hub to upload existing CSV lead lists for batch scoring.

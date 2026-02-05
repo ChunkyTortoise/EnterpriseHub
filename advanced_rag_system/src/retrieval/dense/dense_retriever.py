@@ -1,9 +1,7 @@
 """Production dense retrieval using vector embeddings and similarity search.
 
 This module provides the DenseRetriever class that performs semantic search
-using OpenAI embeddings and vector storage. Uses ChromaDB when available,
-falls back to InMemoryVectorStore when ChromaDB has dependency conflicts
-(e.g. pydantic v2 on Python 3.14).
+using OpenAI embeddings and ChromaDB vector storage.
 """
 
 from __future__ import annotations
@@ -19,39 +17,29 @@ from src.core.types import DocumentChunk, SearchResult
 from src.embeddings.openai_provider import OpenAIEmbeddingProvider
 from src.embeddings.base import EmbeddingConfig
 from src.vector_store.base import VectorStoreConfig, SearchOptions, VectorStore
-from src.vector_store.in_memory_store import InMemoryVectorStore
+from src.vector_store.chroma_store import ChromaVectorStore
 
 logger = logging.getLogger(__name__)
 
-# Lazy ChromaDB availability check
-_CHROMADB_AVAILABLE: Optional[bool] = None
-
-
-def _check_chromadb() -> bool:
-    """Check if ChromaDB can be imported without triggering pydantic errors."""
-    global _CHROMADB_AVAILABLE
-    if _CHROMADB_AVAILABLE is None:
-        try:
-            from src.vector_store.chroma_store import ChromaVectorStore  # noqa: F401
-            _CHROMADB_AVAILABLE = True
-        except (ImportError, Exception):
-            _CHROMADB_AVAILABLE = False
-    return _CHROMADB_AVAILABLE
 
 
 def _create_vector_store(config: VectorStoreConfig, persist_directory: Optional[str] = None) -> VectorStore:
-    """Create the best available vector store.
+    """Create production ChromaDB vector store.
 
-    Tries ChromaDB first for persistence, falls back to InMemoryVectorStore.
+    Args:
+        config: Vector store configuration
+        persist_directory: Directory for persistent storage
+
+    Returns:
+        ChromaVectorStore instance
+
+    Raises:
+        RetrievalError: If ChromaDB store creation fails
     """
-    if _check_chromadb():
-        try:
-            from src.vector_store.chroma_store import ChromaVectorStore
-            return ChromaVectorStore(config, persist_directory=persist_directory)
-        except Exception as e:
-            logger.warning("ChromaDB store creation failed (%s), using InMemoryVectorStore.", e)
-
-    return InMemoryVectorStore(config)
+    try:
+        return ChromaVectorStore(config, persist_directory=persist_directory)
+    except Exception as e:
+        raise RetrievalError(f"Failed to create ChromaDB vector store: {str(e)}") from e
 
 
 class DenseRetriever:
@@ -59,7 +47,7 @@ class DenseRetriever:
 
     Provides semantic search capabilities using:
     - OpenAI embeddings for text-to-vector conversion
-    - ChromaDB or InMemoryVectorStore for vector storage
+    - ChromaDB for persistent vector storage
     - Async operations for optimal performance
 
     Example:
@@ -124,7 +112,7 @@ class DenseRetriever:
             self._embedding_provider = OpenAIEmbeddingProvider(embedding_config)
             await self._embedding_provider.initialize()
 
-            # Initialize vector store (ChromaDB or InMemory fallback)
+            # Initialize vector store (ChromaDB)
             vector_config = VectorStoreConfig(
                 collection_name=self._collection_name,
                 dimension=self._dimensions,
