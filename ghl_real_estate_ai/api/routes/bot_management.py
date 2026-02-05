@@ -300,8 +300,8 @@ async def stream_bot_conversation(
             # Track metrics in background
             background_tasks.add_task(_track_conversation_metrics, bot_id, processing_time)
             # Persist conversation messages
-                await session_manager.add_message(resolved_conversation_id, "user", request.content)
-                await session_manager.add_message(resolved_conversation_id, "bot", bot_response)
+            await session_manager.add_message(resolved_conversation_id, "user", request.content)
+            await session_manager.add_message(resolved_conversation_id, "bot", bot_response)
 
         except Exception as e:
             logger.error(f"Streaming error for {bot_id}: {e}")
