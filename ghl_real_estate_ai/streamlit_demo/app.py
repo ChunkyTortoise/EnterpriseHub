@@ -5,6 +5,7 @@ Main Application with 5 Core Hubs
 from dotenv import load_dotenv
 load_dotenv()
 
+import os
 import warnings
 import sys
 import pandas as pd
@@ -14,6 +15,9 @@ import datetime
 import asyncio
 import json
 from pathlib import Path
+
+# DEMO_MODE: Run the dashboard with zero external dependencies (no DB, Redis, or API keys)
+DEMO_MODE = os.getenv("DEMO_MODE", "").lower() in ("true", "1")
 
 # Enterprise Real Estate AI Ecosystem
 # Triggering reload: 2026-01-12T19:10:45
@@ -155,11 +159,15 @@ try:
     from ghl_real_estate_ai.services.claude_assistant_optimized import ClaudeAssistantOptimized
     
     # Initialize OPTIMIZED Claude Assistant (75% faster responses)
-    claude = ClaudeAssistantOptimized()
-    
+    if DEMO_MODE:
+        claude = MockService()
+    else:
+        claude = ClaudeAssistantOptimized()
+
     # PERFORMANCE OPTIMIZATION: Initialize cache warming service
-    from ghl_real_estate_ai.services.performance_optimization_service import get_performance_service
-    performance_service = get_performance_service()
+    if not DEMO_MODE:
+        from ghl_real_estate_ai.services.performance_optimization_service import get_performance_service
+        performance_service = get_performance_service()
 
     # Import Claude Platform Companion
     try:
@@ -501,15 +509,19 @@ def get_services(market="Austin"):
     listings_path = Path(__file__).parent.parent / "data" / "knowledge_base" / listings_file
 
     # Safe import of orchestrator services with fallback
-    try:
-        from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
-        from ghl_real_estate_ai.services.claude_automation_engine import ClaudeAutomationEngine
-        claude_orchestrator = get_claude_orchestrator()
-        claude_automation = ClaudeAutomationEngine()
-    except ImportError as e:
-        print(f"Warning: Claude orchestrator services not available: {e}")
+    if DEMO_MODE:
         claude_orchestrator = MockService()
         claude_automation = MockService()
+    else:
+        try:
+            from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
+            from ghl_real_estate_ai.services.claude_automation_engine import ClaudeAutomationEngine
+            claude_orchestrator = get_claude_orchestrator()
+            claude_automation = ClaudeAutomationEngine()
+        except ImportError as e:
+            print(f"Warning: Claude orchestrator services not available: {e}")
+            claude_orchestrator = MockService()
+            claude_automation = MockService()
 
     services_dict = {
         "lead_scorer": LeadScorer(),
