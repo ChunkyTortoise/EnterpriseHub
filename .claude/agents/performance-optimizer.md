@@ -38,7 +38,7 @@ latency_targets:
 - **Claude Assistant Caching**: Cache frequent AI responses and explanations
 
 ### **Real Estate Data Processing**
-- **Property Matching**: Optimize geospatial queries for Austin market
+- **Property Matching**: Optimize geospatial queries for Rancho Cucamonga market
 - **Lead Scoring Pipeline**: Batch processing for 10,000+ leads/hour
 - **Event Streaming**: WebSocket optimization for real-time updates
 

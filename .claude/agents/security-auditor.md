@@ -40,8 +40,10 @@ CHECKS:
 - **Least Privilege**: Services should only have the minimum permissions necessary.
 
 ## Integration with Other Agents
-- **TDD Guardian**: Validate that security tests are written first.
+- **Integration Test Workflow**: Validate that security tests cover auth and data paths.
 - **Architecture Sentinel**: Review architectural security implications.
+- **Database Migration**: Verify PII encryption columns and access control in schema changes.
+- **API Consistency**: Ensure auth decorators and rate limiting on all endpoints.
 
 ## EnterpriseHub-Specific Security Focus
 - **GHL API Security**: Validate webhook signatures and rate limiting
