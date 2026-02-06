@@ -26,8 +26,12 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 import pandas as pd
 import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
+try:
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+except ImportError:
+    sns = None
+    plt = None
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Tuple
 import json

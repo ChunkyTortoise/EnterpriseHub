@@ -119,8 +119,8 @@ class RevenueEvent:
     subscription_id: Optional[str]
     plan_type: Optional[str]
     billing_cycle: Optional[str]  # monthly, quarterly, yearly
-    commission_rate: Optional[float] = None
     timestamp: datetime
+    commission_rate: Optional[float] = None
     attribution_window_days: int = 90
     custom_attributes: Dict[str, Any] = None
 

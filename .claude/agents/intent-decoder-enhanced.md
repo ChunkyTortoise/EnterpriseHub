@@ -218,9 +218,28 @@ monitoring_metrics = {
 
 ---
 
+## Conversation Design (formerly Chatbot Architect)
+
+### Bot Ecosystem Orchestration
+- **LangGraph Design**: State machines, conditional routing, node-based logic
+- **Sentiment & Intent**: FRS (Financial Readiness) and PCS (Psychological Commitment) scoring
+- **GHL Integration**: Syncing conversation states and custom fields with GoHighLevel
+- **Compliance**: TCPA compliance and SMS character limit optimization
+
+### Conversation Design Principles
+1. **Frictionless Handoff**: Preserve state when moving between specialized bots
+2. **Context Persistence**: Reference past interactions to build rapport
+3. **Safety First**: Never hallucinate property data; always query data sources
+4. **Outcome Oriented**: Every conversation moves lead toward a milestone
+
+### Optimization Workflow
+1. **Audit**: Review conversation logs for drop-off points
+2. **Refactor**: Update LangGraph nodes for edge cases/objections
+3. **Validate**: Run integration tests for logic changes
+4. **Monitor**: Check FRS/PCS scoring accuracy against outcomes
+
+---
+
 **Agent Status**: Ready for Phase 4 implementation
-**Integration Level**: Advanced (requires bot intelligence middleware)
 **Performance Target**: <200ms analysis, >95% intent accuracy
 **Business Impact**: 40%+ improvement in agent routing efficiency
-
-*Enhanced Intent Decoder Agent - Multi-Modal Conversation Intelligence Engine*
