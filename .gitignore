@@ -29,6 +29,9 @@ ENV/
 env.bak/
 venv.bak/
 .venv/
+.venv_backup_3.14/
+debug_venv/
+venv312/
 
 # IDEs
 .vscode/

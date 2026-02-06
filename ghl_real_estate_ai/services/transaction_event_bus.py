@@ -681,4 +681,4 @@ async def create_event_bus(redis_url: str = "redis://localhost:6379") -> Transac
 
 
 # Type alias for better code readability
-AsyncIterator = asyncio.Iterator
+from collections.abc import AsyncIterator

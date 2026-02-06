@@ -528,6 +528,7 @@ MARKET_CONFIG = market_manager.get_market_config()
 
 __all__ = [
     "JorgeSellerConfig",
+    "JorgeConfig",
     "JorgeEnvironmentSettings",
     "JorgeMarketManager",
     "settings",
@@ -539,3 +540,6 @@ __all__ = [
     "CURRENT_MARKET",
     "MARKET_CONFIG"
 ]
+
+# Backward-compatible alias used by prediction, compliance, intelligence modules
+JorgeConfig = JorgeSellerConfig

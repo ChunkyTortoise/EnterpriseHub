@@ -6,12 +6,23 @@ AFTER: 65 lines with reusable primitives (64% reduction)
 
 import streamlit as st
 import plotly.graph_objects as go
-from components.primitives import (
-    render_obsidian_card, CardConfig,
-    render_obsidian_metric, MetricConfig, 
-    render_obsidian_badge, BadgeConfig,
-    lead_temperature_badge, status_badge
-)
+try:
+    from ghl_real_estate_ai.streamlit_demo.components.primitives import (
+        render_obsidian_card, CardConfig,
+        render_obsidian_metric, MetricConfig,
+        render_obsidian_badge, BadgeConfig,
+        lead_temperature_badge, status_badge
+    )
+except ImportError:
+    from ghl_real_estate_ai.streamlit_demo.components.primitives.card import render_obsidian_card, CardConfig
+    from ghl_real_estate_ai.streamlit_demo.components.primitives.metric import render_obsidian_metric, MetricConfig
+    from ghl_real_estate_ai.streamlit_demo.components.primitives.badge import render_obsidian_badge, BadgeConfig
+
+    def lead_temperature_badge(temp, **kwargs):
+        return render_obsidian_badge(BadgeConfig(text=temp, variant="info"))
+
+    def status_badge(status, **kwargs):
+        return render_obsidian_badge(BadgeConfig(text=status, variant="default"))
 
 
 @st.cache_data(ttl=300)

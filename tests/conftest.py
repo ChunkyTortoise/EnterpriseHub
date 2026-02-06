@@ -476,6 +476,8 @@ def disable_compliance_guard(mocker):
 @pytest.fixture(autouse=True)
 def force_mock_llm(monkeypatch):
     monkeypatch.setenv("USE_MOCK_LLM", "true")
+    monkeypatch.setenv("SMS_COMPLIANCE_USE_DB", "false")
+    monkeypatch.setenv("SMS_COMPLIANCE_ALLOW_DDL", "false")
     yield
 
 

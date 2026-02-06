@@ -20,7 +20,20 @@ from ghl_real_estate_ai.streamlit_demo.components.shap_explainability_dashboard 
     render_shap_explainability_dashboard
 )
 from ghl_real_estate_ai.services.ml_lead_analyzer import get_ml_enhanced_lead_analyzer_async
-from ghl_real_estate_ai.streamlit_demo.components.primitives.async_utils import run_async
+try:
+    from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
+except ImportError:
+    import asyncio as _asyncio
+    def run_async(coro):
+        try:
+            loop = _asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+        if loop and loop.is_running():
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                return pool.submit(_asyncio.run, coro).result()
+        return _asyncio.run(coro)
 
 def render_lead_intelligence_with_shap_integration(
     selected_lead_name: str,

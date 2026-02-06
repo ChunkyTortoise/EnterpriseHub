@@ -317,46 +317,31 @@ Alert fatigue prevention:
 - Weekly alert review to tune thresholds
 ```
 
-## Integration with Other Agents
+## Market Intelligence Analysis (formerly Market Intelligence Specialist)
 
-### Handoff to LLM Cost Optimizer
-When AI cost KPIs exceed thresholds:
-```
-@llm-cost-optimizer: AI cost KPIs need attention:
-- [Specific cost metrics exceeding targets]
-- [Token consumption trends]
-- [Recommended optimization areas]
-```
+### Market Analysis Workflow
+1. **Gather**: Fetch current market stats for the target area
+2. **Compare**: Benchmark against historical data or neighboring sub-markets
+3. **Synthesize**: Identify core narrative (e.g., "Inventory spiking, creating buyer window")
+4. **Recommend**: Suggest specific actions with data backing
 
-### Handoff to Dashboard Design Specialist
-When new KPIs need visualization:
-```
-@dashboard-design-specialist: New KPIs ready for dashboard integration:
-- [KPI specifications with chart type recommendations]
-- [Data refresh requirements]
-- [Page layout suggestions]
-```
+### Market Analysis KPIs
+- **Data Freshness**: <24 hours for active listings (alert: >48h)
+- **Property Completeness**: >95% required fields populated
+- **CMA Accuracy**: <5% variance estimated vs actual sale price
+- **Prospecting Efficiency**: >40% improvement with intelligence vs without
+- **Market Prediction Accuracy**: >70% correct direction predictions
 
-### Handoff to BI Performance Specialist
-When system health KPIs indicate issues:
-```
-@bi-performance-specialist: System health KPIs flagged:
-- [Performance metrics exceeding thresholds]
-- [Capacity concerns identified]
-- [Investigation priorities]
-```
+### Geospatial & Financial Analysis
+- Neighborhood boundaries, school district impacts, development corridors
+- Cap rate calculations, ROI projections, appreciation forecasting
+- Absorption rates, days on market (DOM), supply-side constraints
 
 ## Success Metrics
 - **KPI Coverage**: 100% of business questions answered by defined KPIs
-- **Alert Accuracy**: <5% false positive rate on alerts
-- **Data Freshness**: All KPIs within defined refresh targets
-- **Adoption**: 100% of defined KPIs displayed on dashboards
-- **Threshold Calibration**: Quarterly review with <10% threshold adjustments
+- **Alert Accuracy**: <5% false positive rate
+- **Threshold Calibration**: Quarterly review with <10% adjustments
 
 ---
 
-*This agent operates with the principle: "If you can't measure it, you can't improve it. If you measure the wrong thing, you'll improve the wrong thing."*
-
-**Last Updated**: 2026-02-01
-**Compatible with**: Claude Code v2.0+
-**Dependencies**: LLM Cost Optimizer, Dashboard Design Specialist, BI Performance Specialist
+**Last Updated**: 2026-02-05

@@ -1,27 +1,10 @@
 {
   "mcpServers": {
-    "github": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-github"
-      ],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "REDACTED_GITHUB_PATE"
-      }
-    },
     "memory": {
       "command": "npx",
       "args": [
         "-y",
         "@modelcontextprotocol/server-memory"
-      ]
-    },
-    "sequential-thinking": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-sequential-thinking"
       ]
     }
   }

@@ -37,12 +37,30 @@ from ghl_real_estate_ai.services.shap_explainer_service import (
     SHAPExplainerService
 )
 from ghl_real_estate_ai.services.ml_lead_analyzer import get_ml_enhanced_lead_analyzer_async
-from ghl_real_estate_ai.streamlit_demo.components.primitives.obsidian_cards import (
-    render_obsidian_card, 
+from ghl_real_estate_ai.streamlit_demo.components.primitives.card import (
+    render_obsidian_card,
     CardConfig,
-    create_metric_card
 )
-from ghl_real_estate_ai.streamlit_demo.components.primitives.async_utils import run_async
+try:
+    from ghl_real_estate_ai.streamlit_demo.components.primitives.card import create_metric_card
+except ImportError:
+    def create_metric_card(title, value, **kwargs):
+        render_obsidian_card(title=title, content=f"<p>{value}</p>", config=CardConfig())
+
+try:
+    from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
+except ImportError:
+    import asyncio as _asyncio
+    def run_async(coro):
+        try:
+            loop = _asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+        if loop and loop.is_running():
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                return pool.submit(_asyncio.run, coro).result()
+        return _asyncio.run(coro)
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
