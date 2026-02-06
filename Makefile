@@ -1,6 +1,6 @@
 # Makefile for Enterprise Hub
 
-.PHONY: help install install-dev test lint format type-check clean run build
+.PHONY: help install install-dev test lint format type-check clean run demo build
 
 help:  ## Show this help message
 	@echo 'Usage: make [target]'
@@ -46,6 +46,9 @@ clean:  ## Clean up build artifacts and cache
 
 run:  ## Run the Streamlit app
 	streamlit run app.py
+
+demo:  ## Run in demo mode (no API keys, DB, or Redis required)
+	DEMO_MODE=true streamlit run ghl_real_estate_ai/streamlit_demo/app.py
 
 build:  ## Verify the app can be built/imported
 	python -c "import app; print('✓ App imported successfully')"
