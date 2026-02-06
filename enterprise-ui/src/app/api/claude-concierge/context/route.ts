@@ -33,7 +33,10 @@ export async function POST(request: NextRequest) {
     }
 
     // For POST requests (context analysis), use appropriate analysis endpoint based on contextType
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000'
+    const backendUrl =
+      process.env.ENTERPRISE_API_BASE_URL ||
+      process.env.BACKEND_URL ||
+      'http://localhost:8000'
     let endpoint = '/api/claude-concierge/analyze/platform' // Default
 
     switch (body.contextType) {
@@ -115,7 +118,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Get context from unified backend
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000'
+    const backendUrl =
+      process.env.ENTERPRISE_API_BASE_URL ||
+      process.env.BACKEND_URL ||
+      'http://localhost:8000'
 
     const response = await fetch(`${backendUrl}/api/claude-concierge/context/${sessionId}`, {
       method: 'GET',

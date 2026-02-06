@@ -322,6 +322,26 @@ class EnhancedGHLClient(GHLClient):
     async def create_contact(self, contact_data: Dict[str, Any], 
                            lead_id: str = None) -> GHLContact:
         """Create new contact in GHL."""
+        if settings.test_mode:
+            mock_id = f"demo_{int(datetime.utcnow().timestamp())}"
+            logger.info(
+                "[TEST MODE] Returning mocked contact for create_contact",
+                extra={"contact_id": mock_id, "test_mode": True}
+            )
+            return GHLContact(
+                id=mock_id,
+                first_name=contact_data.get("first_name"),
+                last_name=contact_data.get("last_name"),
+                name=contact_data.get("name") or f"{contact_data.get('first_name', '')} {contact_data.get('last_name', '')}".strip(),
+                email=contact_data.get("email"),
+                phone=contact_data.get("phone"),
+                tags=contact_data.get("tags", []),
+                custom_fields=contact_data.get("custom_fields", {}),
+                source=contact_data.get("source", "Service6-Lead-Engine"),
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+            )
+
         payload = {
             "locationId": self.config.location_id,
             "firstName": contact_data.get("first_name", ""),

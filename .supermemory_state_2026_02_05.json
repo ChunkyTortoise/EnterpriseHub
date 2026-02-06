@@ -1,10 +1,10 @@
 {
   "project": "EnterpriseHub",
-  "version": "5.1.1",
-  "timestamp": "2026-02-05T08:15:00Z",
+  "version": "5.1.2",
+  "timestamp": "2026-02-05T22:25:00Z",
   "session_id": "p0-execution-2026-02-05",
-  "status": "p0-execution",
-  "completion_overall": "86%",
+  "status": "demo-integration-ready",
+  "completion_overall": "90%",
   "projects": [
     {
       "name": "Jorge Real Estate AI Platform",
@@ -21,13 +21,16 @@
         "test_coverage": "80%+"
       },
       "recent_work": [
+        "Render blueprint aligned for API + UI staging",
+        "Smoke tests passing for core agent endpoints",
+        "Agent status endpoint added for dashboard",
+        "Enterprise UI connected to real FastAPI endpoints",
         "Fly.io deployment configuration completed",
         "GHL webhook authentication fixed",
         "Docker multi-stage build optimized",
         "Fixed database service recursion during initialization",
         "Aligned Redis jobstore configuration with REDIS_URL",
-        "Removed non-immutable index predicates in DB indexes",
-        "Hardened Docker startup and health checks"
+        "Removed non-immutable index predicates in DB indexes"
       ],
       "remaining_work": [
         "50+ TODOs (prioritized)",
@@ -92,8 +95,8 @@
       "known_issues": [
         "~50 TODOs catalogued",
         "Database integration incomplete",
-        "Mock-to-real API transitions needed",
-        "Mobile services partially implemented"
+        "Mobile services partially implemented",
+        "Remaining UI modules still use mocked endpoints"
       ],
       "todo_categories": {
         "database_integration": 25,
@@ -220,10 +223,9 @@
   },
   "next_actions": {
     "immediate": [
-      "Review and approve finalization plan",
-      "Choose execution strategy (parallel vs sequential)",
-      "Start Project 1 (Jorge Platform) with agent chat script",
-      "Validate Docker build and Fly.io staging deployment"
+      "Run demo script with deterministic scenario data",
+      "Deploy staging on Render (API + UI) with ENTERPRISE_API_BASE_URL",
+      "Finalize client demo narrative and deck outline"
     ],
     "short_term_week1": [
       "Complete Jorge Platform deployment (Days 1-5)",
@@ -256,15 +258,20 @@
       "path": ".supermemory_state_2026_02_05.json",
       "type": "memory",
       "description": "Supermemory-compatible project state"
+    },
+    {
+      "path": "CLIENT_VALUE_EVALUATION_PROMPT.md",
+      "type": "prompt",
+      "description": "Client value evaluation prompt and file map"
     }
   ],
   "git_state": {
     "branch": "main",
     "modified_files": 0,
     "recent_commits": [
-      "fd20c0c8b: Fly.io config and slim production dependencies",
-      "25fa49c38: Trigger deploy after trial reset",
-      "d3a49f87b: GHL webhook authentication fixed"
+      "2768a82: relax demo auth and concierge smoke tests",
+      "d2f9c63: demo compose deps, smoke tests, render blueprint",
+      "1b188dd: connect enterprise UI to real agents and demo assets"
     ],
     "uncommitted_changes": []
   },

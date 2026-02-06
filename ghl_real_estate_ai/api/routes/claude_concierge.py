@@ -20,7 +20,7 @@ from ghl_real_estate_ai.services.claude_concierge_orchestrator import (
     IntelligenceScope
 )
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.api.auth import get_current_user
+from ghl_real_estate_ai.api.middleware.enhanced_auth import get_current_user_optional
 from ghl_real_estate_ai.api.models import User
 
 logger = get_logger(__name__)
@@ -209,7 +209,7 @@ async def generate_contextual_guidance(
     mode: str = "proactive",
     scope: Optional[str] = None,
     orchestrator: ClaudeConciergeOrchestrator = Depends(get_concierge_orchestrator),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_optional)
 ):
     """
     Generate intelligent contextual guidance based on current platform state.
@@ -242,7 +242,7 @@ async def generate_contextual_guidance(
 async def generate_live_guidance(
     request: LiveGuidanceRequest,
     orchestrator: ClaudeConciergeOrchestrator = Depends(get_concierge_orchestrator),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_optional)
 ):
     """
     Generate intelligent guidance using real-time GHL data.
@@ -273,7 +273,7 @@ async def generate_live_guidance(
 async def chat_with_concierge(
     request: ChatRequest,
     orchestrator: ClaudeConciergeOrchestrator = Depends(get_concierge_orchestrator),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_optional)
 ):
     """
     Interactive chat with the omnipresent concierge.
@@ -353,7 +353,7 @@ async def chat_with_concierge(
 async def provide_real_time_coaching(
     request: CoachingRequest,
     orchestrator: ClaudeConciergeOrchestrator = Depends(get_concierge_orchestrator),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_optional)
 ):
     """
     Provide real-time coaching and guidance for specific situations.
@@ -378,7 +378,7 @@ async def provide_real_time_coaching(
 async def coordinate_bot_ecosystem(
     request: BotHandoffRequest,
     orchestrator: ClaudeConciergeOrchestrator = Depends(get_concierge_orchestrator),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_optional)
 ):
     """
     Coordinate the bot ecosystem for optimal outcomes.
@@ -402,7 +402,7 @@ async def coordinate_bot_ecosystem(
 async def generate_mobile_field_assistance(
     request: FieldAssistanceRequest,
     orchestrator: ClaudeConciergeOrchestrator = Depends(get_concierge_orchestrator),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_optional)
 ):
     """
     Generate mobile-specific field assistance for property visits and client meetings.
@@ -426,7 +426,7 @@ async def generate_mobile_field_assistance(
 async def provide_client_presentation_support(
     request: PresentationSupportRequest,
     orchestrator: ClaudeConciergeOrchestrator = Depends(get_concierge_orchestrator),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_optional)
 ):
     """
     Provide intelligent support for client presentations with talking points and strategies.
@@ -456,7 +456,7 @@ async def learn_from_user_decision(
     request: LearningRequest,
     background_tasks: BackgroundTasks,
     orchestrator: ClaudeConciergeOrchestrator = Depends(get_concierge_orchestrator),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_optional)
 ):
     """
     Learn from Jorge's decisions to improve future recommendations.
@@ -484,7 +484,7 @@ async def predict_jorge_preference(
     situation: Dict[str, Any],
     request: PlatformContextRequest,
     orchestrator: ClaudeConciergeOrchestrator = Depends(get_concierge_orchestrator),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_optional)
 ):
     """
     Predict what Jorge would prefer in a given situation based on learned patterns.
@@ -561,7 +561,7 @@ async def get_capabilities():
 @router.get("/metrics")
 async def get_orchestrator_metrics(
     orchestrator: ClaudeConciergeOrchestrator = Depends(get_concierge_orchestrator),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_optional)
 ):
     """Get performance metrics for the concierge orchestrator."""
     try:
@@ -586,7 +586,7 @@ async def get_orchestrator_metrics(
 async def reset_concierge_session(
     session_id: str,
     orchestrator: ClaudeConciergeOrchestrator = Depends(get_concierge_orchestrator),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_optional)
 ):
     """Reset a concierge session for debugging or user request."""
     try:
