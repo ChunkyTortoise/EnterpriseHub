@@ -1,9 +1,9 @@
 # Jorge Bot Finalization Spec
 
-**Version**: 1.0
+**Version**: 1.1
 **Branch**: `feature/advanced-rag-benchmarks`
-**Status**: 128 bot tests passing (Lead: 14, Buyer: 50, Seller: 64)
-**Date**: 2026-02-03
+**Status**: 142 bot tests passing (Lead: 23, Buyer: 50, Seller: 64, Handoff: 16)
+**Date**: 2026-02-06
 
 ---
 
@@ -50,11 +50,16 @@ Incoming GHL Webhook (POST /ghl/webhook)
     |     Tags: Hot-Buyer, Warm-Buyer, Cold-Buyer, Buyer-Qualified
     |     Compliance: audit_message() with buyer fallback
     |
-    +-- DEFAULT LEAD FALLBACK (lines 462-816)
-          Route: ConversationManager (Claude orchestration)
-          Scoring: LeadScorer with temperature tags
-          Actions: prepare_ghl_actions() -> tags, custom fields, workflows
-          Background: dynamic pricing, billing usage
+    +-- LEAD ROUTING (lines 462-650) **[NEW - COMPLETE]**
+    |     Condition: LEAD_ACTIVATION_TAG in tags AND JORGE_LEAD_MODE=true
+    |     Bot: ConversationManager.generate_response()
+    |     Tags: Hot-Lead, Warm-Lead, Cold-Lead
+    |     Compliance: audit_message() with lead fallback
+    |     SMS Length Guard: 320-char truncation with smart boundaries
+    |     Handoff: Evaluate lead→buyer/seller at 0.7 confidence
+    |
+    +-- DEFAULT FALLBACK (no mode matched)
+          Route: Minimal response, no AI processing
 ```
 
 ### 1.2 Bot Entry Points
@@ -108,6 +113,162 @@ if status == ComplianceStatus.BLOCKED:
 
 **Seller fallback**: `"Let's stick to the facts about your property. What price are you looking to get?"`
 **Buyer fallback**: `"I'd love to help you find your next home. What's most important to you in a property?"`
+**Lead fallback**: `"Thanks for reaching out! I'd love to help. What are you looking for in your next home?"`
+
+---
+
+## 1.5 Lead Bot Handoff Integration
+
+The [`JorgeHandoffService`](ghl_real_estate_ai/services/jorge/jorge_handoff_service.py:33) enables cross-bot handoffs when intent signals exceed confidence thresholds.
+
+### Handoff Flow
+
+```
+Lead Bot Processing
+    |
+    +-- Extract intent signals (buyer_intent_score, seller_intent_score)
+    |     via JorgeHandoffService.extract_intent_signals()
+    |
+    +-- Evaluate handoff decision
+    |     if buyer_score >= 0.7 AND buyer_score > seller_score
+    |         -> Handoff to Buyer Bot
+    |     elif seller_score >= 0.7 AND seller_score > buyer_score
+    |         -> Handoff to Seller Bot
+    |
+    +-- Execute handoff actions
+          1. Remove source activation tag
+          2. Add target activation tag
+          3. Add handoff tracking tag
+          4. Log analytics event
+```
+
+### Confidence Thresholds
+
+| Direction | Threshold | Trigger Phrases |
+|-----------|-----------|----------------|
+| Lead → Buyer | 0.7 | "I want to buy", "budget $", "pre-approval", "looking to buy" |
+| Lead → Seller | 0.7 | "Sell my house", "home worth", "CMA", "list my home" |
+| Buyer → Seller | 0.8 | "Need to sell first", "sell before buying" |
+| Seller → Buyer | 0.6 | "Also looking to buy", "need to find a new place" |
+
+### Handoff Actions
+
+When a handoff executes, the following GHL actions are generated:
+
+| Action | Description |
+|--------|-------------|
+| `remove_tag` | Removes source bot's activation tag |
+| `add_tag` | Adds target bot's activation tag |
+| `add_tag` | Adds tracking tag (e.g., `Handoff-Lead-to-Buyer`) |
+
+### Intent Pattern Detection
+
+**Buyer Intent Patterns** (regex):
+- `\bi\s+want\s+to\s+buy\b`
+- `\blooking\s+to\s+buy\b`
+- `\bbudget\b.*\# Jorge Bot Finalization Spec
+
+**Version**: 1.1
+**Branch**: `feature/advanced-rag-benchmarks`
+**Status**: 142 bot tests passing (Lead: 23, Buyer: 50, Seller: 64, Handoff: 16)
+**Date**: 2026-02-06
+
+---
+
+## Table of Contents
+
+1. [Current Architecture](#1-current-architecture)
+2. [Phase 1: Lead Bot Routing & Compliance](#2-phase-1-lead-bot-routing--compliance)
+3. [Phase 2: Configurable GHL IDs](#3-phase-2-configurable-ghl-ids)
+4. [Phase 3: Cross-Bot Handoff](#4-phase-3-cross-bot-handoff)
+5. [Phase 4: Real MLS Data Integration](#5-phase-4-real-mls-data-integration)
+6. [Phase 5: Integration Tests & Load Testing](#6-phase-5-integration-tests--load-testing)
+7. [Test Patterns Reference](#7-test-patterns-reference)
+8. [File Reference Index](#8-file-reference-index)
+9. [Acceptance Criteria](#9-acceptance-criteria)
+
+---
+
+## 1. Current Architecture
+
+### 1.1 Webhook Routing Flow
+
+```
+Incoming GHL Webhook (POST /ghl/webhook)
+    |
+    +-- Loopback check: outbound messages ignored
+    +-- Activation tag check (lines 133-178)
+    |     activation_tags from settings + buyer tag
+    |     deactivation_tags: ["AI-Off", "Qualified", "Stop-Bot", "AI-Qualified"]
+    |
+    +-- Opt-out detection (lines 180-201)
+    |     OPT_OUT_PHRASES: "stop", "unsubscribe", "not interested", etc.
+    |     Action: add "AI-Off" tag, send confirmation
+    |
+    +-- SELLER ROUTING (lines 203-335)
+    |     Condition: "Needs Qualifying" in tags AND JORGE_SELLER_MODE=true
+    |     Bot: JorgeSellerEngine.process_seller_response()
+    |     Tags: Hot-Seller, Warm-Seller, Cold-Seller
+    |     Compliance: audit_message() with seller fallback
+    |     Workflows: hot_seller_workflow, warm_seller_workflow
+    |
+    +-- BUYER ROUTING (lines 336-461)
+    |     Condition: BUYER_ACTIVATION_TAG in tags AND JORGE_BUYER_MODE=true
+    |     Bot: JorgeBuyerBot.process_buyer_conversation()
+    |     Tags: Hot-Buyer, Warm-Buyer, Cold-Buyer, Buyer-Qualified
+    |     Compliance: audit_message() with buyer fallback
+    |
+    +-- LEAD ROUTING (lines 462-650) **[NEW - COMPLETE]**
+    |     Condition: LEAD_ACTIVATION_TAG in tags AND JORGE_LEAD_MODE=true
+    |     Bot: ConversationManager.generate_response()
+    |     Tags: Hot-Lead, Warm-Lead, Cold-Lead
+    |     Compliance: audit_message() with lead fallback
+    |     SMS Length Guard: 320-char truncation with smart boundaries
+    |     Handoff: Evaluate lead→buyer/seller at 0.7 confidence
+    |
+    +-- DEFAULT FALLBACK (no mode matched)
+          Route: Minimal response, no AI processing
+```
+
+### 1.2 Bot Entry Points
+
+| Bot | Class | Entry Method | Return Keys |
+|-----|-------|-------------|-------------|
+| Lead | `ConversationManager` | `generate_response()` via webhook fallback | `message`, `actions` (via `prepare_ghl_actions`) |
+| Buyer | `JorgeBuyerBot` | `process_buyer_conversation(buyer_id, buyer_name, conversation_history)` | `buyer_temperature`, `is_qualified`, `response_content`, `matched_properties`, `financial_readiness_score`, `buying_motivation_score` |
+| Seller | `JorgeSellerEngine` | `process_seller_response(contact_id, user_message, location_id, tenant_config, images)` | `message`, `actions`, `temperature`, `seller_data`, `questions_answered`, `analytics`, `pricing` |
+
+### 1.3 Configuration Architecture
+
+```
+jorge_config.py
+    +-- JorgeSellerConfig (dataclass, lines 17-335)
+    |     Static config: tags, thresholds, workflows, custom fields, questions
+    |     Helper methods: get_workflow_id(), get_ghl_custom_field_id()
+    |
+    +-- JorgeEnvironmentSettings (class, lines 337-412)
+    |     Runtime config loaded from env vars
+    |     Properties: JORGE_SELLER_MODE, JORGE_BUYER_MODE, BUYER_ACTIVATION_TAG
+    |     List parsing: _parse_list_env() (JSON or CSV)
+    |
+    +-- JorgeMarketManager (class, lines 414-473)
+    |     Market-specific config (Rancho Cucamonga)
+    |
+    +-- Module exports (lines 475-499)
+          settings = JorgeEnvironmentSettings()
+          Exported: JORGE_SELLER_MODE, ACTIVATION_TAGS, DEACTIVATION_TAGS
+```
+
+
+- `\bpre[- ]?approv\b`
+- `\bfind\s+(a|my)\s+(new\s+)?(home|house|place|property)\b`
+
+**Seller Intent Patterns** (regex):
+- `\bsell\s+my\s+(home|house|property)\b`
+- `\bwhat'?s\s+my\s+home\s+worth\b`
+- `\bhome\s+valu\b`
+- `\bcma\b`
+- `\blist(ing)?\s+my\s+(home|house|property)\b`
 
 ---
 
@@ -871,3 +1032,63 @@ Phases 1 and 2 can be developed in parallel.
 Phase 3 depends on Phase 1 (needs lead bot routing to exist).
 Phase 4 is independent and can be developed at any time.
 Phase 5 depends on all other phases.
+
+---
+
+## 10. Configuration Validation
+
+### 10.1 Environment Variables Required
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `JORGE_LEAD_MODE` | No | `true` | Enable Lead Bot routing |
+| `LEAD_ACTIVATION_TAG` | No | `Needs Qualifying` | Tag that triggers Lead Bot |
+| `JORGE_SELLER_MODE` | No | `false` | Enable Seller Bot routing |
+| `JORGE_BUYER_MODE` | No | `false` | Enable Buyer Bot routing |
+| `HOT_SELLER_WORKFLOW_ID` | No | `` | GHL workflow for hot sellers |
+| `WARM_SELLER_WORKFLOW_ID` | No | `` | GHL workflow for warm sellers |
+| `HOT_BUYER_WORKFLOW_ID` | No | `` | GHL workflow for hot buyers |
+| `CUSTOM_FIELD_LEAD_SCORE` | No | `` | GHL custom field for lead score |
+| `CUSTOM_FIELD_SELLER_TEMPERATURE` | No | `` | GHL custom field for seller temperature |
+| `CUSTOM_FIELD_BUYER_TEMPERATURE` | No | `` | GHL custom field for buyer temperature |
+
+### 10.2 Tag Configuration
+
+| Bot | Activation Tag | Deactivation Tags |
+|-----|----------------|-------------------|
+| Lead | `Needs Qualifying` | `AI-Off`, `Qualified`, `Stop-Bot` |
+| Buyer | `Buyer-Lead` | `AI-Off`, `Qualified`, `Stop-Bot` |
+| Seller | `Needs Qualifying` | `AI-Off`, `Qualified`, `Stop-Bot` |
+
+### 10.3 Routing Priority
+
+When multiple activation tags are present, the routing priority is:
+
+1. **Seller Bot** — Highest priority (when `JORGE_SELLER_MODE=true`)
+2. **Buyer Bot** — When `BUYER_ACTIVATION_TAG` present (when `JORGE_BUYER_MODE=true`)
+3. **Lead Bot** — When `LEAD_ACTIVATION_TAG` present (when `JORGE_LEAD_MODE=true`)
+4. **Default Fallback** — No bot mode matched
+
+### 10.4 Validation Checklist
+
+- [ ] All required environment variables documented in `.env.example`
+- [ ] `JORGE_LEAD_MODE` defaults to `true` (Lead Bot is the default behavior)
+- [ ] `validate_ghl_integration()` runs at startup and logs warnings
+- [ ] Tag names in config match GHL dashboard exactly
+- [ ] Workflow IDs are valid UUIDs (not placeholder strings)
+- [ ] Custom field IDs are valid UUIDs (not placeholder strings)
+
+### 10.5 Startup Validation Output
+
+When the application starts, it should output validation warnings for missing configuration:
+
+```
+GHL Config Warning: HOT_SELLER_WORKFLOW_ID not set — hot seller workflows disabled
+GHL Config Warning: CUSTOM_FIELD_LEAD_SCORE not set — field updates will use semantic names
+```
+
+---
+
+**Document Version**: 1.1
+**Last Updated**: 2026-02-06
+**Next Review**: After Phase 5 completion

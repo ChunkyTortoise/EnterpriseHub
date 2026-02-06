@@ -84,6 +84,37 @@ All agents are **domain-agnostic** -- they adapt to this project's domain via CL
 | Agent Mesh | `services/agent_mesh_coordinator.py` | Governance, routing, auto-scaling, audit trails |
 | GHL Client | `services/enhanced_ghl_client.py` | 10 req/s rate limit, real-time CRM sync |
 | BI Dashboards | `streamlit_demo/components/` | Monte Carlo, sentiment, churn detection |
+| **Jorge Handoff Service** | `services/jorge/jorge_handoff_service.py` | Cross-bot handoff, 0.7 confidence threshold |
+
+## Lead Bot Status: COMPLETE
+
+| Feature | Status | Description |
+|---------|--------|-------------|
+| Lead Bot Routing | **COMPLETE** | Dedicated routing block with `LEAD_ACTIVATION_TAG` |
+| Temperature Tags | **COMPLETE** | Hot-Lead, Warm-Lead, Cold-Lead classification |
+| Compliance Guard | **COMPLETE** | Lead-specific fallback messages |
+| Handoff Integration | **COMPLETE** | Lead→Buyer/Lead→Seller with 0.7 confidence threshold |
+| SMS Length Guard | **COMPLETE** | 320-char truncation with smart sentence boundaries |
+
+### Temperature Tag Publishing
+Lead score determines temperature classification:
+
+| Lead Score | Temperature Tag | Actions |
+|------------|-----------------|---------|
+| ≥ 80 | **Hot-Lead** | Priority workflow trigger, agent notification |
+| 40-79 | **Warm-Lead** | Nurture sequence, follow-up reminder |
+| < 40 | **Cold-Lead** | Educational content, periodic check-in |
+
+### Lead Bot Handoff Integration
+Cross-bot handoff via [`JorgeHandoffService.evaluate_handoff()`](ghl_real_estate_ai/services/jorge/jorge_handoff_service.py:76):
+
+| Direction | Confidence Threshold | Trigger Phrases |
+|-----------|---------------------|-----------------|
+| Lead → Buyer | 0.7 | "I want to buy", "budget $", "pre-approval" |
+| Lead → Seller | 0.7 | "Sell my house", "home worth", "CMA" |
+
+### Compliance Guard for Lead Mode
+Lead-specific compliance fallback: `"Thanks for reaching out! I'd love to help. What are you looking for in your next home?"`
 
 ## Security Essentials
 - **PII**: Encrypted at rest (Fernet) | **API Keys**: Env vars only, never hardcoded
