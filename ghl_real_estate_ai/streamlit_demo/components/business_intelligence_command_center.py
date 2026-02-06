@@ -18,10 +18,14 @@ import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
 
-from ghl_real_estate_ai.intelligence.business_intelligence_dashboard import (
-    BusinessIntelligenceDashboard,
-    create_business_intelligence_dashboard
-)
+try:
+    from ghl_real_estate_ai.intelligence.business_intelligence_dashboard import (
+        BusinessIntelligenceDashboard,
+        create_business_intelligence_dashboard
+    )
+except (ImportError, Exception):
+    BusinessIntelligenceDashboard = None
+    create_business_intelligence_dashboard = None
 
 
 class BusinessIntelligenceCommandCenter:

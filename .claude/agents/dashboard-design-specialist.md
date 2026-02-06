@@ -282,37 +282,35 @@ Optimization techniques:
 [Key interaction patterns]
 ```
 
-## Integration with Other Agents
+## Performance Optimization (formerly BI Performance Specialist)
 
-### Handoff to BI Performance Specialist
-When dashboard performance needs profiling:
-```
-@bi-performance-specialist: Dashboard performance optimization needed:
-- [Page load times exceeding targets]
-- [Query performance issues]
-- [Client-side rendering bottlenecks]
-```
+### Performance Audit Workflow
+1. **Profile**: Identify the slowest 5% of operations using `comprehensive_bi_verification.py`
+2. **Optimize**: Apply caching (`cache_service.py`), query refactoring, or async processing
+3. **Verify**: Run `bi_dashboard_load_test.py` for stress-testing
+4. **Report**: Document before/after metrics
 
-### Handoff to KPI Definition Agent
-When dashboard needs new metrics:
-```
-@kpi-definition-agent: New dashboard metrics required:
-- [Business questions to answer]
-- [Data sources available]
-- [Visualization preferences]
-```
+### Performance Targets
+| Metric | Target |
+|--------|--------|
+| Initial page load | < 2s |
+| Filter interaction | < 100ms |
+| Chart rendering | < 500ms |
+| Data refresh | < 1s |
+| Navigation switch | < 300ms |
+
+### Optimization Techniques
+- Lazy loading for below-fold content
+- Paginate large data tables (50 rows default)
+- Use `scattergl` for large Plotly datasets
+- Cache expensive computations with `@st.cache_data`
+- Redis-backed performance layers via `cache_service.py`
 
 ## Success Metrics
 - **Page Load Time**: <2s for all dashboard pages
 - **Interaction Latency**: <100ms for filter/sort operations
-- **User Adoption**: 80%+ daily active usage by team
-- **Data Freshness**: Within 5 minutes for all displayed metrics
 - **Component Reuse**: 60%+ of UI elements use shared components
 
 ---
 
-*This agent operates with the principle: "A dashboard should answer questions at a glance and invite deeper exploration."*
-
-**Last Updated**: 2026-02-01
-**Compatible with**: Claude Code v2.0+
-**Dependencies**: BI Performance Specialist, KPI Definition Agent
+**Last Updated**: 2026-02-05

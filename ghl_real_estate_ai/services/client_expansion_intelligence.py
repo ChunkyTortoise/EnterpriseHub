@@ -186,8 +186,6 @@ class CustomValueProposition:
     # Pricing strategy
     proposed_pricing: Decimal
     pricing_justification: str
-    discount_strategy: Optional[str] = None
-    payment_terms: str = "Monthly"
 
     # Objection handling
     anticipated_objections: List[str]
@@ -198,6 +196,10 @@ class CustomValueProposition:
     urgency_factors: List[str]
 
     generated_at: datetime
+
+    # Fields with defaults must come after non-default fields
+    discount_strategy: Optional[str] = None
+    payment_terms: str = "Monthly"
 
 
 @dataclass
