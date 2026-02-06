@@ -33,5 +33,29 @@
       "Bash(TRUNCATE TABLE:*)"
     ],
     "ask": []
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "ruff check --fix --quiet \"$CLAUDE_FILE_PATH\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$CLAUDE_FILE_PATH\" | grep -qE '\\.(env|key|pem)$'; then echo 'BLOCKED: Cannot write to secret files' >&2; exit 1; fi"
+          }
+        ]
+      }
+    ]
   }
 }
