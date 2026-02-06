@@ -10,6 +10,10 @@ on:
       - '.claude/settings.json'
       - '.claude/mcp-profiles/**'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   token-usage-analysis:
     name: Token Usage Analysis
@@ -21,6 +25,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
       - name: Analyze token usage patterns
         run: |
@@ -163,6 +168,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
       - name: Analyze MCP server token overhead
         run: |
@@ -237,6 +243,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
       - name: Check session manager health
         run: |
@@ -298,6 +305,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
       - name: Generate comprehensive report
         run: |
