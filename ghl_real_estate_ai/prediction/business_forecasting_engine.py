@@ -20,9 +20,9 @@ import numpy as np
 import pandas as pd
 from decimal import Decimal
 
-from ...services.claude_assistant import ClaudeAssistant
-from ...services.cache_service import CacheService
-from ...ghl_utils.jorge_config import JorgeConfig
+from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
+from ghl_real_estate_ai.services.cache_service import CacheService
+from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeConfig
 
 logger = logging.getLogger(__name__)
 

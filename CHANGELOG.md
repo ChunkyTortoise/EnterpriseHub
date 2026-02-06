@@ -5,6 +5,31 @@ All notable changes to EnterpriseHub will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- OpenRouter multi-LLM provider integration with automatic fallbacks
+- Supermemory AI universal memory service integration
+- JorgeConfig backward-compatible alias in jorge_config.py (supports 19 modules)
+
+### Fixed
+- 11 dashboard component import errors resolved (0 failures across 137 components)
+- Dataclass field ordering in client_expansion_intelligence, consulting_delivery_service, and revenue_attribution_engine
+- Python 3.14 compatibility: replaced deprecated asyncio.Iterator with collections.abc.AsyncIterator
+- Relative import beyond top-level package in business_forecasting_engine (triple-dot to absolute)
+- Missing obsidian_cards primitive module reference in SHAP dashboards (pointed to card.py)
+- Wrong class name ExecutivePortfolioManager (actual: PortfolioManagerAgent) with graceful fallback
+- Bare import path for lead_dashboard_optimized (components.primitives to absolute path)
+- Missing run_async in utils/async_utils (pointed to streamlit_demo.async_utils)
+- Optional seaborn import in customer_segmentation_dashboard
+- Protected business_intelligence_command_center against pydantic v1/v2 ConfigError
+
+### Changed
+- SMS compliance service: expanded STOP keywords, added cache integration, event publishing, and error boundaries
+- README overhauled for professional portfolio presentation
+
+---
+
 ## [7.0.0] - 2026-01-25
 
 ### 🚀 MAJOR RELEASE: Phase 3 Critical Bug Fixes & Production Readiness

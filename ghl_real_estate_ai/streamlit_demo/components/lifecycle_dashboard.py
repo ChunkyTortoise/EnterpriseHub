@@ -14,7 +14,20 @@ from typing import Dict, List, Any
 import time
 import asyncio
 from ghl_real_estate_ai.services.agent_state_sync import sync_service
-from ghl_real_estate_ai.utils.async_utils import run_async
+try:
+    from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
+except ImportError:
+    import asyncio
+    def run_async(coro):
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+        if loop and loop.is_running():
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                return pool.submit(asyncio.run, coro).result()
+        return asyncio.run(coro)
 
 def render_full_lifecycle_dashboard():
     """Renders the Full Lifecycle tab for Jorge's Command Center."""

@@ -33,7 +33,6 @@ models/
 jorge_deployment_package/
 demo_logs/
 competitive-intelligence-engine/
-claude-real-estate-ai-plugin/
 .claude/
 advanced_rag_system/htmlcov/
 advanced_rag_system/.mypy_cache/

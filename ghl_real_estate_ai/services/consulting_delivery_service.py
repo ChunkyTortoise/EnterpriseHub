@@ -112,10 +112,10 @@ class ConsultingEngagement:
     # Timeline
     start_date: str
     planned_end_date: str
-    actual_end_date: Optional[str] = None
 
     # Team
     lead_consultant: str
+    actual_end_date: Optional[str] = None
     consulting_team: List[str] = field(default_factory=list)
     stakeholders: List[Stakeholder] = field(default_factory=list)
 

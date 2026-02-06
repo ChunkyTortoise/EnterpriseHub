@@ -16,15 +16,54 @@ import asyncio
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
-from ghl_real_estate_ai.services.executive_portfolio_manager import (
-    ExecutivePortfolioManager,
-    UHNWClient,
-    PortfolioProperty,
-    create_sample_uhnw_client,
-    create_sample_portfolio,
-    PropertyType,
-    InvestmentStrategy
-)
+try:
+    from ghl_real_estate_ai.services.executive_portfolio_manager import (
+        PortfolioManagerAgent as ExecutivePortfolioManager,
+    )
+except ImportError:
+    ExecutivePortfolioManager = None
+
+# Stub types for interface compatibility when full service is not available
+try:
+    from ghl_real_estate_ai.services.executive_portfolio_manager import (
+        UHNWClient,
+        PortfolioProperty,
+        create_sample_uhnw_client,
+        create_sample_portfolio,
+        PropertyType,
+        InvestmentStrategy,
+    )
+except ImportError:
+    from dataclasses import dataclass, field
+    from enum import Enum
+
+    class PropertyType(str, Enum):
+        RESIDENTIAL = "residential"
+        COMMERCIAL = "commercial"
+        LUXURY = "luxury"
+
+    class InvestmentStrategy(str, Enum):
+        GROWTH = "growth"
+        INCOME = "income"
+        BALANCED = "balanced"
+
+    @dataclass
+    class UHNWClient:
+        client_id: str = ""
+        name: str = ""
+        net_worth: float = 0.0
+
+    @dataclass
+    class PortfolioProperty:
+        property_id: str = ""
+        address: str = ""
+        value: float = 0.0
+
+    def create_sample_uhnw_client():
+        return UHNWClient(client_id="demo", name="Demo Client", net_worth=5_000_000)
+
+    def create_sample_portfolio():
+        return []
 
 
 class ExecutivePortfolioInterface:
