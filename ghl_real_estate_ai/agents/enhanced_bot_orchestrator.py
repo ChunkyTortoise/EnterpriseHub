@@ -10,7 +10,11 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass
 from enum import Enum
 
-from ghl_real_estate_ai.agents.adaptive_jorge_seller_bot import AdaptiveJorgeBot, get_adaptive_jorge_bot
+try:
+    from ghl_real_estate_ai.agents.adaptive_jorge_seller_bot import AdaptiveJorgeBot, get_adaptive_jorge_bot
+except ImportError:
+    AdaptiveJorgeBot = None
+    get_adaptive_jorge_bot = None
 from ghl_real_estate_ai.agents.predictive_lead_bot import PredictiveLeadBot, get_predictive_lead_bot
 from ghl_real_estate_ai.agents.realtime_intent_decoder import RealTimeIntentDecoder, get_realtime_intent_decoder
 from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot

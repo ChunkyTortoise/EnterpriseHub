@@ -88,9 +88,9 @@ WORKDIR /app
 RUN chown jorge:jorge /app
 
 # Install Python dependencies
-COPY requirements-production.txt /app/
+COPY requirements.txt /app/
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir -r requirements-production.txt
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY --chown=jorge:jorge ghl_real_estate_ai/services/intelligent_cache_warming_service.py /app/
