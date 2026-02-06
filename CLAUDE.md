@@ -46,13 +46,27 @@ ghl_real_estate_ai/            # Main app
 ## Agent & MCP Landscape
 
 ### Claude Code Agents (17)
-| Category | Agents |
-|----------|--------|
-| **Core Dev** | architecture-sentinel, security-auditor, performance-optimizer, integration-test-workflow |
-| **Domain** | compliance-risk, intent-decoder, handoff-orchestrator, conversation-design |
-| **Data & ML** | database-migration, ml-pipeline, predictive-analytics, rag-pipeline-optimizer |
-| **Platform** | api-consistency, devops-infrastructure, cost-token-optimization |
-| **BI** | dashboard-design, kpi-definition |
+All agents are **domain-agnostic** -- they adapt to this project's domain via CLAUDE.md and reference files.
+
+| Agent | Purpose |
+|-------|---------|
+| architecture-sentinel | Deep architectural analysis and design guidance |
+| security-auditor | Vulnerability research and security compliance |
+| performance-optimizer | Performance profiling and scalability tuning |
+| integration-test-workflow | Multi-agent coordination and integration testing |
+| compliance-risk | Regulatory compliance monitoring and risk assessment |
+| intent-decoder | Multi-modal conversation intelligence and intent analysis |
+| handoff-orchestrator | Agent-to-agent transitions and context preservation |
+| conversation-design | Conversational AI architecture and dialogue quality |
+| database-migration | Schema design, migrations, and data infrastructure |
+| ml-pipeline | ML model quality, training pipelines, and optimization |
+| predictive-analytics | Forecasting, conversion optimization, and trend analysis |
+| rag-pipeline-optimizer | RAG systems engineering and information retrieval |
+| api-consistency | REST API design, standardization, and governance |
+| devops-infrastructure | CI/CD pipelines, containers, and deployment automation |
+| cost-token-optimization | AI cost engineering and token efficiency |
+| dashboard-design | Streamlit BI dashboard architecture and visualization |
+| kpi-definition | Business intelligence KPI frameworks and metrics |
 
 ### MCP Servers (5)
 | Server | Package | Purpose |
