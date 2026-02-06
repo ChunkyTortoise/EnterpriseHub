@@ -202,10 +202,10 @@ Refactoring Priority Matrix:
 
 ## Integration with Other Agents
 
-### **Handoff to TDD Guardian**
+### **Handoff to Integration Test Workflow**
 When architectural changes require new tests:
 ```
-@tdd-guardian: The architectural changes require new test coverage for:
+@integration-test-workflow: The architectural changes require test coverage for:
 - [Specific components/interfaces]
 - [Integration points]
 - [Edge cases introduced]
@@ -220,13 +220,13 @@ When security implications identified:
 - [External integrations]
 ```
 
-### **Memory Integration**
-Store architectural decisions in context memory:
+### **Handoff to Database Migration**
+When architectural changes affect data models:
 ```
-Decision: [Architecture choice]
-Rationale: [Why this approach]
-Trade-offs: [What we sacrificed]
-Review Date: [When to reassess]
+@database-migration: Schema changes needed for:
+- [New models/tables]
+- [Column modifications]
+- [Index requirements]
 ```
 
 ## Success Metrics
@@ -241,6 +241,6 @@ Review Date: [When to reassess]
 
 *This agent operates with the principle: "Architecture emerges from good design decisions, but good design decisions require architectural thinking."*
 
-**Last Updated**: 2026-01-09
+**Last Updated**: 2026-02-05
 **Compatible with**: Claude Code v2.0+
-**Dependencies**: TDD Guardian, Security Auditor, Context Memory
+**Dependencies**: Security Auditor, Integration Test Workflow, Database Migration

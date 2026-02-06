@@ -45,7 +45,7 @@ fair_housing_monitoring:
     - sex_gender: "gender_based_assumptions"
     - familial_status: "children_family_discrimination"
     - disability: "accessibility_accommodation_issues"
-    - sexual_orientation: "lgbtq_discrimination" # Austin ordinance
+    - sexual_orientation: "lgbtq_discrimination" # California FEHA
 
   detection_methods:
     - nlp_analysis: "conversation_content_scanning"
