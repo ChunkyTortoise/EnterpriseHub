@@ -1,7 +1,6 @@
-name: Jorge Platform Frontend Deployment
-# Automated CI/CD pipeline for Jorge's Real Estate AI Platform Frontend
-# Professional Next.js deployment with comprehensive quality gates
-# Version: 1.0.0
+name: Frontend Deployment
+# Automated CI/CD pipeline for Enterprise UI frontend
+# Next.js deployment to Vercel with comprehensive quality gates
 
 on:
   push:
@@ -9,7 +8,7 @@ on:
       - main
     paths:
       - 'enterprise-ui/**'
-      - '.github/workflows/jorge-platform-deployment.yml'
+      - '.github/workflows/frontend-deploy.yml'
   pull_request:
     branches:
       - main
@@ -25,6 +24,10 @@ on:
         options:
           - preview
           - production
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
   NODE_VERSION: '18'
@@ -156,8 +159,8 @@ jobs:
         env:
           NEXT_TELEMETRY_DISABLED: 1
           NODE_ENV: production
-          NEXT_PUBLIC_API_BASE: https://api.jorge-platform.example.com
-          NEXT_PUBLIC_SOCKET_URL: wss://api.jorge-platform.example.com
+          NEXT_PUBLIC_API_BASE: ${{ secrets.NEXT_PUBLIC_API_BASE }}
+          NEXT_PUBLIC_SOCKET_URL: ${{ secrets.NEXT_PUBLIC_SOCKET_URL }}
 
       - name: Analyze bundle size
         run: |
@@ -252,7 +255,7 @@ jobs:
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: `🚀 Jorge Platform Preview deployed!\n\n**Preview URL:** ${VERCEL_PREVIEW_URL}\n\n**Features Available:**\n- Jorge Seller Bot Dashboard\n- Lead Bot Dashboard  \n- Intent Decoder Dashboard\n- Real-time Bot Coordination\n- Professional PWA Interface`
+                body: `🚀 Frontend Preview deployed!\n\n**Preview URL:** ${VERCEL_PREVIEW_URL}`
               });
             }
 
@@ -267,7 +270,7 @@ jobs:
     if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
     environment:
       name: production
-      url: https://jorge-platform.vercel.app
+      url: ${{ vars.PRODUCTION_URL }}
     defaults:
       run:
         working-directory: ${{ env.WORKING_DIRECTORY }}
@@ -290,18 +293,16 @@ jobs:
 
       - name: Health check production deployment
         run: |
+          PROD_URL="${{ vars.PRODUCTION_URL }}"
           # Check health endpoint
-          curl -f https://jorge-platform.vercel.app/health || exit 1
+          curl -f "${PROD_URL}/health" || exit 1
 
           # Check status endpoint
-          curl -f https://jorge-platform.vercel.app/status || exit 1
-
-          # Basic functionality test
-          curl -f https://jorge-platform.vercel.app/api/jorge-seller/health || exit 1
+          curl -f "${PROD_URL}/status" || exit 1
 
       - name: Performance audit
         run: |
-          npx lighthouse https://jorge-platform.vercel.app \
+          npx lighthouse ${{ vars.PRODUCTION_URL }} \
             --chrome-flags="--headless --no-sandbox" \
             --output-path=./lighthouse-report.html \
             --output=html \
@@ -322,14 +323,11 @@ jobs:
         with:
           status: success
           text: |
-            🎉 Jorge Platform Production Deployment Successful!
+            Frontend Production Deployment Successful!
 
-            🔗 URL: https://jorge-platform.vercel.app
-            📊 Features: Bot Dashboards, Real-time Coordination, PWA
-            🧪 Tests: All quality gates passed
-            ⚡ Performance: Lighthouse audit completed
-
-            The platform is ready for client demonstrations!
+            URL: ${{ vars.PRODUCTION_URL }}
+            Tests: All quality gates passed
+            Performance: Lighthouse audit completed
 
       - name: Notify deployment failure
         if: failure()
@@ -339,10 +337,10 @@ jobs:
         with:
           status: failure
           text: |
-            🚨 Jorge Platform Production Deployment Failed!
+            Frontend Production Deployment Failed!
 
-            🔍 Check: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-            🛠️ Action: Manual investigation required
+            Check: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            Action: Manual investigation required
 
   # ============================================
   # PHASE 7: Post-Deployment Monitoring
@@ -356,35 +354,37 @@ jobs:
     steps:
       - name: Monitor production health (5 minutes)
         run: |
-          echo "Monitoring Jorge Platform health for 5 minutes..."
+          PROD_URL="${{ vars.PRODUCTION_URL }}"
+          echo "Monitoring frontend health for 5 minutes..."
           for i in {1..10}; do
             echo "Health check $i/10..."
 
             # Health endpoint
-            health_status=$(curl -s -o /dev/null -w "%{http_code}" https://jorge-platform.vercel.app/health)
+            health_status=$(curl -s -o /dev/null -w "%{http_code}" "${PROD_URL}/health")
 
             # Status endpoint
-            status_code=$(curl -s -o /dev/null -w "%{http_code}" https://jorge-platform.vercel.app/status)
+            status_code=$(curl -s -o /dev/null -w "%{http_code}" "${PROD_URL}/status")
 
             if [ "$health_status" != "200" ] || [ "$status_code" != "200" ]; then
-              echo "❌ Health check failed: health=$health_status, status=$status_code"
+              echo "Health check failed: health=$health_status, status=$status_code"
               exit 1
             fi
 
-            echo "✅ Health check passed: health=$health_status, status=$status_code"
+            echo "Health check passed: health=$health_status, status=$status_code"
             sleep 30
           done
 
-          echo "🎉 5-minute health monitoring completed successfully!"
+          echo "5-minute health monitoring completed successfully!"
 
       - name: Validate business metrics
         run: |
+          PROD_URL="${{ vars.PRODUCTION_URL }}"
           # Check metrics endpoint
-          metrics_response=$(curl -s https://jorge-platform.vercel.app/api/metrics)
+          metrics_response=$(curl -s "${PROD_URL}/api/metrics")
           echo "Metrics endpoint response received"
 
           # In production, this would validate specific business KPIs
-          echo "✅ Business metrics validation completed"
+          echo "Business metrics validation completed"
 
       - name: Create deployment report
         run: |
