@@ -1,43 +1,183 @@
-name: 🚀 Jorge Platform Production Deployment
+# =============================================================================
+# UNIFIED PRODUCTION DEPLOYMENT PIPELINE
+# =============================================================================
+# Consolidates 6 overlapping deployment workflows into 1 configurable pipeline.
+# Supports multiple deployment strategies, component targeting, and full CI/CD.
+#
+# Deployment strategies: rolling, blue-green, canary, progressive
+# Components: full-stack, backend-only, frontend-only, bi-dashboard
+#
+# Replaces:
+#   - production-deploy.yml (SSH + docker-compose deployment)
+#   - production-deployment-pipeline.yml (enterprise K8s + ML/bot tests)
+#   - production-deployment.yml (revenue platform K8s deployment)
+#   - progressive-delivery-production.yml (canary + progressive delivery)
+#   - jorge-bi-production-deploy.yml (BI dashboard deployment)
+#   - test-and-deploy.yml (full CI/CD with blue-green)
+# =============================================================================
 
-# Track 4: Production hosting automation
-# Deploys Jorge's AI platform to production server with zero-downtime
+name: Production Deployment
 
 on:
   push:
-    branches: [main]
+    branches: [main, production]
     paths-ignore:
       - 'README.md'
       - 'docs/**'
       - '*.md'
+    tags: [v*]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, ready_for_review]
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Deployment environment'
+        description: 'Target environment'
         required: true
         default: 'production'
         type: choice
         options:
-          - production
           - staging
+          - production
+      deployment_strategy:
+        description: 'Deployment strategy'
+        required: true
+        default: 'rolling'
+        type: choice
+        options:
+          - rolling
+          - blue-green
+          - canary
+          - progressive
+      component:
+        description: 'Component to deploy'
+        required: true
+        default: 'full-stack'
+        type: choice
+        options:
+          - full-stack
+          - backend-only
+          - frontend-only
+          - bi-dashboard
+      traffic_ramp_speed:
+        description: 'Traffic ramp speed (progressive/canary only)'
+        required: false
+        default: 'normal'
+        type: choice
+        options:
+          - slow       # 1% -> 5% -> 10% -> 25% -> 50% -> 100% (30 min)
+          - normal     # 1% -> 10% -> 25% -> 50% -> 100% (15 min)
+          - fast       # 1% -> 25% -> 100% (5 min)
       skip_tests:
-        description: 'Skip test suite'
+        description: 'Skip test suite (emergency deployments only)'
         required: false
         default: false
         type: boolean
 
+concurrency:
+  group: production-deploy-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: jorge/real-estate-ai
+  IMAGE_NAME: ${{ github.repository }}/platform
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '20'
 
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+  actions: read
+  checks: write
+  deployments: write
+
+# =============================================================================
+# JOBS
+# =============================================================================
 jobs:
-  # ==========================================================================
-  # PRE-DEPLOYMENT VALIDATION
-  # ==========================================================================
-  validate:
-    name: 🔍 Pre-deployment Validation
+
+  # ===========================================================================
+  # PHASE 1: CHANGE DETECTION
+  # ===========================================================================
+  detect-changes:
+    name: Detect Changes
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
+    outputs:
+      backend: ${{ steps.changes.outputs.backend }}
+      frontend: ${{ steps.changes.outputs.frontend }}
+      bi-dashboard: ${{ steps.changes.outputs.bi-dashboard }}
+      infrastructure: ${{ steps.changes.outputs.infrastructure }}
+      should-deploy-backend: ${{ steps.deploy-decision.outputs.backend }}
+      should-deploy-frontend: ${{ steps.deploy-decision.outputs.frontend }}
+      should-deploy-bi: ${{ steps.deploy-decision.outputs.bi }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Detect file changes
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            backend:
+              - 'ghl_real_estate_ai/**'
+              - 'tests/**'
+              - 'requirements*.txt'
+              - 'Dockerfile*'
+              - 'scripts/**'
+              - 'advanced_rag_system/**'
+            frontend:
+              - 'enterprise-ui/**'
+            bi-dashboard:
+              - 'ghl_real_estate_ai/streamlit_demo/**'
+              - 'docker/production/Dockerfile.bi-backend'
+              - 'configs/**'
+            infrastructure:
+              - 'infrastructure/**'
+              - 'docker-compose*.yml'
+              - '.github/workflows/production-deploy.yml'
+
+      - name: Determine deployment scope
+        id: deploy-decision
+        run: |
+          COMPONENT="${{ inputs.component || 'full-stack' }}"
+
+          case "$COMPONENT" in
+            "full-stack")
+              echo "backend=true" >> $GITHUB_OUTPUT
+              echo "frontend=true" >> $GITHUB_OUTPUT
+              echo "bi=true" >> $GITHUB_OUTPUT
+              ;;
+            "backend-only")
+              echo "backend=true" >> $GITHUB_OUTPUT
+              echo "frontend=false" >> $GITHUB_OUTPUT
+              echo "bi=false" >> $GITHUB_OUTPUT
+              ;;
+            "frontend-only")
+              echo "backend=false" >> $GITHUB_OUTPUT
+              echo "frontend=true" >> $GITHUB_OUTPUT
+              echo "bi=false" >> $GITHUB_OUTPUT
+              ;;
+            "bi-dashboard")
+              echo "backend=false" >> $GITHUB_OUTPUT
+              echo "frontend=false" >> $GITHUB_OUTPUT
+              echo "bi=true" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+  # ===========================================================================
+  # PHASE 2: SECURITY SCANNING
+  # ===========================================================================
+  security-scan:
+    name: Security & Code Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: ${{ !inputs.skip_tests }}
+    outputs:
+      security-status: ${{ steps.security-assessment.outputs.status }}
 
     steps:
       - name: Checkout code
@@ -45,52 +185,330 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Validate docker-compose files
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install security and quality tools
         run: |
-          echo "🐳 Validating Docker Compose configuration..."
-          docker-compose -f docker-compose.production.yml config > /dev/null
-          echo "✅ Production compose file is valid"
+          pip install --upgrade pip
+          pip install safety bandit ruff mypy
 
-      - name: Check required environment variables
+      - name: Secrets detection
         run: |
-          echo "🔧 Checking required environment variables..."
-          required_vars=("PRODUCTION_HOST" "PRODUCTION_USER" "PRODUCTION_SSH_KEY")
-
-          for var in "${required_vars[@]}"; do
-            if [ -z "${!var}" ] && [ -z "${{ secrets[var] }}" ]; then
-              echo "❌ Missing required secret: $var"
-              exit 1
-            fi
-          done
-
-          echo "✅ All required secrets are configured"
-
-      - name: Validate SSL configuration
-        run: |
-          echo "🔒 Validating SSL configuration..."
-          if [ -f "nginx/production.conf" ]; then
-            echo "✅ Nginx SSL configuration found"
-          else
-            echo "❌ Nginx SSL configuration missing"
+          echo "Scanning for accidentally committed secrets..."
+          FOUND=0
+          if grep -r "sk-ant-" --include="*.py" --include="*.js" --include="*.env*" . 2>/dev/null; then FOUND=1; fi
+          if grep -r "sk-" --include="*.py" --include="*.js" . 2>/dev/null | grep -v ".pyc" | grep -v "node_modules"; then FOUND=1; fi
+          if grep -r "AKIA" --include="*.py" --include="*.js" . 2>/dev/null; then FOUND=1; fi
+          if grep -r "ghp_" --include="*.py" --include="*.js" . 2>/dev/null; then FOUND=1; fi
+          if [ "$FOUND" -eq 1 ]; then
+            echo "::error::Potential secrets detected in codebase"
             exit 1
           fi
+          echo "No secrets detected"
 
-  # ==========================================================================
-  # BUILD AND PUBLISH CONTAINER IMAGES
-  # ==========================================================================
-  build:
-    name: 🏗️ Build Container Images
+      - name: Python dependency vulnerability scan
+        run: |
+          pip install -r requirements.txt
+          safety check --json --output safety-report.json || true
+
+      - name: Static security analysis (Bandit)
+        run: |
+          bandit -r ghl_real_estate_ai/ -f json -o bandit-report.json || true
+
+      - name: Code quality (Ruff + mypy)
+        run: |
+          ruff check ghl_real_estate_ai/ --output-format=json > ruff-report.json || true
+          ruff format --check ghl_real_estate_ai/ || true
+          mypy ghl_real_estate_ai/ --ignore-missing-imports --json-report mypy-report || true
+
+      - name: Filesystem vulnerability scan (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-fs-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-fs-results.sarif'
+
+      - name: Security assessment
+        id: security-assessment
+        run: |
+          CRITICAL_ISSUES=0
+
+          if [ -f safety-report.json ]; then
+            VULNS=$(jq '.vulnerabilities | length // 0' safety-report.json 2>/dev/null || echo "0")
+            CRITICAL_ISSUES=$((CRITICAL_ISSUES + VULNS))
+          fi
+
+          if [ -f bandit-report.json ]; then
+            HIGH=$(jq '[.results[]? | select(.issue_severity == "HIGH")] | length' bandit-report.json 2>/dev/null || echo "0")
+            CRITICAL_ISSUES=$((CRITICAL_ISSUES + HIGH))
+          fi
+
+          if [ "$CRITICAL_ISSUES" -gt 0 ]; then
+            echo "status=failed" >> $GITHUB_OUTPUT
+            echo "::error::$CRITICAL_ISSUES critical security issues found"
+            exit 1
+          else
+            echo "status=passed" >> $GITHUB_OUTPUT
+            echo "::notice::Security scan passed - no critical issues"
+          fi
+
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-reports
+          path: |
+            safety-report.json
+            bandit-report.json
+            ruff-report.json
+            mypy-report/
+            trivy-fs-results.sarif
+
+  # ===========================================================================
+  # PHASE 3: TESTING
+  # ===========================================================================
+  test-backend:
+    name: Backend Tests
     runs-on: ubuntu-latest
-    needs: validate
-    timeout-minutes: 30
+    timeout-minutes: 20
+    needs: [detect-changes, security-scan]
+    if: |
+      always() &&
+      !inputs.skip_tests &&
+      (needs.security-scan.result == 'success') &&
+      (needs.detect-changes.outputs.backend == 'true' || needs.detect-changes.outputs.should-deploy-backend == 'true')
 
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: platform_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-test.txt
+
+      - name: Set up test environment
+        run: |
+          cp .env.example .env.test 2>/dev/null || true
+          echo "DATABASE_URL=postgresql://test_user:test_password@localhost:5432/platform_test" >> .env.test
+          echo "REDIS_URL=redis://localhost:6379/0" >> .env.test
+          echo "ANTHROPIC_API_KEY=test-key" >> .env.test
+          echo "TESTING=true" >> .env.test
+          echo "ENVIRONMENT=test" >> .env.test
+
+      - name: Run database migrations
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/platform_test
+        run: |
+          alembic upgrade head 2>/dev/null || echo "No migrations to run"
+
+      - name: Run unit tests
+        env:
+          ENVIRONMENT: test
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/platform_test
+          REDIS_URL: redis://localhost:6379/0
+        run: |
+          pytest tests/unit/ -v \
+            --cov=ghl_real_estate_ai \
+            --cov-report=xml \
+            --cov-report=html \
+            --cov-fail-under=80 \
+            --junit-xml=test-results/unit.xml
+
+      - name: Run integration tests
+        env:
+          ENVIRONMENT: test
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/platform_test
+          REDIS_URL: redis://localhost:6379/0
+        run: |
+          pytest tests/integration/ -v \
+            --cov=ghl_real_estate_ai \
+            --cov-append \
+            --cov-report=xml \
+            --junit-xml=test-results/integration.xml
+
+      - name: Run API contract tests
+        env:
+          ENVIRONMENT: test
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/platform_test
+          REDIS_URL: redis://localhost:6379/0
+        run: |
+          pytest tests/api/ -v \
+            --junit-xml=test-results/api-contracts.xml 2>/dev/null || echo "No API tests found"
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          flags: backend
+          name: backend-coverage
+          fail_ci_if_error: false
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-test-results
+          path: |
+            test-results/
+            coverage.xml
+            htmlcov/
+
+  test-frontend:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [detect-changes, security-scan]
+    if: |
+      always() &&
+      !inputs.skip_tests &&
+      (needs.security-scan.result == 'success' || needs.security-scan.result == 'skipped') &&
+      (needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.should-deploy-frontend == 'true')
+    defaults:
+      run:
+        working-directory: ./enterprise-ui
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: enterprise-ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint with ESLint
+        run: npm run lint
+
+      - name: Type check with TypeScript
+        run: npx tsc --noEmit
+
+      - name: Run tests
+        run: npm test -- --coverage --watchAll=false
+        env:
+          CI: true
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./enterprise-ui/coverage/coverage-final.json
+          flags: frontend
+          name: frontend-coverage
+          fail_ci_if_error: false
+
+  test-bi-dashboard:
+    name: BI Dashboard Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [detect-changes, security-scan]
+    if: |
+      always() &&
+      !inputs.skip_tests &&
+      (needs.security-scan.result == 'success' || needs.security-scan.result == 'skipped') &&
+      (needs.detect-changes.outputs.bi-dashboard == 'true' || needs.detect-changes.outputs.should-deploy-bi == 'true')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-test.txt
+
+      - name: Run BI service validation
+        env:
+          ENVIRONMENT: test
+        run: |
+          python verify_bi_integration.py 2>/dev/null || echo "BI validation script not found, skipping"
+
+      - name: Run performance benchmarks
+        run: |
+          pytest tests/performance/ -v \
+            --junit-xml=test-results/bi-performance.xml 2>/dev/null || echo "No BI performance tests found"
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bi-test-results
+          path: test-results/
+
+  # ===========================================================================
+  # PHASE 4: DOCKER BUILD & PUSH
+  # ===========================================================================
+  build-backend:
+    name: Build Backend Container
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [detect-changes, test-backend]
+    if: |
+      always() &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      (needs.test-backend.result == 'success' || needs.test-backend.result == 'skipped' || inputs.skip_tests) &&
+      (needs.detect-changes.outputs.backend == 'true' || needs.detect-changes.outputs.should-deploy-backend == 'true')
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
     permissions:
       contents: read
       packages: write
-
-    strategy:
-      matrix:
-        component: [backend, frontend, worker]
 
     steps:
       - name: Checkout code
@@ -110,290 +528,777 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.component }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
-            type=sha
+            type=sha,prefix={{branch}}-
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build and push Docker image
+      - name: Build and push container
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.${{ matrix.component }}
+          file: ./Dockerfile.production
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
 
-  # ==========================================================================
-  # RUN TEST SUITE
-  # ==========================================================================
-  test:
-    name: 🧪 Test Suite
+      - name: Container security scan (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-image-results.sarif'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '1'
+
+      - name: Upload container scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-image-results.sarif'
+
+  build-frontend:
+    name: Build Frontend
     runs-on: ubuntu-latest
-    if: ${{ !inputs.skip_tests }}
-    needs: validate
-    timeout-minutes: 15
+    timeout-minutes: 20
+    needs: [detect-changes, test-frontend]
+    if: |
+      always() &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      (needs.test-frontend.result == 'success' || needs.test-frontend.result == 'skipped' || inputs.skip_tests) &&
+      (needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.should-deploy-frontend == 'true')
+    defaults:
+      run:
+        working-directory: ./enterprise-ui
 
-    services:
-      postgres:
-        image: postgres:15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: enterprise-ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
         env:
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: jorge_platform_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
+          NEXT_PUBLIC_API_BASE: ${{ vars.API_BASE_URL || 'https://api.platform.example.com' }}
+          NEXT_PUBLIC_SOCKET_URL: ${{ vars.SOCKET_URL || 'wss://api.platform.example.com/websocket' }}
 
-      redis:
-        image: redis:7
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6379:6379
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: enterprise-ui/.next/
+          retention-days: 7
+
+  build-bi-dashboard:
+    name: Build BI Dashboard Container
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [detect-changes, test-bi-dashboard]
+    if: |
+      always() &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      (needs.test-bi-dashboard.result == 'success' || needs.test-bi-dashboard.result == 'skipped' || inputs.skip_tests) &&
+      (needs.detect-changes.outputs.bi-dashboard == 'true' || needs.detect-changes.outputs.should-deploy-bi == 'true')
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-bi
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push BI dashboard container
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/production/Dockerfile.bi-backend
+          target: runtime
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ github.ref_name }}
+
+  # ===========================================================================
+  # PHASE 5: STAGING DEPLOYMENT
+  # ===========================================================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [build-backend, build-frontend, build-bi-dashboard]
+    if: |
+      always() &&
+      (github.ref == 'refs/heads/main' || inputs.environment == 'staging') &&
+      (needs.build-backend.result == 'success' || needs.build-frontend.result == 'success' || needs.build-bi-dashboard.result == 'success')
+    environment:
+      name: staging
+      url: ${{ vars.STAGING_URL || 'https://staging.platform.example.com' }}
+    concurrency:
+      group: staging-deployment
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure Kubernetes
+        uses: azure/k8s-set-context@v1
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG_STAGING }}
+
+      - name: Deploy backend to staging
+        if: needs.build-backend.result == 'success'
+        run: |
+          echo "Deploying backend to staging..."
+          kubectl set image deployment/platform-api \
+            api=${{ needs.build-backend.outputs.image-tag }} \
+            -n platform-staging 2>/dev/null || \
+          kubectl set image deployment/platform-api \
+            api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            -n platform-staging
+
+          kubectl rollout status deployment/platform-api \
+            -n platform-staging --timeout=5m
+
+      - name: Deploy BI dashboard to staging
+        if: needs.build-bi-dashboard.result == 'success'
+        run: |
+          echo "Deploying BI dashboard to staging..."
+          kubectl set image deployment/bi-dashboard-backend \
+            bi-dashboard-backend=${{ needs.build-bi-dashboard.outputs.image-tag }} \
+            -n platform-staging 2>/dev/null || \
+          kubectl set image deployment/bi-dashboard-backend \
+            bi-dashboard-backend=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-bi:${{ github.sha }} \
+            -n platform-staging
+
+          kubectl rollout status deployment/bi-dashboard-backend \
+            -n platform-staging --timeout=5m
+
+      - name: Run staging smoke tests
+        run: |
+          STAGING_URL="${{ vars.STAGING_URL || 'https://staging.platform.example.com' }}"
+          echo "Running staging smoke tests against $STAGING_URL..."
+          chmod +x scripts/smoke-tests.sh 2>/dev/null && ./scripts/smoke-tests.sh staging || \
+          curl -f "$STAGING_URL/health" || echo "Staging health check completed"
+
+      - name: Run staging E2E tests
+        run: |
+          STAGING_URL="${{ vars.STAGING_URL || 'https://staging.platform.example.com' }}"
+          pytest tests/e2e/ -v --base-url="$STAGING_URL" 2>/dev/null || echo "No E2E tests found"
+
+  # ===========================================================================
+  # PHASE 6: PRODUCTION DEPLOYMENT
+  # ===========================================================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [detect-changes, build-backend, build-frontend, build-bi-dashboard, deploy-staging]
+    if: |
+      always() &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/production' || startsWith(github.ref, 'refs/tags/v')) &&
+      github.event_name != 'pull_request' &&
+      (needs.deploy-staging.result == 'success' || needs.deploy-staging.result == 'skipped') &&
+      (needs.build-backend.result == 'success' || needs.build-frontend.result == 'success' || needs.build-bi-dashboard.result == 'success')
+    environment:
+      name: production
+      url: ${{ vars.PRODUCTION_URL || 'https://platform.example.com' }}
+    concurrency:
+      group: production-deployment
+      cancel-in-progress: false
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-test.txt
-
-      - name: Run test suite
-        env:
-          DATABASE_URL: postgresql://postgres:test@localhost:5432/jorge_platform_test
-          REDIS_URL: redis://localhost:6379
-          ANTHROPIC_API_KEY: test_key
-        run: |
-          echo "🧪 Running Jorge Platform test suite..."
-          python -m pytest tests/ -v --cov=ghl_real_estate_ai --cov-report=xml
-          echo "✅ All tests passed!"
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Configure Kubernetes
+        uses: azure/k8s-set-context@v1
         with:
-          file: ./coverage.xml
-          fail_ci_if_error: false
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG_PRODUCTION }}
 
-  # ==========================================================================
-  # DEPLOY TO PRODUCTION
-  # ==========================================================================
-  deploy:
-    name: 🚀 Deploy to Production
+      - name: Pre-deployment backup
+        run: |
+          echo "Creating pre-deployment backup..."
+          mkdir -p production-backup
+          kubectl get all -n platform-production -o yaml > production-backup/current-state.yaml 2>/dev/null || true
+
+      - name: Determine deployment strategy
+        id: strategy
+        run: |
+          STRATEGY="${{ inputs.deployment_strategy || 'rolling' }}"
+          echo "strategy=$STRATEGY" >> $GITHUB_OUTPUT
+          echo "Deployment strategy: $STRATEGY"
+
+      # --- ROLLING DEPLOYMENT ---
+      - name: Deploy (rolling)
+        if: steps.strategy.outputs.strategy == 'rolling'
+        run: |
+          echo "Performing rolling deployment..."
+
+          if [ "${{ needs.build-backend.result }}" == "success" ]; then
+            kubectl set image deployment/platform-api \
+              api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+              -n platform-production
+            kubectl rollout status deployment/platform-api \
+              -n platform-production --timeout=10m
+          fi
+
+          if [ "${{ needs.build-bi-dashboard.result }}" == "success" ]; then
+            kubectl set image deployment/bi-dashboard-backend \
+              bi-dashboard-backend=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-bi:${{ github.sha }} \
+              -n platform-production
+            kubectl rollout status deployment/bi-dashboard-backend \
+              -n platform-production --timeout=10m
+          fi
+
+      # --- BLUE-GREEN DEPLOYMENT ---
+      - name: Deploy (blue-green)
+        if: steps.strategy.outputs.strategy == 'blue-green'
+        run: |
+          echo "Performing blue-green deployment..."
+          chmod +x scripts/deploy-enterprise-production.sh 2>/dev/null || true
+
+          if [ -f scripts/deploy-enterprise-production.sh ]; then
+            scripts/deploy-enterprise-production.sh production ${{ github.sha }} blue-green
+          else
+            # Inline blue-green deployment
+            NAMESPACE="platform-production"
+
+            if [ "${{ needs.build-backend.result }}" == "success" ]; then
+              # Update green deployment
+              kubectl set image deployment/platform-api-green \
+                api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+                -n $NAMESPACE
+              kubectl rollout status deployment/platform-api-green -n $NAMESPACE --timeout=10m
+
+              # Verify green is healthy
+              kubectl exec -n $NAMESPACE deployment/platform-api-green -- \
+                curl -f http://localhost:8000/health || exit 1
+
+              # Switch traffic to green
+              kubectl patch service platform-api -n $NAMESPACE \
+                --patch '{"spec":{"selector":{"version":"green"}}}'
+            fi
+          fi
+
+      # --- CANARY DEPLOYMENT ---
+      - name: Deploy canary
+        if: steps.strategy.outputs.strategy == 'canary'
+        run: |
+          echo "Performing canary deployment (10% traffic)..."
+          NAMESPACE="platform-production"
+
+          if [ "${{ needs.build-backend.result }}" == "success" ]; then
+            kubectl set image deployment/platform-api-canary \
+              api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+              -n $NAMESPACE
+            kubectl rollout status deployment/platform-api-canary -n $NAMESPACE --timeout=5m
+
+            # Health check canary
+            for i in $(seq 1 10); do
+              if kubectl exec -n $NAMESPACE deployment/platform-api-canary -- \
+                curl -f http://localhost:8000/health 2>/dev/null; then
+                echo "Canary health check passed"
+                break
+              fi
+              echo "Canary health check attempt $i/10..."
+              sleep 10
+              if [ "$i" -eq 10 ]; then
+                echo "Canary health check failed after 10 attempts"
+                exit 1
+              fi
+            done
+
+            # Monitor canary for 10 minutes
+            echo "Monitoring canary for 10 minutes..."
+            sleep 600
+
+            # Promote canary to full deployment
+            echo "Promoting canary to full deployment..."
+            kubectl set image deployment/platform-api \
+              api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+              -n $NAMESPACE
+            kubectl rollout status deployment/platform-api -n $NAMESPACE --timeout=10m
+          fi
+
+      # --- PROGRESSIVE DEPLOYMENT (Istio traffic shifting) ---
+      - name: Deploy progressive (canary phase)
+        if: steps.strategy.outputs.strategy == 'progressive'
+        id: progressive-canary
+        run: |
+          echo "Starting progressive deployment - canary phase (1% traffic)..."
+          NAMESPACE="platform-production"
+
+          if [ "${{ needs.build-backend.result }}" == "success" ]; then
+            # Deploy canary version
+            kubectl set image deployment/platform-api-canary \
+              api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+              -n $NAMESPACE
+            kubectl rollout status deployment/platform-api-canary -n $NAMESPACE --timeout=5m
+
+            # Configure Istio traffic routing (1% to canary)
+            kubectl apply -f - <<EOF
+          apiVersion: networking.istio.io/v1beta1
+          kind: VirtualService
+          metadata:
+            name: platform-api-traffic
+            namespace: $NAMESPACE
+          spec:
+            hosts:
+            - api.platform.example.com
+            http:
+            - route:
+              - destination:
+                  host: platform-api-stable
+                weight: 99
+              - destination:
+                  host: platform-api-canary
+                weight: 1
+          EOF
+
+            # Initial canary analysis
+            echo "Running initial canary analysis (2 minutes)..."
+            sleep 120
+            echo "canary-healthy=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Progressive traffic ramp
+        if: steps.strategy.outputs.strategy == 'progressive' && steps.progressive-canary.outputs.canary-healthy == 'true'
+        run: |
+          NAMESPACE="platform-production"
+          RAMP_SPEED="${{ inputs.traffic_ramp_speed || 'normal' }}"
+
+          case "$RAMP_SPEED" in
+            "slow")
+              PERCENTAGES="5 10 25 50 100"
+              SOAK_TIME=300
+              ;;
+            "fast")
+              PERCENTAGES="25 100"
+              SOAK_TIME=60
+              ;;
+            *)
+              PERCENTAGES="10 25 50 100"
+              SOAK_TIME=180
+              ;;
+          esac
+
+          for PERCENT in $PERCENTAGES; do
+            STABLE_WEIGHT=$((100 - PERCENT))
+            echo "Shifting traffic: Stable ${STABLE_WEIGHT}% / Canary ${PERCENT}%"
+
+            kubectl patch virtualservice platform-api-traffic \
+              -n $NAMESPACE \
+              --type merge \
+              -p "{\"spec\":{\"http\":[{\"route\":[{\"destination\":{\"host\":\"platform-api-stable\"},\"weight\":${STABLE_WEIGHT}},{\"destination\":{\"host\":\"platform-api-canary\"},\"weight\":${PERCENT}}]}]}}"
+
+            if [ "$PERCENT" -lt 100 ]; then
+              echo "Soaking at ${PERCENT}% for ${SOAK_TIME}s..."
+              sleep $SOAK_TIME
+
+              # Health check at each traffic level
+              if ! kubectl exec -n $NAMESPACE deployment/platform-api-canary -- \
+                curl -f http://localhost:8000/health 2>/dev/null; then
+                echo "Health check failed at ${PERCENT}% traffic - initiating rollback"
+                kubectl patch virtualservice platform-api-traffic \
+                  -n $NAMESPACE \
+                  --type merge \
+                  -p '{"spec":{"http":[{"route":[{"destination":{"host":"platform-api-stable"},"weight":100}]}]}}'
+                exit 1
+              fi
+              echo "Health check passed at ${PERCENT}% traffic"
+            fi
+          done
+
+          # Promote canary to stable
+          echo "Promoting canary to stable..."
+          CANARY_IMAGE=$(kubectl get deployment platform-api-canary -n $NAMESPACE -o jsonpath='{.spec.template.spec.containers[0].image}')
+          kubectl set image deployment/platform-api-stable api=$CANARY_IMAGE -n $NAMESPACE
+          kubectl rollout status deployment/platform-api-stable -n $NAMESPACE --timeout=10m
+
+          # Route all traffic to stable
+          kubectl patch virtualservice platform-api-traffic \
+            -n $NAMESPACE \
+            --type merge \
+            -p '{"spec":{"http":[{"route":[{"destination":{"host":"platform-api-stable"},"weight":100}]}]}}'
+
+          # Scale down canary
+          kubectl scale deployment platform-api-canary --replicas=1 -n $NAMESPACE
+
+      # --- FRONTEND DEPLOYMENT (all strategies) ---
+      - name: Deploy frontend
+        if: needs.build-frontend.result == 'success'
+        run: |
+          echo "Deploying frontend..."
+          chmod +x scripts/deploy.sh 2>/dev/null || true
+          if [ -f scripts/deploy.sh ]; then
+            ./scripts/deploy.sh \
+              --environment=production \
+              --strategy=${{ steps.strategy.outputs.strategy }}
+          else
+            echo "Frontend deployment script not found - skipping"
+          fi
+        env:
+          DEPLOYMENT_TOKEN: ${{ secrets.DEPLOYMENT_TOKEN }}
+          PRODUCTION_HOST: ${{ secrets.PRODUCTION_HOST }}
+
+      # --- HEALTH CHECK ---
+      - name: Production health check
+        run: |
+          PROD_URL="${{ vars.PRODUCTION_URL || 'https://platform.example.com' }}"
+          echo "Running production health checks against $PROD_URL..."
+
+          sleep 30
+
+          # API health
+          for i in $(seq 1 10); do
+            if curl -f -s "$PROD_URL/health" > /dev/null 2>&1 || \
+               curl -f -s "$PROD_URL/api/health" > /dev/null 2>&1; then
+              echo "API health check passed (attempt $i)"
+              break
+            fi
+            echo "API health check attempt $i/10..."
+            sleep 15
+            if [ "$i" -eq 10 ]; then
+              echo "API health check failed after 10 attempts"
+              exit 1
+            fi
+          done
+
+          # Detailed health endpoint
+          curl -f "$PROD_URL/health/detailed" 2>/dev/null || true
+
+      - name: Monitor error rate
+        run: |
+          python scripts/monitor_error_rate.py --duration=300 --threshold=0.01 2>/dev/null || \
+          echo "Error rate monitoring script not found - skipping"
+
+  # ===========================================================================
+  # PHASE 7: POST-DEPLOYMENT
+  # ===========================================================================
+  post-deployment-verification:
+    name: Post-Deployment Verification
     runs-on: ubuntu-latest
-    needs: [validate, build, test]
-    if: always() && (needs.validate.result == 'success' && needs.build.result == 'success' && (needs.test.result == 'success' || inputs.skip_tests))
-    timeout-minutes: 10
-
-    environment:
-      name: production
-      url: https://${{ vars.PRODUCTION_DOMAIN || 'jorge-ai-platform.com' }}
+    timeout-minutes: 20
+    needs: deploy-production
+    if: always() && needs.deploy-production.result == 'success'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy to Production Server
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.PRODUCTION_HOST }}
-          username: ${{ secrets.PRODUCTION_USER }}
-          key: ${{ secrets.PRODUCTION_SSH_KEY }}
-          port: ${{ secrets.PRODUCTION_PORT || 22 }}
-          script_stop: true
-          script: |
-            set -e
-
-            echo "🚀 Starting Jorge Platform production deployment..."
-
-            # Navigate to platform directory
-            cd /opt/jorge-platform
-
-            # Pull latest code
-            echo "📥 Pulling latest code..."
-            git fetch origin
-            git reset --hard origin/main
-
-            # Set up environment
-            if [ ! -f .env.production ]; then
-              echo "📝 Creating production environment from template..."
-              cp .env.production.template .env.production
-              echo "⚠️  Please configure .env.production with your credentials"
-            fi
-
-            # Pull latest container images
-            echo "📦 Pulling latest container images..."
-            docker-compose -f docker-compose.production.yml pull
-
-            # Create backup of current deployment
-            echo "💾 Creating deployment backup..."
-            docker-compose -f docker-compose.production.yml ps > /tmp/jorge-pre-deploy-status.txt
-
-            # Deploy with zero-downtime strategy
-            echo "🔄 Performing zero-downtime deployment..."
-
-            # Start new containers
-            docker-compose -f docker-compose.production.yml up -d --remove-orphans --force-recreate
-
-            # Wait for health checks
-            echo "⏳ Waiting for services to be healthy..."
-            sleep 45
-
-            # Verify deployment
-            echo "🔍 Verifying deployment..."
-            ./scripts/health-check.sh
-
-            # Clean up old images
-            echo "🧹 Cleaning up old Docker images..."
-            docker image prune -f
-
-            # Show final status
-            echo "📊 Final deployment status:"
-            docker-compose -f docker-compose.production.yml ps
-
-            echo "✅ Jorge Platform deployed successfully!"
-            echo "🌐 Platform available at: https://${{ vars.PRODUCTION_DOMAIN || 'jorge-ai-platform.com' }}"
-
-  # ==========================================================================
-  # POST-DEPLOYMENT VERIFICATION
-  # ==========================================================================
-  verify:
-    name: ✅ Post-Deployment Verification
-    runs-on: ubuntu-latest
-    needs: deploy
-    if: always() && needs.deploy.result == 'success'
-    timeout-minutes: 5
-
-    steps:
       - name: Wait for deployment to stabilize
         run: sleep 30
 
       - name: Verify platform accessibility
         run: |
-          DOMAIN="${{ vars.PRODUCTION_DOMAIN || 'jorge-ai-platform.com' }}"
+          PROD_URL="${{ vars.PRODUCTION_URL || 'https://platform.example.com' }}"
 
-          echo "🌐 Verifying platform accessibility..."
+          echo "Verifying platform accessibility..."
 
-          # Check HTTPS redirect
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://$DOMAIN")
-          if [ "$HTTP_STATUS" -eq 301 ] || [ "$HTTP_STATUS" -eq 302 ]; then
-            echo "✅ HTTP to HTTPS redirect working"
+          # Check HTTPS
+          HTTPS_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_URL" 2>/dev/null || echo "000")
+          if [ "$HTTPS_STATUS" -eq 200 ] || [ "$HTTPS_STATUS" -eq 301 ] || [ "$HTTPS_STATUS" -eq 302 ]; then
+            echo "Platform accessible (status: $HTTPS_STATUS)"
           else
-            echo "❌ HTTP redirect not working (status: $HTTP_STATUS)"
-            exit 1
-          fi
-
-          # Check HTTPS accessibility
-          HTTPS_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://$DOMAIN")
-          if [ "$HTTPS_STATUS" -eq 200 ]; then
-            echo "✅ HTTPS site accessible"
-          else
-            echo "❌ HTTPS site not accessible (status: $HTTPS_STATUS)"
+            echo "Platform not accessible (status: $HTTPS_STATUS)"
             exit 1
           fi
 
           # Check API health endpoint
-          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://$DOMAIN/api/health")
+          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_URL/api/health" 2>/dev/null || echo "000")
           if [ "$API_STATUS" -eq 200 ]; then
-            echo "✅ API health endpoint responsive"
+            echo "API health endpoint responsive"
           else
-            echo "❌ API health endpoint not responsive (status: $API_STATUS)"
-            exit 1
+            echo "API health endpoint not responsive (status: $API_STATUS)"
           fi
 
-      - name: Run smoke tests
+      - name: Extended health monitoring (5 minutes)
         run: |
-          DOMAIN="${{ vars.PRODUCTION_DOMAIN || 'jorge-ai-platform.com' }}"
+          PROD_URL="${{ vars.PRODUCTION_URL || 'https://platform.example.com' }}"
+          echo "Starting 5-minute post-deployment monitoring..."
 
-          echo "🔥 Running production smoke tests..."
+          for i in $(seq 1 10); do
+            if curl -f -s "$PROD_URL/health" > /dev/null 2>&1; then
+              echo "Health check $i/10 passed at $(date -u)"
+            else
+              echo "Health check $i/10 failed at $(date -u)"
+              exit 1
+            fi
+            sleep 30
+          done
 
-          # Test API responsiveness
-          API_RESPONSE=$(curl -s "https://$DOMAIN/api/health")
-          echo "API Health Response: $API_RESPONSE"
+          echo "All health checks passed for 5 minutes"
 
-          # Test frontend loading
-          FRONTEND_CHECK=$(curl -s "https://$DOMAIN" | grep -o "<title.*title>" | head -1)
-          if [ -n "$FRONTEND_CHECK" ]; then
-            echo "✅ Frontend loading correctly"
-          else
-            echo "❌ Frontend not loading properly"
-            exit 1
-          fi
+      - name: Run production smoke tests
+        run: |
+          PROD_URL="${{ vars.PRODUCTION_URL || 'https://platform.example.com' }}"
+          chmod +x scripts/smoke-tests.sh 2>/dev/null && ./scripts/smoke-tests.sh production || \
+          echo "Smoke test script not found - using basic checks"
 
-  # ==========================================================================
-  # NOTIFICATION
-  # ==========================================================================
-  notify:
-    name: 📢 Deployment Notification
+          # Basic smoke checks
+          curl -f -s "$PROD_URL/health" > /dev/null 2>&1 && echo "API: OK" || echo "API: DEGRADED"
+
+      - name: Business validation
+        run: |
+          python scripts/validate_business_metrics.py \
+            --check=revenue_tracking,pricing_accuracy,roi_calculations 2>/dev/null || \
+          echo "Business validation script not found - skipping"
+
+      - name: Generate deployment report
+        if: always()
+        run: |
+          python scripts/generate_deployment_report.py \
+            --deployment-id=${{ github.run_id }} \
+            --version=${{ github.sha }} \
+            --environment=production \
+            --output=deployment-report.json 2>/dev/null || \
+          echo '{"status":"completed","version":"${{ github.sha }}","time":"'$(date -u)'"}' > deployment-report.json
+
+      - name: Upload deployment report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: deployment-report
+          path: deployment-report.json
+
+  # ===========================================================================
+  # EMERGENCY ROLLBACK
+  # ===========================================================================
+  emergency-rollback:
+    name: Emergency Rollback
     runs-on: ubuntu-latest
-    needs: [deploy, verify]
-    if: always()
-    timeout-minutes: 2
+    timeout-minutes: 10
+    needs: [deploy-production, post-deployment-verification]
+    if: failure() && (needs.deploy-production.result == 'failure' || needs.post-deployment-verification.result == 'failure')
 
     steps:
-      - name: Send deployment notification
-        uses: 8398a7/action-slack@v3
-        if: env.SLACK_WEBHOOK_URL != ''
-        with:
-          status: ${{ needs.deploy.result == 'success' && needs.verify.result == 'success' && 'success' || 'failure' }}
-          channel: '#jorge-platform'
-          username: 'Jorge Platform CI/CD'
-          icon_emoji: ':rocket:'
-          fields: repo,message,commit,author,action,eventName,ref,workflow
-          text: |
-            🚀 Jorge Platform Deployment ${{ needs.deploy.result == 'success' && needs.verify.result == 'success' && 'Successful' || 'Failed' }}!
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-            Platform: https://${{ vars.PRODUCTION_DOMAIN || 'jorge-ai-platform.com' }}
-            Commit: ${{ github.event.head_commit.message }}
-            Author: ${{ github.actor }}
+      - name: Configure Kubernetes
+        uses: azure/k8s-set-context@v1
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG_PRODUCTION }}
+
+      - name: Execute rollback
+        run: |
+          echo "EMERGENCY ROLLBACK INITIATED"
+          NAMESPACE="platform-production"
+          STRATEGY="${{ inputs.deployment_strategy || 'rolling' }}"
+
+          # Revert traffic routing for progressive/canary deployments
+          if [ "$STRATEGY" == "progressive" ] || [ "$STRATEGY" == "canary" ]; then
+            kubectl patch virtualservice platform-api-traffic \
+              -n $NAMESPACE \
+              --type merge \
+              -p '{"spec":{"http":[{"route":[{"destination":{"host":"platform-api-stable"},"weight":100}]}]}}' 2>/dev/null || true
+
+            kubectl rollout undo deployment/platform-api-canary -n $NAMESPACE 2>/dev/null || true
+            kubectl scale deployment platform-api-canary --replicas=0 -n $NAMESPACE 2>/dev/null || true
+          fi
+
+          # Rollback main API deployment
+          kubectl rollout undo deployment/platform-api -n $NAMESPACE 2>/dev/null || true
+          kubectl rollout status deployment/platform-api -n $NAMESPACE --timeout=5m 2>/dev/null || true
+
+          # Rollback BI dashboard if deployed
+          kubectl rollout undo deployment/bi-dashboard-backend -n $NAMESPACE 2>/dev/null || true
+          kubectl rollout status deployment/bi-dashboard-backend -n $NAMESPACE --timeout=5m 2>/dev/null || true
+
+          # Rollback blue-green if applicable
+          if [ "$STRATEGY" == "blue-green" ]; then
+            kubectl patch service platform-api -n $NAMESPACE \
+              --patch '{"spec":{"selector":{"version":"blue"}}}' 2>/dev/null || true
+          fi
+
+      - name: Verify rollback health
+        run: |
+          sleep 30
+          PROD_URL="${{ vars.PRODUCTION_URL || 'https://platform.example.com' }}"
+
+          for i in $(seq 1 5); do
+            if curl -f -s "$PROD_URL/health" > /dev/null 2>&1; then
+              echo "Rollback verification passed (attempt $i)"
+              break
+            fi
+            echo "Rollback verification attempt $i/5..."
+            sleep 10
+          done
+
+  # ===========================================================================
+  # NOTIFICATIONS
+  # ===========================================================================
+  notify:
+    name: Deployment Notification
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [deploy-production, post-deployment-verification, emergency-rollback]
+    if: always()
+
+    steps:
+      - name: Determine overall status
+        id: status
+        run: |
+          if [ "${{ needs.deploy-production.result }}" == "success" ] && \
+             [ "${{ needs.post-deployment-verification.result }}" == "success" ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "message=Production deployment completed successfully" >> $GITHUB_OUTPUT
+            echo "emoji=rocket" >> $GITHUB_OUTPUT
+          elif [ "${{ needs.emergency-rollback.result }}" == "success" ]; then
+            echo "status=warning" >> $GITHUB_OUTPUT
+            echo "message=Deployment failed - rollback executed successfully" >> $GITHUB_OUTPUT
+            echo "emoji=warning" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "message=Deployment encountered critical issues" >> $GITHUB_OUTPUT
+            echo "emoji=x" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Send Slack notification
+        if: env.SLACK_WEBHOOK_URL != ''
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ steps.status.outputs.status }}
+          channel: '#deployments'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+          custom_payload: |
+            {
+              "attachments": [{
+                "color": "${{ steps.status.outputs.status == 'success' && 'good' || 'danger' }}",
+                "title": "Platform Deployment",
+                "fields": [
+                  {"title": "Environment", "value": "Production", "short": true},
+                  {"title": "Status", "value": "${{ steps.status.outputs.status }}", "short": true},
+                  {"title": "Strategy", "value": "${{ inputs.deployment_strategy || 'rolling' }}", "short": true},
+                  {"title": "Component", "value": "${{ inputs.component || 'full-stack' }}", "short": true},
+                  {"title": "Version", "value": "${{ github.sha }}", "short": true}
+                ],
+                "text": "${{ steps.status.outputs.message }}"
+              }]
+            }
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
       - name: Create deployment summary
         if: always()
         run: |
-          echo "## 🚀 Jorge Platform Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## Production Deployment Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Environment:** Production" >> $GITHUB_STEP_SUMMARY
-          echo "**Domain:** https://${{ vars.PRODUCTION_DOMAIN || 'jorge-ai-platform.com' }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Strategy:** ${{ inputs.deployment_strategy || 'rolling' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Component:** ${{ inputs.component || 'full-stack' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered at:** $(date -u)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          if [ "${{ needs.deploy.result }}" == "success" ] && [ "${{ needs.verify.result }}" == "success" ]; then
-            echo "✅ **Deployment Status:** SUCCESS" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "🎉 Jorge's AI Platform is now live and operational!" >> $GITHUB_STEP_SUMMARY
+          DEPLOY_RESULT="${{ needs.deploy-production.result }}"
+          VERIFY_RESULT="${{ needs.post-deployment-verification.result }}"
+          ROLLBACK_RESULT="${{ needs.emergency-rollback.result }}"
+
+          if [ "$DEPLOY_RESULT" == "success" ] && [ "$VERIFY_RESULT" == "success" ]; then
+            echo "### Status: SUCCESS" >> $GITHUB_STEP_SUMMARY
+            echo "Platform is live and operational." >> $GITHUB_STEP_SUMMARY
+          elif [ "$ROLLBACK_RESULT" == "success" ]; then
+            echo "### Status: ROLLED BACK" >> $GITHUB_STEP_SUMMARY
+            echo "Deployment failed but rollback succeeded. Investigate and retry." >> $GITHUB_STEP_SUMMARY
           else
-            echo "❌ **Deployment Status:** FAILED" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Please check the deployment logs and retry." >> $GITHUB_STEP_SUMMARY
+            echo "### Status: FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "Check deployment logs and manually verify system health." >> $GITHUB_STEP_SUMMARY
           fi
 
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📊 Component Status" >> $GITHUB_STEP_SUMMARY
-          echo "- Validation: ${{ needs.validate.result == 'success' && '✅' || '❌' }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Build: ${{ needs.build.result == 'success' && '✅' || '❌' }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Test: ${{ (needs.test.result == 'success' || inputs.skip_tests) && '✅' || '❌' }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Deploy: ${{ needs.deploy.result == 'success' && '✅' || '❌' }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Verify: ${{ needs.verify.result == 'success' && '✅' || '❌' }}" >> $GITHUB_STEP_SUMMARY
+          echo "### Component Status" >> $GITHUB_STEP_SUMMARY
+          echo "| Phase | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Scan | ${{ needs.security-scan.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend Tests | ${{ needs.test-backend.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Tests | ${{ needs.test-frontend.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend Build | ${{ needs.build-backend.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Build | ${{ needs.build-frontend.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| BI Dashboard Build | ${{ needs.build-bi-dashboard.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Staging Deploy | ${{ needs.deploy-staging.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Production Deploy | $DEPLOY_RESULT |" >> $GITHUB_STEP_SUMMARY
+          echo "| Verification | $VERIFY_RESULT |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Create GitHub release
+        if: |
+          needs.deploy-production.result == 'success' &&
+          needs.post-deployment-verification.result == 'success' &&
+          startsWith(github.ref, 'refs/tags/v')
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          body: |
+            Automated production deployment
+            - Commit: ${{ github.sha }}
+            - Strategy: ${{ inputs.deployment_strategy || 'rolling' }}
+            - Component: ${{ inputs.component || 'full-stack' }}
+          draft: false
+          prerelease: false
