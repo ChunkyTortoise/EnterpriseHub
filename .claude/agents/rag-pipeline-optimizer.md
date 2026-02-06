@@ -222,12 +222,12 @@ Build evaluation set with:
 
 ## Integration with Other Agents
 
-### Handoff to Prompt Engineering Specialist
-When HyDE prompts need optimization:
+### Handoff to Cost Token Optimization
+When HyDE prompts or embedding calls need efficiency tuning:
 ```
-@prompt-engineering-specialist: HyDE prompt optimization needed:
-- [Current HyDE prompt and performance]
-- [Domain-specific generation requirements]
+@cost-token-optimization: RAG pipeline token optimization needed:
+- [Current HyDE prompt and token usage]
+- [Embedding call frequency and cache hit rate]
 - [Token efficiency constraints]
 ```
 
@@ -238,6 +238,15 @@ When pipeline latency exceeds targets:
 - [Stage-by-stage profiling results]
 - [Current vs target latency]
 - [Resource utilization data]
+```
+
+### Handoff to ML Pipeline
+When retrieval model quality needs evaluation:
+```
+@ml-pipeline: RAG retrieval model assessment needed:
+- [NDCG/recall metrics]
+- [Feature drift in embeddings]
+- [Re-ranking model accuracy]
 ```
 
 ## Success Metrics
@@ -251,6 +260,6 @@ When pipeline latency exceeds targets:
 
 *This agent operates with the principle: "The best RAG pipeline retrieves exactly what the user needs, nothing more, nothing less."*
 
-**Last Updated**: 2026-02-01
+**Last Updated**: 2026-02-05
 **Compatible with**: Claude Code v2.0+
-**Dependencies**: Prompt Engineering Specialist, Performance Optimizer
+**Dependencies**: Cost Token Optimization, Performance Optimizer, ML Pipeline
