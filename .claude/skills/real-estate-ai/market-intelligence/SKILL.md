@@ -1,15 +1,15 @@
 # Market Intelligence Skill
 
 ## Overview
-Advanced Austin real estate market analysis and property intelligence using MCP integrations.
+Advanced Rancho Cucamonga real estate market analysis and property intelligence using MCP integrations.
 
 ## Commands
 
-### `/austin-market`
-Comprehensive Austin real estate market analysis with trend identification.
+### `/rancho-market`
+Comprehensive Rancho Cucamonga real estate market analysis with trend identification.
 
-**Usage**: `/austin-market [area] [price_range] [timeframe]`
-**Example**: `/austin-market west-lake-hills 500k-1m q4-2025`
+**Usage**: `/rancho-market [area] [price_range] [timeframe]`
+**Example**: `/rancho-market alta-loma 500k-800k q4-2025`
 
 **Implementation**:
 - Uses Firecrawl MCP to scrape current listings
@@ -18,10 +18,10 @@ Comprehensive Austin real estate market analysis with trend identification.
 - Stores findings in Memory MCP for trend tracking
 
 ### `/property-match`
-Match leads from GoHighLevel to Austin property inventory.
+Match leads from GoHighLevel to Rancho Cucamonga property inventory.
 
 **Usage**: `/property-match [lead_id] [criteria]`
-**Example**: `/property-match jorge_lead_123 3br-cedar-park-under-600k`
+**Example**: `/property-match jorge_lead_123 3br-etiwanda-under-700k`
 
 **Implementation**:
 - Queries Jorge's GHL account via MCP
@@ -30,10 +30,10 @@ Match leads from GoHighLevel to Austin property inventory.
 - Generates match recommendations with reasoning
 
 ### `/investment-scan`
-Identify undervalued Austin properties with growth potential.
+Identify undervalued Rancho Cucamonga properties with growth potential.
 
 **Usage**: `/investment-scan [area] [roi_target] [max_price]`
-**Example**: `/investment-scan downtown 15% 800k`
+**Example**: `/investment-scan terra-vista 12% 750k`
 
 **Implementation**:
 - Scrapes property listings and recent sales
@@ -45,7 +45,7 @@ Identify undervalued Austin properties with growth potential.
 Generate comprehensive market intelligence reports.
 
 **Usage**: `/market-report [type] [area] [format]`
-**Example**: `/market-report cma west-lake-hills pdf`
+**Example**: `/market-report cma alta-loma pdf`
 
 **Implementation**:
 - Gathers multi-source property data
@@ -63,19 +63,19 @@ Generate comprehensive market intelligence reports.
 
 ## Market Specializations
 
-### Austin Geographic Areas
-- Downtown Austin (condos, urban living)
-- West Lake Hills (luxury, waterfront)
-- Cedar Park/Round Rock (family suburbs)
-- South Austin (emerging neighborhoods)
-- East Austin (gentrification zones)
+### Rancho Cucamonga Geographic Areas
+- Alta Loma (foothills, equestrian properties, premium lots)
+- Etiwanda (top-rated schools, family neighborhoods)
+- Haven Avenue Corridor (commercial proximity, newer builds)
+- Victoria Gardens Area (walkable retail, urban feel)
+- Terra Vista / Day Creek (planned communities, HOA-managed)
 
 ### Property Types
-- Single-family homes (suburban market)
-- Luxury properties ($1M+ segment)
-- Investment properties (rental opportunities)
-- New developments (pre-construction)
-- Distressed properties (fix-and-flip)
+- Single-family homes (primary market, ~$650K median)
+- Luxury properties ($1M+ foothills segment)
+- Investment properties (rental opportunities, IE growth)
+- New developments (pre-construction in Day Creek)
+- Multi-family (duplex/triplex near transit)
 
 ## Success Metrics
 
@@ -85,4 +85,4 @@ Generate comprehensive market intelligence reports.
 - Lead-to-property conversion improvement
 
 ---
-**Ready for Austin real estate market domination!**
+**Ready for Rancho Cucamonga real estate market intelligence!**

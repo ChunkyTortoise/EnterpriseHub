@@ -16,16 +16,17 @@ body:
       label: Module Affected
       description: Which module is experiencing the bug?
       options:
-        - Market Pulse
-        - Financial Analyst
-        - Margin Hunter
-        - Agent Logic
-        - Content Engine
-        - Data Detective
-        - Marketing Analytics
-        - Multi-Agent Workflow
-        - Smart Forecast
-        - Design System
+        - Jorge Bots (Lead/Buyer/Seller)
+        - BI Dashboard (Streamlit)
+        - FastAPI Backend (Routes/API)
+        - GHL CRM Integration
+        - AI Orchestration (Claude/Gemini)
+        - ML Scoring Engines
+        - RAG Pipeline
+        - Voice AI (Retell/Vapi)
+        - Stripe Billing
+        - Agent Mesh / Swarm
+        - DevOps / Docker / CI
         - Core/Utils
         - Other
     validations:

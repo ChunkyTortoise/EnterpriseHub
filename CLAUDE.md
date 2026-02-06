@@ -43,6 +43,26 @@ ghl_real_estate_ai/            # Main app
 - **Env vars**: `PROJECT_FEATURE_NAME` | **DB tables**: `plural_snake_case`
 - **Errors**: Explicit exception types, structured JSON responses (`error`, `message`, `field`, `code`)
 
+## Agent & MCP Landscape
+
+### Claude Code Agents (17)
+| Category | Agents |
+|----------|--------|
+| **Core Dev** | architecture-sentinel, security-auditor, performance-optimizer, integration-test-workflow |
+| **Domain** | compliance-risk, intent-decoder, handoff-orchestrator, conversation-design |
+| **Data & ML** | database-migration, ml-pipeline, predictive-analytics, rag-pipeline-optimizer |
+| **Platform** | api-consistency, devops-infrastructure, cost-token-optimization |
+| **BI** | dashboard-design, kpi-definition |
+
+### MCP Servers (5)
+| Server | Package | Purpose |
+|--------|---------|---------|
+| memory | `@modelcontextprotocol/server-memory` | Knowledge graph persistence |
+| postgres | `@modelcontextprotocol/server-postgres` | Direct DB queries via `${DATABASE_URL}` |
+| redis | `@gongrzhe/server-redis-mcp` | Cache inspection via `${REDIS_URL}` |
+| stripe | `@stripe/mcp` | Billing management via `${STRIPE_SECRET_KEY}` |
+| playwright | `@playwright/mcp` | E2E browser testing |
+
 ## Critical Services
 | Service | File | Key Behavior |
 |---------|------|-------------|
@@ -69,4 +89,4 @@ ghl_real_estate_ai/            # Main app
 
 ---
 
-**Version**: 6.0 | **Last Updated**: February 5, 2026
+**Version**: 7.0 | **Last Updated**: February 5, 2026
