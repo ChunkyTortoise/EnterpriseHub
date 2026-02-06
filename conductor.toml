@@ -3,10 +3,10 @@
 
 [project]
 name = "EnterpriseHub"
-version = "5.1.2"
-description = "Enterprise-Grade Real Estate Intelligence with Mobile-First Architecture"
-status = "demo-integration-ready"
-current_phase = "enterprise-ui-integration"
+version = "6.0.0"
+description = "Enterprise SaaS Platform with AI Orchestration, BI Dashboards, and Multi-Agent Coordination"
+status = "active-development"
+current_phase = "infrastructure-consolidation"
 plan_id = "904587f9-597e-4d5a-a904-1062fc6b6674"
 
 [conductor]
@@ -28,9 +28,22 @@ swarm_manifest = "docs/swarm/strike_team_beta.md"
 # Link to existing MCP configurations
 config = "gemini.toml"
 
+[agents]
+# 17 domain-agnostic Claude Code agents in .claude/agents/
+count = 17
+config_dir = ".claude/agents/"
+domain_context = ".claude/reference/"
+
 [workflow]
 # Preferences for AI-assisted development
 preferred_models = ["gemini-2.0-flash", "gemini-2.5-flash"]
 code_style = "pep8"
 test_framework = "pytest"
 linting = "ruff"
+type_checking = "pyright"
+
+[ci]
+# 11 GitHub Actions workflows
+workflow_count = 11
+workflow_dir = ".github/workflows/"
+unified_deploy = "production-deploy.yml"
