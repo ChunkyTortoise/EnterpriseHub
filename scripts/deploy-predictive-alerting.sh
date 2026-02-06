@@ -90,7 +90,7 @@ WORKDIR /app
 RUN chown jorge:jorge /app
 
 # Install Python dependencies
-COPY requirements-production.txt /app/
+COPY requirements.txt /app/
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir \
     scikit-learn==1.3.2 \
@@ -98,7 +98,7 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pandas==2.1.4 \
     joblib==1.3.2 \
     aiohttp==3.9.1 \
-    && pip install --no-cache-dir -r requirements-production.txt
+    && pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY --chown=jorge:jorge ghl_real_estate_ai/monitoring/predictive_alerting_engine.py /app/

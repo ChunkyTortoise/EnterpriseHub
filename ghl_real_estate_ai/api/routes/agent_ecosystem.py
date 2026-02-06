@@ -14,7 +14,10 @@ import uuid
 from ghl_real_estate_ai.agents.claude_concierge_agent import get_claude_concierge
 from ghl_real_estate_ai.agents.property_intelligence_agent import get_property_intelligence_agent
 from ghl_real_estate_ai.agents.customer_journey_orchestrator import get_customer_journey_orchestrator
-from ghl_real_estate_ai.agents.adaptive_jorge_seller_bot import get_adaptive_jorge_bot
+try:
+    from ghl_real_estate_ai.agents.adaptive_jorge_seller_bot import get_adaptive_jorge_bot
+except ImportError:
+    get_adaptive_jorge_bot = None
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.api.middleware.enhanced_auth import get_current_user_optional

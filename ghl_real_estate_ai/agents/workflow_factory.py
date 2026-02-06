@@ -1,6 +1,6 @@
 from typing import Dict, Any, Optional
 from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
-from ghl_real_estate_ai.agents.jorge_seller_workflow import JorgeSellerWorkflow
+from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -33,8 +33,8 @@ class WorkflowFactory:
             
         elif workflow_type == "seller":
             if "seller" not in cls._instances:
-                logger.info("Initializing JorgeSellerWorkflow (Seller)")
-                cls._instances["seller"] = JorgeSellerWorkflow(conversation_manager, ghl_client)
+                logger.info("Initializing JorgeSellerBot (Seller)")
+                cls._instances["seller"] = JorgeSellerBot(conversation_manager, ghl_client)
             return cls._instances["seller"]
             
         else:

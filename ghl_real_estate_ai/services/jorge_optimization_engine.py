@@ -490,7 +490,7 @@ class JorgeOptimizationEngine:
                         "5. Optimize database queries with proper indexing"
                     ],
                     code_changes_required=[
-                        "ghl_real_estate_ai/agents/jorge_seller_bot_enhanced.py",
+                        "ghl_real_estate_ai/agents/jorge_seller_bot.py",
                         "ghl_real_estate_ai/services/claude_orchestrator.py",
                         "ghl_real_estate_ai/services/cache_service.py"
                     ],
@@ -524,7 +524,7 @@ class JorgeOptimizationEngine:
                     "4. Streamline intervention decision logic"
                 ],
                 code_changes_required=[
-                    "ghl_real_estate_ai/agents/jorge_seller_bot_enhanced.py"
+                    "ghl_real_estate_ai/agents/jorge_seller_bot.py"
                 ],
                 testing_requirements=[
                     "A/B test conversation flow changes",
@@ -558,7 +558,7 @@ class JorgeOptimizationEngine:
                     "5. Optimize AI model cache management"
                 ],
                 code_changes_required=[
-                    "ghl_real_estate_ai/agents/jorge_seller_bot_enhanced.py",
+                    "ghl_real_estate_ai/agents/jorge_seller_bot.py",
                     "ghl_real_estate_ai/services/conversation_manager.py",
                     "ghl_real_estate_ai/services/cache_service.py"
                 ],
@@ -605,7 +605,7 @@ class JorgeOptimizationEngine:
                     "5. Implement confidence-based decision thresholds"
                 ],
                 code_changes_required=[
-                    "ghl_real_estate_ai/agents/jorge_seller_bot_enhanced.py"
+                    "ghl_real_estate_ai/agents/jorge_seller_bot.py"
                 ],
                 testing_requirements=[
                     "Stall detection accuracy testing on 500+ scenarios",
@@ -674,7 +674,7 @@ class JorgeOptimizationEngine:
                 "5. Implement compliance safeguards for aggressive tactics"
             ],
             code_changes_required=[
-                "ghl_real_estate_ai/agents/jorge_seller_bot_enhanced.py"
+                "ghl_real_estate_ai/agents/jorge_seller_bot.py"
             ],
             testing_requirements=[
                 "Jorge methodology effectiveness validation",

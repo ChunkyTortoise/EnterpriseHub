@@ -19,9 +19,9 @@ RUN groupadd -r jorge && useradd -r -g jorge -m -s /bin/bash jorge
 WORKDIR /app
 
 # Copy requirements and install dependencies
-COPY requirements.txt requirements-prod.txt ./
+COPY requirements.txt ./
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
-RUN pip install --no-cache-dir -r requirements-prod.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Install Celery and related dependencies
 RUN pip install --no-cache-dir \
