@@ -77,24 +77,26 @@ For tables >1M rows:
 - Implement blue-green migration strategy
 ```
 
-## EnterpriseHub-Specific Focus
+## Project-Specific Guidance
 
-### Lead Data Models
-- **Lead scoring tables**: FRS/PCS columns, indexing strategy for scoring queries
-- **Conversation history**: Efficient storage patterns, partitioning by date
-- **Property data**: Geospatial indexing, pgvector for property embeddings
-- **CRM sync state**: GHL sync tracking, conflict resolution columns
+Adapts to the active project's domain via CLAUDE.md and reference files.
+
+### Common Data Model Patterns
+- **User tables**: Profile data, preferences, indexing strategy for lookup queries
+- **Event tracking**: Activity logs, efficient storage patterns, partitioning by date
+- **Audit logs**: Change history, user attribution, retention policies
+- **External sync state**: Third-party integration tracking, conflict resolution columns
 
 ### Critical Table Patterns
 ```yaml
 required_indexes:
-  leads: [status, temperature, created_at, agent_id]
-  conversations: [lead_id, created_at]  # partitioned by month
-  properties: [location_gist, price_range, status]
-  scores: [lead_id, score_type, calculated_at]
+  users: [status, created_at, email]
+  events: [user_id, created_at]  # partitioned by month
+  audit_logs: [entity_type, entity_id, created_at]
+  scores: [user_id, score_type, calculated_at]
 
 required_constraints:
-  leads: [unique(ghl_contact_id), check(temperature IN ('hot','warm','cold'))]
+  users: [unique(email), check(status IN ('active','inactive','suspended'))]
   scores: [check(score >= 0 AND score <= 100)]
 ```
 

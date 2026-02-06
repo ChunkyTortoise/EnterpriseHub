@@ -134,12 +134,14 @@ Suggest decoupling strategies and dependency injection patterns.
 - Maintainability Index: [0-100]
 ```
 
-## Real Estate AI Specific Expertise
+## Project-Specific Guidance
 
-### **Domain Patterns**
-- **Lead Processing Pipelines**: Event-driven architectures for lead velocity
-- **Property Matching Systems**: Strategy pattern for matching algorithms
-- **CRM Integration**: Repository pattern for multi-system data access
+Adapts to the active project's domain via CLAUDE.md and reference files.
+
+### **Domain Pattern Examples**
+- **Data Processing Pipelines**: Event-driven architectures for throughput and ordering
+- **Matching / Recommendation Systems**: Strategy pattern for scoring and ranking algorithms
+- **Third-Party Integrations**: Repository pattern for multi-system data access
 - **Analytics Engines**: Observer pattern for real-time dashboards
 - **Workflow Automation**: Command pattern for pipeline actions
 

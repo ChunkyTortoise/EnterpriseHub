@@ -45,8 +45,11 @@ CHECKS:
 - **Database Migration**: Verify PII encryption columns and access control in schema changes.
 - **API Consistency**: Ensure auth decorators and rate limiting on all endpoints.
 
-## EnterpriseHub-Specific Security Focus
-- **GHL API Security**: Validate webhook signatures and rate limiting
-- **Jorge Bot Security**: Ensure AI responses don't leak sensitive lead data
-- **Real Estate PII**: Protect buyer/seller contact information and financial data
-- **Claude Assistant**: Secure API key handling and prompt injection prevention
+## Project-Specific Guidance
+
+Adapts to the active project's domain via CLAUDE.md and reference files.
+
+- **API Key Management**: Validate webhook signatures, rotate keys, enforce env-only storage
+- **PII Protection**: Ensure user contact, financial, and identity data is encrypted and access-controlled
+- **Third-Party Integrations**: Audit external service connections for data leakage and auth weaknesses
+- **AI Security**: Secure API key handling, prompt injection prevention, prevent sensitive data in AI responses

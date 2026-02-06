@@ -100,9 +100,11 @@ Audit 18 workflows for:
 - Excessive parallel jobs burning CI minutes
 ```
 
-## EnterpriseHub Infrastructure Map
+## Project-Specific Guidance
 
-### Docker Compose Hierarchy
+Adapts to the active project's domain via CLAUDE.md and reference files.
+
+### Docker Compose Hierarchy (Example)
 ```yaml
 base:
   docker-compose.yml           # Core: app, postgres, redis, nginx
@@ -110,32 +112,32 @@ base:
 
 production:
   docker-compose.production.yml      # Full production stack
-  docker-compose.bi.production.yml   # BI-specific production
+  docker-compose.bi.production.yml   # BI/analytics production
 
-feature_specific:
+app_services:
   docker-compose.enterprise.yml      # Enterprise features
-  docker-compose.service6.yml        # Service6 deployment
+  docker-compose.workers.yml         # Background workers
   docker-compose.kafka.yml           # Event streaming layer
 
-operational:
+monitoring:
   docker-compose.performance.yml     # Prometheus + Grafana
   docker-compose.scale.yml           # Auto-scaling config
 ```
 
-### Service Dependencies
+### Service Dependencies (Example)
 ```
 nginx ──► app (FastAPI :8000)
            ├──► postgres (:5432)
            ├──► redis (:6379)
            └──► kafka (:9092, optional)
 
-streamlit (:8501) ──► app (API calls)
+dashboard (:8501) ──► app (API calls)
 
 prometheus (:9090) ──► app (/metrics)
 grafana (:3000) ──► prometheus
 ```
 
-### CI/CD Workflow Map
+### CI/CD Workflow Map (Example)
 ```yaml
 core_pipelines:
   - ci.yml                           # PR checks (lint, test, scan)
@@ -143,8 +145,8 @@ core_pipelines:
   - test-and-deploy.yml              # Combined test+deploy
 
 specialized:
-  - jorge-platform-deployment.yml    # Jorge bot platform
-  - jorge-bi-production-deploy.yml   # BI dashboard
+  - app-platform-deployment.yml      # Main application platform
+  - bi-production-deploy.yml         # BI dashboard
   - compliance-platform.yml          # Compliance features
   - security-scan.yml                # Dedicated security scan
   - visual-regression.yml            # UI visual tests

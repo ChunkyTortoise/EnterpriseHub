@@ -157,4 +157,3 @@ def select_agent_for_task(task_type: str, complexity: float) -> AgentType:
 
 - `orchestration-patterns.md` - Coordination patterns
 - `task-management.md` - Task creation and dependency management
-- `workflow-state.md` - Workflow state management

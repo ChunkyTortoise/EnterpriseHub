@@ -30,7 +30,7 @@ For every AI call path, measure:
 - Total cost per call
 - Calls per hour/day
 - Cache hit rate (avoided calls)
-- Cost per lead interaction
+- Cost per user interaction
 - Cost per conversion
 
 Create a cost attribution model:
@@ -48,19 +48,19 @@ model_routing_rules:
     latency: "<500ms"
 
   standard_conversation:
-    task: "Lead qualification, property matching"
+    task: "User qualification, multi-turn dialogue"
     model: "claude-sonnet / gemini-pro"
     cost: "$3/M input, $15/M output"
     latency: "<2s"
 
   complex_analysis:
-    task: "CMA generation, negotiation strategy, market reports"
+    task: "Report generation, strategy analysis, deep reasoning"
     model: "claude-opus / gemini-ultra"
     cost: "$15/M input, $75/M output"
     latency: "<10s"
 
   research:
-    task: "Market data, competitive analysis"
+    task: "Web research, competitive analysis"
     model: "perplexity-sonar"
     cost: "Per-query pricing"
     latency: "<5s"
@@ -80,7 +80,7 @@ Token reduction techniques:
 2. CONTEXT WINDOW MANAGEMENT
    - Sliding window for conversation history (last N turns)
    - Summarize older context instead of full history
-   - Only include relevant lead data, not full profile
+   - Only include relevant entity data, not full profile
    - Target: <2000 tokens for context injection
 
 3. OUTPUT CONTROL
@@ -90,7 +90,7 @@ Token reduction techniques:
    - Target: Output tokens <2x the useful content
 
 4. BATCHING
-   - Batch multiple lead scores in single call
+   - Batch multiple scoring requests in single call
    - Aggregate analytics queries
    - Target: >5x throughput improvement via batching
 ```
@@ -106,12 +106,12 @@ L1 (In-Memory):
 
 L2 (Redis):
   - Hit rate target: >25% for similar queries
-  - TTL: 1 hour (scoring results, market data)
+  - TTL: 1 hour (scoring results, reference data)
   - Cost savings: Eliminates API call, Redis cost negligible
 
 L3 (PostgreSQL):
   - Hit rate target: >15% for knowledge queries
-  - TTL: 24 hours (property data, CMA results)
+  - TTL: 24 hours (entity data, generated reports)
   - Cost savings: Eliminates API call, query cost minimal
 
 ROI calculation:
@@ -122,7 +122,9 @@ ROI calculation:
   Cache ROI: ($X - $Z - $Y) / $Y × 100%
 ```
 
-## EnterpriseHub Cost Landscape
+## Project-Specific Guidance
+
+Adapts to the active project's domain via CLAUDE.md and reference files.
 
 ### AI Provider Breakdown
 ```yaml
@@ -131,43 +133,39 @@ providers:
     usage: "Primary - conversation, scoring, reports"
     models: [opus, sonnet, haiku]
     billing: "Per token (input/output)"
-    service: services/claude_orchestrator.py
 
   gemini:
     usage: "Secondary - supplementary analysis"
     models: [pro, flash]
     billing: "Per token"
-    service: optional integration
 
   perplexity:
-    usage: "Market research, property data"
+    usage: "Web research, domain-specific data"
     models: [sonar-pro]
     billing: "Per query"
-    service: services/perplexity_researcher.py
 
   openrouter:
     usage: "Multi-model routing, fallback"
     billing: "Per token (varies by model)"
-    service: optional integration
 ```
 
 ### Cost Centers
 ```yaml
 high_cost_features:
-  jorge_conversations:
+  chat_sessions:
     volume: "~500 conversations/day"
     avg_tokens: "~3000 per conversation"
-    optimization: "Model routing by qualification stage"
+    optimization: "Model routing by task complexity"
 
-  lead_scoring:
-    volume: "~2000 scores/day"
-    avg_tokens: "~800 per score"
-    optimization: "Batch scoring, cache recent scores"
+  batch_processing:
+    volume: "~2000 operations/day"
+    avg_tokens: "~800 per operation"
+    optimization: "Batch requests, cache recent results"
 
-  cma_reports:
+  report_generation:
     volume: "~50 reports/day"
     avg_tokens: "~5000 per report"
-    optimization: "Cache market data, template-based generation"
+    optimization: "Cache reference data, template-based generation"
 
   analytics:
     volume: "~100 queries/day"
@@ -179,7 +177,7 @@ high_cost_features:
 ```yaml
 alerts:
   daily_spend: ">$50 = warning, >$100 = critical"
-  per_lead_cost: ">$0.50 = investigate"
+  per_user_cost: ">$0.50 = investigate"
   cache_miss_rate: ">70% = tune cache"
   model_upgrade_drift: "Track when haiku tasks drift to sonnet"
 ```
@@ -211,12 +209,12 @@ alerts:
 ### Top Cost Drivers
 | Feature | Monthly Cost | Calls/Day | Avg Tokens | Model |
 |---------|-------------|-----------|------------|-------|
-| Jorge conversations | $X | 500 | 3000 | sonnet |
+| Chat sessions | $X | 500 | 3000 | sonnet |
 
 ### Optimization Plan
 | # | Action | Savings/mo | Effort | Risk |
 |---|--------|-----------|--------|------|
-| 1 | Route qualifying Q1-Q3 to haiku | $X | Low | Low |
+| 1 | Route simple classification tasks to haiku | $X | Low | Low |
 
 ### Cache Performance
 | Layer | Hit Rate | Saved Calls/Day | Monthly Savings |

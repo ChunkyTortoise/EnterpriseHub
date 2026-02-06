@@ -14,6 +14,10 @@ on:
       - 'CLAUDE.md'
   workflow_dispatch:  # Allow manual trigger
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   validate-setup:
     name: Validate Claude Code Setup

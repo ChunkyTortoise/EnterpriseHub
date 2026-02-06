@@ -1,12 +1,16 @@
 # Agent Integration Test Workflow
 
-**Purpose**: Demonstrate multi-agent coordination for real estate AI enhancement
-**Test Scenario**: Property Matcher Service Enhancement
+**Purpose**: Demonstrate multi-agent coordination for feature enhancement
+**Test Scenario**: User Recommendation Service Enhancement
 **Version**: 2.0.0
+
+## Project-Specific Guidance
+
+Adapts to the active project's domain via CLAUDE.md and reference files.
 
 ## Test Scenario Overview
 
-We'll enhance the existing Property Matcher AI service with a new scoring algorithm, demonstrating how agents coordinate:
+We'll enhance the existing Recommendation Service with a new scoring algorithm, demonstrating how agents coordinate:
 
 1. **Architecture Sentinel** - Analyzes current code and recommends patterns
 2. **Database Migration** - Validates schema changes for new scoring data
@@ -17,12 +21,12 @@ We'll enhance the existing Property Matcher AI service with a new scoring algori
 
 Based on your existing codebase structure:
 ```
-ghl_real_estate_ai/
-├── streamlit_demo/components/property_matcher_ai.py
-├── streamlit_demo/components/property_cards.py
-├── services/advanced_property_matching_engine.py
+src/
+├── components/recommendation_engine.py
+├── components/result_cards.py
+├── services/advanced_matching_engine.py
 ├── services/predictive_analytics_engine.py
-└── agents/property_intelligence_agent.py
+└── agents/intelligence_agent.py
 ```
 
 ## Workflow Execution
@@ -31,13 +35,13 @@ ghl_real_estate_ai/
 ```
 ARCHITECTURE SENTINEL ACTIVATION
 
-Input: "Enhance property matching with ML-based scoring"
+Input: "Enhance recommendation matching with ML-based scoring"
 
 Expected Analysis:
-1. Review existing property_matcher_ai.py implementation
+1. Review existing recommendation_engine.py implementation
 2. Identify current patterns and architecture
 3. Recommend Strategy pattern for scoring algorithms
-4. Suggest Repository pattern for property data access
+4. Suggest Repository pattern for data access
 5. Flag potential performance improvements
 
 Output: Architecture recommendations with specific refactoring steps
@@ -50,7 +54,7 @@ DATABASE MIGRATION ACTIVATION
 Input: Architecture recommendations requiring new data storage
 
 Expected Actions:
-1. Review existing property and scoring models
+1. Review existing data and scoring models
 2. Propose Alembic migration for new scoring columns/tables
 3. Validate index strategy for scoring queries (<50ms target)
 4. Ensure pgvector dimensions match embedding model
@@ -66,7 +70,7 @@ ML PIPELINE ACTIVATION
 Input: New scoring algorithm implementation
 
 Expected Actions:
-1. Evaluate feature engineering for property scoring
+1. Evaluate feature engineering for recommendation scoring
 2. Validate score range (0-100) and calibration
 3. Check for data leakage in training features
 4. Benchmark accuracy against rule-based baseline
@@ -79,7 +83,7 @@ Output: Model quality report with metrics
 ```
 API CONSISTENCY ACTIVATION
 
-Input: New property scoring endpoints
+Input: New recommendation scoring endpoints
 
 Expected Actions:
 1. Validate URL naming conventions (plural nouns, snake_case)
@@ -112,41 +116,41 @@ Output: Production-ready enhancement with full test coverage
 
 ### **Step 1: Test Suite Creation**
 ```python
-# test_property_scoring_strategy.py
+# test_recommendation_scoring_strategy.py
 
 import pytest
 from unittest.mock import Mock, patch
-from ghl_real_estate_ai.services.property_scorer import (
-    PropertyScorer,
+from src.services.recommendation_scorer import (
+    RecommendationScorer,
     MLBasedScoringStrategy,
     RuleBasedScoringStrategy
 )
 
-class TestPropertyScoringStrategy:
+class TestRecommendationScoringStrategy:
     """
-    TDD-first test suite for property scoring enhancement.
+    TDD-first test suite for recommendation scoring enhancement.
     Following RED-GREEN-REFACTOR discipline.
     """
 
-    def test_should_score_property_when_perfect_match(self):
+    def test_should_score_item_when_perfect_match(self):
         """RED PHASE: This test should fail initially"""
-        property_data = {
-            'price': 500000,
-            'bedrooms': 3,
-            'bathrooms': 2,
-            'location': 'Rancho Cucamonga, CA',
-            'square_feet': 2000
+        item_data = {
+            'category': 'premium',
+            'features': ['feature_a', 'feature_b', 'feature_c'],
+            'rating': 4.8,
+            'region': 'us-west',
+            'tier': 'enterprise'
         }
         user_criteria = {
-            'max_price': 550000,
-            'min_bedrooms': 3,
-            'min_bathrooms': 2,
-            'preferred_location': 'Rancho Cucamonga, CA',
-            'min_square_feet': 1800
+            'preferred_category': 'premium',
+            'required_features': ['feature_a', 'feature_b'],
+            'min_rating': 4.5,
+            'preferred_region': 'us-west',
+            'tier': 'enterprise'
         }
-        scorer = PropertyScorer(strategy=MLBasedScoringStrategy())
+        scorer = RecommendationScorer(strategy=MLBasedScoringStrategy())
 
-        score = scorer.score_property(property_data, user_criteria)
+        score = scorer.score_item(item_data, user_criteria)
 
         assert score >= 90
         assert isinstance(score, float)
@@ -154,14 +158,14 @@ class TestPropertyScoringStrategy:
 
     def test_should_use_different_strategies_when_specified(self):
         """Test strategy pattern implementation"""
-        property_data = {'price': 400000, 'bedrooms': 2}
-        criteria = {'max_price': 450000, 'min_bedrooms': 2}
+        item_data = {'category': 'standard', 'rating': 4.0}
+        criteria = {'preferred_category': 'standard', 'min_rating': 3.5}
 
-        ml_scorer = PropertyScorer(strategy=MLBasedScoringStrategy())
-        rule_scorer = PropertyScorer(strategy=RuleBasedScoringStrategy())
+        ml_scorer = RecommendationScorer(strategy=MLBasedScoringStrategy())
+        rule_scorer = RecommendationScorer(strategy=RuleBasedScoringStrategy())
 
-        ml_score = ml_scorer.score_property(property_data, criteria)
-        rule_score = rule_scorer.score_property(property_data, criteria)
+        ml_score = ml_scorer.score_item(item_data, criteria)
+        rule_score = rule_scorer.score_item(item_data, criteria)
 
         assert isinstance(ml_score, float)
         assert isinstance(rule_score, float)
@@ -184,7 +188,7 @@ assert migration.handles_existing_data() # Data safety
 Architecture Sentinel
     ├──► Database Migration: "New scoring tables needed"
     ├──► ML Pipeline: "Validate scoring algorithm quality"
-    └──► API Consistency: "Review new /api/v1/properties/scores endpoint"
+    └──► API Consistency: "Review new /api/v1/recommendations/scores endpoint"
 
 Database Migration
     └──► Performance Optimizer: "Verify query plans for new indexes"
@@ -217,7 +221,7 @@ API Consistency
 
 ```bash
 # Start development session
-claude "Enhance lead scoring algorithm accuracy"
+claude "Enhance recommendation scoring algorithm accuracy"
 
 # Agents coordinate automatically:
 # 1. Architecture Sentinel analyzes current scoring implementation
