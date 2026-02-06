@@ -1,0 +1,29 @@
+{
+  "pythonVersion": "3.11",
+  "pythonPlatform": "Linux",
+  "venvPath": ".",
+  "venv": ".venv",
+  "typeCheckingMode": "basic",
+  "reportMissingImports": "warning",
+  "reportMissingTypeStubs": false,
+  "reportOptionalMemberAccess": "warning",
+  "reportGeneralTypeIssues": "warning",
+  "reportUnusedImport": "warning",
+  "reportUnusedVariable": "warning",
+  "reportDuplicateImport": "error",
+  "exclude": [
+    ".agent",
+    "_archive",
+    ".git",
+    ".venv",
+    "build",
+    "dist",
+    "node_modules",
+    "**/__pycache__",
+    "**/tests/**"
+  ],
+  "include": [
+    "ghl_real_estate_ai",
+    "advanced_rag_system"
+  ]
+}
