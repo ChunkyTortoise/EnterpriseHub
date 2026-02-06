@@ -25,6 +25,15 @@ AI agents should read `.beads/issues.jsonl` to:
 - **11 GitHub Actions workflows** (consolidated from 17)
 - Agents adapt to project domain via `CLAUDE.md` and `.claude/reference/` files
 
+## jorge_real_estate_bots (Standalone Repo)
+- **Repo**: `ChunkyTortoise/jorge_real_estate_bots` (private)
+- **Status**: Phase 1 merged (PR #1), security cleanup pending
+- **Bots**: Lead, Buyer (new), Seller — Q1-Q4 qualification framework
+- **DB**: PostgreSQL async (SQLAlchemy + Alembic), Redis cache
+- **Tests**: 279 total, 256 pass (23 need PostgreSQL)
+- **Dashboard**: v3 with 20+ modular Streamlit components
+- **Critical**: `.env` committed, `__pycache__` tracked, fallback signature bug
+
 ### Adding an Issue
 Issues should be added as JSON lines to `.beads/issues.jsonl`.
 ```json
