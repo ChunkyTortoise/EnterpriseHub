@@ -32,20 +32,22 @@ Describe your changes in detail:
 
 <!-- Check all modules that are modified by this PR -->
 
-- [ ] Market Pulse (`modules/market_pulse.py`)
-- [ ] Financial Analyst (`modules/financial_analyst.py`)
-- [ ] Margin Hunter (`modules/margin_hunter.py`)
-- [ ] Agent Logic (`modules/agent_logic.py`)
-- [ ] Content Engine (`modules/content_engine.py`)
-- [ ] Data Detective (`modules/data_detective.py`)
-- [ ] Marketing Analytics (`modules/marketing_analytics.py`)
-- [ ] Multi-Agent Workflow (`modules/multi_agent.py`)
-- [ ] Smart Forecast (`modules/smart_forecast.py`)
-- [ ] Design System (`modules/design_system.py`)
+- [ ] Jorge Bots (`agents/jorge_*_bot.py`)
+- [ ] BI Dashboard (`streamlit_demo/`)
+- [ ] FastAPI Routes (`api/`)
+- [ ] GHL CRM Integration (`services/enhanced_ghl_client.py`)
+- [ ] AI Orchestration (`services/claude_orchestrator.py`)
+- [ ] ML Scoring Engines (`services/*engine*.py`)
+- [ ] RAG Pipeline (`advanced_rag_system/`)
+- [ ] Voice AI (`services/voice_ai_integration.py`)
+- [ ] Stripe Billing (`services/subscription_manager.py`)
+- [ ] Agent Mesh (`services/agent_mesh_coordinator.py`)
+- [ ] Models (`models/`)
 - [ ] Utilities (`utils/`)
 - [ ] Core App (`app.py`)
 - [ ] Tests (`tests/`)
 - [ ] CI/CD (`.github/`)
+- [ ] Docker/Infrastructure (`docker-compose*.yml`, `Dockerfile*`)
 
 ---
 
@@ -58,14 +60,14 @@ Describe your changes in detail:
 - [ ] All existing tests pass: `pytest tests/ -v`
 - [ ] Added new unit tests for new functionality
 - [ ] Added integration tests (if applicable)
-- [ ] Test coverage meets 80%+ threshold for new code: `pytest --cov=modules --cov=utils`
+- [ ] Test coverage meets 80%+ threshold for new code: `pytest --cov`
 
 ### Manual Testing
 
-- [ ] Ran the app locally: `streamlit run app.py`
+- [ ] Ran FastAPI locally: `uvicorn ghl_real_estate_ai.api.main:app`
+- [ ] Ran Streamlit locally: `streamlit run ghl_real_estate_ai/streamlit_demo/app.py`
 - [ ] Tested affected module(s) end-to-end
 - [ ] Verified edge cases and error handling
-- [ ] Tested with missing API key (if AI features affected)
 
 ---
 
@@ -79,28 +81,23 @@ Describe your changes in detail:
 
 ### Type Safety
 
-- [ ] `mypy modules/ utils/` passes with no errors
+- [ ] `pyright` passes with no errors
 - [ ] All new functions have complete type hints (parameters and return types)
 
 ### Security
 
-- [ ] `bandit -r modules/ utils/` passes with no high-severity issues
+- [ ] `bandit -r ghl_real_estate_ai/` passes with no high-severity issues
 - [ ] No secrets, credentials, or API keys in the code
-- [ ] User inputs are validated at boundaries
+- [ ] User inputs are validated with Pydantic at boundaries
+- [ ] PII handling follows encryption requirements (Fernet)
 
 ### Architecture Compliance
 
-- [ ] **No cross-module imports** (modules only import from `utils/`)
-- [ ] Session state initialized at module top level (not inside functions)
-- [ ] Expensive operations use `@st.cache_data(ttl=300)`
-- [ ] Proper error handling with custom exceptions from `utils/exceptions.py`
-- [ ] API integrations have graceful fallbacks when keys are missing
-
-### Documentation
-
-- [ ] Docstrings added to all new public functions
-- [ ] CLAUDE.md updated (if adding new modules or patterns)
-- [ ] CHANGELOG.md updated (for user-facing changes)
+- [ ] Follows existing patterns in the affected module
+- [ ] API endpoints use response envelope (success/data/meta)
+- [ ] Database changes include Alembic migration with downgrade
+- [ ] External API calls use circuit breaker pattern
+- [ ] Proper error handling with structured JSON responses
 
 ---
 
@@ -133,22 +130,7 @@ Describe your changes in detail:
 
 <!--
 Any additional context, implementation notes, or questions for reviewers?
-- Known limitations?
-- Future improvements planned?
-- Areas that need careful review?
 -->
-
----
-
-## Reviewer Guidance
-
-<!-- Help reviewers focus on what matters most -->
-
-**Key files to review:**
--
-
-**Areas needing careful review:**
--
 
 ---
 
