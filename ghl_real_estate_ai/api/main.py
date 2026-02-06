@@ -251,7 +251,7 @@ def _setup_routers(app: FastAPI):
     """Initialize all routers for the application."""
     from ghl_real_estate_ai.api.routes import (
         analytics, attribution_reports, bot_management, bulk_operations,
-        claude_chat, crm, golden_lead_detection, health, jorge_advanced,
+        claude_chat, crm, demo, golden_lead_detection, health, jorge_advanced,
         lead_lifecycle, leads, lead_bot_management, ml_scoring, portal,
         predictive_analytics, pricing_optimization, properties, team,
         voice, webhook, auth, lead_intelligence, agent_sync, agent_ui,
@@ -279,6 +279,7 @@ def _setup_routers(app: FastAPI):
     app.include_router(property_intelligence.router)
     app.include_router(error_monitoring.router)
     app.include_router(security.router)
+    app.include_router(demo.router)
     app.include_router(webhook.router, prefix="/api")
     app.include_router(analytics.router, prefix="/api")
     app.include_router(bulk_operations.router, prefix="/api", dependencies=[admin_guard])
