@@ -1,23 +1,32 @@
 # ==============================================================================
+# EnterpriseHub - Base Production Dependencies
+# ==============================================================================
+# All base/production dependencies required for the core application.
+# For development/testing extras, see requirements-dev.txt
+# For ML-specific dependencies, see requirements-ml.txt
+# ==============================================================================
+
+# ==============================================================================
 # Core Framework
 # ==============================================================================
 streamlit>=1.41.1
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
 
 # ==============================================================================
 # Data Processing & Analysis
 # ==============================================================================
 pandas>=2.1.3
 numpy>=1.26.2
+scipy>=1.11.4
+scikit-learn==1.4.0
+joblib==1.3.2
 
 # ==============================================================================
 # Async I/O Performance
 # ==============================================================================
 aiofiles>=24.1.0
 nest-asyncio>=1.5.8
-scipy>=1.11.4
-scikit-learn==1.4.0
-shap>=0.45.0
-joblib==1.3.2
 
 # ==============================================================================
 # Data Visualization
@@ -42,6 +51,7 @@ textblob==0.17.1
 langgraph==1.0.6
 langchain-core>=0.1.0
 langchain-anthropic>=0.1.0
+langsmith>=0.1.0
 fastmcp>=0.2.0
 # NOTE: sentence-transformers, transformers, spacy removed — they pull PyTorch
 # (~2GB) and cause Railway builds to timeout. Services use lazy imports.
@@ -49,8 +59,6 @@ fastmcp>=0.2.0
 # ==============================================================================
 # GHL Integration & Backend Services
 # ==============================================================================
-fastapi>=0.109.0
-uvicorn[standard]>=0.27.0
 pydantic>=2.5.0
 pydantic-settings>=2.1.0
 httpx[http2]>=0.26.0
@@ -75,7 +83,7 @@ reportlab>=4.0
 qrcode[pil]>=7.4.2
 
 # ==============================================================================
-# Database & Service6 Production Dependencies
+# Database & Production Dependencies
 # ==============================================================================
 psycopg2-binary>=2.9.0
 asyncpg>=0.31.0
@@ -89,6 +97,7 @@ aiohttp==3.13.3
 PyJWT>=2.8.0
 aiosqlite>=0.19.0
 alembic>=1.13.0
+cryptography>=41.0.0
 
 # ==============================================================================
 # Real-time Communication & System Monitoring
@@ -102,4 +111,19 @@ psutil>=5.9.0
 # Billing Integration
 # ==============================================================================
 stripe>=8.0.0
-langsmith>=0.1.0
+
+# ==============================================================================
+# High-Performance Computing (from requirements-production.txt)
+# ==============================================================================
+aioboto3>=12.3.0
+boto3>=1.34.0
+botocore>=1.34.0
+cachetools>=5.3.2
+cloudpickle>=3.0.0
+hiredis>=2.2.3
+httptools>=0.6.1
+msgpack>=1.0.7
+orjson>=3.9.10
+prometheus-client>=0.19.0
+structlog>=23.2.0
+uvloop>=0.19.0

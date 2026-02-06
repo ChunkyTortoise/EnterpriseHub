@@ -1,6 +1,6 @@
 <div align="center">
   <h1>EnterpriseHub</h1>
-  <p><strong>Enterprise Real Estate AI Platform with Multi-Agent Orchestration</strong></p>
+  <p><strong>Real Estate AI Platform with Multi-Agent Orchestration</strong></p>
 
   [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
   [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
@@ -14,24 +14,25 @@
 
 ## What This Is
 
-EnterpriseHub is a production-grade real estate AI platform that combines multi-agent bot orchestration, ML-powered lead scoring, and real-time business intelligence dashboards. Built for the Rancho Cucamonga and Austin markets, it integrates with GoHighLevel CRM to automate lead qualification, buyer/seller workflows, and market analysis through a coordinated system of specialized AI agents.
+EnterpriseHub is a real estate AI platform that automates lead qualification through coordinated AI agents. Three specialized bots (Lead, Buyer, Seller) qualify prospects using a Q0-Q4 framework, with results surfaced through a Streamlit BI dashboard and synced to GoHighLevel CRM.
+
+Built as a working platform for a real estate client in the Rancho Cucamonga market.
 
 ## Architecture
 
 ```
                           +---------------------------+
                           |    Streamlit BI Dashboard  |
-                          |  (5 Intelligence Hubs)     |
+                          |  (Command Center)          |
                           +------------+--------------+
                                        |
 +------------------+     +-------------+-------------+     +-------------------+
 |   Jorge Bots     |     |       FastAPI Core         |     | GoHighLevel CRM   |
 |                  +---->+    (Orchestration Layer)    +<----+   Integration     |
-|  Lead Bot        |     |                             |     |                   |
-|  Buyer Bot       |     |  Claude Orchestrator        |     |  Webhooks         |
-|  Seller Bot      |     |  Agent Mesh Coordinator     |     |  Contact Sync     |
-+------------------+     |  ML Lead Scoring Pipeline   |     |  Workflow Triggers |
-                         +-------------+---------------+     +-------------------+
+|  Lead Bot :8001  |     |                             |     |                   |
+|  Seller Bot :8002|     |  Claude Orchestrator        |     |  Webhooks         |
+|  Buyer Bot :8003 |     |  Agent Mesh Coordinator     |     |  Contact Sync     |
++------------------+     +-------------+---------------+     +-------------------+
                                        |
               +------------------------+------------------------+
               |                        |                        |
@@ -44,41 +45,27 @@ EnterpriseHub is a production-grade real estate AI platform that combines multi-
 
 ## Key Capabilities
 
-- **Multi-agent bot orchestration** -- Lead, Buyer, and Seller qualification bots with autonomous handoff and cross-bot coordination
-- **ML lead scoring pipeline** -- Gradient boosting models with SHAP explainability, 85%+ accuracy, and continuous retraining
-- **Real-time BI dashboard** -- 5 intelligence hubs (Executive, Lead Intelligence, Sales Copilot, Automation Studio, Operations)
-- **Advanced RAG pipeline** -- 0.7ms end-to-end retrieval (214x faster than target), hybrid BM25 + dense search with query enhancement
-- **Multi-LLM orchestration** -- Claude (primary), Gemini (analysis), OpenRouter (fallback), with semantic response caching
-- **GoHighLevel CRM integration** -- Webhook handling, contact sync, workflow triggers, and custom field mapping
-- **Enterprise cache layer** -- 4,900+ ops/sec with L1/L2/L3 caching, LRU eviction, and circuit breakers
-- **SMS compliance engine** -- TCPA opt-out handling, frequency limits, business hours enforcement, and audit trails
-
-## Performance
-
-| Metric | Target | Achieved |
-|--------|--------|----------|
-| API response time | < 200ms | 42ms |
-| Cache throughput | 1,000 ops/sec | 4,900+ ops/sec |
-| RAG retrieval | < 150ms | 0.7ms |
-| Lead scoring accuracy | > 80% | 85%+ |
-| Bot intent classification | > 90% | 95% |
-| Thread safety (concurrent ops) | 100% | 100% |
-| Test coverage | > 80% | 80%+ (650+ tests) |
+- **Multi-agent bot orchestration** -- Lead, Buyer, and Seller qualification bots with Q0-Q4 framework and cross-bot handoff
+- **Claude AI orchestration** -- Multi-strategy LLM parsing with L1/L2/L3 response caching and provider fallback
+- **Agent mesh coordination** -- Governance, routing, auto-scaling, and audit trails across agent fleet
+- **Real-time BI dashboard** -- Streamlit command center with lead pipeline, performance analytics, and commission tracking
+- **GoHighLevel CRM integration** -- Webhook handling, contact sync, workflow triggers, rate-limited at 10 req/s
+- **Advanced RAG pipeline** -- Hybrid BM25 + dense search with ChromaDB vector store and query enhancement
+- **SMS compliance** -- TCPA opt-out handling, frequency limits, business hours enforcement
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| API | FastAPI, async/await, Pydantic validation |
-| UI | Streamlit, Plotly, WebSocket real-time updates |
+| API | FastAPI (async), Pydantic validation |
+| UI | Streamlit, Plotly, WebSocket |
 | Database | PostgreSQL, Alembic migrations |
 | Cache | Redis (L1), Application memory (L2), Database (L3) |
-| AI/ML | Claude, Gemini, OpenRouter, XGBoost, SHAP |
+| AI/ML | Claude (primary), Gemini (analysis), OpenRouter (fallback) |
 | CRM | GoHighLevel (webhooks, contacts, workflows) |
 | Search | ChromaDB vector store, BM25, hybrid retrieval |
 | Payments | Stripe (subscriptions, webhooks) |
-| Voice | Retell AI, Vapi.ai |
-| Infrastructure | Docker Compose, Fly.io, nginx |
+| Infrastructure | Docker Compose, Fly.io |
 
 ## Quick Start
 
@@ -108,7 +95,7 @@ alembic upgrade head
 uvicorn app:app --reload --port 8000
 
 # BI Dashboard (separate terminal)
-streamlit run ghl_real_estate_ai/streamlit_demo/app.py --server.port 8501
+streamlit run admin_dashboard.py --server.port 8501
 ```
 
 ### Required Environment Variables
@@ -131,73 +118,63 @@ See [`.env.example`](.env.example) for the full configuration reference.
 ```
 EnterpriseHub/
 ├── ghl_real_estate_ai/           # Main application
-│   ├── agents/                   # Jorge bot implementations (Lead, Buyer, Seller)
-│   ├── api/routes/               # FastAPI endpoints (40+ route files)
-│   ├── services/                 # Business logic (62+ services)
+│   ├── agents/                   # Bot implementations (Lead, Buyer, Seller)
+│   ├── api/routes/               # FastAPI endpoints
+│   ├── services/                 # Business logic layer
+│   │   ├── claude_orchestrator.py    # Multi-LLM coordination + caching
+│   │   ├── agent_mesh_coordinator.py # Agent fleet management
+│   │   └── enhanced_ghl_client.py    # CRM integration (rate-limited)
 │   ├── models/                   # SQLAlchemy models, Pydantic schemas
 │   ├── intelligence/             # BI dashboard backends
-│   ├── analytics/                # Revenue attribution, CLV analytics
-│   ├── prediction/               # ML forecasting engines
-│   ├── compliance/               # SMS compliance, security framework
-│   ├── markets/                  # Multi-market expansion support
-│   └── streamlit_demo/           # Dashboard UI (137 components)
-│       ├── components/           # Reusable dashboard components
-│       └── pages/                # Streamlit multi-page app
-├── advanced_rag_system/          # RAG pipeline infrastructure
-│   └── src/
-│       ├── retrieval/            # BM25, dense, hybrid search
-│       ├── embeddings/           # Vector embeddings with caching
-│       └── vector_store/         # ChromaDB integration
-├── tests/                        # Test suite (650+ tests)
+│   ├── analytics/                # Revenue attribution, CLV
+│   ├── compliance/               # SMS compliance, TCPA
+│   └── streamlit_demo/           # Dashboard UI components
+├── advanced_rag_system/          # RAG pipeline
+│   └── src/                      # BM25, dense search, ChromaDB
+├── tests/                        # Test suite
 ├── docker-compose.yml            # Container orchestration
-├── fly.toml                      # Fly.io deployment config
 ├── alembic/                      # Database migrations
+├── app.py                        # FastAPI entry point
+├── admin_dashboard.py            # Streamlit BI dashboard
 └── requirements.txt              # Python dependencies
 ```
+
+## Core Services
+
+| Service | File | What It Does |
+|---------|------|-------------|
+| Claude Orchestrator | `services/claude_orchestrator.py` | Multi-strategy LLM parsing, L1/L2/L3 response cache, provider fallback |
+| Agent Mesh | `services/agent_mesh_coordinator.py` | Agent routing, governance, auto-scaling, audit trails |
+| GHL Client | `services/enhanced_ghl_client.py` | GoHighLevel CRM sync with 10 req/s rate limiting |
 
 ## Testing
 
 ```bash
-# Run full test suite
+# Run test suite
+python -m pytest tests/ -v
+
+# Run with coverage
 python -m pytest --cov=ghl_real_estate_ai --cov-report=term-missing
-
-# Run specific test modules
-python -m pytest tests/services/ -v
-python -m pytest advanced_rag_system/tests/ -v
-
-# Run with coverage threshold
-python -m pytest --cov=ghl_real_estate_ai --cov-fail-under=80
 ```
-
-**Coverage:** 650+ tests across unit, integration, and end-to-end categories covering bot logic, service layers, API routes, cache operations, and ML pipelines.
 
 ## Deployment
 
-The platform supports multiple deployment targets:
-
-| Platform | Config File | Notes |
-|----------|-------------|-------|
-| Docker Compose | `docker-compose.yml` | Full stack with PostgreSQL, Redis, nginx |
-| Fly.io | `fly.toml` | Production deployment with auto-scaling |
-| Railway | `railway.json` | One-click deploy |
-| Render | `render.yaml` | Managed infrastructure |
+| Platform | Config File |
+|----------|-------------|
+| Docker Compose | `docker-compose.yml` |
+| Fly.io | `fly.toml` |
+| Railway | `railway.json` |
+| Render | `render.yaml` |
 
 ```bash
-# Validate production readiness
-python3 validate_environment.py
-
-# Deploy with Docker
 docker-compose --profile production up -d
 ```
 
-## Contributing
+## Related Projects
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Install dev dependencies (`pip install -r dev-requirements.txt`)
-4. Write tests first, then implement
-5. Run `pytest` and `flake8` before committing
-6. Open a Pull Request
+- [**Jorge Bots**](https://github.com/ChunkyTortoise/jorge_real_estate_bots) -- Standalone 3-bot qualification system extracted from this platform. 279 tests, full technical spec.
+- [**AgentForge**](https://github.com/ChunkyTortoise/ai-orchestrator) -- Provider-agnostic async LLM client library (Claude, Gemini, OpenAI, Perplexity).
+- [**Revenue-Sprint**](https://github.com/ChunkyTortoise/Revenue-Sprint) -- Freelancer automation: Upwork scanner, proposal pipeline, LinkedIn outreach. 212+ tests.
 
 ## License
 

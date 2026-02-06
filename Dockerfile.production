@@ -65,7 +65,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 FROM base AS dependencies
 
 # Copy requirements files for better caching
-COPY requirements.txt requirements-prod.txt ./
+COPY requirements.txt ./
 COPY ghl_real_estate_ai/requirements_clean.txt ./ghl_requirements.txt
 
 # Create virtual environment and install dependencies
@@ -74,7 +74,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 # Install Python dependencies with optimizations
 RUN pip install --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir -r requirements-prod.txt && \
+    pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir \
         gunicorn[gthread] \
         uvicorn[standard] \

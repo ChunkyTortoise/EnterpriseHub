@@ -61,8 +61,8 @@ ghl_real_estate_ai/.env
 !.env*.example
 
 # Streamlit
-.streamlit/secrets.toml
-.streamlit/config.toml
+.streamlit/
+!.streamlit/*.example
 
 # Testing
 .pytest_cache/
@@ -129,6 +129,8 @@ logs/
 # Cache
 .cache/
 *.cache
+.chroma_db/
+.benchmarks/
 
 # MCP Configuration (contains local paths and secrets)
 *_mcp_config.json

@@ -35,7 +35,7 @@ RUN python3.9 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Install Python dependencies with optimizations
-COPY requirements-production.txt /tmp/requirements-production.txt
+COPY requirements.txt requirements-ml.txt /tmp/
 RUN pip install --no-cache-dir \
     # Core ML libraries with CUDA support
     torch==2.1.0+cu118 torchvision==0.16.0+cu118 --index-url https://download.pytorch.org/whl/cu118 \
@@ -60,7 +60,8 @@ RUN pip install --no-cache-dir \
     # Monitoring
     prometheus-client \
     # Additional optimizations
-    && pip install --no-cache-dir -r /tmp/requirements-production.txt
+    && pip install --no-cache-dir -r /tmp/requirements.txt \
+    && pip install --no-cache-dir -r /tmp/requirements-ml.txt
 
 # =============================================================================
 # Stage 2: Production Runtime with Optimizations

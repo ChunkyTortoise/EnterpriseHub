@@ -148,19 +148,7 @@ class MeshAgentRegistry:
                 "file": "ghl_real_estate_ai/agents/jorge_seller_bot.py",
                 "class": "JorgeSellerBot",
                 "capabilities": [AgentCapability.LEAD_QUALIFICATION, AgentCapability.CONVERSATION_ANALYSIS],
-                "name": "Jorge Seller Bot (Legacy)"
-            },
-            {
-                "file": "ghl_real_estate_ai/agents/jorge_seller_bot_progressive.py",
-                "class": "JorgeSellerBotProgressive",
-                "capabilities": [AgentCapability.LEAD_QUALIFICATION, AgentCapability.CONVERSATION_ANALYSIS],
-                "name": "Jorge Seller Bot (Progressive)"
-            },
-            {
-                "file": "ghl_real_estate_ai/agents/jorge_seller_bot_mcp_enhanced.py",
-                "class": "JorgeSellerBotMCPEnhanced",
-                "capabilities": [AgentCapability.LEAD_QUALIFICATION, AgentCapability.CONVERSATION_ANALYSIS, AgentCapability.FOLLOWUP_AUTOMATION],
-                "name": "Jorge Seller Bot (MCP Enhanced)"
+                "name": "Jorge Seller Bot"
             },
             {
                 "file": "ghl_real_estate_ai/agents/lead_bot.py",
