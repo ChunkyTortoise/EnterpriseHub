@@ -12,7 +12,7 @@ To transform specialized real estate expertise into monetizable AI assets throug
 - **Target Audience:** Real Estate PE firms, Investors, Agency owners.
 
 ## Strategic Position
-EnterpriseHub utilizes a "Modular Monolith" architecture with a specialized multi-agent swarm ("Strike Team Beta") to parallelize complex tasks such as market analysis, content generation, and technical due diligence.
+EnterpriseHub utilizes a "Modular Monolith" architecture with a multi-agent orchestration layer to parallelize complex tasks such as market analysis, content generation, and technical due diligence.
 
 ## Core Capabilities
 1. **Virtual AI Architect:** Autonomous strategy lead-intake.
