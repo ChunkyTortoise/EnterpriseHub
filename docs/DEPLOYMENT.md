@@ -117,21 +117,41 @@ The application auto-detects its environment mode:
 
 ## Docker Deployment
 
-### Build Image
+### Prerequisites
+
+- Docker Desktop installed ([Download](https://www.docker.com/products/docker-desktop))
+- Docker Compose v2.0+ (included with Docker Desktop)
+
+### Quick Start
 
 ```bash
-docker build -t enterprise-hub:latest .
+# Clone repository (if not already)
+git clone https://github.com/ChunkyTortoise/enterprise-hub.git
+cd enterprise-hub
+
+# Copy and configure environment
+cp .env.example .env
+# Edit .env with your API keys and configuration
+
+# Build and start all services
+docker-compose up -d --build
+
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
 ```
 
-### Docker Compose (Full Stack)
+### Environment Modes
 
-```bash
-# Development with all services
-docker-compose up -d
+The application auto-detects its environment:
 
-# Production profile with monitoring
-docker-compose --profile production --profile monitoring up -d
-```
+| Mode | Trigger | Behavior |
+|------|---------|----------|
+| **Demo** | `ENVIRONMENT=demo` or `GHL_API_KEY=demo_mode` | Mock data, no external API calls |
+| **Staging** | `ENVIRONMENT=staging` or test API key | Real APIs, test accounts |
+| **Production** | `ENVIRONMENT=production` + valid API key | Full validation, HTTPS enforced |
 
 ### Services Started
 
@@ -141,7 +161,26 @@ docker-compose --profile production --profile monitoring up -d
 | `streamlit` | 8501 | BI Dashboard |
 | `postgres` | 5432 | PostgreSQL database |
 | `redis` | 6379 | Cache and sessions |
-| `nginx` | 80/443 | Reverse proxy (production) |
+| `nginx` | 80/443 | Reverse proxy (production profile) |
+
+### Docker Commands
+
+```bash
+# Build specific service
+docker-compose build jorge-api
+
+# View logs for specific service
+docker-compose logs -f jorge-api
+
+# Restart service
+docker-compose restart jorge-api
+
+# Run with production profile
+docker-compose --profile production up -d
+
+# Run with monitoring stack
+docker-compose --profile production --profile monitoring up -d
+```
 
 ---
 
@@ -551,4 +590,74 @@ open https://grafana.example.com/d/jorge-bots
 
 ---
 
-**Version**: 2.2 | **Last Updated**: February 2, 2026
+## Troubleshooting
+
+### Docker Issues
+
+**Build fails with dependency errors:**
+```bash
+# Clear Docker cache and rebuild
+docker-compose down -v
+docker system prune -a
+docker-compose up -d --build
+```
+
+**Port already in use (8000 or 8501):**
+```bash
+# Find process using port
+lsof -i :8000
+# Kill process or change port in docker-compose.yml
+```
+
+**Database connection errors:**
+```bash
+# Verify PostgreSQL is running
+docker-compose ps postgres
+# Check logs
+docker-compose logs postgres
+# Ensure DATABASE_URL is set correctly in .env
+```
+
+### Railway Issues
+
+**Deployment fails during build:**
+- Verify `railway.jorge.toml` is in the repository root
+- Check all required environment variables are set
+- Review build logs: `railway logs --build`
+
+**Service starts but crashes:**
+- Verify API keys are valid: `ANTHROPIC_API_KEY`, `GHL_API_KEY`
+- Check for missing required env vars: `railway variables`
+- Review runtime logs: `railway logs`
+
+**Webhook not triggering:**
+- Verify webhook URL matches Railway domain
+- Check GHL workflow is active
+- Ensure contact has "Needs Qualifying" tag
+- Verify webhook secret matches: `GHL_WEBHOOK_SECRET`
+
+### Common Errors
+
+**"API key validation failed":**
+- Check API keys are correctly set in environment
+- Verify keys have not expired
+- Test keys directly via API documentation
+
+**"Database migration failed":**
+```bash
+# Check current migration state
+alembic current
+# Rollback one step if needed
+alembic downgrade -1
+# Re-apply migrations
+alembic upgrade head
+```
+
+**"Redis connection refused":**
+- Verify Redis is running: `docker-compose ps redis`
+- Check REDIS_URL format: `redis://localhost:6379`
+- In production, ensure REDIS_PASSWORD is set
+
+---
+
+**Version**: 2.3 | **Last Updated**: February 5, 2026

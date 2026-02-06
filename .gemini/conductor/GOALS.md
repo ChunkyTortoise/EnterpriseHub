@@ -1,14 +1,15 @@
-# Project Goals: EnterpriseHub (January 2026)
+# Project Goals: EnterpriseHub (February 2026)
 
-## Current Focus: Stability & Performance
-- **Zero Hallucination Policy:** Ensure all AI outputs are grounded in verified data and project documentation.
-- **Latency Optimization:** Maintain sub-2s page load times and sub-50ms computation for financial models.
-- **Production Hardening:** Achieve 100% test pass rate across 500+ automated tests.
+## Current Focus: jorge_real_estate_bots Cleanup & Hardening
+- **Security:** Remove `.env` from git history, rotate compromised secrets, untrack `__pycache__`.
+- **Test Infrastructure:** Set up test PostgreSQL (docker-compose or SQLite in-memory) so all 279 tests pass.
+- **Bug Fixes:** Fix `_get_fallback_conversations()` signature mismatch, replace remaining mock data methods in `metrics_service.py`.
+- **Production Hardening:** Replace hardcoded `admin123` password in `auth_service.py`.
 
 ## Short-Term Goals (Q1 2026)
-1. **Full Gemini Conductor Integration:** Transition all context management to the Conductor pattern.
-2. **Mobile Refinement:** Finalize the 6 production-ready mobile components and gesture support.
-3. **Advanced WebSocket Optimization:** Reduce alert delivery latency to sub-15 seconds.
+1. **jorge_real_estate_bots Phase 2:** Remaining mock→real data replacements in `_fetch_lead_data_for_budget_analysis`, `_fetch_lead_data_for_timeline_analysis`, `_generate_commission_trend_data`.
+2. **Full Gemini Conductor Integration:** Transition all context management to the Conductor pattern.
+3. **Mobile Refinement:** Finalize the 6 production-ready mobile components and gesture support.
 4. **Semantic Caching Expansion:** Target 50%+ reduction in LLM API costs.
 
 ## Long-Term Goals

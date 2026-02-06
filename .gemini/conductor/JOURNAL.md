@@ -1,5 +1,21 @@
 # Development Journal: EnterpriseHub
 
+## Wednesday, February 5, 2026
+### Task: jorge_real_estate_bots Production Integration (Phase 1)
+- **Action:** Created standalone repo `ChunkyTortoise/jorge_real_estate_bots` with 7 atomic commits merged via PR #1.
+- **Scope:** Buyer bot, PostgreSQL DB layer (SQLAlchemy + Alembic), replaced 3 mock data methods with real DB queries, dashboard v3 with 20+ Streamlit components, fixed flaky test fixture, Docker + Locust, docs reorganization.
+- **Key Fixes:**
+  - Replaced `_fetch_real_conversation_data` mock (~150 lines) with DB delegation
+  - Replaced `_calculate_real_lead_source_roi` random mock with `JorgeBusinessRules.calculate_commission()`
+  - Fixed `TestSellerBotEdgeCases` AsyncMock fixture (3 of 4 tests now pass)
+  - Fixed Python 3.14 regex incompatibility in `logger.py` (double-escaped backslashes)
+- **Test Results:** 256/279 pass. 23 fail due to no local PostgreSQL.
+- **Outstanding:** `.env` committed with secrets (needs scrub), 24 `__pycache__` files tracked, `_get_fallback_conversations()` signature mismatch.
+
+### Task: EnterpriseHub Infrastructure Consolidation
+- **Action:** Archived 527 stale docs, consolidated 17→11 GitHub Actions, genericized 17 agents, added 6 new agents, configured 5 MCP servers, set up hooks and pyright.
+- **Outcome:** Clean repo root (9 essential .md files), domain-agnostic agent pattern established.
+
 ## Sunday, January 25, 2026
 ### Task: Gemini Conductor Integration
 - **Action:** Initialized `.gemini/conductor/` directory and `conductor.toml`.

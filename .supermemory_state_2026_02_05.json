@@ -1,10 +1,10 @@
 {
   "project": "EnterpriseHub",
-  "version": "6.0.0",
-  "timestamp": "2026-02-05T23:59:00Z",
-  "session_id": "infra-consolidation-2026-02-05",
+  "version": "6.1.0",
+  "timestamp": "2026-02-06T05:30:00Z",
+  "session_id": "jorge-production-integration-2026-02-05",
   "status": "active-development",
-  "completion_overall": "90%",
+  "completion_overall": "92%",
   "projects": [
     {
       "name": "Core Platform (Backend Services)",
@@ -22,22 +22,53 @@
         "Genericized all 17 Claude Code agents (domain-agnostic)",
         "Consolidated 17 GitHub Actions workflows to 11 (35% reduction)",
         "Added 4 MCP servers (postgres, redis, stripe, playwright)",
-        "Added 6 specialized agents (database-migration, api-consistency, ml-pipeline, devops-infrastructure, conversation-design, cost-token-optimization)",
-        "Added pyrightconfig.json (Python 3.11, basic mode)",
-        "Added Claude Code hooks (ruff auto-fix, secret file guard)",
-        "Unified 6 production deploy workflows into 1 with strategy selector",
-        "Renamed jorge-platform-deployment → frontend-deploy.yml",
-        "Updated all GitHub templates with current module names"
+        "Added 6 specialized agents",
+        "Archived 527 stale docs to _archive/docs/"
       ],
       "remaining_work": [
-        "50+ TODOs (prioritized)",
         "SMS compliance database storage",
-        "Conversation session persistence",
         "Human escalation notifications",
-        "Production monitoring setup",
-        "Load testing validation"
+        "Production monitoring setup"
+      ]
+    },
+    {
+      "name": "jorge_real_estate_bots (Standalone)",
+      "path": "../jorge_real_estate_bots/",
+      "repo": "ChunkyTortoise/jorge_real_estate_bots",
+      "completion": "75%",
+      "priority": "P0-critical",
+      "status": "phase1-merged-cleanup-needed",
+      "key_metrics": {
+        "tests_total": 279,
+        "tests_passing": 256,
+        "tests_failing": 23,
+        "failing_reason": "no local PostgreSQL",
+        "commits": 18,
+        "pr_merged": "#1"
+      },
+      "phase1_completed": [
+        "Buyer bot with property matching and temperature scoring",
+        "PostgreSQL async DB layer (SQLAlchemy + Alembic)",
+        "Replaced 3 mock data methods with real DB queries",
+        "Dashboard v3 with 20+ Streamlit components",
+        "Fixed flaky TestSellerBotEdgeCases AsyncMock fixture",
+        "Fixed Python 3.14 regex incompatibility in logger.py",
+        "Docker + docker-compose + Locust load testing",
+        "Docs reorganized into phases/handoffs/reference/"
       ],
-      "blockers": []
+      "critical_todos": [
+        "SECURITY: .env committed with secrets — git rm --cached, rotate, scrub history",
+        "HYGIENE: 24 __pycache__/*.pyc files tracked in git",
+        "BUG: _get_fallback_conversations() signature mismatch (self vs self,filters,page,page_size)",
+        "SECURITY: auth_service.py:110 hardcoded admin123 password"
+      ],
+      "phase2_remaining": [
+        "_fetch_lead_data_for_budget_analysis still uses import random (mock)",
+        "_fetch_lead_data_for_timeline_analysis still uses import random (mock)",
+        "_generate_commission_trend_data still uses import random (mock)",
+        "_calculate_conversation_summary still has hardcoded mock data",
+        "Test infrastructure: need PostgreSQL for 23 failing tests"
+      ]
     },
     {
       "name": "Advanced RAG System",
@@ -48,49 +79,21 @@
       "key_metrics": {
         "retrieval_latency": "0.7ms",
         "performance_vs_target": "214x faster",
-        "tests_passing": "88",
+        "tests_passing": 88,
         "test_runtime": "1.5s"
       },
-      "completed_phases": [
-        "Phase 1: Foundation (embeddings, vector store, testing)",
-        "Phase 2: Hybrid Retrieval (BM25, RRF fusion, re-ranking)",
-        "Phase 3: Query Enhancement (HyDE, classification, expansion)"
-      ],
       "missing_components": [
-        "FastAPI application layer (src/api/ doesn't exist)",
+        "FastAPI application layer",
         "Docker deployment infrastructure",
-        "Prometheus/Grafana monitoring stack",
-        "Load testing suite",
-        "Parent document retrieval",
-        "Prompt management system"
-      ]
-    },
-    {
-      "name": "Backend Integration Layer",
-      "path": "ghl_real_estate_ai/",
-      "completion": "85%",
-      "priority": "P2-medium",
-      "status": "functional-with-todos",
-      "working_well": [
-        "FastAPI backend with 40+ API routes",
-        "CRM API integration operational",
-        "Claude AI orchestration functional",
-        "Real-time WebSocket updates",
-        "Lead qualification flows complete",
-        "Bot conversations working"
-      ],
-      "known_issues": [
-        "~50 TODOs catalogued",
-        "Database integration incomplete",
-        "Mobile services partially implemented",
-        "Remaining UI modules still use mocked endpoints"
+        "Prometheus/Grafana monitoring",
+        "Load testing suite"
       ]
     }
   ],
   "infrastructure": {
     "claude_code": {
       "agents": 17,
-      "agents_status": "all domain-agnostic with Project-Specific Guidance sections",
+      "agents_status": "all domain-agnostic",
       "mcp_servers": 5,
       "mcp_list": ["memory", "postgres", "redis", "stripe", "playwright"],
       "hooks": ["PostToolUse: ruff auto-fix", "PreToolUse: secret file guard"],
@@ -98,69 +101,39 @@
     },
     "github_actions": {
       "workflow_count": 11,
-      "consolidated_from": 17,
-      "reduction": "35%",
-      "workflows": [
-        "ci",
-        "claude-code-validation",
-        "compliance-platform",
-        "cost-optimization-check",
-        "deploy-portfolio",
-        "frontend-deploy",
-        "production-deploy",
-        "release",
-        "security-scan",
-        "skills-validation",
-        "visual-regression"
-      ],
-      "unified_deploy_strategies": ["rolling", "blue-green", "canary", "progressive"],
-      "unified_deploy_components": ["full-stack", "backend-only", "frontend-only", "bi-dashboard"]
-    },
-    "shared": {
-      "database": "PostgreSQL with Alembic migrations",
-      "caching": "Redis (L1/L2)",
-      "ai_models": ["Claude", "OpenAI", "Gemini"],
-      "monitoring": "Prometheus + Grafana",
-      "authentication": "JWT tokens",
-      "realtime": "WebSocket + Socket.IO"
+      "workflows": ["ci", "claude-code-validation", "compliance-platform", "cost-optimization-check", "deploy-portfolio", "frontend-deploy", "production-deploy", "release", "security-scan", "skills-validation", "visual-regression"]
     }
   },
   "git_state": {
-    "branch": "main",
-    "recent_commits": [
-      "e115b91: consolidate 6 deploy workflows into 1 unified pipeline",
-      "fa2ba33: genericize all 17 agents and optimize GitHub Actions",
-      "1961da4: update templates, CLAUDE.md, and fix Austin market refs in skills",
-      "da143f6: add pyrightconfig, Claude hooks, and remove legacy issue templates",
-      "1dc6e31: remove stale agent refs and correct market references",
-      "d19630a: add 4 MCP servers and 6 specialized agents"
+    "enterprisehub_branch": "main",
+    "jorge_branch": "main",
+    "jorge_recent_commits": [
+      "0bdb609: Merge PR #1 (production phase 1)",
+      "5c04c77: docs: reorganize documentation",
+      "7ef316c: feat: Docker + Locust load testing",
+      "96b0f6c: test: buyer/smoke/mobile tests, fix flaky seller fixture",
+      "2932fb7: feat: dashboard v3 with components",
+      "a577b43: fix: replace mock data with real PostgreSQL queries",
+      "8981cc4: feat: database module with SQLAlchemy + Alembic",
+      "a28e396: feat: buyer bot with property matching"
     ]
   },
   "key_decisions": [
     "Agents are domain-agnostic — domain context lives in CLAUDE.md and .claude/reference/",
-    "Skills are job-specific — real estate content stays in .claude/skills/real-estate-ai/",
-    "Unified production deploy with strategy selector replaces 6 overlapping workflows",
+    "jorge_real_estate_bots is a standalone repo, not an EnterpriseHub subdirectory",
+    "Mock data replacement is incremental — 3 done, 4 remaining",
     "All MCP server secrets use env var references, never hardcoded"
   ],
-  "performance_benchmarks": {
-    "platform": {
-      "cache_ops_per_sec": "4900+",
-      "api_response_target": "<200ms",
-      "bot_response_target": "<500ms",
-      "websocket_delivery_target": "<30s"
-    },
-    "rag_system": {
-      "retrieval_latency": "0.7ms",
-      "api_target": "<50ms p95",
-      "throughput_target": ">1000 req/min",
-      "cache_hit_rate_target": ">90%"
-    }
-  },
+  "lessons_learned": [
+    "Python 3.14 regex: raw strings with \\\\d (double-escaped) fail — use \\d",
+    "AsyncMock fixture: with patch() context manager exits early, use return_value pattern",
+    "venv missing deps != code bug — install sqlalchemy + greenlet before running tests",
+    ".env files must be in .gitignore BEFORE first commit or they get tracked"
+  ],
   "tags": [
-    "infrastructure-consolidation",
-    "domain-agnostic-agents",
-    "ci-cd-optimization",
-    "multi-project",
-    "agent-coordination"
+    "jorge-production-integration",
+    "security-cleanup-needed",
+    "mock-data-replacement",
+    "standalone-repo-extraction"
   ]
 }
