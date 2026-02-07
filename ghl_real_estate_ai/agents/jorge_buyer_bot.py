@@ -165,13 +165,35 @@ class JorgeBuyerBot:
     6. Schedule follow-up actions based on qualification level
     """
 
-    def __init__(self, tenant_id: str = "jorge_buyer", enable_bot_intelligence: bool = True):
+    DEFAULT_BUDGET_RANGES = {
+        "under 300": {"budget_max": 700000, "buyer_type": "first_time"},
+        "under 400": {"budget_max": 400000, "buyer_type": "entry_level"},
+        "under 500": {"budget_max": 700000, "buyer_type": "mid_market"},
+        "under 600": {"budget_max": 600000, "buyer_type": "mid_market"},
+        "under 700": {"budget_max": 700000, "buyer_type": "move_up"},
+        "under 800": {"budget_max": 800000, "buyer_type": "move_up"},
+        "under 1m": {"budget_max": 1200000, "buyer_type": "luxury"},
+        "under 1 million": {"budget_max": 1200000, "buyer_type": "luxury"},
+        "over 1m": {"budget_min": 1200000, "buyer_type": "luxury_plus"},
+    }
+
+    FINANCING_PRE_APPROVED_THRESHOLD = 75
+    FINANCING_NEEDS_APPROVAL_THRESHOLD = 50
+    FINANCING_CASH_BUDGET_THRESHOLD = 70
+
+    BUDGET_AMOUNT_K_THRESHOLD = 1000
+    BUDGET_SINGLE_AMOUNT_MIN_FACTOR = 0.8
+
+    def __init__(self, tenant_id: str = "jorge_buyer", enable_bot_intelligence: bool = True,
+                 enable_handoff: bool = True, budget_ranges: Optional[Dict] = None):
         self.intent_decoder = BuyerIntentDecoder()
         self.claude = ClaudeAssistant()
         self.event_publisher = get_event_publisher()
         self.property_matcher = PropertyMatcher()
         self.ml_analytics = get_ml_analytics_engine(tenant_id)
         self.ghl_client = GHLClient()
+        self.enable_handoff = enable_handoff
+        self.budget_ranges = budget_ranges or self.DEFAULT_BUDGET_RANGES
 
         # Phase 3.3 Bot Intelligence Middleware Integration
         self.enable_bot_intelligence = enable_bot_intelligence
@@ -407,20 +429,8 @@ class JorgeBuyerBot:
         # Look for buyer signals in conversation
         conversation_text = " ".join([msg.get("content", "") for msg in conversation_history]).lower()
 
-        # Budget extraction (buyer-focused)
-        budget_keywords = {
-            "under 300": {"budget_max": 700000, "buyer_type": "first_time"},
-            "under 400": {"budget_max": 400000, "buyer_type": "entry_level"},
-            "under 500": {"budget_max": 700000, "buyer_type": "mid_market"},
-            "under 600": {"budget_max": 600000, "buyer_type": "mid_market"},
-            "under 700": {"budget_max": 700000, "buyer_type": "move_up"},
-            "under 800": {"budget_max": 800000, "buyer_type": "move_up"},
-            "under 1m": {"budget_max": 1200000, "buyer_type": "luxury"},
-            "under 1 million": {"budget_max": 1200000, "buyer_type": "luxury"},
-            "over 1m": {"budget_min": 1200000, "buyer_type": "luxury_plus"}
-        }
-
-        for keyword, budget_info in budget_keywords.items():
+        # Budget extraction (buyer-focused) using configurable ranges
+        for keyword, budget_info in self.budget_ranges.items():
             if keyword in conversation_text:
                 preferences.update(budget_info)
                 break
@@ -472,11 +482,11 @@ class JorgeBuyerBot:
             financing_score = float(profile.financing_status_score or 0)
             budget_score = float(profile.budget_clarity or 0)
             
-            if financing_score >= 75:
+            if financing_score >= self.FINANCING_PRE_APPROVED_THRESHOLD:
                 financing_status = "pre_approved"
-            elif financing_score >= 50:
+            elif financing_score >= self.FINANCING_NEEDS_APPROVAL_THRESHOLD:
                 financing_status = "needs_approval"
-            elif budget_score >= 70:
+            elif budget_score >= self.FINANCING_CASH_BUDGET_THRESHOLD:
                 financing_status = "cash"
             else:
                 financing_status = "unknown"
@@ -1103,7 +1113,7 @@ class JorgeBuyerBot:
                 amount = int(val.replace(',', ''))
                 if k_suffix:
                     amount *= 1000
-                elif amount < 1000: # Handle cases like "500" meaning 700k
+                elif amount < self.BUDGET_AMOUNT_K_THRESHOLD:
                     amount *= 1000
                 amounts.append(amount)
 
@@ -1111,7 +1121,7 @@ class JorgeBuyerBot:
                 return {"min": min(amounts), "max": max(amounts)}
             elif len(amounts) == 1:
                 # Single amount - assume it's max budget
-                return {"min": int(amounts[0] * 0.8), "max": amounts[0]}
+                return {"min": int(amounts[0] * self.BUDGET_SINGLE_AMOUNT_MIN_FACTOR), "max": amounts[0]}
 
             return None
 
@@ -1174,68 +1184,111 @@ class JorgeBuyerBot:
         except Exception as e:
             logger.error(f"Error scheduling follow-up for {buyer_id}: {str(e)}")
 
-    async def process_buyer_conversation(self, buyer_id: str, buyer_name: str,
-                                       conversation_history: List[Dict]) -> Dict[str, Any]:
+    async def process_buyer_conversation(
+        self,
+        conversation_id: str,
+        user_message: str,
+        buyer_name: Optional[str] = None,
+        conversation_history: Optional[List[Dict[str, Any]]] = None,
+        buyer_phone: Optional[str] = None,
+        buyer_email: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """
         Main entry point for processing buyer conversations.
-        Returns complete buyer qualification results.
+
+        Args:
+            conversation_id: Unique identifier for the conversation
+            user_message: The incoming message from the buyer
+            buyer_name: Optional name of the buyer
+            conversation_history: Optional list of previous messages
+            buyer_phone: Optional phone number for SMS follow-ups
+            buyer_email: Optional email for email follow-ups
+            metadata: Optional additional metadata
+
+        Returns:
+            Dict containing:
+                - response_content: Bot's response message
+                - lead_id: The conversation/buyer identifier
+                - current_step: Current qualification step
+                - engagement_status: Current engagement state
+                - financial_readiness: Financial readiness score
+                - handoff_signals: Signals for cross-bot handoff
         """
         try:
-            # Prepare initial state
-            initial_state = BuyerBotState(
-                buyer_id=buyer_id,
-                buyer_name=buyer_name,
-                target_areas=None,
-                conversation_history=conversation_history,
-                intent_profile=None,
-                budget_range=None,
-                financing_status="unknown",
-                urgency_level="browsing",
-                property_preferences=None,
-                current_qualification_step="budget",
-                objection_detected=False,
-                detected_objection_type=None,
-                next_action="qualify",
-                response_content="",
-                matched_properties=[],
-                financial_readiness_score=0.0,
-                buying_motivation_score=0.0,
-                is_qualified=False,
-                current_journey_stage="discovery",
-                properties_viewed_count=0,
-                last_action_timestamp=None
-            )
+            if conversation_history is None:
+                conversation_history = []
 
-            # Execute buyer workflow
+            conversation_history.append({
+                "role": "user",
+                "content": user_message,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+
+            initial_state = {
+                "buyer_id": conversation_id,
+                "buyer_name": buyer_name or f"Buyer {conversation_id}",
+                "target_areas": None,
+                "conversation_history": conversation_history,
+                "intent_profile": None,
+                "budget_range": None,
+                "financing_status": "unknown",
+                "urgency_level": "browsing",
+                "property_preferences": None,
+                "current_qualification_step": "budget",
+                "objection_detected": False,
+                "detected_objection_type": None,
+                "next_action": "qualify",
+                "response_content": "",
+                "matched_properties": [],
+                "financial_readiness_score": 0.0,
+                "buying_motivation_score": 0.0,
+                "is_qualified": False,
+                "current_journey_stage": "discovery",
+                "properties_viewed_count": 0,
+                "last_action_timestamp": None,
+                "user_message": user_message,
+                "intelligence_context": None,
+                "intelligence_performance_ms": 0.0,
+            }
+
+            if buyer_phone:
+                initial_state["buyer_phone"] = buyer_phone
+            if buyer_email:
+                initial_state["buyer_email"] = buyer_email
+            if metadata:
+                initial_state["metadata"] = metadata
+
             result = await self.workflow.ainvoke(initial_state)
 
-            # Update performance statistics
             self.workflow_stats["total_interactions"] += 1
 
-            # Mark as qualified if scores are high enough
             is_qualified = (
                 result.get("financial_readiness_score", 0) >= 50 and
                 result.get("buying_motivation_score", 0) >= 50
             )
-
             result["is_qualified"] = is_qualified
+            result["lead_id"] = conversation_id
+            result["current_step"] = result.get("current_qualification_step", "unknown")
+            result["engagement_status"] = "qualified" if is_qualified else "nurturing"
+            result["financial_readiness"] = result.get("financial_readiness_score", 0.0)
 
-            # P0 FIX: Extract handoff signals for cross-bot handoff detection
-            # Get the last user message for intent analysis
-            user_message = ""
-            if conversation_history:
-                for msg in reversed(conversation_history):
-                    if msg.get("role") == "user":
-                        user_message = msg.get("content", "")
-                        break
-            
-            from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
-            handoff_signals = JorgeHandoffService.extract_intent_signals(user_message)
+            handoff_signals = {}
+            if self.enable_handoff:
+                from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+                handoff_signals = JorgeHandoffService.extract_intent_signals(user_message)
+
             result["handoff_signals"] = handoff_signals
 
-            # Emit final qualification result
+            await self.event_publisher.publish_bot_status_update(
+                bot_type="jorge-buyer",
+                contact_id=conversation_id,
+                status="completed",
+                current_step=result.get("current_qualification_step", "unknown")
+            )
+
             await self.event_publisher.publish_buyer_qualification_complete(
-                contact_id=buyer_id,
+                contact_id=conversation_id,
                 qualification_status="qualified" if is_qualified else "needs_nurturing",
                 final_score=(result.get("financial_readiness_score", 0) +
                            result.get("buying_motivation_score", 0)) / 2,
@@ -1245,13 +1298,16 @@ class JorgeBuyerBot:
             return result
 
         except Exception as e:
-            logger.error(f"Error processing buyer conversation for {buyer_id}: {str(e)}")
+            logger.error(f"Error processing buyer conversation for {conversation_id}: {str(e)}")
             return {
-                "buyer_id": buyer_id,
+                "buyer_id": conversation_id,
+                "lead_id": conversation_id,
                 "error": str(e),
-                "qualification_status": "error",
                 "response_content": "I'm having technical difficulties. Let me connect you with Jorge directly.",
-                "handoff_signals": {}  # P0 FIX: Include empty handoff_signals in error case
+                "current_step": "error",
+                "engagement_status": "error",
+                "financial_readiness": 0.0,
+                "handoff_signals": {}
             }
 
     # ================================
