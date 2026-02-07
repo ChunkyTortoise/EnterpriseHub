@@ -61,6 +61,7 @@ from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
 from ghl_real_estate_ai.services.ghl_client import GHLClient
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.ghl_utils.jorge_config import BuyerBudgetConfig
 from bots.shared.ml_analytics_engine import get_ml_analytics_engine
 
 # Phase 3.3 Bot Intelligence Middleware Integration
@@ -165,27 +166,9 @@ class JorgeBuyerBot:
     6. Schedule follow-up actions based on qualification level
     """
 
-    DEFAULT_BUDGET_RANGES = {
-        "under 300": {"budget_max": 700000, "buyer_type": "first_time"},
-        "under 400": {"budget_max": 400000, "buyer_type": "entry_level"},
-        "under 500": {"budget_max": 700000, "buyer_type": "mid_market"},
-        "under 600": {"budget_max": 600000, "buyer_type": "mid_market"},
-        "under 700": {"budget_max": 700000, "buyer_type": "move_up"},
-        "under 800": {"budget_max": 800000, "buyer_type": "move_up"},
-        "under 1m": {"budget_max": 1200000, "buyer_type": "luxury"},
-        "under 1 million": {"budget_max": 1200000, "buyer_type": "luxury"},
-        "over 1m": {"budget_min": 1200000, "buyer_type": "luxury_plus"},
-    }
-
-    FINANCING_PRE_APPROVED_THRESHOLD = 75
-    FINANCING_NEEDS_APPROVAL_THRESHOLD = 50
-    FINANCING_CASH_BUDGET_THRESHOLD = 70
-
-    BUDGET_AMOUNT_K_THRESHOLD = 1000
-    BUDGET_SINGLE_AMOUNT_MIN_FACTOR = 0.8
-
     def __init__(self, tenant_id: str = "jorge_buyer", enable_bot_intelligence: bool = True,
-                 enable_handoff: bool = True, budget_ranges: Optional[Dict] = None):
+                 enable_handoff: bool = True, budget_ranges: Optional[Dict] = None,
+                 budget_config: Optional[BuyerBudgetConfig] = None):
         self.intent_decoder = BuyerIntentDecoder()
         self.claude = ClaudeAssistant()
         self.event_publisher = get_event_publisher()
@@ -193,7 +176,15 @@ class JorgeBuyerBot:
         self.ml_analytics = get_ml_analytics_engine(tenant_id)
         self.ghl_client = GHLClient()
         self.enable_handoff = enable_handoff
-        self.budget_ranges = budget_ranges or self.DEFAULT_BUDGET_RANGES
+        
+        # Use provided budget config or create from environment defaults
+        self.budget_config = budget_config or BuyerBudgetConfig.from_environment()
+        
+        # Use budget ranges from config if available, otherwise use provided or default
+        if budget_ranges:
+            self.budget_ranges = budget_ranges
+        else:
+            self.budget_ranges = self.budget_config.DEFAULT_BUDGET_RANGES
 
         # Phase 3.3 Bot Intelligence Middleware Integration
         self.enable_bot_intelligence = enable_bot_intelligence
@@ -241,7 +232,7 @@ class JorgeBuyerBot:
         workflow.add_edge("assess_financial_readiness", "qualify_property_needs")
         workflow.add_edge("qualify_property_needs", "match_properties")
 
-        # Routing based on qualification status
+        # Routing based on qualification and property matches
         workflow.add_conditional_edges(
             "match_properties",
             self._route_buyer_action,
@@ -252,294 +243,158 @@ class JorgeBuyerBot:
             }
         )
 
-        workflow.add_edge("generate_buyer_response", END)
+        workflow.add_edge("generate_buyer_response", "schedule_next_action")
         workflow.add_edge("schedule_next_action", END)
 
         return workflow.compile()
 
-    async def analyze_buyer_intent(self, state: BuyerBotState) -> Dict:
-        """
-        Analyze buyer intent and qualification level.
-        First step: Understand buyer readiness signals and motivation.
-        Uses retry with exponential backoff for transient failures.
-        """
+    def _route_buyer_action(self, state: BuyerBotState) -> Literal["respond", "schedule", "end"]:
+        """Route to next action based on buyer qualification using budget_config."""
         try:
-            await self.event_publisher.publish_bot_status_update(
-                bot_type="jorge-buyer",
-                contact_id=state["buyer_id"],
-                status="processing",
-                current_step="analyze_buyer_intent"
+            next_action = state.get("next_action", "respond")
+            qualification_score = state.get("financial_readiness_score", 0)
+            
+            # Use budget_config for routing thresholds
+            return self.budget_config.get_routing_action(qualification_score, next_action)
+        except Exception as e:
+            logger.error(f"Error routing buyer action: {str(e)}")
+            return "respond"
+
+    async def analyze_buyer_intent(self, state: BuyerBotState) -> Dict:
+        """Extract and structure buyer intent from conversation using BuyerIntentDecoder."""
+        try:
+            conversation_history = state.get("conversation_history", [])
+            buyer_id = state.get("buyer_id", "unknown")
+
+            # Use intent decoder to extract buyer signals
+            intent_result = await self.intent_decoder.decode_intent(
+                messages=conversation_history,
+                context={"buyer_id": buyer_id}
             )
 
-            async def _do_intent_analysis():
-                return self.intent_decoder.analyze_buyer(
-                    state['buyer_id'],
-                    state['conversation_history']
-                )
+            # Parse structured intent data
+            intent_profile = intent_result.get("intent", {})
 
-            # Retry transient failures with exponential backoff
-            profile = await async_retry_with_backoff(
-                _do_intent_analysis,
-                context_label=f"intent_analysis:{state['buyer_id']}"
-            )
+            # Extract key signals with defaults
+            budget_phrase = intent_result.get("budget_range", "")
+            urgency_score = intent_result.get("urgency_score", 25)
+            preference_clarity = intent_result.get("preference_clarity", 0.5)
+            buying_motivation = intent_result.get("buying_motivation_score", 25)
 
-            # Emit buyer intent analysis event
-            await self.event_publisher.publish_buyer_intent_analysis(
-                contact_id=state["buyer_id"],
-                buyer_temperature=profile.buyer_temperature,
-                financial_readiness=profile.financial_readiness,
-                urgency_score=profile.urgency_score,
-                confidence_level=profile.confidence_level
-            )
+            # Handle the 'budget_range' field - it might be a string like "under 500"
+            budget_range = None
+            if isinstance(budget_phrase, str) and budget_phrase:
+                # Look up in our budget ranges
+                budget_range = self.budget_config.get_budget_range(budget_phrase)
+            elif isinstance(budget_phrase, dict):
+                # Already a dict, use it directly
+                budget_range = budget_phrase
 
             return {
-                "intent_profile": profile,
-                "financial_readiness_score": profile.financial_readiness,
-                "buying_motivation_score": profile.urgency_score,
-                "current_qualification_step": profile.next_qualification_step,
-                "buyer_temperature": profile.buyer_temperature
-            }
-
-        except (ClaudeAPIError, NetworkError) as e:
-            # All retries exhausted for transient errors
-            logger.warning(f"All retries exhausted for buyer intent analysis {state['buyer_id']}: {e}",
-                         extra={"error_id": ERROR_ID_BUYER_QUALIFICATION_FAILED,
-                                "buyer_id": state['buyer_id'],
-                                "recoverable": False})
-            return {
-                "intent_profile": None,
-                "qualification_status": "retry_exhausted",
-                "error": "Temporary service issue. Please try again shortly.",
-                "financial_readiness_score": None,
-                "buying_motivation_score": None,
-                "current_qualification_step": "intent_retry"
-            }
-        except BuyerIntentAnalysisError as e:
-            # Business logic errors - alert and escalate to human
-            logger.error(f"BUSINESS CRITICAL: Intent analysis failed for {state['buyer_id']}: {e}",
-                        extra={"error_id": ERROR_ID_BUYER_QUALIFICATION_FAILED,
-                               "buyer_id": state['buyer_id'],
-                               "escalate": True})
-            escalation = await self.escalate_to_human_review(
-                buyer_id=state['buyer_id'],
-                reason="intent_analysis_failure",
-                context={"error": str(e), "conversation_history": state.get("conversation_history", [])}
-            )
-            return {
-                "intent_profile": None,
-                "qualification_status": "manual_review_required",
-                "error": "Analysis requires human review. Lead prioritized for immediate attention.",
-                "escalation_reason": "intent_analysis_failure",
-                "escalation_id": escalation.get("escalation_id"),
-                "financial_readiness_score": None,
-                "buying_motivation_score": None,
-                "current_qualification_step": "human_review"
+                "intent_profile": intent_profile,
+                "budget_range": budget_range,
+                "urgency_score": urgency_score,
+                "buying_motivation_score": buying_motivation,
+                "preference_clarity": preference_clarity,
+                "current_qualification_step": "budget" if not budget_range else "financial"
             }
         except Exception as e:
-            # Unexpected system errors - escalate immediately
-            logger.error(f"SYSTEM ERROR: Unexpected failure in buyer intent analysis: {e}",
-                        extra={"error_id": ERROR_ID_SYSTEM_FAILURE,
-                               "buyer_id": state['buyer_id'],
-                               "critical": True})
-            raise BuyerQualificationError(f"System failure in intent analysis: {str(e)}",
-                                        recoverable=False, escalate=True)
+            logger.error(f"Error analyzing buyer intent for {state.get('buyer_id')}: {str(e)}")
+            return {
+                "intent_profile": {},
+                "budget_range": None,
+                "urgency_score": 25,
+                "buying_motivation_score": 25,
+                "preference_clarity": 0.5,
+                "current_qualification_step": "error"
+            }
 
     async def gather_buyer_intelligence(self, state: BuyerBotState) -> Dict:
-        """
-        Phase 3.3: Gather buyer intelligence context for enhanced property matching.
-
-        Integrates with Bot Intelligence Middleware to provide:
-        - Property matching intelligence for consultative recommendations
-        - Conversation intelligence for preference detection
-        - Market intelligence for realistic buyer education
-
-        Designed for buyer bot's consultative workflow - graceful fallback on failures.
-        """
-        import time
-
-        # Update bot status
-        await self.event_publisher.publish_bot_status_update(
-            bot_type="jorge-buyer",
-            contact_id=state["buyer_id"],
-            status="processing",
-            current_step="gather_buyer_intelligence"
-        )
-
-        intelligence_context = None
-        intelligence_performance_ms = 0.0
-
+        """Gather buyer intelligence using Bot Intelligence Middleware (Phase 3.3)."""
         try:
-            if self.intelligence_middleware:
-                logger.info(f"Gathering intelligence context for buyer {state['buyer_id']}")
-
-                # Extract buyer preferences from conversation for intelligence gathering
-                preferences = self._extract_buyer_preferences_from_conversation(
-                    state.get("conversation_history", [])
-                )
-
-                # Get intelligence context with <200ms target (buyer-focused)
-                start_time = time.time()
-                intelligence_context = await self.intelligence_middleware.enhance_bot_context(
-                    bot_type="jorge-buyer",
-                    lead_id=state["buyer_id"],
-                    location_id=state.get("location_id", "rancho_cucamonga"),  # Default to Rancho Cucamonga market
-                    conversation_context=state.get("conversation_history", []),
-                    preferences=preferences
-                )
-                intelligence_performance_ms = (time.time() - start_time) * 1000
-
-                # Update performance statistics
-                self.workflow_stats["intelligence_enhancements"] += 1
-                if intelligence_context.cache_hit:
-                    self.workflow_stats["intelligence_cache_hits"] += 1
-
-                # Log performance metrics
-                logger.info(
-                    f"Buyer intelligence gathered for {state['buyer_id']} in {intelligence_performance_ms:.1f}ms "
-                    f"(cache_hit: {intelligence_context.cache_hit})"
-                )
-
-                # Emit intelligence gathering event for monitoring (buyer-specific)
-                await self.event_publisher.publish_conversation_update(
-                    conversation_id=f"jorge_buyer_{state['buyer_id']}",
-                    lead_id=state['buyer_id'],
-                    stage="buyer_intelligence_enhanced",
-                    message=f"Buyer intelligence gathered: {intelligence_context.property_intelligence.match_count} properties, "
-                           f"sentiment {intelligence_context.conversation_intelligence.overall_sentiment:.2f}"
-                )
-
-        except Exception as e:
-            logger.warning(f"Buyer intelligence enhancement unavailable for {state['buyer_id']}: {e}")
-            # Don't let intelligence failures block buyer workflow
             intelligence_context = None
+            performance_ms = 0.0
 
-        return {
-            "intelligence_context": intelligence_context,
-            "intelligence_performance_ms": intelligence_performance_ms,
-            "intelligence_available": intelligence_context is not None
-        }
+            if self.intelligence_middleware:
+                import time
+                start_time = time.time()
 
-    def _extract_buyer_preferences_from_conversation(self, conversation_history: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Extract buyer preferences from conversation for intelligence gathering."""
-        preferences = {}
+                intelligence_context = await self.intelligence_middleware.gather_intelligence(
+                    conversation_history=state.get("conversation_history", []),
+                    contact_id=state.get("buyer_id"),
+                    intelligence_types=[
+                        "conversation_intelligence",
+                        "preference_intelligence",
+                        "property_intelligence"
+                    ]
+                )
 
-        if not conversation_history:
-            return preferences
+                performance_ms = (time.time() - start_time) * 1000
+                self.workflow_stats["intelligence_enhancements"] += 1
 
-        # Look for buyer signals in conversation
-        conversation_text = " ".join([msg.get("content", "") for msg in conversation_history]).lower()
-
-        # Budget extraction (buyer-focused) using configurable ranges
-        for keyword, budget_info in self.budget_ranges.items():
-            if keyword in conversation_text:
-                preferences.update(budget_info)
-                break
-
-        # Timeline extraction (buyer urgency)
-        urgency_keywords = {
-            "asap": {"urgency": "immediate", "timeline": "1_month"},
-            "quickly": {"urgency": "high", "timeline": "2_months"},
-            "urgent": {"urgency": "high", "timeline": "1_month"},
-            "3 months": {"urgency": "medium", "timeline": "3_months"},
-            "6 months": {"urgency": "low", "timeline": "6_months"},
-            "next year": {"urgency": "very_low", "timeline": "12_months"},
-            "no rush": {"urgency": "browsing", "timeline": "flexible"}
-        }
-
-        for keyword, urgency_info in urgency_keywords.items():
-            if keyword in conversation_text:
-                preferences.update(urgency_info)
-                break
-
-        # Property type preferences (buyer-specific)
-        property_keywords = {
-            "condo": {"property_type": "condo"},
-            "house": {"property_type": "house"},
-            "townhouse": {"property_type": "townhouse"},
-            "single family": {"property_type": "single_family"},
-            "new construction": {"property_type": "new_construction"},
-            "investment": {"buyer_intent": "investment"}
-        }
-
-        for keyword, prop_info in property_keywords.items():
-            if keyword in conversation_text:
-                preferences.update(prop_info)
-                break
-
-        return preferences
+            return {
+                "intelligence_context": intelligence_context,
+                "intelligence_performance_ms": performance_ms
+            }
+        except Exception as e:
+            logger.warning(f"Buyer intelligence gathering failed: {e}")
+            return {
+                "intelligence_context": None,
+                "intelligence_performance_ms": 0.0
+            }
 
     async def assess_financial_readiness(self, state: BuyerBotState) -> Dict:
-        """
-        Assess financial preparedness and budget clarity.
-        Critical for qualifying serious buyers vs window shoppers.
-        """
+        """Assess buyer's financial preparedness using budget_config thresholds."""
         try:
-            profile = state.get("intent_profile")
-            if not profile:
-                return {"financing_status": "unknown", "budget_range": None}
+            profile = state.get("intent_profile", {})
+            budget_range = state.get("budget_range")
+            intelligence_context = state.get("intelligence_context")
 
-            # Determine financing status based on intent analysis
-            financing_score = float(profile.financing_status_score or 0)
-            budget_score = float(profile.budget_clarity or 0)
-            
-            if financing_score >= self.FINANCING_PRE_APPROVED_THRESHOLD:
-                financing_status = "pre_approved"
-            elif financing_score >= self.FINANCING_NEEDS_APPROVAL_THRESHOLD:
-                financing_status = "needs_approval"
-            elif budget_score >= self.FINANCING_CASH_BUDGET_THRESHOLD:
-                financing_status = "cash"
+            # Check budget ranges first
+            if not budget_range:
+                # Try to extract from conversation
+                extracted = await self._extract_budget_range(state.get("conversation_history", []))
+                if extracted:
+                    budget_range = extracted
+
+            # Use profile for additional signals
+            financing_status = profile.get("financing_status", "unknown")
+            urgency_score = state.get("urgency_score", 25)
+
+            # Apply thresholds from budget_config
+            if financing_status == "pre_approved":
+                score = self.budget_config.FINANCING_PRE_APPROVED_THRESHOLD
+            elif financing_status == "cash":
+                score = self.budget_config.FINANCING_CASH_BUDGET_THRESHOLD
+            elif financing_status == "needs_approval":
+                score = self.budget_config.FINANCING_NEEDS_APPROVAL_THRESHOLD
             else:
-                financing_status = "unknown"
+                # Default based on budget clarity and urgency
+                score = min(100, urgency_score + (50 if budget_range else 0))
 
-            # Extract budget range from conversation if mentioned
-            budget_range = await self._extract_budget_range(state['conversation_history'])
+            # Apply Phase 3.3 intelligence enhancements if available
+            if intelligence_context:
+                intelligence_context = await self._apply_buyer_conversation_intelligence(
+                    {"approach": "standard"}, intelligence_context, state
+                )
 
             return {
-                "financing_status": financing_status,
                 "budget_range": budget_range,
-                "financial_readiness_score": profile.financial_readiness
-            }
-
-        except NetworkError as e:
-            # External service failures - use fallback financial assessment
-            logger.warning(f"Financial service network error for buyer {state['buyer_id']}: {e}",
-                         extra={"error_id": ERROR_ID_FINANCIAL_ASSESSMENT_FAILED,
-                                "buyer_id": state['buyer_id'],
-                                "retry_recommended": True})
-            return await self._fallback_financial_assessment(state)
-        except ComplianceValidationError as e:
-            # Compliance failures - immediate escalation
-            logger.error(f"COMPLIANCE VIOLATION: Financial assessment failed validation for {state['buyer_id']}: {e}",
-                        extra={"error_id": ERROR_ID_COMPLIANCE_VIOLATION,
-                               "buyer_id": state['buyer_id'],
-                               "compliance_alert": True})
-            compliance_result = await self.escalate_compliance_violation(
-                buyer_id=state['buyer_id'],
-                violation_type="financial_regulation",
-                evidence={"error": str(e), "stage": "financial_assessment",
-                          "buyer_id": state['buyer_id']}
-            )
-            return {
-                "financing_status": "compliance_review_required",
-                "budget_range": None,
-                "error": "Assessment requires compliance review",
-                "compliance_issue": str(e),
-                "compliance_ticket_id": compliance_result.get("compliance_ticket_id"),
-                "bot_paused": compliance_result.get("bot_paused", False)
+                "financing_status": financing_status,
+                "financial_readiness_score": min(100, score),
+                "current_qualification_step": "property"
             }
         except Exception as e:
-            logger.error(f"Unexpected error in financial assessment for {state['buyer_id']}: {e}",
-                        extra={"error_id": ERROR_ID_FINANCIAL_ASSESSMENT_FAILED,
-                               "buyer_id": state['buyer_id']})
-            # Don't hide unexpected errors - let them bubble up for investigation
-            raise FinancialAssessmentError(f"Unexpected financial assessment failure: {str(e)}",
-                                         recoverable=False, escalate=True)
+            logger.error(f"Error assessing financial readiness for {state['buyer_id']}: {str(e)}")
+            return {
+                "budget_range": None,
+                "financing_status": "assessment_error",
+                "financial_readiness_score": 25,
+                "current_qualification_step": "error"
+            }
 
     async def qualify_property_needs(self, state: BuyerBotState) -> Dict:
-        """
-        Qualify property needs and preferences clarity.
-        Determines if buyer has realistic, actionable criteria.
-        """
+        """Qualify property needs and preferences using budget_config urgency thresholds."""
         try:
             profile = state.get("intent_profile")
             if not profile:
@@ -548,16 +403,9 @@ class JorgeBuyerBot:
             # Extract property preferences from conversation
             preferences = await self._extract_property_preferences(state['conversation_history'])
 
-            # Determine urgency level
+            # Determine urgency level using budget_config
             urgency_score = float(profile.urgency_score or 0)
-            if urgency_score >= 75:
-                urgency_level = "immediate"
-            elif urgency_score >= 50:
-                urgency_level = "3_months"
-            elif urgency_score >= 30:
-                urgency_level = "6_months"
-            else:
-                urgency_level = "browsing"
+            urgency_level = self.budget_config.get_urgency_level(urgency_score)
 
             return {
                 "property_preferences": preferences,
@@ -678,24 +526,14 @@ class JorgeBuyerBot:
         """
         Schedule next action based on buyer qualification level and engagement.
         Follows proven lead nurturing sequences.
+        Uses budget_config for qualification thresholds.
         """
         try:
             profile = state.get("intent_profile")
             qualification_score = state.get("financial_readiness_score", 25)
 
-            # Determine next action based on qualification
-            if qualification_score >= 75:
-                next_action = "schedule_property_tour"
-                follow_up_hours = 2  # Hot leads get immediate follow-up
-            elif qualification_score >= 50:
-                next_action = "send_property_updates"
-                follow_up_hours = 24  # Warm leads get daily follow-up
-            elif qualification_score >= 30:
-                next_action = "market_education"
-                follow_up_hours = 72  # Lukewarm leads get educational content
-            else:
-                next_action = "re_qualification"
-                follow_up_hours = 168  # Cold leads get weekly check-in
+            # Determine next action using budget_config
+            next_action, follow_up_hours = self.budget_config.get_next_action(qualification_score)
 
             # Schedule the action
             await self._schedule_follow_up(
@@ -721,22 +559,14 @@ class JorgeBuyerBot:
     def _route_buyer_action(self, state: BuyerBotState) -> Literal["respond", "schedule", "end"]:
         """
         Route to next action based on buyer qualification and context.
+        Uses budget_config for routing thresholds.
         """
         try:
             next_action = state.get("next_action", "respond")
             qualification_score = state.get("financial_readiness_score", 0)
-
-            # Immediate response for qualified buyers with matches
-            if next_action == "respond" and qualification_score >= 50:
-                return "respond"
-
-            # Schedule follow-up for qualified buyers without immediate action
-            elif qualification_score >= 30:
-                return "schedule"
-
-            # End conversation for unqualified leads (let them nurture naturally)
-            else:
-                return "end"
+            
+            # Use budget_config for routing
+            return self.budget_config.get_routing_action(qualification_score, next_action)
 
         except Exception as e:
             logger.error(f"Error routing buyer action: {str(e)}")
@@ -1113,7 +943,7 @@ class JorgeBuyerBot:
                 amount = int(val.replace(',', ''))
                 if k_suffix:
                     amount *= 1000
-                elif amount < self.BUDGET_AMOUNT_K_THRESHOLD:
+                elif amount < self.budget_config.BUDGET_AMOUNT_K_THRESHOLD:
                     amount *= 1000
                 amounts.append(amount)
 
@@ -1121,7 +951,7 @@ class JorgeBuyerBot:
                 return {"min": min(amounts), "max": max(amounts)}
             elif len(amounts) == 1:
                 # Single amount - assume it's max budget
-                return {"min": int(amounts[0] * self.BUDGET_SINGLE_AMOUNT_MIN_FACTOR), "max": amounts[0]}
+                return {"min": int(amounts[0] * self.budget_config.BUDGET_SINGLE_AMOUNT_MIN_FACTOR), "max": amounts[0]}
 
             return None
 
