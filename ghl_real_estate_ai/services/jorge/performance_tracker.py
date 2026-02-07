@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 
 
 # ── SLA Configuration (from Phase 4 Audit Spec) ─────────────────────────
-SLA_CONFIG: Dict[str, Dict[str, float]] = {
+SLA_CONFIG: Dict[str, Dict[str, Dict[str, float]]] = {
     "lead_bot": {
         "full_qualification": {"p50_target": 500, "p95_target": 2000, "p99_target": 3000},
         "process": {"p50_target": 300, "p95_target": 1500, "p99_target": 2000},
@@ -155,81 +155,156 @@ class PerformanceTracker:
                 )
         logger.info("Registered %d SLA targets", sum(len(v) for v in self._sla_targets.values()))
 
-    # ── Timing ────────────────────────────────────────────────────────
+    # ── Core Tracking Methods ───────────────────────────────────────────
 
-    def record_operation(
+    async def track_operation(
         self,
+        bot_name: str,
         operation: str,
         duration_ms: float,
+        success: bool = True,
+        cache_hit: bool = False,
         metadata: Optional[Dict[str, Any]] = None,
     ) -> None:
-        """Record a single operation's timing.
+        """Track a bot operation with timing and success status.
 
         Args:
-            operation: Operation name (e.g. "lead_bot.full_qualification").
+            bot_name: Bot name (e.g., "lead_bot", "buyer_bot", "seller_bot", "handoff").
+            operation: Operation name (e.g., "qualify", "process", "handoff").
             duration_ms: Duration in milliseconds.
+            success: Whether the operation succeeded.
+            cache_hit: Whether the result was served from cache.
             metadata: Optional key-value metadata to attach.
+
+        Raises:
+            ValueError: If bot_name is not in VALID_BOT_NAMES.
         """
+        if bot_name not in VALID_BOT_NAMES:
+            raise ValueError(f"Invalid bot_name '{bot_name}'. Must be one of {VALID_BOT_NAMES}")
+
         entry = _OperationEntry(
             timestamp=time.time(),
             duration_ms=duration_ms,
+            success=success,
+            cache_hit=cache_hit,
             metadata=metadata or {},
         )
 
         with self._data_lock:
-            if operation not in self._operations:
-                self._operations[operation] = []
-            self._operations[operation].append(entry)
+            # Add to all rolling windows
+            for window_name in WINDOWS:
+                self._operations[bot_name][window_name].append(entry)
 
         logger.debug(
-            "Recorded %s: %.2fms%s",
+            "Recorded %s.%s: %.2fms (success=%s, cache_hit=%s)",
+            bot_name,
             operation,
             duration_ms,
-            f" ({metadata})" if metadata else "",
+            success,
+            cache_hit,
         )
 
     @asynccontextmanager
-    async def track_operation(
-        self, operation: str, metadata: Optional[Dict[str, Any]] = None
+    async def track_async_operation(
+        self,
+        bot_name: str,
+        operation: str,
+        cache_hit: bool = False,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> AsyncIterator[None]:
         """Async context manager that auto-records start/end timing.
 
         Usage:
-            async with tracker.track_operation("lead_bot.process"):
+            async with tracker.track_async_operation("lead_bot", "process"):
                 await process_lead()
 
         Args:
+            bot_name: Bot name to track.
             operation: Operation name to track.
+            cache_hit: Whether the result was served from cache.
             metadata: Optional key-value metadata to attach.
 
         Yields:
             None
         """
         start = time.perf_counter()
+        success = True
         try:
             yield
+        except Exception:
+            success = False
+            raise
         finally:
             elapsed_ms = (time.perf_counter() - start) * 1000.0
-            self.record_operation(operation, elapsed_ms, metadata)
+            await self.track_operation(bot_name, operation, elapsed_ms, success, cache_hit, metadata)
 
     # ── Metrics Retrieval ─────────────────────────────────────────────
 
-    def get_latency_stats(
-        self, operation: str, window_minutes: int = 60
-    ) -> Dict[str, Any]:
-        """Return latency percentile statistics for an operation.
+    async def get_percentile(
+        self,
+        bot_name: str,
+        percentile: float,
+        window: str = "1h",
+    ) -> float:
+        """Get a specific percentile value for a bot's operations.
 
         Args:
-            operation: Operation name to query.
-            window_minutes: Rolling window size in minutes (default 60).
+            bot_name: Bot name to query.
+            percentile: Percentile value (0-100).
+            window: Rolling window ("1h", "24h", "7d").
 
         Returns:
-            Dict with keys: p50, p95, p99, mean, min, max, count.
-            Returns zeroed dict if no data exists.
-        """
-        durations = self._get_durations_in_window(operation, window_minutes)
+            The percentile value in milliseconds.
 
+        Raises:
+            ValueError: If bot_name or window is invalid.
+        """
+        if bot_name not in VALID_BOT_NAMES:
+            raise ValueError(f"Invalid bot_name '{bot_name}'")
+        if window not in WINDOWS:
+            raise ValueError(f"Invalid window '{window}'. Must be one of {list(WINDOWS.keys())}")
+
+        durations = self._get_durations_in_window(bot_name, window)
+        
         if not durations:
+            return 0.0
+
+        sorted_durations = sorted(durations)
+        return self._percentile(sorted_durations, percentile)
+
+    async def get_bot_stats(
+        self,
+        bot_name: str,
+        window: str = "1h",
+    ) -> Dict[str, Any]:
+        """Get comprehensive statistics for a specific bot.
+
+        Args:
+            bot_name: Bot name to query.
+            window: Rolling window ("1h", "24h", "7d").
+
+        Returns:
+            Dict with keys:
+                - p50, p95, p99: Latency percentiles in ms
+                - mean, min, max: Additional latency stats
+                - count: Total number of operations
+                - success_count: Number of successful operations
+                - error_count: Number of failed operations
+                - cache_hit_count: Number of cache hits
+                - cache_hit_rate: Cache hit rate (0-1)
+                - success_rate: Success rate (0-1)
+
+        Raises:
+            ValueError: If bot_name or window is invalid.
+        """
+        if bot_name not in VALID_BOT_NAMES:
+            raise ValueError(f"Invalid bot_name '{bot_name}'")
+        if window not in WINDOWS:
+            raise ValueError(f"Invalid window '{window}'. Must be one of {list(WINDOWS.keys())}")
+
+        entries = self._get_entries_in_window(bot_name, window)
+        
+        if not entries:
             return {
                 "p50": 0.0,
                 "p95": 0.0,
@@ -238,9 +313,19 @@ class PerformanceTracker:
                 "min": 0.0,
                 "max": 0.0,
                 "count": 0,
+                "success_count": 0,
+                "error_count": 0,
+                "cache_hit_count": 0,
+                "cache_hit_rate": 0.0,
+                "success_rate": 0.0,
             }
 
+        durations = [e.duration_ms for e in entries]
         sorted_durations = sorted(durations)
+        
+        success_count = sum(1 for e in entries if e.success)
+        error_count = len(entries) - success_count
+        cache_hit_count = sum(1 for e in entries if e.cache_hit)
 
         return {
             "p50": self._percentile(sorted_durations, 50),
@@ -249,181 +334,124 @@ class PerformanceTracker:
             "mean": round(statistics.mean(sorted_durations), 2),
             "min": round(min(sorted_durations), 2),
             "max": round(max(sorted_durations), 2),
-            "count": len(sorted_durations),
+            "count": len(entries),
+            "success_count": success_count,
+            "error_count": error_count,
+            "cache_hit_count": cache_hit_count,
+            "cache_hit_rate": round(cache_hit_count / len(entries), 4) if entries else 0.0,
+            "success_rate": round(success_count / len(entries), 4) if entries else 0.0,
         }
 
-    def get_throughput(
-        self, operation: str, window_minutes: int = 60
-    ) -> Dict[str, Any]:
-        """Return throughput metrics for an operation.
+    async def get_all_stats(self, window: str = "1h") -> Dict[str, Any]:
+        """Get statistics for all bots.
 
         Args:
-            operation: Operation name to query.
-            window_minutes: Rolling window size in minutes (default 60).
+            window: Rolling window ("1h", "24h", "7d").
 
         Returns:
-            Dict with keys: total, per_minute, per_second.
+            Dict mapping bot names to their statistics dicts.
         """
-        cutoff = time.time() - (window_minutes * 60)
+        stats: Dict[str, Any] = {}
+        
+        for bot_name in VALID_BOT_NAMES:
+            stats[bot_name] = await self.get_bot_stats(bot_name, window)
+        
+        return stats
 
-        with self._data_lock:
-            entries = self._operations.get(operation, [])
-            in_window = [e for e in entries if e.timestamp >= cutoff]
-
-        total = len(in_window)
-        window_seconds = window_minutes * 60
-
-        return {
-            "total": total,
-            "per_minute": round(total / window_minutes, 2) if window_minutes > 0 else 0.0,
-            "per_second": round(total / window_seconds, 4) if window_seconds > 0 else 0.0,
-        }
-
-    def get_all_operations(self) -> List[str]:
-        """List all tracked operation names.
-
-        Returns:
-            Sorted list of operation name strings.
-        """
-        with self._data_lock:
-            return sorted(self._operations.keys())
-
-    # ── SLA Monitoring ────────────────────────────────────────────────
-
-    def register_sla(
-        self, operation: str, target_p95_ms: float, target_p50_ms: float
-    ) -> None:
-        """Register SLA targets for an operation.
+    async def check_sla_compliance(self, window: str = "1h") -> List[Dict[str, Any]]:
+        """Check SLA compliance for all registered SLAs.
 
         Args:
-            operation: Operation name.
-            target_p95_ms: Maximum acceptable p95 latency in ms.
-            target_p50_ms: Maximum acceptable p50 latency in ms.
-        """
-        with self._data_lock:
-            self._sla_targets[operation] = _SLATarget(
-                operation=operation,
-                target_p50_ms=target_p50_ms,
-                target_p95_ms=target_p95_ms,
-            )
-
-        logger.info(
-            "Registered SLA for '%s': p50 <= %.0fms, p95 <= %.0fms",
-            operation,
-            target_p50_ms,
-            target_p95_ms,
-        )
-
-    def check_sla_compliance(self, operation: str) -> Dict[str, Any]:
-        """Check SLA compliance for a specific operation.
-
-        Args:
-            operation: Operation name to check.
+            window: Rolling window ("1h", "24h", "7d").
 
         Returns:
-            Dict with keys: compliant, p95_target, p95_actual, p50_target,
-            p50_actual, violations.
-
-        Raises:
-            KeyError: If no SLA is registered for the operation.
+            List of compliance dicts, one per bot/operation combination.
+            Each dict contains:
+                - bot_name: Bot name
+                - operation: Operation name
+                - compliant: Whether SLA is met
+                - p50_target, p95_target, p99_target: SLA targets
+                - p50_actual, p95_actual, p99_actual: Actual values
+                - violations: List of violation messages
         """
-        with self._data_lock:
-            if operation not in self._sla_targets:
-                raise KeyError(f"No SLA registered for operation '{operation}'")
-            target = self._sla_targets[operation]
-
-        stats = self.get_latency_stats(operation)
-        violations: List[str] = []
-
-        p50_actual = stats["p50"]
-        p95_actual = stats["p95"]
-
-        if stats["count"] > 0:
-            if p50_actual > target.target_p50_ms:
-                violations.append(
-                    f"p50 {p50_actual:.1f}ms exceeds target {target.target_p50_ms:.0f}ms"
-                )
-            if p95_actual > target.target_p95_ms:
-                violations.append(
-                    f"p95 {p95_actual:.1f}ms exceeds target {target.target_p95_ms:.0f}ms"
-                )
-
-        return {
-            "compliant": len(violations) == 0,
-            "p95_target": target.target_p95_ms,
-            "p95_actual": p95_actual,
-            "p50_target": target.target_p50_ms,
-            "p50_actual": p50_actual,
-            "violations": violations,
-        }
-
-    def get_sla_report(self) -> Dict[str, Any]:
-        """Return SLA compliance status for all registered SLAs.
-
-        Returns:
-            Dict mapping operation names to their compliance status dicts.
-            Includes an overall 'all_compliant' flag.
-        """
-        with self._data_lock:
-            operations = list(self._sla_targets.keys())
-
-        report: Dict[str, Any] = {}
-        all_compliant = True
-
-        for operation in operations:
-            compliance = self.check_sla_compliance(operation)
-            report[operation] = compliance
-            if not compliance["compliant"]:
-                all_compliant = False
-
-        report["all_compliant"] = all_compliant
-        return report
-
-    # ── Cleanup ───────────────────────────────────────────────────────
-
-    def _cleanup_old_entries(self, max_age_seconds: int = 3600) -> int:
-        """Prune entries older than the specified window.
-
-        Args:
-            max_age_seconds: Maximum age in seconds (default 3600 = 1 hour).
-
-        Returns:
-            Number of entries removed.
-        """
-        cutoff = time.time() - max_age_seconds
-        removed = 0
-
-        with self._data_lock:
-            for operation in self._operations:
-                original = self._operations[operation]
-                pruned = [e for e in original if e.timestamp >= cutoff]
-                removed += len(original) - len(pruned)
-                self._operations[operation] = pruned
-
-        if removed > 0:
-            logger.info("Cleaned up %d old entries (max_age=%ds)", removed, max_age_seconds)
-
-        return removed
+        compliance_list: List[Dict[str, Any]] = []
+        
+        for bot_name in VALID_BOT_NAMES:
+            if bot_name not in self._sla_targets:
+                continue
+            
+            for operation, target in self._sla_targets[bot_name].items():
+                stats = await self.get_bot_stats(bot_name, window)
+                violations: List[str] = []
+                
+                if stats["count"] > 0:
+                    if stats["p50"] > target.target_p50_ms:
+                        violations.append(
+                            f"p50 {stats['p50']:.1f}ms exceeds target {target.target_p50_ms:.0f}ms"
+                        )
+                    if stats["p95"] > target.target_p95_ms:
+                        violations.append(
+                            f"p95 {stats['p95']:.1f}ms exceeds target {target.target_p95_ms:.0f}ms"
+                        )
+                    if target.target_p99_ms > 0 and stats["p99"] > target.target_p99_ms:
+                        violations.append(
+                            f"p99 {stats['p99']:.1f}ms exceeds target {target.target_p99_ms:.0f}ms"
+                        )
+                
+                compliance_list.append({
+                    "bot_name": bot_name,
+                    "operation": operation,
+                    "compliant": len(violations) == 0,
+                    "p50_target": target.target_p50_ms,
+                    "p95_target": target.target_p95_ms,
+                    "p99_target": target.target_p99_ms,
+                    "p50_actual": stats["p50"],
+                    "p95_actual": stats["p95"],
+                    "p99_actual": stats["p99"],
+                    "violations": violations,
+                })
+        
+        return compliance_list
 
     # ── Internal Helpers ──────────────────────────────────────────────
 
-    def _get_durations_in_window(
-        self, operation: str, window_minutes: int
-    ) -> List[float]:
-        """Extract duration values within the rolling window.
+    def _get_entries_in_window(
+        self,
+        bot_name: str,
+        window: str,
+    ) -> List[_OperationEntry]:
+        """Get entries within the rolling window.
 
         Args:
-            operation: Operation name.
-            window_minutes: Window size in minutes.
+            bot_name: Bot name.
+            window: Window name ("1h", "24h", "7d").
+
+        Returns:
+            List of entries within the window.
+        """
+        window_seconds = WINDOWS[window]
+        cutoff = time.time() - window_seconds
+
+        with self._data_lock:
+            entries = self._operations.get(bot_name, {}).get(window, deque())
+            return [e for e in entries if e.timestamp >= cutoff]
+
+    def _get_durations_in_window(
+        self,
+        bot_name: str,
+        window: str,
+    ) -> List[float]:
+        """Get duration values within the rolling window.
+
+        Args:
+            bot_name: Bot name.
+            window: Window name ("1h", "24h", "7d").
 
         Returns:
             List of duration_ms values within the window.
         """
-        cutoff = time.time() - (window_minutes * 60)
-
-        with self._data_lock:
-            entries = self._operations.get(operation, [])
-            return [e.duration_ms for e in entries if e.timestamp >= cutoff]
+        entries = self._get_entries_in_window(bot_name, window)
+        return [e.duration_ms for e in entries]
 
     @staticmethod
     def _percentile(sorted_data: List[float], pct: int) -> float:
@@ -467,3 +495,82 @@ class PerformanceTracker:
                 cls._instance._sla_targets.clear()
                 cls._instance._initialized = False
             cls._instance = None
+
+
+# ── Decorator for Performance Tracking ─────────────────────────────────
+
+def track_performance(bot_name: str, operation: str):
+    """Decorator to track performance of async functions.
+
+    Usage:
+        @track_performance("lead_bot", "qualify")
+        async def qualify_lead(lead_data):
+            # ... qualification logic
+            return result
+
+    Args:
+        bot_name: Bot name (e.g., "lead_bot", "buyer_bot", "seller_bot", "handoff").
+        operation: Operation name (e.g., "qualify", "process", "handoff").
+
+    Returns:
+        Decorator function.
+    """
+    def decorator(func: Callable) -> Callable:
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            tracker = PerformanceTracker()
+            start = time.perf_counter()
+            success = True
+            try:
+                result = await func(*args, **kwargs)
+                return result
+            except Exception:
+                success = False
+                raise
+            finally:
+                elapsed_ms = (time.perf_counter() - start) * 1000.0
+                await tracker.track_operation(bot_name, operation, elapsed_ms, success)
+        return wrapper
+    return decorator
+
+
+# ── Convenience Functions ─────────────────────────────────────────────
+
+async def get_performance_summary(window: str = "1h") -> Dict[str, Any]:
+    """Get a performance summary for all bots.
+
+    Args:
+        window: Rolling window ("1h", "24h", "7d").
+
+    Returns:
+        Dict with overall stats and per-bot breakdown.
+    """
+    tracker = PerformanceTracker()
+    all_stats = await tracker.get_all_stats(window)
+    compliance = await tracker.check_sla_compliance(window)
+    
+    # Calculate overall metrics
+    total_operations = sum(s["count"] for s in all_stats.values())
+    total_success = sum(s["success_count"] for s in all_stats.values())
+    total_errors = sum(s["error_count"] for s in all_stats.values())
+    total_cache_hits = sum(s["cache_hit_count"] for s in all_stats.values())
+    
+    # Count SLA violations
+    sla_violations = [c for c in compliance if not c["compliant"]]
+    
+    return {
+        "window": window,
+        "timestamp": time.time(),
+        "overall": {
+            "total_operations": total_operations,
+            "total_success": total_success,
+            "total_errors": total_errors,
+            "total_cache_hits": total_cache_hits,
+            "overall_success_rate": round(total_success / total_operations, 4) if total_operations > 0 else 0.0,
+            "overall_cache_hit_rate": round(total_cache_hits / total_operations, 4) if total_operations > 0 else 0.0,
+            "sla_compliant_count": len(compliance) - len(sla_violations),
+            "sla_violation_count": len(sla_violations),
+        },
+        "bots": all_stats,
+        "sla_compliance": compliance,
+    }
