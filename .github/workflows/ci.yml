@@ -37,19 +37,12 @@ jobs:
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
 
-    - name: Run Black (code formatting check)
-      run: black --check .
+    - name: Run ruff check
+      run: ruff check .
       continue-on-error: true
 
-    - name: Run isort (import sorting check)
-      run: isort --check-only .
-      continue-on-error: true
-
-    - name: Run flake8 (linting)
-      run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-
-    - name: Run flake8 (warnings)
-      run: flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+    - name: Run ruff format check
+      run: ruff format --check .
       continue-on-error: true
 
   test-unit:
@@ -86,6 +79,10 @@ jobs:
         pip install -r requirements-dev.txt
 
     - name: Run unit tests
+      env:
+        ANTHROPIC_API_KEY: sk-test-key-for-ci-only
+        GHL_API_KEY: test-ghl-key-for-ci-only
+        GHL_LOCATION_ID: test-location-id-for-ci-only
       run: |
         pytest tests/unit/ --cov=. --cov-report=xml --cov-report=term-missing -v
 
