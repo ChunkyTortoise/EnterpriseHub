@@ -4,11 +4,16 @@ Calculates Financial Readiness Score (FRS) and Psychological Commitment Score (P
 Updated to use unified models in ghl_real_estate_ai.models.lead_scoring.
 """
 
+from __future__ import annotations
+
 import logging
 import re
-from typing import List, Dict, Any, Optional
-from datetime import datetime
+from typing import List, Dict, Any, Optional, TYPE_CHECKING
+from datetime import datetime, timezone
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from ghl_real_estate_ai.services.enhanced_ghl_client import EnhancedGHLClient, GHLContact
 
 from ghl_real_estate_ai.models.lead_scoring import (
     LeadIntentProfile,
@@ -28,7 +33,9 @@ class LeadIntentDecoder:
     Implements FRS (Financial Readiness) and PCS (Psychological Commitment) scoring.
     """
     
-    def __init__(self):
+    def __init__(self, ghl_client: Optional[EnhancedGHLClient] = None):
+        self.ghl_client = ghl_client
+
         # Motivation Markers
         self.high_intent_motivation = ["need to sell fast", "relocating in 30 days", "behind on payments", "divorce", "estate", "probate"]
         self.mixed_intent_motivation = ["thinking about it", "might sell next year", "curious about value"]
@@ -131,6 +138,201 @@ class LeadIntentDecoder:
             lead_type=lead_type,
             next_best_action=next_action
         )
+
+    async def analyze_lead_with_ghl(
+        self,
+        contact_id: str,
+        conversation_history: List[Dict[str, str]],
+        ghl_contact: Optional[GHLContact] = None,
+    ) -> LeadIntentProfile:
+        """
+        Enhanced lead analysis that incorporates GHL contact data for better scoring.
+
+        If ghl_contact is not provided but self.ghl_client is available, fetches the
+        contact from GHL. Falls back to the standard analyze_lead() if GHL data is
+        unavailable.
+
+        Args:
+            contact_id: The lead's GHL contact ID.
+            conversation_history: List of conversation messages.
+            ghl_contact: Pre-fetched GHLContact object (optional).
+
+        Returns:
+            LeadIntentProfile with GHL-boosted scores.
+        """
+        # Attempt to fetch GHL contact data if not provided
+        if ghl_contact is None and self.ghl_client is not None:
+            try:
+                ghl_contact = await self.ghl_client.get_contact(contact_id)
+            except Exception as e:
+                logger.warning(
+                    f"Failed to fetch GHL contact {contact_id}: {e}. "
+                    "Falling back to conversation-only analysis."
+                )
+
+        # Fall back to standard analysis if no GHL data available
+        if ghl_contact is None:
+            logger.info(f"No GHL data for {contact_id}, using conversation-only analysis")
+            return self.analyze_lead(contact_id, conversation_history)
+
+        # Run standard conversation-based analysis first
+        profile = self.analyze_lead(contact_id, conversation_history)
+
+        # Extract GHL data points
+        try:
+            ghl_data = {
+                "tags": ghl_contact.tags or [],
+                "custom_fields": ghl_contact.custom_fields or {},
+                "source": ghl_contact.source,
+                "date_added": ghl_contact.created_at,
+                "last_activity": ghl_contact.last_activity_at or ghl_contact.updated_at,
+            }
+        except Exception as e:
+            logger.warning(f"Error extracting GHL data for {contact_id}: {e}")
+            return profile
+
+        # Apply GHL-based boosts
+        boosted_frs, boosted_pcs = self._apply_ghl_boosts(
+            profile.frs.total_score,
+            profile.pcs.total_score,
+            ghl_data,
+        )
+
+        # Reclassify FRS based on boosted score
+        frs_classification = "Cold"
+        if boosted_frs >= 75:
+            frs_classification = "Hot"
+        elif boosted_frs >= 50:
+            frs_classification = "Warm"
+        elif boosted_frs >= 25:
+            frs_classification = "Lukewarm"
+
+        # Build updated FRS with boosted total
+        updated_frs = FinancialReadinessScore(
+            total_score=round(boosted_frs, 2),
+            motivation=profile.frs.motivation,
+            timeline=profile.frs.timeline,
+            condition=profile.frs.condition,
+            price=profile.frs.price,
+            classification=frs_classification,
+        )
+
+        # Build updated PCS with boosted total
+        updated_pcs = PsychologicalCommitmentScore(
+            total_score=round(boosted_pcs, 2),
+            response_velocity_score=profile.pcs.response_velocity_score,
+            message_length_score=profile.pcs.message_length_score,
+            question_depth_score=profile.pcs.question_depth_score,
+            objection_handling_score=profile.pcs.objection_handling_score,
+            call_acceptance_score=profile.pcs.call_acceptance_score,
+        )
+
+        # Redetermine next best action with boosted scores
+        next_action = "Nurture - Low Intent"
+        if frs_classification == "Hot":
+            next_action = "Urgent: Call Lead Immediately"
+        elif frs_classification == "Warm":
+            next_action = "Send Soft Check-in SMS"
+        elif updated_pcs.total_score > 70:
+            next_action = "Schedule Property Tour"
+
+        return LeadIntentProfile(
+            lead_id=contact_id,
+            frs=updated_frs,
+            pcs=updated_pcs,
+            lead_type=profile.lead_type,
+            next_best_action=next_action,
+        )
+
+    def _apply_ghl_boosts(
+        self,
+        frs_score: float,
+        pcs_score: float,
+        ghl_data: Dict[str, Any],
+    ) -> tuple:
+        """
+        Apply FRS and PCS boosts/penalties based on GHL contact data.
+
+        Boost logic:
+        - Tags: Hot-Lead → +15 FRS, Warm-Lead → +8 FRS, Cold-Lead → -5 FRS
+        - Lead age: < 7 days → +10 FRS (fresh), > 90 days → -10 FRS (stale)
+        - Engagement recency: < 3 days → +10 PCS velocity, > 30 days → -15 PCS
+
+        Args:
+            frs_score: Base FRS total score from conversation analysis.
+            pcs_score: Base PCS total score from conversation analysis.
+            ghl_data: Extracted GHL data dict with tags, custom_fields, source,
+                      date_added, and last_activity.
+
+        Returns:
+            Tuple of (boosted_frs, boosted_pcs) clamped to 0-100.
+        """
+        frs_boost = 0.0
+        pcs_boost = 0.0
+        tags = [t.lower() for t in ghl_data.get("tags", [])]
+
+        # --- Tag-based FRS boosts ---
+        if "hot-lead" in tags:
+            frs_boost += 15
+        elif "warm-lead" in tags:
+            frs_boost += 8
+        elif "cold-lead" in tags:
+            frs_boost -= 5
+
+        # Additional tag signals
+        if "referral" in tags:
+            frs_boost += 5
+        if "do-not-contact" in tags or "dnc" in tags:
+            frs_boost -= 20
+
+        # --- Lead age factor (days since date_added) ---
+        date_added = ghl_data.get("date_added")
+        if date_added is not None:
+            try:
+                now = datetime.now(timezone.utc)
+                if date_added.tzinfo is None:
+                    date_added = date_added.replace(tzinfo=timezone.utc)
+                lead_age_days = (now - date_added).days
+                if lead_age_days <= 7:
+                    frs_boost += 10  # Fresh lead
+                elif lead_age_days <= 30:
+                    frs_boost += 5   # Recent lead
+                elif lead_age_days > 90:
+                    frs_boost -= 10  # Stale lead
+            except Exception as e:
+                logger.debug(f"Could not compute lead age: {e}")
+
+        # --- Engagement recency factor (days since last_activity) ---
+        last_activity = ghl_data.get("last_activity")
+        if last_activity is not None:
+            try:
+                now = datetime.now(timezone.utc)
+                if last_activity.tzinfo is None:
+                    last_activity = last_activity.replace(tzinfo=timezone.utc)
+                days_since_activity = (now - last_activity).days
+                if days_since_activity <= 3:
+                    pcs_boost += 10  # Very recent engagement
+                elif days_since_activity <= 7:
+                    pcs_boost += 5   # Recent engagement
+                elif days_since_activity > 30:
+                    pcs_boost -= 15  # Disengaged
+            except Exception as e:
+                logger.debug(f"Could not compute engagement recency: {e}")
+
+        # --- Custom field signals ---
+        custom_fields = ghl_data.get("custom_fields", {})
+        if custom_fields.get("pre_approval_status") in ("approved", "pre-approved"):
+            frs_boost += 10
+
+        boosted_frs = max(0, min(100, frs_score + frs_boost))
+        boosted_pcs = max(0, min(100, pcs_score + pcs_boost))
+
+        logger.info(
+            f"GHL boosts applied: FRS {frs_score} → {boosted_frs} "
+            f"(+{frs_boost}), PCS {pcs_score} → {boosted_pcs} (+{pcs_boost})"
+        )
+
+        return boosted_frs, boosted_pcs
 
     def _analyze_motivation(self, text: str) -> MotivationSignals:
         detected = [m for m in self.high_intent_motivation if m in text]
