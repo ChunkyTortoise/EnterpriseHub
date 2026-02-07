@@ -15,7 +15,8 @@ import logging
 import re
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -116,6 +117,7 @@ class JorgeHandoffService:
     def _check_circular_handoff(
         cls, contact_id: str, source_bot: str, target_bot: str
     ) -> Optional[str]:
+        """Check for direct circular handoff (same source->target within 30 min)."""
         now = time.time()
         cutoff = now - cls.CIRCULAR_WINDOW_SECONDS
         for entry in cls._handoff_history.get(contact_id, []):
@@ -129,6 +131,64 @@ class JorgeHandoffService:
                     f"for contact {contact_id} occurred within last 30 minutes"
                 )
         return None
+
+    @classmethod
+    def _check_circular_prevention(
+        cls, contact_id: str, source_bot: str, target_bot: str
+    ) -> Tuple[bool, str]:
+        """Check if handoff would create a cycle.
+        
+        Performs two checks:
+        1. Same source->target handoff within 30-minute window
+        2. Full handoff chain detection for circular patterns (e.g., Lead->Buyer->Lead)
+        
+        Returns:
+            Tuple of (is_blocked: bool, reason: str)
+        """
+        now = time.time()
+        cutoff = now - cls.CIRCULAR_WINDOW_SECONDS
+        history = cls._handoff_history.get(contact_id, [])
+        
+        # Check 1: Same source->target within 30-minute window
+        for entry in history:
+            if (
+                entry["from"] == source_bot
+                and entry["to"] == target_bot
+                and entry["timestamp"] > cutoff
+            ):
+                return (
+                    True,
+                    f"Circular prevention: {source_bot}->{target_bot} blocked "
+                    f"within 30-min window for contact {contact_id}"
+                )
+        
+        # Check 2: Detect circular patterns in handoff chain
+        # Build the chain of bot transitions
+        chain: List[str] = []
+        for entry in reversed(history):
+            if entry["timestamp"] > cutoff:
+                chain.append(entry["to"])
+                chain.append(entry["from"])
+        
+        # If chain is empty, no circular pattern possible
+        if not chain:
+            return (False, "")
+        
+        # Check if proposed handoff creates a cycle
+        # A cycle exists if the target_bot appears earlier in the chain
+        # and the path from that occurrence back to target_bot completes a loop
+        chain = list(dict.fromkeys(chain))  # Remove duplicates while preserving order
+        
+        # Check if target_bot is already in the chain (would create a loop)
+        if target_bot in chain:
+            chain_str = " -> ".join(chain[-6:]) if len(chain) > 6 else " -> ".join(chain)
+            return (
+                True,
+                f"Circular prevention: handoff chain detected for contact {contact_id}. "
+                f"Current chain: {chain_str} -> {target_bot} (would create cycle)"
+            )
+        
+        return (False, "")
 
     @classmethod
     def _check_rate_limit(cls, contact_id: str) -> Optional[str]:
@@ -274,6 +334,7 @@ class JorgeHandoffService:
 
         Incorporates learned threshold adjustments from historical handoff
         outcomes and intent signals extracted from conversation history.
+        Performs circular handoff prevention checks before returning a decision.
         """
         buyer_score = intent_signals.get("buyer_intent_score", 0.0)
         seller_score = intent_signals.get("seller_intent_score", 0.0)
@@ -314,6 +375,17 @@ class JorgeHandoffService:
         adjusted_threshold = max(0.0, min(1.0, threshold + learned["adjustment"]))
 
         if score < adjusted_threshold:
+            return None
+
+        # Check circular prevention before returning decision
+        self._cleanup_old_entries()
+        is_blocked, block_reason = self._check_circular_prevention(
+            contact_id, current_bot, target
+        )
+        if is_blocked:
+            logger.info(
+                f"Handoff blocked by circular prevention: {block_reason}"
+            )
             return None
 
         reason = f"{target}_intent_detected"
