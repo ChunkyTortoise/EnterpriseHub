@@ -77,6 +77,7 @@ class JorgeFeatureConfig:
     enable_adaptive_questioning: bool = False
     enable_track3_intelligence: bool = True  # Default enabled
     enable_bot_intelligence: bool = True  # Phase 3.3 Intelligence Integration
+    jorge_handoff_enabled: bool = True
 
     # Performance settings
     max_concurrent_tasks: int = 5
@@ -1475,30 +1476,95 @@ class JorgeSellerBot:
 
         return final_strategy
 
-    async def process_seller_message(self,
-                                   lead_id: str,
-                                   lead_name: str,
-                                   history: List[Dict[str, str]]) -> Dict[str, Any]:
-        """Process a message through the Jorge Seller Bot workflow."""
-        initial_state = {
-            "lead_id": lead_id,
-            "lead_name": lead_name,
-            "conversation_history": history,
-            "property_address": None,
-            "intent_profile": None,
-            "current_tone": "direct",
-            "stall_detected": False,
-            "detected_stall_type": None,
-            "next_action": "respond", # Changed from "analyze"
-            "response_content": "",
-            "psychological_commitment": 0.0,
-            "is_qualified": False,
-            "current_journey_stage": "qualification",
-            "follow_up_count": 0,
-            "last_action_timestamp": None
-        }
-        
-        return await self.workflow.ainvoke(initial_state)
+    async def process_seller_message(
+        self,
+        conversation_id: str,
+        user_message: str,
+        seller_name: Optional[str] = None,
+        conversation_history: Optional[List[Dict[str, Any]]] = None,
+        seller_phone: Optional[str] = None,
+        seller_email: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        try:
+            if conversation_history is None:
+                conversation_history = []
+
+            conversation_history.append({
+                "role": "user",
+                "content": user_message,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+
+            initial_state = {
+                "lead_id": conversation_id,
+                "lead_name": seller_name or f"Seller {conversation_id}",
+                "conversation_history": conversation_history,
+                "property_address": None,
+                "intent_profile": None,
+                "current_tone": "direct",
+                "stall_detected": False,
+                "detected_stall_type": None,
+                "next_action": "respond",
+                "response_content": "",
+                "psychological_commitment": 0.0,
+                "is_qualified": False,
+                "current_journey_stage": "qualification",
+                "follow_up_count": 0,
+                "last_action_timestamp": None
+            }
+
+            if seller_phone:
+                initial_state["seller_phone"] = seller_phone
+            if seller_email:
+                initial_state["seller_email"] = seller_email
+            if metadata:
+                initial_state["metadata"] = metadata
+
+            result = await self.workflow.ainvoke(initial_state)
+
+            self.workflow_stats["total_interactions"] += 1
+
+            handoff_signals = {}
+            if self.config.jorge_handoff_enabled:
+                from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+                handoff_signals = JorgeHandoffService.extract_intent_signals(user_message)
+
+            intent_profile = result.get("intent_profile")
+            frs_score = 0.0
+            pcs_score = 0.0
+            if intent_profile:
+                frs_score = getattr(getattr(intent_profile, "frs", None), "total_score", 0.0)
+                pcs_score = getattr(getattr(intent_profile, "pcs", None), "total_score", 0.0)
+
+            await self.event_publisher.publish_bot_status_update(
+                bot_type="seller-bot",
+                contact_id=conversation_id,
+                status="completed",
+                current_step=result.get("next_action", "unknown")
+            )
+
+            return {
+                "response_content": result.get("response_content", ""),
+                "lead_id": conversation_id,
+                "current_step": result.get("next_action", "unknown"),
+                "engagement_status": result.get("current_journey_stage", "qualification"),
+                "frs_score": frs_score,
+                "pcs_score": pcs_score,
+                "handoff_signals": handoff_signals
+            }
+
+        except Exception as e:
+            logger.error(f"Error processing seller message for {conversation_id}: {str(e)}")
+            return {
+                "response_content": "Thanks for reaching out! I'd love to help you with your property. Could you tell me more about what you're looking for?",
+                "lead_id": conversation_id,
+                "current_step": "error",
+                "engagement_status": "error",
+                "frs_score": 0.0,
+                "pcs_score": 0.0,
+                "handoff_signals": {}
+            }
 
     # ================================
     # UNIFIED PROCESSING METHODS
