@@ -510,6 +510,160 @@ class JorgeMarketManager:
             }
         }
 
+
+# ========== BUYER BUDGET CONFIGURATION ==========
+
+
+@dataclass
+class BuyerBudgetConfig:
+    """Centralized configuration for buyer budget and qualification thresholds.
+    
+    This class externalizes all hardcoded budget ranges and thresholds from the
+    Buyer Bot to support environment-based configuration overrides.
+    """
+
+    # ========== DEFAULT BUDGET RANGES ==========
+    # Maps budget phrases to max/min values and buyer types
+    DEFAULT_BUDGET_RANGES: Dict[str, Dict] = None
+
+    def __post_init__(self):
+        if self.DEFAULT_BUDGET_RANGES is None:
+            self.DEFAULT_BUDGET_RANGES = {
+                "under 300": {"budget_max": 700000, "buyer_type": "first_time"},
+                "under 400": {"budget_max": 400000, "buyer_type": "entry_level"},
+                "under 500": {"budget_max": 700000, "buyer_type": "mid_market"},
+                "under 600": {"budget_max": 600000, "buyer_type": "mid_market"},
+                "under 700": {"budget_max": 700000, "buyer_type": "move_up"},
+                "under 800": {"budget_max": 800000, "buyer_type": "move_up"},
+                "under 1m": {"budget_max": 1200000, "buyer_type": "luxury"},
+                "under 1 million": {"budget_max": 1200000, "buyer_type": "luxury"},
+                "over 1m": {"budget_min": 1200000, "buyer_type": "luxury_plus"},
+            }
+
+    # ========== FINANCING THRESHOLDS ==========
+    # Score thresholds for financing readiness assessment
+    FINANCING_PRE_APPROVED_THRESHOLD: int = 75
+    FINANCING_NEEDS_APPROVAL_THRESHOLD: int = 50
+    FINANCING_CASH_BUDGET_THRESHOLD: int = 70
+
+    # Budget amount thresholds for parsing
+    BUDGET_AMOUNT_K_THRESHOLD: int = 1000
+    BUDGET_SINGLE_AMOUNT_MIN_FACTOR: float = 0.8
+
+    # ========== URGENCY THRESHOLDS ==========
+    # Score thresholds for buyer urgency classification
+    URGENCY_IMMEDIATE_THRESHOLD: int = 75
+    URGENCY_3_MONTHS_THRESHOLD: int = 50
+    URGENCY_6_MONTHS_THRESHOLD: int = 30
+
+    # ========== QUALIFICATION THRESHOLDS ==========
+    # Score thresholds for buyer qualification levels
+    QUALIFICATION_HOT_THRESHOLD: int = 75
+    QUALIFICATION_WARM_THRESHOLD: int = 50
+    QUALIFICATION_LUKEWARM_THRESHOLD: int = 30
+
+    # Follow-up hours for each qualification level
+    QUALIFICATION_HOT_FOLLOWUP_HOURS: int = 2
+    QUALIFICATION_WARM_FOLLOWUP_HOURS: int = 24
+    QUALIFICATION_LUKEWARM_FOLLOWUP_HOURS: int = 72
+    QUALIFICATION_COLD_FOLLOWUP_HOURS: int = 168
+
+    # ========== ROUTING THRESHOLDS ==========
+    # Score thresholds for routing decisions
+    ROUTING_QUALIFIED_THRESHOLD: int = 50
+    ROUTING_SCHEDULE_THRESHOLD: int = 30
+
+    # ========== ENVIRONMENT OVERRIDES ==========
+
+    @classmethod
+    def from_environment(cls) -> "BuyerBudgetConfig":
+        """Create BuyerBudgetConfig instance with environment variable overrides.
+        
+        Environment variables:
+        - BUYER_BUDGET_RANGES: JSON-encoded budget ranges dict
+        - BUYER_FINANCING_PRE_APPROVED_THRESHOLD: int (default 75)
+        - BUYER_FINANCING_NEEDS_APPROVAL_THRESHOLD: int (default 50)
+        - BUYER_FINANCING_CASH_BUDGET_THRESHOLD: int (default 70)
+        - BUYER_URGENCY_IMMEDIATE_THRESHOLD: int (default 75)
+        - BUYER_URGENCY_3_MONTHS_THRESHOLD: int (default 50)
+        - BUYER_URGENCY_6_MONTHS_THRESHOLD: int (default 30)
+        - BUYER_QUALIFICATION_HOT_THRESHOLD: int (default 75)
+        - BUYER_QUALIFICATION_WARM_THRESHOLD: int (default 50)
+        - BUYER_QUALIFICATION_LUKEWARM_THRESHOLD: int (default 30)
+        - BUYER_ROUTING_QUALIFIED_THRESHOLD: int (default 50)
+        - BUYER_ROUTING_SCHEDULE_THRESHOLD: int (default 30)
+        """
+        import json
+        
+        # Parse budget ranges from environment if provided
+        budget_ranges = None
+        budget_ranges_env = os.getenv("BUYER_BUDGET_RANGES")
+        if budget_ranges_env:
+            try:
+                budget_ranges = json.loads(budget_ranges_env)
+            except json.JSONDecodeError:
+                logger.warning("Invalid BUYER_BUDGET_RANGES format, using defaults")
+        
+        return cls(
+            DEFAULT_BUDGET_RANGES=budget_ranges,
+            FINANCING_PRE_APPROVED_THRESHOLD=int(os.getenv("BUYER_FINANCING_PRE_APPROVED_THRESHOLD", "75")),
+            FINANCING_NEEDS_APPROVAL_THRESHOLD=int(os.getenv("BUYER_FINANCING_NEEDS_APPROVAL_THRESHOLD", "50")),
+            FINANCING_CASH_BUDGET_THRESHOLD=int(os.getenv("BUYER_FINANCING_CASH_BUDGET_THRESHOLD", "70")),
+            URGENCY_IMMEDIATE_THRESHOLD=int(os.getenv("BUYER_URGENCY_IMMEDIATE_THRESHOLD", "75")),
+            URGENCY_3_MONTHS_THRESHOLD=int(os.getenv("BUYER_URGENCY_3_MONTHS_THRESHOLD", "50")),
+            URGENCY_6_MONTHS_THRESHOLD=int(os.getenv("BUYER_URGENCY_6_MONTHS_THRESHOLD", "30")),
+            QUALIFICATION_HOT_THRESHOLD=int(os.getenv("BUYER_QUALIFICATION_HOT_THRESHOLD", "75")),
+            QUALIFICATION_WARM_THRESHOLD=int(os.getenv("BUYER_QUALIFICATION_WARM_THRESHOLD", "50")),
+            QUALIFICATION_LUKEWARM_THRESHOLD=int(os.getenv("BUYER_QUALIFICATION_LUKEWARM_THRESHOLD", "30")),
+            ROUTING_QUALIFIED_THRESHOLD=int(os.getenv("BUYER_ROUTING_QUALIFIED_THRESHOLD", "50")),
+            ROUTING_SCHEDULE_THRESHOLD=int(os.getenv("BUYER_ROUTING_SCHEDULE_THRESHOLD", "30")),
+        )
+
+    # ========== HELPER METHODS ==========
+
+    def get_budget_range(self, budget_phrase: str) -> Optional[Dict]:
+        """Get budget range configuration for a given budget phrase."""
+        return self.DEFAULT_BUDGET_RANGES.get(budget_phrase.lower())
+
+    def get_urgency_level(self, urgency_score: int) -> str:
+        """Get urgency level based on score."""
+        if urgency_score >= self.URGENCY_IMMEDIATE_THRESHOLD:
+            return "immediate"
+        elif urgency_score >= self.URGENCY_3_MONTHS_THRESHOLD:
+            return "3_months"
+        elif urgency_score >= self.URGENCY_6_MONTHS_THRESHOLD:
+            return "6_months"
+        return "browsing"
+
+    def get_qualification_level(self, score: int) -> str:
+        """Get qualification level based on score."""
+        if score >= self.QUALIFICATION_HOT_THRESHOLD:
+            return "hot"
+        elif score >= self.QUALIFICATION_WARM_THRESHOLD:
+            return "warm"
+        elif score >= self.QUALIFICATION_LUKEWARM_THRESHOLD:
+            return "lukewarm"
+        return "cold"
+
+    def get_next_action(self, qualification_score: int) -> tuple:
+        """Get next action and follow-up hours based on qualification score."""
+        if qualification_score >= self.QUALIFICATION_HOT_THRESHOLD:
+            return ("schedule_property_tour", self.QUALIFICATION_HOT_FOLLOWUP_HOURS)
+        elif qualification_score >= self.QUALIFICATION_WARM_THRESHOLD:
+            return ("send_property_updates", self.QUALIFICATION_WARM_FOLLOWUP_HOURS)
+        elif qualification_score >= self.QUALIFICATION_LUKEWARM_THRESHOLD:
+            return ("market_education", self.QUALIFICATION_LUKEWARM_FOLLOWUP_HOURS)
+        return ("re_qualification", self.QUALIFICATION_COLD_FOLLOWUP_HOURS)
+
+    def get_routing_action(self, qualification_score: int, next_action: str = "respond") -> str:
+        """Get routing action based on qualification score."""
+        if next_action == "respond" and qualification_score >= self.ROUTING_QUALIFIED_THRESHOLD:
+            return "respond"
+        elif qualification_score >= self.ROUTING_SCHEDULE_THRESHOLD:
+            return "schedule"
+        return "end"
+
+
 # ========== EXPORTS ==========
 
 # Create global settings instance
@@ -531,6 +685,7 @@ __all__ = [
     "JorgeConfig",
     "JorgeEnvironmentSettings",
     "JorgeMarketManager",
+    "BuyerBudgetConfig",
     "settings",
     "market_manager",
     "JORGE_SELLER_MODE",
