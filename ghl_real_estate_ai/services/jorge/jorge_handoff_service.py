@@ -55,6 +55,10 @@ class JorgeHandoffService:
     DAY_SECONDS = 86400
 
     _handoff_history: Dict[str, List[Dict[str, Any]]] = {}
+    _handoff_outcomes: Dict[str, List[Dict[str, Any]]] = {}
+
+    # Minimum data points required before learned adjustments apply
+    MIN_LEARNING_SAMPLES = 10
 
     # Intent phrase patterns for signal boosting
     BUYER_INTENT_PATTERNS = [
@@ -155,10 +159,26 @@ class JorgeHandoffService:
         conversation_history: List[Dict],
         intent_signals: Dict[str, Any],
     ) -> Optional[HandoffDecision]:
-        """Evaluate whether a handoff is needed based on intent signals."""
+        """Evaluate whether a handoff is needed based on intent signals.
+
+        Incorporates learned threshold adjustments from historical handoff
+        outcomes and intent signals extracted from conversation history.
+        """
         buyer_score = intent_signals.get("buyer_intent_score", 0.0)
         seller_score = intent_signals.get("seller_intent_score", 0.0)
         detected_phrases = intent_signals.get("detected_intent_phrases", [])
+
+        # Boost scores with signals extracted from conversation history
+        history_signals: Dict[str, float] = {}
+        if conversation_history:
+            history_signals = self.extract_intent_signals_from_history(
+                conversation_history
+            )
+            # Blend history signals: add half of history confidence to current
+            if "buyer_intent" in history_signals:
+                buyer_score = min(1.0, buyer_score + history_signals["buyer_intent"] * 0.5)
+            if "seller_intent" in history_signals:
+                seller_score = min(1.0, seller_score + history_signals["seller_intent"] * 0.5)
 
         # Determine candidate target and score
         if current_bot in ("lead", "seller") and buyer_score > seller_score:
@@ -175,7 +195,14 @@ class JorgeHandoffService:
             return None
 
         threshold = self.THRESHOLDS.get((current_bot, target))
-        if threshold is None or score < threshold:
+        if threshold is None:
+            return None
+
+        # Apply learned adjustment from historical handoff outcomes
+        learned = self.get_learned_adjustments(current_bot, target)
+        adjusted_threshold = max(0.0, min(1.0, threshold + learned["adjustment"]))
+
+        if score < adjusted_threshold:
             return None
 
         reason = f"{target}_intent_detected"
@@ -188,6 +215,10 @@ class JorgeHandoffService:
                 "contact_id": contact_id,
                 "detected_phrases": detected_phrases,
                 "conversation_turns": len(conversation_history),
+                "learned_adjustment": learned["adjustment"],
+                "learned_success_rate": learned["success_rate"],
+                "learned_sample_size": learned["sample_size"],
+                "history_signals": history_signals,
             },
         )
 
@@ -288,3 +319,130 @@ class JorgeHandoffService:
             "seller_intent_score": seller_score,
             "detected_intent_phrases": detected,
         }
+
+    @classmethod
+    def record_handoff_outcome(
+        cls,
+        contact_id: str,
+        source_bot: str,
+        target_bot: str,
+        outcome: str,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """Record the outcome of a handoff for pattern learning.
+
+        Args:
+            contact_id: The contact that was handed off.
+            source_bot: Bot that initiated the handoff.
+            target_bot: Bot that received the handoff.
+            outcome: One of "successful", "failed", "reverted", "timeout".
+            metadata: Optional extra context about the outcome.
+        """
+        valid_outcomes = {"successful", "failed", "reverted", "timeout"}
+        if outcome not in valid_outcomes:
+            logger.warning(
+                f"Invalid handoff outcome '{outcome}' for contact {contact_id}. "
+                f"Expected one of {valid_outcomes}"
+            )
+            return
+
+        pair_key = f"{source_bot}->{target_bot}"
+        if pair_key not in cls._handoff_outcomes:
+            cls._handoff_outcomes[pair_key] = []
+
+        cls._handoff_outcomes[pair_key].append({
+            "contact_id": contact_id,
+            "outcome": outcome,
+            "timestamp": time.time(),
+            "metadata": metadata or {},
+        })
+
+        logger.info(
+            f"Recorded handoff outcome: {pair_key} for contact {contact_id} "
+            f"-> {outcome}"
+        )
+
+    @classmethod
+    def get_learned_adjustments(
+        cls, source_bot: str, target_bot: str
+    ) -> Dict[str, Any]:
+        """Calculate confidence threshold adjustments from historical outcomes.
+
+        Returns a dict with:
+            adjustment: float threshold delta (negative = easier handoff)
+            success_rate: float between 0.0-1.0
+            sample_size: int number of data points
+        """
+        pair_key = f"{source_bot}->{target_bot}"
+        outcomes = cls._handoff_outcomes.get(pair_key, [])
+        sample_size = len(outcomes)
+
+        if sample_size < cls.MIN_LEARNING_SAMPLES:
+            return {
+                "adjustment": 0.0,
+                "success_rate": 0.0,
+                "sample_size": sample_size,
+            }
+
+        successful_count = sum(
+            1 for o in outcomes if o["outcome"] == "successful"
+        )
+        success_rate = successful_count / sample_size
+
+        # High success rate -> lower threshold (easier handoffs)
+        # Low success rate -> raise threshold (harder handoffs)
+        if success_rate > 0.8:
+            adjustment = -0.05
+        elif success_rate < 0.5:
+            adjustment = 0.1
+        else:
+            adjustment = 0.0
+
+        return {
+            "adjustment": adjustment,
+            "success_rate": round(success_rate, 4),
+            "sample_size": sample_size,
+        }
+
+    @classmethod
+    def extract_intent_signals_from_history(
+        cls, conversation_history: List[Dict[str, Any]]
+    ) -> Dict[str, float]:
+        """Scan recent conversation history for intent patterns.
+
+        Examines up to the last 5 messages and aggregates buyer/seller
+        intent signals with confidence scores.
+
+        Args:
+            conversation_history: List of message dicts, each expected to
+                have a "message" or "content" key with the text.
+
+        Returns:
+            Dict mapping signal names to confidence scores, e.g.:
+            {"buyer_intent": 0.6, "seller_intent": 0.3}
+        """
+        recent = conversation_history[-5:] if conversation_history else []
+        buyer_total = 0
+        seller_total = 0
+
+        for msg in recent:
+            text = msg.get("message") or msg.get("content") or ""
+            if not isinstance(text, str) or not text.strip():
+                continue
+
+            for pattern in cls.BUYER_INTENT_PATTERNS:
+                if re.search(pattern, text, re.IGNORECASE):
+                    buyer_total += 1
+
+            for pattern in cls.SELLER_INTENT_PATTERNS:
+                if re.search(pattern, text, re.IGNORECASE):
+                    seller_total += 1
+
+        # Each pattern match adds 0.2 confidence, capped at 1.0
+        signals: Dict[str, float] = {}
+        if buyer_total > 0:
+            signals["buyer_intent"] = min(1.0, round(buyer_total * 0.2, 2))
+        if seller_total > 0:
+            signals["seller_intent"] = min(1.0, round(seller_total * 0.2, 2))
+
+        return signals
