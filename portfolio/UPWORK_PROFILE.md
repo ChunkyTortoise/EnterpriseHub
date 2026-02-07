@@ -9,6 +9,8 @@ I build AI-powered applications with Python, FastAPI, and Streamlit. My projects
 
 Everything I build is tested, documented, and on GitHub. All repos have CI, demo modes, and zero-key quick starts.
 
+**Portfolio:** [chunkytortoise.github.io](https://chunkytortoise.github.io)
+
 ### What I Build
 
 - **AI agent systems** -- Multi-bot architectures with handoff logic, context management, and CRM integration
@@ -87,7 +89,7 @@ Everything I build is tested, documented, and on GitHub. All repos have CI, demo
 
 ### Scraping & Automation
 
-7. **[scrape-and-serve](https://github.com/ChunkyTortoise/scrape-and-serve)** -- Web scraping framework + Excel-to-web converter. YAML-configurable scrapers, competitor price monitoring with historical charts, Excel-to-Streamlit CRUD app generator, SEO content module. BeautifulSoup + Playwright + SQLAlchemy.
+7. **[scrape-and-serve](https://github.com/ChunkyTortoise/scrape-and-serve)** -- Web scraping framework + Excel-to-web converter. YAML-configurable scrapers, competitor price monitoring with historical charts, Excel-to-Streamlit CRUD app generator, SEO content scoring. 62 tests. BeautifulSoup + httpx + SQLite + Streamlit.
 
 ---
 
