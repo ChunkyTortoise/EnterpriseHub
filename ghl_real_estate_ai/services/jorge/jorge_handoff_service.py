@@ -53,9 +53,21 @@ class JorgeHandoffService:
     DAILY_HANDOFF_LIMIT = 10
     HOUR_SECONDS = 3600
     DAY_SECONDS = 86400
+    HANDOFF_LOCK_TIMEOUT = 30  # seconds before a handoff lock expires
 
     _handoff_history: Dict[str, List[Dict[str, Any]]] = {}
     _handoff_outcomes: Dict[str, List[Dict[str, Any]]] = {}
+    _active_handoffs: Dict[str, float] = {}
+    _analytics: Dict[str, Any] = {
+        "total_handoffs": 0,
+        "successful_handoffs": 0,
+        "failed_handoffs": 0,
+        "processing_times_ms": [],
+        "handoffs_by_route": {},
+        "handoffs_by_hour": {h: 0 for h in range(24)},
+        "blocked_by_rate_limit": 0,
+        "blocked_by_circular": 0,
+    }
 
     # Minimum data points required before learned adjustments apply
     MIN_LEARNING_SAMPLES = 10
@@ -152,6 +164,105 @@ class JorgeHandoffService:
             "timestamp": time.time(),
         })
 
+    @classmethod
+    def _acquire_handoff_lock(cls, contact_id: str) -> bool:
+        """Acquire a handoff lock for the given contact.
+
+        Returns False if the contact already has an active handoff
+        (within HANDOFF_LOCK_TIMEOUT seconds). Otherwise sets the lock
+        timestamp and returns True.
+        """
+        now = time.time()
+        if contact_id in cls._active_handoffs:
+            lock_time = cls._active_handoffs[contact_id]
+            if now - lock_time < cls.HANDOFF_LOCK_TIMEOUT:
+                return False
+        cls._active_handoffs[contact_id] = now
+        return True
+
+    @classmethod
+    def _release_handoff_lock(cls, contact_id: str) -> None:
+        """Remove the handoff lock for the given contact."""
+        cls._active_handoffs.pop(contact_id, None)
+
+    @classmethod
+    def _record_analytics(
+        cls,
+        route: str,
+        start_time: float,
+        success: bool,
+        blocked_by: Optional[str] = None,
+    ) -> None:
+        """Record a handoff event into the analytics ledger."""
+        elapsed_ms = (time.time() - start_time) * 1000
+        cls._analytics["total_handoffs"] += 1
+        if success:
+            cls._analytics["successful_handoffs"] += 1
+        else:
+            cls._analytics["failed_handoffs"] += 1
+        cls._analytics["processing_times_ms"].append(elapsed_ms)
+
+        # Route counter
+        if route not in cls._analytics["handoffs_by_route"]:
+            cls._analytics["handoffs_by_route"][route] = 0
+        cls._analytics["handoffs_by_route"][route] += 1
+
+        # Hour distribution
+        hour = time.localtime().tm_hour
+        cls._analytics["handoffs_by_hour"][hour] += 1
+
+        # Blocked counters
+        if blocked_by == "rate_limit":
+            cls._analytics["blocked_by_rate_limit"] += 1
+        elif blocked_by == "circular":
+            cls._analytics["blocked_by_circular"] += 1
+
+    @classmethod
+    def get_analytics_summary(cls) -> Dict[str, Any]:
+        """Return an aggregate summary of handoff analytics.
+
+        Returns:
+            Dict with total_handoffs, successful_handoffs, failed_handoffs,
+            success_rate, avg_processing_time_ms, handoffs_by_route,
+            handoffs_by_hour, peak_hour, blocked_by_rate_limit,
+            blocked_by_circular.
+        """
+        total = cls._analytics["total_handoffs"]
+        successful = cls._analytics["successful_handoffs"]
+        failed = cls._analytics["failed_handoffs"]
+        times = cls._analytics["processing_times_ms"]
+        avg_time = sum(times) / len(times) if times else 0.0
+        by_hour = cls._analytics["handoffs_by_hour"]
+        peak_hour = max(by_hour, key=by_hour.get) if total > 0 else 0
+
+        return {
+            "total_handoffs": total,
+            "successful_handoffs": successful,
+            "failed_handoffs": failed,
+            "success_rate": round(successful / total, 4) if total > 0 else 0.0,
+            "avg_processing_time_ms": round(avg_time, 2),
+            "handoffs_by_route": dict(cls._analytics["handoffs_by_route"]),
+            "handoffs_by_hour": dict(by_hour),
+            "peak_hour": peak_hour,
+            "blocked_by_rate_limit": cls._analytics["blocked_by_rate_limit"],
+            "blocked_by_circular": cls._analytics["blocked_by_circular"],
+        }
+
+    @classmethod
+    def reset_analytics(cls) -> None:
+        """Clear all analytics data (useful for testing)."""
+        cls._analytics = {
+            "total_handoffs": 0,
+            "successful_handoffs": 0,
+            "failed_handoffs": 0,
+            "processing_times_ms": [],
+            "handoffs_by_route": {},
+            "handoffs_by_hour": {h: 0 for h in range(24)},
+            "blocked_by_rate_limit": 0,
+            "blocked_by_circular": 0,
+        }
+        cls._active_handoffs = {}
+
     async def evaluate_handoff(
         self,
         current_bot: str,
@@ -229,66 +340,95 @@ class JorgeHandoffService:
         location_id: str = "",
     ) -> List[Dict[str, Any]]:
         """Generate GHL action dicts to execute the handoff."""
-        self._cleanup_old_entries()
+        start_time = time.time()
+        route = f"{decision.source_bot}->{decision.target_bot}"
 
-        circular_reason = self._check_circular_handoff(
-            contact_id, decision.source_bot, decision.target_bot
-        )
-        if circular_reason:
-            logger.warning(circular_reason)
-            return [{"handoff_executed": False, "reason": circular_reason}]
+        # Conflict resolution: prevent concurrent handoffs for the same contact
+        if not self._acquire_handoff_lock(contact_id):
+            return [
+                {
+                    "handoff_executed": False,
+                    "reason": "Concurrent handoff in progress for this contact",
+                }
+            ]
 
-        rate_reason = self._check_rate_limit(contact_id)
-        if rate_reason:
-            logger.warning(rate_reason)
-            return [{"handoff_executed": False, "reason": rate_reason}]
+        try:
+            self._cleanup_old_entries()
 
-        actions: List[Dict[str, Any]] = []
-
-        source_tag = self.TAG_MAP.get(decision.source_bot)
-        target_tag = self.TAG_MAP.get(decision.target_bot)
-
-        # Remove source bot's activation tag
-        if source_tag:
-            actions.append({"type": "remove_tag", "tag": source_tag})
-
-        # Add target bot's activation tag
-        if target_tag:
-            actions.append({"type": "add_tag", "tag": target_tag})
-
-        # Add tracking tag
-        tracking_tag = (
-            f"Handoff-{decision.source_bot.capitalize()}-to-{decision.target_bot.capitalize()}"
-        )
-        actions.append({"type": "add_tag", "tag": tracking_tag})
-
-        # Log analytics event
-        if self.analytics_service:
-            try:
-                await self.analytics_service.track_event(
-                    event_type="jorge_handoff",
-                    location_id=location_id,
-                    contact_id=contact_id,
-                    data={
-                        "source_bot": decision.source_bot,
-                        "target_bot": decision.target_bot,
-                        "reason": decision.reason,
-                        "confidence": decision.confidence,
-                        "detected_phrases": decision.context.get("detected_phrases", []),
-                    },
+            circular_reason = self._check_circular_handoff(
+                contact_id, decision.source_bot, decision.target_bot
+            )
+            if circular_reason:
+                logger.warning(circular_reason)
+                self._record_analytics(
+                    route, start_time, success=False, blocked_by="circular"
                 )
-            except Exception as e:
-                logger.warning(f"Failed to log handoff analytics for {contact_id}: {e}")
+                return [{"handoff_executed": False, "reason": circular_reason}]
 
-        logger.info(
-            f"Handoff: {decision.source_bot} -> {decision.target_bot} "
-            f"for contact {contact_id} (confidence={decision.confidence:.2f}, "
-            f"reason={decision.reason})"
-        )
+            rate_reason = self._check_rate_limit(contact_id)
+            if rate_reason:
+                logger.warning(rate_reason)
+                self._record_analytics(
+                    route, start_time, success=False, blocked_by="rate_limit"
+                )
+                return [{"handoff_executed": False, "reason": rate_reason}]
 
-        self._record_handoff(contact_id, decision.source_bot, decision.target_bot)
+            actions: List[Dict[str, Any]] = []
 
-        return actions
+            source_tag = self.TAG_MAP.get(decision.source_bot)
+            target_tag = self.TAG_MAP.get(decision.target_bot)
+
+            # Remove source bot's activation tag
+            if source_tag:
+                actions.append({"type": "remove_tag", "tag": source_tag})
+
+            # Add target bot's activation tag
+            if target_tag:
+                actions.append({"type": "add_tag", "tag": target_tag})
+
+            # Add tracking tag
+            tracking_tag = (
+                f"Handoff-{decision.source_bot.capitalize()}-to-"
+                f"{decision.target_bot.capitalize()}"
+            )
+            actions.append({"type": "add_tag", "tag": tracking_tag})
+
+            # Log analytics event
+            if self.analytics_service:
+                try:
+                    await self.analytics_service.track_event(
+                        event_type="jorge_handoff",
+                        location_id=location_id,
+                        contact_id=contact_id,
+                        data={
+                            "source_bot": decision.source_bot,
+                            "target_bot": decision.target_bot,
+                            "reason": decision.reason,
+                            "confidence": decision.confidence,
+                            "detected_phrases": decision.context.get(
+                                "detected_phrases", []
+                            ),
+                        },
+                    )
+                except Exception as e:
+                    logger.warning(
+                        f"Failed to log handoff analytics for {contact_id}: {e}"
+                    )
+
+            logger.info(
+                f"Handoff: {decision.source_bot} -> {decision.target_bot} "
+                f"for contact {contact_id} (confidence={decision.confidence:.2f}, "
+                f"reason={decision.reason})"
+            )
+
+            self._record_handoff(
+                contact_id, decision.source_bot, decision.target_bot
+            )
+            self._record_analytics(route, start_time, success=True)
+
+            return actions
+        finally:
+            self._release_handoff_lock(contact_id)
 
     @classmethod
     def extract_intent_signals(cls, message: str) -> Dict[str, Any]:
