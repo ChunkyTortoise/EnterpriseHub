@@ -1,65 +1,112 @@
 """
 Jorge Performance Tracker Service
 
-Tracks latency, throughput, and SLA compliance for all bot operations.
-Uses in-memory storage with a rolling window (default 1 hour) and
-provides percentile-based latency stats, throughput metrics, and
-SLA violation detection.
+Tracks latency, throughput, cache hits, and SLA compliance for all Jorge bot operations.
+Uses in-memory storage with rolling windows (1h, 24h, 7d) and provides 
+percentile-based latency stats, throughput metrics, and SLA violation detection.
 
 Usage:
     tracker = PerformanceTracker()
-    tracker.record_operation("lead_bot.process", duration_ms=142.5)
+    
+    # Manual tracking
+    await tracker.track_operation("lead_bot", "qualify", 1500, True)
+    
+    # Context manager for async operations
+    async with tracker.track_async_operation("lead_bot", "process"):
+        await process_lead()
+    
+    # Get stats
+    stats = await tracker.get_bot_stats("lead_bot")
+    
+    # Check SLA compliance
+    compliance = await tracker.check_sla_compliance()
 
-    async with tracker.track_operation("handoff.execute"):
-        await do_handoff()
-
-    stats = tracker.get_latency_stats("lead_bot.process")
-    report = tracker.get_sla_report()
+SLA Targets (Phase 4 Audit Spec):
+    - Lead Bot P95 < 2000ms
+    - Buyer Bot P95 < 2500ms
+    - Seller Bot P95 < 2500ms
+    - Handoff P95 < 500ms
 """
 
+import asyncio
 import logging
+import math
 import statistics
 import threading
 import time
+from collections import deque
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
-from typing import Any, AsyncIterator, Dict, List, Optional
+from functools import wraps
+from typing import Any, AsyncIterator, Callable, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
 
-# ── Default SLA Targets (from audit spec) ────────────────────────────
-DEFAULT_SLAS: Dict[str, Dict[str, float]] = {
-    "lead_bot.full_qualification": {"p50": 500, "p95": 2000},
-    "buyer_bot.full_qualification": {"p50": 800, "p95": 2500},
-    "seller_bot.full_qualification": {"p50": 700, "p95": 2500},
-    "handoff.execute": {"p50": 100, "p95": 500},
+# ── SLA Configuration (from Phase 4 Audit Spec) ─────────────────────────
+SLA_CONFIG: Dict[str, Dict[str, float]] = {
+    "lead_bot": {
+        "full_qualification": {"p50_target": 500, "p95_target": 2000, "p99_target": 3000},
+        "process": {"p50_target": 300, "p95_target": 1500, "p99_target": 2000},
+        "handoff": {"p50_target": 100, "p95_target": 500, "p99_target": 800},
+    },
+    "buyer_bot": {
+        "full_qualification": {"p50_target": 800, "p95_target": 2500, "p99_target": 3500},
+        "process": {"p50_target": 400, "p95_target": 1800, "p99_target": 2500},
+        "handoff": {"p50_target": 100, "p95_target": 500, "p99_target": 800},
+    },
+    "seller_bot": {
+        "full_qualification": {"p50_target": 700, "p95_target": 2500, "p99_target": 3500},
+        "process": {"p50_target": 400, "p95_target": 1800, "p99_target": 2500},
+        "handoff": {"p50_target": 100, "p95_target": 500, "p99_target": 800},
+    },
+    "handoff": {
+        "execute": {"p50_target": 100, "p95_target": 500, "p99_target": 800},
+    },
 }
+
+# Rolling window configurations (in seconds)
+WINDOWS = {
+    "1h": 3600,
+    "24h": 86400,
+    "7d": 604800,
+}
+
+# Bot names for validation
+VALID_BOT_NAMES = frozenset(["lead_bot", "buyer_bot", "seller_bot", "handoff"])
 
 
 @dataclass
 class _OperationEntry:
     """A single recorded operation timing."""
-
     timestamp: float
     duration_ms: float
+    success: bool = True
+    cache_hit: bool = False
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class _SLATarget:
     """SLA target thresholds for an operation."""
-
     operation: str
     target_p50_ms: float
     target_p95_ms: float
+    target_p99_ms: float = 0.0
 
 
 class PerformanceTracker:
-    """Latency, throughput, and SLA compliance tracker for Jorge bots.
+    """Performance tracking service for Jorge bots.
 
     Thread-safe, in-memory performance monitoring with rolling-window
     storage and percentile-based latency analysis.
+    
+    Supports:
+    - Response time tracking (P50, P95, P99)
+    - Request counts (success, error, total)
+    - Cache hit rates
+    - SLA compliance checking
+    - Multiple rolling windows (1h, 24h, 7d)
     """
 
     # ── Singleton ─────────────────────────────────────────────────────
@@ -76,16 +123,37 @@ class PerformanceTracker:
     def __init__(self) -> None:
         if self._initialized:
             return
-        self._operations: Dict[str, List[_OperationEntry]] = {}
-        self._sla_targets: Dict[str, _SLATarget] = {}
+        
+        # Rolling windows: bot -> operation -> window -> deque of entries
+        self._operations: Dict[str, Dict[str, Dict[str, deque]]] = {}
+        self._sla_targets: Dict[str, Dict[str, _SLATarget]] = {}
         self._data_lock = threading.Lock()
         self._initialized = True
-
+        
+        # Initialize data structures for each bot and window
+        for bot_name in VALID_BOT_NAMES:
+            self._operations[bot_name] = {}
+            for window_name in WINDOWS:
+                self._operations[bot_name][window_name] = deque(maxlen=10000)
+        
         # Register default SLAs from audit spec
-        for operation, targets in DEFAULT_SLAS.items():
-            self.register_sla(operation, targets["p95"], targets["p50"])
+        self._register_default_slas()
+        
+        logger.info("PerformanceTracker initialized with %d bots, %d windows", 
+                   len(VALID_BOT_NAMES), len(WINDOWS))
 
-        logger.info("PerformanceTracker initialized with %d default SLAs", len(DEFAULT_SLAS))
+    def _register_default_slas(self) -> None:
+        """Register SLA targets from SLA_CONFIG."""
+        for bot_name, operations in SLA_CONFIG.items():
+            self._sla_targets[bot_name] = {}
+            for operation, targets in operations.items():
+                self._sla_targets[bot_name][operation] = _SLATarget(
+                    operation=operation,
+                    target_p50_ms=targets["p50_target"],
+                    target_p95_ms=targets["p95_target"],
+                    target_p99_ms=targets.get("p99_target", 0.0),
+                )
+        logger.info("Registered %d SLA targets", sum(len(v) for v in self._sla_targets.values()))
 
     # ── Timing ────────────────────────────────────────────────────────
 
