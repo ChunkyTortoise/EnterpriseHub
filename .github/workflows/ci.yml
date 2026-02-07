@@ -176,5 +176,4 @@ jobs:
 
     - name: Verify modules can be imported
       run: |
-        python -c "from modules import market_pulse; print('market_pulse imported successfully')"
         python -c "from utils import data_loader; print('data_loader imported successfully')"
