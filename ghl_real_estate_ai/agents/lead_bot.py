@@ -269,15 +269,38 @@ class BehavioralAnalyticsEngine:
 
         logger.debug(f"Cache miss for lead {lead_id}, computing response pattern")
 
-        # Calculate response velocity
+        # Calculate response velocity using actual timestamps
         response_times = []
         for i in range(1, len(conversation_history)):
             current_msg = conversation_history[i]
             prev_msg = conversation_history[i-1]
 
-            # Mock timestamp analysis (in production, use actual timestamps)
+            # Real timestamp analysis using conversation timestamps
             if current_msg.get('role') == 'user' and prev_msg.get('role') == 'assistant':
-                response_times.append(4.5)  # Mock: 4.5 hours average
+                current_ts = current_msg.get('timestamp')
+                prev_ts = prev_msg.get('timestamp')
+                
+                if current_ts and prev_ts:
+                    try:
+                        # Parse timestamps (support ISO format and Unix timestamps)
+                        if isinstance(current_ts, (int, float)):
+                            current_dt = datetime.fromtimestamp(current_ts, tz=timezone.utc)
+                        else:
+                            current_dt = datetime.fromisoformat(str(current_ts).replace('Z', '+00:00'))
+                        
+                        if isinstance(prev_ts, (int, float)):
+                            prev_dt = datetime.fromtimestamp(prev_ts, tz=timezone.utc)
+                        else:
+                            prev_dt = datetime.fromisoformat(str(prev_ts).replace('Z', '+00:00'))
+                        
+                        # Calculate hours between messages
+                        delta_hours = (current_dt - prev_dt).total_seconds() / 3600
+                        if delta_hours > 0:  # Only count positive deltas
+                            response_times.append(delta_hours)
+                    except (ValueError, TypeError) as e:
+                        logger.debug(f"Could not parse timestamps for lead {lead_id}: {e}")
+                        # Fallback to default if timestamp parsing fails
+                        response_times.append(4.5)
 
         avg_response_hours = sum(response_times) / len(response_times) if response_times else 24.0
 
@@ -289,13 +312,8 @@ class BehavioralAnalyticsEngine:
         else:
             velocity = "slow"
 
-        # Analyze channel preferences (mock implementation)
-        channel_prefs = {
-            "SMS": 0.8,
-            "Email": 0.3,
-            "Voice": 0.6,
-            "WhatsApp": 0.2
-        }
+        # Analyze channel preferences from GHL contact data
+        channel_prefs = await self._get_channel_preferences(lead_id, conversation_history)
 
         # Analyze message length preference
         avg_msg_length = sum(len(m.get('content', '').split()) for m in conversation_history if m.get('role') == 'user')
@@ -303,12 +321,15 @@ class BehavioralAnalyticsEngine:
 
         length_pref = "brief" if avg_msg_length < 10 else "detailed"
 
+        # Calculate best contact times from engagement patterns
+        best_times = self._calculate_best_contact_times(conversation_history)
+        
         pattern = ResponsePattern(
             avg_response_hours=avg_response_hours,
             response_count=len([m for m in conversation_history if m.get('role') == 'user']),
             channel_preferences=channel_prefs,
             engagement_velocity=velocity,
-            best_contact_times=[9, 14, 18],  # Mock: 9 AM, 2 PM, 6 PM
+            best_contact_times=best_times,
             message_length_preference=length_pref
         )
 
@@ -323,6 +344,110 @@ class BehavioralAnalyticsEngine:
     def cleanup_stale_patterns(self) -> int:
         """Manually trigger cleanup of expired patterns."""
         return self._patterns_cache.cleanup_expired()
+
+    async def _get_channel_preferences(self, lead_id: str, conversation_history: List[Dict]) -> Dict[str, float]:
+        """
+        Get channel preferences from GHL contact data or infer from conversation history.
+        
+        Returns:
+            Dict mapping channel names to preference scores (0.0-1.0)
+        """
+        channel_prefs = {
+            "SMS": 0.5,
+            "Email": 0.5,
+            "Voice": 0.5,
+            "WhatsApp": 0.3
+        }
+        
+        try:
+            # Try to fetch contact preferences from GHL
+            from ghl_real_estate_ai.services.enhanced_ghl_client import EnhancedGHLClient
+            async with EnhancedGHLClient() as ghl_client:
+                contact = await ghl_client.get_contact(lead_id)
+                if contact:
+                    # Extract channel preferences from contact custom fields
+                    custom_fields = getattr(contact, 'custom_fields', {}) or {}
+                    
+                    # Check for explicit channel preferences
+                    if custom_fields.get('preferred_channel'):
+                        preferred = custom_fields['preferred_channel'].upper()
+                        if preferred in channel_prefs:
+                            channel_prefs[preferred] = 0.9
+                    
+                    # Check DND (Do Not Disturb) settings
+                    if getattr(contact, 'dnd', False):
+                        channel_prefs["Voice"] = 0.1
+                    
+                    # Check email opt-out
+                    if getattr(contact, 'email_opt_out', False):
+                        channel_prefs["Email"] = 0.0
+                    
+                    # Check SMS opt-out
+                    if getattr(contact, 'sms_opt_out', False):
+                        channel_prefs["SMS"] = 0.0
+                        
+        except Exception as e:
+            logger.debug(f"Could not fetch GHL contact preferences for {lead_id}: {e}")
+        
+        # Infer preferences from conversation history
+        channel_counts = {"SMS": 0, "Email": 0, "Voice": 0, "WhatsApp": 0}
+        for msg in conversation_history:
+            channel = msg.get('channel', '').upper()
+            if channel in channel_counts:
+                channel_counts[channel] += 1
+        
+        total_messages = sum(channel_counts.values())
+        if total_messages > 0:
+            for channel, count in channel_counts.items():
+                # Blend GHL preferences with observed behavior (70% observed, 30% GHL)
+                observed_pref = count / total_messages
+                channel_prefs[channel] = 0.7 * observed_pref + 0.3 * channel_prefs[channel]
+        
+        return channel_prefs
+
+    def _calculate_best_contact_times(self, conversation_history: List[Dict]) -> List[int]:
+        """
+        Calculate best contact times based on engagement patterns.
+        
+        Analyzes when the lead typically responds to determine optimal contact hours.
+        
+        Returns:
+            List of hours (0-23) when lead is most responsive
+        """
+        hour_engagement = {}  # hour -> response count
+        
+        for msg in conversation_history:
+            if msg.get('role') == 'user':
+                timestamp = msg.get('timestamp')
+                if timestamp:
+                    try:
+                        if isinstance(timestamp, (int, float)):
+                            dt = datetime.fromtimestamp(timestamp, tz=timezone.utc)
+                        else:
+                            dt = datetime.fromisoformat(str(timestamp).replace('Z', '+00:00'))
+                        
+                        hour = dt.hour
+                        hour_engagement[hour] = hour_engagement.get(hour, 0) + 1
+                    except (ValueError, TypeError):
+                        continue
+        
+        if hour_engagement:
+            # Sort hours by engagement count and return top 3
+            sorted_hours = sorted(hour_engagement.items(), key=lambda x: x[1], reverse=True)
+            best_times = [hour for hour, _ in sorted_hours[:3]]
+            
+            # Ensure we have at least 3 times, pad with business hours defaults
+            default_times = [9, 14, 18]
+            while len(best_times) < 3:
+                for default in default_times:
+                    if default not in best_times:
+                        best_times.append(default)
+                        break
+            
+            return best_times[:3]
+        
+        # Default to standard business hours if no engagement data
+        return [9, 14, 18]
 
     async def predict_optimal_sequence(self, pattern: ResponsePattern) -> SequenceOptimization:
         """Predict optimal sequence timing based on behavioral patterns"""
@@ -1914,10 +2039,11 @@ class LeadBotWorkflow:
         
         await sync_service.record_lead_event(state['lead_id'], "AI", "Starting escrow nurture and milestone tracking.", "node")
 
-        # Milestone logic (mocked for now, but structure is there)
-        msg = "Congrats again on being under contract! The next major milestone is the inspection. I'll be there to make sure everything is handled."
+        # Real milestone tracking based on lead state and engagement
+        milestone = self._determine_escrow_milestone(state)
+        msg = self._get_milestone_message(milestone, state['lead_name'])
         
-        await sync_service.record_lead_event(state['lead_id'], "AI", "Escrow update: Inspection milestone tracked.", "thought")
+        await sync_service.record_lead_event(state['lead_id'], "AI", f"Escrow update: {milestone} milestone tracked.", "thought")
 
         return {"engagement_status": "under_contract", "current_step": "closed"}
 
@@ -1953,8 +2079,8 @@ class LeadBotWorkflow:
         if step in ["day_3", "day_7", "day_14", "day_30"]:
             return step
         
-        # Default fallback
-        return "nurture"
+        # Intelligent fallback based on lead signals and engagement
+        return self._classify_lead_for_routing(state)
 
     def _select_stall_breaker(self, state: LeadFollowUpState) -> str:
         """Select the appropriate stall-breaking script based on intent profile via GhostEngine."""
@@ -1972,6 +2098,117 @@ class LeadBotWorkflow:
             objection_type = "has_realtor"
 
         return self.ghost_engine.get_stall_breaker(objection_type)
+
+    def _determine_escrow_milestone(self, state: LeadFollowUpState) -> str:
+        """
+        Determine current escrow milestone based on lead state and timeline.
+        
+        Milestones in order:
+        1. contract_signed - Initial contract execution
+        2. inspection - Home inspection period
+        3. appraisal - Property appraisal
+        4. loan_approval - Final loan approval
+        5. final_walkthrough - Pre-closing walkthrough
+        6. closing - Closing day
+        """
+        # Check for milestone indicators in conversation history
+        conversation_text = " ".join(
+            msg.get('content', '').lower() 
+            for msg in state.get('conversation_history', [])
+        )
+        
+        # Check custom fields or state for milestone tracking
+        custom_fields = state.get('custom_fields', {})
+        current_milestone = custom_fields.get('escrow_milestone', '')
+        
+        if current_milestone:
+            return current_milestone
+        
+        # Infer milestone from conversation keywords
+        milestone_keywords = {
+            'closing': ['closing', 'close of escrow', 'coe', 'keys', 'final signing'],
+            'final_walkthrough': ['walkthrough', 'walk-through', 'final walk'],
+            'loan_approval': ['loan approved', 'clear to close', 'ctc', 'underwriting'],
+            'appraisal': ['appraisal', 'appraiser', 'appraisal value'],
+            'inspection': ['inspection', 'inspector', 'home inspection'],
+            'contract_signed': ['contract', 'under contract', 'accepted offer']
+        }
+        
+        # Check in reverse order (most advanced milestone first)
+        for milestone, keywords in milestone_keywords.items():
+            if any(kw in conversation_text for kw in keywords):
+                return milestone
+        
+        # Default to inspection as first major milestone after contract
+        return 'inspection'
+
+    def _get_milestone_message(self, milestone: str, lead_name: str) -> str:
+        """
+        Get appropriate message for the current escrow milestone.
+        """
+        milestone_messages = {
+            'contract_signed': f"Congrats {lead_name} on getting under contract! The next step is scheduling the home inspection. I'll help coordinate everything.",
+            'inspection': f"Great news {lead_name}! The inspection is the next major milestone. I'll be there to make sure everything is handled properly.",
+            'appraisal': f"{lead_name}, the appraisal is coming up. This is when the lender confirms the home's value. I'll keep you posted on the results.",
+            'loan_approval': f"Exciting progress {lead_name}! We're waiting on final loan approval. Once we get the clear to close, we're almost there!",
+            'final_walkthrough': f"{lead_name}, time for the final walkthrough! This is your chance to verify everything is in order before closing.",
+            'closing': f"The big day is here {lead_name}! Closing day - you're about to get the keys to your new home!"
+        }
+        
+        return milestone_messages.get(
+            milestone, 
+            f"Congrats {lead_name} on being under contract! I'll keep you updated on each milestone."
+        )
+
+    def _classify_lead_for_routing(self, state: LeadFollowUpState) -> Literal["qualified", "nurture"]:
+        """
+        Classify lead for routing based on intent signals, engagement, and temperature.
+        
+        Returns:
+            'qualified' if lead shows strong buying/selling signals
+            'nurture' if lead needs more engagement
+        """
+        # Check intent profile for classification
+        intent_profile = state.get('intent_profile')
+        if intent_profile:
+            frs = getattr(intent_profile, 'frs', None)
+            if frs:
+                classification = getattr(frs, 'classification', '')
+                if classification in ['Hot Lead', 'Warm Lead']:
+                    return 'qualified'
+        
+        # Check lead score from state
+        lead_score = state.get('lead_score', 0)
+        if lead_score >= 70:
+            return 'qualified'
+        
+        # Analyze conversation for buying signals
+        conversation_history = state.get('conversation_history', [])
+        if conversation_history:
+            recent_messages = conversation_history[-5:]  # Last 5 messages
+            message_text = " ".join(
+                msg.get('content', '').lower() 
+                for msg in recent_messages 
+                if msg.get('role') == 'user'
+            )
+            
+            # Strong buying signals
+            buying_signals = [
+                'pre-approved', 'preapproved', 'ready to buy', 'want to make an offer',
+                'schedule a showing', 'see the house', 'budget is', 'looking to buy',
+                'sell my house', 'list my home', 'what\'s my home worth'
+            ]
+            
+            if any(signal in message_text for signal in buying_signals):
+                return 'qualified'
+        
+        # Check engagement status
+        engagement = state.get('engagement_status', '')
+        if engagement in ['showing_booked', 'offer_sent', 'under_contract']:
+            return 'qualified'
+        
+        # Default to nurture for leads needing more engagement
+        return 'nurture'
 
     # ================================
     # INTELLIGENCE HELPER METHODS
@@ -2146,6 +2383,130 @@ class LeadBotWorkflow:
     # ================================
     # UNIFIED PROCESSING METHODS
     # ================================
+
+    async def process_lead_conversation(
+        self,
+        conversation_id: str,
+        user_message: str,
+        lead_name: Optional[str] = None,
+        conversation_history: Optional[List[Dict[str, Any]]] = None,
+        sequence_day: int = 0,
+        lead_phone: Optional[str] = None,
+        lead_email: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        Main entry point for processing lead conversations.
+        
+        This is the primary public API method for the Lead Bot, providing a simple
+        interface for processing incoming lead messages through the LangGraph workflow.
+        
+        Args:
+            conversation_id: Unique identifier for the conversation
+            user_message: The incoming message from the lead
+            lead_name: Optional name of the lead
+            conversation_history: Optional list of previous messages
+            sequence_day: Day in the follow-up sequence (0 = initial contact)
+            lead_phone: Optional phone number for SMS follow-ups
+            lead_email: Optional email for email follow-ups
+            metadata: Optional additional metadata
+            
+        Returns:
+            Dict containing:
+                - response_content: Bot's response message
+                - lead_id: The conversation/lead identifier
+                - current_step: Next action in the workflow
+                - engagement_status: Current engagement state
+                - temperature: Lead temperature if predicted
+                - handoff_signals: Signals for cross-bot handoff
+        """
+        try:
+            # Build conversation history if not provided
+            if conversation_history is None:
+                conversation_history = []
+            
+            # Add the user message to history
+            conversation_history.append({
+                "role": "user",
+                "content": user_message,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+            
+            # Create initial state for the workflow
+            initial_state = {
+                "lead_id": conversation_id,
+                "lead_name": lead_name or f"Lead {conversation_id}",
+                "conversation_history": conversation_history,
+                "sequence_day": sequence_day,
+                "engagement_status": "responsive",
+                "cma_generated": False,
+                "user_message": user_message,
+                
+                # Enhanced fields
+                "response_pattern": None,
+                "personality_type": None,
+                "temperature_prediction": None,
+                "sequence_optimization": None,
+                
+                # Track 3.1 fields
+                "journey_analysis": None,
+                "conversion_analysis": None,
+                "touchpoint_analysis": None,
+                "enhanced_optimization": None,
+                "critical_scenario": None,
+                "track3_applied": False,
+                
+                # Phase 3.3 Intelligence Enhancement fields
+                "intelligence_context": None,
+                "intelligence_performance_ms": 0.0,
+                "preferred_engagement_timing": None,
+                "churn_risk_score": None,
+                "cross_bot_preferences": None,
+                "sequence_optimization_applied": False
+            }
+            
+            # Add optional metadata
+            if lead_phone:
+                initial_state["lead_phone"] = lead_phone
+            if lead_email:
+                initial_state["lead_email"] = lead_email
+            if metadata:
+                initial_state["metadata"] = metadata
+            
+            # Execute the workflow
+            result = await self.workflow.ainvoke(initial_state)
+            
+            # Update performance statistics
+            self.workflow_stats["total_interactions"] += 1
+            
+            # Extract handoff signals for cross-bot handoff detection
+            handoff_signals = {}
+            if self.config.jorge_handoff_enabled:
+                from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+                handoff_signals = JorgeHandoffService.extract_intent_signals(user_message)
+            
+            result["handoff_signals"] = handoff_signals
+            
+            # Emit conversation processed event
+            await self.event_publisher.publish_bot_status_update(
+                bot_type="lead-bot",
+                contact_id=conversation_id,
+                status="completed",
+                current_step=result.get("current_step", "unknown")
+            )
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error processing lead conversation for {conversation_id}: {str(e)}")
+            return {
+                "conversation_id": conversation_id,
+                "error": str(e),
+                "response_content": "I apologize, but I encountered an issue processing your message. Please try again.",
+                "current_step": "error",
+                "engagement_status": "error",
+                "handoff_signals": {}
+            }
 
     async def process_enhanced_lead_sequence(self, lead_id: str, sequence_day: int,
                                            conversation_history: List[Dict]) -> Dict[str, Any]:
