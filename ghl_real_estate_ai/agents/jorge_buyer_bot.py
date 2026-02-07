@@ -59,10 +59,20 @@ from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
 from ghl_real_estate_ai.services.ghl_client import GHLClient
+from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
+from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
+from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
+from ghl_real_estate_ai.services.jorge.ab_testing_service import ABTestingService
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ghl_utils.jorge_config import BuyerBudgetConfig
-from bots.shared.ml_analytics_engine import get_ml_analytics_engine
+
+try:
+    from bots.shared.ml_analytics_engine import get_ml_analytics_engine
+except ImportError:
+    get_ml_analytics_engine = None
+
+logger = get_logger(__name__)
 
 # Phase 3.3 Bot Intelligence Middleware Integration
 try:
@@ -72,8 +82,6 @@ try:
 except ImportError as e:
     logger.warning(f"Bot Intelligence Middleware unavailable: {e}")
     BOT_INTELLIGENCE_AVAILABLE = False
-
-logger = get_logger(__name__)
 
 
 # ================================
@@ -166,6 +174,9 @@ class JorgeBuyerBot:
     6. Schedule follow-up actions based on qualification level
     """
 
+    MAX_CONVERSATION_HISTORY = 50
+    SMS_MAX_LENGTH = 160
+
     def __init__(self, tenant_id: str = "jorge_buyer", enable_bot_intelligence: bool = True,
                  enable_handoff: bool = True, budget_ranges: Optional[Dict] = None,
                  budget_config: Optional[BuyerBudgetConfig] = None):
@@ -173,7 +184,7 @@ class JorgeBuyerBot:
         self.claude = ClaudeAssistant()
         self.event_publisher = get_event_publisher()
         self.property_matcher = PropertyMatcher()
-        self.ml_analytics = get_ml_analytics_engine(tenant_id)
+        self.ml_analytics = get_ml_analytics_engine(tenant_id) if get_ml_analytics_engine else None
         self.ghl_client = GHLClient()
         self.enable_handoff = enable_handoff
         
@@ -195,6 +206,13 @@ class JorgeBuyerBot:
         elif self.enable_bot_intelligence:
             logger.warning("Jorge Buyer Bot: Bot Intelligence requested but dependencies not available")
 
+        # Monitoring services (singletons — cheap to instantiate)
+        self.performance_tracker = PerformanceTracker()
+        self.metrics_collector = BotMetricsCollector()
+        self.alerting_service = AlertingService()
+        self.ab_testing = ABTestingService()
+        self._init_ab_experiments()
+
         # Performance tracking for intelligence enhancements
         self.workflow_stats = {
             "total_interactions": 0,
@@ -203,6 +221,16 @@ class JorgeBuyerBot:
         }
 
         self.workflow = self._build_graph()
+
+    def _init_ab_experiments(self) -> None:
+        """Create default A/B experiments if not already registered."""
+        try:
+            self.ab_testing.create_experiment(
+                ABTestingService.RESPONSE_TONE_EXPERIMENT,
+                ["formal", "casual", "empathetic"],
+            )
+        except ValueError:
+            pass  # Already exists
 
     def _build_graph(self) -> StateGraph:
         workflow = StateGraph(BuyerBotState)
@@ -266,42 +294,32 @@ class JorgeBuyerBot:
             conversation_history = state.get("conversation_history", [])
             buyer_id = state.get("buyer_id", "unknown")
 
-            # Use intent decoder to extract buyer signals
-            intent_result = await self.intent_decoder.decode_intent(
-                messages=conversation_history,
-                context={"buyer_id": buyer_id}
+            # Use intent decoder to analyze buyer (returns BuyerIntentProfile)
+            profile = self.intent_decoder.analyze_buyer(
+                buyer_id=buyer_id,
+                conversation_history=conversation_history,
             )
 
-            # Parse structured intent data
-            intent_profile = intent_result.get("intent", {})
+            # Extract key signals from BuyerIntentProfile model
+            urgency_score = profile.urgency_score
+            preference_clarity = profile.preference_clarity
+            buying_motivation = (profile.financial_readiness + profile.urgency_score) / 2
 
-            # Extract key signals with defaults
-            budget_phrase = intent_result.get("budget_range", "")
-            urgency_score = intent_result.get("urgency_score", 25)
-            preference_clarity = intent_result.get("preference_clarity", 0.5)
-            buying_motivation = intent_result.get("buying_motivation_score", 25)
-
-            # Handle the 'budget_range' field - it might be a string like "under 500"
-            budget_range = None
-            if isinstance(budget_phrase, str) and budget_phrase:
-                # Look up in our budget ranges
-                budget_range = self.budget_config.get_budget_range(budget_phrase)
-            elif isinstance(budget_phrase, dict):
-                # Already a dict, use it directly
-                budget_range = budget_phrase
+            # Try to extract budget range from conversation
+            budget_range = await self._extract_budget_range(conversation_history)
 
             return {
-                "intent_profile": intent_profile,
+                "intent_profile": profile,
                 "budget_range": budget_range,
                 "urgency_score": urgency_score,
                 "buying_motivation_score": buying_motivation,
                 "preference_clarity": preference_clarity,
-                "current_qualification_step": "budget" if not budget_range else "financial"
+                "current_qualification_step": profile.next_qualification_step,
             }
         except Exception as e:
             logger.error(f"Error analyzing buyer intent for {state.get('buyer_id')}: {str(e)}")
             return {
-                "intent_profile": {},
+                "intent_profile": None,
                 "budget_range": None,
                 "urgency_score": 25,
                 "buying_motivation_score": 25,
@@ -404,13 +422,13 @@ class JorgeBuyerBot:
             preferences = await self._extract_property_preferences(state['conversation_history'])
 
             # Determine urgency level using budget_config
-            urgency_score = float(profile.urgency_score or 0)
+            urgency_score = float(state.get("urgency_score", 0))
             urgency_level = self.budget_config.get_urgency_level(urgency_score)
 
             return {
                 "property_preferences": preferences,
                 "urgency_level": urgency_level,
-                "preference_clarity_score": profile.preference_clarity
+                "preference_clarity_score": state.get("preference_clarity", 0.5),
             }
 
         except Exception as e:
@@ -478,11 +496,21 @@ class JorgeBuyerBot:
             matches = state.get("matched_properties", [])
             intelligence_context = state.get("intelligence_context")
 
+            # Get A/B test variant for response tone
+            buyer_id = state.get("buyer_id", "unknown")
+            try:
+                tone_variant = await self.ab_testing.get_variant(
+                    ABTestingService.RESPONSE_TONE_EXPERIMENT, buyer_id
+                )
+            except (KeyError, ValueError):
+                tone_variant = "empathetic"
+
             # Base prompt for buyer consultation
+            buyer_temp = getattr(profile, "buyer_temperature", "cold") if profile else "cold"
             response_prompt = f"""
             As Jorge's Buyer Bot, generate a helpful and supportive response for this buyer:
 
-            Buyer Temperature: {profile.buyer_temperature if profile else 'cold'}
+            Buyer Temperature: {buyer_temp}
             Financial Readiness: {state.get('financial_readiness_score', 25)}/100
             Properties Matched: {len(matches)}
             Current Step: {state.get('current_qualification_step', 'unknown')}
@@ -496,6 +524,8 @@ class JorgeBuyerBot:
             - Property-focused if qualified with matches
             - Market education if qualified but no matches
             - Professional, friendly and relationship-focused (Jorge's style)
+
+            Tone style: {tone_variant}
 
             Keep under 160 characters for SMS compliance.
             """
@@ -555,22 +585,6 @@ class JorgeBuyerBot:
                 "next_action": "manual_review",
                 "follow_up_scheduled": False
             }
-
-    def _route_buyer_action(self, state: BuyerBotState) -> Literal["respond", "schedule", "end"]:
-        """
-        Route to next action based on buyer qualification and context.
-        Uses budget_config for routing thresholds.
-        """
-        try:
-            next_action = state.get("next_action", "respond")
-            qualification_score = state.get("financial_readiness_score", 0)
-            
-            # Use budget_config for routing
-            return self.budget_config.get_routing_action(qualification_score, next_action)
-
-        except Exception as e:
-            logger.error(f"Error routing buyer action: {str(e)}")
-            return "respond"
 
     # ================================
     # ERROR HANDLING & ESCALATION METHODS
@@ -943,7 +957,9 @@ class JorgeBuyerBot:
                 amount = int(val.replace(',', ''))
                 if k_suffix:
                     amount *= 1000
-                elif amount < self.budget_config.BUDGET_AMOUNT_K_THRESHOLD:
+                elif 100 <= amount < self.budget_config.BUDGET_AMOUNT_K_THRESHOLD:
+                    # Only auto-multiply 100-999 range (clear K-shorthand in real estate)
+                    # "$500" -> $500K, but "$50" stays $50, "$1500" stays $1500
                     amount *= 1000
                 amounts.append(amount)
 
@@ -1045,7 +1061,24 @@ class JorgeBuyerBot:
                 - financial_readiness: Financial readiness score
                 - handoff_signals: Signals for cross-bot handoff
         """
+        MAX_MESSAGE_LENGTH = 10_000
+
+        # Input validation
+        if not conversation_id or not str(conversation_id).strip():
+            raise ValueError("conversation_id must be a non-empty string")
+        if not user_message or not str(user_message).strip():
+            return {
+                "buyer_id": conversation_id, "lead_id": conversation_id,
+                "response_content": "I didn't catch that. Could you say more?",
+                "current_step": "awaiting_input", "engagement_status": "active",
+                "financial_readiness": 0.0, "handoff_signals": {},
+            }
+        user_message = str(user_message).strip()[:MAX_MESSAGE_LENGTH]
+
         try:
+            import time as _time
+            _workflow_start = _time.time()
+
             if conversation_history is None:
                 conversation_history = []
 
@@ -1054,6 +1087,10 @@ class JorgeBuyerBot:
                 "content": user_message,
                 "timestamp": datetime.now(timezone.utc).isoformat()
             })
+
+            # Prune to prevent unbounded memory growth
+            if len(conversation_history) > self.MAX_CONVERSATION_HISTORY:
+                conversation_history = conversation_history[-self.MAX_CONVERSATION_HISTORY:]
 
             initial_state = {
                 "buyer_id": conversation_id,
@@ -1091,6 +1128,7 @@ class JorgeBuyerBot:
 
             result = await self.workflow.ainvoke(initial_state)
 
+            _workflow_duration_ms = (_time.time() - _workflow_start) * 1000
             self.workflow_stats["total_interactions"] += 1
 
             is_qualified = (
@@ -1110,6 +1148,26 @@ class JorgeBuyerBot:
 
             result["handoff_signals"] = handoff_signals
 
+            # SMS length guard
+            response_text = result.get("response_content", "")
+            if response_text and len(response_text) > self.SMS_MAX_LENGTH:
+                result["response_content_full"] = response_text
+                result["response_content"] = response_text[:self.SMS_MAX_LENGTH]
+
+            # Record performance metrics
+            await self.performance_tracker.track_operation(
+                "buyer_bot", "process", _workflow_duration_ms, success=True
+            )
+            self.metrics_collector.record_bot_interaction(
+                "buyer", duration_ms=_workflow_duration_ms, success=True
+            )
+
+            # Feed metrics to alerting (non-blocking)
+            try:
+                self.metrics_collector.feed_to_alerting(self.alerting_service)
+            except Exception:
+                pass
+
             await self.event_publisher.publish_bot_status_update(
                 bot_type="jorge-buyer",
                 contact_id=conversation_id,
@@ -1128,6 +1186,19 @@ class JorgeBuyerBot:
             return result
 
         except Exception as e:
+            # Record failure metrics
+            try:
+                import time as _time
+                _fail_duration = (_time.time() - _workflow_start) * 1000
+                await self.performance_tracker.track_operation(
+                    "buyer_bot", "process", _fail_duration, success=False
+                )
+                self.metrics_collector.record_bot_interaction(
+                    "buyer", duration_ms=_fail_duration, success=False
+                )
+            except Exception:
+                pass
+
             logger.error(f"Error processing buyer conversation for {conversation_id}: {str(e)}")
             return {
                 "buyer_id": conversation_id,

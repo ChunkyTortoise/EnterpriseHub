@@ -23,6 +23,10 @@ from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.lead_sequence_state_service import get_sequence_service, SequenceDay, LeadSequenceState, SequenceStatus
 from ghl_real_estate_ai.services.lead_sequence_scheduler import get_lead_scheduler
 from ghl_real_estate_ai.api.schemas.ghl import MessageType
+from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
+from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
+from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
+from ghl_real_estate_ai.services.jorge.ab_testing_service import ABTestingService
 
 # Enhanced Features (Track 3.1 Integration)
 try:
@@ -36,6 +40,8 @@ try:
 except ImportError:
     TRACK3_ML_AVAILABLE = False
 
+logger = get_logger(__name__)
+
 # Phase 3.3 Bot Intelligence Middleware Integration
 try:
     from ghl_real_estate_ai.services.bot_intelligence_middleware import get_bot_intelligence_middleware
@@ -44,8 +50,6 @@ try:
 except ImportError as e:
     logger.warning(f"Bot Intelligence Middleware unavailable: {e}")
     BOT_INTELLIGENCE_AVAILABLE = False
-
-logger = get_logger(__name__)
 
 # ================================
 # ENHANCED FEATURES DATACLASSES
@@ -638,6 +642,9 @@ class LeadBotWorkflow:
     - Jorge Bot handoff coordination
     """
 
+    MAX_CONVERSATION_HISTORY = 50
+    SMS_MAX_LENGTH = 160
+
     def __init__(self, ghl_client=None, config: Optional[LeadBotConfig] = None, sendgrid_client=None):
         # Core components (always initialized)
         self.config = config or LeadBotConfig()
@@ -686,9 +693,17 @@ class LeadBotWorkflow:
         elif self.config.enable_bot_intelligence:
             logger.warning("Lead Bot: Phase 3.3 Bot Intelligence requested but dependencies not available")
 
+        # Monitoring services (singletons — cheap to instantiate)
+        self.performance_tracker = PerformanceTracker()
+        self.metrics_collector = BotMetricsCollector()
+        self.alerting_service = AlertingService()
+        self.ab_testing = ABTestingService()
+        self._init_ab_experiments()
+
         # Performance tracking
         self.workflow_stats = {
             "total_sequences": 0,
+            "total_interactions": 0,
             "behavioral_optimizations": 0,
             "personality_adaptations": 0,
             "track3_enhancements": 0,
@@ -698,6 +713,16 @@ class LeadBotWorkflow:
 
         # Build workflow based on enabled features
         self.workflow = self._build_unified_graph()
+
+    def _init_ab_experiments(self) -> None:
+        """Create default A/B experiments if not already registered."""
+        try:
+            self.ab_testing.create_experiment(
+                ABTestingService.RESPONSE_TONE_EXPERIMENT,
+                ["formal", "casual", "empathetic"],
+            )
+        except ValueError:
+            pass  # Already exists
 
     def _build_unified_graph(self) -> StateGraph:
         """Build workflow graph based on enabled features"""
@@ -1499,6 +1524,7 @@ class LeadBotWorkflow:
 
         await sync_service.record_lead_event(state['lead_id'], "AI", "Analyzing lead intent profile.", "thought")
 
+        _intent_start_time = time.time()
         profile = self.intent_decoder.analyze_lead(
             state['lead_id'], 
             state['conversation_history']
@@ -1537,11 +1563,15 @@ class LeadBotWorkflow:
         else:
             logger.info(f"Restored sequence state for lead {state['lead_id']}: {sequence_state.current_day.value}")
 
+        # Compute actual timing and confidence
+        intent_processing_ms = (time.time() - _intent_start_time) * 1000
+        intent_confidence = min(0.99, profile.frs.total_score / 100.0)
+
         # Emit intent analysis complete event
         await self.event_publisher.publish_intent_analysis_complete(
             contact_id=state["lead_id"],
-            processing_time_ms=42.3,  # Placeholder - would be actual timing
-            confidence_score=0.95,    # Placeholder - would be actual confidence
+            processing_time_ms=round(intent_processing_ms, 2),
+            confidence_score=round(intent_confidence, 3),
             intent_category=profile.frs.classification,
             frs_score=profile.frs.total_score,
             pcs_score=profile.pcs.total_score,
@@ -1563,12 +1593,12 @@ class LeadBotWorkflow:
         is_price_aware = state['intent_profile'].frs.price.category == "Price-Aware"
         has_keyword = any(k in last_msg for k in price_keywords)
         
-        logger.info(f"DEBUG: determine_path - last_msg: '{last_msg}'")
-        logger.info(f"DEBUG: determine_path - is_price_aware: {is_price_aware}, has_keyword: {has_keyword}")
-        logger.info(f"DEBUG: determine_path - cma_generated: {state.get('cma_generated')}")
+        logger.debug(f"determine_path - last_msg: '{last_msg}'")
+        logger.debug(f"determine_path - is_price_aware: {is_price_aware}, has_keyword: {has_keyword}")
+        logger.debug(f"determine_path - cma_generated: {state.get('cma_generated')}")
 
         if (is_price_aware or has_keyword) and not state.get('cma_generated'):
-            logger.info("DEBUG: determine_path - Routing to generate_cma")
+            logger.debug("determine_path - Routing to generate_cma")
             await sync_service.record_lead_event(state['lead_id'], "AI", "Price awareness detected. Routing to CMA generation.", "node")
             return {"current_step": "generate_cma", "engagement_status": "responsive"}
 
@@ -1605,7 +1635,7 @@ class LeadBotWorkflow:
                 # Create new sequence
                 sequence_state = await self.sequence_service.create_sequence(state['lead_id'])
 
-        logger.info(f"DEBUG: determine_path - sequence state: {sequence_state.current_day.value}, status: {sequence_state.sequence_status}")
+        logger.debug(f"determine_path - sequence state: {sequence_state.current_day.value}, status: {sequence_state.sequence_status}")
 
         # Determine routing based on sequence day
         current_day = sequence_state.current_day
@@ -1616,32 +1646,32 @@ class LeadBotWorkflow:
             elif sequence_day_val == 30: current_day = SequenceDay.DAY_30
 
         if current_day == SequenceDay.DAY_3:
-            logger.info("DEBUG: determine_path - Routing to day_3")
+            logger.debug("determine_path - Routing to day_3")
             await sync_service.record_lead_event(state['lead_id'], "AI", "Executing Day 3 SMS sequence.", "sequence")
             return {"current_step": "day_3", "engagement_status": sequence_state.engagement_status}
 
         elif current_day == SequenceDay.DAY_7:
-            logger.info("DEBUG: determine_path - Routing to day_7")
+            logger.debug("determine_path - Routing to day_7")
             await sync_service.record_lead_event(state['lead_id'], "AI", "Executing Day 7 call sequence.", "sequence")
             return {"current_step": "day_7", "engagement_status": sequence_state.engagement_status}
 
         elif current_day == SequenceDay.DAY_14:
-            logger.info("DEBUG: determine_path - Routing to day_14")
+            logger.debug("determine_path - Routing to day_14")
             await sync_service.record_lead_event(state['lead_id'], "AI", "Executing Day 14 email sequence.", "sequence")
             return {"current_step": "day_14", "engagement_status": sequence_state.engagement_status}
 
         elif current_day == SequenceDay.DAY_30:
-            logger.info("DEBUG: determine_path - Routing to day_30")
+            logger.debug("determine_path - Routing to day_30")
             await sync_service.record_lead_event(state['lead_id'], "AI", "Executing Day 30 final nudge.", "sequence")
             return {"current_step": "day_30", "engagement_status": sequence_state.engagement_status}
 
         elif current_day == SequenceDay.QUALIFIED:
-            logger.info("DEBUG: determine_path - Lead is qualified")
+            logger.debug("determine_path - Lead is qualified")
             await sync_service.record_lead_event(state['lead_id'], "AI", "Lead qualified, exiting sequence.", "sequence")
             return {"current_step": "qualified", "engagement_status": "qualified"}
 
         else:  # NURTURE or other
-            logger.info("DEBUG: determine_path - Moving to nurture")
+            logger.debug("determine_path - Moving to nurture")
             await sync_service.record_lead_event(state['lead_id'], "AI", "Lead in nurture status.", "sequence")
             return {"current_step": "nurture", "engagement_status": "nurture"}
 
@@ -2420,18 +2450,38 @@ class LeadBotWorkflow:
                 - temperature: Lead temperature if predicted
                 - handoff_signals: Signals for cross-bot handoff
         """
+        MAX_MESSAGE_LENGTH = 10_000
+
+        # Input validation
+        if not conversation_id or not str(conversation_id).strip():
+            raise ValueError("conversation_id must be a non-empty string")
+        if not user_message or not str(user_message).strip():
+            return {
+                "conversation_id": conversation_id,
+                "response_content": "I didn't catch that. Could you say more?",
+                "current_step": "awaiting_input", "engagement_status": "active",
+                "handoff_signals": {},
+            }
+        user_message = str(user_message).strip()[:MAX_MESSAGE_LENGTH]
+
         try:
+            _workflow_start = time.time()
+
             # Build conversation history if not provided
             if conversation_history is None:
                 conversation_history = []
-            
+
             # Add the user message to history
             conversation_history.append({
                 "role": "user",
                 "content": user_message,
                 "timestamp": datetime.now(timezone.utc).isoformat()
             })
-            
+
+            # Prune to prevent unbounded memory growth
+            if len(conversation_history) > self.MAX_CONVERSATION_HISTORY:
+                conversation_history = conversation_history[-self.MAX_CONVERSATION_HISTORY:]
+
             # Create initial state for the workflow
             initial_state = {
                 "lead_id": conversation_id,
@@ -2475,18 +2525,33 @@ class LeadBotWorkflow:
             
             # Execute the workflow
             result = await self.workflow.ainvoke(initial_state)
-            
+
+            _workflow_duration_ms = (time.time() - _workflow_start) * 1000
             # Update performance statistics
             self.workflow_stats["total_interactions"] += 1
-            
+
             # Extract handoff signals for cross-bot handoff detection
             handoff_signals = {}
             if self.config.jorge_handoff_enabled:
                 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
                 handoff_signals = JorgeHandoffService.extract_intent_signals(user_message)
-            
+
             result["handoff_signals"] = handoff_signals
-            
+
+            # Record performance metrics
+            await self.performance_tracker.track_operation(
+                "lead_bot", "process", _workflow_duration_ms, success=True
+            )
+            self.metrics_collector.record_bot_interaction(
+                "lead", duration_ms=_workflow_duration_ms, success=True
+            )
+
+            # Feed metrics to alerting (non-blocking)
+            try:
+                self.metrics_collector.feed_to_alerting(self.alerting_service)
+            except Exception:
+                pass
+
             # Emit conversation processed event
             await self.event_publisher.publish_bot_status_update(
                 bot_type="lead-bot",
@@ -2494,10 +2559,22 @@ class LeadBotWorkflow:
                 status="completed",
                 current_step=result.get("current_step", "unknown")
             )
-            
+
             return result
-            
+
         except Exception as e:
+            # Record failure metrics
+            try:
+                _fail_duration = (time.time() - _workflow_start) * 1000
+                await self.performance_tracker.track_operation(
+                    "lead_bot", "process", _fail_duration, success=False
+                )
+                self.metrics_collector.record_bot_interaction(
+                    "lead", duration_ms=_fail_duration, success=False
+                )
+            except Exception:
+                pass
+
             logger.error(f"Error processing lead conversation for {conversation_id}: {str(e)}")
             return {
                 "conversation_id": conversation_id,

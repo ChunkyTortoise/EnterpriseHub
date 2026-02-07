@@ -17,12 +17,20 @@ class BuyerBotState(TypedDict):
     # Context
     conversation_history: List[Dict[str, str]]
     intent_profile: Optional[BuyerIntentProfile]
+    user_message: Optional[str]
+    intelligence_context: Optional[Any]
+    intelligence_performance_ms: float
 
     # Buyer-Specific Context
     budget_range: Optional[Dict[str, int]]  # {"min": 300000, "max": 450000}
     financing_status: str  # "pre_approved", "needs_approval", "cash", "unknown"
     urgency_level: str     # "immediate", "3_months", "6_months", "browsing"
     property_preferences: Optional[Dict[str, Any]]
+
+    # Contact info (optional, set at runtime)
+    buyer_phone: Optional[str]
+    buyer_email: Optional[str]
+    metadata: Optional[Dict[str, Any]]
 
     # Bot Logic (match seller patterns)
     current_qualification_step: str  # "budget", "timeline", "preferences", "decision_makers"
@@ -37,6 +45,7 @@ class BuyerBotState(TypedDict):
     # Metrics
     financial_readiness_score: float  # 0-100
     buying_motivation_score: float    # 0-100
+    buyer_temperature: Optional[str]
     is_qualified: bool
 
     # Journey Tracking
