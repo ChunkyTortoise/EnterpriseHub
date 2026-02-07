@@ -84,21 +84,35 @@ All agents are **domain-agnostic** -- they adapt to this project's domain via CL
 | Agent Mesh | `services/agent_mesh_coordinator.py` | Governance, routing, auto-scaling, audit trails |
 | GHL Client | `services/enhanced_ghl_client.py` | 10 req/s rate limit, real-time CRM sync |
 | BI Dashboards | `streamlit_demo/components/` | Monte Carlo, sentiment, churn detection |
-| **Jorge Handoff Service** | `services/jorge/jorge_handoff_service.py` | Cross-bot handoff, 0.7 confidence threshold |
+| **Jorge Handoff Service** | `services/jorge/jorge_handoff_service.py` | Cross-bot handoff, 0.7 confidence threshold, circular prevention, rate limiting (3/hr, 10/day), pattern learning, analytics |
+| **A/B Testing** | `services/jorge/ab_testing_service.py` | Experiment management, deterministic variant assignment, z-test significance |
+| **Performance Tracker** | `services/jorge/performance_tracker.py` | P50/P95/P99 latency, SLA compliance, rolling window |
+| **Alerting** | `services/jorge/alerting_service.py` | Configurable rules, cooldowns, 7 default alert rules |
+| **Bot Metrics** | `services/jorge/bot_metrics_collector.py` | Per-bot stats, cache hits, alerting integration |
 
-## Lead Bot Status: COMPLETE
+## Bot Public APIs (Jorge Bot Audit — Feb 2026)
 
-| Feature | Status | Description |
-|---------|--------|-------------|
-| Lead Bot Routing | **COMPLETE** | Dedicated routing block with `LEAD_ACTIVATION_TAG` |
-| Temperature Tags | **COMPLETE** | Hot-Lead, Warm-Lead, Cold-Lead classification |
-| Compliance Guard | **COMPLETE** | Lead-specific fallback messages |
-| Handoff Integration | **COMPLETE** | Lead→Buyer/Lead→Seller with 0.7 confidence threshold |
-| SMS Length Guard | **COMPLETE** | 320-char truncation with smart sentence boundaries |
+All three bots have unified public API entry points:
+
+| Bot | Method | Key Returns |
+|-----|--------|------------|
+| Lead | `LeadBotWorkflow.process_lead_conversation()` | response, temperature, handoff_signals |
+| Buyer | `JorgeBuyerBot.process_buyer_conversation()` | response, financial_readiness, handoff_signals |
+| Seller | `JorgeSellerBot.process_seller_message()` | response, frs_score, pcs_score, handoff_signals |
+
+### Intent Decoders (GHL-Enhanced)
+| Decoder | Standard Method | GHL Method |
+|---------|----------------|------------|
+| `LeadIntentDecoder` | `analyze_lead()` | `analyze_lead_with_ghl()` — tag boosts, lead age, engagement recency |
+| `BuyerIntentDecoder` | `analyze_buyer()` | `analyze_buyer_with_ghl()` — pre-approval, budget, urgency from GHL |
+
+### Handoff Safeguards
+- **Circular prevention**: Same source→target blocked within 30min window
+- **Rate limiting**: 3 handoffs/hr, 10/day per contact
+- **Conflict resolution**: Contact-level locking prevents concurrent handoffs
+- **Pattern learning**: Dynamic threshold adjustment from outcome history (min 10 data points)
 
 ### Temperature Tag Publishing
-Lead score determines temperature classification:
-
 | Lead Score | Temperature Tag | Actions |
 |------------|-----------------|---------|
 | ≥ 80 | **Hot-Lead** | Priority workflow trigger, agent notification |
@@ -106,15 +120,12 @@ Lead score determines temperature classification:
 | < 40 | **Cold-Lead** | Educational content, periodic check-in |
 
 ### Lead Bot Handoff Integration
-Cross-bot handoff via [`JorgeHandoffService.evaluate_handoff()`](ghl_real_estate_ai/services/jorge/jorge_handoff_service.py:76):
+Cross-bot handoff via [`JorgeHandoffService.evaluate_handoff()`](ghl_real_estate_ai/services/jorge/jorge_handoff_service.py):
 
 | Direction | Confidence Threshold | Trigger Phrases |
 |-----------|---------------------|-----------------|
 | Lead → Buyer | 0.7 | "I want to buy", "budget $", "pre-approval" |
 | Lead → Seller | 0.7 | "Sell my house", "home worth", "CMA" |
-
-### Compliance Guard for Lead Mode
-Lead-specific compliance fallback: `"Thanks for reaching out! I'd love to help. What are you looking for in your next home?"`
 
 ## Security Essentials
 - **PII**: Encrypted at rest (Fernet) | **API Keys**: Env vars only, never hardcoded
@@ -134,4 +145,4 @@ Lead-specific compliance fallback: `"Thanks for reaching out! I'd love to help. 
 
 ---
 
-**Version**: 7.0 | **Last Updated**: February 5, 2026
+**Version**: 8.0 | **Last Updated**: February 7, 2026
