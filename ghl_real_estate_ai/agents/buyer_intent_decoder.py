@@ -4,10 +4,15 @@ Calculates buyer-specific Financial Readiness Score (FRS) and Motivation Score (
 Designed to identify 'Serious Buyers' and filter 'Window Shoppers'.
 """
 
+from __future__ import annotations
+
 import logging
 import re
-from typing import List, Dict, Any, Optional
-from datetime import datetime
+from typing import List, Dict, Any, Optional, TYPE_CHECKING
+from datetime import datetime, timezone
+
+if TYPE_CHECKING:
+    from ghl_real_estate_ai.services.enhanced_ghl_client import EnhancedGHLClient, GHLContact
 
 from ghl_real_estate_ai.models.lead_scoring import BuyerIntentProfile
 
@@ -19,7 +24,9 @@ class BuyerIntentDecoder:
     Implements buyer-specific FRS and Motivation scoring for purchase qualification.
     """
 
-    def __init__(self):
+    def __init__(self, ghl_client: Optional[EnhancedGHLClient] = None):
+        self.ghl_client = ghl_client
+
         # Financial Readiness Markers
         self.high_finance_readiness = ["pre-approved", "cash buyer", "loan approved", "down payment ready", "financing secured"]
         self.medium_finance_readiness = ["getting pre-approved", "working with lender", "checking financing"]
@@ -114,6 +121,188 @@ class BuyerIntentDecoder:
         except Exception as e:
             logger.error(f"Error analyzing buyer intent for {buyer_id}: {str(e)}", exc_info=True)
             return self._create_default_profile(buyer_id)
+
+    async def analyze_buyer_with_ghl(
+        self,
+        contact_id: str,
+        conversation_history: List[Dict[str, str]],
+        ghl_contact: Optional[GHLContact] = None,
+    ) -> BuyerIntentProfile:
+        """
+        Enhanced buyer analysis that incorporates GHL contact data for better scoring.
+
+        Pulls GHL contact data for budget, financing status, and property preferences.
+        Uses GHL custom fields like budget_range, pre_approval_status, preferred_areas.
+        Falls back to the standard analyze_buyer() if GHL data is unavailable.
+
+        Args:
+            contact_id: The buyer's GHL contact ID.
+            conversation_history: List of conversation messages.
+            ghl_contact: Pre-fetched GHLContact object (optional).
+
+        Returns:
+            BuyerIntentProfile with GHL-boosted scores.
+        """
+        # Attempt to fetch GHL contact data if not provided
+        if ghl_contact is None and self.ghl_client is not None:
+            try:
+                ghl_contact = await self.ghl_client.get_contact(contact_id)
+            except Exception as e:
+                logger.warning(
+                    f"Failed to fetch GHL contact {contact_id}: {e}. "
+                    "Falling back to conversation-only analysis."
+                )
+
+        # Fall back to standard analysis if no GHL data available
+        if ghl_contact is None:
+            logger.info(f"No GHL data for buyer {contact_id}, using conversation-only analysis")
+            return self.analyze_buyer(contact_id, conversation_history)
+
+        # Run standard conversation-based analysis first
+        profile = self.analyze_buyer(contact_id, conversation_history)
+
+        # Extract GHL data points
+        try:
+            ghl_data = {
+                "tags": ghl_contact.tags or [],
+                "custom_fields": ghl_contact.custom_fields or {},
+                "source": ghl_contact.source,
+                "date_added": ghl_contact.created_at,
+                "last_activity": ghl_contact.last_activity_at or ghl_contact.updated_at,
+            }
+        except Exception as e:
+            logger.warning(f"Error extracting GHL data for buyer {contact_id}: {e}")
+            return profile
+
+        # Apply GHL-based boosts
+        boosted = self._apply_ghl_buyer_boosts(profile, ghl_data)
+        return boosted
+
+    def _apply_ghl_buyer_boosts(
+        self,
+        profile: BuyerIntentProfile,
+        ghl_data: Dict[str, Any],
+    ) -> BuyerIntentProfile:
+        """
+        Apply buyer-specific boosts/penalties based on GHL contact data.
+
+        Boost logic:
+        - Pre-approval status in custom fields → +20 financial_readiness, +15 financing_status
+        - budget_range custom field present → +10 budget_clarity
+        - preferred_areas custom field present → +10 preference_clarity
+        - Tags: Active-Buyer → +15 urgency, Tour-Scheduled → +20 urgency
+        - Engagement recency: < 3 days → +10 urgency, > 30 days → -10 urgency
+
+        Args:
+            profile: Base BuyerIntentProfile from conversation analysis.
+            ghl_data: Extracted GHL data dict.
+
+        Returns:
+            New BuyerIntentProfile with boosted scores.
+        """
+        tags = [t.lower() for t in ghl_data.get("tags", [])]
+        custom_fields = ghl_data.get("custom_fields", {})
+
+        # Start with existing scores
+        financial_readiness = profile.financial_readiness
+        budget_clarity = profile.budget_clarity
+        financing_status = profile.financing_status_score
+        urgency = profile.urgency_score
+        timeline_pressure = profile.timeline_pressure
+        preference_clarity = profile.preference_clarity
+
+        # --- Pre-approval status from GHL custom fields ---
+        pre_approval = custom_fields.get("pre_approval_status", "").lower()
+        if pre_approval in ("approved", "pre-approved", "cash"):
+            financial_readiness += 20
+            financing_status += 15
+            logger.info(f"GHL pre-approval boost: +20 financial, +15 financing")
+        elif pre_approval in ("in_progress", "applied"):
+            financial_readiness += 10
+            financing_status += 8
+            logger.info(f"GHL pre-approval in-progress boost: +10 financial, +8 financing")
+
+        # --- Budget range from GHL custom fields ---
+        if custom_fields.get("budget_range"):
+            budget_clarity += 10
+            logger.info(f"GHL budget_range field present: +10 budget_clarity")
+
+        # --- Preferred areas from GHL custom fields ---
+        if custom_fields.get("preferred_areas"):
+            preference_clarity += 10
+            logger.info(f"GHL preferred_areas field present: +10 preference_clarity")
+
+        # --- Tag-based urgency boosts ---
+        if "tour-scheduled" in tags:
+            urgency += 20
+            timeline_pressure += 10
+            logger.info(f"GHL Tour-Scheduled tag: +20 urgency, +10 timeline")
+        if "active-buyer" in tags:
+            urgency += 15
+            logger.info(f"GHL Active-Buyer tag: +15 urgency")
+        if "pre-approved" in tags:
+            financial_readiness += 10
+            financing_status += 10
+            logger.info(f"GHL pre-approved tag: +10 financial, +10 financing")
+        if "window-shopper" in tags:
+            urgency -= 10
+            logger.info(f"GHL Window-Shopper tag: -10 urgency")
+
+        # --- Engagement recency factor ---
+        last_activity = ghl_data.get("last_activity")
+        if last_activity is not None:
+            try:
+                now = datetime.now(timezone.utc)
+                if last_activity.tzinfo is None:
+                    last_activity = last_activity.replace(tzinfo=timezone.utc)
+                days_since = (now - last_activity).days
+                if days_since <= 3:
+                    urgency += 10
+                    logger.info(f"GHL recent activity ({days_since}d): +10 urgency")
+                elif days_since <= 7:
+                    urgency += 5
+                elif days_since > 30:
+                    urgency -= 10
+                    logger.info(f"GHL stale activity ({days_since}d): -10 urgency")
+            except Exception as e:
+                logger.debug(f"Could not compute buyer engagement recency: {e}")
+
+        # Clamp all scores to 0-100
+        financial_readiness = max(0, min(100, financial_readiness))
+        budget_clarity = max(0, min(100, budget_clarity))
+        financing_status = max(0, min(100, financing_status))
+        urgency = max(0, min(100, urgency))
+        timeline_pressure = max(0, min(100, timeline_pressure))
+        preference_clarity = max(0, min(100, preference_clarity))
+
+        # Recalculate overall score with boosted components
+        overall_score = (
+            (financial_readiness + budget_clarity + financing_status) / 3 * 0.4 +
+            (urgency + timeline_pressure + profile.consequence_awareness) / 3 * 0.35 +
+            (preference_clarity + profile.market_realism + profile.decision_authority) / 3 * 0.25
+        )
+
+        buyer_temperature = self._classify_buyer_temperature(overall_score)
+        next_step = self._determine_next_qualification_step(
+            financial_readiness, urgency, preference_clarity, profile.decision_authority
+        )
+
+        return BuyerIntentProfile(
+            financial_readiness=financial_readiness,
+            budget_clarity=budget_clarity,
+            financing_status_score=financing_status,
+            urgency_score=urgency,
+            timeline_pressure=timeline_pressure,
+            consequence_awareness=profile.consequence_awareness,
+            preference_clarity=preference_clarity,
+            market_realism=profile.market_realism,
+            decision_authority=profile.decision_authority,
+            buyer_temperature=buyer_temperature,
+            confidence_level=min(95.0, profile.confidence_level + 5.0),
+            conversation_turns=profile.conversation_turns,
+            key_insights=profile.key_insights,
+            next_qualification_step=next_step,
+        )
 
     def _score_financial_readiness(self, text: str) -> float:
         """Score financial readiness based on linguistic markers (0-100)."""
