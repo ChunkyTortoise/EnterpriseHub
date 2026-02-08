@@ -101,6 +101,78 @@ class JorgeHandoffService:
 
     def __init__(self, analytics_service=None):
         self.analytics_service = analytics_service
+        self._repository: Any = None
+
+    # ── Persistence Configuration ─────────────────────────────────────
+
+    def set_repository(self, repository: Any) -> None:
+        """Attach a repository for handoff outcome persistence.
+
+        The repository must implement:
+            - ``save_handoff_outcome(contact_id, source_bot, target_bot,
+              outcome, timestamp, metadata)`` (async)
+            - ``load_handoff_outcomes(since_timestamp, source_bot, target_bot)``
+              (async, returns list of dicts)
+
+        Args:
+            repository: A repository instance (or None to disable).
+        """
+        self._repository = repository
+        logger.info(
+            "JorgeHandoffService persistence %s",
+            "enabled" if repository else "disabled",
+        )
+
+    async def load_from_database(self, since_minutes: int = 10080) -> int:
+        """Hydrate in-memory handoff outcomes from the database.
+
+        Loads outcomes recorded within the last ``since_minutes`` (default
+        7 days) and merges them into ``_handoff_outcomes``, deduplicating
+        by contact_id + timestamp.
+
+        Args:
+            since_minutes: How far back to load (default 10080 = 7 days).
+
+        Returns:
+            Total number of records loaded from DB.
+        """
+        if self._repository is None:
+            return 0
+
+        cutoff = time.time() - (since_minutes * 60)
+        loaded = 0
+
+        try:
+            db_outcomes = await self._repository.load_handoff_outcomes(cutoff)
+
+            # Build set of existing keys for dedup
+            existing_keys: set = set()
+            for route, outcomes in self._handoff_outcomes.items():
+                for o in outcomes:
+                    existing_keys.add((o.get("contact_id", ""), o.get("timestamp", 0)))
+
+            for row in db_outcomes:
+                key = (row["contact_id"], row["timestamp"])
+                if key in existing_keys:
+                    continue
+
+                pair_key = f"{row['source_bot']}->{row['target_bot']}"
+                if pair_key not in self._handoff_outcomes:
+                    self._handoff_outcomes[pair_key] = []
+
+                self._handoff_outcomes[pair_key].append({
+                    "contact_id": row["contact_id"],
+                    "outcome": row["outcome"],
+                    "timestamp": row["timestamp"],
+                    "metadata": row.get("metadata") or {},
+                })
+                loaded += 1
+        except Exception as exc:
+            logger.warning("Failed to load handoff outcomes from DB: %s", exc)
+
+        if loaded:
+            logger.info("Loaded %d handoff outcome records from database", loaded)
+        return loaded
 
     @classmethod
     def _cleanup_old_entries(cls, max_age: float = 86400) -> None:
@@ -295,7 +367,7 @@ class JorgeHandoffService:
 
     @classmethod
     def reset_analytics(cls) -> None:
-        """Clear all analytics data (useful for testing)."""
+        """Clear all analytics and outcome data (useful for testing)."""
         cls._analytics = {
             "total_handoffs": 0,
             "successful_handoffs": 0,
@@ -307,6 +379,8 @@ class JorgeHandoffService:
             "blocked_by_circular": 0,
         }
         cls._active_handoffs = {}
+        cls._handoff_outcomes = {}
+        cls._handoff_history = {}
 
     @classmethod
     def seed_historical_data(
@@ -401,6 +475,89 @@ class JorgeHandoffService:
             "total_records": total_records,
             "per_route_success_rates": per_route_rates,
         }
+
+    @classmethod
+    def export_seed_data(cls) -> List[Dict[str, Any]]:
+        """Export current handoff outcome history as a JSON-serializable list.
+
+        Returns:
+            List of dicts, each containing route, contact_id, outcome,
+            timestamp, and metadata for one handoff outcome record.
+        """
+        records: List[Dict[str, Any]] = []
+        for route, outcomes in cls._handoff_outcomes.items():
+            for outcome in outcomes:
+                records.append({
+                    "route": route,
+                    "contact_id": outcome.get("contact_id", ""),
+                    "outcome": outcome["outcome"],
+                    "timestamp": outcome["timestamp"],
+                    "metadata": outcome.get("metadata", {}),
+                })
+        logger.info("Exported %d handoff outcome records", len(records))
+        return records
+
+    @classmethod
+    def import_seed_data(cls, records: List[Dict[str, Any]]) -> int:
+        """Import handoff outcome records from a list of dicts.
+
+        Args:
+            records: List of dicts with route, contact_id, outcome,
+                     timestamp, and optional metadata.
+
+        Returns:
+            Number of records imported.
+        """
+        imported = 0
+        for record in records:
+            route = record["route"]
+            if route not in cls._handoff_outcomes:
+                cls._handoff_outcomes[route] = []
+            cls._handoff_outcomes[route].append({
+                "contact_id": record.get("contact_id", ""),
+                "outcome": record["outcome"],
+                "timestamp": record["timestamp"],
+                "metadata": record.get("metadata", {}),
+            })
+            imported += 1
+        logger.info("Imported %d handoff outcome records", imported)
+        return imported
+
+    async def persist_seed_data(self) -> int:
+        """Persist current in-memory handoff outcomes to the database.
+
+        Requires a repository to be set via ``set_repository()``.
+        Iterates over all ``_handoff_outcomes`` and writes each record.
+
+        Returns:
+            Number of records persisted.
+        """
+        if self._repository is None:
+            return 0
+
+        persisted = 0
+        for route, outcomes in self._handoff_outcomes.items():
+            parts = route.split("->")
+            if len(parts) != 2:
+                continue
+            source_bot, target_bot = parts
+
+            for record in outcomes:
+                try:
+                    await self._repository.save_handoff_outcome(
+                        contact_id=record.get("contact_id", ""),
+                        source_bot=source_bot,
+                        target_bot=target_bot,
+                        outcome=record["outcome"],
+                        timestamp=record["timestamp"],
+                        metadata=record.get("metadata"),
+                    )
+                    persisted += 1
+                except Exception as exc:
+                    logger.debug("Failed to persist seed outcome: %s", exc)
+
+        logger.info("Persisted %d handoff outcome records to database", persisted)
+        return persisted
 
     @trace_operation("jorge.handoff", "evaluate_handoff")
     async def evaluate_handoff(
@@ -600,8 +757,14 @@ class JorgeHandoffService:
         target_bot: str,
         outcome: str,
         metadata: Optional[Dict[str, Any]] = None,
+        *,
+        _repository: Any = None,
     ) -> None:
         """Record the outcome of a handoff for pattern learning.
+
+        If a repository is attached (via ``_repository`` kwarg or
+        instance-level ``_repository``), the outcome is also persisted
+        to PostgreSQL (fire-and-forget; DB errors are logged, not raised).
 
         Args:
             contact_id: The contact that was handed off.
@@ -609,6 +772,7 @@ class JorgeHandoffService:
             target_bot: Bot that received the handoff.
             outcome: One of "successful", "failed", "reverted", "timeout".
             metadata: Optional extra context about the outcome.
+            _repository: Optional repository for DB write-through.
         """
         valid_outcomes = {"successful", "failed", "reverted", "timeout"}
         if outcome not in valid_outcomes:
@@ -621,14 +785,46 @@ class JorgeHandoffService:
         if pair_key not in cls._handoff_outcomes:
             cls._handoff_outcomes[pair_key] = []
 
-        cls._handoff_outcomes[pair_key].append(
-            {
-                "contact_id": contact_id,
-                "outcome": outcome,
-                "timestamp": time.time(),
-                "metadata": metadata or {},
-            }
-        )
+        ts = time.time()
+        record = {
+            "contact_id": contact_id,
+            "outcome": outcome,
+            "timestamp": ts,
+            "metadata": metadata or {},
+        }
+        cls._handoff_outcomes[pair_key].append(record)
+
+        # Write-through to DB if repository provided
+        repo = _repository
+        if repo is not None:
+            import asyncio
+
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    asyncio.ensure_future(
+                        repo.save_handoff_outcome(
+                            contact_id=contact_id,
+                            source_bot=source_bot,
+                            target_bot=target_bot,
+                            outcome=outcome,
+                            timestamp=ts,
+                            metadata=metadata,
+                        )
+                    )
+                else:
+                    loop.run_until_complete(
+                        repo.save_handoff_outcome(
+                            contact_id=contact_id,
+                            source_bot=source_bot,
+                            target_bot=target_bot,
+                            outcome=outcome,
+                            timestamp=ts,
+                            metadata=metadata,
+                        )
+                    )
+            except RuntimeError:
+                logger.debug("No event loop for handoff outcome DB write-through")
 
         logger.info(f"Recorded handoff outcome: {pair_key} for contact {contact_id} -> {outcome}")
 

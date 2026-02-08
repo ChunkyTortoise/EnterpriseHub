@@ -169,3 +169,65 @@ def trace_operation(service_name: str, operation_name: str):
 def is_otel_available() -> bool:
     """Return True if the OpenTelemetry SDK is importable."""
     return _otel_available
+
+
+# ── Metric Counters ──────────────────────────────────────────────────
+
+_meter = None
+_counters: dict = {}
+
+try:
+    from opentelemetry import metrics as otel_metrics
+
+    _meter = otel_metrics.get_meter("jorge-services", "1.0.0")
+    _counters = {
+        "jorge.interaction.total": _meter.create_counter(
+            "jorge.interaction.total",
+            description="Total bot interactions processed",
+            unit="1",
+        ),
+        "jorge.handoff.total": _meter.create_counter(
+            "jorge.handoff.total",
+            description="Total handoff events",
+            unit="1",
+        ),
+        "jorge.alert.triggered": _meter.create_counter(
+            "jorge.alert.triggered",
+            description="Total alerts triggered",
+            unit="1",
+        ),
+    }
+    logger.info("OTel metric counters created for jorge services")
+except ImportError:
+    logger.debug("OTel metrics SDK not installed — counters are no-ops")
+except Exception as exc:
+    logger.debug("Failed to create OTel metric counters: %s", exc)
+
+
+def increment_counter(name: str, value: int = 1, **attributes: Any) -> None:
+    """Increment a named OTel counter.
+
+    No-op if OTel is not available or the counter name is not registered.
+
+    Args:
+        name: Counter name (e.g. "jorge.interaction.total").
+        value: Amount to increment (default 1).
+        **attributes: Additional label attributes for the counter.
+    """
+    counter = _counters.get(name)
+    if counter is not None:
+        counter.add(value, attributes)
+
+
+def add_jorge_attributes(span: Any, **kwargs: Any) -> None:
+    """Add common Jorge service attributes to a span.
+
+    Safely sets attributes on both real and no-op spans.
+
+    Args:
+        span: A span-like object (real OTel span or _NoOpSpan).
+        **kwargs: Key-value pairs to set as ``jorge.<key>`` attributes.
+            Common keys: bot_type, contact_id, route, outcome, duration_ms.
+    """
+    for key, value in kwargs.items():
+        span.set_attribute(f"jorge.{key}", value)
