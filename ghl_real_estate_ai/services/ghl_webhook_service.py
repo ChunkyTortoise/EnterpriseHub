@@ -3,6 +3,7 @@ GHL Webhook Service - Path B Backend Integration
 Handles webhook triggers from GoHighLevel for lead qualification
 """
 
+import asyncio
 import hashlib
 import hmac
 import logging
@@ -11,7 +12,6 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import anthropic
-import asyncio
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 # Import the Cleaner agent logic (Self-Healing Data Pipeline)
 try:
     from ghl_real_estate_ai.agents.agent_swarm_orchestrator_v2 import AgentSwarmOrchestratorV2
+
     cleaner_orchestrator = AgentSwarmOrchestratorV2()
 except ImportError:
     cleaner_orchestrator = None
@@ -27,12 +28,13 @@ except ImportError:
 # Phase 7: Autonomous Integration Orchestrator
 try:
     from ghl_real_estate_ai.services.autonomous_integration_orchestrator import get_autonomous_integration_orchestrator
+
     orchestrator = get_autonomous_integration_orchestrator()
     try:
         loop = asyncio.get_running_loop()
         asyncio.create_task(orchestrator.initialize_system())
     except RuntimeError:
-        # In a synchronous context (like FastAPI/Streamlit startup), 
+        # In a synchronous context (like FastAPI/Streamlit startup),
         # initialization should happen when the first request arrives or the loop starts.
         logger.debug("No running event loop found for orchestrator initialization, skipping for now")
 except ImportError:
@@ -41,11 +43,13 @@ except ImportError:
 # Phase 7: Model Retraining
 try:
     from ghl_real_estate_ai.services.model_retraining_service import get_retraining_service
+
     retraining_service = get_retraining_service()
 except ImportError:
     retraining_service = None
 
 # Phase 7: Global Compliance Enforcer
+from ghl_real_estate_ai.agents.workflow_factory import get_workflow_factory
 from ghl_real_estate_ai.compliance_platform.engine.policy_enforcer import PolicyEnforcer
 from ghl_real_estate_ai.services.agent_state_sync import sync_service
 
@@ -53,7 +57,6 @@ from ghl_real_estate_ai.services.agent_state_sync import sync_service
 from ghl_real_estate_ai.services.autonomous_objection_handler import get_autonomous_objection_handler
 from ghl_real_estate_ai.services.calendar_scheduler import get_smart_scheduler
 from ghl_real_estate_ai.services.market_timing_opportunity_intelligence import MarketTimingOpportunityEngine
-from ghl_real_estate_ai.agents.workflow_factory import get_workflow_factory
 
 compliance_enforcer = PolicyEnforcer()
 objection_handler = get_autonomous_objection_handler()
@@ -146,9 +149,7 @@ def verify_webhook_signature(request: Request, body: bytes) -> bool:
     return hmac.compare_digest(signature, computed)
 
 
-def get_ai_response(
-    contact_data: Dict, conversation_history: List, question_type: str
-) -> str:
+def get_ai_response(contact_data: Dict, conversation_history: List, question_type: str) -> str:
     """
     Generate AI response using Claude with Jorge's tone:
     Professional, friendly, direct, and curious
@@ -224,10 +225,7 @@ async def safe_send_sms(contact_id: str, location_id: str, message: str, agent_n
         logger.warning(f"🚫 BLOCKED non-compliant message for {contact_id}: {compliance['violations']}")
         # Log to dashboard
         await sync_service.record_lead_event(
-            contact_id, 
-            "AI", 
-            f"BLOCKED: FHA violation. Suggestion: {compliance['suggestion']}", 
-            "error"
+            contact_id, "AI", f"BLOCKED: FHA violation. Suggestion: {compliance['suggestion']}", "error"
         )
         return
 
@@ -321,13 +319,13 @@ async def handle_ghl_webhook(request: Request, background_tasks: BackgroundTasks
     try:
         payload = await request.json()
         logger.info(f"Received webhook: {payload}")
-        
+
         # Phase 5: Self-Healing Data Pipeline (The Cleaner)
         if cleaner_orchestrator:
             logger.info("Triggering 'The Cleaner' agent for data standardization...")
             payload = await cleaner_orchestrator.run_cleaner(payload)
             logger.info(f"Cleaned payload: {payload}")
-            
+
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid JSON: {e}")
 
@@ -358,7 +356,7 @@ async def handle_ghl_webhook(request: Request, background_tasks: BackgroundTasks
         "ai_schedule_showing": ("buyer", "schedule_showing"),
         "ai_facilitate_offer": ("buyer", "facilitate_offer"),
         "ai_escrow_nurture": ("seller", "under_contract"),
-        "ai_post_closing": ("seller", "post_close")
+        "ai_post_closing": ("seller", "post_close"),
     }
 
     for tag, (wf_type, node) in lifecycle_tags.items():
@@ -366,15 +364,10 @@ async def handle_ghl_webhook(request: Request, background_tasks: BackgroundTasks
             logger.info(f"🚀 Manual lifecycle trigger: {tag} for {contact_id}")
             wf_factory = get_workflow_factory()
             workflow = wf_factory.get_workflow(wf_type)
-            
+
             # Record the manual trigger event
-            await sync_service.record_lead_event(
-                contact_id, 
-                "GHL", 
-                f"Manual Trigger: Applied tag '{tag}'", 
-                "action"
-            )
-            
+            await sync_service.record_lead_event(contact_id, "GHL", f"Manual Trigger: Applied tag '{tag}'", "action")
+
             # Prepare state
             state = {
                 "lead_id": contact_id,
@@ -382,57 +375,49 @@ async def handle_ghl_webhook(request: Request, background_tasks: BackgroundTasks
                 "contact_phone": payload.get("contact", {}).get("phone", ""),
                 "contact_email": payload.get("contact", {}).get("email", ""),
                 "property_address": payload.get("customFields", {}).get("property_address"),
-                "conversation_history": [], # Should load from DB in prod
+                "conversation_history": [],  # Should load from DB in prod
                 "engagement_status": "new",
-                "current_step": node
+                "current_step": node,
             }
-            
+
             # Execute specific node if possible, or run workflow with node as entry
             # Simplified: invoke workflow and let it route
             background_tasks.add_task(workflow.workflow.ainvoke, state)
-            
-            await sync_service.record_lead_event(
-                contact_id, 
-                "AI", 
-                f"Starting {node} workflow node.", 
-                "node"
-            )
+
+            await sync_service.record_lead_event(contact_id, "AI", f"Starting {node} workflow node.", "node")
             return JSONResponse({"status": "lifecycle_triggered", "node": node})
 
     # Phase 7: Autonomous Processing via Orchestrator
     if orchestrator:
         logger.info(f"🚀 Processing lead {contact_id} via Autonomous Integration Orchestrator (Phase 7)")
         # Map GHL payload to expected activity data
-        activity_data = {
-            "tags": tags,
-            "customFields": payload.get("customFields", {}),
-            "type": payload.get("type")
-        }
+        activity_data = {"tags": tags, "customFields": payload.get("customFields", {}), "type": payload.get("type")}
         # In GHL webhooks, the message is often in customFields or another field depending on trigger
         recent_messages = [payload.get("message", "")] if payload.get("message") else []
-        
+
         results = await orchestrator.process_lead_comprehensive(
             lead_id=contact_id,
             activity_data=activity_data,
-            context={"location_id": location_id, "recent_messages": recent_messages}
+            context={"location_id": location_id, "recent_messages": recent_messages},
         )
-        
+
         # Phase 7: Regional Compliance Audit
         from ghl_real_estate_ai.agents.regional_compliance_agent import get_compliance_agent
+
         compliance = get_compliance_agent()
         # Region could be determined from location_id or custom field
         region = payload.get("customFields", {}).get("region", "TX")
-        
+
         # Check if an automated response was generated
         objection_result = results.get("component_results", {}).get("objection_handling", {})
         if objection_result.get("objection_detected") and objection_result.get("suggested_response"):
             ai_message = objection_result["suggested_response"]
-            
+
             # Compliance check before sending
             warnings = compliance.audit_message(ai_message, region)
             if warnings:
                 logger.warning(f"⚠️ Compliance Warning for lead {contact_id}: {warnings}")
-                # In strict mode, we might block the message here. 
+                # In strict mode, we might block the message here.
                 # For now, we log and proceed with Jorge's approval.
 
             background_tasks.add_task(safe_send_sms, contact_id, location_id, ai_message, "Orchestrator")
@@ -442,7 +427,7 @@ async def handle_ghl_webhook(request: Request, background_tasks: BackgroundTasks
     lead_message = payload.get("message", {}).get("body", "")
     lead_name = payload.get("contact", {}).get("firstName", "there")
     custom_fields = payload.get("customFields", {})
-    
+
     # 1. Autonomous Objection Resolution
     if lead_message:
         obj_response = await objection_handler.handle_objection_flow(
@@ -450,7 +435,9 @@ async def handle_ghl_webhook(request: Request, background_tasks: BackgroundTasks
         )
         if obj_response and obj_response.confidence_score > 0.8:
             logger.info(f"✅ Auto-resolved objection for {contact_id}: {obj_response.analysis.category}")
-            background_tasks.add_task(safe_send_sms, contact_id, location_id, obj_response.generated_message, "ObjectionBot")
+            background_tasks.add_task(
+                safe_send_sms, contact_id, location_id, obj_response.generated_message, "ObjectionBot"
+            )
             return JSONResponse({"status": "objection_resolved", "message": obj_response.generated_message})
 
     # 2. Get or create qualification state
@@ -465,28 +452,29 @@ async def handle_ghl_webhook(request: Request, background_tasks: BackgroundTasks
             "contact_id": contact_id,
             "first_name": lead_name,
             "phone": payload.get("contact", {}).get("phone"),
-            "email": payload.get("contact", {}).get("email")
+            "email": payload.get("contact", {}).get("email"),
         }
         extracted_data = {
             "budget": custom_fields.get("budget"),
             "location": custom_fields.get("location"),
             "motivation": custom_fields.get("motivation"),
-            "timeline": custom_fields.get("timeline")
+            "timeline": custom_fields.get("timeline"),
         }
-        
+
         booked, booking_msg, booking_actions = await calendar_scheduler.handle_appointment_request(
             contact_id, contact_info, state.score // 10, extracted_data, lead_message
         )
-        
+
         if booked:
             logger.info(f"📅 Proactive scheduling triggered for {contact_id}")
             background_tasks.add_task(safe_send_sms, contact_id, location_id, booking_msg, "SchedulerBot")
             # Apply GHL actions (tags, etc.) if any
             if booking_actions:
                 from ghl_real_estate_ai.services.ghl_client import GHLClient
+
                 ghl = GHLClient()
                 background_tasks.add_task(ghl.apply_actions, contact_id, booking_actions)
-            
+
             return JSONResponse({"status": "appointment_offered", "message": booking_msg})
 
     # 4. Investor "Prime Arbitrage" Pitch
@@ -496,7 +484,7 @@ async def handle_ghl_webhook(request: Request, background_tasks: BackgroundTasks
             client_budget=float(custom_fields.get("budget", 500000)),
             risk_tolerance="medium",
             investment_goals=["appreciation", "arbitrage"],
-            time_horizon="1_year"
+            time_horizon="1_year",
         )
         if opportunities:
             best_opp = opportunities[0]
@@ -506,29 +494,19 @@ async def handle_ghl_webhook(request: Request, background_tasks: BackgroundTasks
 
     # Check if we should disengage (score >= 70) - Original logic fallback
     if state.score >= 70:
-        logger.info(
-            f"Lead {contact_id} is HOT (score: {state.score}) - handing off to human"
-        )
+        logger.info(f"Lead {contact_id} is HOT (score: {state.score}) - handing off to human")
 
         # Tag as "Hot Lead" in GHL
-        background_tasks.add_task(
-            update_contact_tag, contact_id, location_id, "Hot Lead"
-        )
+        background_tasks.add_task(update_contact_tag, contact_id, location_id, "Hot Lead")
 
         # Turn off AI
-        background_tasks.add_task(
-            update_contact_tag, contact_id, location_id, "AI Assistant: OFF"
-        )
+        background_tasks.add_task(update_contact_tag, contact_id, location_id, "AI Assistant: OFF")
 
         # Send handoff message
         handoff_msg = "Thanks for all the info! A team member will reach out shortly to help you. 🎉"
-        background_tasks.add_task(
-            safe_send_sms, contact_id, location_id, handoff_msg, "System"
-        )
+        background_tasks.add_task(safe_send_sms, contact_id, location_id, handoff_msg, "System")
 
-        return JSONResponse(
-            {"status": "handoff", "score": state.score, "status_label": state.status}
-        )
+        return JSONResponse({"status": "handoff", "score": state.score, "status_label": state.status})
 
     # Generate next qualifying question
     conversation_history = []  # In production, load from DB
@@ -585,21 +563,13 @@ async def handle_contact_response(request: Request, background_tasks: Background
 
     # Update GHL tags based on status
     if status == "Hot":
-        background_tasks.add_task(
-            update_contact_tag, contact_id, location_id, "Hot Lead"
-        )
+        background_tasks.add_task(update_contact_tag, contact_id, location_id, "Hot Lead")
     elif status == "Warm":
-        background_tasks.add_task(
-            update_contact_tag, contact_id, location_id, "Warm Lead"
-        )
+        background_tasks.add_task(update_contact_tag, contact_id, location_id, "Warm Lead")
     else:
-        background_tasks.add_task(
-            update_contact_tag, contact_id, location_id, "Cold Lead"
-        )
+        background_tasks.add_task(update_contact_tag, contact_id, location_id, "Cold Lead")
 
-    logger.info(
-        f"Contact {contact_id} - Score: {score} ({status}), Answers: {len(state.answers)}"
-    )
+    logger.info(f"Contact {contact_id} - Score: {score} ({status}), Answers: {len(state.answers)}")
 
     return JSONResponse(
         {

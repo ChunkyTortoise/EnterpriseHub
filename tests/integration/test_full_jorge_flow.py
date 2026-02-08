@@ -13,29 +13,30 @@ All external services (Claude AI, event publisher, ML analytics, property matche
 are mocked. Test data uses realistic Rancho Cucamonga market context.
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timezone
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+import pytest
+
 from ghl_real_estate_ai.models.buyer_bot_state import BuyerBotState
-from ghl_real_estate_ai.models.seller_bot_state import JorgeSellerState
 from ghl_real_estate_ai.models.lead_scoring import (
     BuyerIntentProfile,
-    LeadIntentProfile,
-    FinancialReadinessScore,
-    PsychologicalCommitmentScore,
-    MotivationSignals,
-    TimelineCommitment,
     ConditionRealism,
+    FinancialReadinessScore,
+    LeadIntentProfile,
+    MotivationSignals,
     PriceResponsiveness,
+    PsychologicalCommitmentScore,
+    TimelineCommitment,
 )
-
+from ghl_real_estate_ai.models.seller_bot_state import JorgeSellerState
 
 # ---------------------------------------------------------------------------
 # Shared helpers and fixtures
 # ---------------------------------------------------------------------------
+
 
 def _make_buyer_intent_profile(
     *,
@@ -253,6 +254,7 @@ def _rancho_cucamonga_properties(count: int = 3) -> List[Dict[str, Any]]:
 # Mock context managers for buyer and seller bot dependencies
 # ---------------------------------------------------------------------------
 
+
 def _buyer_bot_patches():
     """Return a dict of patches for JorgeBuyerBot external dependencies."""
     mock_event_publisher = AsyncMock()
@@ -316,6 +318,7 @@ def _seller_bot_patches():
 # 1. TestLeadQualificationFlow
 # ===========================================================================
 
+
 @pytest.mark.integration
 class TestLeadQualificationFlow:
     """Lead -> Qualification -> Action: end-to-end qualification pipeline."""
@@ -334,9 +337,11 @@ class TestLeadQualificationFlow:
         mock_intent_decoder.analyze_buyer = MagicMock(return_value=buyer_profile)
 
         mock_claude = AsyncMock()
-        mock_claude.generate_response = AsyncMock(return_value={
-            "content": "Great news! Based on your pre-approval and timeline, I have some excellent Etiwanda properties to show you."
-        })
+        mock_claude.generate_response = AsyncMock(
+            return_value={
+                "content": "Great news! Based on your pre-approval and timeline, I have some excellent Etiwanda properties to show you."
+            }
+        )
 
         mock_property_matcher = MagicMock()
         mock_property_matcher.find_matches = MagicMock(return_value=_rancho_cucamonga_properties(3))
@@ -399,9 +404,9 @@ class TestLeadQualificationFlow:
         mock_intent_decoder.analyze_buyer = MagicMock(return_value=hot_profile)
 
         mock_claude = AsyncMock()
-        mock_claude.generate_response = AsyncMock(return_value={
-            "content": "I am excited to help! Let us schedule property tours in Victoria this weekend."
-        })
+        mock_claude.generate_response = AsyncMock(
+            return_value={"content": "I am excited to help! Let us schedule property tours in Victoria this weekend."}
+        )
 
         mock_property_matcher = MagicMock()
         mock_property_matcher.find_matches = MagicMock(return_value=_rancho_cucamonga_properties(5))
@@ -460,9 +465,11 @@ class TestLeadQualificationFlow:
         mock_intent_decoder.analyze_buyer = MagicMock(return_value=cold_profile)
 
         mock_claude = AsyncMock()
-        mock_claude.generate_response = AsyncMock(return_value={
-            "content": "I would love to help when you are ready. Here is some info about the Rancho Cucamonga market."
-        })
+        mock_claude.generate_response = AsyncMock(
+            return_value={
+                "content": "I would love to help when you are ready. Here is some info about the Rancho Cucamonga market."
+            }
+        )
 
         mock_property_matcher = MagicMock()
         mock_property_matcher.find_matches = MagicMock(return_value=[])
@@ -517,9 +524,9 @@ class TestLeadQualificationFlow:
         mock_intent_decoder.analyze_buyer = MagicMock(return_value=minimal_profile)
 
         mock_claude = AsyncMock()
-        mock_claude.generate_response = AsyncMock(return_value={
-            "content": "Hi there! I would love to help you explore homes in Rancho Cucamonga."
-        })
+        mock_claude.generate_response = AsyncMock(
+            return_value={"content": "Hi there! I would love to help you explore homes in Rancho Cucamonga."}
+        )
 
         mock_property_matcher = MagicMock()
         mock_property_matcher.find_matches = MagicMock(return_value=[])
@@ -557,6 +564,7 @@ class TestLeadQualificationFlow:
 # 2. TestBuyerQualificationFlow
 # ===========================================================================
 
+
 @pytest.mark.integration
 class TestBuyerQualificationFlow:
     """Buyer discovery -> Financial assessment -> Property matching -> Response."""
@@ -577,9 +585,11 @@ class TestBuyerQualificationFlow:
         mock_intent_decoder.analyze_buyer = MagicMock(return_value=profile)
 
         mock_claude = AsyncMock()
-        mock_claude.generate_response = AsyncMock(return_value={
-            "content": "Based on your pre-approval, here are three stunning Etiwanda homes within budget."
-        })
+        mock_claude.generate_response = AsyncMock(
+            return_value={
+                "content": "Based on your pre-approval, here are three stunning Etiwanda homes within budget."
+            }
+        )
 
         etiwanda_properties = _rancho_cucamonga_properties(3)
         mock_property_matcher = MagicMock()
@@ -644,9 +654,9 @@ class TestBuyerQualificationFlow:
         mock_intent_decoder.analyze_buyer = MagicMock(return_value=preapproved_profile)
 
         mock_claude = AsyncMock()
-        mock_claude.generate_response = AsyncMock(return_value={
-            "content": "With your strong pre-approval, let us tour these Terra Vista homes this weekend!"
-        })
+        mock_claude.generate_response = AsyncMock(
+            return_value={"content": "With your strong pre-approval, let us tour these Terra Vista homes this weekend!"}
+        )
 
         mock_property_matcher = MagicMock()
         mock_property_matcher.find_matches = MagicMock(return_value=_rancho_cucamonga_properties(5))
@@ -671,7 +681,10 @@ class TestBuyerQualificationFlow:
                 buyer_name="Lisa Wang",
                 conversation_history=[
                     {"role": "user", "content": "Pre-approved for $850k, looking for 4br in Terra Vista"},
-                    {"role": "assistant", "content": "Excellent! Terra Vista is a premium area. When do you need to move?"},
+                    {
+                        "role": "assistant",
+                        "content": "Excellent! Terra Vista is a premium area. When do you need to move?",
+                    },
                     {"role": "user", "content": "Within 60 days, relocating from LA for work"},
                 ],
             )
@@ -708,9 +721,11 @@ class TestBuyerQualificationFlow:
         mock_intent_decoder.analyze_buyer = MagicMock(return_value=unrealistic_profile)
 
         mock_claude = AsyncMock()
-        mock_claude.generate_response = AsyncMock(return_value={
-            "content": "The Rancho Cucamonga market typically starts around $500k for entry-level homes. Let me help you explore options."
-        })
+        mock_claude.generate_response = AsyncMock(
+            return_value={
+                "content": "The Rancho Cucamonga market typically starts around $500k for entry-level homes. Let me help you explore options."
+            }
+        )
 
         mock_property_matcher = MagicMock()
         mock_property_matcher.find_matches = MagicMock(return_value=[])
@@ -786,9 +801,9 @@ class TestBuyerQualificationFlow:
         mock_intent_decoder.analyze_buyer = MagicMock(side_effect=_rotating_analyze)
 
         mock_claude = AsyncMock()
-        mock_claude.generate_response = AsyncMock(return_value={
-            "content": "Thanks for the details! With your pre-approval, we have great options in Haven."
-        })
+        mock_claude.generate_response = AsyncMock(
+            return_value={"content": "Thanks for the details! With your pre-approval, we have great options in Haven."}
+        )
 
         mock_property_matcher = MagicMock()
         mock_property_matcher.find_matches = MagicMock(return_value=_rancho_cucamonga_properties(2))
@@ -840,6 +855,7 @@ class TestBuyerQualificationFlow:
 # 3. TestSellerAnalysisFlow
 # ===========================================================================
 
+
 @pytest.mark.integration
 class TestSellerAnalysisFlow:
     """Seller inquiry -> Qualification -> CMA / Strategy selection."""
@@ -847,6 +863,7 @@ class TestSellerAnalysisFlow:
     @pytest.fixture
     def seller_config(self):
         from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeFeatureConfig
+
         return JorgeFeatureConfig(
             enable_progressive_skills=False,
             enable_agent_mesh=False,
@@ -869,9 +886,11 @@ class TestSellerAnalysisFlow:
         mock_intent_decoder.analyze_lead = MagicMock(return_value=seller_profile)
 
         mock_claude = AsyncMock()
-        mock_claude.analyze_with_context = AsyncMock(return_value={
-            "content": "Maria, based on recent Etiwanda sales, your property could be very attractive to buyers right now."
-        })
+        mock_claude.analyze_with_context = AsyncMock(
+            return_value={
+                "content": "Maria, based on recent Etiwanda sales, your property could be very attractive to buyers right now."
+            }
+        )
 
         sp = _seller_bot_patches()
 
@@ -923,9 +942,11 @@ class TestSellerAnalysisFlow:
         mock_intent_decoder.analyze_lead = MagicMock(return_value=profile)
 
         mock_claude = AsyncMock()
-        mock_claude.analyze_with_context = AsyncMock(return_value={
-            "content": "I understand you need time. Would it be helpful if I shared recent comps for your neighborhood?"
-        })
+        mock_claude.analyze_with_context = AsyncMock(
+            return_value={
+                "content": "I understand you need time. Would it be helpful if I shared recent comps for your neighborhood?"
+            }
+        )
 
         sp = _seller_bot_patches()
 
@@ -988,9 +1009,11 @@ class TestSellerAnalysisFlow:
         mock_intent_decoder.analyze_lead = MagicMock(return_value=hot_profile)
 
         mock_claude = AsyncMock()
-        mock_claude.analyze_with_context = AsyncMock(return_value={
-            "content": "Maria, the market is hot right now! Let us schedule a listing appointment this week."
-        })
+        mock_claude.analyze_with_context = AsyncMock(
+            return_value={
+                "content": "Maria, the market is hot right now! Let us schedule a listing appointment this week."
+            }
+        )
 
         sp = _seller_bot_patches()
 
@@ -1039,9 +1062,11 @@ class TestSellerAnalysisFlow:
         mock_intent_decoder.analyze_lead = MagicMock(return_value=objection_profile)
 
         mock_claude = AsyncMock()
-        mock_claude.analyze_with_context = AsyncMock(return_value={
-            "content": "Online estimates cannot see your home's unique features. Let me show you actual recent sales nearby."
-        })
+        mock_claude.analyze_with_context = AsyncMock(
+            return_value={
+                "content": "Online estimates cannot see your home's unique features. Let me show you actual recent sales nearby."
+            }
+        )
 
         sp = _seller_bot_patches()
 
@@ -1091,6 +1116,7 @@ class TestSellerAnalysisFlow:
 # 4. TestConversationPersistence
 # ===========================================================================
 
+
 @pytest.mark.integration
 class TestConversationPersistence:
     """State management: persistence across turns and qualification progress."""
@@ -1109,9 +1135,9 @@ class TestConversationPersistence:
         mock_intent_decoder.analyze_buyer = MagicMock(return_value=profile)
 
         mock_claude = AsyncMock()
-        mock_claude.generate_response = AsyncMock(return_value={
-            "content": "Let me find matching properties for you in Central Park."
-        })
+        mock_claude.generate_response = AsyncMock(
+            return_value={"content": "Let me find matching properties for you in Central Park."}
+        )
 
         mock_property_matcher = MagicMock()
         mock_property_matcher.find_matches = MagicMock(return_value=_rancho_cucamonga_properties(2))
@@ -1329,6 +1355,7 @@ class TestConversationPersistence:
 # 5. TestCrossBotCommunication
 # ===========================================================================
 
+
 @pytest.mark.integration
 class TestCrossBotCommunication:
     """Bot handoff: lead qualification -> specialized bot routing."""
@@ -1347,9 +1374,11 @@ class TestCrossBotCommunication:
         mock_intent_decoder.analyze_buyer = MagicMock(return_value=buyer_profile)
 
         mock_claude = AsyncMock()
-        mock_claude.generate_response = AsyncMock(return_value={
-            "content": "Welcome! I will be your dedicated buyer specialist for finding homes in Rancho Cucamonga."
-        })
+        mock_claude.generate_response = AsyncMock(
+            return_value={
+                "content": "Welcome! I will be your dedicated buyer specialist for finding homes in Rancho Cucamonga."
+            }
+        )
 
         mock_property_matcher = MagicMock()
         mock_property_matcher.find_matches = MagicMock(return_value=_rancho_cucamonga_properties(3))
@@ -1414,9 +1443,11 @@ class TestCrossBotCommunication:
         mock_intent_decoder.analyze_lead = MagicMock(return_value=seller_profile)
 
         mock_claude = AsyncMock()
-        mock_claude.analyze_with_context = AsyncMock(return_value={
-            "content": "I would love to help you sell your Central Park property. Let us discuss the market."
-        })
+        mock_claude.analyze_with_context = AsyncMock(
+            return_value={
+                "content": "I would love to help you sell your Central Park property. Let us discuss the market."
+            }
+        )
 
         sp = _seller_bot_patches()
 
@@ -1589,6 +1620,7 @@ class TestCrossBotCommunication:
 # ===========================================================================
 # 6. TestCrossBotHandoffService
 # ===========================================================================
+
 
 @pytest.mark.integration
 class TestCrossBotHandoffService:

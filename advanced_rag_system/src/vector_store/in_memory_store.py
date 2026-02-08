@@ -169,12 +169,14 @@ class InMemoryVectorStore(VectorStore):
                 chunk_id = self._id_index[idx]
                 chunk = self._chunks[chunk_id]
 
-                results.append(SearchResult(
-                    chunk=chunk,
-                    score=score,
-                    rank=rank + 1,
-                    distance=max(0.0, 1.0 - score),
-                ))
+                results.append(
+                    SearchResult(
+                        chunk=chunk,
+                        score=score,
+                        rank=rank + 1,
+                        distance=max(0.0, 1.0 - score),
+                    )
+                )
 
             return results
 
@@ -235,7 +237,6 @@ class InMemoryVectorStore(VectorStore):
             "dimension": self.config.dimension,
             "collection_name": self.config.collection_name,
             "memory_estimated_mb": (
-                len(self._embeddings) * self.config.dimension * 4 / (1024 * 1024)
-                if self._embeddings else 0.0
+                len(self._embeddings) * self.config.dimension * 4 / (1024 * 1024) if self._embeddings else 0.0
             ),
         }

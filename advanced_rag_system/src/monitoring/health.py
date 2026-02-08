@@ -182,10 +182,7 @@ class AggregatedHealth:
         return {
             "status": self.status.value,
             "timestamp": self.timestamp,
-            "checks": {
-                name: result.to_dict()
-                for name, result in self.checks.items()
-            },
+            "checks": {name: result.to_dict() for name, result in self.checks.items()},
         }
 
     def is_healthy(self) -> bool:
@@ -271,9 +268,7 @@ class HealthChecker:
             Aggregated health status
         """
         checks_to_run = (
-            {name: self.checks[name] for name in check_names if name in self.checks}
-            if check_names
-            else self.checks
+            {name: self.checks[name] for name in check_names if name in self.checks} if check_names else self.checks
         )
 
         if not checks_to_run:
@@ -404,6 +399,7 @@ health_checker = HealthChecker()
 
 # Built-in health check implementations
 
+
 async def check_vector_store() -> HealthResult:
     """Check vector store connectivity.
 
@@ -479,8 +475,7 @@ async def check_cache() -> HealthResult:
                 message="Redis cache is accessible",
                 details={
                     "type": "redis",
-                    "url": settings.redis_url.replace(
-                        "://", "://***@"),  # Mask credentials
+                    "url": settings.redis_url.replace("://", "://***@"),  # Mask credentials
                 },
                 response_time_ms=elapsed_ms,
             )

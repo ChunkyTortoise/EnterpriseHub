@@ -4,13 +4,14 @@ Tests for Jorge Alerting Service.
 Validates alert rule checking, notification sending, and cooldowns.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from ghl_real_estate_ai.services.jorge.alerting_service import (
+    Alert,
     AlertingService,
     AlertRule,
-    Alert,
 )
 
 
@@ -47,15 +48,18 @@ class TestAlertingService:
         mock_smtp_instance = MagicMock()
         mock_smtp_instance.__enter__ = MagicMock(return_value=mock_smtp_instance)
         mock_smtp_instance.__exit__ = MagicMock(return_value=False)
-        
+
         with patch("ghl_real_estate_ai.services.jorge.alerting_service.smtplib.SMTP") as mock_smtp:
             mock_smtp.return_value = mock_smtp_instance
-            
-            with patch.dict("os.environ", {
-                "ALERT_EMAIL_TO": "test@example.com",
-                "ALERT_SMTP_HOST": "localhost",
-                "ALERT_SMTP_PORT": "587",
-            }):
+
+            with patch.dict(
+                "os.environ",
+                {
+                    "ALERT_EMAIL_TO": "test@example.com",
+                    "ALERT_SMTP_HOST": "localhost",
+                    "ALERT_SMTP_PORT": "587",
+                },
+            ):
                 await alerting_service._send_email_alert(alert)
                 mock_smtp.assert_called_once()
                 mock_smtp_instance.send_message.assert_called_once()
@@ -90,11 +94,11 @@ class TestAlertingService:
 
         mock_response = AsyncMock()
         mock_response.raise_for_status = AsyncMock()
-        
+
         mock_post = AsyncMock()
         mock_post.__aenter__ = AsyncMock(return_value=mock_response)
         mock_post.__aexit__ = AsyncMock(return_value=None)
-        
+
         mock_session = AsyncMock()
         mock_session.post = MagicMock(return_value=mock_post)
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
@@ -135,11 +139,11 @@ class TestAlertingService:
 
         mock_response = AsyncMock()
         mock_response.raise_for_status = AsyncMock()
-        
+
         mock_post = AsyncMock()
         mock_post.__aenter__ = AsyncMock(return_value=mock_response)
         mock_post.__aexit__ = AsyncMock(return_value=None)
-        
+
         mock_session = AsyncMock()
         mock_session.post = MagicMock(return_value=mock_post)
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)

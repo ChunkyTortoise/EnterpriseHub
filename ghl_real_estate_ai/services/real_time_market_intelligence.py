@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 # Rancho Cucamonga neighborhoods
 # ---------------------------------------------------------------------------
 
+
 class Neighborhood(Enum):
     VICTORIA = "victoria"
     HAVEN = "haven"
@@ -103,6 +104,7 @@ HIGH_INVENTORY_THRESHOLD = 80
 # Data structures
 # ---------------------------------------------------------------------------
 
+
 class MarketCondition(Enum):
     SELLERS = "sellers_market"
     BUYERS = "buyers_market"
@@ -124,6 +126,7 @@ class AlertSeverity(Enum):
 @dataclass
 class MarketSnapshot:
     """Point-in-time market conditions for a neighborhood."""
+
     neighborhood: str
     median_price: int
     avg_days_on_market: int
@@ -138,6 +141,7 @@ class MarketSnapshot:
 @dataclass
 class PriceTrend:
     """Price trend analysis over a time window."""
+
     neighborhood: str
     period_days: int
     direction: TrendDirection
@@ -152,6 +156,7 @@ class PriceTrend:
 @dataclass
 class MarketOpportunity:
     """Detected market opportunity for proactive outreach."""
+
     opportunity_id: str
     neighborhood: str
     opportunity_type: str  # "price_drop", "new_inventory", "undervalued", "hot_zone"
@@ -166,6 +171,7 @@ class MarketOpportunity:
 @dataclass
 class MarketAlert:
     """Automated market alert."""
+
     alert_id: str
     severity: AlertSeverity
     neighborhood: str
@@ -180,6 +186,7 @@ class MarketAlert:
 # ---------------------------------------------------------------------------
 # Service
 # ---------------------------------------------------------------------------
+
 
 class RealTimeMarketIntelligence:
     """
@@ -199,17 +206,13 @@ class RealTimeMarketIntelligence:
 
         # Initialize price history with baselines
         for nb, data in NEIGHBORHOOD_BASELINES.items():
-            self._price_history[nb.value] = [
-                {"price": data["median_price"], "timestamp": time.time()}
-            ]
+            self._price_history[nb.value] = [{"price": data["median_price"], "timestamp": time.time()}]
 
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
 
-    async def get_market_snapshot(
-        self, neighborhood: str
-    ) -> MarketSnapshot:
+    async def get_market_snapshot(self, neighborhood: str) -> MarketSnapshot:
         """Get current market conditions for a neighborhood."""
         nb = self._resolve_neighborhood(neighborhood)
         baseline = NEIGHBORHOOD_BASELINES.get(nb, NEIGHBORHOOD_BASELINES[Neighborhood.CENTRAL_PARK])
@@ -228,9 +231,7 @@ class RealTimeMarketIntelligence:
             buyer_competition_index=round(competition, 4),
         )
 
-    async def get_price_trends(
-        self, neighborhood: str, days: int = 90
-    ) -> PriceTrend:
+    async def get_price_trends(self, neighborhood: str, days: int = 90) -> PriceTrend:
         """Analyse price trends for a neighborhood over a time window."""
         nb = self._resolve_neighborhood(neighborhood)
         baseline = NEIGHBORHOOD_BASELINES.get(nb, NEIGHBORHOOD_BASELINES[Neighborhood.CENTRAL_PARK])
@@ -262,9 +263,7 @@ class RealTimeMarketIntelligence:
             confidence=round(confidence, 4),
         )
 
-    async def detect_opportunities(
-        self, min_score: float = 0.5
-    ) -> List[MarketOpportunity]:
+    async def detect_opportunities(self, min_score: float = 0.5) -> List[MarketOpportunity]:
         """Scan all neighborhoods for actionable opportunities."""
         opportunities: List[MarketOpportunity] = []
 
@@ -276,45 +275,47 @@ class RealTimeMarketIntelligence:
                 )
                 if score >= min_score:
                     self._opportunity_counter += 1
-                    opportunities.append(MarketOpportunity(
-                        opportunity_id=f"opp_{self._opportunity_counter}",
-                        neighborhood=nb.value,
-                        opportunity_type="hot_zone",
-                        score=round(score, 4),
-                        description=(
-                            f"{nb.value.replace('_', ' ').title()}: Low inventory ({baseline['inventory']} listings) "
-                            f"with {baseline['appreciation_1yr']*100:.1f}% annual appreciation"
-                        ),
-                        recommended_action="Target absentee owners and long-term holders for listing opportunities",
-                        estimated_value=baseline["median_price"],
-                        time_sensitivity="this_week",
-                    ))
+                    opportunities.append(
+                        MarketOpportunity(
+                            opportunity_id=f"opp_{self._opportunity_counter}",
+                            neighborhood=nb.value,
+                            opportunity_type="hot_zone",
+                            score=round(score, 4),
+                            description=(
+                                f"{nb.value.replace('_', ' ').title()}: Low inventory ({baseline['inventory']} listings) "
+                                f"with {baseline['appreciation_1yr'] * 100:.1f}% annual appreciation"
+                            ),
+                            recommended_action="Target absentee owners and long-term holders for listing opportunities",
+                            estimated_value=baseline["median_price"],
+                            time_sensitivity="this_week",
+                        )
+                    )
 
             # High DOM + declining price → buyer opportunity
             if baseline["avg_dom"] > SELLERS_MARKET_DOM * 1.5:
                 score = min(baseline["avg_dom"] / 60, 1.0) * 0.7
                 if score >= min_score:
                     self._opportunity_counter += 1
-                    opportunities.append(MarketOpportunity(
-                        opportunity_id=f"opp_{self._opportunity_counter}",
-                        neighborhood=nb.value,
-                        opportunity_type="buyer_advantage",
-                        score=round(score, 4),
-                        description=(
-                            f"{nb.value.replace('_', ' ').title()}: Avg {baseline['avg_dom']} DOM, "
-                            f"buyer negotiation leverage available"
-                        ),
-                        recommended_action="Coach buyers on below-asking offers and contingency negotiations",
-                        estimated_value=baseline["median_price"],
-                        time_sensitivity="this_month",
-                    ))
+                    opportunities.append(
+                        MarketOpportunity(
+                            opportunity_id=f"opp_{self._opportunity_counter}",
+                            neighborhood=nb.value,
+                            opportunity_type="buyer_advantage",
+                            score=round(score, 4),
+                            description=(
+                                f"{nb.value.replace('_', ' ').title()}: Avg {baseline['avg_dom']} DOM, "
+                                f"buyer negotiation leverage available"
+                            ),
+                            recommended_action="Coach buyers on below-asking offers and contingency negotiations",
+                            estimated_value=baseline["median_price"],
+                            time_sensitivity="this_month",
+                        )
+                    )
 
         opportunities.sort(key=lambda o: o.score, reverse=True)
         return opportunities
 
-    async def check_alerts(
-        self, thresholds: Optional[Dict[str, float]] = None
-    ) -> List[MarketAlert]:
+    async def check_alerts(self, thresholds: Optional[Dict[str, float]] = None) -> List[MarketAlert]:
         """Check for threshold breaches and generate alerts."""
         defaults = {
             "appreciation_warning": 0.08,
@@ -333,7 +334,7 @@ class RealTimeMarketIntelligence:
                     severity=AlertSeverity.WARNING,
                     neighborhood=nb.value,
                     title=f"High appreciation in {nb.value.replace('_', ' ').title()}",
-                    message=f"Annual appreciation at {baseline['appreciation_1yr']*100:.1f}%, above {thresholds['appreciation_warning']*100:.0f}% threshold",
+                    message=f"Annual appreciation at {baseline['appreciation_1yr'] * 100:.1f}%, above {thresholds['appreciation_warning'] * 100:.0f}% threshold",
                     metric_name="appreciation_1yr",
                     metric_value=baseline["appreciation_1yr"],
                     threshold=thresholds["appreciation_warning"],
@@ -363,27 +364,25 @@ class RealTimeMarketIntelligence:
         comparison = []
         for nb, baseline in NEIGHBORHOOD_BASELINES.items():
             condition = self._classify_market(baseline["avg_dom"], baseline["inventory"])
-            comparison.append({
-                "neighborhood": nb.value,
-                "median_price": baseline["median_price"],
-                "price_per_sqft": baseline["avg_sqft_price"],
-                "days_on_market": baseline["avg_dom"],
-                "inventory": baseline["inventory"],
-                "appreciation": round(baseline["appreciation_1yr"] * 100, 1),
-                "school_rating": baseline["school_rating"],
-                "market_condition": condition.value,
-            })
+            comparison.append(
+                {
+                    "neighborhood": nb.value,
+                    "median_price": baseline["median_price"],
+                    "price_per_sqft": baseline["avg_sqft_price"],
+                    "days_on_market": baseline["avg_dom"],
+                    "inventory": baseline["inventory"],
+                    "appreciation": round(baseline["appreciation_1yr"] * 100, 1),
+                    "school_rating": baseline["school_rating"],
+                    "market_condition": condition.value,
+                }
+            )
         comparison.sort(key=lambda x: x["appreciation"], reverse=True)
         return comparison
 
-    def ingest_price_update(
-        self, neighborhood: str, price: int
-    ) -> None:
+    def ingest_price_update(self, neighborhood: str, price: int) -> None:
         """Ingest a new price data point for real-time tracking."""
         nb = self._resolve_neighborhood(neighborhood)
-        self._price_history.setdefault(nb.value, []).append(
-            {"price": price, "timestamp": time.time()}
-        )
+        self._price_history.setdefault(nb.value, []).append({"price": price, "timestamp": time.time()})
 
     # ------------------------------------------------------------------
     # Internal scoring
@@ -427,9 +426,7 @@ class RealTimeMarketIntelligence:
         return min(0.3 + density * 0.7, 0.95)
 
     @staticmethod
-    def _opportunity_score(
-        appreciation: float, dom: int, inventory: int
-    ) -> float:
+    def _opportunity_score(appreciation: float, dom: int, inventory: int) -> float:
         app_score = min(appreciation / 0.10, 1.0)
         dom_score = max(0, 1 - dom / 45)
         inv_score = max(0, 1 - inventory / 80)

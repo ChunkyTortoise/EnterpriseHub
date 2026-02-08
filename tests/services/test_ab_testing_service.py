@@ -28,9 +28,7 @@ class TestABTestingService:
     def test_create_experiment_valid(self):
         """A valid experiment with 2+ variants is created successfully."""
         service = ABTestingService()
-        result = service.create_experiment(
-            "greeting_style", ["formal", "casual", "empathetic"]
-        )
+        result = service.create_experiment("greeting_style", ["formal", "casual", "empathetic"])
 
         assert result["experiment_id"] == "greeting_style"
         assert result["variants"] == ["formal", "casual", "empathetic"]
@@ -101,9 +99,7 @@ class TestABTestingService:
         service.create_experiment("outcome_test", ["a", "b"])
         variant = await service.get_variant("outcome_test", "contact_1")
 
-        result = await service.record_outcome(
-            "outcome_test", "contact_1", variant, "conversion", value=2.5
-        )
+        result = await service.record_outcome("outcome_test", "contact_1", variant, "conversion", value=2.5)
 
         assert result["experiment_id"] == "outcome_test"
         assert result["contact_id"] == "contact_1"
@@ -119,9 +115,7 @@ class TestABTestingService:
         variant = await service.get_variant("bad_outcome", "contact_1")
 
         with pytest.raises(ValueError, match="Invalid outcome"):
-            await service.record_outcome(
-                "bad_outcome", "contact_1", variant, "not_a_real_outcome"
-            )
+            await service.record_outcome("bad_outcome", "contact_1", variant, "not_a_real_outcome")
 
     # ── 9. Experiment results ─────────────────────────────────────────
 
@@ -135,9 +129,7 @@ class TestABTestingService:
         for i in range(20):
             variant = await service.get_variant("results_test", f"c_{i}")
             if i % 3 == 0:
-                await service.record_outcome(
-                    "results_test", f"c_{i}", variant, "conversion"
-                )
+                await service.record_outcome("results_test", f"c_{i}", variant, "conversion")
 
         results = service.get_experiment_results("results_test")
 
@@ -174,9 +166,9 @@ class TestABTestingService:
                 loser_contacts.append(f"sig_c_{i}")
 
         # Record high conversion for winner, low for loser
-        for cid in winner_contacts[:int(len(winner_contacts) * 0.8)]:
+        for cid in winner_contacts[: int(len(winner_contacts) * 0.8)]:
             await service.record_outcome("sig_test", cid, "winner", "conversion")
-        for cid in loser_contacts[:int(len(loser_contacts) * 0.1)]:
+        for cid in loser_contacts[: int(len(loser_contacts) * 0.1)]:
             await service.record_outcome("sig_test", cid, "loser", "conversion")
 
         assert service.is_significant("sig_test") is True

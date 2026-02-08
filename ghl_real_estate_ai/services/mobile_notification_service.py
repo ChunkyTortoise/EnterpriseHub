@@ -13,21 +13,24 @@ Provides comprehensive push notification capabilities:
 import asyncio
 import json
 import logging
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Union
 from enum import Enum
-from dataclasses import dataclass, asdict
+from typing import Any, Dict, List, Optional, Union
+
 from pydantic import BaseModel
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.services.analytics_service import AnalyticsService
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)
 
+
 class NotificationType(Enum):
     """Types of mobile notifications."""
+
     LEAD_UPDATE = "lead_update"
     PROPERTY_ALERT = "property_alert"
     REVENUE_NOTIFICATION = "revenue_notification"
@@ -37,16 +40,20 @@ class NotificationType(Enum):
     RESPONSE_NEEDED = "response_needed"
     DEAL_ALERT = "deal_alert"
 
+
 class NotificationPriority(Enum):
     """Notification priority levels."""
+
     LOW = "low"
     NORMAL = "normal"
     HIGH = "high"
     URGENT = "urgent"
 
+
 @dataclass
 class NotificationPayload:
     """Rich notification payload structure."""
+
     title: str
     body: str
     type: NotificationType
@@ -61,9 +68,11 @@ class NotificationPayload:
     target_location: Optional[Dict[str, float]] = None  # lat, lng, radius
     deeplink: Optional[str] = None
 
+
 @dataclass
 class DeviceRegistration:
     """Device registration information."""
+
     device_id: str
     platform: str  # ios or android
     fcm_token: str
@@ -74,6 +83,7 @@ class DeviceRegistration:
     timezone: str = "UTC"
     notification_preferences: Dict[str, bool] = None
     last_active: datetime = None
+
 
 class MobileNotificationService:
     """
@@ -89,7 +99,7 @@ class MobileNotificationService:
         """Initialize FCM and APNS providers."""
         try:
             # Initialize FCM (Firebase Cloud Messaging)
-            if hasattr(settings, 'fcm_server_key') and settings.fcm_server_key:
+            if hasattr(settings, "fcm_server_key") and settings.fcm_server_key:
                 self.fcm_enabled = True
                 logger.info("FCM push notifications enabled")
             else:
@@ -97,8 +107,12 @@ class MobileNotificationService:
                 logger.warning("FCM not configured - Android notifications disabled")
 
             # Initialize APNS (Apple Push Notification Service)
-            if (hasattr(settings, 'apns_key_id') and settings.apns_key_id and
-                hasattr(settings, 'apns_team_id') and settings.apns_team_id):
+            if (
+                hasattr(settings, "apns_key_id")
+                and settings.apns_key_id
+                and hasattr(settings, "apns_team_id")
+                and settings.apns_team_id
+            ):
                 self.apns_enabled = True
                 logger.info("APNS push notifications enabled")
             else:
@@ -142,7 +156,7 @@ class MobileNotificationService:
         payload: NotificationPayload,
         target_devices: Optional[List[str]] = None,
         target_location: Optional[str] = None,
-        target_user: Optional[str] = None
+        target_user: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Send push notification to specified targets.
@@ -187,7 +201,7 @@ class MobileNotificationService:
                 "ios_sent": 0,
                 "android_failed": 0,
                 "ios_failed": 0,
-                "total_attempted": len(filtered_devices)
+                "total_attempted": len(filtered_devices),
             }
 
             # Group by platform
@@ -210,7 +224,7 @@ class MobileNotificationService:
             await self.analytics.track_notification_sent(
                 notification_type=payload.type.value,
                 total_sent=results["android_sent"] + results["ios_sent"],
-                total_failed=results["android_failed"] + results["ios_failed"]
+                total_failed=results["android_failed"] + results["ios_failed"],
             )
 
             # Store for A/B testing analysis
@@ -219,7 +233,7 @@ class MobileNotificationService:
             return {
                 "success": True,
                 "results": results,
-                "notification_id": f"notif_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+                "notification_id": f"notif_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
             }
 
         except Exception as e:
@@ -227,10 +241,7 @@ class MobileNotificationService:
             return {"success": False, "error": str(e)}
 
     async def send_lead_update_notification(
-        self,
-        location_id: str,
-        lead_data: Dict[str, Any],
-        update_type: str = "status_change"
+        self, location_id: str, lead_data: Dict[str, Any], update_type: str = "status_change"
     ) -> Dict[str, Any]:
         """
         Send lead update notification to relevant users.
@@ -260,35 +271,28 @@ class MobileNotificationService:
                 title=title,
                 body=body,
                 type=NotificationType.LEAD_UPDATE,
-                priority=NotificationPriority.HIGH if update_type in ["hot_lead", "response_needed"] else NotificationPriority.NORMAL,
+                priority=NotificationPriority.HIGH
+                if update_type in ["hot_lead", "response_needed"]
+                else NotificationPriority.NORMAL,
                 data={
                     "lead_id": lead_data.get("id"),
                     "lead_name": lead_name,
                     "update_type": update_type,
-                    "score": lead_data.get("score")
+                    "score": lead_data.get("score"),
                 },
-                actions=[
-                    {"action": "view", "title": "View Lead"},
-                    {"action": "call", "title": "Call Now"}
-                ],
+                actions=[{"action": "view", "title": "View Lead"}, {"action": "call", "title": "Call Now"}],
                 deeplink=deeplink,
-                sound="lead_alert.wav" if update_type == "hot_lead" else None
+                sound="lead_alert.wav" if update_type == "hot_lead" else None,
             )
 
-            return await self.send_notification(
-                payload=payload,
-                target_location=location_id
-            )
+            return await self.send_notification(payload=payload, target_location=location_id)
 
         except Exception as e:
             logger.error(f"Lead notification failed: {e}")
             return {"success": False, "error": str(e)}
 
     async def send_property_alert(
-        self,
-        location_id: str,
-        property_data: Dict[str, Any],
-        alert_type: str = "price_change"
+        self, location_id: str, property_data: Dict[str, Any], alert_type: str = "price_change"
     ) -> Dict[str, Any]:
         """
         Send property alert notification.
@@ -319,30 +323,20 @@ class MobileNotificationService:
                     "property_id": property_data.get("id"),
                     "address": address,
                     "price": price,
-                    "alert_type": alert_type
+                    "alert_type": alert_type,
                 },
-                actions=[
-                    {"action": "view", "title": "View Property"},
-                    {"action": "tour", "title": "Schedule Tour"}
-                ],
+                actions=[{"action": "view", "title": "View Property"}, {"action": "tour", "title": "Schedule Tour"}],
                 image_url=property_data.get("image_url"),
-                deeplink=f"app://properties/{property_data.get('id')}"
+                deeplink=f"app://properties/{property_data.get('id')}",
             )
 
-            return await self.send_notification(
-                payload=payload,
-                target_location=location_id
-            )
+            return await self.send_notification(payload=payload, target_location=location_id)
 
         except Exception as e:
             logger.error(f"Property alert failed: {e}")
             return {"success": False, "error": str(e)}
 
-    async def send_revenue_notification(
-        self,
-        location_id: str,
-        revenue_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def send_revenue_notification(self, location_id: str, revenue_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Send revenue milestone notification.
         """
@@ -356,27 +350,18 @@ class MobileNotificationService:
                 type=NotificationType.REVENUE_NOTIFICATION,
                 priority=NotificationPriority.NORMAL,
                 data=revenue_data,
-                actions=[
-                    {"action": "view", "title": "View Details"},
-                    {"action": "share", "title": "Share Success"}
-                ],
-                deeplink="app://dashboard/revenue"
+                actions=[{"action": "view", "title": "View Details"}, {"action": "share", "title": "Share Success"}],
+                deeplink="app://dashboard/revenue",
             )
 
-            return await self.send_notification(
-                payload=payload,
-                target_location=location_id
-            )
+            return await self.send_notification(payload=payload, target_location=location_id)
 
         except Exception as e:
             logger.error(f"Revenue notification failed: {e}")
             return {"success": False, "error": str(e)}
 
     async def schedule_notification(
-        self,
-        payload: NotificationPayload,
-        send_time: datetime,
-        target_location: str
+        self, payload: NotificationPayload, send_time: datetime, target_location: str
     ) -> str:
         """
         Schedule a notification for future delivery.
@@ -389,14 +374,14 @@ class MobileNotificationService:
                 "payload": asdict(payload),
                 "send_time": send_time.isoformat(),
                 "target_location": target_location,
-                "status": "scheduled"
+                "status": "scheduled",
             }
 
             # Store scheduled notification
             await self.cache.set(
                 f"scheduled_notification:{scheduled_id}",
                 scheduled_notification,
-                ttl=int((send_time - datetime.utcnow()).total_seconds()) + 3600  # Add 1 hour buffer
+                ttl=int((send_time - datetime.utcnow()).total_seconds()) + 3600,  # Add 1 hour buffer
             )
 
             # Add to location's scheduled list
@@ -438,11 +423,7 @@ class MobileNotificationService:
         # TODO: Implement user device lookup
         return []
 
-    async def _should_send_notification(
-        self,
-        device_reg: DeviceRegistration,
-        payload: NotificationPayload
-    ) -> bool:
+    async def _should_send_notification(self, device_reg: DeviceRegistration, payload: NotificationPayload) -> bool:
         """
         Check if notification should be sent to device based on preferences and timing.
         """
@@ -469,9 +450,7 @@ class MobileNotificationService:
             return False
 
     async def _send_fcm_notifications(
-        self,
-        android_devices: List[DeviceRegistration],
-        payload: NotificationPayload
+        self, android_devices: List[DeviceRegistration], payload: NotificationPayload
     ) -> Dict[str, int]:
         """
         Send notifications via Firebase Cloud Messaging (Android).
@@ -484,22 +463,14 @@ class MobileNotificationService:
 
             logger.info(f"FCM notifications sent: {success_count} success, {failure_count} failed")
 
-            return {
-                "success_count": success_count,
-                "failure_count": failure_count
-            }
+            return {"success_count": success_count, "failure_count": failure_count}
 
         except Exception as e:
             logger.error(f"FCM sending failed: {e}")
-            return {
-                "success_count": 0,
-                "failure_count": len(android_devices)
-            }
+            return {"success_count": 0, "failure_count": len(android_devices)}
 
     async def _send_apns_notifications(
-        self,
-        ios_devices: List[DeviceRegistration],
-        payload: NotificationPayload
+        self, ios_devices: List[DeviceRegistration], payload: NotificationPayload
     ) -> Dict[str, int]:
         """
         Send notifications via Apple Push Notification Service (iOS).
@@ -512,23 +483,13 @@ class MobileNotificationService:
 
             logger.info(f"APNS notifications sent: {success_count} success, {failure_count} failed")
 
-            return {
-                "success_count": success_count,
-                "failure_count": failure_count
-            }
+            return {"success_count": success_count, "failure_count": failure_count}
 
         except Exception as e:
             logger.error(f"APNS sending failed: {e}")
-            return {
-                "success_count": 0,
-                "failure_count": len(ios_devices)
-            }
+            return {"success_count": 0, "failure_count": len(ios_devices)}
 
-    async def _store_notification_metrics(
-        self,
-        payload: NotificationPayload,
-        results: Dict[str, Any]
-    ):
+    async def _store_notification_metrics(self, payload: NotificationPayload, results: Dict[str, Any]):
         """
         Store notification metrics for A/B testing and analytics.
         """
@@ -542,21 +503,23 @@ class MobileNotificationService:
                 "title": payload.title,
                 "body_length": len(payload.body),
                 "has_image": payload.image_url is not None,
-                "has_actions": len(payload.actions or []) > 0
+                "has_actions": len(payload.actions or []) > 0,
             }
 
             # Store for analytics
             await self.cache.set(
                 f"notification_metrics:{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
                 metrics,
-                ttl=86400 * 30  # 30 days
+                ttl=86400 * 30,  # 30 days
             )
 
         except Exception as e:
             logger.error(f"Metrics storage failed: {e}")
 
+
 # Global service instance
 _notification_service = None
+
 
 def get_notification_service() -> MobileNotificationService:
     """Get the global notification service instance."""

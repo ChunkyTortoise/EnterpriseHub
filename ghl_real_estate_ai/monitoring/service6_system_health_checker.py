@@ -6,31 +6,32 @@ Automated system validation and recovery orchestration.
 import asyncio
 import logging
 import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
-from ..services.database_service import DatabaseService
-from ..services.cache_service import CacheService
 from ..core.llm_client import LLMClient
+from ..services.cache_service import CacheService
+from ..services.database_service import DatabaseService
+from .service6_alerting_engine import AlertLevel, Service6AlertingEngine
 from .service6_metrics_collector import Service6MetricsCollector
-from .service6_alerting_engine import Service6AlertingEngine, AlertLevel
-
 
 logger = logging.getLogger(__name__)
 
 
 class HealthCheckType(Enum):
     """Types of health checks."""
-    CRITICAL = "critical"        # Database, Redis, core services
-    ESSENTIAL = "essential"      # Agent orchestration, lead processing
+
+    CRITICAL = "critical"  # Database, Redis, core services
+    ESSENTIAL = "essential"  # Agent orchestration, lead processing
     PERFORMANCE = "performance"  # Response times, throughput
-    BUSINESS = "business"        # Revenue pipeline, conversion rates
+    BUSINESS = "business"  # Revenue pipeline, conversion rates
 
 
 class HealthCheckStatus(Enum):
     """Health check result status."""
+
     PASS = "pass"
     WARN = "warn"
     FAIL = "fail"
@@ -40,6 +41,7 @@ class HealthCheckStatus(Enum):
 @dataclass
 class HealthCheckResult:
     """Individual health check result."""
+
     check_name: str
     check_type: HealthCheckType
     status: HealthCheckStatus
@@ -53,6 +55,7 @@ class HealthCheckResult:
 @dataclass
 class SystemHealthReport:
     """Comprehensive system health report."""
+
     overall_status: HealthCheckStatus
     critical_checks: List[HealthCheckResult]
     essential_checks: List[HealthCheckResult]
@@ -81,10 +84,10 @@ class Service6SystemHealthChecker:
 
         # Health check configuration
         self.check_intervals = {
-            HealthCheckType.CRITICAL: 30,      # Every 30 seconds
-            HealthCheckType.ESSENTIAL: 60,     # Every minute
+            HealthCheckType.CRITICAL: 30,  # Every 30 seconds
+            HealthCheckType.ESSENTIAL: 60,  # Every minute
             HealthCheckType.PERFORMANCE: 120,  # Every 2 minutes
-            HealthCheckType.BUSINESS: 300      # Every 5 minutes
+            HealthCheckType.BUSINESS: 300,  # Every 5 minutes
         }
 
         # Performance thresholds
@@ -95,7 +98,7 @@ class Service6SystemHealthChecker:
             "cache_hit_rate_percent": 80,
             "error_rate_percent": 1.0,
             "memory_usage_percent": 85,
-            "cpu_usage_percent": 80
+            "cpu_usage_percent": 80,
         }
 
         # Recovery actions registry
@@ -105,7 +108,7 @@ class Service6SystemHealthChecker:
             "agent_timeout": self._recover_agent_timeouts,
             "high_error_rate": self._recover_high_error_rate,
             "memory_pressure": self._recover_memory_pressure,
-            "lead_processing_stalled": self._recover_lead_processing
+            "lead_processing_stalled": self._recover_lead_processing,
         }
 
         self._running = False
@@ -124,9 +127,7 @@ class Service6SystemHealthChecker:
         tasks = []
         for check_type in HealthCheckType:
             interval = self.check_intervals[check_type]
-            task = asyncio.create_task(
-                self._run_periodic_checks(check_type, interval)
-            )
+            task = asyncio.create_task(self._run_periodic_checks(check_type, interval))
             tasks.append(task)
 
         # Wait for all monitoring tasks
@@ -152,7 +153,7 @@ class Service6SystemHealthChecker:
             self._run_critical_checks(),
             self._run_essential_checks(),
             self._run_performance_checks(),
-            self._run_business_checks()
+            self._run_business_checks(),
         ]
 
         try:
@@ -187,14 +188,16 @@ class Service6SystemHealthChecker:
                 warning_checks=warnings,
                 check_duration_seconds=check_duration,
                 recovery_actions_triggered=recovery_actions,
-                next_check_time=datetime.utcnow() + timedelta(minutes=1)
+                next_check_time=datetime.utcnow() + timedelta(minutes=1),
             )
 
             # Send alerts for critical failures
             if failed > 0 or overall_status == HealthCheckStatus.FAIL:
                 await self._send_health_alerts(report)
 
-            logger.info(f"Health check completed in {check_duration:.2f}s: {passed} passed, {failed} failed, {warnings} warnings")
+            logger.info(
+                f"Health check completed in {check_duration:.2f}s: {passed} passed, {failed} failed, {warnings} warnings"
+            )
             return report
 
         except Exception as e:
@@ -327,21 +330,23 @@ class Service6SystemHealthChecker:
                         message="Database connectivity successful",
                         response_time_ms=response_time,
                         details={"query_result": result},
-                        timestamp=datetime.utcnow()
+                        timestamp=datetime.utcnow(),
                     )
                 else:
                     return self._create_fail_result(
-                        check_name, HealthCheckType.CRITICAL,
+                        check_name,
+                        HealthCheckType.CRITICAL,
                         "Database query returned unexpected result",
-                        {"expected": 1, "actual": result}
+                        {"expected": 1, "actual": result},
                     )
 
         except Exception as e:
             return self._create_fail_result(
-                check_name, HealthCheckType.CRITICAL,
+                check_name,
+                HealthCheckType.CRITICAL,
                 f"Database connectivity failed: {str(e)}",
                 {"error": str(e)},
-                recovery_action="database_connection_failed"
+                recovery_action="database_connection_failed",
             )
 
     async def _check_cache_connectivity(self) -> HealthCheckResult:
@@ -365,21 +370,23 @@ class Service6SystemHealthChecker:
                     message="Cache connectivity successful",
                     response_time_ms=response_time,
                     details={"test_key": test_key},
-                    timestamp=datetime.utcnow()
+                    timestamp=datetime.utcnow(),
                 )
             else:
                 return self._create_fail_result(
-                    check_name, HealthCheckType.CRITICAL,
+                    check_name,
+                    HealthCheckType.CRITICAL,
                     "Cache operation failed - value mismatch",
-                    {"expected": "health_check_value", "actual": value}
+                    {"expected": "health_check_value", "actual": value},
                 )
 
         except Exception as e:
             return self._create_fail_result(
-                check_name, HealthCheckType.CRITICAL,
+                check_name,
+                HealthCheckType.CRITICAL,
                 f"Cache connectivity failed: {str(e)}",
                 {"error": str(e)},
-                recovery_action="cache_unavailable"
+                recovery_action="cache_unavailable",
             )
 
     async def _check_llm_service_availability(self) -> HealthCheckResult:
@@ -393,8 +400,7 @@ class Service6SystemHealthChecker:
             test_prompt = "Respond with exactly: 'Service health check successful'"
 
             response = await llm_client.generate_response(
-                messages=[{"role": "user", "content": test_prompt}],
-                max_tokens=20
+                messages=[{"role": "user", "content": test_prompt}], max_tokens=20
             )
 
             response_time = (time.time() - start_time) * 1000
@@ -407,20 +413,19 @@ class Service6SystemHealthChecker:
                     message="LLM service responding correctly",
                     response_time_ms=response_time,
                     details={"response_preview": response[:100]},
-                    timestamp=datetime.utcnow()
+                    timestamp=datetime.utcnow(),
                 )
             else:
                 return self._create_warn_result(
-                    check_name, HealthCheckType.CRITICAL,
+                    check_name,
+                    HealthCheckType.CRITICAL,
                     "LLM service responding but with unexpected content",
-                    {"response_preview": response[:100]}
+                    {"response_preview": response[:100]},
                 )
 
         except Exception as e:
             return self._create_fail_result(
-                check_name, HealthCheckType.CRITICAL,
-                f"LLM service unavailable: {str(e)}",
-                {"error": str(e)}
+                check_name, HealthCheckType.CRITICAL, f"LLM service unavailable: {str(e)}", {"error": str(e)}
             )
 
     async def _check_file_system_access(self) -> HealthCheckResult:
@@ -429,17 +434,17 @@ class Service6SystemHealthChecker:
         check_name = "file_system_access"
 
         try:
-            import tempfile
             import os
+            import tempfile
 
             # Test temporary file creation
-            with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+            with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
                 test_content = f"health_check_{int(time.time())}"
                 f.write(test_content)
                 temp_path = f.name
 
             # Test file reading
-            with open(temp_path, 'r') as f:
+            with open(temp_path, "r") as f:
                 read_content = f.read()
 
             # Clean up
@@ -455,20 +460,19 @@ class Service6SystemHealthChecker:
                     message="File system access successful",
                     response_time_ms=response_time,
                     details={"temp_file_path": temp_path},
-                    timestamp=datetime.utcnow()
+                    timestamp=datetime.utcnow(),
                 )
             else:
                 return self._create_fail_result(
-                    check_name, HealthCheckType.CRITICAL,
+                    check_name,
+                    HealthCheckType.CRITICAL,
                     "File system read/write mismatch",
-                    {"expected": test_content, "actual": read_content}
+                    {"expected": test_content, "actual": read_content},
                 )
 
         except Exception as e:
             return self._create_fail_result(
-                check_name, HealthCheckType.CRITICAL,
-                f"File system access failed: {str(e)}",
-                {"error": str(e)}
+                check_name, HealthCheckType.CRITICAL, f"File system access failed: {str(e)}", {"error": str(e)}
             )
 
     def _determine_overall_status(self, checks: List[HealthCheckResult]) -> HealthCheckStatus:
@@ -478,8 +482,7 @@ class Service6SystemHealthChecker:
 
         # Critical failures result in overall failure
         critical_failures = [
-            c for c in checks
-            if c.check_type == HealthCheckType.CRITICAL and c.status == HealthCheckStatus.FAIL
+            c for c in checks if c.check_type == HealthCheckType.CRITICAL and c.status == HealthCheckStatus.FAIL
         ]
 
         if critical_failures:
@@ -487,8 +490,7 @@ class Service6SystemHealthChecker:
 
         # Any failures in essential systems result in overall failure
         essential_failures = [
-            c for c in checks
-            if c.check_type == HealthCheckType.ESSENTIAL and c.status == HealthCheckStatus.FAIL
+            c for c in checks if c.check_type == HealthCheckType.ESSENTIAL and c.status == HealthCheckStatus.FAIL
         ]
 
         if essential_failures:
@@ -497,8 +499,7 @@ class Service6SystemHealthChecker:
         # Multiple warnings or performance issues result in warning
         warnings = [c for c in checks if c.status == HealthCheckStatus.WARN]
         performance_failures = [
-            c for c in checks
-            if c.check_type == HealthCheckType.PERFORMANCE and c.status == HealthCheckStatus.FAIL
+            c for c in checks if c.check_type == HealthCheckType.PERFORMANCE and c.status == HealthCheckStatus.FAIL
         ]
 
         if len(warnings) >= 3 or len(performance_failures) >= 2:
@@ -534,7 +535,7 @@ class Service6SystemHealthChecker:
         check_type: HealthCheckType,
         message: str,
         details: Dict[str, Any],
-        recovery_action: Optional[str] = None
+        recovery_action: Optional[str] = None,
     ) -> HealthCheckResult:
         """Create a failed health check result."""
         return HealthCheckResult(
@@ -545,15 +546,11 @@ class Service6SystemHealthChecker:
             response_time_ms=0.0,
             details=details,
             timestamp=datetime.utcnow(),
-            recovery_action=recovery_action
+            recovery_action=recovery_action,
         )
 
     def _create_warn_result(
-        self,
-        check_name: str,
-        check_type: HealthCheckType,
-        message: str,
-        details: Dict[str, Any]
+        self, check_name: str, check_type: HealthCheckType, message: str, details: Dict[str, Any]
     ) -> HealthCheckResult:
         """Create a warning health check result."""
         return HealthCheckResult(
@@ -563,7 +560,7 @@ class Service6SystemHealthChecker:
             message=message,
             response_time_ms=0.0,
             details=details,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
 
     # Recovery action implementations

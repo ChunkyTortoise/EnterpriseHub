@@ -18,27 +18,28 @@ Date: 2026-01-17
 """
 
 import asyncio
+import hashlib
 import json
+import logging
 import pickle
-import time
 import threading
+import time
 import weakref
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from functools import wraps, partial
-from typing import Any, Optional, Union, Dict, List, Callable, Tuple, TypeVar, Generic
-import logging
-import hashlib
+from functools import partial, wraps
+from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar, Union
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 # Type variable for generic cache operations
-T = TypeVar('T')
+T = TypeVar("T")
+
 
 @dataclass
 class CacheMetrics:
@@ -123,7 +124,7 @@ class CacheMetrics:
                 "hit_ratio_percent": round(self.cache_hit_ratio * 100, 2),
                 "average_latency_ms": round(self.average_latency_ms, 3),
                 "total_requests": self.total_requests,
-                "performance_improvement": f"{round((1 - self.cache_hit_ratio) * 100, 1)}% reduction in backend calls"
+                "performance_improvement": f"{round((1 - self.cache_hit_ratio) * 100, 1)}% reduction in backend calls",
             },
             "l1_memory_cache": {
                 "hits": self.l1_hits,
@@ -133,20 +134,20 @@ class CacheMetrics:
                 "max_size": self.l1_size_max,
                 "utilization_percent": round(self.l1_size_current / self.l1_size_max * 100, 2),
                 "evictions": self.l1_evictions,
-                "average_latency_ms": round(self.l1_total_latency_ms / max(1, self.l1_hits + self.l1_misses), 3)
+                "average_latency_ms": round(self.l1_total_latency_ms / max(1, self.l1_hits + self.l1_misses), 3),
             },
             "l2_redis_cache": {
                 "hits": self.l2_hits,
                 "misses": self.l2_misses,
                 "hit_ratio_percent": round(self.l2_hits / max(1, self.l2_hits + self.l2_misses) * 100, 2),
                 "promotions_to_l1": self.l2_promotions,
-                "average_latency_ms": round(self.l2_total_latency_ms / max(1, self.l2_hits + self.l2_misses), 3)
+                "average_latency_ms": round(self.l2_total_latency_ms / max(1, self.l2_hits + self.l2_misses), 3),
             },
             "background_tasks": {
                 "cleanup_runs": self.cleanup_runs,
                 "expired_items_cleaned": self.expired_items_cleaned,
-                "last_cleanup": self.last_cleanup_time.isoformat() if self.last_cleanup_time else "Never"
-            }
+                "last_cleanup": self.last_cleanup_time.isoformat() if self.last_cleanup_time else "Never",
+            },
         }
 
 
@@ -236,12 +237,7 @@ class LRUCache(Generic[T]):
 
         with self._lock:
             # Create cache item
-            item = CacheItem(
-                value=value,
-                created_at=now,
-                expires_at=now + ttl,
-                source="l1"
-            )
+            item = CacheItem(value=value, created_at=now, expires_at=now + ttl, source="l1")
 
             # Add/update item
             if key in self._cache:
@@ -292,7 +288,7 @@ class LRUCache(Generic[T]):
                 "size": len(self._cache),
                 "max_size": self.max_size,
                 "total_size_bytes": total_size_bytes,
-                "utilization_percent": len(self._cache) / self.max_size * 100
+                "utilization_percent": len(self._cache) / self.max_size * 100,
             }
 
     def _evict_lru(self):
@@ -408,10 +404,10 @@ class TieredCacheService:
     - Background maintenance tasks
     """
 
-    _instance: Optional['TieredCacheService'] = None
+    _instance: Optional["TieredCacheService"] = None
     _lock = threading.Lock()
 
-    def __new__(cls) -> 'TieredCacheService':
+    def __new__(cls) -> "TieredCacheService":
         """Singleton pattern for global cache instance."""
         if cls._instance is None:
             with cls._lock:
@@ -422,7 +418,7 @@ class TieredCacheService:
     def __init__(self):
         """Initialize tiered cache service."""
         # Prevent re-initialization of singleton
-        if hasattr(self, '_initialized'):
+        if hasattr(self, "_initialized"):
             return
 
         self._initialized = True
@@ -505,8 +501,7 @@ class TieredCacheService:
             # Promote to L1 if accessed enough
             promoted = False
             if cache_item.should_promote:
-                self.l1_cache.set(key, cache_item.value,
-                                int(cache_item.expires_at - time.time()))
+                self.l1_cache.set(key, cache_item.value, int(cache_item.expires_at - time.time()))
                 promoted = True
 
             self.metrics.update_l2_hit((time.perf_counter() - start_time) * 1000, promoted)
@@ -532,12 +527,9 @@ class TieredCacheService:
         - L2 provides persistence across restarts
         """
         success_l1 = self.l1_cache.set(key, value, ttl)
-        success_l2 = await self._set_l2(key, CacheItem(
-            value=value,
-            created_at=time.time(),
-            expires_at=time.time() + ttl,
-            source="direct"
-        ), ttl)
+        success_l2 = await self._set_l2(
+            key, CacheItem(value=value, created_at=time.time(), expires_at=time.time() + ttl, source="direct"), ttl
+        )
 
         return success_l1 and success_l2
 
@@ -604,10 +596,7 @@ class TieredCacheService:
                 self.metrics.l1_size_current = len(self.l1_cache._cache)
 
                 # Wait for next cleanup cycle
-                await asyncio.wait_for(
-                    self._shutdown_event.wait(),
-                    timeout=self._maintenance_interval
-                )
+                await asyncio.wait_for(self._shutdown_event.wait(), timeout=self._maintenance_interval)
 
             except asyncio.TimeoutError:
                 continue  # Normal timeout, continue cleanup cycle
@@ -630,6 +619,7 @@ def tiered_cache(ttl: int = 300, key_prefix: str = ""):
             # Expensive ML computation
             return complex_scoring_logic(lead_id, model_version)
     """
+
     def decorator(func: Callable) -> Callable:
         cache_service = TieredCacheService()
 
@@ -761,15 +751,15 @@ class TieredCacheContext:
 
 # Export main interfaces
 __all__ = [
-    'TieredCacheService',
-    'CacheMetrics',
-    'CacheItem',
-    'tiered_cache',
-    'get_tiered_cache',
-    'cache_get',
-    'cache_set',
-    'cache_delete',
-    'cache_clear',
-    'cache_metrics',
-    'TieredCacheContext'
+    "TieredCacheService",
+    "CacheMetrics",
+    "CacheItem",
+    "tiered_cache",
+    "get_tiered_cache",
+    "cache_get",
+    "cache_set",
+    "cache_delete",
+    "cache_clear",
+    "cache_metrics",
+    "TieredCacheContext",
 ]

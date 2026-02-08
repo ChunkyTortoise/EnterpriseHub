@@ -7,13 +7,14 @@ conversation-level trends, and escalation risk detection.
 
 import logging
 from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.sentiment_analysis_engine import (
     get_sentiment_engine,
 )
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -26,6 +27,7 @@ router = APIRouter(
 # ---------------------------------------------------------------------------
 # Request / Response Models
 # ---------------------------------------------------------------------------
+
 
 class AnalyzeSentimentRequest(BaseModel):
     contact_id: str = Field(..., description="Contact identifier")
@@ -65,6 +67,7 @@ class BatchSentimentRequest(BaseModel):
 # Endpoints
 # ---------------------------------------------------------------------------
 
+
 @router.post("/analyze", response_model=SentimentResponse)
 async def analyze_sentiment(request: AnalyzeSentimentRequest):
     """Analyze sentiment of a single message."""
@@ -102,12 +105,14 @@ async def analyze_sentiment_batch(request: BatchSentimentRequest):
                 message=msg.message,
                 channel=msg.channel,
             )
-            results.append({
-                "contact_id": result.contact_id,
-                "polarity": result.polarity,
-                "emotion": result.emotion.value,
-                "intent_signals": result.intent_signals,
-            })
+            results.append(
+                {
+                    "contact_id": result.contact_id,
+                    "polarity": result.polarity,
+                    "emotion": result.emotion.value,
+                    "intent_signals": result.intent_signals,
+                }
+            )
         return {"results": results, "total": len(results)}
     except Exception as e:
         logger.error("Batch sentiment analysis failed: %s", e)

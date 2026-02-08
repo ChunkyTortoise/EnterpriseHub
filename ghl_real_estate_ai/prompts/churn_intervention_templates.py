@@ -20,17 +20,20 @@ Author: EnterpriseHub AI
 Last Updated: 2026-01-09
 """
 
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
-from enum import Enum
 import random
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
 
 class MessageTone(Enum):
     """Message tone variations for A/B testing"""
+
     PROFESSIONAL = "professional"
     FRIENDLY = "friendly"
     URGENT = "urgent"
     CONSULTATIVE = "consultative"
+
 
 class InterventionTemplate:
     """Base class for intervention message templates"""
@@ -39,17 +42,18 @@ class InterventionTemplate:
     def personalize_template(template: str, personalization_data: Dict[str, Any]) -> str:
         """Apply personalization data to template securely"""
         from collections import defaultdict
-        
+
         # Use a defaultdict to handle missing keys gracefully
         safe_data = defaultdict(lambda: "[DATA_MISSING]")
         safe_data.update(personalization_data)
-        
+
         try:
             return template.format_map(safe_data)
         except Exception as e:
             # Fallback for complex format strings
             logger.error(f"Error personalizing template: {e}")
             return template
+
 
 class CriticalRiskTemplates:
     """Templates for critical churn risk (80-100% probability)"""
@@ -82,7 +86,7 @@ Recommended Talking Points:
 
 This lead requires personal attention to prevent churn.
 """,
-            "sms": "URGENT: {lead_name} showing critical churn risk. Call immediately - last interaction {days_since_interaction} days ago. Escalation required."
+            "sms": "URGENT: {lead_name} showing critical churn risk. Call immediately - last interaction {days_since_interaction} days ago. Escalation required.",
         }
 
         return {
@@ -96,7 +100,7 @@ This lead requires personal attention to prevent churn.
         subject_variations = [
             "⏰ Limited Time: Exclusive Benefits for Your Home Search",
             "🏠 Special Offer: Let's Fast-Track Your Home Purchase",
-            "💰 Exclusive: Closing Cost Assistance Available Now"
+            "💰 Exclusive: Closing Cost Assistance Available Now",
         ]
 
         template = """
@@ -127,7 +131,7 @@ P.S. This exclusive offer expires in 7 days. Let's connect soon to ensure you do
 
         return {
             "subject": random.choice(subject_variations),
-            "body": InterventionTemplate.personalize_template(template, personalization_data)
+            "body": InterventionTemplate.personalize_template(template, personalization_data),
         }
 
     @staticmethod
@@ -165,8 +169,9 @@ Sincerely,
 
         return {
             "subject": f"Priority Consultation Available - {personalization_data.get('lead_name', 'Valued Client')}",
-            "body": InterventionTemplate.personalize_template(template, personalization_data)
+            "body": InterventionTemplate.personalize_template(template, personalization_data),
         }
+
 
 class HighRiskTemplates:
     """Templates for high churn risk (60-80% probability)"""
@@ -178,7 +183,7 @@ class HighRiskTemplates:
             "Quick Check-In: How's Your Home Search Going?",
             "Updates on {preferred_locations} Properties",
             "Haven't Heard From You - Everything OK?",
-            "New Opportunities in Your Price Range"
+            "New Opportunities in Your Price Range",
         ]
 
         template = """
@@ -219,8 +224,10 @@ Best regards,
 """
 
         return {
-            "subject": InterventionTemplate.personalize_template(random.choice(subject_variations), personalization_data),
-            "body": InterventionTemplate.personalize_template(template, personalization_data)
+            "subject": InterventionTemplate.personalize_template(
+                random.choice(subject_variations), personalization_data
+            ),
+            "body": InterventionTemplate.personalize_template(template, personalization_data),
         }
 
     @staticmethod
@@ -230,14 +237,14 @@ Best regards,
             "Hi {lead_name}! Haven't connected in {days_since_interaction} days. Found some great properties in {preferred_locations}. Quick call today?",
             "Hey {lead_name}! Checking in on your home search. Have updates that might interest you. Good time to chat?",
             "Hi {lead_name}! Market's moving fast in your area. Can we touch base about your search? 15 min call?",
-            "{lead_name}, wanted to ensure you're getting the support you need. Available for a quick call today?"
+            "{lead_name}, wanted to ensure you're getting the support you need. Available for a quick call today?",
         ]
 
         template = random.choice(sms_variations)
 
         return {
             "subject": "Follow-up SMS",
-            "body": InterventionTemplate.personalize_template(template, personalization_data)
+            "body": InterventionTemplate.personalize_template(template, personalization_data),
         }
 
     @staticmethod
@@ -280,8 +287,9 @@ P.S. I'm also tracking 2 other properties that should be listing soon in your ar
 
         return {
             "subject": f"🏠 Perfect Match Found in {personalization_data.get('preferred_locations', 'Your Area')} - View Today?",
-            "body": InterventionTemplate.personalize_template(template, personalization_data)
+            "body": InterventionTemplate.personalize_template(template, personalization_data),
         }
+
 
 class MediumRiskTemplates:
     """Templates for medium churn risk (30-60% probability)"""
@@ -293,7 +301,7 @@ class MediumRiskTemplates:
             "Your Weekly Market Update - {preferred_locations}",
             "3 Things Happening in Your Local Market",
             "Market Insights: What Buyers Should Know This Week",
-            "Quick Update on {preferred_locations} Market Activity"
+            "Quick Update on {preferred_locations} Market Activity",
         ]
 
         template = """
@@ -340,8 +348,10 @@ P.S. If your search criteria have changed or you'd like to pause updates tempora
 """
 
         return {
-            "subject": InterventionTemplate.personalize_template(random.choice(subject_variations), personalization_data),
-            "body": InterventionTemplate.personalize_template(template, personalization_data)
+            "subject": InterventionTemplate.personalize_template(
+                random.choice(subject_variations), personalization_data
+            ),
+            "body": InterventionTemplate.personalize_template(template, personalization_data),
         }
 
     @staticmethod
@@ -389,7 +399,7 @@ Take care,
 
         return {
             "subject": f"Home Buying Insights for {personalization_data.get('lead_name', 'You')}",
-            "body": InterventionTemplate.personalize_template(template, personalization_data)
+            "body": InterventionTemplate.personalize_template(template, personalization_data),
         }
 
     @staticmethod
@@ -434,8 +444,9 @@ Thanks!
 
         return {
             "subject": f"Quick Preference Check - {personalization_data.get('lead_name', 'Valued Client')}",
-            "body": InterventionTemplate.personalize_template(template, personalization_data)
+            "body": InterventionTemplate.personalize_template(template, personalization_data),
         }
+
 
 class LowRiskTemplates:
     """Templates for low churn risk (0-30% probability)"""
@@ -478,7 +489,7 @@ Best regards,
 
         return {
             "subject": f"Weekly Update - {personalization_data.get('preferred_locations', 'Your Area')} Market",
-            "body": InterventionTemplate.personalize_template(template, personalization_data)
+            "body": InterventionTemplate.personalize_template(template, personalization_data),
         }
 
     @staticmethod
@@ -517,16 +528,20 @@ Best,
 
         return {
             "subject": f"Success Story from {personalization_data.get('preferred_locations', 'Your Area')}",
-            "body": InterventionTemplate.personalize_template(template, personalization_data)
+            "body": InterventionTemplate.personalize_template(template, personalization_data),
         }
+
 
 class TemplateSelector:
     """Selects appropriate templates based on risk factors and personalization"""
 
     @staticmethod
-    def select_template(risk_tier: str, intervention_type: str,
-                       personalization_data: Dict[str, Any],
-                       tone: MessageTone = MessageTone.PROFESSIONAL) -> Dict[str, str]:
+    def select_template(
+        risk_tier: str,
+        intervention_type: str,
+        personalization_data: Dict[str, Any],
+        tone: MessageTone = MessageTone.PROFESSIONAL,
+    ) -> Dict[str, str]:
         """
         Select appropriate template based on risk tier and intervention type
 
@@ -545,16 +560,13 @@ class TemplateSelector:
             ("critical", "agent_escalation"): CriticalRiskTemplates.agent_escalation_alert,
             ("critical", "incentive_offer"): CriticalRiskTemplates.incentive_offer_email,
             ("critical", "personal_consultation"): CriticalRiskTemplates.emergency_consultation_offer,
-
             ("high", "email_reengagement"): HighRiskTemplates.urgent_followup_email,
             ("high", "sms_urgent"): HighRiskTemplates.sms_urgent_callback,
             ("high", "property_alert"): HighRiskTemplates.property_alert_reengagement,
             ("high", "phone_callback"): HighRiskTemplates.urgent_followup_email,
-
             ("medium", "email_reengagement"): MediumRiskTemplates.nurture_reengagement_email,
             ("medium", "market_update"): MediumRiskTemplates.educational_content_email,
             ("medium", "preference_update"): MediumRiskTemplates.preference_update_request,
-
             ("low", "email_reengagement"): LowRiskTemplates.standard_nurture_email,
             ("low", "success_story"): LowRiskTemplates.success_story_email,
         }
@@ -588,7 +600,7 @@ Best regards,
 
         return {
             "subject": f"Following up on your home search - {personalization_data.get('lead_name', 'Valued Client')}",
-            "body": InterventionTemplate.personalize_template(template, personalization_data)
+            "body": InterventionTemplate.personalize_template(template, personalization_data),
         }
 
     @staticmethod
@@ -598,8 +610,9 @@ Best regards,
             "critical": ["agent_escalation", "incentive_offer", "personal_consultation"],
             "high": ["email_reengagement", "sms_urgent", "property_alert", "phone_callback"],
             "medium": ["email_reengagement", "market_update", "preference_update"],
-            "low": ["email_reengagement", "success_story"]
+            "low": ["email_reengagement", "success_story"],
         }
+
 
 # A/B Testing Support
 class ABTestTemplates:
@@ -612,7 +625,7 @@ class ABTestTemplates:
             "urgent": ABTestTemplates._apply_urgency_variant,
             "friendly": ABTestTemplates._apply_friendly_variant,
             "professional": ABTestTemplates._apply_professional_variant,
-            "value_focused": ABTestTemplates._apply_value_variant
+            "value_focused": ABTestTemplates._apply_value_variant,
         }
 
         variant_function = variants.get(variant.lower())
@@ -626,8 +639,7 @@ class ABTestTemplates:
         # Add urgency indicators to subject and body
         template["subject"] = f"⏰ URGENT: {template['subject']}"
         template["body"] = template["body"].replace(
-            "Best regards,",
-            "Time is of the essence - let's connect soon!\n\nBest regards,"
+            "Best regards,", "Time is of the essence - let's connect soon!\n\nBest regards,"
         )
         return template
 
@@ -652,6 +664,7 @@ class ABTestTemplates:
         template["subject"] = f"💰 Value Alert: {template['subject']}"
         return template
 
+
 # Example usage
 if __name__ == "__main__":
     # Sample personalization data
@@ -671,9 +684,7 @@ if __name__ == "__main__":
 
     # Test template selection
     template = TemplateSelector.select_template(
-        risk_tier="critical",
-        intervention_type="incentive_offer",
-        personalization_data=sample_data
+        risk_tier="critical", intervention_type="incentive_offer", personalization_data=sample_data
     )
 
     print("Generated Template:")

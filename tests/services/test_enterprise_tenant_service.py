@@ -4,25 +4,30 @@ Tests for Enterprise Tenant Management Service.
 Ensures reliability for high-ticket consulting platform ($25K-$100K engagements).
 """
 
-import pytest
-import pytest_asyncio
 import asyncio
 import json
-from datetime import datetime, date, timedelta
-from decimal import Decimal
-from uuid import uuid4
 from contextlib import asynccontextmanager
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
+from uuid import uuid4
 
+import pytest
+import pytest_asyncio
 from pydantic import ConfigDict
 
 import ghl_real_estate_ai.services.enterprise_tenant_service as ets_module
-
 from ghl_real_estate_ai.services.enterprise_tenant_service import (
-    EnterpriseTenantService, TenantConfig, TenantUser, BrandingConfig,
-    FeatureFlags, TenantTier, TenantStatus, Permission, RoleType,
+    BrandingConfig,
+    EnterpriseTenantService,
+    FeatureFlags,
+    Permission,
+    RoleType,
+    TenantConfig,
+    TenantStatus,
+    TenantTier,
+    TenantUser,
 )
-
 
 # ============================================================================
 # Fix for Pydantic use_enum_values=True incompatibility with service code
@@ -32,19 +37,23 @@ from ghl_real_estate_ai.services.enterprise_tenant_service import (
 # the module-level classes so the service code uses the fixed versions.
 # ============================================================================
 
+
 class FixedTenantConfig(TenantConfig):
     """TenantConfig subclass that preserves enum types."""
+
     model_config = ConfigDict(use_enum_values=False)
 
 
 class FixedTenantUser(TenantUser):
     """TenantUser subclass that preserves enum types."""
+
     model_config = ConfigDict(use_enum_values=False)
 
 
 # ============================================================================
 # Test Fixtures
 # ============================================================================
+
 
 class MockConnection:
     """Mock database connection that stores data in memory."""
@@ -109,11 +118,21 @@ class MockConnection:
                 key = f"{tenant_id}:{date_key}"
                 if key in self.storage["usage"]:
                     existing = self.storage["usage"][key]
-                    for i, field in enumerate(["ai_queries_count", "multi_agent_queries",
-                                               "behavioral_analysis_runs", "predictive_models_executed",
-                                               "api_calls_count", "leads_processed", "campaigns_executed",
-                                               "reports_generated", "revenue_attributed", "leads_converted",
-                                               "roi_calculated"]):
+                    for i, field in enumerate(
+                        [
+                            "ai_queries_count",
+                            "multi_agent_queries",
+                            "behavioral_analysis_runs",
+                            "predictive_models_executed",
+                            "api_calls_count",
+                            "leads_processed",
+                            "campaigns_executed",
+                            "reports_generated",
+                            "revenue_attributed",
+                            "leads_converted",
+                            "roi_calculated",
+                        ]
+                    ):
                         existing[field] = existing.get(field, 0) + (args[i + 2] if i + 2 < len(args) else 0)
                 else:
                     self.storage["usage"][key] = {
@@ -222,12 +241,14 @@ class MockConnection:
             results = []
             for key, usage in self.storage["usage"].items():
                 if usage["tenant_id"] == tenant_id:
-                    results.append({
-                        "date": usage["date"],
-                        "ai_queries_count": usage.get("ai_queries_count", 0),
-                        "leads_processed": usage.get("leads_processed", 0),
-                        "revenue_attributed": usage.get("revenue_attributed", 0),
-                    })
+                    results.append(
+                        {
+                            "date": usage["date"],
+                            "ai_queries_count": usage.get("ai_queries_count", 0),
+                            "leads_processed": usage.get("leads_processed", 0),
+                            "revenue_attributed": usage.get("revenue_attributed", 0),
+                        }
+                    )
             return results
 
         return []
@@ -302,7 +323,7 @@ def sample_tenant_config():
         sendgrid_api_key="test-sendgrid-key",
         consulting_package_value=65000.00,
         engagement_start_date=date.today(),
-        engagement_end_date=date.today() + timedelta(days=90)
+        engagement_end_date=date.today() + timedelta(days=90),
     )
 
 
@@ -315,7 +336,7 @@ def sample_branding_config():
         secondary_color="#004E89",
         company_name="Client Real Estate",
         contact_email="support@client.com",
-        support_phone="+1-555-0123"
+        support_phone="+1-555-0123",
     )
 
 
@@ -323,13 +344,11 @@ def sample_branding_config():
 # Tenant Management Tests
 # ============================================================================
 
+
 @pytest.mark.asyncio
 async def test_create_tenant(enterprise_service, sample_tenant_config):
     """Test creating enterprise tenant with full configuration."""
-    tenant_id = await enterprise_service.create_tenant(
-        sample_tenant_config,
-        created_by="test-system"
-    )
+    tenant_id = await enterprise_service.create_tenant(sample_tenant_config, created_by="test-system")
 
     assert tenant_id is not None
     assert len(tenant_id) == 36  # UUID format
@@ -354,7 +373,7 @@ async def test_create_tenant_with_custom_branding(enterprise_service, sample_bra
         anthropic_api_key="test-key",
         ghl_api_key="test-ghl",
         branding=sample_branding_config,
-        consulting_package_value=95000.00
+        consulting_package_value=95000.00,
     )
 
     tenant_id = await enterprise_service.create_tenant(config)
@@ -377,7 +396,7 @@ async def test_tenant_tier_feature_mapping(enterprise_service):
         organization_name="Starter Corp",
         anthropic_api_key="key1",
         ghl_api_key="key2",
-        consulting_package_value=30000.00
+        consulting_package_value=30000.00,
     )
 
     starter_id = await enterprise_service.create_tenant(starter_config)
@@ -397,7 +416,7 @@ async def test_tenant_tier_feature_mapping(enterprise_service):
         organization_name="Enterprise Corp",
         anthropic_api_key="key1",
         ghl_api_key="key2",
-        consulting_package_value=85000.00
+        consulting_package_value=85000.00,
     )
 
     enterprise_id = await enterprise_service.create_tenant(enterprise_config)
@@ -432,12 +451,10 @@ async def test_update_tenant(enterprise_service, sample_tenant_config):
     updates = {
         "organization_name": "Updated Corp Name",
         "consulting_package_value": 75000.00,
-        "tier": TenantTier.ENTERPRISE.value
+        "tier": TenantTier.ENTERPRISE.value,
     }
 
-    success = await enterprise_service.update_tenant(
-        tenant_id, updates, updated_by="test-admin"
-    )
+    success = await enterprise_service.update_tenant(tenant_id, updates, updated_by="test-admin")
 
     assert success is True
 
@@ -445,6 +462,7 @@ async def test_update_tenant(enterprise_service, sample_tenant_config):
 # ============================================================================
 # User Management & RBAC Tests
 # ============================================================================
+
 
 @pytest.mark.asyncio
 async def test_create_tenant_user(enterprise_service, sample_tenant_config):
@@ -456,16 +474,14 @@ async def test_create_tenant_user(enterprise_service, sample_tenant_config):
         email="sales@testclient.com",
         first_name="Sales",
         last_name="Manager",
-        role=RoleType.SALES_MANAGER
+        role=RoleType.SALES_MANAGER,
     )
 
     user_id = await enterprise_service.create_tenant_user(user, "admin")
     assert user_id is not None
 
     # Verify user has correct role permissions
-    has_leads_edit = await enterprise_service.check_permission(
-        "sales@testclient.com", tenant_id, Permission.LEADS_EDIT
-    )
+    has_leads_edit = await enterprise_service.check_permission("sales@testclient.com", tenant_id, Permission.LEADS_EDIT)
     has_tenant_admin = await enterprise_service.check_permission(
         "sales@testclient.com", tenant_id, Permission.TENANT_ADMIN
     )
@@ -481,46 +497,33 @@ async def test_role_permission_mapping(enterprise_service, sample_tenant_config)
 
     # Test TENANT_ADMIN role
     admin_user = FixedTenantUser(
-        tenant_id=tenant_id,
-        email="admin@test.com",
-        first_name="Admin",
-        last_name="User",
-        role=RoleType.TENANT_ADMIN
+        tenant_id=tenant_id, email="admin@test.com", first_name="Admin", last_name="User", role=RoleType.TENANT_ADMIN
     )
 
     await enterprise_service.create_tenant_user(admin_user)
 
     # Should have admin permissions
-    assert await enterprise_service.check_permission(
-        "admin@test.com", tenant_id, Permission.TENANT_ADMIN
-    ) is True
-    assert await enterprise_service.check_permission(
-        "admin@test.com", tenant_id, Permission.WHITELABEL_BRANDING
-    ) is True
+    assert await enterprise_service.check_permission("admin@test.com", tenant_id, Permission.TENANT_ADMIN) is True
+    assert (
+        await enterprise_service.check_permission("admin@test.com", tenant_id, Permission.WHITELABEL_BRANDING) is True
+    )
 
     # Test VIEWER role
     viewer_user = FixedTenantUser(
-        tenant_id=tenant_id,
-        email="viewer@test.com",
-        first_name="View",
-        last_name="Only",
-        role=RoleType.VIEWER
+        tenant_id=tenant_id, email="viewer@test.com", first_name="View", last_name="Only", role=RoleType.VIEWER
     )
 
     await enterprise_service.create_tenant_user(viewer_user)
 
     # Should only have view permissions
-    assert await enterprise_service.check_permission(
-        "viewer@test.com", tenant_id, Permission.LEADS_VIEW
-    ) is True
-    assert await enterprise_service.check_permission(
-        "viewer@test.com", tenant_id, Permission.LEADS_EDIT
-    ) is False
+    assert await enterprise_service.check_permission("viewer@test.com", tenant_id, Permission.LEADS_VIEW) is True
+    assert await enterprise_service.check_permission("viewer@test.com", tenant_id, Permission.LEADS_EDIT) is False
 
 
 # ============================================================================
 # Usage Tracking & Analytics Tests
 # ============================================================================
+
 
 @pytest.mark.asyncio
 async def test_track_usage(enterprise_service, sample_tenant_config):
@@ -536,7 +539,7 @@ async def test_track_usage(enterprise_service, sample_tenant_config):
         "campaigns_executed": 5,
         "revenue_attributed": 250000.00,
         "leads_converted": 12,
-        "roi_calculated": 4.85
+        "roi_calculated": 4.85,
     }
 
     await enterprise_service.track_usage(tenant_id, usage_metrics)
@@ -588,6 +591,7 @@ async def test_analytics_date_filtering(enterprise_service, sample_tenant_config
 # Legacy Compatibility Tests
 # ============================================================================
 
+
 @pytest.mark.asyncio
 async def test_legacy_compatibility(enterprise_service, sample_tenant_config):
     """Test compatibility with existing tenant_service.py interface."""
@@ -607,6 +611,7 @@ async def test_legacy_compatibility(enterprise_service, sample_tenant_config):
 # Data Validation Tests
 # ============================================================================
 
+
 def test_tenant_config_validation():
     """Test tenant configuration validation."""
     # Test invalid slug
@@ -617,7 +622,7 @@ def test_tenant_config_validation():
             primary_contact_email="test@example.com",
             organization_name="Test Corp",
             anthropic_api_key="key",
-            ghl_api_key="key"
+            ghl_api_key="key",
         )
 
     # Test valid slug
@@ -627,18 +632,14 @@ def test_tenant_config_validation():
         primary_contact_email="test@example.com",
         organization_name="Test Corp",
         anthropic_api_key="key",
-        ghl_api_key="key"
+        ghl_api_key="key",
     )
     assert config.slug == "valid-slug-123"
 
 
 def test_feature_flags_dataclass():
     """Test feature flags data structure."""
-    flags = FeatureFlags(
-        multi_agent_swarm=True,
-        behavioral_profiling=True,
-        custom_ai_models=False
-    )
+    flags = FeatureFlags(multi_agent_swarm=True, behavioral_profiling=True, custom_ai_models=False)
 
     flags_dict = flags.to_dict()
     assert flags_dict["multi_agent_swarm"] is True
@@ -652,7 +653,7 @@ def test_branding_config_dataclass():
         logo_url="https://example.com/logo.png",
         primary_color="#FF0000",
         company_name="Test Company",
-        contact_email="contact@test.com"
+        contact_email="contact@test.com",
     )
 
     branding_dict = branding.to_dict()
@@ -665,6 +666,7 @@ def test_branding_config_dataclass():
 # Security Tests
 # ============================================================================
 
+
 @pytest.mark.asyncio
 async def test_api_key_encryption(enterprise_service):
     """Test that API keys are properly encrypted in storage."""
@@ -674,7 +676,7 @@ async def test_api_key_encryption(enterprise_service):
         primary_contact_email="test@security.com",
         organization_name="Security Corp",
         anthropic_api_key="secret-claude-key",
-        ghl_api_key="secret-ghl-key"
+        ghl_api_key="secret-ghl-key",
     )
 
     tenant_id = await enterprise_service.create_tenant(config)
@@ -689,6 +691,7 @@ async def test_api_key_encryption(enterprise_service):
 # Performance Tests
 # ============================================================================
 
+
 @pytest.mark.asyncio
 async def test_bulk_tenant_operations(enterprise_service):
     """Test performance with multiple tenants."""
@@ -702,7 +705,7 @@ async def test_bulk_tenant_operations(enterprise_service):
             primary_contact_email=f"test{i}@bulk.com",
             organization_name=f"Bulk Corp {i}",
             anthropic_api_key=f"key-{i}",
-            ghl_api_key=f"ghl-{i}"
+            ghl_api_key=f"ghl-{i}",
         )
 
         tenant_id = await enterprise_service.create_tenant(config)
@@ -717,6 +720,7 @@ async def test_bulk_tenant_operations(enterprise_service):
 # ============================================================================
 # Error Handling Tests
 # ============================================================================
+
 
 @pytest.mark.asyncio
 async def test_nonexistent_tenant_retrieval(enterprise_service):
@@ -735,9 +739,7 @@ async def test_permission_check_nonexistent_user(enterprise_service, sample_tena
     """Test permission check for non-existent user."""
     tenant_id = await enterprise_service.create_tenant(sample_tenant_config)
 
-    has_permission = await enterprise_service.check_permission(
-        "nonexistent@user.com", tenant_id, Permission.LEADS_VIEW
-    )
+    has_permission = await enterprise_service.check_permission("nonexistent@user.com", tenant_id, Permission.LEADS_VIEW)
 
     assert has_permission is False
 

@@ -17,24 +17,25 @@ Coverage Target: 85%+ for all database operations
 
 import asyncio
 import json
-import pytest
-import pytest_asyncio
 import uuid
 from datetime import datetime, timedelta
+from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, Any, List
+
+import pytest
+import pytest_asyncio
 
 # Import the module under test
 try:
     from ghl_real_estate_ai.services.database_service import (
-        DatabaseService,
-        DatabaseManager,
-        Lead,
+        CommunicationChannel,
         CommunicationLog,
-        NurtureCampaign,
+        DatabaseManager,
+        DatabaseService,
+        Lead,
         LeadCampaignStatus,
         LeadStatus,
-        CommunicationChannel
+        NurtureCampaign,
     )
 except (ImportError, TypeError, AttributeError):
     pytest.skip("required imports unavailable", allow_module_level=True)
@@ -78,19 +79,13 @@ class TestDatabaseService:
         mock_connection_manager.initialize = AsyncMock()
         mock_connection_manager.cleanup = AsyncMock()
         mock_connection_manager.pool = MagicMock()
-        mock_connection_manager.get_pool_metrics = AsyncMock(return_value={
-            'active_connections': 5,
-            'idle_connections': 10,
-            'total_connections': 15
-        })
-        mock_connection_manager.get_query_performance_summary = AsyncMock(return_value={
-            'avg_query_time_ms': 25.5,
-            'slow_queries': 0
-        })
-        mock_connection_manager.health_check = AsyncMock(return_value={
-            'status': 'healthy',
-            'pool_utilization': 0.33
-        })
+        mock_connection_manager.get_pool_metrics = AsyncMock(
+            return_value={"active_connections": 5, "idle_connections": 10, "total_connections": 15}
+        )
+        mock_connection_manager.get_query_performance_summary = AsyncMock(
+            return_value={"avg_query_time_ms": 25.5, "slow_queries": 0}
+        )
+        mock_connection_manager.health_check = AsyncMock(return_value={"status": "healthy", "pool_utilization": 0.33})
         mock_connection_manager.execute_query = AsyncMock()
 
         # Create database service
@@ -191,8 +186,8 @@ class TestLeadManagement:
         # Verify lead was stored
         stored_lead = await db_service.get_lead("test_lead_id")
         assert stored_lead is not None
-        assert stored_lead['name'] == lead_data['name']
-        assert stored_lead['email'] == lead_data['email']
+        assert stored_lead["name"] == lead_data["name"]
+        assert stored_lead["email"] == lead_data["email"]
 
     @pytest.mark.asyncio
     async def test_create_lead_duplicate_email(self):
@@ -218,7 +213,7 @@ class TestLeadManagement:
             "last_name": "Doe",
             "email": "john@example.com",
             "phone": "+1234567890",
-            "source": "website"
+            "source": "website",
         }
 
         with pytest.raises(Exception, match="duplicate key value"):
@@ -235,8 +230,8 @@ class TestLeadManagement:
         result = await db_service.get_lead("test_lead_123")
 
         assert result is not None
-        assert result['name'] == lead_data['name']
-        assert result['email'] == lead_data['email']
+        assert result["name"] == lead_data["name"]
+        assert result["email"] == lead_data["email"]
 
     @pytest.mark.asyncio
     async def test_get_lead_not_found(self, db_service):
@@ -253,9 +248,9 @@ class TestLeadManagement:
 
         # Update lead score
         analysis_data = {
-            'ai_models_used': ['claude', 'ml_scorer'],
-            'confidence': 0.85,
-            'insights': ['High engagement', 'Budget aligned']
+            "ai_models_used": ["claude", "ml_scorer"],
+            "confidence": 0.85,
+            "insights": ["High engagement", "Budget aligned"],
         }
 
         result = await db_service.update_lead_score("test_lead_456", 78.5, analysis_data)
@@ -263,8 +258,8 @@ class TestLeadManagement:
 
         # Verify update
         updated_lead = await db_service.get_lead("test_lead_456")
-        assert updated_lead['ai_score'] == 78.5
-        assert updated_lead['ai_analysis'] == analysis_data
+        assert updated_lead["ai_score"] == 78.5
+        assert updated_lead["ai_analysis"] == analysis_data
 
     @pytest.mark.asyncio
     async def test_update_lead_score_not_found(self, db_service):
@@ -282,9 +277,9 @@ class TestLeadManagement:
 
         # Verify history structure
         for item in history:
-            assert 'timestamp' in item
-            assert 'action' in item
-            assert 'details' in item
+            assert "timestamp" in item
+            assert "action" in item
+            assert "details" in item
 
 
 class TestCommunicationLogging:
@@ -320,10 +315,7 @@ class TestCommunicationLogging:
             "status": "sent",
             "campaign_id": "campaign_456",
             "template_id": "template_789",
-            "metadata": {
-                "subject": "North Austin Properties Available",
-                "template_name": "property_followup"
-            }
+            "metadata": {"subject": "North Austin Properties Available", "template_name": "property_followup"},
         }
 
         result = await db_service_real.log_communication(comm_data)
@@ -347,7 +339,7 @@ class TestCommunicationLogging:
             "channel": "sms",
             "direction": "inbound",
             "content": "Yes, I'm interested in viewing the property",
-            "status": "received"
+            "status": "received",
         }
 
         result = await db_service_real.log_communication(comm_data)
@@ -366,10 +358,7 @@ class TestCommunicationLogging:
             "direction": "outbound",
             "content": "Property viewing scheduled for tomorrow 2pm",
             "status": "completed",
-            "metadata": {
-                "call_duration": 300,
-                "recording_url": "https://recordings.example.com/call_123.mp3"
-            }
+            "metadata": {"call_duration": 300, "recording_url": "https://recordings.example.com/call_123.mp3"},
         }
 
         result = await db_service_real.log_communication(comm_data)
@@ -381,21 +370,21 @@ class TestCommunicationLogging:
         # Mock fetch result - use dicts directly since the service calls dict(row)
         mock_communications = [
             {
-                'id': 'comm_1',
-                'lead_id': 'lead_123',
-                'channel': 'email',
-                'direction': 'outbound',
-                'content': 'Welcome email',
-                'sent_at': datetime.now()
+                "id": "comm_1",
+                "lead_id": "lead_123",
+                "channel": "email",
+                "direction": "outbound",
+                "content": "Welcome email",
+                "sent_at": datetime.now(),
             },
             {
-                'id': 'comm_2',
-                'lead_id': 'lead_123',
-                'channel': 'sms',
-                'direction': 'inbound',
-                'content': 'Thanks for the info',
-                'sent_at': datetime.now() - timedelta(hours=1)
-            }
+                "id": "comm_2",
+                "lead_id": "lead_123",
+                "channel": "sms",
+                "direction": "inbound",
+                "content": "Thanks for the info",
+                "sent_at": datetime.now() - timedelta(hours=1),
+            },
         ]
 
         # The service calls dict(row), so mock rows need to support dict() conversion
@@ -415,8 +404,8 @@ class TestCommunicationLogging:
         result = await db_service_real.get_lead_communications("lead_123", limit=10)
 
         assert len(result) == 2
-        assert result[0]['channel'] == 'email'
-        assert result[1]['channel'] == 'sms'
+        assert result[0]["channel"] == "email"
+        assert result[1]["channel"] == "sms"
 
     @pytest.mark.asyncio
     async def test_update_communication_status(self, db_service_real):
@@ -426,9 +415,7 @@ class TestCommunicationLogging:
         # Mock successful update
         db_service_real._mock_conn.execute.return_value = "UPDATE 1"
 
-        result = await db_service_real.update_communication_status(
-            "comm_123", "delivered", delivered_at
-        )
+        result = await db_service_real.update_communication_status("comm_123", "delivered", delivered_at)
 
         assert result is True
         db_service_real._mock_conn.execute.assert_called()
@@ -439,9 +426,7 @@ class TestCommunicationLogging:
         # Mock no rows affected
         db_service_real._mock_conn.execute.return_value = "UPDATE 0"
 
-        result = await db_service_real.update_communication_status(
-            "non_existent", "delivered"
-        )
+        result = await db_service_real.update_communication_status("non_existent", "delivered")
 
         assert result is False
 
@@ -477,33 +462,30 @@ class TestNurtureCampaigns:
             "name": "New Lead Nurture Sequence",
             "description": "5-day email sequence for new leads",
             "status": "active",
-            "trigger_conditions": {
-                "lead_status": "new",
-                "source": ["website", "facebook"]
-            },
+            "trigger_conditions": {"lead_status": "new", "source": ["website", "facebook"]},
             "steps": [
                 {
                     "step": 1,
                     "delay_hours": 0,
                     "channel": "email",
                     "template": "welcome_email",
-                    "subject": "Welcome to Our Real Estate Journey"
+                    "subject": "Welcome to Our Real Estate Journey",
                 },
                 {
                     "step": 2,
                     "delay_hours": 24,
                     "channel": "email",
                     "template": "market_insights",
-                    "subject": "Austin Market Update"
+                    "subject": "Austin Market Update",
                 },
                 {
                     "step": 3,
                     "delay_hours": 72,
                     "channel": "sms",
                     "template": "quick_check_in",
-                    "content": "Quick question: Are you still looking in the Austin area?"
-                }
-            ]
+                    "content": "Quick question: Are you still looking in the Austin area?",
+                },
+            ],
         }
 
         result = await db_service_campaigns.create_nurture_campaign(campaign_data)
@@ -521,18 +503,8 @@ class TestNurtureCampaigns:
         """Test retrieving active campaigns"""
         # Mock active campaigns - use objects that support dict() conversion
         mock_campaigns = [
-            {
-                'id': 'campaign_1',
-                'name': 'New Lead Sequence',
-                'status': 'active',
-                'active_leads_count': 25
-            },
-            {
-                'id': 'campaign_2',
-                'name': 'Re-engagement Campaign',
-                'status': 'active',
-                'active_leads_count': 12
-            }
+            {"id": "campaign_1", "name": "New Lead Sequence", "status": "active", "active_leads_count": 25},
+            {"id": "campaign_2", "name": "Re-engagement Campaign", "status": "active", "active_leads_count": 12},
         ]
 
         # Create mock rows that support dict() conversion
@@ -549,8 +521,8 @@ class TestNurtureCampaigns:
         result = await db_service_campaigns.get_active_campaigns()
 
         assert len(result) == 2
-        assert result[0]['name'] == 'New Lead Sequence'
-        assert result[1]['name'] == 'Re-engagement Campaign'
+        assert result[0]["name"] == "New Lead Sequence"
+        assert result[1]["name"] == "Re-engagement Campaign"
 
     @pytest.mark.asyncio
     async def test_enroll_lead_in_campaign(self, db_service_campaigns):
@@ -559,9 +531,7 @@ class TestNurtureCampaigns:
         campaign_id = "campaign_456"
         next_action_at = datetime.now() + timedelta(hours=1)
 
-        result = await db_service_campaigns.enroll_lead_in_campaign(
-            lead_id, campaign_id, next_action_at
-        )
+        result = await db_service_campaigns.enroll_lead_in_campaign(lead_id, campaign_id, next_action_at)
 
         assert isinstance(result, str)
 
@@ -575,15 +545,15 @@ class TestNurtureCampaigns:
         # Mock due actions - use objects that support dict() conversion
         mock_actions = [
             {
-                'id': 'enrollment_1',
-                'lead_id': 'lead_123',
-                'campaign_id': 'campaign_456',
-                'current_step': 1,
-                'next_action_at': datetime.now() - timedelta(minutes=30),
-                'email': 'john@example.com',
-                'first_name': 'John',
-                'campaign_name': 'New Lead Sequence',
-                'steps': json.dumps([{'step': 1, 'template': 'welcome'}])
+                "id": "enrollment_1",
+                "lead_id": "lead_123",
+                "campaign_id": "campaign_456",
+                "current_step": 1,
+                "next_action_at": datetime.now() - timedelta(minutes=30),
+                "email": "john@example.com",
+                "first_name": "John",
+                "campaign_name": "New Lead Sequence",
+                "steps": json.dumps([{"step": 1, "template": "welcome"}]),
             }
         ]
 
@@ -601,8 +571,8 @@ class TestNurtureCampaigns:
         result = await db_service_campaigns.get_due_campaign_actions()
 
         assert len(result) == 1
-        assert result[0]['lead_id'] == 'lead_123'
-        assert result[0]['campaign_name'] == 'New Lead Sequence'
+        assert result[0]["lead_id"] == "lead_123"
+        assert result[0]["campaign_name"] == "New Lead Sequence"
 
 
 class TestSearchAndFiltering:
@@ -631,8 +601,8 @@ class TestSearchAndFiltering:
 
         # Mock search results - use objects that support dict() conversion
         mock_leads = [
-            {'id': 'lead_1', 'status': 'qualified', 'score': 85},
-            {'id': 'lead_2', 'status': 'qualified', 'score': 78}
+            {"id": "lead_1", "status": "qualified", "score": 85},
+            {"id": "lead_2", "status": "qualified", "score": 78},
         ]
 
         mock_rows = []
@@ -648,20 +618,14 @@ class TestSearchAndFiltering:
         result = await db_service_search.search_leads(filters, limit=50, offset=0)
 
         assert len(result) == 2
-        assert all(lead['status'] == 'qualified' for lead in result)
+        assert all(lead["status"] == "qualified" for lead in result)
 
     @pytest.mark.asyncio
     async def test_search_leads_by_score_range(self, db_service_search):
         """Test searching leads by score range"""
-        filters = {
-            "score_min": 70,
-            "score_max": 90
-        }
+        filters = {"score_min": 70, "score_max": 90}
 
-        mock_leads = [
-            {'id': 'lead_1', 'score': 85},
-            {'id': 'lead_2', 'score': 72}
-        ]
+        mock_leads = [{"id": "lead_1", "score": 85}, {"id": "lead_2", "score": 72}]
 
         mock_rows = []
         for lead in mock_leads:
@@ -686,10 +650,7 @@ class TestSearchAndFiltering:
     @pytest.mark.asyncio
     async def test_search_leads_by_date_range(self, db_service_search):
         """Test searching leads by creation date range"""
-        filters = {
-            "created_after": datetime.now() - timedelta(days=7),
-            "created_before": datetime.now()
-        }
+        filters = {"created_after": datetime.now() - timedelta(days=7), "created_before": datetime.now()}
 
         result = await db_service_search.search_leads(filters)
 
@@ -722,16 +683,8 @@ class TestSearchAndFiltering:
         # Mock silent leads
         silent_cutoff = datetime.now() - timedelta(hours=48)
         mock_silent_leads = [
-            {
-                'id': 'lead_1',
-                'status': 'contacted',
-                'last_interaction_at': silent_cutoff - timedelta(hours=6)
-            },
-            {
-                'id': 'lead_2',
-                'status': 'qualified',
-                'last_interaction_at': silent_cutoff - timedelta(hours=12)
-            }
+            {"id": "lead_1", "status": "contacted", "last_interaction_at": silent_cutoff - timedelta(hours=6)},
+            {"id": "lead_2", "status": "qualified", "last_interaction_at": silent_cutoff - timedelta(hours=12)},
         ]
 
         mock_rows = []
@@ -776,20 +729,15 @@ class TestHealthAndMonitoring:
 
         db_service.connection_manager = MagicMock()
         _make_connection_context_manager(db_service.connection_manager, mock_conn)
-        db_service.connection_manager.get_pool_metrics = AsyncMock(return_value={
-            'active_connections': 3,
-            'idle_connections': 7,
-            'total_connections': 10
-        })
-        db_service.connection_manager.get_query_performance_summary = AsyncMock(return_value={
-            'avg_query_time_ms': 15.2,
-            'slow_queries': 0,
-            'total_queries': 1250
-        })
-        db_service.connection_manager.health_check = AsyncMock(return_value={
-            'status': 'healthy',
-            'pool_utilization': 0.3
-        })
+        db_service.connection_manager.get_pool_metrics = AsyncMock(
+            return_value={"active_connections": 3, "idle_connections": 7, "total_connections": 10}
+        )
+        db_service.connection_manager.get_query_performance_summary = AsyncMock(
+            return_value={"avg_query_time_ms": 15.2, "slow_queries": 0, "total_queries": 1250}
+        )
+        db_service.connection_manager.health_check = AsyncMock(
+            return_value={"status": "healthy", "pool_utilization": 0.3}
+        )
 
         db_service.pool = mock_pool
         db_service._initialized = True
@@ -802,24 +750,24 @@ class TestHealthAndMonitoring:
         """Test successful health check"""
         # Mock successful health check responses
         db_service_health._mock_conn.fetchval.side_effect = [
-            1,      # connectivity test
-            150,    # leads count
-            500,    # communications count
-            5,      # campaigns count
-            25      # recent leads
+            1,  # connectivity test
+            150,  # leads count
+            500,  # communications count
+            5,  # campaigns count
+            25,  # recent leads
         ]
 
         result = await db_service_health.health_check()
 
-        assert result['status'] == 'healthy'
-        assert result['database_connected'] is True
-        assert result['response_time_seconds'] > 0
-        assert 'stats' in result
-        assert result['stats']['total_leads'] == 150
-        assert result['stats']['total_communications'] == 500
-        assert result['stats']['total_campaigns'] == 5
-        assert result['stats']['leads_today'] == 25
-        assert 'pool_stats' in result
+        assert result["status"] == "healthy"
+        assert result["database_connected"] is True
+        assert result["response_time_seconds"] > 0
+        assert "stats" in result
+        assert result["stats"]["total_leads"] == 150
+        assert result["stats"]["total_communications"] == 500
+        assert result["stats"]["total_campaigns"] == 5
+        assert result["stats"]["leads_today"] == 25
+        assert "pool_stats" in result
 
     @pytest.mark.asyncio
     async def test_health_check_failure(self, db_service_health):
@@ -836,17 +784,12 @@ class TestHealthAndMonitoring:
         """Test retrieving performance metrics"""
         # Mock table sizes - use objects that support dict() conversion
         mock_table_sizes = [
-            {'tablename': 'leads', 'size': '1024 MB', 'bytes': 1073741824},
-            {'tablename': 'communication_logs', 'size': '512 MB', 'bytes': 536870912}
+            {"tablename": "leads", "size": "1024 MB", "bytes": 1073741824},
+            {"tablename": "communication_logs", "size": "512 MB", "bytes": 536870912},
         ]
 
         # Mock activity metrics
-        mock_activity = {
-            'leads_last_hour': 5,
-            'comms_last_hour': 12,
-            'new_leads': 45,
-            'hot_leads': 8
-        }
+        mock_activity = {"leads_last_hour": 5, "comms_last_hour": 12, "new_leads": 45, "hot_leads": 8}
 
         # Create mock rows for table sizes that support dict() conversion
         mock_table_rows = []
@@ -868,47 +811,47 @@ class TestHealthAndMonitoring:
 
         result = await db_service_health.get_performance_metrics()
 
-        assert 'connection_pool' in result
-        assert 'query_performance' in result
-        assert 'table_sizes' in result
-        assert 'activity' in result
+        assert "connection_pool" in result
+        assert "query_performance" in result
+        assert "table_sizes" in result
+        assert "activity" in result
 
         # Verify connection pool metrics
-        assert result['connection_pool']['active_connections'] == 3
+        assert result["connection_pool"]["active_connections"] == 3
 
         # Verify query performance
-        assert result['query_performance']['avg_query_time_ms'] == 15.2
+        assert result["query_performance"]["avg_query_time_ms"] == 15.2
 
         # Verify table sizes
-        assert len(result['table_sizes']) == 2
-        assert result['table_sizes'][0]['tablename'] == 'leads'
+        assert len(result["table_sizes"]) == 2
+        assert result["table_sizes"][0]["tablename"] == "leads"
 
         # Verify activity metrics
-        assert result['activity']['leads_last_hour'] == 5
-        assert result['activity']['new_leads'] == 45
+        assert result["activity"]["leads_last_hour"] == 5
+        assert result["activity"]["new_leads"] == 45
 
     @pytest.mark.asyncio
     async def test_get_connection_health(self, db_service_health):
         """Test getting connection health details"""
         # Mock successful health check for database_specific
         db_service_health._mock_conn.fetchval.side_effect = [
-            1,      # connectivity test
-            150,    # leads count
-            500,    # communications count
-            5,      # campaigns count
-            25      # recent leads
+            1,  # connectivity test
+            150,  # leads count
+            500,  # communications count
+            5,  # campaigns count
+            25,  # recent leads
         ]
 
         result = await db_service_health.get_connection_health()
 
-        assert 'enterprise_connection_manager' in result
-        assert 'database_specific' in result
+        assert "enterprise_connection_manager" in result
+        assert "database_specific" in result
 
         # Verify enterprise connection manager health
-        assert result['enterprise_connection_manager']['status'] == 'healthy'
+        assert result["enterprise_connection_manager"]["status"] == "healthy"
 
         # Verify database-specific health
-        assert result['database_specific']['status'] == 'healthy'
+        assert result["database_specific"]["status"] == "healthy"
 
     @pytest.mark.asyncio
     async def test_execute_optimized_query(self, db_service_health):
@@ -972,7 +915,9 @@ class TestEdgeCasesAndErrorHandling:
 
         # Mock connection that raises constraint violation
         mock_conn = MagicMock()
-        mock_conn.execute = AsyncMock(side_effect=Exception("null value in column 'email' violates not-null constraint"))
+        mock_conn.execute = AsyncMock(
+            side_effect=Exception("null value in column 'email' violates not-null constraint")
+        )
 
         # Setup transaction as sync method returning async context manager
         _make_transaction_context_manager(mock_conn)
@@ -1009,11 +954,7 @@ class TestEdgeCasesAndErrorHandling:
         # Simulate concurrent updates
         update_tasks = []
         for i in range(5):
-            task = db_service.update_lead(
-                "lead_123",
-                {"score": 80 + i, "temperature": "warm"},
-                updated_by=f"user_{i}"
-            )
+            task = db_service.update_lead("lead_123", {"score": 80 + i, "temperature": "warm"}, updated_by=f"user_{i}")
             update_tasks.append(task)
 
         results = await asyncio.gather(*update_tasks, return_exceptions=True)
@@ -1050,13 +991,14 @@ class TestPerformanceCharacteristics:
                 "last_name": "Test",
                 "email": f"lead{i}@test.com",
                 "phone": f"+1555000{i:04d}",
-                "source": "performance_test"
+                "source": "performance_test",
             }
 
             task = db_service.create_lead(lead_data)
             lead_tasks.append(task)
 
         import time
+
         start_time = time.time()
 
         results = await asyncio.gather(*lead_tasks, return_exceptions=True)
@@ -1086,16 +1028,9 @@ class TestPerformanceCharacteristics:
         db_service._initialized = True
 
         with pytest.raises(Exception, match="Query timeout"):
-            await db_service.execute_optimized_query(
-                "SELECT * FROM large_table",
-                timeout=0.1
-            )
+            await db_service.execute_optimized_query("SELECT * FROM large_table", timeout=0.1)
 
 
 if __name__ == "__main__":
     # Run specific test classes for development
-    pytest.main([
-        "-v",
-        "tests/services/test_database_service.py::TestLeadManagement",
-        "--tb=short"
-    ])
+    pytest.main(["-v", "tests/services/test_database_service.py::TestLeadManagement", "--tb=short"])

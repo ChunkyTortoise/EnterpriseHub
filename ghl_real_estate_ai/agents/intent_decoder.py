@@ -8,39 +8,48 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import List, Dict, Any, Optional, TYPE_CHECKING
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 if TYPE_CHECKING:
     from ghl_real_estate_ai.services.enhanced_ghl_client import EnhancedGHLClient, GHLContact
 
 from ghl_real_estate_ai.models.lead_scoring import (
-    LeadIntentProfile,
-    FinancialReadinessScore,
-    PsychologicalCommitmentScore,
-    MotivationSignals,
-    TimelineCommitment,
     ConditionRealism,
-    PriceResponsiveness
+    FinancialReadinessScore,
+    LeadIntentProfile,
+    MotivationSignals,
+    PriceResponsiveness,
+    PsychologicalCommitmentScore,
+    TimelineCommitment,
 )
 
 logger = logging.getLogger(__name__)
+
 
 class LeadIntentDecoder:
     """
     Decodes lead intent using linguistic markers and behavioral signals.
     Implements FRS (Financial Readiness) and PCS (Psychological Commitment) scoring.
     """
-    
+
     def __init__(self, ghl_client: Optional[EnhancedGHLClient] = None):
         self.ghl_client = ghl_client
 
         # Motivation Markers
-        self.high_intent_motivation = ["need to sell fast", "relocating in 30 days", "behind on payments", "divorce", "estate", "probate"]
+        self.high_intent_motivation = [
+            "need to sell fast",
+            "relocating in 30 days",
+            "behind on payments",
+            "divorce",
+            "estate",
+            "probate",
+        ]
         self.mixed_intent_motivation = ["thinking about it", "might sell next year", "curious about value"]
         self.low_intent_motivation = ["just browsing", "not sure", "what if rates drop"]
-        
+
         # Timeline Markers
         self.high_intent_timeline = ["asap", "30 days", "this month", "immediately"]
         self.flexible_timeline = ["soon", "this year", "flexible"]
@@ -57,16 +66,38 @@ class LeadIntentDecoder:
 
         # Buyer vs Seller Intent Markers
         self.buyer_markers = [
-            "looking for", "want to buy", "searching for", "need a home",
-            "bedroom", "3 bed", "4 bed", "bd house", "buying", "pre-approved",
-            "mortgage", "first time buyer", "house hunting", "move in",
-            "looking to purchase", "budget", "under 700k", "under 500k"
+            "looking for",
+            "want to buy",
+            "searching for",
+            "need a home",
+            "bedroom",
+            "3 bed",
+            "4 bed",
+            "bd house",
+            "buying",
+            "pre-approved",
+            "mortgage",
+            "first time buyer",
+            "house hunting",
+            "move in",
+            "looking to purchase",
+            "budget",
+            "under 700k",
+            "under 500k",
         ]
         self.seller_markers = [
-            "want to sell", "selling my", "sell my", "list my",
-            "home value", "what's my home worth", "thinking about selling",
-            "how much is my", "considering selling", "need to sell",
-            "sell the house", "put my house on the market"
+            "want to sell",
+            "selling my",
+            "sell my",
+            "list my",
+            "home value",
+            "what's my home worth",
+            "thinking about selling",
+            "how much is my",
+            "considering selling",
+            "need to sell",
+            "sell the house",
+            "put my house on the market",
         ]
 
     def detect_lead_type(self, conversation_history: List[Dict[str, str]]) -> str:
@@ -87,9 +118,9 @@ class LeadIntentDecoder:
         Main entry point for lead intent decoding.
         """
         logger.info(f"Decoding intent for lead {contact_id}")
-        
+
         all_text = " ".join([m.get("content", "").lower() for m in (conversation_history or [])])
-        
+
         # 1. Calculate Pillars
         motivation_data = self._analyze_motivation(all_text)
         timeline_data = self._analyze_timeline(all_text)
@@ -97,15 +128,20 @@ class LeadIntentDecoder:
         price_data = self._analyze_price(all_text)
 
         # 2. Calculate FRS
-        frs_total = (motivation_data.score * 0.35) + \
-                    (timeline_data.score * 0.30) + \
-                    (condition_data.score * 0.20) + \
-                    (price_data.score * 0.15)
-        
+        frs_total = (
+            (motivation_data.score * 0.35)
+            + (timeline_data.score * 0.30)
+            + (condition_data.score * 0.20)
+            + (price_data.score * 0.15)
+        )
+
         frs_classification = "Cold"
-        if frs_total >= 75: frs_classification = "Hot"
-        elif frs_total >= 50: frs_classification = "Warm"
-        elif frs_total >= 25: frs_classification = "Lukewarm"
+        if frs_total >= 75:
+            frs_classification = "Hot"
+        elif frs_total >= 50:
+            frs_classification = "Warm"
+        elif frs_total >= 25:
+            frs_classification = "Lukewarm"
 
         frs_score = FinancialReadinessScore(
             total_score=round(frs_total, 2),
@@ -113,7 +149,7 @@ class LeadIntentDecoder:
             timeline=timeline_data,
             condition=condition_data,
             price=price_data,
-            classification=frs_classification
+            classification=frs_classification,
         )
 
         # 3. Calculate PCS
@@ -132,11 +168,7 @@ class LeadIntentDecoder:
         lead_type = self.detect_lead_type(conversation_history)
 
         return LeadIntentProfile(
-            lead_id=contact_id,
-            frs=frs_score,
-            pcs=pcs_score,
-            lead_type=lead_type,
-            next_best_action=next_action
+            lead_id=contact_id, frs=frs_score, pcs=pcs_score, lead_type=lead_type, next_best_action=next_action
         )
 
     async def analyze_lead_with_ghl(
@@ -166,8 +198,7 @@ class LeadIntentDecoder:
                 ghl_contact = await self.ghl_client.get_contact(contact_id)
             except Exception as e:
                 logger.warning(
-                    f"Failed to fetch GHL contact {contact_id}: {e}. "
-                    "Falling back to conversation-only analysis."
+                    f"Failed to fetch GHL contact {contact_id}: {e}. Falling back to conversation-only analysis."
                 )
 
         # Fall back to standard analysis if no GHL data available
@@ -296,7 +327,7 @@ class LeadIntentDecoder:
                 if lead_age_days <= 7:
                     frs_boost += 10  # Fresh lead
                 elif lead_age_days <= 30:
-                    frs_boost += 5   # Recent lead
+                    frs_boost += 5  # Recent lead
                 elif lead_age_days > 90:
                     frs_boost -= 10  # Stale lead
             except Exception as e:
@@ -313,7 +344,7 @@ class LeadIntentDecoder:
                 if days_since_activity <= 3:
                     pcs_boost += 10  # Very recent engagement
                 elif days_since_activity <= 7:
-                    pcs_boost += 5   # Recent engagement
+                    pcs_boost += 5  # Recent engagement
                 elif days_since_activity > 30:
                     pcs_boost -= 15  # Disengaged
             except Exception as e:
@@ -338,14 +369,14 @@ class LeadIntentDecoder:
         detected = [m for m in self.high_intent_motivation if m in text]
         score = 50
         category = "Mixed Intent"
-        
+
         if detected:
             score = 85
             category = "High Intent"
         elif any(m in text for m in self.low_intent_motivation):
             score = 20
             category = "Low Intent"
-            
+
         return MotivationSignals(score=score, detected_markers=detected, category=category)
 
     def _analyze_timeline(self, text: str) -> TimelineCommitment:
@@ -387,7 +418,7 @@ class LeadIntentDecoder:
                 message_length_score=0,
                 question_depth_score=0,
                 objection_handling_score=0,
-                call_acceptance_score=0
+                call_acceptance_score=0,
             )
 
         # Message Length
@@ -400,17 +431,21 @@ class LeadIntentDecoder:
 
         # Call Acceptance
         call_keywords = ["call", "phone", "tour", "schedule", "meet"]
-        call_score = 100 if any(kw in " ".join([m.get("content", "").lower() for m in history]) for kw in call_keywords) else 0
+        call_score = (
+            100 if any(kw in " ".join([m.get("content", "").lower() for m in history]) for kw in call_keywords) else 0
+        )
 
         # Heuristics for others
         velocity_score = 80
         objection_score = 60
 
-        total = (velocity_score * 0.20) + \
-                (len_score * 0.15) + \
-                (q_score * 0.20) + \
-                (objection_score * 0.25) + \
-                (call_score * 0.20)
+        total = (
+            (velocity_score * 0.20)
+            + (len_score * 0.15)
+            + (q_score * 0.20)
+            + (objection_score * 0.25)
+            + (call_score * 0.20)
+        )
 
         return PsychologicalCommitmentScore(
             total_score=round(total, 2),
@@ -418,5 +453,5 @@ class LeadIntentDecoder:
             message_length_score=len_score,
             question_depth_score=q_score,
             objection_handling_score=objection_score,
-            call_acceptance_score=call_score
+            call_acceptance_score=call_score,
         )

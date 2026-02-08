@@ -11,19 +11,19 @@ Used for quality benchmarks measuring retrieval accuracy, relevance, and answer 
 """
 
 import asyncio
+import hashlib
 import json
 import random
-import hashlib
+import tempfile
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Iterator, Tuple
-from dataclasses import dataclass, asdict
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 from urllib.parse import urlparse
-import tempfile
 
 try:
-    import pandas as pd
     import numpy as np
+    import pandas as pd
 except ImportError:
     # Fallback for environments without pandas/numpy
     pd = None
@@ -33,6 +33,7 @@ except ImportError:
 @dataclass
 class EvaluationQuery:
     """Standard structure for evaluation queries."""
+
     query_id: str
     query_text: str
     relevant_docs: List[str]
@@ -45,6 +46,7 @@ class EvaluationQuery:
 @dataclass
 class EvaluationDocument:
     """Standard structure for evaluation documents."""
+
     doc_id: str
     content: str
     title: str
@@ -55,6 +57,7 @@ class EvaluationDocument:
 @dataclass
 class QAPair:
     """Question-answer pair with context for answer quality evaluation."""
+
     question: str
     answer: str
     context: List[str]
@@ -105,14 +108,22 @@ class DatasetManager:
             "security considerations for {topic}",
             "cost analysis of {topic} implementation",
             "integration challenges with {topic}",
-            "monitoring and maintenance of {topic}"
+            "monitoring and maintenance of {topic}",
         ]
 
         topics = [
-            "vector databases", "semantic search", "embedding models",
-            "retrieval systems", "information retrieval", "document ranking",
-            "neural networks", "transformer models", "attention mechanisms",
-            "natural language processing", "machine learning", "deep learning"
+            "vector databases",
+            "semantic search",
+            "embedding models",
+            "retrieval systems",
+            "information retrieval",
+            "document ranking",
+            "neural networks",
+            "transformer models",
+            "attention mechanisms",
+            "natural language processing",
+            "machine learning",
+            "deep learning",
         ]
 
         for i in range(size):
@@ -125,13 +136,11 @@ class DatasetManager:
             relevant_docs = [f"marco_doc_{i}_{j}" for j in range(num_relevant)]
 
             # Generate relevance scores (0-3 scale as in MS MARCO)
-            relevance_scores = [
-                random.choice([0, 1, 2, 3]) for _ in relevant_docs
-            ]
+            relevance_scores = [random.choice([0, 1, 2, 3]) for _ in relevant_docs]
 
             # Determine difficulty based on query complexity
-            difficulty = "easy" if len(query_text.split()) < 8 else (
-                "hard" if len(query_text.split()) > 12 else "medium"
+            difficulty = (
+                "easy" if len(query_text.split()) < 8 else ("hard" if len(query_text.split()) > 12 else "medium")
             )
 
             query = EvaluationQuery(
@@ -141,12 +150,7 @@ class DatasetManager:
                 relevance_scores=relevance_scores,
                 domain="information_retrieval",
                 difficulty=difficulty,
-                metadata={
-                    "dataset": "ms_marco",
-                    "split": split,
-                    "topic": topic,
-                    "template": template
-                }
+                metadata={"dataset": "ms_marco", "split": split, "topic": topic, "template": template},
             )
             queries.append(query)
 
@@ -179,14 +183,20 @@ class DatasetManager:
             "What are the benefits of {topic}?",
             "How can you {action}?",
             "What causes {phenomenon}?",
-            "When did {event} happen?"
+            "When did {event} happen?",
         ]
 
         entities = [
-            "machine learning", "artificial intelligence", "vector databases",
-            "semantic search", "natural language processing", "deep learning",
-            "computer vision", "reinforcement learning", "neural networks",
-            "information retrieval"
+            "machine learning",
+            "artificial intelligence",
+            "vector databases",
+            "semantic search",
+            "natural language processing",
+            "deep learning",
+            "computer vision",
+            "reinforcement learning",
+            "neural networks",
+            "information retrieval",
         ]
 
         for i in range(size):
@@ -216,15 +226,17 @@ class DatasetManager:
                 question = template
 
             # Generate answer and context
-            answer = f"{entity.title()} is a fundamental concept in computer science and artificial intelligence. " \
-                    f"It involves sophisticated algorithms and techniques that enable machines to process and understand data. " \
-                    f"The field has evolved significantly over recent years with advances in computational power and methodology."
+            answer = (
+                f"{entity.title()} is a fundamental concept in computer science and artificial intelligence. "
+                f"It involves sophisticated algorithms and techniques that enable machines to process and understand data. "
+                f"The field has evolved significantly over recent years with advances in computational power and methodology."
+            )
 
             context = [
                 f"Technical documentation about {entity} and its applications",
                 f"Research paper on {entity} methodologies and best practices",
                 f"Industry report covering {entity} implementation strategies",
-                f"Academic textbook chapter on {entity} fundamentals"
+                f"Academic textbook chapter on {entity} fundamentals",
             ]
 
             qa_pair = QAPair(
@@ -236,8 +248,8 @@ class DatasetManager:
                     "split": split,
                     "entity": entity,
                     "template": template,
-                    "answer_length": len(answer.split())
-                }
+                    "answer_length": len(answer.split()),
+                },
             )
             qa_pairs.append(qa_pair)
 
@@ -259,9 +271,9 @@ class DatasetManager:
         if not file_path.exists():
             raise FileNotFoundError(f"Dataset file not found: {path}")
 
-        if file_path.suffix == '.json':
+        if file_path.suffix == ".json":
             return await self._load_json_qa(file_path)
-        elif file_path.suffix == '.csv':
+        elif file_path.suffix == ".csv":
             return await self._load_csv_qa(file_path)
         else:
             raise ValueError(f"Unsupported file format: {file_path.suffix}")
@@ -270,7 +282,7 @@ class DatasetManager:
         self,
         num_queries: int = 100,
         domains: Optional[List[str]] = None,
-        difficulty_distribution: Optional[Dict[str, float]] = None
+        difficulty_distribution: Optional[Dict[str, float]] = None,
     ) -> List[EvaluationQuery]:
         """
         Create synthetic evaluation dataset for testing.
@@ -300,18 +312,27 @@ class DatasetManager:
             ("Troubleshooting common {technology} issues", "hard"),
             ("Integration patterns for {technology}", "medium"),
             ("Security considerations for {technology}", "hard"),
-            ("Monitoring and observability for {technology}", "medium")
+            ("Monitoring and observability for {technology}", "medium"),
         ]
 
         technologies = [
-            "vector databases", "embedding models", "semantic search",
-            "retrieval systems", "neural networks", "transformer models",
-            "attention mechanisms", "language models"
+            "vector databases",
+            "embedding models",
+            "semantic search",
+            "retrieval systems",
+            "neural networks",
+            "transformer models",
+            "attention mechanisms",
+            "language models",
         ]
 
         contexts = [
-            "production environments", "cloud platforms", "enterprise systems",
-            "real-time applications", "distributed systems", "microservices"
+            "production environments",
+            "cloud platforms",
+            "enterprise systems",
+            "real-time applications",
+            "distributed systems",
+            "microservices",
         ]
 
         for i in range(num_queries):
@@ -340,7 +361,11 @@ class DatasetManager:
                 base_difficulty = random.choice(list(difficulty_distribution.keys()))
 
             # Apply difficulty distribution
-            difficulty = base_difficulty if random.random() < difficulty_distribution.get(base_difficulty, 0.33) else random.choice(list(difficulty_distribution.keys()))
+            difficulty = (
+                base_difficulty
+                if random.random() < difficulty_distribution.get(base_difficulty, 0.33)
+                else random.choice(list(difficulty_distribution.keys()))
+            )
 
             query = EvaluationQuery(
                 query_id=f"synthetic_{domain}_{i}",
@@ -352,8 +377,8 @@ class DatasetManager:
                 metadata={
                     "dataset": "synthetic",
                     "generation_timestamp": datetime.now().isoformat(),
-                    "pattern": pattern if domain == "technical" else None
-                }
+                    "pattern": pattern if domain == "technical" else None,
+                },
             )
             queries.append(query)
 
@@ -374,14 +399,14 @@ class DatasetManager:
 
         # Different types of challenging queries
         challenge_types = [
-            "ambiguous",      # Multiple valid interpretations
-            "negation",       # Queries with negation that can confuse systems
-            "multi_intent",   # Queries with multiple intents
-            "domain_shift",   # Queries that span multiple domains
-            "temporal",       # Time-sensitive queries
-            "comparative",    # Queries requiring comparison
-            "causal",         # Queries about cause and effect
-            "counterfactual"  # What-if scenarios
+            "ambiguous",  # Multiple valid interpretations
+            "negation",  # Queries with negation that can confuse systems
+            "multi_intent",  # Queries with multiple intents
+            "domain_shift",  # Queries that span multiple domains
+            "temporal",  # Time-sensitive queries
+            "comparative",  # Queries requiring comparison
+            "causal",  # Queries about cause and effect
+            "counterfactual",  # What-if scenarios
         ]
 
         for i in range(size):
@@ -418,8 +443,8 @@ class DatasetManager:
                 metadata={
                     "dataset": "adversarial",
                     "challenge_type": challenge_type,
-                    "expected_challenge": f"Tests system robustness to {challenge_type} queries"
-                }
+                    "expected_challenge": f"Tests system robustness to {challenge_type} queries",
+                },
             )
             adversarial_queries.append(query)
 
@@ -452,27 +477,31 @@ class DatasetManager:
         # Convert dataclass objects to dictionaries for JSON serialization
         serializable_data = []
         for item in data:
-            if hasattr(item, '__dict__'):
+            if hasattr(item, "__dict__"):
                 serializable_data.append(asdict(item))
             else:
                 serializable_data.append(item)
 
         try:
-            with cache_file.open('w') as f:
-                json.dump({
-                    "metadata": {
-                        "timestamp": datetime.now().isoformat(),
-                        "size": len(data),
-                        "type": type(data[0]).__name__ if data else "empty"
+            with cache_file.open("w") as f:
+                json.dump(
+                    {
+                        "metadata": {
+                            "timestamp": datetime.now().isoformat(),
+                            "size": len(data),
+                            "type": type(data[0]).__name__ if data else "empty",
+                        },
+                        "data": serializable_data,
                     },
-                    "data": serializable_data
-                }, f, indent=2)
+                    f,
+                    indent=2,
+                )
         except Exception as e:
             print(f"Warning: Could not cache dataset {name}: {e}")
 
     async def _load_json_qa(self, file_path: Path) -> List[QAPair]:
         """Load QA pairs from JSON file."""
-        with file_path.open('r') as f:
+        with file_path.open("r") as f:
             data = json.load(f)
 
         qa_pairs = []
@@ -481,7 +510,7 @@ class DatasetManager:
                 question=item["question"],
                 answer=item["answer"],
                 context=item.get("context", []),
-                metadata=item.get("metadata", {})
+                metadata=item.get("metadata", {}),
             )
             qa_pairs.append(qa_pair)
 
@@ -500,7 +529,7 @@ class DatasetManager:
                 question=row["question"],
                 answer=row["answer"],
                 context=row.get("context", "").split("|") if "context" in row else [],
-                metadata={"source": "csv", "row_id": row.name}
+                metadata={"source": "csv", "row_id": row.name},
             )
             qa_pairs.append(qa_pair)
 
@@ -528,6 +557,7 @@ async def get_full_benchmark_suite() -> Dict[str, List[Any]]:
 
 # Example usage and testing
 if __name__ == "__main__":
+
     async def main():
         print("Testing evaluation datasets...")
 

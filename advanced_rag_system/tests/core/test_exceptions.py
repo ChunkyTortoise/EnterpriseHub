@@ -2,15 +2,15 @@
 
 import pytest
 from src.core.exceptions import (
-    RAGException,
-    ConfigurationError,
-    EmbeddingError,
-    VectorStoreError,
     CacheError,
-    ValidationError,
-    RateLimitError,
-    NotFoundError,
+    ConfigurationError,
     DuplicateError,
+    EmbeddingError,
+    NotFoundError,
+    RAGException,
+    RateLimitError,
+    ValidationError,
+    VectorStoreError,
 )
 
 

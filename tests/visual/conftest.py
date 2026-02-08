@@ -6,10 +6,11 @@ Provides:
 - Page fixture with 1920x1080 viewport
 - Streamlit app fixture with automatic navigation
 """
+
 import pytest
 
 playwright = pytest.importorskip("playwright", reason="playwright not installed")
-from playwright.sync_api import sync_playwright, Browser, Page, BrowserContext
+from playwright.sync_api import Browser, BrowserContext, Page, sync_playwright
 
 
 @pytest.fixture(scope="session")
@@ -27,9 +28,9 @@ def browser() -> Browser:
         browser = p.chromium.launch(
             headless=True,
             args=[
-                '--disable-dev-shm-usage',  # Avoid shared memory issues in CI
-                '--no-sandbox',              # Required for Docker/CI
-            ]
+                "--disable-dev-shm-usage",  # Avoid shared memory issues in CI
+                "--no-sandbox",  # Required for Docker/CI
+            ],
         )
         yield browser
         browser.close()
@@ -50,9 +51,9 @@ def context(browser: Browser) -> BrowserContext:
         BrowserContext: New browser context
     """
     context = browser.new_context(
-        viewport={'width': 1920, 'height': 1080},
+        viewport={"width": 1920, "height": 1080},
         device_scale_factor=1,  # Consistent pixel density
-        locale='en-US',         # Consistent locale for date/time formatting
+        locale="en-US",  # Consistent locale for date/time formatting
     )
     yield context
     context.close()
@@ -123,14 +124,16 @@ def freeze_dynamic_content(page: Page) -> callable:
         freeze_dynamic_content()  # Freezes all dynamic content
         freeze_dynamic_content('[data-testid="specific-component"]')  # Freeze specific component
     """
-    def freeze(selector: str = 'body'):
+
+    def freeze(selector: str = "body"):
         """
         Freeze dynamic content within selector.
 
         Args:
             selector: CSS selector for container to freeze (default: 'body')
         """
-        page.evaluate(f"""
+        page.evaluate(
+            f"""
             (selector) => {{
                 const container = document.querySelector(selector);
                 if (!container) return;
@@ -168,6 +171,8 @@ def freeze_dynamic_content(page: Page) -> callable:
                 `;
                 container.appendChild(style);
             }}
-        """, selector)
+        """,
+            selector,
+        )
 
     return freeze

@@ -13,37 +13,37 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent))
 
 # Import components
-from property_scorer import PropertyScorer, ScoringResult, ScoringContext, ConfidenceLevel
 from basic_scorer import BasicPropertyScorer
 from enhanced_scorer import EnhancedPropertyScorer
 from property_matcher_context import PropertyMatcherContext
+from property_scorer import ConfidenceLevel, PropertyScorer, ScoringContext, ScoringResult
 from scoring_factory import ScoringFactory
 
 
 def create_test_data():
     """Create test property and preferences data"""
     test_property = {
-        'id': 'demo-001',
-        'price': 750000,
-        'address': {'neighborhood': 'Downtown'},
-        'bedrooms': 3,
-        'bathrooms': 2.5,
-        'sqft': 2100,
-        'property_type': 'Single Family',
-        'year_built': 2020,
-        'amenities': ['garage', 'updated_kitchen', 'hardwood_floors'],
-        'days_on_market': 12
+        "id": "demo-001",
+        "price": 750000,
+        "address": {"neighborhood": "Downtown"},
+        "bedrooms": 3,
+        "bathrooms": 2.5,
+        "sqft": 2100,
+        "property_type": "Single Family",
+        "year_built": 2020,
+        "amenities": ["garage", "updated_kitchen", "hardwood_floors"],
+        "days_on_market": 12,
     }
 
     test_preferences = {
-        'budget': 800000,
-        'location': ['Downtown'],
-        'bedrooms': 3,
-        'bathrooms': 2,
-        'property_type': 'Single Family',
-        'work_location': 'downtown',
-        'has_children': False,
-        'min_sqft': 2000
+        "budget": 800000,
+        "location": ["Downtown"],
+        "bedrooms": 3,
+        "bathrooms": 2,
+        "property_type": "Single Family",
+        "work_location": "downtown",
+        "has_children": False,
+        "min_sqft": 2000,
     }
 
     return test_property, test_preferences
@@ -96,7 +96,7 @@ def validate_enhanced_scorer():
     print(f"   ✓ Strategy: {result.metadata.get('strategy', 'N/A')}")
 
     # Show factor breakdown
-    factor_scores = result.metadata.get('factor_scores', {})
+    factor_scores = result.metadata.get("factor_scores", {})
     if factor_scores:
         print("   ✓ Top Factors:")
         sorted_factors = sorted(factor_scores.items(), key=lambda x: x[1], reverse=True)
@@ -164,7 +164,7 @@ def validate_scoring_factory():
     # Test strategy validation
     validation_results = factory.validate_all_strategies()
     for strategy_name, result in validation_results.items():
-        status_icon = "✅" if result['status'] == 'passed' else "⚠️" if result['status'] == 'warning' else "❌"
+        status_icon = "✅" if result["status"] == "passed" else "⚠️" if result["status"] == "warning" else "❌"
         print(f"   {status_icon} {strategy_name}: {result['status']}")
 
     return factory
@@ -180,14 +180,14 @@ def validate_batch_processing():
 
     for i in range(5):
         prop = base_property.copy()
-        prop['id'] = f'batch-{i:03d}'
-        prop['price'] = 700000 + (i * 25000)
-        prop['neighborhood'] = ['Downtown', 'Domain', 'Mueller', 'Highland', 'Westlake'][i]
+        prop["id"] = f"batch-{i:03d}"
+        prop["price"] = 700000 + (i * 25000)
+        prop["neighborhood"] = ["Downtown", "Domain", "Mueller", "Highland", "Westlake"][i]
         properties.append(prop)
 
     # Test batch scoring
     factory = ScoringFactory()
-    context = PropertyMatcherContext(factory.create_strategy('enhanced'))
+    context = PropertyMatcherContext(factory.create_strategy("enhanced"))
 
     start_time = time.time()
     scored_properties = context.score_multiple_properties(properties, preferences)
@@ -198,14 +198,14 @@ def validate_batch_processing():
     print(f"   ✓ Average Time per Property: {(execution_time / len(scored_properties) * 1000):.1f}ms")
 
     # Validate sorting
-    scores = [p.get('overall_score', 0) for p in scored_properties]
+    scores = [p.get("overall_score", 0) for p in scored_properties]
     is_sorted = scores == sorted(scores, reverse=True)
     print(f"   ✓ Results Sorted: {'PASS' if is_sorted else 'FAIL'}")
 
     # Show top results
     print("   ✓ Top Properties:")
     for i, prop in enumerate(scored_properties[:3]):
-        print(f"     {i+1}. {prop.get('address', 'N/A')} - {prop.get('overall_score', 0):.1f}%")
+        print(f"     {i + 1}. {prop.get('address', 'N/A')} - {prop.get('overall_score', 0):.1f}%")
 
     return scored_properties
 
@@ -221,15 +221,15 @@ def validate_legacy_compatibility():
     # Test legacy format conversion
     legacy_result = result.to_legacy_format()
 
-    required_fields = ['match_score', 'budget_match', 'location_match', 'features_match', 'match_reasons']
+    required_fields = ["match_score", "budget_match", "location_match", "features_match", "match_reasons"]
     all_fields_present = all(field in legacy_result for field in required_fields)
     print(f"   ✓ Legacy Fields Present: {'PASS' if all_fields_present else 'FAIL'}")
 
     # Validate data types
     type_checks = [
-        isinstance(legacy_result['match_score'], int),
-        isinstance(legacy_result['budget_match'], bool),
-        isinstance(legacy_result['match_reasons'], list)
+        isinstance(legacy_result["match_score"], int),
+        isinstance(legacy_result["budget_match"], bool),
+        isinstance(legacy_result["match_reasons"], list),
     ]
     all_types_correct = all(type_checks)
     print(f"   ✓ Legacy Data Types: {'PASS' if all_types_correct else 'FAIL'}")
@@ -271,7 +271,9 @@ def main():
     except Exception as e:
         print(f"\n❌ Validation Error: {e}")
         import traceback
+
         traceback.print_exc()
+
 
 if __name__ == "__main__":
     main()

@@ -8,12 +8,13 @@ Ensures all test components are properly configured and ready for integration te
 Built for Jorge's Real Estate AI Platform - Phase 7: Advanced AI Intelligence
 """
 
-import sys
 import ast
 import importlib.util
-from pathlib import Path
-from typing import Dict, List, Any, Tuple
+import sys
 import traceback
+from pathlib import Path
+from typing import Any, Dict, List, Tuple
+
 
 class Phase7TestValidator:
     """Validator for Phase 7 test files and structure."""
@@ -23,7 +24,7 @@ class Phase7TestValidator:
             "tests/api/test_revenue_intelligence_phase7.py",
             "tests/integration/test_phase7_business_intelligence.py",
             "tests/services/test_phase7_intelligence_services.py",
-            "tests/run_phase7_integration_tests.py"
+            "tests/run_phase7_integration_tests.py",
         ]
 
         self.validation_results = {}
@@ -31,7 +32,7 @@ class Phase7TestValidator:
     def validate_syntax(self, file_path: str) -> Tuple[bool, str]:
         """Validate Python syntax of test file."""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
             # Parse AST to check syntax
@@ -62,7 +63,7 @@ class Phase7TestValidator:
     def validate_test_structure(self, file_path: str) -> Tuple[bool, List[str]]:
         """Validate test file structure and required components."""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
             issues = []
@@ -75,12 +76,12 @@ class Phase7TestValidator:
             test_methods = []
 
             for node in ast.walk(tree):
-                if isinstance(node, ast.ClassDef) and node.name.startswith('Test'):
+                if isinstance(node, ast.ClassDef) and node.name.startswith("Test"):
                     test_classes.append(node.name)
 
                     # Check methods in test classes
                     for item in node.body:
-                        if isinstance(item, ast.FunctionDef) and item.name.startswith('test_'):
+                        if isinstance(item, ast.FunctionDef) and item.name.startswith("test_"):
                             test_methods.append(f"{node.name}::{item.name}")
 
             # Validation checks
@@ -91,11 +92,11 @@ class Phase7TestValidator:
                 issues.append("No test methods found (should start with 'test_')")
 
             # Check for required patterns in Phase 7 tests
-            if 'phase7' in file_path.lower() or 'revenue_intelligence' in file_path:
-                if 'phase7' not in content.lower() and 'Phase 7' not in content:
+            if "phase7" in file_path.lower() or "revenue_intelligence" in file_path:
+                if "phase7" not in content.lower() and "Phase 7" not in content:
                     issues.append("Missing Phase 7 references in Phase 7 test file")
 
-                if 'jorge' not in content.lower() and 'Jorge' not in content:
+                if "jorge" not in content.lower() and "Jorge" not in content:
                     issues.append("Missing Jorge methodology references")
 
             return len(issues) == 0, issues
@@ -109,11 +110,11 @@ class Phase7TestValidator:
 
         if not Path(file_path).exists():
             return {
-                'exists': False,
-                'syntax_valid': False,
-                'imports_valid': False,
-                'structure_valid': False,
-                'issues': [f"File does not exist: {file_path}"]
+                "exists": False,
+                "syntax_valid": False,
+                "imports_valid": False,
+                "structure_valid": False,
+                "issues": [f"File does not exist: {file_path}"],
             }
 
         # Syntax validation
@@ -142,12 +143,12 @@ class Phase7TestValidator:
                 print(f"        ⚠️  {issue}")
 
         return {
-            'exists': True,
-            'syntax_valid': syntax_valid,
-            'imports_valid': imports_valid,
-            'structure_valid': structure_valid,
-            'overall_valid': overall_valid,
-            'issues': all_issues
+            "exists": True,
+            "syntax_valid": syntax_valid,
+            "imports_valid": imports_valid,
+            "structure_valid": structure_valid,
+            "overall_valid": overall_valid,
+            "issues": all_issues,
         }
 
     def validate_phase7_test_coverage(self) -> Dict[str, Any]:
@@ -155,15 +156,15 @@ class Phase7TestValidator:
         print(f"\n📊 Analyzing Phase 7 Test Coverage:")
 
         required_components = {
-            'revenue_intelligence_api': False,
-            'business_intelligence_dashboard': False,
-            'forecasting_engine': False,
-            'conversation_analytics': False,
-            'market_intelligence': False,
-            'streaming_services': False,
-            'cache_services': False,
-            'integration_workflows': False,
-            'performance_validation': False
+            "revenue_intelligence_api": False,
+            "business_intelligence_dashboard": False,
+            "forecasting_engine": False,
+            "conversation_analytics": False,
+            "market_intelligence": False,
+            "streaming_services": False,
+            "cache_services": False,
+            "integration_workflows": False,
+            "performance_validation": False,
         }
 
         coverage_analysis = {}
@@ -173,34 +174,34 @@ class Phase7TestValidator:
                 continue
 
             try:
-                with open(file_path, 'r', encoding='utf-8') as f:
+                with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read().lower()
 
                 # Check for required component coverage
-                if 'revenue' in content and ('intelligence' in content or 'forecast' in content):
-                    required_components['revenue_intelligence_api'] = True
-                    required_components['forecasting_engine'] = True
+                if "revenue" in content and ("intelligence" in content or "forecast" in content):
+                    required_components["revenue_intelligence_api"] = True
+                    required_components["forecasting_engine"] = True
 
-                if 'business' in content and 'intelligence' in content:
-                    required_components['business_intelligence_dashboard'] = True
+                if "business" in content and "intelligence" in content:
+                    required_components["business_intelligence_dashboard"] = True
 
-                if 'conversation' in content and 'analytics' in content:
-                    required_components['conversation_analytics'] = True
+                if "conversation" in content and "analytics" in content:
+                    required_components["conversation_analytics"] = True
 
-                if 'market' in content and 'intelligence' in content:
-                    required_components['market_intelligence'] = True
+                if "market" in content and "intelligence" in content:
+                    required_components["market_intelligence"] = True
 
-                if 'stream' in content or 'websocket' in content:
-                    required_components['streaming_services'] = True
+                if "stream" in content or "websocket" in content:
+                    required_components["streaming_services"] = True
 
-                if 'cache' in content:
-                    required_components['cache_services'] = True
+                if "cache" in content:
+                    required_components["cache_services"] = True
 
-                if 'integration' in content and 'test' in content:
-                    required_components['integration_workflows'] = True
+                if "integration" in content and "test" in content:
+                    required_components["integration_workflows"] = True
 
-                if 'performance' in content:
-                    required_components['performance_validation'] = True
+                if "performance" in content:
+                    required_components["performance_validation"] = True
 
             except Exception as e:
                 print(f"    ⚠️  Error analyzing {file_path}: {str(e)}")
@@ -214,14 +215,14 @@ class Phase7TestValidator:
 
         for component, covered in required_components.items():
             status_icon = "✅" if covered else "❌"
-            component_name = component.replace('_', ' ').title()
+            component_name = component.replace("_", " ").title()
             print(f"      {status_icon} {component_name}")
 
         return {
-            'total_components': total_components,
-            'covered_components': covered_components,
-            'coverage_percentage': coverage_percentage,
-            'component_details': required_components
+            "total_components": total_components,
+            "covered_components": covered_components,
+            "coverage_percentage": coverage_percentage,
+            "component_details": required_components,
         }
 
     def validate_all_tests(self) -> Dict[str, Any]:
@@ -230,38 +231,38 @@ class Phase7TestValidator:
         print("=" * 50)
 
         validation_summary = {
-            'total_files': len(self.test_files),
-            'valid_files': 0,
-            'files_with_issues': 0,
-            'missing_files': 0,
-            'file_results': {}
+            "total_files": len(self.test_files),
+            "valid_files": 0,
+            "files_with_issues": 0,
+            "missing_files": 0,
+            "file_results": {},
         }
 
         # Validate each test file
         for file_path in self.test_files:
             result = self.validate_file(file_path)
             self.validation_results[file_path] = result
-            validation_summary['file_results'][file_path] = result
+            validation_summary["file_results"][file_path] = result
 
-            if not result['exists']:
-                validation_summary['missing_files'] += 1
-            elif result['overall_valid']:
-                validation_summary['valid_files'] += 1
+            if not result["exists"]:
+                validation_summary["missing_files"] += 1
+            elif result["overall_valid"]:
+                validation_summary["valid_files"] += 1
             else:
-                validation_summary['files_with_issues'] += 1
+                validation_summary["files_with_issues"] += 1
 
         # Validate test coverage
         coverage_analysis = self.validate_phase7_test_coverage()
-        validation_summary['coverage_analysis'] = coverage_analysis
+        validation_summary["coverage_analysis"] = coverage_analysis
 
         # Overall assessment
         overall_valid = (
-            validation_summary['valid_files'] == validation_summary['total_files'] and
-            validation_summary['missing_files'] == 0 and
-            coverage_analysis['coverage_percentage'] >= 80  # 80% component coverage requirement
+            validation_summary["valid_files"] == validation_summary["total_files"]
+            and validation_summary["missing_files"] == 0
+            and coverage_analysis["coverage_percentage"] >= 80  # 80% component coverage requirement
         )
 
-        validation_summary['overall_valid'] = overall_valid
+        validation_summary["overall_valid"] = overall_valid
 
         return validation_summary
 
@@ -270,7 +271,7 @@ class Phase7TestValidator:
         print(f"\n🏁 PHASE 7 TEST VALIDATION SUMMARY")
         print("=" * 50)
 
-        if summary['overall_valid']:
+        if summary["overall_valid"]:
             print("🎉 RESULT: ✅ All Phase 7 tests are valid and ready!")
         else:
             print("⚠️  RESULT: ❌ Issues found - review required")
@@ -281,12 +282,12 @@ class Phase7TestValidator:
         print(f"   Files with Issues: {summary['files_with_issues']}")
         print(f"   Missing Files: {summary['missing_files']}")
 
-        coverage = summary['coverage_analysis']
+        coverage = summary["coverage_analysis"]
         print(f"\n📈 Test Coverage:")
         print(f"   Component Coverage: {coverage['coverage_percentage']:.1f}%")
         print(f"   Components Covered: {coverage['covered_components']}/{coverage['total_components']}")
 
-        if summary['overall_valid']:
+        if summary["overall_valid"]:
             print(f"\n🚀 Phase 7 tests are ready for execution!")
             print("   Run: python tests/run_phase7_integration_tests.py")
         else:
@@ -303,7 +304,7 @@ def main():
     validator.print_summary(summary)
 
     # Exit with appropriate code
-    sys.exit(0 if summary['overall_valid'] else 1)
+    sys.exit(0 if summary["overall_valid"] else 1)
 
 
 if __name__ == "__main__":

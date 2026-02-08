@@ -5,10 +5,10 @@ Provides convenient methods for collecting behavioral events from
 different parts of the application.
 """
 
-from typing import Dict, Any, Optional, List
-from datetime import datetime, timedelta
-import uuid
 import logging
+import uuid
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from ..interfaces import BehavioralEvent, EventType, IBehaviorTracker
 
@@ -29,11 +29,7 @@ class EventCollector:
 
     def __init__(self, tracker: IBehaviorTracker):
         self.tracker = tracker
-        self.stats = {
-            "events_collected": 0,
-            "collection_errors": 0,
-            "events_by_type": {}
-        }
+        self.stats = {"events_collected": 0, "collection_errors": 0, "events_by_type": {}}
 
     # Property interaction tracking
     async def track_property_view(
@@ -44,7 +40,7 @@ class EventCollector:
         device_type: Optional[str] = None,
         view_duration_seconds: Optional[float] = None,
         page_source: Optional[str] = None,
-        referrer: Optional[str] = None
+        referrer: Optional[str] = None,
     ) -> str:
         """Track property view event with detailed context"""
 
@@ -61,8 +57,8 @@ class EventCollector:
             event_data={
                 "view_duration_seconds": view_duration_seconds,
                 "page_source": page_source,
-                "referrer": referrer
-            }
+                "referrer": referrer,
+            },
         )
 
         success = await self.tracker.track_event(event)
@@ -77,7 +73,7 @@ class EventCollector:
         swipe_direction: str,  # "left" (dislike) or "right" (like)
         session_id: Optional[str] = None,
         swipe_velocity: Optional[float] = None,
-        property_details: Optional[Dict[str, Any]] = None
+        property_details: Optional[Dict[str, Any]] = None,
     ) -> str:
         """Track property swipe (Tinder-style interaction)"""
 
@@ -95,8 +91,8 @@ class EventCollector:
                 "swipe_direction": swipe_direction,
                 "liked": liked,
                 "swipe_velocity": swipe_velocity,
-                "property_details": property_details
-            }
+                "property_details": property_details,
+            },
         )
 
         success = await self.tracker.track_event(event)
@@ -109,7 +105,7 @@ class EventCollector:
         lead_id: str,
         property_id: str,
         save_type: str = "favorite",  # "favorite", "watchlist", "compare"
-        session_id: Optional[str] = None
+        session_id: Optional[str] = None,
     ) -> str:
         """Track property save/favorite action"""
 
@@ -122,9 +118,7 @@ class EventCollector:
             lead_id=lead_id,
             property_id=property_id,
             session_id=session_id,
-            event_data={
-                "save_type": save_type
-            }
+            event_data={"save_type": save_type},
         )
 
         success = await self.tracker.track_event(event)
@@ -138,7 +132,7 @@ class EventCollector:
         property_id: str,
         share_method: str,  # "email", "sms", "social", "link"
         recipient_info: Optional[Dict[str, Any]] = None,
-        session_id: Optional[str] = None
+        session_id: Optional[str] = None,
     ) -> str:
         """Track property sharing action"""
 
@@ -151,10 +145,7 @@ class EventCollector:
             lead_id=lead_id,
             property_id=property_id,
             session_id=session_id,
-            event_data={
-                "share_method": share_method,
-                "recipient_info": recipient_info
-            }
+            event_data={"share_method": share_method, "recipient_info": recipient_info},
         )
 
         success = await self.tracker.track_event(event)
@@ -172,7 +163,7 @@ class EventCollector:
         booking_type: str = "tour",  # "tour", "meeting", "call"
         urgency: str = "medium",
         session_id: Optional[str] = None,
-        additional_notes: Optional[str] = None
+        additional_notes: Optional[str] = None,
     ) -> str:
         """Track booking request - returns event_id for outcome recording"""
 
@@ -190,8 +181,8 @@ class EventCollector:
                 "requested_time": requested_time.isoformat(),
                 "booking_type": booking_type,
                 "urgency": urgency,
-                "additional_notes": additional_notes
-            }
+                "additional_notes": additional_notes,
+            },
         )
 
         success = await self.tracker.track_event(event)
@@ -208,7 +199,7 @@ class EventCollector:
         completed: bool,
         completion_time: Optional[datetime] = None,
         completion_rating: Optional[int] = None,
-        feedback: Optional[str] = None
+        feedback: Optional[str] = None,
     ) -> str:
         """Track booking completion (outcome)"""
 
@@ -216,7 +207,7 @@ class EventCollector:
         await self.tracker.record_outcome(
             event_id=booking_request_event_id,
             outcome="completed" if completed else "cancelled",
-            outcome_value=1.0 if completed else 0.0
+            outcome_value=1.0 if completed else 0.0,
         )
 
         # Create completion event
@@ -234,10 +225,10 @@ class EventCollector:
                 "completion_time": completion_time.isoformat() if completion_time else None,
                 "completion_rating": completion_rating,
                 "feedback": feedback,
-                "original_request_event_id": booking_request_event_id
+                "original_request_event_id": booking_request_event_id,
             },
             outcome="completed" if completed else "cancelled",
-            outcome_value=1.0 if completed else 0.0
+            outcome_value=1.0 if completed else 0.0,
         )
 
         success = await self.tracker.track_event(event)
@@ -252,7 +243,7 @@ class EventCollector:
         property_id: str,
         tour_time: datetime,
         tour_type: str = "in_person",  # "in_person", "virtual"
-        session_id: Optional[str] = None
+        session_id: Optional[str] = None,
     ) -> str:
         """Track tour scheduling"""
 
@@ -266,10 +257,7 @@ class EventCollector:
             agent_id=agent_id,
             property_id=property_id,
             session_id=session_id,
-            event_data={
-                "tour_time": tour_time.isoformat(),
-                "tour_type": tour_type
-            }
+            event_data={"tour_time": tour_time.isoformat(), "tour_type": tour_type},
         )
 
         success = await self.tracker.track_event(event)
@@ -285,7 +273,7 @@ class EventCollector:
         completed: bool,
         duration_minutes: Optional[int] = None,
         lead_interest_level: Optional[int] = None,  # 1-10 scale
-        notes: Optional[str] = None
+        notes: Optional[str] = None,
     ) -> str:
         """Track tour completion"""
 
@@ -302,10 +290,10 @@ class EventCollector:
                 "completed": completed,
                 "duration_minutes": duration_minutes,
                 "lead_interest_level": lead_interest_level,
-                "notes": notes
+                "notes": notes,
             },
             outcome="completed" if completed else "cancelled",
-            outcome_value=lead_interest_level / 10.0 if lead_interest_level else (1.0 if completed else 0.0)
+            outcome_value=lead_interest_level / 10.0 if lead_interest_level else (1.0 if completed else 0.0),
         )
 
         success = await self.tracker.track_event(event)
@@ -320,7 +308,7 @@ class EventCollector:
         lead_id: Optional[str],
         action_type: str,
         action_data: Dict[str, Any],
-        session_id: Optional[str] = None
+        session_id: Optional[str] = None,
     ) -> str:
         """Track agent action for performance learning"""
 
@@ -333,10 +321,7 @@ class EventCollector:
             agent_id=agent_id,
             lead_id=lead_id,
             session_id=session_id,
-            event_data={
-                "action_type": action_type,
-                **action_data
-            }
+            event_data={"action_type": action_type, **action_data},
         )
 
         success = await self.tracker.track_event(event)
@@ -350,7 +335,7 @@ class EventCollector:
         interaction_type: str,
         agent_id: Optional[str] = None,
         interaction_data: Optional[Dict[str, Any]] = None,
-        session_id: Optional[str] = None
+        session_id: Optional[str] = None,
     ) -> str:
         """Track general lead interaction"""
 
@@ -363,10 +348,7 @@ class EventCollector:
             lead_id=lead_id,
             agent_id=agent_id,
             session_id=session_id,
-            event_data={
-                "interaction_type": interaction_type,
-                **(interaction_data or {})
-            }
+            event_data={"interaction_type": interaction_type, **(interaction_data or {})},
         )
 
         success = await self.tracker.track_event(event)
@@ -381,7 +363,7 @@ class EventCollector:
         search_query: str,
         search_filters: Optional[Dict[str, Any]] = None,
         results_count: Optional[int] = None,
-        session_id: Optional[str] = None
+        session_id: Optional[str] = None,
     ) -> str:
         """Track search query and results"""
 
@@ -393,11 +375,7 @@ class EventCollector:
             timestamp=datetime.now(),
             lead_id=lead_id,
             session_id=session_id,
-            event_data={
-                "search_query": search_query,
-                "search_filters": search_filters,
-                "results_count": results_count
-            }
+            event_data={"search_query": search_query, "search_filters": search_filters, "results_count": results_count},
         )
 
         success = await self.tracker.track_event(event)
@@ -412,7 +390,7 @@ class EventCollector:
         filter_value: Any,
         previous_results_count: Optional[int] = None,
         new_results_count: Optional[int] = None,
-        session_id: Optional[str] = None
+        session_id: Optional[str] = None,
     ) -> str:
         """Track filter application"""
 
@@ -428,8 +406,8 @@ class EventCollector:
                 "filter_type": filter_type,
                 "filter_value": filter_value,
                 "previous_results_count": previous_results_count,
-                "new_results_count": new_results_count
-            }
+                "new_results_count": new_results_count,
+            },
         )
 
         success = await self.tracker.track_event(event)
@@ -443,7 +421,7 @@ class EventCollector:
         lead_id: str,
         email_campaign_id: Optional[str] = None,
         email_subject: Optional[str] = None,
-        agent_id: Optional[str] = None
+        agent_id: Optional[str] = None,
     ) -> str:
         """Track email open"""
 
@@ -456,9 +434,7 @@ class EventCollector:
             lead_id=lead_id,
             agent_id=agent_id,
             campaign_id=email_campaign_id,
-            event_data={
-                "email_subject": email_subject
-            }
+            event_data={"email_subject": email_subject},
         )
 
         success = await self.tracker.track_event(event)
@@ -472,7 +448,7 @@ class EventCollector:
         email_campaign_id: Optional[str] = None,
         link_url: Optional[str] = None,
         link_type: Optional[str] = None,
-        agent_id: Optional[str] = None
+        agent_id: Optional[str] = None,
     ) -> str:
         """Track email link click"""
 
@@ -485,10 +461,7 @@ class EventCollector:
             lead_id=lead_id,
             agent_id=agent_id,
             campaign_id=email_campaign_id,
-            event_data={
-                "link_url": link_url,
-                "link_type": link_type
-            }
+            event_data={"link_url": link_url, "link_type": link_type},
         )
 
         success = await self.tracker.track_event(event)
@@ -503,7 +476,7 @@ class EventCollector:
         session_id: str,
         device_type: Optional[str] = None,
         user_agent: Optional[str] = None,
-        referrer: Optional[str] = None
+        referrer: Optional[str] = None,
     ) -> str:
         """Track session start"""
 
@@ -516,10 +489,7 @@ class EventCollector:
             lead_id=lead_id,
             session_id=session_id,
             device_type=device_type,
-            event_data={
-                "user_agent": user_agent,
-                "referrer": referrer
-            }
+            event_data={"user_agent": user_agent, "referrer": referrer},
         )
 
         success = await self.tracker.track_event(event)
@@ -533,7 +503,7 @@ class EventCollector:
         session_id: str,
         session_duration_seconds: Optional[float] = None,
         total_page_views: Optional[int] = None,
-        total_property_views: Optional[int] = None
+        total_property_views: Optional[int] = None,
     ) -> str:
         """Track session end"""
 
@@ -548,8 +518,8 @@ class EventCollector:
             event_data={
                 "session_duration_seconds": session_duration_seconds,
                 "total_page_views": total_page_views,
-                "total_property_views": total_property_views
-            }
+                "total_property_views": total_property_views,
+            },
         )
 
         success = await self.tracker.track_event(event)
@@ -577,7 +547,7 @@ class EventCollector:
                 property_id=event_data.get("property_id"),
                 session_id=event_data.get("session_id"),
                 device_type=event_data.get("device_type"),
-                event_data=event_data.get("event_data", {})
+                event_data=event_data.get("event_data", {}),
             )
             events.append(event)
 
@@ -599,17 +569,13 @@ class EventCollector:
         if success:
             self.stats["events_collected"] += 1
             event_type_key = event_type.value
-            self.stats["events_by_type"][event_type_key] = \
-                self.stats["events_by_type"].get(event_type_key, 0) + 1
+            self.stats["events_by_type"][event_type_key] = self.stats["events_by_type"].get(event_type_key, 0) + 1
         else:
             self.stats["collection_errors"] += 1
 
     def get_stats(self) -> Dict[str, Any]:
         """Get collection statistics"""
-        return {
-            **self.stats,
-            "success_rate": self._calculate_success_rate()
-        }
+        return {**self.stats, "success_rate": self._calculate_success_rate()}
 
     def _calculate_success_rate(self) -> float:
         """Calculate collection success rate"""
@@ -638,7 +604,7 @@ class PropertyInteractionCollector:
         interaction_type: str,  # "hover", "click", "expand", "collapse"
         session_id: Optional[str] = None,
         card_position: Optional[int] = None,
-        total_cards: Optional[int] = None
+        total_cards: Optional[int] = None,
     ) -> str:
         """Track property card interaction"""
 
@@ -651,8 +617,9 @@ class PropertyInteractionCollector:
                 logger.warning(f"Failed to get property details for {property_id}: {e}")
 
         # Use the basic track_property_view method but manually create event with additional data
-        from ..interfaces import BehavioralEvent, EventType
         import uuid
+
+        from ..interfaces import BehavioralEvent, EventType
 
         event_id = f"evt_{uuid.uuid4().hex[:12]}"
 
@@ -668,8 +635,8 @@ class PropertyInteractionCollector:
                 "card_position": card_position,
                 "total_cards": total_cards,
                 "property_details": property_details,
-                "page_source": "property_card"
-            }
+                "page_source": "property_card",
+            },
         )
 
         success = await self.collector.tracker.track_event(event)
@@ -678,10 +645,7 @@ class PropertyInteractionCollector:
         return event_id
 
     async def track_property_comparison(
-        self,
-        lead_id: str,
-        property_ids: List[str],
-        session_id: Optional[str] = None
+        self, lead_id: str, property_ids: List[str], session_id: Optional[str] = None
     ) -> str:
         """Track property comparison activity"""
 
@@ -690,18 +654,11 @@ class PropertyInteractionCollector:
             lead_id=lead_id,
             interaction_type="property_comparison",
             session_id=session_id,
-            interaction_data={
-                "compared_properties": property_ids,
-                "comparison_count": len(property_ids)
-            }
+            interaction_data={"compared_properties": property_ids, "comparison_count": len(property_ids)},
         )
 
     async def track_property_list_scroll(
-        self,
-        lead_id: str,
-        properties_viewed: List[str],
-        scroll_depth_percent: float,
-        session_id: Optional[str] = None
+        self, lead_id: str, properties_viewed: List[str], scroll_depth_percent: float, session_id: Optional[str] = None
     ) -> str:
         """Track property list scrolling behavior"""
 
@@ -712,6 +669,6 @@ class PropertyInteractionCollector:
             interaction_data={
                 "properties_viewed": properties_viewed,
                 "scroll_depth_percent": scroll_depth_percent,
-                "properties_in_view": len(properties_viewed)
-            }
+                "properties_in_view": len(properties_viewed),
+            },
         )

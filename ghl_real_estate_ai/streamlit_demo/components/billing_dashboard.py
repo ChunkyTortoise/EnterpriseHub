@@ -11,23 +11,28 @@ Created: 2026-01-18
 """
 
 import asyncio
-import streamlit as st
-import plotly.graph_objects as go
-import plotly.express as px
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
-import pandas as pd
-import numpy as np
 from collections import defaultdict
+from datetime import datetime, timedelta
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
+
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import streamlit as st
+
+from ghl_real_estate_ai.api.schemas.billing import (
+    RevenueAnalytics,
+    SubscriptionStatus,
+    SubscriptionTier,
+    TierDistribution,
+    UsageSummary,
+)
 
 # Billing service imports
 from ghl_real_estate_ai.services.billing_service import BillingService, BillingServiceError
 from ghl_real_estate_ai.services.subscription_manager import SubscriptionManager
-from ghl_real_estate_ai.api.schemas.billing import (
-    SubscriptionTier, SubscriptionStatus, TierDistribution,
-    RevenueAnalytics, UsageSummary
-)
 
 
 # Simulate billing data for demonstration (until database is connected)
@@ -48,10 +53,10 @@ class MockBillingDataGenerator:
             "total_active_subscriptions": 67,
             "growth_metrics": {
                 "arr_growth_rate": 23.4,  # % monthly
-                "new_subscriptions": 8,   # this month
+                "new_subscriptions": 8,  # this month
                 "canceled_subscriptions": 2,
-                "net_revenue_retention": 127.3  # %
-            }
+                "net_revenue_retention": 127.3,  # %
+            },
         }
 
     @staticmethod
@@ -64,7 +69,7 @@ class MockBillingDataGenerator:
             "starter_percentage": 41.8,
             "professional_percentage": 40.3,
             "enterprise_percentage": 17.9,
-            "total_subscriptions": 67
+            "total_subscriptions": 67,
         }
 
     @staticmethod
@@ -75,19 +80,19 @@ class MockBillingDataGenerator:
                 "total_overage_revenue": 5432.10,
                 "overage_customers": 23,
                 "avg_overage_per_customer": 236.18,
-                "overage_growth_rate": 42.3
+                "overage_growth_rate": 42.3,
             },
             "usage_patterns": {
                 "peak_usage_hours": [9, 10, 14, 15, 16],
                 "average_leads_per_customer": 147.3,
                 "high_usage_customers": 15,
-                "usage_efficiency_score": 87.4
+                "usage_efficiency_score": 87.4,
             },
             "tier_performance": {
                 "starter": {"avg_usage": 82.4, "overage_rate": 15.2, "satisfaction": 4.3},
                 "professional": {"avg_usage": 89.7, "overage_rate": 22.8, "satisfaction": 4.6},
-                "enterprise": {"avg_usage": 78.2, "overage_rate": 8.1, "satisfaction": 4.8}
-            }
+                "enterprise": {"avg_usage": 78.2, "overage_rate": 8.1, "satisfaction": 4.8},
+            },
         }
 
     @staticmethod
@@ -96,20 +101,20 @@ class MockBillingDataGenerator:
         return {
             "payment_health": {
                 "successful_payments": 94.7,  # %
-                "failed_payments": 5.3,       # %
-                "retry_success_rate": 67.8,   # %
-                "average_payment_time": 1.2   # days
+                "failed_payments": 5.3,  # %
+                "retry_success_rate": 67.8,  # %
+                "average_payment_time": 1.2,  # days
             },
             "dunning_management": {
                 "accounts_in_dunning": 4,
-                "recovery_rate": 78.3,        # %
-                "average_recovery_time": 4.7  # days
+                "recovery_rate": 78.3,  # %
+                "average_recovery_time": 4.7,  # days
             },
             "payment_methods": {
                 "credit_card": 78.4,  # %
                 "bank_transfer": 15.7,
-                "other": 5.9
-            }
+                "other": 5.9,
+            },
         }
 
 
@@ -128,7 +133,7 @@ def load_billing_analytics(tenant_id: str = "demo") -> Dict[str, Any]:
         "tiers": mock_generator.generate_tier_distribution(),
         "usage": mock_generator.generate_usage_analytics(),
         "payments": mock_generator.generate_payment_analytics(),
-        "last_updated": datetime.now().isoformat()
+        "last_updated": datetime.now().isoformat(),
     }
 
 
@@ -139,7 +144,8 @@ def render_billing_dashboard(tenant_id: str = "demo"):
     Args:
         tenant_id: Tenant identifier for billing data
     """
-    st.markdown("""
+    st.markdown(
+        """
     <div style="background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
                 padding: 1rem; border-radius: 10px; margin-bottom: 2rem;">
         <h1 style="color: white; text-align: center; margin: 0;">
@@ -149,7 +155,9 @@ def render_billing_dashboard(tenant_id: str = "demo"):
             $240K ARR Foundation - Real-time Subscription & Usage Analytics
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     # Load billing data
     try:
@@ -168,21 +176,21 @@ def render_billing_dashboard(tenant_id: str = "demo"):
         st.metric(
             "Total ARR",
             f"${revenue_data['total_arr']:,.0f}",
-            delta=f"+{revenue_data['growth_metrics']['arr_growth_rate']:.1f}%"
+            delta=f"+{revenue_data['growth_metrics']['arr_growth_rate']:.1f}%",
         )
 
     with col2:
         st.metric(
             "Monthly Revenue",
             f"${revenue_data['monthly_revenue']:,.2f}",
-            delta=f"+{revenue_data['growth_metrics']['new_subscriptions']} new subs"
+            delta=f"+{revenue_data['growth_metrics']['new_subscriptions']} new subs",
         )
 
     with col3:
         st.metric(
             "Average ARPU",
             f"${revenue_data['average_arpu']:.2f}",
-            delta=f"{revenue_data['upgrade_rate']:.1f}% upgrade rate"
+            delta=f"{revenue_data['upgrade_rate']:.1f}% upgrade rate",
         )
 
     with col4:
@@ -190,7 +198,7 @@ def render_billing_dashboard(tenant_id: str = "demo"):
             "Churn Rate",
             f"{revenue_data['churn_rate']:.1f}%",
             delta=f"-{revenue_data['growth_metrics']['canceled_subscriptions']} canceled",
-            delta_color="inverse"
+            delta_color="inverse",
         )
 
     # Revenue Composition Chart
@@ -199,22 +207,24 @@ def render_billing_dashboard(tenant_id: str = "demo"):
     with col1:
         st.markdown("#### Revenue Composition")
 
-        subscription_revenue = revenue_data['monthly_revenue'] * (100 - revenue_data['usage_revenue_percentage']) / 100
-        usage_revenue = revenue_data['monthly_revenue'] * revenue_data['usage_revenue_percentage'] / 100
+        subscription_revenue = revenue_data["monthly_revenue"] * (100 - revenue_data["usage_revenue_percentage"]) / 100
+        usage_revenue = revenue_data["monthly_revenue"] * revenue_data["usage_revenue_percentage"] / 100
 
-        fig_revenue = go.Figure(data=[
-            go.Pie(
-                labels=['Subscription Revenue (67%)', 'Usage Overages (33%)'],
-                values=[subscription_revenue, usage_revenue],
-                marker_colors=['#667eea', '#764ba2'],
-                hole=0.4
-            )
-        ])
+        fig_revenue = go.Figure(
+            data=[
+                go.Pie(
+                    labels=["Subscription Revenue (67%)", "Usage Overages (33%)"],
+                    values=[subscription_revenue, usage_revenue],
+                    marker_colors=["#667eea", "#764ba2"],
+                    hole=0.4,
+                )
+            ]
+        )
         fig_revenue.update_layout(
             showlegend=True,
             height=350,
             margin=dict(t=30, b=30, l=30, r=30),
-            annotations=[dict(text='$15.6K MRR', x=0.5, y=0.5, font_size=16, showarrow=False)]
+            annotations=[dict(text="$15.6K MRR", x=0.5, y=0.5, font_size=16, showarrow=False)],
         )
         st.plotly_chart(fig_revenue, use_container_width=True)
 
@@ -223,22 +233,26 @@ def render_billing_dashboard(tenant_id: str = "demo"):
 
         tier_data = billing_data["tiers"]
 
-        fig_tiers = go.Figure(data=[
-            go.Bar(
-                x=['Starter', 'Professional', 'Enterprise'],
-                y=[tier_data['starter_count'], tier_data['professional_count'], tier_data['enterprise_count']],
-                marker_color=['#ff6b6b', '#4ecdc4', '#45b7d1'],
-                text=[f"{tier_data['starter_percentage']:.1f}%",
-                      f"{tier_data['professional_percentage']:.1f}%",
-                      f"{tier_data['enterprise_percentage']:.1f}%"],
-                textposition='outside'
-            )
-        ])
+        fig_tiers = go.Figure(
+            data=[
+                go.Bar(
+                    x=["Starter", "Professional", "Enterprise"],
+                    y=[tier_data["starter_count"], tier_data["professional_count"], tier_data["enterprise_count"]],
+                    marker_color=["#ff6b6b", "#4ecdc4", "#45b7d1"],
+                    text=[
+                        f"{tier_data['starter_percentage']:.1f}%",
+                        f"{tier_data['professional_percentage']:.1f}%",
+                        f"{tier_data['enterprise_percentage']:.1f}%",
+                    ],
+                    textposition="outside",
+                )
+            ]
+        )
         fig_tiers.update_layout(
             title="Subscription Distribution",
             yaxis_title="Number of Subscriptions",
             height=350,
-            margin=dict(t=50, b=30, l=30, r=30)
+            margin=dict(t=50, b=30, l=30, r=30),
         )
         st.plotly_chart(fig_tiers, use_container_width=True)
 
@@ -253,28 +267,26 @@ def render_billing_dashboard(tenant_id: str = "demo"):
         st.metric(
             "Overage Revenue",
             f"${usage_data['overage_statistics']['total_overage_revenue']:,.2f}",
-            delta=f"+{usage_data['overage_statistics']['overage_growth_rate']:.1f}%"
+            delta=f"+{usage_data['overage_statistics']['overage_growth_rate']:.1f}%",
         )
 
     with col2:
         st.metric(
             "Overage Customers",
             f"{usage_data['overage_statistics']['overage_customers']}",
-            delta=f"${usage_data['overage_statistics']['avg_overage_per_customer']:.0f} avg"
+            delta=f"${usage_data['overage_statistics']['avg_overage_per_customer']:.0f} avg",
         )
 
     with col3:
         st.metric(
             "Avg Leads/Customer",
             f"{usage_data['usage_patterns']['average_leads_per_customer']:.1f}",
-            delta=f"{usage_data['usage_patterns']['high_usage_customers']} high usage"
+            delta=f"{usage_data['usage_patterns']['high_usage_customers']} high usage",
         )
 
     with col4:
         st.metric(
-            "Usage Efficiency",
-            f"{usage_data['usage_patterns']['usage_efficiency_score']:.1f}%",
-            delta="Optimized"
+            "Usage Efficiency", f"{usage_data['usage_patterns']['usage_efficiency_score']:.1f}%", delta="Optimized"
         )
 
     # Tier Performance Analysis
@@ -283,26 +295,28 @@ def render_billing_dashboard(tenant_id: str = "demo"):
     tier_performance_data = usage_data["tier_performance"]
 
     # Create DataFrame for tier performance
-    tiers_df = pd.DataFrame([
-        {
-            "Tier": "Starter",
-            "Avg Usage %": tier_performance_data["starter"]["avg_usage"],
-            "Overage Rate %": tier_performance_data["starter"]["overage_rate"],
-            "Satisfaction": tier_performance_data["starter"]["satisfaction"]
-        },
-        {
-            "Tier": "Professional",
-            "Avg Usage %": tier_performance_data["professional"]["avg_usage"],
-            "Overage Rate %": tier_performance_data["professional"]["overage_rate"],
-            "Satisfaction": tier_performance_data["professional"]["satisfaction"]
-        },
-        {
-            "Tier": "Enterprise",
-            "Avg Usage %": tier_performance_data["enterprise"]["avg_usage"],
-            "Overage Rate %": tier_performance_data["enterprise"]["overage_rate"],
-            "Satisfaction": tier_performance_data["enterprise"]["satisfaction"]
-        }
-    ])
+    tiers_df = pd.DataFrame(
+        [
+            {
+                "Tier": "Starter",
+                "Avg Usage %": tier_performance_data["starter"]["avg_usage"],
+                "Overage Rate %": tier_performance_data["starter"]["overage_rate"],
+                "Satisfaction": tier_performance_data["starter"]["satisfaction"],
+            },
+            {
+                "Tier": "Professional",
+                "Avg Usage %": tier_performance_data["professional"]["avg_usage"],
+                "Overage Rate %": tier_performance_data["professional"]["overage_rate"],
+                "Satisfaction": tier_performance_data["professional"]["satisfaction"],
+            },
+            {
+                "Tier": "Enterprise",
+                "Avg Usage %": tier_performance_data["enterprise"]["avg_usage"],
+                "Overage Rate %": tier_performance_data["enterprise"]["overage_rate"],
+                "Satisfaction": tier_performance_data["enterprise"]["satisfaction"],
+            },
+        ]
+    )
 
     col1, col2 = st.columns(2)
 
@@ -315,27 +329,29 @@ def render_billing_dashboard(tenant_id: str = "demo"):
             color="Tier",
             size="Satisfaction",
             title="Usage vs Overage Rate by Tier",
-            color_discrete_sequence=['#ff6b6b', '#4ecdc4', '#45b7d1']
+            color_discrete_sequence=["#ff6b6b", "#4ecdc4", "#45b7d1"],
         )
         fig_usage.update_layout(height=400)
         st.plotly_chart(fig_usage, use_container_width=True)
 
     with col2:
         # Satisfaction by Tier
-        fig_satisfaction = go.Figure(data=[
-            go.Bar(
-                x=tiers_df["Tier"],
-                y=tiers_df["Satisfaction"],
-                marker_color=['#ff6b6b', '#4ecdc4', '#45b7d1'],
-                text=[f"{val:.1f}/5" for val in tiers_df["Satisfaction"]],
-                textposition='outside'
-            )
-        ])
+        fig_satisfaction = go.Figure(
+            data=[
+                go.Bar(
+                    x=tiers_df["Tier"],
+                    y=tiers_df["Satisfaction"],
+                    marker_color=["#ff6b6b", "#4ecdc4", "#45b7d1"],
+                    text=[f"{val:.1f}/5" for val in tiers_df["Satisfaction"]],
+                    textposition="outside",
+                )
+            ]
+        )
         fig_satisfaction.update_layout(
             title="Customer Satisfaction by Tier",
             yaxis_title="Satisfaction Score",
             yaxis=dict(range=[0, 5]),
-            height=400
+            height=400,
         )
         st.plotly_chart(fig_satisfaction, use_container_width=True)
 
@@ -350,26 +366,24 @@ def render_billing_dashboard(tenant_id: str = "demo"):
         st.markdown("#### Payment Success Rate")
 
         # Payment success gauge chart
-        fig_payment_success = go.Figure(go.Indicator(
-            mode = "gauge+number",
-            value = payment_data["payment_health"]["successful_payments"],
-            domain = {'x': [0, 1], 'y': [0, 1]},
-            title = {'text': "Success Rate %"},
-            gauge = {
-                'axis': {'range': [None, 100]},
-                'bar': {'color': "#45b7d1"},
-                'steps': [
-                    {'range': [0, 50], 'color': "#ff6b6b"},
-                    {'range': [50, 90], 'color': "#feca57"},
-                    {'range': [90, 100], 'color': "#48dbfb"}
-                ],
-                'threshold': {
-                    'line': {'color': "red", 'width': 4},
-                    'thickness': 0.75,
-                    'value': 95
-                }
-            }
-        ))
+        fig_payment_success = go.Figure(
+            go.Indicator(
+                mode="gauge+number",
+                value=payment_data["payment_health"]["successful_payments"],
+                domain={"x": [0, 1], "y": [0, 1]},
+                title={"text": "Success Rate %"},
+                gauge={
+                    "axis": {"range": [None, 100]},
+                    "bar": {"color": "#45b7d1"},
+                    "steps": [
+                        {"range": [0, 50], "color": "#ff6b6b"},
+                        {"range": [50, 90], "color": "#feca57"},
+                        {"range": [90, 100], "color": "#48dbfb"},
+                    ],
+                    "threshold": {"line": {"color": "red", "width": 4}, "thickness": 0.75, "value": 95},
+                },
+            )
+        )
         fig_payment_success.update_layout(height=300, margin=dict(t=30, b=30, l=30, r=30))
         st.plotly_chart(fig_payment_success, use_container_width=True)
 
@@ -378,16 +392,12 @@ def render_billing_dashboard(tenant_id: str = "demo"):
 
         col2_1, col2_2 = st.columns(2)
         with col2_1:
-            st.metric(
-                "Accounts in Dunning",
-                payment_data["dunning_management"]["accounts_in_dunning"],
-                delta="Active"
-            )
+            st.metric("Accounts in Dunning", payment_data["dunning_management"]["accounts_in_dunning"], delta="Active")
         with col2_2:
             st.metric(
                 "Recovery Rate",
                 f"{payment_data['dunning_management']['recovery_rate']:.1f}%",
-                delta=f"{payment_data['dunning_management']['average_recovery_time']:.1f}d avg"
+                delta=f"{payment_data['dunning_management']['average_recovery_time']:.1f}d avg",
             )
 
         # Recovery rate progress bar
@@ -399,19 +409,17 @@ def render_billing_dashboard(tenant_id: str = "demo"):
 
         payment_methods = payment_data["payment_methods"]
 
-        fig_payment_methods = go.Figure(data=[
-            go.Pie(
-                labels=['Credit Card', 'Bank Transfer', 'Other'],
-                values=[payment_methods['credit_card'], payment_methods['bank_transfer'], payment_methods['other']],
-                marker_colors=['#667eea', '#764ba2', '#f093fb'],
-                hole=0.3
-            )
-        ])
-        fig_payment_methods.update_layout(
-            height=300,
-            margin=dict(t=30, b=30, l=30, r=30),
-            showlegend=True
+        fig_payment_methods = go.Figure(
+            data=[
+                go.Pie(
+                    labels=["Credit Card", "Bank Transfer", "Other"],
+                    values=[payment_methods["credit_card"], payment_methods["bank_transfer"], payment_methods["other"]],
+                    marker_colors=["#667eea", "#764ba2", "#f093fb"],
+                    hole=0.3,
+                )
+            ]
         )
+        fig_payment_methods.update_layout(height=300, margin=dict(t=30, b=30, l=30, r=30), showlegend=True)
         st.plotly_chart(fig_payment_methods, use_container_width=True)
 
     # Advanced Analytics Section
@@ -424,25 +432,23 @@ def render_billing_dashboard(tenant_id: str = "demo"):
 
         # Generate mock forecasting data
         dates = [datetime.now() + timedelta(days=x) for x in range(30)]
-        base_revenue = revenue_data['monthly_revenue']
+        base_revenue = revenue_data["monthly_revenue"]
         forecasted_revenue = [
-            base_revenue * (1 + (revenue_data['growth_metrics']['arr_growth_rate'] / 100) * (x / 30))
-            for x in range(30)
+            base_revenue * (1 + (revenue_data["growth_metrics"]["arr_growth_rate"] / 100) * (x / 30)) for x in range(30)
         ]
 
         fig_forecast = go.Figure()
-        fig_forecast.add_trace(go.Scatter(
-            x=dates,
-            y=forecasted_revenue,
-            mode='lines+markers',
-            name='Forecasted Revenue',
-            line=dict(color='#667eea', width=3)
-        ))
+        fig_forecast.add_trace(
+            go.Scatter(
+                x=dates,
+                y=forecasted_revenue,
+                mode="lines+markers",
+                name="Forecasted Revenue",
+                line=dict(color="#667eea", width=3),
+            )
+        )
         fig_forecast.update_layout(
-            title="30-Day Revenue Forecast",
-            xaxis_title="Date",
-            yaxis_title="Revenue ($)",
-            height=400
+            title="30-Day Revenue Forecast", xaxis_title="Date", yaxis_title="Revenue ($)", height=400
         )
         st.plotly_chart(fig_forecast, use_container_width=True)
 
@@ -457,7 +463,7 @@ def render_billing_dashboard(tenant_id: str = "demo"):
                 "Lifetime Value",
                 "Payback Period",
                 "Gross Margin",
-                "Logo Churn Rate"
+                "Logo Churn Rate",
             ],
             "Value": [
                 f"{revenue_data['growth_metrics']['net_revenue_retention']:.1f}%",
@@ -465,17 +471,10 @@ def render_billing_dashboard(tenant_id: str = "demo"):
                 "$8,420",
                 "4.2 months",
                 "87.3%",
-                "1.8%"
+                "1.8%",
             ],
-            "Target": [
-                "120%+",
-                "<$300",
-                "$8,000+",
-                "<6 months",
-                ">85%",
-                "<3%"
-            ],
-            "Status": ["🟢", "🟢", "🟢", "🟢", "🟢", "🟢"]
+            "Target": ["120%+", "<$300", "$8,000+", "<6 months", ">85%", "<3%"],
+            "Status": ["🟢", "🟢", "🟢", "🟢", "🟢", "🟢"],
         }
 
         kpi_df = pd.DataFrame(kpi_data)
@@ -488,23 +487,23 @@ def render_billing_dashboard(tenant_id: str = "demo"):
         {
             "type": "success",
             "title": "Strong Revenue Growth",
-            "description": f"ARR growing at {revenue_data['growth_metrics']['arr_growth_rate']:.1f}% monthly, on track for $240K target"
+            "description": f"ARR growing at {revenue_data['growth_metrics']['arr_growth_rate']:.1f}% monthly, on track for $240K target",
         },
         {
             "type": "warning",
             "title": "Overage Optimization Opportunity",
-            "description": f"{usage_data['overage_statistics']['overage_customers']} customers generating significant overages - consider tier upgrades"
+            "description": f"{usage_data['overage_statistics']['overage_customers']} customers generating significant overages - consider tier upgrades",
         },
         {
             "type": "info",
             "title": "Payment Health Strong",
-            "description": f"{payment_data['payment_health']['successful_payments']:.1f}% payment success rate with effective dunning management"
+            "description": f"{payment_data['payment_health']['successful_payments']:.1f}% payment success rate with effective dunning management",
         },
         {
             "type": "success",
             "title": "Customer Satisfaction High",
-            "description": "All tiers showing satisfaction scores >4.3/5, indicating strong product-market fit"
-        }
+            "description": "All tiers showing satisfaction scores >4.3/5, indicating strong product-market fit",
+        },
     ]
 
     for insight in insights:
@@ -561,10 +560,10 @@ def render_subscription_management():
             "Payment successful - $249.00",
             "Usage overage billed - $47.50",
             "New subscription created - Starter tier",
-            "Payment retry successful - $99.00"
+            "Payment retry successful - $99.00",
         ],
         "Customer": ["Acme Real Estate", "Summit Properties", "Coastal Realty", "Peak Homes", "Valley Estates"],
-        "Amount": ["$499.00", "$249.00", "$47.50", "$99.00", "$99.00"]
+        "Amount": ["$499.00", "$249.00", "$47.50", "$99.00", "$99.00"],
     }
 
     activity_df = pd.DataFrame(activity_data)
@@ -577,8 +576,8 @@ def show():
     from ghl_real_estate_ai.streamlit_demo.components.profit_center import render_profit_center
 
     # Initialize session state
-    if 'billing_tab' not in st.session_state:
-        st.session_state.billing_tab = 'Analytics'
+    if "billing_tab" not in st.session_state:
+        st.session_state.billing_tab = "Analytics"
 
     # Tab navigation
     tab1, tab2, tab3 = st.tabs(["📊 Analytics", "⚙️ Management", "💎 Profit Center"])
@@ -588,7 +587,7 @@ def show():
 
     with tab2:
         render_subscription_management()
-        
+
     with tab3:
         render_profit_center()
 

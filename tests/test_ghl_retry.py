@@ -8,14 +8,15 @@ The retry mechanism in ghl_real_estate_ai/services/ghl_client.py uses:
 - Raises the last error after exhausting retries
 """
 
-import pytest
 import asyncio
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import httpx
+import pytest
 
 try:
-    from ghl_real_estate_ai.services.ghl_client import GHLClient
     from ghl_real_estate_ai.api.schemas.ghl import MessageType
+    from ghl_real_estate_ai.services.ghl_client import GHLClient
 except (ImportError, TypeError, AttributeError):
     pytest.skip("GHL client imports unavailable", allow_module_level=True)
 
@@ -65,9 +66,11 @@ class TestSendMessageRetry:
                 raise httpx.ConnectTimeout("Connection timed out")
             return success_response
 
-        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings, \
-             patch("httpx.AsyncClient") as mock_client_cls, \
-             patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+        with (
+            patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings,
+            patch("httpx.AsyncClient") as mock_client_cls,
+            patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
+        ):
             mock_settings.test_mode = False
             mock_settings.webhook_timeout_seconds = 10
 
@@ -98,9 +101,11 @@ class TestSendMessageRetry:
                 resp.raise_for_status()  # raises HTTPStatusError
             return success_response
 
-        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings, \
-             patch("httpx.AsyncClient") as mock_client_cls, \
-             patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+        with (
+            patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings,
+            patch("httpx.AsyncClient") as mock_client_cls,
+            patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
+        ):
             mock_settings.test_mode = False
             mock_settings.webhook_timeout_seconds = 10
 
@@ -117,12 +122,15 @@ class TestSendMessageRetry:
     @pytest.mark.asyncio
     async def test_send_message_gives_up_after_3_retries(self, ghl_client):
         """send_message raises after exhausting all 3 attempts."""
+
         async def mock_post(*args, **kwargs):
             raise httpx.ConnectTimeout("Connection timed out")
 
-        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings, \
-             patch("httpx.AsyncClient") as mock_client_cls, \
-             patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+        with (
+            patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings,
+            patch("httpx.AsyncClient") as mock_client_cls,
+            patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
+        ):
             mock_settings.test_mode = False
             mock_settings.webhook_timeout_seconds = 10
 
@@ -152,9 +160,11 @@ class TestSendMessageRetry:
                 raise httpx.ConnectTimeout("Timeout")
             return success_response
 
-        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings, \
-             patch("httpx.AsyncClient") as mock_client_cls, \
-             patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+        with (
+            patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings,
+            patch("httpx.AsyncClient") as mock_client_cls,
+            patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
+        ):
             mock_settings.test_mode = False
             mock_settings.webhook_timeout_seconds = 10
 
@@ -171,12 +181,15 @@ class TestSendMessageRetry:
     @pytest.mark.asyncio
     async def test_retry_uses_exponential_backoff(self, ghl_client):
         """Retries use exponential backoff: 0.5s then 1.0s."""
+
         async def mock_post(*args, **kwargs):
             raise httpx.ConnectTimeout("Timeout")
 
-        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings, \
-             patch("httpx.AsyncClient") as mock_client_cls, \
-             patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+        with (
+            patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings,
+            patch("httpx.AsyncClient") as mock_client_cls,
+            patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
+        ):
             mock_settings.test_mode = False
             mock_settings.webhook_timeout_seconds = 10
 

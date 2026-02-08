@@ -15,36 +15,38 @@ Performance: Sub-200ms prediction latency
 """
 
 import asyncio
+import hashlib
 import json
 import logging
 import pickle
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import joblib
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple, Union
-from dataclasses import dataclass, asdict
-from enum import Enum
-import hashlib
-from pathlib import Path
+from sklearn.base import BaseEstimator, RegressorMixin
 
 # ML libraries
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.linear_model import ElasticNet
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.model_selection import cross_val_score, TimeSeriesSplit
 from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error
-from sklearn.base import BaseEstimator, RegressorMixin
-import joblib
+from sklearn.model_selection import TimeSeriesSplit, cross_val_score
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)
 
 
 class PredictionTimeframe(Enum):
     """Prediction timeframe options."""
+
     ONE_MONTH = "1m"
     THREE_MONTHS = "3m"
     SIX_MONTHS = "6m"
@@ -53,6 +55,7 @@ class PredictionTimeframe(Enum):
 
 class ModelType(Enum):
     """Available ML model types."""
+
     RANDOM_FOREST = "random_forest"
     GRADIENT_BOOSTING = "gradient_boosting"
     ELASTIC_NET = "elastic_net"
@@ -62,6 +65,7 @@ class ModelType(Enum):
 @dataclass
 class ModelMetrics:
     """Model performance metrics."""
+
     accuracy: float  # 1 - MAPE
     mape: float  # Mean Absolute Percentage Error
     rmse: float  # Root Mean Square Error
@@ -76,6 +80,7 @@ class ModelMetrics:
 @dataclass
 class PredictionFeatures:
     """Feature set for price prediction."""
+
     # Property characteristics
     property_type: str
     bedrooms: int
@@ -124,6 +129,7 @@ class PredictionFeatures:
 @dataclass
 class PricePredictionResult:
     """Comprehensive price prediction result."""
+
     property_id: Optional[str]
     predicted_price: float
     confidence_interval: Tuple[float, float]  # (low, high)
@@ -156,39 +162,23 @@ class EnsemblePricePredictor(BaseEstimator, RegressorMixin):
     prediction confidence and historical performance.
     """
 
-    def __init__(self,
-                 use_feature_selection: bool = True,
-                 ensemble_weights: Optional[Dict[str, float]] = None):
+    def __init__(self, use_feature_selection: bool = True, ensemble_weights: Optional[Dict[str, float]] = None):
         self.use_feature_selection = use_feature_selection
         self.ensemble_weights = ensemble_weights or {
-            'random_forest': 0.4,
-            'gradient_boosting': 0.35,
-            'elastic_net': 0.25
+            "random_forest": 0.4,
+            "gradient_boosting": 0.35,
+            "elastic_net": 0.25,
         }
 
         # Initialize base models
         self.models = {
-            'random_forest': RandomForestRegressor(
-                n_estimators=200,
-                max_depth=15,
-                min_samples_split=5,
-                min_samples_leaf=2,
-                random_state=42,
-                n_jobs=-1
+            "random_forest": RandomForestRegressor(
+                n_estimators=200, max_depth=15, min_samples_split=5, min_samples_leaf=2, random_state=42, n_jobs=-1
             ),
-            'gradient_boosting': GradientBoostingRegressor(
-                n_estimators=200,
-                learning_rate=0.1,
-                max_depth=8,
-                min_samples_split=5,
-                random_state=42
+            "gradient_boosting": GradientBoostingRegressor(
+                n_estimators=200, learning_rate=0.1, max_depth=8, min_samples_split=5, random_state=42
             ),
-            'elastic_net': ElasticNet(
-                alpha=0.1,
-                l1_ratio=0.5,
-                random_state=42,
-                max_iter=2000
-            )
+            "elastic_net": ElasticNet(alpha=0.1, l1_ratio=0.5, random_state=42, max_iter=2000),
         }
 
         self.scalers = {}
@@ -248,18 +238,16 @@ class EnsemblePricePredictor(BaseEstimator, RegressorMixin):
         X_processed = X.copy()
 
         # Handle categorical features
-        categorical_cols = X_processed.select_dtypes(include=['object']).columns
+        categorical_cols = X_processed.select_dtypes(include=["object"]).columns
         for col in categorical_cols:
             if fit:
                 self.label_encoders[col] = LabelEncoder()
-                X_processed[col] = self.label_encoders[col].fit_transform(
-                    X_processed[col].fillna('unknown')
-                )
+                X_processed[col] = self.label_encoders[col].fit_transform(X_processed[col].fillna("unknown"))
             else:
                 if col in self.label_encoders:
                     # Handle unseen categories
                     le = self.label_encoders[col]
-                    X_processed[col] = X_processed[col].fillna('unknown')
+                    X_processed[col] = X_processed[col].fillna("unknown")
 
                     # Replace unseen categories with most frequent
                     mask = ~X_processed[col].isin(le.classes_)
@@ -277,15 +265,11 @@ class EnsemblePricePredictor(BaseEstimator, RegressorMixin):
 
         # Scale features
         if fit:
-            self.scalers['scaler'] = StandardScaler()
-            X_processed[numeric_cols] = self.scalers['scaler'].fit_transform(
-                X_processed[numeric_cols]
-            )
+            self.scalers["scaler"] = StandardScaler()
+            X_processed[numeric_cols] = self.scalers["scaler"].fit_transform(X_processed[numeric_cols])
         else:
-            if 'scaler' in self.scalers:
-                X_processed[numeric_cols] = self.scalers['scaler'].transform(
-                    X_processed[numeric_cols]
-                )
+            if "scaler" in self.scalers:
+                X_processed[numeric_cols] = self.scalers["scaler"].transform(X_processed[numeric_cols])
 
         return X_processed
 
@@ -297,20 +281,20 @@ class EnsemblePricePredictor(BaseEstimator, RegressorMixin):
         importance_dict = {}
 
         # Random Forest feature importance
-        if hasattr(self.models['random_forest'], 'feature_importances_'):
-            rf_importance = self.models['random_forest'].feature_importances_
+        if hasattr(self.models["random_forest"], "feature_importances_"):
+            rf_importance = self.models["random_forest"].feature_importances_
             for i, importance in enumerate(rf_importance):
-                importance_dict[f'feature_{i}'] = importance * self.ensemble_weights['random_forest']
+                importance_dict[f"feature_{i}"] = importance * self.ensemble_weights["random_forest"]
 
         # Gradient Boosting feature importance
-        if hasattr(self.models['gradient_boosting'], 'feature_importances_'):
-            gb_importance = self.models['gradient_boosting'].feature_importances_
+        if hasattr(self.models["gradient_boosting"], "feature_importances_"):
+            gb_importance = self.models["gradient_boosting"].feature_importances_
             for i, importance in enumerate(gb_importance):
-                feature_name = f'feature_{i}'
+                feature_name = f"feature_{i}"
                 if feature_name in importance_dict:
-                    importance_dict[feature_name] += importance * self.ensemble_weights['gradient_boosting']
+                    importance_dict[feature_name] += importance * self.ensemble_weights["gradient_boosting"]
                 else:
-                    importance_dict[feature_name] = importance * self.ensemble_weights['gradient_boosting']
+                    importance_dict[feature_name] = importance * self.ensemble_weights["gradient_boosting"]
 
         return importance_dict
 
@@ -368,10 +352,12 @@ class PricePredictionEngine:
             logger.error(f"Failed to initialize Price Prediction Engine: {e}")
             raise
 
-    async def predict_price(self,
-                           features: PredictionFeatures,
-                           timeframe: PredictionTimeframe = PredictionTimeframe.ONE_MONTH,
-                           include_uncertainty: bool = True) -> PricePredictionResult:
+    async def predict_price(
+        self,
+        features: PredictionFeatures,
+        timeframe: PredictionTimeframe = PredictionTimeframe.ONE_MONTH,
+        include_uncertainty: bool = True,
+    ) -> PricePredictionResult:
         """
         Predict property price with comprehensive analysis.
 
@@ -402,34 +388,26 @@ class PricePredictionEngine:
             # Make prediction
             if include_uncertainty:
                 prediction, uncertainty = model.predict_with_uncertainty(feature_df)
-                confidence_interval = self._calculate_confidence_interval(
-                    prediction[0], uncertainty[0]
-                )
+                confidence_interval = self._calculate_confidence_interval(prediction[0], uncertainty[0])
             else:
                 prediction = model.predict(feature_df)
                 confidence_interval = (prediction[0] * 0.95, prediction[0] * 1.05)
 
             # Generate multi-timeframe predictions
-            timeframe_predictions = await self._generate_multi_timeframe_predictions(
-                feature_df
-            )
+            timeframe_predictions = await self._generate_multi_timeframe_predictions(feature_df)
 
             # Analyze comparable properties
             comparable_properties = await self._find_comparable_properties(features)
 
             # Calculate market position
-            market_position = self._calculate_market_position(
-                prediction[0], features.median_neighborhood_price
-            )
+            market_position = self._calculate_market_position(prediction[0], features.median_neighborhood_price)
 
             # Build result
             result = PricePredictionResult(
-                property_id=getattr(features, 'property_id', None),
+                property_id=getattr(features, "property_id", None),
                 predicted_price=float(prediction[0]),
                 confidence_interval=confidence_interval,
-                prediction_confidence=self._calculate_prediction_confidence(
-                    model, feature_df
-                ),
+                prediction_confidence=self._calculate_prediction_confidence(model, feature_df),
                 timeframe_predictions=timeframe_predictions,
                 model_used=f"ensemble_{model.__class__.__name__}",
                 feature_importance=model.get_feature_importance(),
@@ -439,7 +417,7 @@ class PricePredictionEngine:
                 neighborhood_context=self._build_neighborhood_context(features),
                 prediction_date=datetime.now(),
                 data_freshness=datetime.now(),
-                model_version="2.1.0"
+                model_version="2.1.0",
             )
 
             # Cache result for 15 minutes
@@ -452,10 +430,9 @@ class PricePredictionEngine:
             logger.error(f"Price prediction failed: {e}")
             raise
 
-    async def batch_predict(self,
-                           features_list: List[PredictionFeatures],
-                           timeframe: PredictionTimeframe = PredictionTimeframe.ONE_MONTH
-                           ) -> List[PricePredictionResult]:
+    async def batch_predict(
+        self, features_list: List[PredictionFeatures], timeframe: PredictionTimeframe = PredictionTimeframe.ONE_MONTH
+    ) -> List[PricePredictionResult]:
         """Batch predict prices for multiple properties."""
         if not self.is_initialized:
             await self.initialize()
@@ -465,20 +442,15 @@ class PricePredictionEngine:
         # Process in batches for memory efficiency
         batch_size = 100
         for i in range(0, len(features_list), batch_size):
-            batch = features_list[i:i + batch_size]
+            batch = features_list[i : i + batch_size]
 
-            batch_results = await asyncio.gather(*[
-                self.predict_price(features, timeframe)
-                for features in batch
-            ])
+            batch_results = await asyncio.gather(*[self.predict_price(features, timeframe) for features in batch])
 
             results.extend(batch_results)
 
         return results
 
-    async def evaluate_model_performance(self,
-                                       test_data: pd.DataFrame,
-                                       target_column: str = 'price') -> ModelMetrics:
+    async def evaluate_model_performance(self, test_data: pd.DataFrame, target_column: str = "price") -> ModelMetrics:
         """Evaluate current model performance."""
         if not self.models:
             raise ValueError("No models available for evaluation")
@@ -489,7 +461,7 @@ class PricePredictionEngine:
             y_test = test_data[target_column]
 
             # Use primary ensemble model
-            model = self.models.get('ensemble', list(self.models.values())[0])
+            model = self.models.get("ensemble", list(self.models.values())[0])
 
             # Make predictions
             y_pred = model.predict(X_test)
@@ -506,9 +478,7 @@ class PricePredictionEngine:
 
             # Cross-validation scores
             cv_scores = cross_val_score(
-                model, X_test, y_test,
-                cv=TimeSeriesSplit(n_splits=5),
-                scoring='neg_mean_absolute_percentage_error'
+                model, X_test, y_test, cv=TimeSeriesSplit(n_splits=5), scoring="neg_mean_absolute_percentage_error"
             )
 
             metrics = ModelMetrics(
@@ -520,11 +490,11 @@ class PricePredictionEngine:
                 prediction_confidence=min(0.99, 1 - mape),
                 feature_importance=model.get_feature_importance(),
                 cross_val_scores=[-score for score in cv_scores],
-                last_evaluated=datetime.now()
+                last_evaluated=datetime.now(),
             )
 
             # Update stored metrics
-            self.model_metrics['ensemble'] = metrics
+            self.model_metrics["ensemble"] = metrics
 
             logger.info(f"Model evaluation complete - Accuracy: {metrics.accuracy:.3f}")
             return metrics
@@ -533,7 +503,7 @@ class PricePredictionEngine:
             logger.error(f"Model evaluation failed: {e}")
             raise
 
-    async def retrain_models(self, training_data: pd.DataFrame, target_column: str = 'price'):
+    async def retrain_models(self, training_data: pd.DataFrame, target_column: str = "price"):
         """Retrain models with new data."""
         logger.info("Starting model retraining...")
 
@@ -555,15 +525,24 @@ class PricePredictionEngine:
             new_accuracy = 1 - mean_absolute_percentage_error(y_test, y_pred)
 
             # Compare with existing model performance
-            current_accuracy = self.model_metrics.get('ensemble', ModelMetrics(
-                accuracy=0, mape=1, rmse=0, mae=0, r2_score=0,
-                prediction_confidence=0, feature_importance={},
-                cross_val_scores=[], last_evaluated=datetime.now()
-            )).accuracy
+            current_accuracy = self.model_metrics.get(
+                "ensemble",
+                ModelMetrics(
+                    accuracy=0,
+                    mape=1,
+                    rmse=0,
+                    mae=0,
+                    r2_score=0,
+                    prediction_confidence=0,
+                    feature_importance={},
+                    cross_val_scores=[],
+                    last_evaluated=datetime.now(),
+                ),
+            ).accuracy
 
             # Update if new model is better
             if new_accuracy > current_accuracy:
-                self.models['ensemble'] = new_model
+                self.models["ensemble"] = new_model
                 await self._save_models()
                 logger.info(f"Model retrained successfully - New accuracy: {new_accuracy:.3f}")
             else:
@@ -573,9 +552,7 @@ class PricePredictionEngine:
             logger.error(f"Model retraining failed: {e}")
             raise
 
-    def _generate_prediction_cache_key(self,
-                                     features: PredictionFeatures,
-                                     timeframe: PredictionTimeframe) -> str:
+    def _generate_prediction_cache_key(self, features: PredictionFeatures, timeframe: PredictionTimeframe) -> str:
         """Generate cache key for prediction."""
         # Create hash of features for cache key
         features_dict = asdict(features)
@@ -603,16 +580,14 @@ class PricePredictionEngine:
         """Get appropriate model for prediction timeframe."""
         # For now, use the ensemble model for all timeframes
         # In production, could have timeframe-specific models
-        model_key = 'ensemble'
+        model_key = "ensemble"
 
         if model_key not in self.models:
             raise ValueError(f"Model {model_key} not available")
 
         return self.models[model_key]
 
-    async def _generate_multi_timeframe_predictions(self,
-                                                   feature_df: pd.DataFrame
-                                                   ) -> Dict[str, float]:
+    async def _generate_multi_timeframe_predictions(self, feature_df: pd.DataFrame) -> Dict[str, float]:
         """Generate predictions for multiple timeframes."""
         predictions = {}
 
@@ -637,9 +612,7 @@ class PricePredictionEngine:
 
         return predictions
 
-    async def _find_comparable_properties(self,
-                                        features: PredictionFeatures
-                                        ) -> List[Dict[str, Any]]:
+    async def _find_comparable_properties(self, features: PredictionFeatures) -> List[Dict[str, Any]]:
         """Find comparable properties for context."""
         # Simulate comparable property analysis
         # In production, query actual property database
@@ -652,7 +625,7 @@ class PricePredictionEngine:
                 "baths": features.bathrooms,
                 "sqft": features.square_footage * 0.98,
                 "days_ago_sold": 15,
-                "price_per_sqft": (features.median_neighborhood_price * 0.95) / (features.square_footage * 0.98)
+                "price_per_sqft": (features.median_neighborhood_price * 0.95) / (features.square_footage * 0.98),
             },
             {
                 "address": "456 Comparable Ave",
@@ -661,8 +634,8 @@ class PricePredictionEngine:
                 "baths": features.bathrooms + 0.5,
                 "sqft": features.square_footage * 1.05,
                 "days_ago_sold": 22,
-                "price_per_sqft": (features.median_neighborhood_price * 1.03) / (features.square_footage * 1.05)
-            }
+                "price_per_sqft": (features.median_neighborhood_price * 1.03) / (features.square_footage * 1.05),
+            },
         ]
 
         return comparables
@@ -692,30 +665,35 @@ class PricePredictionEngine:
             "inventory_level": features.inventory_months,
             "school_quality": features.school_rating,
             "walkability": features.walk_score,
-            "appreciation_trend": features.price_appreciation_12m
+            "appreciation_trend": features.price_appreciation_12m,
         }
 
     def _calculate_confidence_interval(self, prediction: float, uncertainty: float) -> Tuple[float, float]:
         """Calculate confidence interval for prediction."""
         # Use 95% confidence interval (1.96 standard deviations)
         margin = 1.96 * uncertainty
-        return (
-            max(0, prediction - margin),
-            prediction + margin
-        )
+        return (max(0, prediction - margin), prediction + margin)
 
     def _calculate_prediction_confidence(self, model, feature_df: pd.DataFrame) -> float:
         """Calculate overall prediction confidence."""
         # Base confidence from model metrics
-        base_confidence = self.model_metrics.get('ensemble', ModelMetrics(
-            accuracy=0.85, mape=0.15, rmse=0, mae=0, r2_score=0,
-            prediction_confidence=0.85, feature_importance={},
-            cross_val_scores=[], last_evaluated=datetime.now()
-        )).prediction_confidence
+        base_confidence = self.model_metrics.get(
+            "ensemble",
+            ModelMetrics(
+                accuracy=0.85,
+                mape=0.15,
+                rmse=0,
+                mae=0,
+                r2_score=0,
+                prediction_confidence=0.85,
+                feature_importance={},
+                cross_val_scores=[],
+                last_evaluated=datetime.now(),
+            ),
+        ).prediction_confidence
 
         # Adjust based on feature completeness
-        feature_completeness = (feature_df.notna().sum().sum() /
-                              (feature_df.shape[0] * feature_df.shape[1]))
+        feature_completeness = feature_df.notna().sum().sum() / (feature_df.shape[0] * feature_df.shape[1])
 
         # Adjust based on feature quality
         confidence = base_confidence * feature_completeness
@@ -725,9 +703,9 @@ class PricePredictionEngine:
     async def _load_models(self):
         """Load pre-trained models from disk."""
         model_files = {
-            'ensemble': self.model_cache_dir / 'ensemble_model.joblib',
-            'random_forest': self.model_cache_dir / 'rf_model.joblib',
-            'gradient_boosting': self.model_cache_dir / 'gb_model.joblib'
+            "ensemble": self.model_cache_dir / "ensemble_model.joblib",
+            "random_forest": self.model_cache_dir / "rf_model.joblib",
+            "gradient_boosting": self.model_cache_dir / "gb_model.joblib",
         }
 
         for model_name, model_path in model_files.items():
@@ -742,7 +720,7 @@ class PricePredictionEngine:
         """Save trained models to disk."""
         for model_name, model in self.models.items():
             try:
-                model_path = self.model_cache_dir / f'{model_name}_model.joblib'
+                model_path = self.model_cache_dir / f"{model_name}_model.joblib"
                 joblib.dump(model, model_path)
                 logger.info(f"Saved {model_name} model to {model_path}")
             except Exception as e:
@@ -756,14 +734,14 @@ class PricePredictionEngine:
         training_data = self._generate_synthetic_training_data(1000)
 
         # Prepare features and target
-        X_train = training_data.drop(columns=['price'])
-        y_train = training_data['price']
+        X_train = training_data.drop(columns=["price"])
+        y_train = training_data["price"]
 
         # Train ensemble model
         ensemble_model = EnsemblePricePredictor()
         ensemble_model.fit(X_train, y_train)
 
-        self.models['ensemble'] = ensemble_model
+        self.models["ensemble"] = ensemble_model
         self.feature_columns = X_train.columns.tolist()
 
         # Save models
@@ -776,45 +754,47 @@ class PricePredictionEngine:
         np.random.seed(42)
 
         data = {
-            'bedrooms': np.random.choice([2, 3, 4, 5], n_samples, p=[0.2, 0.4, 0.3, 0.1]),
-            'bathrooms': np.random.uniform(1, 4, n_samples),
-            'square_footage': np.random.normal(2000, 800, n_samples),
-            'lot_size': np.random.uniform(0.1, 2.0, n_samples),
-            'year_built': np.random.randint(1950, 2023, n_samples),
-            'garage_spaces': np.random.choice([0, 1, 2, 3], n_samples, p=[0.1, 0.3, 0.5, 0.1]),
-            'walk_score': np.random.randint(20, 100, n_samples),
-            'school_rating': np.random.uniform(3, 10, n_samples),
-            'crime_score': np.random.randint(10, 90, n_samples),
-            'median_neighborhood_price': np.random.normal(650000, 200000, n_samples),
-            'price_per_sqft_neighborhood': np.random.normal(320, 80, n_samples),
-            'days_on_market_avg': np.random.randint(10, 60, n_samples),
-            'inventory_months': np.random.uniform(0.5, 6, n_samples),
-            'sales_velocity': np.random.uniform(0.5, 2.0, n_samples),
-            'price_appreciation_12m': np.random.normal(8, 5, n_samples),
-            'median_income': np.random.normal(75000, 25000, n_samples),
-            'unemployment_rate': np.random.uniform(2, 8, n_samples),
-            'mortgage_rates': np.random.uniform(3, 7, n_samples),
-            'listing_month': np.random.randint(1, 13, n_samples),
-            'is_peak_season': np.random.choice([0, 1], n_samples, p=[0.6, 0.4]),
+            "bedrooms": np.random.choice([2, 3, 4, 5], n_samples, p=[0.2, 0.4, 0.3, 0.1]),
+            "bathrooms": np.random.uniform(1, 4, n_samples),
+            "square_footage": np.random.normal(2000, 800, n_samples),
+            "lot_size": np.random.uniform(0.1, 2.0, n_samples),
+            "year_built": np.random.randint(1950, 2023, n_samples),
+            "garage_spaces": np.random.choice([0, 1, 2, 3], n_samples, p=[0.1, 0.3, 0.5, 0.1]),
+            "walk_score": np.random.randint(20, 100, n_samples),
+            "school_rating": np.random.uniform(3, 10, n_samples),
+            "crime_score": np.random.randint(10, 90, n_samples),
+            "median_neighborhood_price": np.random.normal(650000, 200000, n_samples),
+            "price_per_sqft_neighborhood": np.random.normal(320, 80, n_samples),
+            "days_on_market_avg": np.random.randint(10, 60, n_samples),
+            "inventory_months": np.random.uniform(0.5, 6, n_samples),
+            "sales_velocity": np.random.uniform(0.5, 2.0, n_samples),
+            "price_appreciation_12m": np.random.normal(8, 5, n_samples),
+            "median_income": np.random.normal(75000, 25000, n_samples),
+            "unemployment_rate": np.random.uniform(2, 8, n_samples),
+            "mortgage_rates": np.random.uniform(3, 7, n_samples),
+            "listing_month": np.random.randint(1, 13, n_samples),
+            "is_peak_season": np.random.choice([0, 1], n_samples, p=[0.6, 0.4]),
         }
 
         # Create DataFrame
         df = pd.DataFrame(data)
 
         # Calculate realistic price based on features
-        df['price'] = (
-            df['square_footage'] * df['price_per_sqft_neighborhood'] *
-            (1 + np.random.normal(0, 0.1, n_samples)) *  # Add noise
-            (df['school_rating'] / 10) * 1.1 *  # School adjustment
-            np.where(df['year_built'] > 2000, 1.1, 0.95)  # Age adjustment
+        df["price"] = (
+            df["square_footage"]
+            * df["price_per_sqft_neighborhood"]
+            * (1 + np.random.normal(0, 0.1, n_samples))  # Add noise
+            * (df["school_rating"] / 10)
+            * 1.1  # School adjustment
+            * np.where(df["year_built"] > 2000, 1.1, 0.95)  # Age adjustment
         )
 
         # Add categorical features
-        property_types = ['single_family', 'condo', 'townhome']
-        df['property_type'] = np.random.choice(property_types, n_samples, p=[0.7, 0.2, 0.1])
+        property_types = ["single_family", "condo", "townhome"]
+        df["property_type"] = np.random.choice(property_types, n_samples, p=[0.7, 0.2, 0.1])
 
-        conditions = ['excellent', 'good', 'fair', 'poor']
-        df['property_condition'] = np.random.choice(conditions, n_samples, p=[0.3, 0.5, 0.15, 0.05])
+        conditions = ["excellent", "good", "fair", "poor"]
+        df["property_condition"] = np.random.choice(conditions, n_samples, p=[0.3, 0.5, 0.15, 0.05])
 
         return df
 
@@ -832,9 +812,7 @@ class PricePredictionEngine:
             metrics = await self.evaluate_model_performance(test_data)
 
             if metrics.accuracy < self.target_accuracy:
-                logger.warning(
-                    f"Model accuracy {metrics.accuracy:.3f} below target {self.target_accuracy}"
-                )
+                logger.warning(f"Model accuracy {metrics.accuracy:.3f} below target {self.target_accuracy}")
             else:
                 logger.info(f"Model validation passed - Accuracy: {metrics.accuracy:.3f}")
 

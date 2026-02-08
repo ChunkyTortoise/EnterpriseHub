@@ -3,14 +3,18 @@ Embedding model wrapper for sentence transformers.
 
 Provides a simple interface for generating embeddings using sentence-transformers.
 """
-import numpy as np
+
 from typing import List
+
+import numpy as np
+
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 try:
     from sentence_transformers import SentenceTransformer
+
     SENTENCE_TRANSFORMERS_AVAILABLE = True
 except ImportError:
     logger.warning("sentence-transformers not installed. Using dummy embeddings.")
@@ -55,7 +59,7 @@ class EmbeddingModel:
         if not SENTENCE_TRANSFORMERS_AVAILABLE:
             # Return dummy embeddings (zero vectors of typical size 384)
             return [[0.0] * 384 for _ in texts]
-            
+
         embeddings = self.model.encode(texts, convert_to_numpy=True)
         return embeddings.tolist()
 
@@ -71,6 +75,6 @@ class EmbeddingModel:
         """
         if not SENTENCE_TRANSFORMERS_AVAILABLE:
             return [0.0] * 384
-            
+
         embedding = self.model.encode([query], convert_to_numpy=True)
         return embedding[0].tolist()

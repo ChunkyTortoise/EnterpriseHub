@@ -1,7 +1,6 @@
 """Tests for the reflection and self-correction engine."""
 
 import pytest
-
 from src.agents.query_planner import (
     IntentAnalysis,
     QueryIntent,
@@ -149,12 +148,8 @@ class TestConfidenceScorer:
     def test_completeness_gap_detection(self):
         scorer = ConfidenceScorer()
         results = [_make_tool_result()]
-        gaps = scorer.calculate(
-            results, QueryIntent.RETRIEVAL, answer_text="This is unknown and incomplete."
-        )
-        clean = scorer.calculate(
-            results, QueryIntent.RETRIEVAL, answer_text="ML is a subset of AI."
-        )
+        gaps = scorer.calculate(results, QueryIntent.RETRIEVAL, answer_text="This is unknown and incomplete.")
+        clean = scorer.calculate(results, QueryIntent.RETRIEVAL, answer_text="ML is a subset of AI.")
         assert clean.completeness >= gaps.completeness
 
     def test_all_failed_results(self):
@@ -248,9 +243,7 @@ class TestReflectionEngine:
             query="Explain deep learning and neural networks",
             query_plan=plan,
         )
-        assert any("Deep Learning" in g for g in gaps) or any(
-            "Neural Networks" in g for g in gaps
-        )
+        assert any("Deep Learning" in g for g in gaps) or any("Neural Networks" in g for g in gaps)
 
     def test_identify_gaps_uncertainty_keywords(self):
         engine = ReflectionEngine()
@@ -304,46 +297,34 @@ class TestReflectionEngine:
 
     def test_should_iterate_true_below_threshold(self):
         engine = ReflectionEngine()
-        assessment = AnswerQualityAssessment(
-            overall_score=0.4, recommendations=["improve"]
-        )
+        assessment = AnswerQualityAssessment(overall_score=0.4, recommendations=["improve"])
         assert engine.should_iterate(assessment, 1) is True
 
     def test_should_iterate_false_above_threshold(self):
         engine = ReflectionEngine()
-        assessment = AnswerQualityAssessment(
-            overall_score=0.9, recommendations=["tweak"]
-        )
+        assessment = AnswerQualityAssessment(overall_score=0.9, recommendations=["tweak"])
         assert engine.should_iterate(assessment, 1) is False
 
     def test_should_iterate_false_max_iterations(self):
         config = ReflectionConfig(max_iterations=2)
         engine = ReflectionEngine(config)
-        assessment = AnswerQualityAssessment(
-            overall_score=0.3, recommendations=["improve"]
-        )
+        assessment = AnswerQualityAssessment(overall_score=0.3, recommendations=["improve"])
         assert engine.should_iterate(assessment, 2) is False
 
     def test_should_iterate_false_disabled(self):
         config = ReflectionConfig(enable_self_correction=False)
         engine = ReflectionEngine(config)
-        assessment = AnswerQualityAssessment(
-            overall_score=0.3, recommendations=["improve"]
-        )
+        assessment = AnswerQualityAssessment(overall_score=0.3, recommendations=["improve"])
         assert engine.should_iterate(assessment, 1) is False
 
     def test_should_iterate_false_no_recommendations(self):
         engine = ReflectionEngine()
-        assessment = AnswerQualityAssessment(
-            overall_score=0.3, recommendations=[]
-        )
+        assessment = AnswerQualityAssessment(overall_score=0.3, recommendations=[])
         assert engine.should_iterate(assessment, 1) is False
 
     def test_should_iterate_false_high_confidence(self):
         engine = ReflectionEngine()
-        assessment = AnswerQualityAssessment(
-            overall_score=0.5, recommendations=["improve"]
-        )
+        assessment = AnswerQualityAssessment(overall_score=0.5, recommendations=["improve"])
         assert engine.should_iterate(assessment, 1, ConfidenceScore(overall=0.95)) is False
 
 

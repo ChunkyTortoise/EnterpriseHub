@@ -19,33 +19,37 @@ Performance: >95% cache hit rates, <50ms query response
 """
 
 import asyncio
-import time
-import json
 import hashlib
+import json
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Any, Optional, Tuple, Callable
-from dataclasses import dataclass, asdict
-from enum import Enum
 import statistics
+import time
 from collections import defaultdict, deque
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta, timezone
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import CacheService, get_cache_service
 
 logger = get_logger(__name__)
 
+
 class DataVolatility(Enum):
     """Data volatility levels for TTL management."""
-    REAL_TIME = "real_time"      # <1 minute TTL
-    HIGH = "high"                # 1-5 minutes TTL
-    MEDIUM = "medium"            # 5-30 minutes TTL
-    LOW = "low"                  # 30+ minutes TTL
-    HISTORICAL = "historical"    # Hours/days TTL
+
+    REAL_TIME = "real_time"  # <1 minute TTL
+    HIGH = "high"  # 1-5 minutes TTL
+    MEDIUM = "medium"  # 5-30 minutes TTL
+    LOW = "low"  # 30+ minutes TTL
+    HISTORICAL = "historical"  # Hours/days TTL
+
 
 @dataclass
 class QueryPattern:
     """Analytics query pattern tracking."""
+
     query_hash: str
     query_type: str
     frequency: int
@@ -54,9 +58,11 @@ class QueryPattern:
     data_volatility: DataVolatility
     cache_hit_rate: float
 
+
 @dataclass
 class CacheWarmingJob:
     """Cache warming job definition."""
+
     job_id: str
     query_pattern: QueryPattern
     warming_func: str
@@ -66,15 +72,18 @@ class CacheWarmingJob:
     success_count: int = 0
     failure_count: int = 0
 
+
 @dataclass
 class BIMetrics:
     """BI cache service metrics."""
+
     analytics_queries: int = 0
     cache_hits: int = 0
     cache_misses: int = 0
     warming_jobs_executed: int = 0
     predictive_prefetches: int = 0
     avg_query_time_ms: float = 0.0
+
 
 class BICacheService:
     """
@@ -123,7 +132,7 @@ class BICacheService:
         query_params: Dict[str, Any],
         computation_func: Callable,
         ttl_override: Optional[int] = None,
-        force_refresh: bool = False
+        force_refresh: bool = False,
     ) -> Any:
         """
         Get analytics data with intelligent caching and pattern tracking.
@@ -187,65 +196,37 @@ class BICacheService:
             raise
 
     async def get_dashboard_kpis(
-        self,
-        location_id: str,
-        timeframe: str = '24h',
-        include_comparisons: bool = True
+        self, location_id: str, timeframe: str = "24h", include_comparisons: bool = True
     ) -> Dict[str, Any]:
         """Get dashboard KPIs with optimized caching."""
         return await self.get_analytics_data(
-            'dashboard_kpis',
-            {
-                'location_id': location_id,
-                'timeframe': timeframe,
-                'include_comparisons': include_comparisons
-            },
-            self._compute_dashboard_kpis
+            "dashboard_kpis",
+            {"location_id": location_id, "timeframe": timeframe, "include_comparisons": include_comparisons},
+            self._compute_dashboard_kpis,
         )
 
-    async def get_conversion_funnel(
-        self,
-        location_id: str,
-        period_days: int = 30
-    ) -> Dict[str, Any]:
+    async def get_conversion_funnel(self, location_id: str, period_days: int = 30) -> Dict[str, Any]:
         """Get conversion funnel analytics with caching."""
         return await self.get_analytics_data(
-            'conversion_funnel',
-            {
-                'location_id': location_id,
-                'period_days': period_days
-            },
-            self._compute_conversion_funnel
+            "conversion_funnel",
+            {"location_id": location_id, "period_days": period_days},
+            self._compute_conversion_funnel,
         )
 
-    async def get_bot_performance_matrix(
-        self,
-        location_id: str,
-        timeframe: str = '7d'
-    ) -> Dict[str, Any]:
+    async def get_bot_performance_matrix(self, location_id: str, timeframe: str = "7d") -> Dict[str, Any]:
         """Get bot performance matrix with caching."""
         return await self.get_analytics_data(
-            'bot_performance_matrix',
-            {
-                'location_id': location_id,
-                'timeframe': timeframe
-            },
-            self._compute_bot_performance_matrix
+            "bot_performance_matrix",
+            {"location_id": location_id, "timeframe": timeframe},
+            self._compute_bot_performance_matrix,
         )
 
-    async def get_revenue_pipeline(
-        self,
-        location_id: str,
-        forecast_days: int = 90
-    ) -> Dict[str, Any]:
+    async def get_revenue_pipeline(self, location_id: str, forecast_days: int = 90) -> Dict[str, Any]:
         """Get revenue pipeline analytics with caching."""
         return await self.get_analytics_data(
-            'revenue_pipeline',
-            {
-                'location_id': location_id,
-                'forecast_days': forecast_days
-            },
-            self._compute_revenue_pipeline
+            "revenue_pipeline",
+            {"location_id": location_id, "forecast_days": forecast_days},
+            self._compute_revenue_pipeline,
         )
 
     async def batch_warm_dashboard_cache(self, location_ids: List[str]):
@@ -258,7 +239,7 @@ class BICacheService:
                 self.get_dashboard_kpis(location_id),
                 self.get_conversion_funnel(location_id),
                 self.get_bot_performance_matrix(location_id),
-                self.get_revenue_pipeline(location_id)
+                self.get_revenue_pipeline(location_id),
             ]
             warming_tasks.extend(tasks)
 
@@ -273,12 +254,7 @@ class BICacheService:
         return successful_warms
 
     async def register_warming_job(
-        self,
-        job_id: str,
-        query_type: str,
-        warming_func: str,
-        schedule_interval_minutes: int,
-        priority: int = 5
+        self, job_id: str, query_type: str, warming_func: str, schedule_interval_minutes: int, priority: int = 5
     ):
         """Register a cache warming job."""
         # Create a mock query pattern for the warming job
@@ -289,7 +265,7 @@ class BICacheService:
             last_accessed=datetime.now(timezone.utc),
             avg_processing_time_ms=100.0,
             data_volatility=DataVolatility.HIGH,
-            cache_hit_rate=0.0
+            cache_hit_rate=0.0,
         )
 
         job = CacheWarmingJob(
@@ -297,7 +273,7 @@ class BICacheService:
             query_pattern=pattern,
             warming_func=warming_func,
             schedule_interval_minutes=schedule_interval_minutes,
-            priority=priority
+            priority=priority,
         )
 
         self.warming_jobs[job_id] = job
@@ -313,7 +289,7 @@ class BICacheService:
     def _generate_query_hash(self, query_type: str, query_params: Dict[str, Any]) -> str:
         """Generate query hash for pattern tracking."""
         # Use query type + location for pattern grouping
-        location_id = query_params.get('location_id', 'global')
+        location_id = query_params.get("location_id", "global")
         return f"{query_type}:{location_id}"
 
     def _track_query_access(self, query_hash: str, query_type: str):
@@ -332,48 +308,40 @@ class BICacheService:
                 last_accessed=now,
                 avg_processing_time_ms=100.0,
                 data_volatility=DataVolatility.MEDIUM,
-                cache_hit_rate=0.0
+                cache_hit_rate=0.0,
             )
 
         # Add to access history for time-based analysis
-        self.access_history.append({
-            'query_hash': query_hash,
-            'timestamp': now.timestamp(),
-            'query_type': query_type
-        })
+        self.access_history.append({"query_hash": query_hash, "timestamp": now.timestamp(), "query_type": query_type})
 
     def _record_query_time(self, query_hash: str, processing_time_ms: float):
         """Record query processing time."""
         if query_hash in self.query_patterns:
             pattern = self.query_patterns[query_hash]
             # Exponential moving average
-            pattern.avg_processing_time_ms = (
-                pattern.avg_processing_time_ms * 0.7 + processing_time_ms * 0.3
-            )
+            pattern.avg_processing_time_ms = pattern.avg_processing_time_ms * 0.7 + processing_time_ms * 0.3
 
         # Update global metrics
-        self.metrics.avg_query_time_ms = (
-            self.metrics.avg_query_time_ms * 0.9 + processing_time_ms * 0.1
-        )
+        self.metrics.avg_query_time_ms = self.metrics.avg_query_time_ms * 0.9 + processing_time_ms * 0.1
 
     def _calculate_intelligent_ttl(self, query_type: str, query_params: Dict[str, Any]) -> int:
         """Calculate TTL based on query type and data volatility."""
         # Base TTL by query type
         base_ttls = {
-            'dashboard_kpis': 300,      # 5 minutes
-            'conversion_funnel': 1800,  # 30 minutes
-            'bot_performance_matrix': 600,  # 10 minutes
-            'revenue_pipeline': 3600,   # 1 hour
-            'historical_reports': 7200  # 2 hours
+            "dashboard_kpis": 300,  # 5 minutes
+            "conversion_funnel": 1800,  # 30 minutes
+            "bot_performance_matrix": 600,  # 10 minutes
+            "revenue_pipeline": 3600,  # 1 hour
+            "historical_reports": 7200,  # 2 hours
         }
 
         base_ttl = base_ttls.get(query_type, 300)
 
         # Adjust based on timeframe
-        timeframe = query_params.get('timeframe', '24h')
-        if timeframe in ['1h', '3h']:
+        timeframe = query_params.get("timeframe", "24h")
+        if timeframe in ["1h", "3h"]:
             base_ttl = base_ttl // 2  # More volatile data
-        elif timeframe in ['7d', '30d', '90d']:
+        elif timeframe in ["7d", "30d", "90d"]:
             base_ttl = base_ttl * 2  # Less volatile data
 
         # Adjust based on query frequency
@@ -400,35 +368,31 @@ class BICacheService:
 
                 if probability >= self.prediction_threshold:
                     # Prefetch the related query
-                    asyncio.create_task(
-                        self._background_prefetch(related_query_type, related_params)
-                    )
+                    asyncio.create_task(self._background_prefetch(related_query_type, related_params))
                     self.metrics.predictive_prefetches += 1
 
         except Exception as e:
             logger.error(f"Error in predictive prefetch: {e}")
 
     def _predict_related_queries(
-        self,
-        query_type: str,
-        query_params: Dict[str, Any]
+        self, query_type: str, query_params: Dict[str, Any]
     ) -> List[Tuple[str, Dict[str, Any]]]:
         """Predict related queries based on access patterns."""
         related = []
-        location_id = query_params.get('location_id')
+        location_id = query_params.get("location_id")
 
-        if query_type == 'dashboard_kpis':
+        if query_type == "dashboard_kpis":
             # Users often view conversion funnel after KPIs
-            related.append(('conversion_funnel', {'location_id': location_id}))
-            related.append(('bot_performance_matrix', {'location_id': location_id}))
+            related.append(("conversion_funnel", {"location_id": location_id}))
+            related.append(("bot_performance_matrix", {"location_id": location_id}))
 
-        elif query_type == 'conversion_funnel':
+        elif query_type == "conversion_funnel":
             # Users often view bot performance after funnel
-            related.append(('bot_performance_matrix', {'location_id': location_id}))
+            related.append(("bot_performance_matrix", {"location_id": location_id}))
 
-        elif query_type == 'bot_performance_matrix':
+        elif query_type == "bot_performance_matrix":
             # Users often view revenue pipeline after bot performance
-            related.append(('revenue_pipeline', {'location_id': location_id}))
+            related.append(("revenue_pipeline", {"location_id": location_id}))
 
         return related
 
@@ -460,7 +424,7 @@ class BICacheService:
                 return  # Already cached
 
             # Get appropriate computation function
-            computation_func = getattr(self, f'_compute_{query_type}', None)
+            computation_func = getattr(self, f"_compute_{query_type}", None)
             if not computation_func:
                 return
 
@@ -540,132 +504,124 @@ class BICacheService:
 
     # Computation functions for analytics (mock implementations)
 
-    async def _compute_dashboard_kpis(self, location_id: str, timeframe: str = '24h', include_comparisons: bool = True) -> Dict[str, Any]:
+    async def _compute_dashboard_kpis(
+        self, location_id: str, timeframe: str = "24h", include_comparisons: bool = True
+    ) -> Dict[str, Any]:
         """Compute dashboard KPIs."""
         # In production, this would query the OLAP database
         return {
-            'total_revenue': 452652,
-            'total_leads': 2345,
-            'conversion_rate': 4.2,
-            'hot_leads': 98,
-            'jorge_commission': 27159.12,
-            'avg_response_time_ms': 42.3,
-            'comparisons': {
-                'revenue_change': 13.2,
-                'leads_change': 23.9,
-                'conversion_change': 10.1
-            } if include_comparisons else {}
+            "total_revenue": 452652,
+            "total_leads": 2345,
+            "conversion_rate": 4.2,
+            "hot_leads": 98,
+            "jorge_commission": 27159.12,
+            "avg_response_time_ms": 42.3,
+            "comparisons": {"revenue_change": 13.2, "leads_change": 23.9, "conversion_change": 10.1}
+            if include_comparisons
+            else {},
         }
 
     async def _compute_conversion_funnel(self, location_id: str, period_days: int = 30) -> Dict[str, Any]:
         """Compute conversion funnel analytics."""
         return {
-            'stages': [
-                {'name': 'Initial Contact', 'count': 1000, 'percentage': 100},
-                {'name': 'Qualified', 'count': 400, 'percentage': 40},
-                {'name': 'Hot Lead', 'count': 120, 'percentage': 12},
-                {'name': 'Closed Deal', 'count': 24, 'percentage': 2.4}
+            "stages": [
+                {"name": "Initial Contact", "count": 1000, "percentage": 100},
+                {"name": "Qualified", "count": 400, "percentage": 40},
+                {"name": "Hot Lead", "count": 120, "percentage": 12},
+                {"name": "Closed Deal", "count": 24, "percentage": 2.4},
             ],
-            'conversion_rates': {
-                'contact_to_qualified': 0.40,
-                'qualified_to_hot': 0.30,
-                'hot_to_closed': 0.20
-            }
+            "conversion_rates": {"contact_to_qualified": 0.40, "qualified_to_hot": 0.30, "hot_to_closed": 0.20},
         }
 
-    async def _compute_bot_performance_matrix(self, location_id: str, timeframe: str = '7d') -> Dict[str, Any]:
+    async def _compute_bot_performance_matrix(self, location_id: str, timeframe: str = "7d") -> Dict[str, Any]:
         """Compute bot performance matrix."""
         return {
-            'jorge_seller': {
-                'interactions': 324,
-                'avg_response_time_ms': 38.2,
-                'hot_rate': 0.15,
-                'success_rate': 0.92
+            "jorge_seller": {"interactions": 324, "avg_response_time_ms": 38.2, "hot_rate": 0.15, "success_rate": 0.92},
+            "jorge_buyer": {
+                "interactions": 156,
+                "avg_response_time_ms": 42.1,
+                "qualification_rate": 0.28,
+                "success_rate": 0.89,
             },
-            'jorge_buyer': {
-                'interactions': 156,
-                'avg_response_time_ms': 42.1,
-                'qualification_rate': 0.28,
-                'success_rate': 0.89
+            "lead_bot": {"sequences_started": 89, "completion_rate": 0.67, "response_rate": 0.45, "success_rate": 0.85},
+            "intent_decoder": {
+                "analyses": 567,
+                "avg_confidence": 0.87,
+                "avg_processing_time_ms": 24.1,
+                "accuracy": 0.94,
             },
-            'lead_bot': {
-                'sequences_started': 89,
-                'completion_rate': 0.67,
-                'response_rate': 0.45,
-                'success_rate': 0.85
-            },
-            'intent_decoder': {
-                'analyses': 567,
-                'avg_confidence': 0.87,
-                'avg_processing_time_ms': 24.1,
-                'accuracy': 0.94
-            }
         }
 
     async def _compute_revenue_pipeline(self, location_id: str, forecast_days: int = 90) -> Dict[str, Any]:
         """Compute revenue pipeline analytics."""
         return {
-            'total_pipeline': 2840000,
-            'jorge_commission_pipeline': 170400,  # 6% of pipeline
-            'forecasted_revenue': 1420000,
-            'forecast_confidence': 0.83,
-            'deals_by_stage': {
-                'qualified': {'count': 45, 'value': 1350000},
-                'showing': {'count': 28, 'value': 840000},
-                'offer': {'count': 12, 'value': 360000},
-                'closing': {'count': 8, 'value': 290000}
-            }
+            "total_pipeline": 2840000,
+            "jorge_commission_pipeline": 170400,  # 6% of pipeline
+            "forecasted_revenue": 1420000,
+            "forecast_confidence": 0.83,
+            "deals_by_stage": {
+                "qualified": {"count": 45, "value": 1350000},
+                "showing": {"count": 28, "value": 840000},
+                "offer": {"count": 12, "value": 360000},
+                "closing": {"count": 8, "value": 290000},
+            },
         }
 
     # Default warming functions
 
     async def warm_dashboard_cache(self):
         """Default dashboard cache warming."""
-        location_ids = ['default', 'location_1', 'location_2']
+        location_ids = ["default", "location_1", "location_2"]
         await self.batch_warm_dashboard_cache(location_ids)
 
     async def warm_analytics_cache(self):
         """Default analytics cache warming."""
-        location_ids = ['default', 'location_1']
+        location_ids = ["default", "location_1"]
 
         tasks = []
         for location_id in location_ids:
-            tasks.extend([
-                self.get_conversion_funnel(location_id),
-                self.get_bot_performance_matrix(location_id),
-                self.get_revenue_pipeline(location_id)
-            ])
+            tasks.extend(
+                [
+                    self.get_conversion_funnel(location_id),
+                    self.get_bot_performance_matrix(location_id),
+                    self.get_revenue_pipeline(location_id),
+                ]
+            )
 
         await asyncio.gather(*tasks, return_exceptions=True)
 
     async def get_cache_analytics(self) -> Dict[str, Any]:
         """Get BI cache analytics and metrics."""
         total_queries = self.metrics.analytics_queries
-        hit_rate = (self.metrics.cache_hits / (self.metrics.cache_hits + self.metrics.cache_misses) * 100) if (self.metrics.cache_hits + self.metrics.cache_misses) > 0 else 0
+        hit_rate = (
+            (self.metrics.cache_hits / (self.metrics.cache_hits + self.metrics.cache_misses) * 100)
+            if (self.metrics.cache_hits + self.metrics.cache_misses) > 0
+            else 0
+        )
 
         return {
-            'metrics': asdict(self.metrics),
-            'hit_rate_percent': round(hit_rate, 2),
-            'query_patterns_tracked': len(self.query_patterns),
-            'warming_jobs_registered': len(self.warming_jobs),
-            'top_queries': [
+            "metrics": asdict(self.metrics),
+            "hit_rate_percent": round(hit_rate, 2),
+            "query_patterns_tracked": len(self.query_patterns),
+            "warming_jobs_registered": len(self.warming_jobs),
+            "top_queries": [
                 {
-                    'query_hash': pattern.query_hash,
-                    'query_type': pattern.query_type,
-                    'frequency': pattern.frequency,
-                    'avg_time_ms': pattern.avg_processing_time_ms
+                    "query_hash": pattern.query_hash,
+                    "query_type": pattern.query_type,
+                    "frequency": pattern.frequency,
+                    "avg_time_ms": pattern.avg_processing_time_ms,
                 }
                 for pattern in sorted(self.query_patterns.values(), key=lambda p: p.frequency, reverse=True)[:10]
             ],
-            'warming_job_status': [
+            "warming_job_status": [
                 {
-                    'job_id': job.job_id,
-                    'last_run': job.last_run.isoformat() if job.last_run else None,
-                    'success_count': job.success_count,
-                    'failure_count': job.failure_count
+                    "job_id": job.job_id,
+                    "last_run": job.last_run.isoformat() if job.last_run else None,
+                    "success_count": job.success_count,
+                    "failure_count": job.failure_count,
                 }
                 for job in self.warming_jobs.values()
-            ]
+            ],
         }
 
     async def optimize_cache_configuration(self) -> Dict[str, Any]:
@@ -674,42 +630,48 @@ class BICacheService:
 
         # Analyze query patterns
         high_frequency_queries = [
-            p for p in self.query_patterns.values()
-            if p.frequency > 20 and p.cache_hit_rate < 0.8
+            p for p in self.query_patterns.values() if p.frequency > 20 and p.cache_hit_rate < 0.8
         ]
 
         for pattern in high_frequency_queries:
-            recommendations.append({
-                'type': 'increase_ttl',
-                'query': pattern.query_hash,
-                'reason': f'High frequency ({pattern.frequency}) with low hit rate ({pattern.cache_hit_rate:.1%})',
-                'suggested_ttl_increase': '50%'
-            })
+            recommendations.append(
+                {
+                    "type": "increase_ttl",
+                    "query": pattern.query_hash,
+                    "reason": f"High frequency ({pattern.frequency}) with low hit rate ({pattern.cache_hit_rate:.1%})",
+                    "suggested_ttl_increase": "50%",
+                }
+            )
 
         # Check for cache warming opportunities
         frequent_cold_starts = [
-            p for p in self.query_patterns.values()
-            if p.frequency > 5 and p.avg_processing_time_ms > 200
+            p for p in self.query_patterns.values() if p.frequency > 5 and p.avg_processing_time_ms > 200
         ]
 
         for pattern in frequent_cold_starts:
-            recommendations.append({
-                'type': 'add_warming_job',
-                'query': pattern.query_hash,
-                'reason': f'Frequent slow queries ({pattern.avg_processing_time_ms:.1f}ms)',
-                'suggested_interval': '15 minutes'
-            })
+            recommendations.append(
+                {
+                    "type": "add_warming_job",
+                    "query": pattern.query_hash,
+                    "reason": f"Frequent slow queries ({pattern.avg_processing_time_ms:.1f}ms)",
+                    "suggested_interval": "15 minutes",
+                }
+            )
 
         return {
-            'cache_hit_rate': (self.metrics.cache_hits / (self.metrics.cache_hits + self.metrics.cache_misses) * 100) if (self.metrics.cache_hits + self.metrics.cache_misses) > 0 else 0,
-            'avg_query_time_ms': self.metrics.avg_query_time_ms,
-            'recommendations': recommendations,
-            'total_patterns_analyzed': len(self.query_patterns),
-            'analysis_timestamp': datetime.now(timezone.utc).isoformat()
+            "cache_hit_rate": (self.metrics.cache_hits / (self.metrics.cache_hits + self.metrics.cache_misses) * 100)
+            if (self.metrics.cache_hits + self.metrics.cache_misses) > 0
+            else 0,
+            "avg_query_time_ms": self.metrics.avg_query_time_ms,
+            "recommendations": recommendations,
+            "total_patterns_analyzed": len(self.query_patterns),
+            "analysis_timestamp": datetime.now(timezone.utc).isoformat(),
         }
+
 
 # Global BI cache service instance
 _bi_cache_service = None
+
 
 def get_bi_cache_service() -> BICacheService:
     """Get singleton BI cache service instance."""
@@ -718,16 +680,19 @@ def get_bi_cache_service() -> BICacheService:
         _bi_cache_service = BICacheService()
     return _bi_cache_service
 
+
 # Convenience functions for common BI cache operations
-async def get_dashboard_metrics(location_id: str, timeframe: str = '24h') -> Dict[str, Any]:
+async def get_dashboard_metrics(location_id: str, timeframe: str = "24h") -> Dict[str, Any]:
     """Get dashboard metrics with caching."""
     service = get_bi_cache_service()
     return await service.get_dashboard_kpis(location_id, timeframe)
+
 
 async def warm_bi_cache_for_locations(location_ids: List[str]) -> int:
     """Warm BI cache for multiple locations."""
     service = get_bi_cache_service()
     return await service.batch_warm_dashboard_cache(location_ids)
+
 
 async def register_bi_warming_job(job_id: str, query_type: str, warming_func: str, interval_minutes: int):
     """Register a BI cache warming job."""

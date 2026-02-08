@@ -19,11 +19,11 @@ Lead Classifications (Jorge's Criteria):
 - Cold Lead: 0-1 questions answered (nurture campaign)
 """
 
+import hashlib
+import json
 import re
 from datetime import datetime
 from typing import Any, Dict, List
-import json
-import hashlib
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.services.cache_service import get_cache_service
@@ -60,23 +60,24 @@ class LeadScorer:
             "extracted_preferences": context.get("extracted_preferences", {}),
             "seller_preferences": context.get("seller_preferences", {}),
             "seller_temperature": context.get("seller_temperature"),
-            "conversation_type": context.get("conversation_type")
+            "conversation_type": context.get("conversation_type"),
         }
-        
+
         cache_key = self._generate_cache_key("calculate", cache_data)
         cached_result = await self.cache.get(cache_key)
-        
+
         if cached_result is not None:
             return cached_result
 
         # Check if this is seller mode (Jorge's bot)
-        if (context.get("seller_preferences") or
-            context.get("seller_temperature") or
-            "seller" in context.get("conversation_type", "").lower()):
-
+        if (
+            context.get("seller_preferences")
+            or context.get("seller_temperature")
+            or "seller" in context.get("conversation_type", "").lower()
+        ):
             seller_result = self.calculate_seller_score(context.get("seller_preferences", {}))
             result = seller_result["questions_answered"]
-            
+
             # Cache the result (TTL 1 hour)
             await self.cache.set(cache_key, result, ttl=3600)
             return result
@@ -142,13 +143,13 @@ class LeadScorer:
         """
         score_mapping = {
             7: 100,  # All questions answered
-            6: 85,   # 6 questions
-            5: 75,   # 5 questions (above Jorge's 70 threshold)
-            4: 65,   # 4 questions
-            3: 50,   # 3 questions (Hot lead)
-            2: 30,   # 2 questions (Warm lead)
-            1: 15,   # 1 question (Cold lead)
-            0: 5     # No questions answered
+            6: 85,  # 6 questions
+            5: 75,  # 5 questions (above Jorge's 70 threshold)
+            4: 65,  # 4 questions
+            3: 50,  # 3 questions (Hot lead)
+            2: 30,  # 2 questions (Warm lead)
+            1: 15,  # 1 question (Cold lead)
+            0: 5,  # No questions answered
         }
         return score_mapping.get(question_count, 0)
 
@@ -372,7 +373,7 @@ class LeadScorer:
             score=score,
             seller_data=seller_data,
             response_quality=seller_data.get("response_quality", 0.5),
-            responsiveness=seller_data.get("responsiveness", 0.5)
+            responsiveness=seller_data.get("responsiveness", 0.5),
         )
 
         # Convert to percentage for consistency with existing system
@@ -387,28 +388,28 @@ class LeadScorer:
             "max_questions": 4,
             "classification": temperature,  # For consistency with existing interface
             "reasoning": self._build_seller_reasoning(seller_data, details),
-            "recommended_actions": self._get_seller_actions(temperature, seller_data)
+            "recommended_actions": self._get_seller_actions(temperature, seller_data),
         }
 
     def _classify_seller_temperature(
-        self,
-        score: float,
-        seller_data: Dict[str, Any],
-        response_quality: float,
-        responsiveness: float
+        self, score: float, seller_data: Dict[str, Any], response_quality: float, responsiveness: float
     ) -> str:
         """Jorge's seller temperature classification logic"""
 
         # Hot seller criteria (Jorge's exact requirements)
-        if (score >= 3.5 and  # Nearly all questions answered (allow for partial scores)
-            seller_data.get("timeline_acceptable") is True and  # 30-45 days acceptable
-            response_quality >= 0.7 and  # High quality responses
-            responsiveness >= 0.7):  # Responsive to messages
+        if (
+            score >= 3.5  # Nearly all questions answered (allow for partial scores)
+            and seller_data.get("timeline_acceptable") is True  # 30-45 days acceptable
+            and response_quality >= 0.7  # High quality responses
+            and responsiveness >= 0.7
+        ):  # Responsive to messages
             return "hot"
 
         # Warm seller criteria
-        elif (score >= 2.5 and  # Most questions answered
-              response_quality >= 0.5):  # Decent responses
+        elif (
+            score >= 2.5  # Most questions answered
+            and response_quality >= 0.5
+        ):  # Decent responses
             return "warm"
 
         # Cold seller (default)
@@ -451,7 +452,7 @@ class LeadScorer:
                 "Trigger agent notification workflow immediately",
                 "Schedule valuation appointment within 24 hours",
                 "Priority follow-up if no response",
-                "Add 'Seller-Qualified' tag"
+                "Add 'Seller-Qualified' tag",
             ]
         elif temperature == "warm":
             return [
@@ -459,7 +460,7 @@ class LeadScorer:
                 "Send market analysis and recent sales",
                 "Follow up within 48 hours",
                 "Continue qualification process",
-                "Provide educational content about selling process"
+                "Provide educational content about selling process",
             ]
         else:  # cold
             return [
@@ -467,7 +468,7 @@ class LeadScorer:
                 "Add to seller nurture sequence",
                 "Send quarterly market updates",
                 "Follow up in 2-3 days with additional questions",
-                "Provide home valuation resources"
+                "Provide home valuation resources",
             ]
 
     def calculate_seller_with_reasoning(self, seller_data: Dict[str, Any]) -> Dict[str, Any]:

@@ -16,24 +16,26 @@ Integrates with:
 """
 
 import asyncio
-import time
-import uuid
-from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, Optional, List, Union, Tuple
-from dataclasses import dataclass, asdict, field
-from enum import Enum
 import json
 import logging
+import time
+import uuid
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timedelta, timezone
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.cache_service import get_cache_service, TenantScopedCache
+from ghl_real_estate_ai.services.cache_service import TenantScopedCache, get_cache_service
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.memory_service import get_memory_service
 
 logger = get_logger(__name__)
 
+
 class JourneyStage(Enum):
     """Client journey stages in real estate transaction lifecycle."""
+
     QUALIFIED = "qualified"
     PROPERTY_SEARCH = "property_search"
     PROPERTY_VIEWING = "property_viewing"
@@ -47,8 +49,10 @@ class JourneyStage(Enum):
     POST_CLOSING = "post_closing"
     ADVOCATE = "advocate"
 
+
 class MilestoneType(Enum):
     """Types of milestones in client journey."""
+
     QUALIFICATION = "qualification"
     PROPERTY_MATCH = "property_match"
     VIEWING_SCHEDULED = "viewing_scheduled"
@@ -61,17 +65,21 @@ class MilestoneType(Enum):
     REFERRAL_GENERATED = "referral_generated"
     REVIEW_SUBMITTED = "review_submitted"
 
+
 class JourneyHealthStatus(Enum):
     """Journey health assessment statuses."""
+
     EXCELLENT = "excellent"
     GOOD = "good"
     AT_RISK = "at_risk"
     CRITICAL = "critical"
     STALLED = "stalled"
 
+
 @dataclass
 class JourneyMilestone:
     """Individual milestone in client journey."""
+
     milestone_id: str
     client_id: str
     location_id: str
@@ -102,9 +110,11 @@ class JourneyMilestone:
     estimated_duration_days: Optional[int] = None
     priority_level: str = "normal"  # low, normal, high, critical
 
+
 @dataclass
 class JourneyHealthMetrics:
     """Client journey health assessment."""
+
     client_id: str
     location_id: str
     current_stage: JourneyStage
@@ -137,9 +147,11 @@ class JourneyHealthMetrics:
     last_assessment: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     assessment_confidence: float = 0.0
 
+
 @dataclass
 class JourneyPersonalization:
     """Personalization settings for client journey."""
+
     client_id: str
     location_id: str
 
@@ -168,9 +180,11 @@ class JourneyPersonalization:
     journey_satisfaction_feedback: Dict[str, float] = field(default_factory=dict)
     adaptation_insights: List[str] = field(default_factory=list)
 
+
 @dataclass
 class JourneyOptimizationRecommendation:
     """Journey optimization recommendation."""
+
     recommendation_id: str
     client_id: str
     location_id: str
@@ -195,6 +209,7 @@ class JourneyOptimizationRecommendation:
     # Metadata
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     status: str = "pending"  # pending, accepted, implemented, rejected
+
 
 class ClientJourneyMappingService:
     """
@@ -226,7 +241,7 @@ class ClientJourneyMappingService:
             JourneyStage.FINANCING: [JourneyStage.CLOSING_PREPARATION],
             JourneyStage.CLOSING_PREPARATION: [JourneyStage.CLOSED],
             JourneyStage.CLOSED: [JourneyStage.POST_CLOSING],
-            JourneyStage.POST_CLOSING: [JourneyStage.ADVOCATE]
+            JourneyStage.POST_CLOSING: [JourneyStage.ADVOCATE],
         }
 
         # Expected durations for stages (in days)
@@ -242,7 +257,7 @@ class ClientJourneyMappingService:
             JourneyStage.CLOSING_PREPARATION: 7,
             JourneyStage.CLOSED: 1,
             JourneyStage.POST_CLOSING: 30,
-            JourneyStage.ADVOCATE: 365  # Ongoing
+            JourneyStage.ADVOCATE: 365,  # Ongoing
         }
 
         # Milestone templates for each stage
@@ -253,7 +268,7 @@ class ClientJourneyMappingService:
         client_id: str,
         location_id: str,
         current_stage: JourneyStage,
-        context_data: Optional[Dict[str, Any]] = None
+        context_data: Optional[Dict[str, Any]] = None,
     ) -> JourneyHealthMetrics:
         """
         Track and assess client journey progress.
@@ -276,7 +291,7 @@ class ClientJourneyMappingService:
             journey_data = await self._get_journey_data(client_id, location_id, tenant_cache)
 
             # 2. Update Current Stage if Changed
-            if journey_data['current_stage'] != current_stage:
+            if journey_data["current_stage"] != current_stage:
                 await self._progress_journey_stage(client_id, location_id, current_stage, journey_data, tenant_cache)
 
             # 3. Assess Journey Health
@@ -290,7 +305,9 @@ class ClientJourneyMappingService:
             await self._apply_personalization(client_id, location_id, health_metrics, personalization)
 
             # 6. Generate Optimization Recommendations
-            recommendations = await self._generate_optimization_recommendations(client_id, location_id, health_metrics, journey_data)
+            recommendations = await self._generate_optimization_recommendations(
+                client_id, location_id, health_metrics, journey_data
+            )
 
             processing_time = (time.perf_counter() - start_time) * 1000
 
@@ -321,7 +338,7 @@ class ClientJourneyMappingService:
         client_id: str,
         location_id: str,
         milestone_type: MilestoneType,
-        completion_data: Optional[Dict[str, Any]] = None
+        completion_data: Optional[Dict[str, Any]] = None,
     ) -> JourneyMilestone:
         """
         Progress a specific milestone in the client journey.
@@ -340,22 +357,22 @@ class ClientJourneyMappingService:
         try:
             # Get current journey data
             journey_data = await self._get_journey_data(client_id, location_id, tenant_cache)
-            milestones = journey_data.get('milestones', {})
+            milestones = journey_data.get("milestones", {})
 
             # Find and update the milestone
             milestone_id = f"{client_id}_{milestone_type.value}"
             if milestone_id in milestones:
                 milestone = milestones[milestone_id]
-                milestone['completion_status'] = 'completed'
-                milestone['actual_completion'] = datetime.now(timezone.utc)
-                milestone['progress_percentage'] = 100.0
-                milestone['updated_at'] = datetime.now(timezone.utc)
+                milestone["completion_status"] = "completed"
+                milestone["actual_completion"] = datetime.now(timezone.utc)
+                milestone["progress_percentage"] = 100.0
+                milestone["updated_at"] = datetime.now(timezone.utc)
 
                 if completion_data:
-                    milestone['completion_data'] = completion_data
+                    milestone["completion_data"] = completion_data
 
                 # Update journey data
-                journey_data['milestones'] = milestones
+                journey_data["milestones"] = milestones
                 await tenant_cache.set(f"journey_data:{client_id}", journey_data, ttl=3600)
 
                 # Publish milestone completion event
@@ -376,10 +393,7 @@ class ClientJourneyMappingService:
             raise
 
     async def personalize_journey(
-        self,
-        client_id: str,
-        location_id: str,
-        preferences: Dict[str, Any]
+        self, client_id: str, location_id: str, preferences: Dict[str, Any]
     ) -> JourneyPersonalization:
         """
         Update client journey personalization settings.
@@ -400,8 +414,8 @@ class ClientJourneyMappingService:
 
             # Update with new preferences
             personalization_data.update(preferences)
-            personalization_data['client_id'] = client_id
-            personalization_data['location_id'] = location_id
+            personalization_data["client_id"] = client_id
+            personalization_data["location_id"] = location_id
 
             personalization = JourneyPersonalization(**personalization_data)
 
@@ -419,11 +433,7 @@ class ClientJourneyMappingService:
             logger.error(f"Journey personalization failed for {client_id}: {e}")
             raise
 
-    async def get_journey_insights(
-        self,
-        client_id: str,
-        location_id: str
-    ) -> Dict[str, Any]:
+    async def get_journey_insights(self, client_id: str, location_id: str) -> Dict[str, Any]:
         """
         Get comprehensive journey insights and analytics.
 
@@ -446,28 +456,28 @@ class ClientJourneyMappingService:
 
             # Generate insights
             insights = {
-                'client_id': client_id,
-                'location_id': location_id,
-                'current_stage': journey_data['current_stage'],
-                'health_status': health_metrics.health_status.value,
-                'progress_summary': {
-                    'overall_progress': health_metrics.overall_progress_percentage,
-                    'milestones_completed': health_metrics.milestones_completed,
-                    'milestones_total': health_metrics.milestones_total,
-                    'velocity_score': health_metrics.velocity_score
+                "client_id": client_id,
+                "location_id": location_id,
+                "current_stage": journey_data["current_stage"],
+                "health_status": health_metrics.health_status.value,
+                "progress_summary": {
+                    "overall_progress": health_metrics.overall_progress_percentage,
+                    "milestones_completed": health_metrics.milestones_completed,
+                    "milestones_total": health_metrics.milestones_total,
+                    "velocity_score": health_metrics.velocity_score,
                 },
-                'timing_analysis': analytics['timing_analysis'],
-                'engagement_metrics': analytics['engagement_metrics'],
-                'optimization_opportunities': analytics['optimization_opportunities'],
-                'risk_assessment': analytics['risk_assessment'],
-                'predictions': analytics['predictions']
+                "timing_analysis": analytics["timing_analysis"],
+                "engagement_metrics": analytics["engagement_metrics"],
+                "optimization_opportunities": analytics["optimization_opportunities"],
+                "risk_assessment": analytics["risk_assessment"],
+                "predictions": analytics["predictions"],
             }
 
             return insights
 
         except Exception as e:
             logger.error(f"Journey insights generation failed for {client_id}: {e}")
-            return {'error': str(e)}
+            return {"error": str(e)}
 
     async def _get_journey_data(
         self, client_id: str, location_id: str, tenant_cache: TenantScopedCache
@@ -479,19 +489,19 @@ class ClientJourneyMappingService:
         if not journey_data:
             # Initialize new journey
             journey_data = {
-                'client_id': client_id,
-                'location_id': location_id,
-                'current_stage': JourneyStage.QUALIFIED.value,
-                'journey_start_date': datetime.now(timezone.utc).isoformat(),
-                'milestones': {},
-                'stage_history': [
+                "client_id": client_id,
+                "location_id": location_id,
+                "current_stage": JourneyStage.QUALIFIED.value,
+                "journey_start_date": datetime.now(timezone.utc).isoformat(),
+                "milestones": {},
+                "stage_history": [
                     {
-                        'stage': JourneyStage.QUALIFIED.value,
-                        'entered_at': datetime.now(timezone.utc).isoformat(),
-                        'duration_days': 0
+                        "stage": JourneyStage.QUALIFIED.value,
+                        "entered_at": datetime.now(timezone.utc).isoformat(),
+                        "duration_days": 0,
                     }
                 ],
-                'engagement_events': []
+                "engagement_events": [],
             }
 
             # Create initial milestones
@@ -504,7 +514,7 @@ class ClientJourneyMappingService:
     ):
         """Initialize milestones for the journey."""
 
-        current_stage = JourneyStage(journey_data['current_stage'])
+        current_stage = JourneyStage(journey_data["current_stage"])
         milestones = {}
 
         # Create milestones for current and next stages
@@ -522,39 +532,41 @@ class ClientJourneyMappingService:
                         location_id=location_id,
                         milestone_type=milestone_type,
                         stage=stage,
-                        **template
+                        **template,
                     )
                     milestones[milestone_id] = asdict(milestone)
 
-        journey_data['milestones'] = milestones
+        journey_data["milestones"] = milestones
         await tenant_cache.set(f"journey_data:{client_id}", journey_data, ttl=3600)
 
     async def _progress_journey_stage(
-        self, client_id: str, location_id: str, new_stage: JourneyStage,
-        journey_data: Dict[str, Any], tenant_cache: TenantScopedCache
+        self,
+        client_id: str,
+        location_id: str,
+        new_stage: JourneyStage,
+        journey_data: Dict[str, Any],
+        tenant_cache: TenantScopedCache,
     ):
         """Progress client to a new journey stage."""
 
-        old_stage = JourneyStage(journey_data['current_stage'])
+        old_stage = JourneyStage(journey_data["current_stage"])
 
         # Update stage history
-        stage_history = journey_data.get('stage_history', [])
+        stage_history = journey_data.get("stage_history", [])
         if stage_history:
             # Update duration for previous stage
             previous_entry = stage_history[-1]
-            entered_at = datetime.fromisoformat(previous_entry['entered_at'])
+            entered_at = datetime.fromisoformat(previous_entry["entered_at"])
             duration = (datetime.now(timezone.utc) - entered_at).days
-            previous_entry['duration_days'] = duration
+            previous_entry["duration_days"] = duration
 
         # Add new stage entry
-        stage_history.append({
-            'stage': new_stage.value,
-            'entered_at': datetime.now(timezone.utc).isoformat(),
-            'duration_days': 0
-        })
+        stage_history.append(
+            {"stage": new_stage.value, "entered_at": datetime.now(timezone.utc).isoformat(), "duration_days": 0}
+        )
 
-        journey_data['current_stage'] = new_stage.value
-        journey_data['stage_history'] = stage_history
+        journey_data["current_stage"] = new_stage.value
+        journey_data["stage_history"] = stage_history
 
         # Create milestones for new stage
         await self._create_stage_milestones(client_id, location_id, new_stage, journey_data)
@@ -572,23 +584,25 @@ class ClientJourneyMappingService:
     ) -> JourneyHealthMetrics:
         """Assess overall journey health."""
 
-        milestones = journey_data.get('milestones', {})
-        current_stage = JourneyStage(journey_data['current_stage'])
+        milestones = journey_data.get("milestones", {})
+        current_stage = JourneyStage(journey_data["current_stage"])
 
         # Calculate milestone statistics
         total_milestones = len(milestones)
-        completed_milestones = sum(1 for m in milestones.values() if m['completion_status'] == 'completed')
+        completed_milestones = sum(1 for m in milestones.values() if m["completion_status"] == "completed")
         overdue_milestones = self._count_overdue_milestones(milestones)
 
         # Calculate overall progress
         overall_progress = (completed_milestones / max(1, total_milestones)) * 100
 
         # Calculate journey duration
-        journey_start = datetime.fromisoformat(journey_data['journey_start_date'])
+        journey_start = datetime.fromisoformat(journey_data["journey_start_date"])
         journey_duration = (datetime.now(timezone.utc) - journey_start).days
 
         # Calculate velocity score
-        expected_duration = sum(self.stage_durations[stage] for stage in self.stage_durations if stage.value <= current_stage.value)
+        expected_duration = sum(
+            self.stage_durations[stage] for stage in self.stage_durations if stage.value <= current_stage.value
+        )
         velocity_score = max(0, min(100, (expected_duration / max(1, journey_duration)) * 100))
 
         # Determine health status
@@ -613,7 +627,7 @@ class ClientJourneyMappingService:
             velocity_score=round(velocity_score, 1),
             risk_factors=risk_factors,
             recommended_actions=recommended_actions,
-            assessment_confidence=self._calculate_assessment_confidence(total_milestones, journey_duration)
+            assessment_confidence=self._calculate_assessment_confidence(total_milestones, journey_duration),
         )
 
     def _initialize_milestone_templates(self) -> Dict[JourneyStage, Dict[MilestoneType, Dict[str, Any]]]:
@@ -622,90 +636,90 @@ class ClientJourneyMappingService:
         return {
             JourneyStage.QUALIFIED: {
                 MilestoneType.QUALIFICATION: {
-                    'title': 'Client Qualification Complete',
-                    'description': 'Client has been qualified and onboarded',
-                    'estimated_duration_days': 1,
-                    'priority_level': 'high'
+                    "title": "Client Qualification Complete",
+                    "description": "Client has been qualified and onboarded",
+                    "estimated_duration_days": 1,
+                    "priority_level": "high",
                 }
             },
             JourneyStage.PROPERTY_SEARCH: {
                 MilestoneType.PROPERTY_MATCH: {
-                    'title': 'Initial Property Matches Identified',
-                    'description': 'Property matches based on client criteria',
-                    'estimated_duration_days': 7,
-                    'priority_level': 'high'
+                    "title": "Initial Property Matches Identified",
+                    "description": "Property matches based on client criteria",
+                    "estimated_duration_days": 7,
+                    "priority_level": "high",
                 }
             },
             JourneyStage.PROPERTY_VIEWING: {
                 MilestoneType.VIEWING_SCHEDULED: {
-                    'title': 'Property Viewings Scheduled',
-                    'description': 'In-person or virtual property viewings arranged',
-                    'estimated_duration_days': 3,
-                    'priority_level': 'high'
+                    "title": "Property Viewings Scheduled",
+                    "description": "In-person or virtual property viewings arranged",
+                    "estimated_duration_days": 3,
+                    "priority_level": "high",
                 }
             },
             JourneyStage.OFFER_PREPARATION: {
                 MilestoneType.OFFER_SUBMITTED: {
-                    'title': 'Offer Submitted',
-                    'description': 'Purchase offer submitted to seller',
-                    'estimated_duration_days': 2,
-                    'priority_level': 'critical'
+                    "title": "Offer Submitted",
+                    "description": "Purchase offer submitted to seller",
+                    "estimated_duration_days": 2,
+                    "priority_level": "critical",
                 }
             },
             JourneyStage.NEGOTIATION: {
                 MilestoneType.OFFER_ACCEPTED: {
-                    'title': 'Offer Accepted',
-                    'description': 'Purchase offer accepted by seller',
-                    'estimated_duration_days': 5,
-                    'priority_level': 'critical'
+                    "title": "Offer Accepted",
+                    "description": "Purchase offer accepted by seller",
+                    "estimated_duration_days": 5,
+                    "priority_level": "critical",
                 }
             },
             JourneyStage.INSPECTION_PERIOD: {
                 MilestoneType.INSPECTION_COMPLETED: {
-                    'title': 'Property Inspection Complete',
-                    'description': 'Professional property inspection completed',
-                    'estimated_duration_days': 7,
-                    'priority_level': 'high'
+                    "title": "Property Inspection Complete",
+                    "description": "Professional property inspection completed",
+                    "estimated_duration_days": 7,
+                    "priority_level": "high",
                 }
             },
             JourneyStage.FINANCING: {
                 MilestoneType.FINANCING_APPROVED: {
-                    'title': 'Financing Approved',
-                    'description': 'Mortgage financing approved by lender',
-                    'estimated_duration_days': 14,
-                    'priority_level': 'critical'
+                    "title": "Financing Approved",
+                    "description": "Mortgage financing approved by lender",
+                    "estimated_duration_days": 14,
+                    "priority_level": "critical",
                 }
             },
             JourneyStage.CLOSING_PREPARATION: {
                 MilestoneType.CLOSING_SCHEDULED: {
-                    'title': 'Closing Scheduled',
-                    'description': 'Final closing meeting scheduled',
-                    'estimated_duration_days': 3,
-                    'priority_level': 'critical'
+                    "title": "Closing Scheduled",
+                    "description": "Final closing meeting scheduled",
+                    "estimated_duration_days": 3,
+                    "priority_level": "critical",
                 }
             },
             JourneyStage.CLOSED: {
                 MilestoneType.TRANSACTION_CLOSED: {
-                    'title': 'Transaction Closed',
-                    'description': 'Property purchase transaction completed',
-                    'estimated_duration_days': 1,
-                    'priority_level': 'critical'
+                    "title": "Transaction Closed",
+                    "description": "Property purchase transaction completed",
+                    "estimated_duration_days": 1,
+                    "priority_level": "critical",
                 }
             },
             JourneyStage.POST_CLOSING: {
                 MilestoneType.REFERRAL_GENERATED: {
-                    'title': 'Client Referral Generated',
-                    'description': 'Satisfied client provides referral',
-                    'estimated_duration_days': 21,
-                    'priority_level': 'medium'
+                    "title": "Client Referral Generated",
+                    "description": "Satisfied client provides referral",
+                    "estimated_duration_days": 21,
+                    "priority_level": "medium",
                 },
                 MilestoneType.REVIEW_SUBMITTED: {
-                    'title': 'Review Submitted',
-                    'description': 'Client submits positive review',
-                    'estimated_duration_days': 14,
-                    'priority_level': 'medium'
-                }
-            }
+                    "title": "Review Submitted",
+                    "description": "Client submits positive review",
+                    "estimated_duration_days": 14,
+                    "priority_level": "medium",
+                },
+            },
         }
 
     def _count_overdue_milestones(self, milestones: Dict[str, Any]) -> int:
@@ -715,9 +729,11 @@ class ClientJourneyMappingService:
         now = datetime.now(timezone.utc)
 
         for milestone in milestones.values():
-            if (milestone['completion_status'] != 'completed' and
-                milestone.get('expected_completion') and
-                datetime.fromisoformat(milestone['expected_completion']) < now):
+            if (
+                milestone["completion_status"] != "completed"
+                and milestone.get("expected_completion")
+                and datetime.fromisoformat(milestone["expected_completion"]) < now
+            ):
                 overdue_count += 1
 
         return overdue_count
@@ -774,7 +790,9 @@ class ClientJourneyMappingService:
         else:
             return JourneyHealthStatus.STALLED
 
-    def _identify_risk_factors(self, milestones: Dict[str, Any], duration_days: int, velocity_score: float) -> List[str]:
+    def _identify_risk_factors(
+        self, milestones: Dict[str, Any], duration_days: int, velocity_score: float
+    ) -> List[str]:
         """Identify journey risk factors."""
 
         risk_factors = []
@@ -793,40 +811,48 @@ class ClientJourneyMappingService:
             risk_factors.append("Extended journey duration")
 
         # Stalled milestones
-        stalled_count = sum(1 for m in milestones.values()
-                          if m['completion_status'] == 'in_progress' and
-                          m['progress_percentage'] < 50)
+        stalled_count = sum(
+            1 for m in milestones.values() if m["completion_status"] == "in_progress" and m["progress_percentage"] < 50
+        )
         if stalled_count > 1:
             risk_factors.append(f"{stalled_count} stalled milestone(s)")
 
         return risk_factors
 
-    def _generate_health_recommendations(self, health_status: JourneyHealthStatus, risk_factors: List[str]) -> List[str]:
+    def _generate_health_recommendations(
+        self, health_status: JourneyHealthStatus, risk_factors: List[str]
+    ) -> List[str]:
         """Generate health-based recommendations."""
 
         recommendations = []
 
         if health_status == JourneyHealthStatus.CRITICAL:
-            recommendations.extend([
-                "🚨 Urgent: Schedule immediate client check-in",
-                "📞 Escalate to senior agent or manager",
-                "🔄 Review and adjust journey timeline",
-                "🎯 Focus on removing blocking issues"
-            ])
+            recommendations.extend(
+                [
+                    "🚨 Urgent: Schedule immediate client check-in",
+                    "📞 Escalate to senior agent or manager",
+                    "🔄 Review and adjust journey timeline",
+                    "🎯 Focus on removing blocking issues",
+                ]
+            )
         elif health_status == JourneyHealthStatus.AT_RISK:
-            recommendations.extend([
-                "⚠️ Increase communication frequency",
-                "📅 Proactive milestone planning session",
-                "🤝 Provide additional support resources",
-                "📊 Weekly progress monitoring"
-            ])
+            recommendations.extend(
+                [
+                    "⚠️ Increase communication frequency",
+                    "📅 Proactive milestone planning session",
+                    "🤝 Provide additional support resources",
+                    "📊 Weekly progress monitoring",
+                ]
+            )
         elif health_status == JourneyHealthStatus.STALLED:
-            recommendations.extend([
-                "🔄 Complete journey assessment and reset",
-                "🎯 Identify and remove blockers",
-                "📞 Re-engage client with value-add approach",
-                "⏰ Set aggressive but achievable milestones"
-            ])
+            recommendations.extend(
+                [
+                    "🔄 Complete journey assessment and reset",
+                    "🎯 Identify and remove blockers",
+                    "📞 Re-engage client with value-add approach",
+                    "⏰ Set aggressive but achievable milestones",
+                ]
+            )
 
         # Risk-specific recommendations
         if "overdue" in " ".join(risk_factors):
@@ -858,7 +884,7 @@ class ClientJourneyMappingService:
                 health_status=health_metrics.health_status.value,
                 progress_percentage=health_metrics.overall_progress_percentage,
                 risk_factors=health_metrics.risk_factors,
-                location_id=location_id
+                location_id=location_id,
             )
 
         except Exception as e:
@@ -871,12 +897,12 @@ class ClientJourneyMappingService:
 
         try:
             journey_context = {
-                'current_stage': health_metrics.current_stage.value,
-                'health_status': health_metrics.health_status.value,
-                'progress_percentage': health_metrics.overall_progress_percentage,
-                'milestones_completed': health_metrics.milestones_completed,
-                'velocity_score': health_metrics.velocity_score,
-                'last_updated': datetime.now(timezone.utc).isoformat()
+                "current_stage": health_metrics.current_stage.value,
+                "health_status": health_metrics.health_status.value,
+                "progress_percentage": health_metrics.overall_progress_percentage,
+                "milestones_completed": health_metrics.milestones_completed,
+                "velocity_score": health_metrics.velocity_score,
+                "last_updated": datetime.now(timezone.utc).isoformat(),
             }
 
             await self.memory_service.store_journey_context(client_id, location_id, journey_context)
@@ -901,11 +927,13 @@ class ClientJourneyMappingService:
             journey_duration_days=0,
             velocity_score=0.0,
             recommended_actions=["Manual review required - assessment failed"],
-            assessment_confidence=0.1
+            assessment_confidence=0.1,
         )
+
 
 # Singleton accessor following established pattern
 _client_journey_mapping_service = None
+
 
 def get_client_journey_mapping() -> ClientJourneyMappingService:
     """Get singleton client journey mapping service instance."""
@@ -914,6 +942,7 @@ def get_client_journey_mapping() -> ClientJourneyMappingService:
         _client_journey_mapping_service = ClientJourneyMappingService()
     return _client_journey_mapping_service
 
+
 # Convenience functions for common operations
 async def track_journey_progress(
     client_id: str, location_id: str, current_stage: JourneyStage, **kwargs
@@ -921,6 +950,7 @@ async def track_journey_progress(
     """Convenience function for journey progress tracking."""
     service = get_client_journey_mapping()
     return await service.track_client_journey(client_id, location_id, current_stage, **kwargs)
+
 
 async def complete_milestone(
     client_id: str, location_id: str, milestone_type: MilestoneType, **kwargs

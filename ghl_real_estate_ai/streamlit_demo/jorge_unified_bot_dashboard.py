@@ -13,18 +13,19 @@ Author: Claude Code Assistant
 Created: 2026-01-25
 """
 
-import streamlit as st
 import asyncio
 import json
+import os
+import sys
 import time
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from datetime import datetime, timedelta, timezone
-from typing import Dict, Any, List, Optional
-import sys
-import os
-from pathlib import Path
+import streamlit as st
 
 # Add project paths for imports
 current_file = Path(__file__).resolve()
@@ -34,41 +35,50 @@ sys.path.insert(0, str(current_file.parent.parent))
 
 # Page Configuration
 st.set_page_config(
-    page_title="Jorge AI | Unified Bot Dashboard",
-    page_icon="🤖",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    page_title="Jorge AI | Unified Bot Dashboard", page_icon="🤖", layout="wide", initial_sidebar_state="expanded"
 )
 
 # Safe imports with fallbacks
 try:
     from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
+
     ASYNC_UTILS_AVAILABLE = True
 except ImportError:
     ASYNC_UTILS_AVAILABLE = False
+
     def run_async(coro):
         import asyncio
+
         try:
             return asyncio.run(coro)
         except:
             return None
 
+
 # Import styling and components
 try:
     from ghl_real_estate_ai.streamlit_demo.obsidian_theme import (
-        inject_elite_css, style_obsidian_chart, render_dossier_block,
-        render_neural_progress, get_svg_icon, render_terminal_log,
-        render_voice_waveform, render_tactical_dock, render_journey_line
+        get_svg_icon,
+        inject_elite_css,
+        render_dossier_block,
+        render_journey_line,
+        render_neural_progress,
+        render_tactical_dock,
+        render_terminal_log,
+        render_voice_waveform,
+        style_obsidian_chart,
     )
+
     ELITE_STYLING = True
 except ImportError:
     ELITE_STYLING = False
 
 # Import bot services
 try:
+    from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
     from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
     from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
-    from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
+
     BOT_SERVICES_AVAILABLE = True
 except ImportError:
     BOT_SERVICES_AVAILABLE = False
@@ -77,9 +87,11 @@ except ImportError:
 try:
     from ghl_real_estate_ai.services.analytics_service import AnalyticsService
     from ghl_real_estate_ai.services.event_publisher import get_event_publisher
+
     ANALYTICS_AVAILABLE = True
 except ImportError:
     ANALYTICS_AVAILABLE = False
+
 
 class UnifiedBotManager:
     """Unified manager for all Jorge AI bots with real-time analytics."""
@@ -111,7 +123,7 @@ class UnifiedBotManager:
             "seller_bot": "🟢 Online" if self.seller_bot else "🔴 Offline",
             "lead_bot": "🟢 Online" if self.lead_bot else "🔴 Offline",
             "buyer_bot": "🟢 Online" if self.buyer_bot else "🔴 Offline",
-            "analytics": "🟢 Online" if self.analytics else "🔴 Offline"
+            "analytics": "🟢 Online" if self.analytics else "🔴 Offline",
         }
 
     async def get_lead_bot_metrics(self, days: int = 7) -> Dict[str, Any]:
@@ -129,7 +141,7 @@ class UnifiedBotManager:
                     "day_30_recovery_rate": 23.4,
                     "avg_engagement_score": lead_data.get("avg_score", 0),
                     "hot_leads_generated": lead_data.get("immediate_priority", 0),
-                    "pipeline_conversion": 34.7
+                    "pipeline_conversion": 34.7,
                 }
             except:
                 pass
@@ -144,7 +156,7 @@ class UnifiedBotManager:
             "day_30_recovery_rate": 23.4,
             "avg_engagement_score": 82.3,
             "hot_leads_generated": 8,
-            "pipeline_conversion": 34.7
+            "pipeline_conversion": 34.7,
         }
 
     async def get_seller_bot_metrics(self, days: int = 7) -> Dict[str, Any]:
@@ -162,7 +174,7 @@ class UnifiedBotManager:
                     "avg_pcs_score": 75.6,
                     "hot_leads": seller_data.get("temp_breakdown", {}).get("hot", 0),
                     "voice_handoffs": seller_data.get("handoffs", 0),
-                    "conversion_to_listing": 42.3
+                    "conversion_to_listing": 42.3,
                 }
             except:
                 pass
@@ -177,7 +189,7 @@ class UnifiedBotManager:
             "avg_pcs_score": 75.6,
             "hot_leads": 12,
             "voice_handoffs": 8,
-            "conversion_to_listing": 42.3
+            "conversion_to_listing": 42.3,
         }
 
     async def get_buyer_bot_metrics(self, days: int = 7) -> Dict[str, Any]:
@@ -192,7 +204,7 @@ class UnifiedBotManager:
             "avg_match_accuracy": 85.6,
             "buyer_satisfaction": 92.1,
             "closed_transactions": 3,
-            "avg_days_to_offer": 18.5
+            "avg_days_to_offer": 18.5,
         }
 
     async def get_performance_summary(self) -> Dict[str, Dict[str, float]]:
@@ -203,44 +215,32 @@ class UnifiedBotManager:
                 "success_rate": 94.2,
                 "efficiency": 87.5,
                 "uptime": 99.7,
-                "satisfaction": 4.6
+                "satisfaction": 4.6,
             },
             "buyer_bot": {
                 "response_time": 1.8,
                 "match_accuracy": 89.7,
                 "conversion_rate": 23.4,
                 "uptime": 99.9,
-                "satisfaction": 4.7
+                "satisfaction": 4.7,
             },
             "seller_bot": {
                 "response_time": 1.2,
                 "qualification_speed": 4.2,
                 "close_rate": 67.8,
                 "uptime": 99.8,
-                "effectiveness": 84.7
-            }
+                "effectiveness": 84.7,
+            },
         }
 
     async def get_real_time_performance(self) -> Dict[str, Any]:
         """Get real-time performance metrics."""
         return {
-            "active_conversations": {
-                "lead_bot": 12,
-                "buyer_bot": 8,
-                "seller_bot": 5
-            },
-            "messages_per_minute": {
-                "lead_bot": 3.2,
-                "buyer_bot": 2.8,
-                "seller_bot": 4.1
-            },
-            "current_load": {
-                "lead_bot": "Normal",
-                "buyer_bot": "Light",
-                "seller_bot": "High"
-            },
+            "active_conversations": {"lead_bot": 12, "buyer_bot": 8, "seller_bot": 5},
+            "messages_per_minute": {"lead_bot": 3.2, "buyer_bot": 2.8, "seller_bot": 4.1},
+            "current_load": {"lead_bot": "Normal", "buyer_bot": "Light", "seller_bot": "High"},
             "system_status": "All systems operational",
-            "last_updated": datetime.now(timezone.utc).isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat(),
         }
 
     async def chat_with_seller_bot(self, seller_id: str, seller_name: str, message: str) -> Dict[str, Any]:
@@ -260,7 +260,7 @@ class UnifiedBotManager:
             "stall_detected": "get_back" in message.lower(),
             "detected_stall_type": "delay_tactic" if "get_back" in message.lower() else None,
             "psychological_commitment": 65,
-            "next_action": "apply_pressure"
+            "next_action": "apply_pressure",
         }
 
     async def chat_with_lead_bot(self, lead_id: str, message: str, step: str = "day_3") -> Dict[str, Any]:
@@ -276,11 +276,14 @@ class UnifiedBotManager:
                     "property_address": "123 Main St, Rancho Cucamonga, CA",
                     "conversation_history": [{"role": "user", "content": message}],
                     "current_step": step,
-                    "engagement_status": "ghosted"
+                    "engagement_status": "ghosted",
                 }
 
                 # Process through workflow (simplified)
-                result = {"response_content": f"Thanks for your message! Let me help you with that property inquiry.", "step_completed": step}
+                result = {
+                    "response_content": f"Thanks for your message! Let me help you with that property inquiry.",
+                    "step_completed": step,
+                }
                 return result
             except Exception as e:
                 return {"error": f"Lead bot error: {str(e)}"}
@@ -290,7 +293,7 @@ class UnifiedBotManager:
             "response_content": f"Hi there! I see you're interested in our property. Based on your message, I'm setting up a customized follow-up sequence. What's your timeline looking like?",
             "step_completed": step,
             "next_step": "day_7",
-            "engagement_score": 78
+            "engagement_score": 78,
         }
 
     async def chat_with_buyer_bot(self, buyer_id: str, message: str) -> Dict[str, Any]:
@@ -303,10 +306,13 @@ class UnifiedBotManager:
                     "buyer_name": "Demo Buyer",
                     "budget_range": {"min": 700000, "max": 750000},
                     "target_areas": ["Rancho Cucamonga", "Victoria Gardens"],
-                    "conversation_history": [{"role": "user", "content": message}]
+                    "conversation_history": [{"role": "user", "content": message}],
                 }
 
-                result = {"response_content": f"I understand you're looking for a home. Let me help you find the perfect match!", "properties_matched": 3}
+                result = {
+                    "response_content": f"I understand you're looking for a home. Let me help you find the perfect match!",
+                    "properties_matched": 3,
+                }
                 return result
             except Exception as e:
                 return {"error": f"Buyer bot error: {str(e)}"}
@@ -316,31 +322,32 @@ class UnifiedBotManager:
             "response_content": f"Perfect! Based on your criteria, I've found 3 properties that match your needs. Let me show you the details and we can schedule viewings.",
             "properties_matched": 3,
             "financial_readiness": 85,
-            "urgency_level": "high"
+            "urgency_level": "high",
         }
+
 
 @st.cache_resource
 def get_bot_manager():
     return UnifiedBotManager()
 
+
 def render_sidebar():
     """Render the navigation sidebar."""
     with st.sidebar:
-        st.markdown("""
+        st.markdown(
+            """
         <div style="text-align: center; padding: 1rem 0;">
             <h2 style="color: #1E88E5; font-family: 'Space Grotesk', sans-serif;">🤖 JORGE AI</h2>
             <p style="color: #8B949E; font-size: 0.8rem; letter-spacing: 0.1em;">UNIFIED BOT COMMAND</p>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
         st.markdown("---")
 
         # Bot selection
-        selected_bot = st.radio(
-            "Select Bot:",
-            ["🎯 Lead Bot", "🏠 Buyer Bot", "💼 Seller Bot"],
-            index=0
-        )
+        selected_bot = st.radio("Select Bot:", ["🎯 Lead Bot", "🏠 Buyer Bot", "💼 Seller Bot"], index=0)
 
         st.markdown("---")
 
@@ -368,6 +375,7 @@ def render_sidebar():
 
         return selected_bot
 
+
 def render_lead_bot_tab():
     """Render the Lead Bot dedicated tab."""
     st.header("🎯 Lead Bot Command Center")
@@ -378,9 +386,9 @@ def render_lead_bot_tab():
     metrics = run_async(manager.get_lead_bot_metrics()) or {}
 
     # Tab structure for Lead Bot
-    chat_tab, kpis_tab, performance_tab, analytics_tab, pipeline_tab, settings_tab = st.tabs([
-        "💬 Live Chat", "📊 KPIs", "⚡ Performance", "📈 Analytics", "🔄 Pipeline", "⚙️ Settings"
-    ])
+    chat_tab, kpis_tab, performance_tab, analytics_tab, pipeline_tab, settings_tab = st.tabs(
+        ["💬 Live Chat", "📊 KPIs", "⚡ Performance", "📈 Analytics", "🔄 Pipeline", "⚙️ Settings"]
+    )
 
     with chat_tab:
         render_lead_bot_chat(manager)
@@ -400,6 +408,7 @@ def render_lead_bot_tab():
     with settings_tab:
         render_lead_bot_settings()
 
+
 def render_buyer_bot_tab():
     """Render the Buyer Bot dedicated tab."""
     st.header("🏠 Buyer Bot Command Center")
@@ -410,9 +419,9 @@ def render_buyer_bot_tab():
     metrics = run_async(manager.get_buyer_bot_metrics()) or {}
 
     # Tab structure for Buyer Bot
-    chat_tab, kpis_tab, performance_tab, properties_tab, analytics_tab, settings_tab = st.tabs([
-        "💬 Live Chat", "📊 KPIs", "⚡ Performance", "🏠 Properties", "📈 Analytics", "⚙️ Settings"
-    ])
+    chat_tab, kpis_tab, performance_tab, properties_tab, analytics_tab, settings_tab = st.tabs(
+        ["💬 Live Chat", "📊 KPIs", "⚡ Performance", "🏠 Properties", "📈 Analytics", "⚙️ Settings"]
+    )
 
     with chat_tab:
         render_buyer_bot_chat(manager)
@@ -432,6 +441,7 @@ def render_buyer_bot_tab():
     with settings_tab:
         render_buyer_bot_settings()
 
+
 def render_seller_bot_tab():
     """Render the Seller Bot dedicated tab."""
     st.header("💼 Seller Bot Command Center")
@@ -442,9 +452,9 @@ def render_seller_bot_tab():
     metrics = run_async(manager.get_seller_bot_metrics()) or {}
 
     # Tab structure for Seller Bot
-    chat_tab, kpis_tab, performance_tab, analytics_tab, insights_tab, settings_tab = st.tabs([
-        "💬 Live Chat", "📊 KPIs", "⚡ Performance", "📈 Analytics", "🧠 Insights", "⚙️ Settings"
-    ])
+    chat_tab, kpis_tab, performance_tab, analytics_tab, insights_tab, settings_tab = st.tabs(
+        ["💬 Live Chat", "📊 KPIs", "⚡ Performance", "📈 Analytics", "🧠 Insights", "⚙️ Settings"]
+    )
 
     with chat_tab:
         render_seller_bot_chat(manager)
@@ -464,6 +474,7 @@ def render_seller_bot_tab():
     with settings_tab:
         render_seller_bot_settings()
 
+
 def render_lead_bot_chat(manager: UnifiedBotManager):
     """Render Lead Bot chat interface."""
     st.subheader("💬 Lead Bot Conversation")
@@ -475,58 +486,54 @@ def render_lead_bot_chat(manager: UnifiedBotManager):
         selected_lead = st.selectbox(
             "Active Leads:",
             ["Sarah Johnson (Day 7)", "Mike Chen (Day 3)", "Jennifer White (Day 30)"],
-            key="lead_chat_selection"
+            key="lead_chat_selection",
         )
 
         sequence_step = st.selectbox(
-            "Current Step:",
-            ["day_3", "day_7", "day_14", "day_30"],
-            index=1,
-            key="lead_sequence_step"
+            "Current Step:", ["day_3", "day_7", "day_14", "day_30"], index=1, key="lead_sequence_step"
         )
 
     with col2:
         st.markdown("**Conversation Simulator**")
 
         # Chat interface
-        if 'lead_chat_history' not in st.session_state:
+        if "lead_chat_history" not in st.session_state:
             st.session_state.lead_chat_history = []
 
         # Display chat history
         for msg in st.session_state.lead_chat_history:
-            if msg['sender'] == 'user':
+            if msg["sender"] == "user":
                 st.markdown(f"**Lead**: {msg['content']}")
             else:
                 st.markdown(f"**Lead Bot**: {msg['content']}")
 
         # Input for new message
-        user_message = st.text_input("Lead Message:", placeholder="I might be interested but need to think about it...", key="lead_user_input")
+        user_message = st.text_input(
+            "Lead Message:", placeholder="I might be interested but need to think about it...", key="lead_user_input"
+        )
 
         if st.button("Send to Lead Bot", use_container_width=True, key="lead_send_btn"):
             if user_message:
                 # Add user message to history
-                st.session_state.lead_chat_history.append({
-                    'sender': 'user',
-                    'content': user_message,
-                    'timestamp': datetime.now()
-                })
+                st.session_state.lead_chat_history.append(
+                    {"sender": "user", "content": user_message, "timestamp": datetime.now()}
+                )
 
                 # Get bot response
                 response = run_async(manager.chat_with_lead_bot("demo_lead", user_message, sequence_step))
 
-                if 'error' not in response:
+                if "error" not in response:
                     # Add bot response to history
-                    st.session_state.lead_chat_history.append({
-                        'sender': 'bot',
-                        'content': response['response_content'],
-                        'timestamp': datetime.now()
-                    })
+                    st.session_state.lead_chat_history.append(
+                        {"sender": "bot", "content": response["response_content"], "timestamp": datetime.now()}
+                    )
 
                     st.success(f"✅ Response generated for {sequence_step}")
                 else:
                     st.error(f"❌ {response['error']}")
 
                 st.rerun()
+
 
 def render_lead_bot_kpis(metrics: Dict[str, Any]):
     """Render Lead Bot KPIs."""
@@ -536,52 +543,21 @@ def render_lead_bot_kpis(metrics: Dict[str, Any]):
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.metric(
-            "Active Sequences",
-            metrics.get("active_sequences", 0),
-            delta="+5 this week"
-        )
-        st.metric(
-            "Day 3 Response Rate",
-            f"{metrics.get('day_3_response_rate', 0):.1f}%",
-            delta="+3.2%"
-        )
+        st.metric("Active Sequences", metrics.get("active_sequences", 0), delta="+5 this week")
+        st.metric("Day 3 Response Rate", f"{metrics.get('day_3_response_rate', 0):.1f}%", delta="+3.2%")
 
     with col2:
-        st.metric(
-            "Re-engagement Rate",
-            f"{metrics.get('reengagement_rate', 0):.1f}%",
-            delta="+5.8%"
-        )
-        st.metric(
-            "Day 7 Call Success",
-            f"{metrics.get('day_7_call_success', 0):.1f}%",
-            delta="+2.1%"
-        )
+        st.metric("Re-engagement Rate", f"{metrics.get('reengagement_rate', 0):.1f}%", delta="+5.8%")
+        st.metric("Day 7 Call Success", f"{metrics.get('day_7_call_success', 0):.1f}%", delta="+2.1%")
 
     with col3:
-        st.metric(
-            "Hot Leads Generated",
-            metrics.get("hot_leads_generated", 0),
-            delta="+3 today"
-        )
-        st.metric(
-            "Avg Engagement Score",
-            f"{metrics.get('avg_engagement_score', 0):.1f}",
-            delta="+1.5"
-        )
+        st.metric("Hot Leads Generated", metrics.get("hot_leads_generated", 0), delta="+3 today")
+        st.metric("Avg Engagement Score", f"{metrics.get('avg_engagement_score', 0):.1f}", delta="+1.5")
 
     with col4:
-        st.metric(
-            "Pipeline Conversion",
-            f"{metrics.get('pipeline_conversion', 0):.1f}%",
-            delta="+4.2%"
-        )
-        st.metric(
-            "30-Day Recovery Rate",
-            f"{metrics.get('day_30_recovery_rate', 0):.1f}%",
-            delta="+1.8%"
-        )
+        st.metric("Pipeline Conversion", f"{metrics.get('pipeline_conversion', 0):.1f}%", delta="+4.2%")
+        st.metric("30-Day Recovery Rate", f"{metrics.get('day_30_recovery_rate', 0):.1f}%", delta="+1.8%")
+
 
 def render_lead_bot_analytics(metrics: Dict[str, Any]):
     """Render Lead Bot analytics."""
@@ -595,7 +571,7 @@ def render_lead_bot_analytics(metrics: Dict[str, Any]):
         step_data = {
             "Step": ["Day 3 SMS", "Day 7 Call", "Day 14 Email", "Day 30 Nudge"],
             "Response Rate": [45.2, 62.8, 38.5, 23.4],
-            "Conversion Rate": [12.5, 28.7, 15.2, 8.1]
+            "Conversion Rate": [12.5, 28.7, 15.2, 8.1],
         }
         df = pd.DataFrame(step_data)
         fig = px.bar(df, x="Step", y=["Response Rate", "Conversion Rate"], barmode="group")
@@ -606,17 +582,14 @@ def render_lead_bot_analytics(metrics: Dict[str, Any]):
     with col2:
         st.markdown("**Engagement Trends (7 Days)**")
         # Mock trend data
-        dates = pd.date_range(start='2026-01-18', periods=7, freq='D')
-        trend_data = {
-            "Date": dates,
-            "Engagements": [23, 31, 28, 35, 42, 38, 45],
-            "Conversions": [3, 5, 4, 7, 9, 6, 8]
-        }
+        dates = pd.date_range(start="2026-01-18", periods=7, freq="D")
+        trend_data = {"Date": dates, "Engagements": [23, 31, 28, 35, 42, 38, 45], "Conversions": [3, 5, 4, 7, 9, 6, 8]}
         df_trend = pd.DataFrame(trend_data)
         fig2 = px.line(df_trend, x="Date", y=["Engagements", "Conversions"])
         if ELITE_STYLING:
             fig2 = style_obsidian_chart(fig2)
         st.plotly_chart(fig2, use_container_width=True)
+
 
 def render_lead_bot_pipeline():
     """Render Lead Bot pipeline view."""
@@ -624,10 +597,22 @@ def render_lead_bot_pipeline():
 
     # Mock pipeline data
     pipeline_data = [
-        {"name": "Sarah Johnson", "step": "Day 7 Call", "status": "Scheduled", "score": 85, "last_response": "2 hours ago"},
+        {
+            "name": "Sarah Johnson",
+            "step": "Day 7 Call",
+            "status": "Scheduled",
+            "score": 85,
+            "last_response": "2 hours ago",
+        },
         {"name": "Mike Chen", "step": "Day 3 SMS", "status": "Sent", "score": 73, "last_response": "Pending"},
-        {"name": "Jennifer White", "step": "Day 30 Nudge", "status": "Delivered", "score": 91, "last_response": "30 min ago"},
-        {"name": "David Brown", "step": "Day 14 Email", "status": "Opened", "score": 67, "last_response": "1 day ago"}
+        {
+            "name": "Jennifer White",
+            "step": "Day 30 Nudge",
+            "status": "Delivered",
+            "score": 91,
+            "last_response": "30 min ago",
+        },
+        {"name": "David Brown", "step": "Day 14 Email", "status": "Opened", "score": 67, "last_response": "1 day ago"},
     ]
 
     for lead in pipeline_data:
@@ -637,16 +622,17 @@ def render_lead_bot_pipeline():
             with col1:
                 st.write(f"**{lead['name']}**")
             with col2:
-                st.write(lead['step'])
+                st.write(lead["step"])
             with col3:
-                status_color = "🟢" if lead['status'] == "Delivered" else "🟡" if lead['status'] == "Opened" else "🔵"
+                status_color = "🟢" if lead["status"] == "Delivered" else "🟡" if lead["status"] == "Opened" else "🔵"
                 st.write(f"{status_color} {lead['status']}")
             with col4:
                 st.write(f"Score: {lead['score']}")
             with col5:
-                st.write(lead['last_response'])
+                st.write(lead["last_response"])
 
             st.divider()
+
 
 def render_lead_bot_settings():
     """Render Lead Bot settings."""
@@ -674,6 +660,7 @@ def render_lead_bot_settings():
         st.selectbox("Response Tone", ["Professional", "Friendly", "Urgent", "Casual"])
         st.selectbox("Personalization Level", ["High", "Medium", "Low"])
 
+
 def render_buyer_bot_chat(manager: UnifiedBotManager):
     """Render Buyer Bot chat interface."""
     st.subheader("💬 Buyer Bot Conversation")
@@ -685,7 +672,7 @@ def render_buyer_bot_chat(manager: UnifiedBotManager):
         selected_buyer = st.selectbox(
             "Active Buyers:",
             ["Alex Thompson (Pre-approved)", "Maria Garcia (Searching)", "John Smith (First-time)"],
-            key="buyer_chat_selection"
+            key="buyer_chat_selection",
         )
 
         st.markdown("**Buyer Profile**")
@@ -697,44 +684,45 @@ def render_buyer_bot_chat(manager: UnifiedBotManager):
         st.markdown("**Conversation Simulator**")
 
         # Chat interface
-        if 'buyer_chat_history' not in st.session_state:
+        if "buyer_chat_history" not in st.session_state:
             st.session_state.buyer_chat_history = []
 
         # Display chat history
         for msg in st.session_state.buyer_chat_history:
-            if msg['sender'] == 'user':
+            if msg["sender"] == "user":
                 st.markdown(f"**Buyer**: {msg['content']}")
             else:
                 st.markdown(f"**Buyer Bot**: {msg['content']}")
 
         # Input for new message
-        user_message = st.text_input("Buyer Message:", placeholder="I'm looking for a 3BR home with a good school district...", key="buyer_user_input")
+        user_message = st.text_input(
+            "Buyer Message:",
+            placeholder="I'm looking for a 3BR home with a good school district...",
+            key="buyer_user_input",
+        )
 
         if st.button("Send to Buyer Bot", use_container_width=True, key="buyer_send_btn"):
             if user_message:
                 # Add user message to history
-                st.session_state.buyer_chat_history.append({
-                    'sender': 'user',
-                    'content': user_message,
-                    'timestamp': datetime.now()
-                })
+                st.session_state.buyer_chat_history.append(
+                    {"sender": "user", "content": user_message, "timestamp": datetime.now()}
+                )
 
                 # Get bot response
                 response = run_async(manager.chat_with_buyer_bot("demo_buyer", user_message))
 
-                if 'error' not in response:
+                if "error" not in response:
                     # Add bot response to history
-                    st.session_state.buyer_chat_history.append({
-                        'sender': 'bot',
-                        'content': response['response_content'],
-                        'timestamp': datetime.now()
-                    })
+                    st.session_state.buyer_chat_history.append(
+                        {"sender": "bot", "content": response["response_content"], "timestamp": datetime.now()}
+                    )
 
                     st.success(f"✅ Found {response.get('properties_matched', 0)} property matches")
                 else:
                     st.error(f"❌ {response['error']}")
 
                 st.rerun()
+
 
 def render_buyer_bot_kpis(metrics: Dict[str, Any]):
     """Render Buyer Bot KPIs."""
@@ -744,52 +732,21 @@ def render_buyer_bot_kpis(metrics: Dict[str, Any]):
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.metric(
-            "Buyers Qualified",
-            metrics.get("total_buyers_qualified", 0),
-            delta="+8 this week"
-        )
-        st.metric(
-            "Avg Financial Readiness",
-            f"{metrics.get('avg_financial_readiness', 0):.1f}%",
-            delta="+2.3%"
-        )
+        st.metric("Buyers Qualified", metrics.get("total_buyers_qualified", 0), delta="+8 this week")
+        st.metric("Avg Financial Readiness", f"{metrics.get('avg_financial_readiness', 0):.1f}%", delta="+2.3%")
 
     with col2:
-        st.metric(
-            "Property Matches Sent",
-            metrics.get("property_matches_sent", 0),
-            delta="+23 today"
-        )
-        st.metric(
-            "Match Accuracy",
-            f"{metrics.get('avg_match_accuracy', 0):.1f}%",
-            delta="+1.8%"
-        )
+        st.metric("Property Matches Sent", metrics.get("property_matches_sent", 0), delta="+23 today")
+        st.metric("Match Accuracy", f"{metrics.get('avg_match_accuracy', 0):.1f}%", delta="+1.8%")
 
     with col3:
-        st.metric(
-            "Showing Bookings",
-            metrics.get("showing_bookings", 0),
-            delta="+5 this week"
-        )
-        st.metric(
-            "Offer Submissions",
-            metrics.get("offer_submissions", 0),
-            delta="+2 this week"
-        )
+        st.metric("Showing Bookings", metrics.get("showing_bookings", 0), delta="+5 this week")
+        st.metric("Offer Submissions", metrics.get("offer_submissions", 0), delta="+2 this week")
 
     with col4:
-        st.metric(
-            "Closed Transactions",
-            metrics.get("closed_transactions", 0),
-            delta="+1 this month"
-        )
-        st.metric(
-            "Avg Days to Offer",
-            f"{metrics.get('avg_days_to_offer', 0):.1f}",
-            delta="-2.3 days"
-        )
+        st.metric("Closed Transactions", metrics.get("closed_transactions", 0), delta="+1 this month")
+        st.metric("Avg Days to Offer", f"{metrics.get('avg_days_to_offer', 0):.1f}", delta="-2.3 days")
+
 
 def render_buyer_properties():
     """Render buyer property matching interface."""
@@ -804,7 +761,7 @@ def render_buyer_properties():
         location = st.multiselect("Areas", ["Rancho Cucamonga", "Victoria Gardens", "Etiwanda", "Day Creek"])
 
         if st.button("🔍 Find Matches", use_container_width=True):
-            st.session_state['property_search_triggered'] = True
+            st.session_state["property_search_triggered"] = True
 
     with col2:
         st.markdown("**Recent Matches**")
@@ -813,17 +770,22 @@ def render_buyer_properties():
         properties = [
             {"address": "123 Oak St, Rancho Cucamonga", "price": "$725K", "beds": 3, "match": 92},
             {"address": "456 Pine Ave, Victoria Gardens", "price": "$685K", "beds": 4, "match": 87},
-            {"address": "789 Elm Dr, Etiwanda", "price": "$750K", "beds": 3, "match": 84}
+            {"address": "789 Elm Dr, Etiwanda", "price": "$750K", "beds": 3, "match": 84},
         ]
 
         for prop in properties:
             with st.container():
                 col_addr, col_price, col_beds, col_match = st.columns([3, 1, 1, 1])
-                with col_addr: st.write(prop["address"])
-                with col_price: st.write(prop["price"])
-                with col_beds: st.write(f"{prop['beds']} BR")
-                with col_match: st.write(f"{prop['match']}% match")
+                with col_addr:
+                    st.write(prop["address"])
+                with col_price:
+                    st.write(prop["price"])
+                with col_beds:
+                    st.write(f"{prop['beds']} BR")
+                with col_match:
+                    st.write(f"{prop['match']}% match")
                 st.divider()
+
 
 def render_buyer_bot_analytics(metrics: Dict[str, Any]):
     """Render Buyer Bot analytics."""
@@ -835,7 +797,7 @@ def render_buyer_bot_analytics(metrics: Dict[str, Any]):
         st.markdown("**Conversion Funnel**")
         funnel_data = {
             "Stage": ["Inquiry", "Qualified", "Matched", "Showing", "Offer", "Closed"],
-            "Count": [100, 64, 45, 23, 7, 3]
+            "Count": [100, 64, 45, 23, 7, 3],
         }
         df = pd.DataFrame(funnel_data)
         fig = px.funnel(df, x="Count", y="Stage")
@@ -845,15 +807,13 @@ def render_buyer_bot_analytics(metrics: Dict[str, Any]):
 
     with col2:
         st.markdown("**Property Match Accuracy**")
-        accuracy_data = {
-            "Price Range": ["$300-500K", "$500-700K", "$700-900K", "$900K+"],
-            "Accuracy": [78, 85, 92, 88]
-        }
+        accuracy_data = {"Price Range": ["$300-500K", "$500-700K", "$700-900K", "$900K+"], "Accuracy": [78, 85, 92, 88]}
         df_acc = pd.DataFrame(accuracy_data)
         fig2 = px.bar(df_acc, x="Price Range", y="Accuracy")
         if ELITE_STYLING:
             fig2 = style_obsidian_chart(fig2)
         st.plotly_chart(fig2, use_container_width=True)
+
 
 def render_buyer_bot_settings():
     """Render Buyer Bot settings."""
@@ -879,6 +839,7 @@ def render_buyer_bot_settings():
         st.markdown("**Communication**")
         st.selectbox("Primary Channel", ["SMS", "Email", "Voice"])
 
+
 def render_seller_bot_chat(manager: UnifiedBotManager):
     """Render Seller Bot chat interface."""
     st.subheader("💬 Seller Bot Conversation")
@@ -890,7 +851,7 @@ def render_seller_bot_chat(manager: UnifiedBotManager):
         selected_seller = st.selectbox(
             "Active Sellers:",
             ["Robert Miller (Motivated)", "Lisa Davis (Price Testing)", "Tom Wilson (Unresponsive)"],
-            key="seller_chat_selection"
+            key="seller_chat_selection",
         )
 
         st.markdown("**Seller Profile**")
@@ -903,51 +864,52 @@ def render_seller_bot_chat(manager: UnifiedBotManager):
         st.markdown("**Conversation Simulator**")
 
         # Chat interface
-        if 'seller_chat_history' not in st.session_state:
+        if "seller_chat_history" not in st.session_state:
             st.session_state.seller_chat_history = []
 
         # Display chat history
         for msg in st.session_state.seller_chat_history:
-            if msg['sender'] == 'user':
+            if msg["sender"] == "user":
                 st.markdown(f"**Seller**: {msg['content']}")
             else:
                 st.markdown(f"**Jorge**: {msg['content']}")
 
         # Input for new message
-        user_message = st.text_input("Seller Message:", placeholder="I'll get back to you next week, pretty busy right now...", key="seller_user_input")
+        user_message = st.text_input(
+            "Seller Message:",
+            placeholder="I'll get back to you next week, pretty busy right now...",
+            key="seller_user_input",
+        )
 
         if st.button("Send to Jorge (Seller Bot)", use_container_width=True, key="seller_send_btn"):
             if user_message:
                 # Add user message to history
-                st.session_state.seller_chat_history.append({
-                    'sender': 'user',
-                    'content': user_message,
-                    'timestamp': datetime.now()
-                })
+                st.session_state.seller_chat_history.append(
+                    {"sender": "user", "content": user_message, "timestamp": datetime.now()}
+                )
 
                 # Get bot response
                 response = run_async(manager.chat_with_seller_bot("demo_seller", "Robert Miller", user_message))
 
-                if 'error' not in response:
+                if "error" not in response:
                     # Add bot response to history
-                    st.session_state.seller_chat_history.append({
-                        'sender': 'bot',
-                        'content': response['response_content'],
-                        'timestamp': datetime.now()
-                    })
+                    st.session_state.seller_chat_history.append(
+                        {"sender": "bot", "content": response["response_content"], "timestamp": datetime.now()}
+                    )
 
                     # Show Jorge's strategy
                     col_response, col_strategy = st.columns([2, 1])
                     with col_response:
                         st.success("✅ Jorge response generated")
                     with col_strategy:
-                        if response.get('stall_detected'):
+                        if response.get("stall_detected"):
                             st.warning(f"⚠️ Stall: {response['detected_stall_type']}")
                         st.info(f"Strategy: {response['current_tone']}")
                 else:
                     st.error(f"❌ {response['error']}")
 
                 st.rerun()
+
 
 def render_seller_bot_kpis(metrics: Dict[str, Any]):
     """Render Seller Bot KPIs."""
@@ -957,52 +919,21 @@ def render_seller_bot_kpis(metrics: Dict[str, Any]):
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.metric(
-            "Total Qualifications",
-            metrics.get("total_qualifications", 0),
-            delta="+12 this week"
-        )
-        st.metric(
-            "Qualification Rate",
-            f"{metrics.get('qualification_rate', 0):.1f}%",
-            delta="+3.4%"
-        )
+        st.metric("Total Qualifications", metrics.get("total_qualifications", 0), delta="+12 this week")
+        st.metric("Qualification Rate", f"{metrics.get('qualification_rate', 0):.1f}%", delta="+3.4%")
 
     with col2:
-        st.metric(
-            "Stall Detection Rate",
-            f"{metrics.get('stall_detection_rate', 0):.1f}%",
-            delta="+5.2%"
-        )
-        st.metric(
-            "Take-Away Success",
-            f"{metrics.get('takeaway_close_success', 0):.1f}%",
-            delta="+8.1%"
-        )
+        st.metric("Stall Detection Rate", f"{metrics.get('stall_detection_rate', 0):.1f}%", delta="+5.2%")
+        st.metric("Take-Away Success", f"{metrics.get('takeaway_close_success', 0):.1f}%", delta="+8.1%")
 
     with col3:
-        st.metric(
-            "Avg FRS Score",
-            f"{metrics.get('avg_frs_score', 0):.1f}",
-            delta="+2.3"
-        )
-        st.metric(
-            "Hot Leads",
-            metrics.get("hot_leads", 0),
-            delta="+4 this week"
-        )
+        st.metric("Avg FRS Score", f"{metrics.get('avg_frs_score', 0):.1f}", delta="+2.3")
+        st.metric("Hot Leads", metrics.get("hot_leads", 0), delta="+4 this week")
 
     with col4:
-        st.metric(
-            "Voice Handoffs",
-            metrics.get("voice_handoffs", 0),
-            delta="+2 today"
-        )
-        st.metric(
-            "Listing Conversion",
-            f"{metrics.get('conversion_to_listing', 0):.1f}%",
-            delta="+6.7%"
-        )
+        st.metric("Voice Handoffs", metrics.get("voice_handoffs", 0), delta="+2 today")
+        st.metric("Listing Conversion", f"{metrics.get('conversion_to_listing', 0):.1f}%", delta="+6.7%")
+
 
 def render_seller_bot_analytics(metrics: Dict[str, Any]):
     """Render Seller Bot analytics."""
@@ -1015,7 +946,7 @@ def render_seller_bot_analytics(metrics: Dict[str, Any]):
         frs_data = {
             "Score Range": ["90-100", "80-89", "70-79", "60-69", "50-59"],
             "Count": [12, 23, 34, 18, 2],
-            "Conversion": [85, 72, 54, 34, 18]
+            "Conversion": [85, 72, 54, 34, 18],
         }
         df = pd.DataFrame(frs_data)
         fig = px.bar(df, x="Score Range", y=["Count", "Conversion"], barmode="group")
@@ -1028,13 +959,14 @@ def render_seller_bot_analytics(metrics: Dict[str, Any]):
         stall_data = {
             "Stall Type": ["Delay Tactic", "Price Shopping", "Thinking", "Get Back"],
             "Detection Rate": [78, 65, 82, 91],
-            "Resolution Rate": [73, 45, 67, 85]
+            "Resolution Rate": [73, 45, 67, 85],
         }
         df_stall = pd.DataFrame(stall_data)
         fig2 = px.bar(df_stall, x="Stall Type", y=["Detection Rate", "Resolution Rate"], barmode="group")
         if ELITE_STYLING:
             fig2 = style_obsidian_chart(fig2)
         st.plotly_chart(fig2, use_container_width=True)
+
 
 def render_seller_bot_insights():
     """Render Seller Bot insights."""
@@ -1048,14 +980,14 @@ def render_seller_bot_insights():
             {"seller": "Robert Miller", "insight": "High motivation but unrealistic timeline", "confidence": 87},
             {"seller": "Lisa Davis", "insight": "Price testing market, not serious", "confidence": 92},
             {"seller": "Tom Wilson", "insight": "Financial distress detected", "confidence": 78},
-            {"seller": "Amy Chen", "insight": "Perfect candidate for quick close", "confidence": 95}
+            {"seller": "Amy Chen", "insight": "Perfect candidate for quick close", "confidence": 95},
         ]
 
         for insight in insights:
             with st.container():
                 st.write(f"**{insight['seller']}**")
-                st.write(insight['insight'])
-                st.progress(insight['confidence']/100, text=f"Confidence: {insight['confidence']}%")
+                st.write(insight["insight"])
+                st.progress(insight["confidence"] / 100, text=f"Confidence: {insight['confidence']}%")
                 st.divider()
 
     with col2:
@@ -1070,6 +1002,7 @@ def render_seller_bot_insights():
         st.success("✅ Increase confrontational tone on Mondays")
         st.info("💡 Pre-emptive Zillow defense in opener")
         st.warning("⚠️ Timeline pressure more effective Q1")
+
 
 def render_seller_bot_settings():
     """Render Seller Bot settings."""
@@ -1092,7 +1025,7 @@ def render_seller_bot_settings():
         active_strategies = st.multiselect(
             "Active Closing Techniques:",
             ["Take-Away Close", "Alternative Choice", "Assumptive Close", "Urgency Create"],
-            default=["Take-Away Close", "Urgency Create"]
+            default=["Take-Away Close", "Urgency Create"],
         )
 
         st.markdown("**Qualification Weights**")
@@ -1100,6 +1033,7 @@ def render_seller_bot_settings():
         st.slider("Timeline Weight", 0.0, 1.0, 0.30)
         st.slider("Condition Weight", 0.0, 1.0, 0.20)
         st.slider("Price Weight", 0.0, 1.0, 0.15)
+
 
 def render_lead_bot_performance(metrics: Dict[str, Any]):
     """Render Lead Bot performance metrics."""
@@ -1109,33 +1043,13 @@ def render_lead_bot_performance(metrics: Dict[str, Any]):
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.metric(
-            "Response Time (Avg)",
-            "2.3s",
-            delta="-0.4s",
-            help="Average time to generate response"
-        )
+        st.metric("Response Time (Avg)", "2.3s", delta="-0.4s", help="Average time to generate response")
     with col2:
-        st.metric(
-            "Success Rate",
-            "94.2%",
-            delta="+2.1%",
-            help="Percentage of successful interactions"
-        )
+        st.metric("Success Rate", "94.2%", delta="+2.1%", help="Percentage of successful interactions")
     with col3:
-        st.metric(
-            "Uptime",
-            "99.7%",
-            delta="+0.1%",
-            help="Bot availability percentage"
-        )
+        st.metric("Uptime", "99.7%", delta="+0.1%", help="Bot availability percentage")
     with col4:
-        st.metric(
-            "Efficiency Score",
-            "87.5/100",
-            delta="+3.2",
-            help="Overall performance efficiency"
-        )
+        st.metric("Efficiency Score", "87.5/100", delta="+3.2", help="Overall performance efficiency")
 
     st.divider()
 
@@ -1148,22 +1062,20 @@ def render_lead_bot_performance(metrics: Dict[str, Any]):
         step_performance = {
             "Step": ["Day 3", "Day 7", "Day 14", "Day 30"],
             "Success Rate": [92.5, 87.3, 78.9, 65.4],
-            "Response Time": [2.1, 2.8, 3.2, 4.1]
+            "Response Time": [2.1, 2.8, 3.2, 4.1],
         }
         df_perf = pd.DataFrame(step_performance)
 
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=df_perf["Step"], y=df_perf["Success Rate"],
-                                name="Success Rate %", yaxis="y"))
-        fig.add_trace(go.Scatter(x=df_perf["Step"], y=df_perf["Response Time"],
-                                name="Response Time (s)", yaxis="y2"))
+        fig.add_trace(go.Scatter(x=df_perf["Step"], y=df_perf["Success Rate"], name="Success Rate %", yaxis="y"))
+        fig.add_trace(go.Scatter(x=df_perf["Step"], y=df_perf["Response Time"], name="Response Time (s)", yaxis="y2"))
 
         fig.update_layout(
             title="Performance by Sequence Step",
             xaxis_title="Sequence Step",
             yaxis=dict(title="Success Rate (%)", side="left"),
             yaxis2=dict(title="Response Time (s)", side="right", overlaying="y"),
-            height=300
+            height=300,
         )
 
         if ELITE_STYLING:
@@ -1173,16 +1085,15 @@ def render_lead_bot_performance(metrics: Dict[str, Any]):
     with col_chart2:
         st.markdown("**Performance Trends (7 Days)**")
         # Performance over time
-        dates = pd.date_range(start='2026-01-18', periods=7, freq='D')
+        dates = pd.date_range(start="2026-01-18", periods=7, freq="D")
         trend_data = {
             "Date": dates,
             "Success Rate": [91.2, 93.4, 94.1, 92.8, 94.7, 95.2, 94.2],
-            "Response Time": [2.8, 2.5, 2.3, 2.4, 2.1, 2.2, 2.3]
+            "Response Time": [2.8, 2.5, 2.3, 2.4, 2.1, 2.2, 2.3],
         }
         df_trend = pd.DataFrame(trend_data)
 
-        fig2 = px.line(df_trend, x="Date", y=["Success Rate", "Response Time"],
-                       title="Performance Trends")
+        fig2 = px.line(df_trend, x="Date", y=["Success Rate", "Response Time"], title="Performance Trends")
         if ELITE_STYLING:
             fig2 = style_obsidian_chart(fig2)
         st.plotly_chart(fig2, use_container_width=True)
@@ -1199,7 +1110,7 @@ def render_lead_bot_performance(metrics: Dict[str, Any]):
             "🟡 Day 30 sequences showing fatigue - optimize messaging",
             "🟢 Success rate above target (85%)",
             "🔵 Peak performance during business hours (9-5 PM)",
-            "🟡 Weekend performance 8% lower than weekdays"
+            "🟡 Weekend performance 8% lower than weekdays",
         ]
 
         for insight in insights:
@@ -1212,11 +1123,12 @@ def render_lead_bot_performance(metrics: Dict[str, Any]):
             "⏰ **Weekend Strategy**: Deploy lighter touch approach",
             "🎯 **Peak Hours**: Increase capacity during 9-5 PM",
             "🔄 **A/B Test**: Try new Day 14 email templates",
-            "📊 **Monitor**: Watch for sequence fatigue patterns"
+            "📊 **Monitor**: Watch for sequence fatigue patterns",
         ]
 
         for rec in recommendations:
             st.markdown(f"• {rec}")
+
 
 def render_buyer_bot_performance(metrics: Dict[str, Any]):
     """Render Buyer Bot performance metrics."""
@@ -1226,33 +1138,13 @@ def render_buyer_bot_performance(metrics: Dict[str, Any]):
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.metric(
-            "Match Accuracy",
-            "89.7%",
-            delta="+1.8%",
-            help="Property match accuracy rate"
-        )
+        st.metric("Match Accuracy", "89.7%", delta="+1.8%", help="Property match accuracy rate")
     with col2:
-        st.metric(
-            "Response Time",
-            "1.8s",
-            delta="-0.2s",
-            help="Average response time"
-        )
+        st.metric("Response Time", "1.8s", delta="-0.2s", help="Average response time")
     with col3:
-        st.metric(
-            "Conversion Rate",
-            "23.4%",
-            delta="+4.1%",
-            help="Inquiry to showing rate"
-        )
+        st.metric("Conversion Rate", "23.4%", delta="+4.1%", help="Inquiry to showing rate")
     with col4:
-        st.metric(
-            "Client Satisfaction",
-            "4.7/5.0",
-            delta="+0.2",
-            help="Average client rating"
-        )
+        st.metric("Client Satisfaction", "4.7/5.0", delta="+0.2", help="Average client rating")
 
     st.divider()
 
@@ -1264,14 +1156,12 @@ def render_buyer_bot_performance(metrics: Dict[str, Any]):
         price_performance = {
             "Price Range": ["$300-500K", "$500-700K", "$700-900K", "$900K+"],
             "Accuracy": [85.2, 89.7, 92.1, 87.3],
-            "Speed (s)": [1.5, 1.8, 2.1, 2.3]
+            "Speed (s)": [1.5, 1.8, 2.1, 2.3],
         }
         df_price = pd.DataFrame(price_performance)
 
-        fig = px.bar(df_price, x="Price Range", y="Accuracy",
-                     title="Match Accuracy by Price Range",
-                     text="Accuracy")
-        fig.update_traces(texttemplate='%{text}%', textposition='outside')
+        fig = px.bar(df_price, x="Price Range", y="Accuracy", title="Match Accuracy by Price Range", text="Accuracy")
+        fig.update_traces(texttemplate="%{text}%", textposition="outside")
         if ELITE_STYLING:
             fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
@@ -1281,23 +1171,37 @@ def render_buyer_bot_performance(metrics: Dict[str, Any]):
         # Performance by hour of day
         hours = list(range(24))
         performance_by_hour = [
-            65, 70, 72, 68, 71, 75, 78, 82, 89, 91, 93, 92,
-            90, 88, 87, 89, 91, 88, 85, 82, 78, 75, 72, 68
+            65,
+            70,
+            72,
+            68,
+            71,
+            75,
+            78,
+            82,
+            89,
+            91,
+            93,
+            92,
+            90,
+            88,
+            87,
+            89,
+            91,
+            88,
+            85,
+            82,
+            78,
+            75,
+            72,
+            68,
         ]
 
         heatmap_data = [performance_by_hour]
-        fig3 = go.Figure(data=go.Heatmap(
-            z=heatmap_data,
-            x=hours,
-            y=["Performance"],
-            colorscale='Blues',
-            showscale=False
-        ))
-        fig3.update_layout(
-            title="Performance by Hour of Day",
-            xaxis_title="Hour",
-            height=200
+        fig3 = go.Figure(
+            data=go.Heatmap(z=heatmap_data, x=hours, y=["Performance"], colorscale="Blues", showscale=False)
         )
+        fig3.update_layout(title="Performance by Hour of Day", xaxis_title="Hour", height=200)
         if ELITE_STYLING:
             fig3 = style_obsidian_chart(fig3)
         st.plotly_chart(fig3, use_container_width=True)
@@ -1314,7 +1218,7 @@ def render_buyer_bot_performance(metrics: Dict[str, Any]):
         funnel_data = {
             "Stage": ["Initial Query", "Properties Found", "Matches Sent", "Viewed", "Inquired"],
             "Count": [100, 78, 45, 34, 23],
-            "Drop Rate": [0, 22, 42, 24, 32]
+            "Drop Rate": [0, 22, 42, 24, 32],
         }
 
         for i, stage in enumerate(funnel_data["Stage"]):
@@ -1322,11 +1226,7 @@ def render_buyer_bot_performance(metrics: Dict[str, Any]):
             drop_rate = funnel_data["Drop Rate"][i]
 
             if drop_rate > 0:
-                st.metric(
-                    stage,
-                    f"{count} leads",
-                    delta=f"-{drop_rate}% drop"
-                )
+                st.metric(stage, f"{count} leads", delta=f"-{drop_rate}% drop")
             else:
                 st.metric(stage, f"{count} leads")
 
@@ -1338,11 +1238,12 @@ def render_buyer_bot_performance(metrics: Dict[str, Any]):
             {"level": "🟡", "message": "Luxury segment ($900K+) needs attention"},
             {"level": "🟢", "message": "Response time optimal"},
             {"level": "🔵", "message": "Peak performance 10 AM - 2 PM"},
-            {"level": "🟡", "message": "Weekend conversion 15% lower"}
+            {"level": "🟡", "message": "Weekend conversion 15% lower"},
         ]
 
         for alert in alerts:
             st.markdown(f"{alert['level']} {alert['message']}")
+
 
 def render_seller_bot_performance(metrics: Dict[str, Any]):
     """Render Seller Bot performance metrics."""
@@ -1352,33 +1253,13 @@ def render_seller_bot_performance(metrics: Dict[str, Any]):
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.metric(
-            "Qualification Speed",
-            "4.2 min",
-            delta="-0.8 min",
-            help="Average time to qualify seller"
-        )
+        st.metric("Qualification Speed", "4.2 min", delta="-0.8 min", help="Average time to qualify seller")
     with col2:
-        st.metric(
-            "Stall Detection",
-            "91.3%",
-            delta="+5.2%",
-            help="Accuracy of stall detection"
-        )
+        st.metric("Stall Detection", "91.3%", delta="+5.2%", help="Accuracy of stall detection")
     with col3:
-        st.metric(
-            "Close Rate",
-            "67.8%",
-            delta="+3.4%",
-            help="Take-away close success rate"
-        )
+        st.metric("Close Rate", "67.8%", delta="+3.4%", help="Take-away close success rate")
     with col4:
-        st.metric(
-            "Jorge Effectiveness",
-            "84.7/100",
-            delta="+2.3",
-            help="Overall Jorge performance score"
-        )
+        st.metric("Jorge Effectiveness", "84.7/100", delta="+2.3", help="Overall Jorge performance score")
 
     st.divider()
 
@@ -1390,13 +1271,18 @@ def render_seller_bot_performance(metrics: Dict[str, Any]):
         strategy_performance = {
             "Strategy": ["Direct Approach", "Take-Away Close", "Pressure Test", "Reality Check"],
             "Success Rate": [78.5, 84.2, 67.3, 72.8],
-            "Usage Rate": [45.2, 32.1, 15.7, 7.0]
+            "Usage Rate": [45.2, 32.1, 15.7, 7.0],
         }
         df_strategy = pd.DataFrame(strategy_performance)
 
-        fig = px.scatter(df_strategy, x="Usage Rate", y="Success Rate",
-                        size="Success Rate", hover_name="Strategy",
-                        title="Strategy Effectiveness vs Usage")
+        fig = px.scatter(
+            df_strategy,
+            x="Usage Rate",
+            y="Success Rate",
+            size="Success Rate",
+            hover_name="Strategy",
+            title="Strategy Effectiveness vs Usage",
+        )
         if ELITE_STYLING:
             fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
@@ -1407,12 +1293,17 @@ def render_seller_bot_performance(metrics: Dict[str, Any]):
         frs_performance = {
             "FRS Range": ["90-100", "80-89", "70-79", "60-69", "50-59"],
             "Conversion": [92.5, 78.3, 54.7, 31.2, 15.8],
-            "Jorge Effectiveness": [95.2, 87.4, 72.1, 58.9, 42.3]
+            "Jorge Effectiveness": [95.2, 87.4, 72.1, 58.9, 42.3],
         }
         df_frs = pd.DataFrame(frs_performance)
 
-        fig2 = px.bar(df_frs, x="FRS Range", y=["Conversion", "Jorge Effectiveness"],
-                      title="Performance by FRS Score", barmode="group")
+        fig2 = px.bar(
+            df_frs,
+            x="FRS Range",
+            y=["Conversion", "Jorge Effectiveness"],
+            title="Performance by FRS Score",
+            barmode="group",
+        )
         if ELITE_STYLING:
             fig2 = style_obsidian_chart(fig2)
         st.plotly_chart(fig2, use_container_width=True)
@@ -1430,12 +1321,12 @@ def render_seller_bot_performance(metrics: Dict[str, Any]):
             {"move": "Price Reality Check", "success": 89.2, "usage": 34.7},
             {"move": "Timeline Pressure", "success": 76.5, "usage": 28.1},
             {"move": "Competition Angle", "success": 83.7, "usage": 22.3},
-            {"move": "Take-Away Close", "success": 91.4, "usage": 15.9}
+            {"move": "Take-Away Close", "success": 91.4, "usage": 15.9},
         ]
 
         for move in jorge_moves:
             st.markdown(f"**{move['move']}**")
-            st.progress(move['success']/100)
+            st.progress(move["success"] / 100)
             st.caption(f"Success: {move['success']}% | Usage: {move['usage']}%")
             st.markdown("")
 
@@ -1446,18 +1337,14 @@ def render_seller_bot_performance(metrics: Dict[str, Any]):
         pcs_data = {
             "Interaction": ["Initial", "2nd Exchange", "3rd Exchange", "4th+ Exchange"],
             "Avg PCS": [45.2, 62.8, 74.3, 81.7],
-            "Conversion": [12.3, 34.7, 58.9, 73.2]
+            "Conversion": [12.3, 34.7, 58.9, 73.2],
         }
 
         for i, interaction in enumerate(pcs_data["Interaction"]):
             pcs = pcs_data["Avg PCS"][i]
             conversion = pcs_data["Conversion"][i]
 
-            st.metric(
-                interaction,
-                f"PCS: {pcs}",
-                delta=f"{conversion}% convert"
-            )
+            st.metric(interaction, f"PCS: {pcs}", delta=f"{conversion}% convert")
 
     st.divider()
 
@@ -1488,15 +1375,21 @@ def render_seller_bot_performance(metrics: Dict[str, Any]):
         "Metric": ["Qualification Time", "Close Rate", "Lead Quality", "Consistency"],
         "Jorge": [4.2, 67.8, 84.7, 98.2],
         "Human Avg": [8.7, 45.3, 72.1, 76.5],
-        "Industry Avg": [12.3, 38.7, 68.9, 65.2]
+        "Industry Avg": [12.3, 38.7, 68.9, 65.2],
     }
 
     df_comparison = pd.DataFrame(comparison_data)
-    fig_comp = px.bar(df_comparison, x="Metric", y=["Jorge", "Human Avg", "Industry Avg"],
-                      title="Jorge vs. Human Performance Comparison", barmode="group")
+    fig_comp = px.bar(
+        df_comparison,
+        x="Metric",
+        y=["Jorge", "Human Avg", "Industry Avg"],
+        title="Jorge vs. Human Performance Comparison",
+        barmode="group",
+    )
     if ELITE_STYLING:
         fig_comp = style_obsidian_chart(fig_comp)
     st.plotly_chart(fig_comp, use_container_width=True)
+
 
 def main():
     """Main application function."""
@@ -1505,7 +1398,8 @@ def main():
         inject_elite_css()
 
     # Header
-    st.markdown("""
+    st.markdown(
+        """
         <div style="background: linear-gradient(135deg, #1E88E5 0%, #6366F1 100%);
                     padding: 2rem; border-radius: 16px; margin-bottom: 2rem; text-align: center;">
             <h1 style="color: white; margin: 0; font-size: 2.5rem; font-weight: 700;">
@@ -1515,7 +1409,9 @@ def main():
                 Elite Command Center for Lead, Buyer & Seller Bots
             </p>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     # Sidebar navigation
     selected_bot = render_sidebar()
@@ -1574,14 +1470,12 @@ def main():
         col_rt1, col_rt2, col_rt3, col_rt4 = st.columns(4)
 
         with col_rt1:
-            st.metric("Active Conversations",
-                     sum(real_time.get("active_conversations", {}).values()),
-                     delta="+3 vs 1hr ago")
+            st.metric(
+                "Active Conversations", sum(real_time.get("active_conversations", {}).values()), delta="+3 vs 1hr ago"
+            )
 
         with col_rt2:
-            st.metric("Messages/Min",
-                     f"{sum(real_time.get('messages_per_minute', {}).values()):.1f}",
-                     delta="+0.8/min")
+            st.metric("Messages/Min", f"{sum(real_time.get('messages_per_minute', {}).values()):.1f}", delta="+0.8/min")
 
         with col_rt3:
             status_emoji = "🟢" if real_time.get("system_status") == "All systems operational" else "🟡"
@@ -1595,10 +1489,15 @@ def main():
     st.markdown("### 🔗 System Status")
 
     col1, col2, col3, col4 = st.columns(4)
-    with col1: st.metric("Total Interactions", "1,247", delta="+89 today")
-    with col2: st.metric("Active Leads", "156", delta="+12 this week")
-    with col3: st.metric("Qualified Sellers", "67", delta="+8 this week")
-    with col4: st.metric("System Uptime", "99.8%", delta="0.0%")
+    with col1:
+        st.metric("Total Interactions", "1,247", delta="+89 today")
+    with col2:
+        st.metric("Active Leads", "156", delta="+12 this week")
+    with col3:
+        st.metric("Qualified Sellers", "67", delta="+8 this week")
+    with col4:
+        st.metric("System Uptime", "99.8%", delta="0.0%")
+
 
 if __name__ == "__main__":
     main()

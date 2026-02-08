@@ -33,9 +33,11 @@ from utils.validators import ConfidenceScorer, ContradictionDetector, SchemaVali
 try:
     from anthropic import (
         APIConnectionError,
-        APIError as AnthropicAPIError,
         APITimeoutError,
         RateLimitError,
+    )
+    from anthropic import (
+        APIError as AnthropicAPIError,
     )
 
     ANTHROPIC_AVAILABLE = True
@@ -89,10 +91,7 @@ def retry_with_exponential_backoff(
                     return func(*args, **kwargs)
                 except RateLimitError as e:
                     last_exception = e
-                    logger.warning(
-                        f"Rate limit hit on attempt {attempt}/{max_attempts}. "
-                        f"Retrying in {delay:.1f}s..."
-                    )
+                    logger.warning(f"Rate limit hit on attempt {attempt}/{max_attempts}. Retrying in {delay:.1f}s...")
                     if attempt < max_attempts:
                         time.sleep(delay)
                         delay *= backoff_factor
@@ -101,8 +100,7 @@ def retry_with_exponential_backoff(
                 except (APIConnectionError, APITimeoutError) as e:
                     last_exception = e
                     logger.warning(
-                        f"Connection/timeout error on attempt {attempt}/{max_attempts}. "
-                        f"Retrying in {delay:.1f}s..."
+                        f"Connection/timeout error on attempt {attempt}/{max_attempts}. Retrying in {delay:.1f}s..."
                     )
                     if attempt < max_attempts:
                         time.sleep(delay)
@@ -129,9 +127,7 @@ def retry_with_exponential_backoff(
 # ============================================================================
 
 
-def calculate_data_quality(
-    df: Optional[pd.DataFrame], info: Dict[str, Any], news: List[Any]
-) -> float:
+def calculate_data_quality(df: Optional[pd.DataFrame], info: Dict[str, Any], news: List[Any]) -> float:
     """
     Calculate overall data quality score.
 
@@ -223,8 +219,7 @@ def data_bot_handler(inputs: Dict[str, Any], context: Dict[str, Any]) -> Dict[st
     quality_score = calculate_data_quality(df, info, news)
 
     logger.info(
-        f"DataBot: Success - {len(df) if df is not None else 0} rows, "
-        f"{len(news)} news, quality={quality_score:.2f}"
+        f"DataBot: Success - {len(df) if df is not None else 0} rows, {len(news)} news, quality={quality_score:.2f}"
     )
 
     return {"df": df, "info": info, "news": news, "quality_score": quality_score}
@@ -325,9 +320,7 @@ def tech_bot_handler(inputs: Dict[str, Any], context: Dict[str, Any]) -> Dict[st
         signal = "NEUTRAL"
         confidence = neutral_conf / total_conf
 
-    logger.info(
-        f"TechBot: Signal={signal}, Confidence={confidence:.2f}, RSI={rsi:.1f}, MACD={macd_signal}"
-    )
+    logger.info(f"TechBot: Signal={signal}, Confidence={confidence:.2f}, RSI={rsi:.1f}, MACD={macd_signal}")
 
     return {
         "df": df,
@@ -415,10 +408,7 @@ def sentiment_bot_handler(inputs: Dict[str, Any], context: Dict[str, Any]) -> Di
     avg_score = result.get("average_score", 0.0)
     confidence = min(1.0, abs(avg_score) + 0.5)
 
-    logger.info(
-        f"SentimentBot: Verdict={verdict}, Confidence={confidence:.2f}, "
-        f"Articles={result['article_count']}"
-    )
+    logger.info(f"SentimentBot: Verdict={verdict}, Confidence={confidence:.2f}, Articles={result['article_count']}")
 
     return {
         "verdict": verdict,
@@ -553,9 +543,7 @@ def forecast_bot_handler(inputs: Dict[str, Any], context: Dict[str, Any]) -> Dic
     df = inputs["df"]
 
     if df is None or df.empty or len(df) < 90:
-        raise DataProcessingError(
-            f"ForecastBot: Insufficient data ({len(df) if df is not None else 0} rows, need 90)"
-        )
+        raise DataProcessingError(f"ForecastBot: Insufficient data ({len(df) if df is not None else 0} rows, need 90)")
 
     logger.info(f"ForecastBot: Generating forecast for {len(df)} rows")
 
@@ -577,9 +565,7 @@ def forecast_bot_handler(inputs: Dict[str, Any], context: Dict[str, Any]) -> Dic
     df_copy = df_copy.dropna()
 
     if len(df_copy) < 60:
-        raise DataProcessingError(
-            f"ForecastBot: After feature engineering, only {len(df_copy)} rows remain"
-        )
+        raise DataProcessingError(f"ForecastBot: After feature engineering, only {len(df_copy)} rows remain")
 
     # Feature selection
     feature_cols = ["MA20", "RSI", "MACD", "lag_1", "lag_5", "rolling_std", "Volume"]
@@ -636,15 +622,10 @@ def forecast_bot_handler(inputs: Dict[str, Any], context: Dict[str, Any]) -> Dic
     else:
         trend = "NEUTRAL"
 
-    logger.info(
-        f"ForecastBot: Trend={trend}, R²={r2:.3f}, MAE={mae:.2f}, "
-        f"Dir.Acc={directional_accuracy:.2%}"
-    )
+    logger.info(f"ForecastBot: Trend={trend}, R²={r2:.3f}, MAE={mae:.2f}, Dir.Acc={directional_accuracy:.2%}")
 
     # Create forecast DataFrame
-    forecast_dates = pd.date_range(
-        start=df.index[-1] + pd.Timedelta(days=1), periods=forecast_horizon, freq="D"
-    )
+    forecast_dates = pd.date_range(start=df.index[-1] + pd.Timedelta(days=1), periods=forecast_horizon, freq="D")
     forecast_df = pd.DataFrame({"forecast": forecast_values}, index=forecast_dates)
 
     return {
@@ -689,10 +670,10 @@ def synthesis_bot_handler(inputs: Dict[str, Any], context: Dict[str, Any]) -> Di
     # Check minimum agents - if flat, we look for specific bot outputs
     has_tech = "technical" in results or "tech_bot" in results or "signal" in results
     has_sent = "sentiment" in results or "sentiment_bot" in results or "verdict" in results
-    
+
     # In a flat context, we might have multiple fields instead of one 'results' dict
     # We'll adapt to both structures
-    
+
     logger.info("SynthesisBot: Starting synthesis")
 
     # Extract signals and confidence
@@ -716,20 +697,26 @@ def synthesis_bot_handler(inputs: Dict[str, Any], context: Dict[str, Any]) -> Di
     if sent_data:
         sent_verdict = sent_data.get("verdict", "Neutral")
         sent_conf = sent_data.get("confidence", 0.5)
-        
-        if "Positive" in sent_verdict: sent_signal = "BULLISH"
-        elif "Negative" in sent_verdict: sent_signal = "BEARISH"
-        else: sent_signal = "NEUTRAL"
-        
+
+        if "Positive" in sent_verdict:
+            sent_signal = "BULLISH"
+        elif "Negative" in sent_verdict:
+            sent_signal = "BEARISH"
+        else:
+            sent_signal = "NEUTRAL"
+
         signals.append((sent_signal, sent_conf, "Sentiment"))
         confidence_scores.append(sent_conf)
     elif "verdict" in results:
         # Flat context support
         sent_verdict = results["verdict"]
         sent_conf = results.get("confidence", 0.5)
-        if "Positive" in sent_verdict: sent_signal = "BULLISH"
-        elif "Negative" in sent_verdict: sent_signal = "BEARISH"
-        else: sent_signal = "NEUTRAL"
+        if "Positive" in sent_verdict:
+            sent_signal = "BULLISH"
+        elif "Negative" in sent_verdict:
+            sent_signal = "BEARISH"
+        else:
+            sent_signal = "NEUTRAL"
         signals.append((sent_signal, sent_conf, "Sentiment"))
         confidence_scores.append(sent_conf)
 
@@ -817,8 +804,7 @@ def synthesis_bot_handler(inputs: Dict[str, Any], context: Dict[str, Any]) -> Di
             risk_factors.append("Validation checks failed")
 
     logger.info(
-        f"SynthesisBot: Recommendation={recommendation}, Confidence={final_confidence:.2f}, "
-        f"Risks={len(risk_factors)}"
+        f"SynthesisBot: Recommendation={recommendation}, Confidence={final_confidence:.2f}, Risks={len(risk_factors)}"
     )
 
     return {
@@ -868,9 +854,7 @@ def analyst_bot_handler(inputs: Dict[str, Any], context: Dict[str, Any]) -> Dict
         forecast_trend = module_results["forecast"].get("trend", "NEUTRAL")
 
         if tech_signal == forecast_trend:
-            integrated_insights.append(
-                f"Technical analysis and ML forecast align ({tech_signal}) → Strong signal"
-            )
+            integrated_insights.append(f"Technical analysis and ML forecast align ({tech_signal}) → Strong signal")
         else:
             divergences.append(
                 {
@@ -879,9 +863,7 @@ def analyst_bot_handler(inputs: Dict[str, Any], context: Dict[str, Any]) -> Dict
                     "severity": "WARNING",
                 }
             )
-            integrated_insights.append(
-                "Divergence detected between technical and forecast → Exercise caution"
-            )
+            integrated_insights.append("Divergence detected between technical and forecast → Exercise caution")
 
     # Check data quality vs confidence
     if "data_bot" in module_results and "validator_bot" in module_results:
@@ -893,8 +875,7 @@ def analyst_bot_handler(inputs: Dict[str, Any], context: Dict[str, Any]) -> Dict
                 {
                     "modules": ["DataBot", "ValidatorBot"],
                     "description": (
-                        f"Low data quality ({data_quality:.2f}) but high "
-                        f"validation confidence ({validator_conf:.2f})"
+                        f"Low data quality ({data_quality:.2f}) but high validation confidence ({validator_conf:.2f})"
                     ),
                     "severity": "INFO",
                 }
@@ -915,8 +896,7 @@ def analyst_bot_handler(inputs: Dict[str, Any], context: Dict[str, Any]) -> Dict
         integrated_insights.append("Insufficient cross-module data for deep analysis")
 
     logger.info(
-        f"AnalystBot: Insights={len(integrated_insights)}, "
-        f"Divergences={len(divergences)}, Confidence={confidence:.2f}"
+        f"AnalystBot: Insights={len(integrated_insights)}, Divergences={len(divergences)}, Confidence={confidence:.2f}"
     )
 
     return {

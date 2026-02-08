@@ -3,16 +3,18 @@ FastMCP Server: Prompt Library Manager for Gemini
 Versions, tests, and retrieves prompts and personas.
 """
 
-from fastmcp import FastMCP
 import json
 import os
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
+
+from fastmcp import FastMCP
 
 # Initialize FastMCP server
 mcp = FastMCP("Gemini Prompt Library")
 
 PROMPTS_DIR = "ghl_real_estate_ai/prompts"
+
 
 @mcp.tool()
 async def save_prompt(name: str, content: str, persona: str, tags: List[str]) -> Dict:
@@ -23,7 +25,7 @@ async def save_prompt(name: str, content: str, persona: str, tags: List[str]) ->
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"{name}_{timestamp}.json"
     filepath = os.path.join(PROMPTS_DIR, filename)
-    
+
     entry = {
         "name": name,
         "content": content,
@@ -32,11 +34,12 @@ async def save_prompt(name: str, content: str, persona: str, tags: List[str]) ->
         "version": timestamp,
         "created_at": datetime.now().isoformat(),
     }
-    
+
     with open(filepath, "w") as f:
         json.dump(entry, f, indent=2)
-    
+
     return {"stored": True, "path": filepath, "version": timestamp}
+
 
 @mcp.tool()
 async def list_prompts(tag: Optional[str] = None) -> List[Dict]:
@@ -45,7 +48,7 @@ async def list_prompts(tag: Optional[str] = None) -> List[Dict]:
     """
     if not os.path.exists(PROMPTS_DIR):
         return []
-        
+
     prompts = []
     for filename in os.listdir(PROMPTS_DIR):
         if filename.endswith(".json"):
@@ -56,9 +59,10 @@ async def list_prompts(tag: Optional[str] = None) -> List[Dict]:
                         prompts.append(data)
                 except Exception:
                     continue
-    
+
     # Return latest versions first
     return sorted(prompts, key=lambda x: x["created_at"], reverse=True)
+
 
 @mcp.tool()
 async def get_latest_prompt(name: str) -> Optional[Dict]:
@@ -70,6 +74,7 @@ async def get_latest_prompt(name: str) -> Optional[Dict]:
         if p["name"] == name:
             return p
     return None
+
 
 if __name__ == "__main__":
     mcp.run()

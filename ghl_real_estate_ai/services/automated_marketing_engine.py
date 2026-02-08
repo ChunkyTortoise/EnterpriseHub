@@ -14,28 +14,29 @@ that consistently generates leads and maintains market presence.
 """
 
 import asyncio
+import calendar
 import json
 import logging
-from datetime import datetime, timedelta, date
-from typing import Dict, List, Any, Optional, Union, Tuple
-from dataclasses import dataclass, asdict
-from enum import Enum
 import re
 import uuid
-import calendar
+from dataclasses import asdict, dataclass
+from datetime import date, datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import quote
 
 from ghl_real_estate_ai.core.llm_client import LLMClient
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import get_rancho_cucamonga_ai_assistant
 from ghl_real_estate_ai.data.rancho_cucamonga_market_data import get_rancho_cucamonga_market_intelligence
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import get_rancho_cucamonga_ai_assistant
 
 logger = get_logger(__name__)
 
 
 class CampaignType(Enum):
     """Types of marketing campaigns"""
+
     SOCIAL_MEDIA = "social_media"
     EMAIL_NEWSLETTER = "email_newsletter"
     LEAD_MAGNET = "lead_magnet"
@@ -48,6 +49,7 @@ class CampaignType(Enum):
 
 class CampaignStatus(Enum):
     """Status levels for campaigns"""
+
     DRAFT = "draft"
     APPROVED = "approved"
     SCHEDULED = "scheduled"
@@ -58,6 +60,7 @@ class CampaignStatus(Enum):
 
 class CampaignTrigger(Enum):
     """Triggers for automated campaign creation"""
+
     NEW_LISTING = "new_listing"
     PRICE_REDUCTION = "price_reduction"
     OPEN_HOUSE = "open_house"
@@ -69,6 +72,7 @@ class CampaignTrigger(Enum):
 
 class ContentFormat(Enum):
     """Content format types"""
+
     FACEBOOK_POST = "facebook_post"
     INSTAGRAM_POST = "instagram_post"
     LINKEDIN_POST = "linkedin_post"
@@ -81,15 +85,17 @@ class ContentFormat(Enum):
 
 class CampaignPriority(Enum):
     """Campaign priority levels"""
-    URGENT = "urgent"      # New listing, hot market news
-    HIGH = "high"          # Seasonal campaigns, market updates
-    MEDIUM = "medium"      # Regular content, nurture campaigns
-    LOW = "low"            # Evergreen content, general branding
+
+    URGENT = "urgent"  # New listing, hot market news
+    HIGH = "high"  # Seasonal campaigns, market updates
+    MEDIUM = "medium"  # Regular content, nurture campaigns
+    LOW = "low"  # Evergreen content, general branding
 
 
 @dataclass
 class CampaignBrief:
     """Marketing campaign brief and requirements"""
+
     campaign_id: str
     campaign_type: CampaignType
     target_audience: str
@@ -125,6 +131,7 @@ class CampaignBrief:
 @dataclass
 class GeneratedContent:
     """Generated marketing content piece"""
+
     content_id: str
     campaign_id: str
     content_format: ContentFormat
@@ -155,6 +162,7 @@ class GeneratedContent:
 @dataclass
 class CampaignPerformance:
     """Campaign performance metrics"""
+
     campaign_id: str
     impressions: int = 0
     clicks: int = 0
@@ -202,30 +210,38 @@ class AutomatedMarketingEngine:
                 "professional": "Knowledgeable Inland Empire specialist",
                 "approachable": "Friendly neighbor who happens to be an expert",
                 "authoritative": "Confident in market knowledge and industry expertise",
-                "helpful": "Always provides valuable insights and guidance"
+                "helpful": "Always provides valuable insights and guidance",
             },
             "key_messages": {
                 "expertise": "Deep Rancho Cucamonga and Inland Empire knowledge",
                 "specialization": "Logistics and healthcare worker relocations",
                 "technology": "AI-powered market analysis and client service",
                 "results": "Track record of successful transactions and happy clients",
-                "availability": "24/7 responsiveness and commitment"
+                "availability": "24/7 responsiveness and commitment",
             },
             "tone_guidelines": {
                 "professional_friendly": "Knowledgeable but approachable, like a trusted advisor",
                 "urgent": "Action-oriented with market timing emphasis",
                 "educational": "Teaching-focused with valuable insights",
-                "celebratory": "Enthusiastic about client successes and market opportunities"
+                "celebratory": "Enthusiastic about client successes and market opportunities",
             },
             "avoid_phrases": [
-                "Best agent", "Number one", "Guaranteed", "Easy money",
-                "No risk", "Perfect timing", "Once in a lifetime"
+                "Best agent",
+                "Number one",
+                "Guaranteed",
+                "Easy money",
+                "No risk",
+                "Perfect timing",
+                "Once in a lifetime",
             ],
             "preferred_phrases": [
-                "Inland Empire expertise", "Local market knowledge",
-                "Logistics/healthcare specialist", "Market insights",
-                "Data-driven analysis", "Personalized service"
-            ]
+                "Inland Empire expertise",
+                "Local market knowledge",
+                "Logistics/healthcare specialist",
+                "Market insights",
+                "Data-driven analysis",
+                "Personalized service",
+            ],
         }
 
     def _load_campaign_templates(self) -> Dict[str, Dict[str, Any]]:
@@ -236,36 +252,36 @@ class AutomatedMarketingEngine:
                 "target_audience": "Buyers in price range and area",
                 "content_focus": ["Property highlights", "Neighborhood benefits", "Market positioning"],
                 "urgency_level": "high",
-                "timeline": "within 24 hours"
+                "timeline": "within 24 hours",
             },
             "market_update": {
                 "objective": "Position Jorge as market expert and generate leads",
                 "target_audience": "Current and potential clients",
                 "content_focus": ["Market trends", "Opportunity analysis", "Timing guidance"],
                 "urgency_level": "medium",
-                "timeline": "weekly"
+                "timeline": "weekly",
             },
             "seasonal_campaign": {
                 "objective": "Capitalize on seasonal market patterns",
                 "target_audience": "Seasonal buyers/sellers",
                 "content_focus": ["Seasonal benefits", "Timing advantages", "Preparation tips"],
                 "urgency_level": "high",
-                "timeline": "monthly"
+                "timeline": "monthly",
             },
             "success_story": {
                 "objective": "Build credibility and generate referrals",
                 "target_audience": "Social network and sphere of influence",
                 "content_focus": ["Client success", "Process expertise", "Market knowledge"],
                 "urgency_level": "low",
-                "timeline": "per closing"
+                "timeline": "per closing",
             },
             "lead_magnet": {
                 "objective": "Capture leads with valuable information",
                 "target_audience": "Information seekers and early-stage buyers/sellers",
                 "content_focus": ["Educational content", "Market insights", "Area expertise"],
                 "urgency_level": "medium",
-                "timeline": "monthly"
-            }
+                "timeline": "monthly",
+            },
         }
 
     def _load_content_frameworks(self) -> Dict[str, Dict[str, Any]]:
@@ -276,43 +292,39 @@ class AutomatedMarketingEngine:
                 "tone": "conversational",
                 "structure": ["Hook", "Value/Insight", "Call to Action"],
                 "hashtag_count": "3-5",
-                "image_required": True
+                "image_required": True,
             },
             "instagram_post": {
                 "max_length": 150,
                 "tone": "visual_first",
                 "structure": ["Visual hook", "Brief insight", "Hashtags"],
                 "hashtag_count": "8-15",
-                "image_required": True
+                "image_required": True,
             },
             "linkedin_post": {
                 "max_length": 700,
                 "tone": "professional",
                 "structure": ["Industry insight", "Market analysis", "Professional CTA"],
                 "hashtag_count": "3-5",
-                "image_required": False
+                "image_required": False,
             },
             "email_newsletter": {
                 "max_length": 1000,
                 "tone": "informative",
                 "structure": ["Personal greeting", "Market update", "Featured content", "Next steps"],
                 "hashtag_count": "0",
-                "image_required": True
+                "image_required": True,
             },
             "blog_post": {
                 "max_length": 1500,
                 "tone": "educational",
                 "structure": ["Introduction", "Main insights", "Examples", "Conclusion", "CTA"],
                 "hashtag_count": "5-8",
-                "image_required": True
-            }
+                "image_required": True,
+            },
         }
 
-    async def create_campaign_from_trigger(
-        self,
-        trigger_type: str,
-        trigger_data: Dict[str, Any]
-    ) -> CampaignBrief:
+    async def create_campaign_from_trigger(self, trigger_type: str, trigger_data: Dict[str, Any]) -> CampaignBrief:
         """Create campaign based on automated trigger"""
 
         campaign_id = str(uuid.uuid4())
@@ -360,18 +372,14 @@ class AutomatedMarketingEngine:
             campaign_type=CampaignType.LISTING_PROMOTION,
             target_audience=", ".join(target_demographics),
             objective="Generate qualified showings and offers",
-            content_formats=[
-                ContentFormat.FACEBOOK_POST,
-                ContentFormat.INSTAGRAM_POST,
-                ContentFormat.EMAIL_HTML
-            ],
+            content_formats=[ContentFormat.FACEBOOK_POST, ContentFormat.INSTAGRAM_POST, ContentFormat.EMAIL_HTML],
             priority=CampaignPriority.URGENT,
             deadline=datetime.now() + timedelta(hours=24),
             tone="professional_friendly",
             call_to_action="Schedule your private showing",
             target_neighborhoods=[neighborhood],
             target_demographics=target_demographics,
-            listing_data=listing_data
+            listing_data=listing_data,
         )
 
     async def _create_market_update_campaign(self, campaign_id: str, market_data: Dict[str, Any]) -> CampaignBrief:
@@ -382,18 +390,14 @@ class AutomatedMarketingEngine:
             campaign_type=CampaignType.MARKET_UPDATE,
             target_audience="Current and potential clients",
             objective="Position Jorge as market expert and generate leads",
-            content_formats=[
-                ContentFormat.EMAIL_HTML,
-                ContentFormat.LINKEDIN_POST,
-                ContentFormat.BLOG_POST
-            ],
+            content_formats=[ContentFormat.EMAIL_HTML, ContentFormat.LINKEDIN_POST, ContentFormat.BLOG_POST],
             priority=CampaignPriority.HIGH,
             deadline=datetime.now() + timedelta(days=2),
             tone="educational",
             call_to_action="Get your personalized market analysis",
             target_neighborhoods=["Rancho Cucamonga", "Alta Loma", "Etiwanda"],
             target_demographics=["current_clients", "sphere_of_influence"],
-            market_data=market_data
+            market_data=market_data,
         )
 
     async def _create_seasonal_campaign(self, campaign_id: str, seasonal_data: Dict[str, Any]) -> CampaignBrief:
@@ -405,7 +409,7 @@ class AutomatedMarketingEngine:
             "spring": ["families", "relocating_professionals"],
             "summer": ["families", "luxury_buyers"],
             "fall": ["investors", "downsizers"],
-            "winter": ["relocating_professionals", "investors"]
+            "winter": ["relocating_professionals", "investors"],
         }
 
         return CampaignBrief(
@@ -413,17 +417,13 @@ class AutomatedMarketingEngine:
             campaign_type=CampaignType.SEASONAL,
             target_audience=f"{season.title()} buyers and sellers",
             objective=f"Capitalize on {season} market opportunities",
-            content_formats=[
-                ContentFormat.FACEBOOK_POST,
-                ContentFormat.EMAIL_HTML,
-                ContentFormat.BLOG_POST
-            ],
+            content_formats=[ContentFormat.FACEBOOK_POST, ContentFormat.EMAIL_HTML, ContentFormat.BLOG_POST],
             priority=CampaignPriority.HIGH,
             deadline=datetime.now() + timedelta(days=7),
             tone="urgent",
             call_to_action=f"Take advantage of {season} opportunities",
             target_demographics=seasonal_demographics.get(season, []),
-            seasonal_context=seasonal_data
+            seasonal_context=seasonal_data,
         )
 
     async def _create_success_story_campaign(self, campaign_id: str, closing_data: Dict[str, Any]) -> CampaignBrief:
@@ -434,16 +434,12 @@ class AutomatedMarketingEngine:
             campaign_type=CampaignType.SUCCESS_STORY,
             target_audience="Social network and referral sources",
             objective="Build credibility and generate referrals",
-            content_formats=[
-                ContentFormat.FACEBOOK_POST,
-                ContentFormat.INSTAGRAM_POST,
-                ContentFormat.LINKEDIN_POST
-            ],
+            content_formats=[ContentFormat.FACEBOOK_POST, ContentFormat.INSTAGRAM_POST, ContentFormat.LINKEDIN_POST],
             priority=CampaignPriority.MEDIUM,
             deadline=datetime.now() + timedelta(days=3),
             tone="celebratory",
             call_to_action="Ready for your real estate success story?",
-            listing_data=closing_data
+            listing_data=closing_data,
         )
 
     async def _create_lead_magnet_campaign(self, campaign_id: str, magnet_data: Dict[str, Any]) -> CampaignBrief:
@@ -456,16 +452,12 @@ class AutomatedMarketingEngine:
             campaign_type=CampaignType.LEAD_MAGNET,
             target_audience="Information seekers and early-stage prospects",
             objective="Capture leads with valuable educational content",
-            content_formats=[
-                ContentFormat.FACEBOOK_POST,
-                ContentFormat.EMAIL_HTML,
-                ContentFormat.PDF_GUIDE
-            ],
+            content_formats=[ContentFormat.FACEBOOK_POST, ContentFormat.EMAIL_HTML, ContentFormat.PDF_GUIDE],
             priority=CampaignPriority.MEDIUM,
             deadline=datetime.now() + timedelta(days=5),
             tone="educational",
             call_to_action="Download your free guide",
-            target_demographics=["first_time_buyers", "relocating_professionals"]
+            target_demographics=["first_time_buyers", "relocating_professionals"],
         )
 
     async def generate_campaign_content(self, campaign_id: str) -> List[GeneratedContent]:
@@ -493,10 +485,7 @@ class AutomatedMarketingEngine:
         return generated_content
 
     async def _generate_content_variants(
-        self,
-        brief: CampaignBrief,
-        content_format: ContentFormat,
-        variant_count: int = 2
+        self, brief: CampaignBrief, content_format: ContentFormat, variant_count: int = 2
     ) -> List[GeneratedContent]:
         """Generate A/B test variants for content format"""
 
@@ -508,9 +497,7 @@ class AutomatedMarketingEngine:
             # Generate different approaches for variants
             variant_approach = self._get_variant_approach(variant_letter)
 
-            content = await self._generate_single_content_piece(
-                brief, content_format, variant_letter, variant_approach
-            )
+            content = await self._generate_single_content_piece(brief, content_format, variant_letter, variant_approach)
 
             variants.append(content)
 
@@ -524,30 +511,26 @@ class AutomatedMarketingEngine:
                 "focus": "benefits_focused",
                 "emotion": "excitement",
                 "structure": "problem_solution",
-                "cta_style": "direct"
+                "cta_style": "direct",
             },
             "B": {
                 "focus": "data_driven",
                 "emotion": "trust",
                 "structure": "evidence_based",
-                "cta_style": "consultative"
+                "cta_style": "consultative",
             },
             "C": {
                 "focus": "urgency_based",
                 "emotion": "urgency",
                 "structure": "scarcity_opportunity",
-                "cta_style": "action_oriented"
-            }
+                "cta_style": "action_oriented",
+            },
         }
 
         return approaches.get(variant, approaches["A"])
 
     async def _generate_single_content_piece(
-        self,
-        brief: CampaignBrief,
-        content_format: ContentFormat,
-        variant: str,
-        approach: Dict[str, str]
+        self, brief: CampaignBrief, content_format: ContentFormat, variant: str, approach: Dict[str, str]
     ) -> GeneratedContent:
         """Generate single content piece using AI"""
 
@@ -555,16 +538,10 @@ class AutomatedMarketingEngine:
         framework = self.content_frameworks.get(content_format.value, {})
 
         # Build generation prompt
-        prompt = await self._build_content_generation_prompt(
-            brief, content_format, framework, variant, approach
-        )
+        prompt = await self._build_content_generation_prompt(brief, content_format, framework, variant, approach)
 
         # Generate content using Claude
-        response = await self.llm_client.agenerate(
-            prompt=prompt,
-            max_tokens=800,
-            temperature=0.7
-        )
+        response = await self.llm_client.agenerate(prompt=prompt, max_tokens=800, temperature=0.7)
 
         # Parse generated content
         parsed_content = await self._parse_generated_content(response.content, content_format)
@@ -577,7 +554,7 @@ class AutomatedMarketingEngine:
             content_format=content_format,
             variant=variant,
             test_hypothesis=f"Variant {variant}: {approach['focus']} approach will perform better",
-            **parsed_content
+            **parsed_content,
         )
 
     async def _build_content_generation_prompt(
@@ -586,12 +563,12 @@ class AutomatedMarketingEngine:
         content_format: ContentFormat,
         framework: Dict[str, Any],
         variant: str,
-        approach: Dict[str, str]
+        approach: Dict[str, str],
     ) -> str:
         """Build comprehensive prompt for content generation"""
 
         base_prompt = f"""
-You are creating {content_format.value.replace('_', ' ')} content for Jorge Martinez, a top Inland Empire real estate agent.
+You are creating {content_format.value.replace("_", " ")} content for Jorge Martinez, a top Inland Empire real estate agent.
 
 JORGE'S BRAND VOICE:
 {json.dumps(self.jorge_brand_voice, indent=2)}
@@ -601,20 +578,20 @@ CAMPAIGN BRIEF:
 - Objective: {brief.objective}
 - Target: {brief.target_audience}
 - Tone: {brief.tone}
-- Deadline: {brief.deadline.strftime('%Y-%m-%d')}
+- Deadline: {brief.deadline.strftime("%Y-%m-%d")}
 
 CONTENT FORMAT REQUIREMENTS:
 - Format: {content_format.value}
-- Max length: {framework.get('max_length', 'No limit')} characters
-- Tone: {framework.get('tone', brief.tone)}
-- Structure: {' → '.join(framework.get('structure', []))}
-- Hashtags: {framework.get('hashtag_count', '3-5')}
+- Max length: {framework.get("max_length", "No limit")} characters
+- Tone: {framework.get("tone", brief.tone)}
+- Structure: {" → ".join(framework.get("structure", []))}
+- Hashtags: {framework.get("hashtag_count", "3-5")}
 
 VARIANT APPROACH ({variant}):
-- Focus: {approach['focus']}
-- Emotion: {approach['emotion']}
-- Structure: {approach['structure']}
-- CTA Style: {approach['cta_style']}
+- Focus: {approach["focus"]}
+- Emotion: {approach["emotion"]}
+- Structure: {approach["structure"]}
+- CTA Style: {approach["cta_style"]}
 """
 
         # Add specific data context
@@ -637,9 +614,9 @@ VARIANT APPROACH ({variant}):
         base_prompt += f"""
 
 CONTENT REQUIREMENTS:
-1. Create compelling {content_format.value.replace('_', ' ')} that aligns with Jorge's brand voice
+1. Create compelling {content_format.value.replace("_", " ")} that aligns with Jorge's brand voice
 2. Include specific Inland Empire/Rancho Cucamonga expertise
-3. Use the {variant} approach: {approach['focus']} with {approach['emotion']} tone
+3. Use the {variant} approach: {approach["focus"]} with {approach["emotion"]} tone
 4. Include relevant market insights or data points
 5. End with compelling call-to-action: "{brief.call_to_action}"
 6. Generate appropriate hashtags for the platform
@@ -658,16 +635,12 @@ Return in this JSON format:
 
         return base_prompt
 
-    async def _parse_generated_content(
-        self,
-        raw_content: str,
-        content_format: ContentFormat
-    ) -> Dict[str, Any]:
+    async def _parse_generated_content(self, raw_content: str, content_format: ContentFormat) -> Dict[str, Any]:
         """Parse and validate generated content"""
 
         try:
             # Extract JSON from response
-            json_match = re.search(r'\{.*\}', raw_content, re.DOTALL)
+            json_match = re.search(r"\{.*\}", raw_content, re.DOTALL)
             if json_match:
                 parsed = json.loads(json_match.group(0))
             else:
@@ -698,7 +671,7 @@ Return in this JSON format:
                 "hashtags": ["#RanchoCucamonga", "#InlandEmpire", "#RealEstate"],
                 "call_to_action": "Contact Jorge today",
                 "image_description": f"Professional real estate content image",
-                "design_elements": ["Jorge's branding"]
+                "design_elements": ["Jorge's branding"],
             }
 
     async def create_seasonal_campaigns(self) -> List[CampaignBrief]:
@@ -718,14 +691,14 @@ Return in this JSON format:
                     "opportunities": [
                         "New inventory hitting market",
                         "Families preparing for summer moves",
-                        "Corporate relocations increasing"
+                        "Corporate relocations increasing",
                     ],
                     "urgency_factors": [
                         "Competition increases in summer",
                         "Interest rates may change",
-                        "Best selection available now"
-                    ]
-                }
+                        "Best selection available now",
+                    ],
+                },
             )
             seasonal_campaigns.append(spring_campaign)
 
@@ -738,14 +711,14 @@ Return in this JSON format:
                     "opportunities": [
                         "Family-friendly neighborhoods in demand",
                         "School district preferences driving decisions",
-                        "Vacation home market active"
+                        "Vacation home market active",
                     ],
                     "urgency_factors": [
                         "School year starting soon",
                         "Limited summer inventory",
-                        "Corporate relocations peak"
-                    ]
-                }
+                        "Corporate relocations peak",
+                    ],
+                },
             )
             seasonal_campaigns.append(summer_campaign)
 
@@ -758,14 +731,14 @@ Return in this JSON format:
                     "opportunities": [
                         "Investor market heating up",
                         "Year-end tax considerations",
-                        "Motivated sellers reducing prices"
+                        "Motivated sellers reducing prices",
                     ],
                     "urgency_factors": [
                         "End of year tax benefits",
                         "Less competition from families",
-                        "Year-end corporate relocations"
-                    ]
-                }
+                        "Year-end corporate relocations",
+                    ],
+                },
             )
             seasonal_campaigns.append(fall_campaign)
 
@@ -778,14 +751,14 @@ Return in this JSON format:
                     "opportunities": [
                         "Serious buyers only in market",
                         "Less competition, more negotiating power",
-                        "Year-end corporate relocations"
+                        "Year-end corporate relocations",
                     ],
                     "urgency_factors": [
                         "Spring market will bring competition",
                         "Interest rate predictions for next year",
-                        "Limited winter inventory means less choice"
-                    ]
-                }
+                        "Limited winter inventory means less choice",
+                    ],
+                },
             )
             seasonal_campaigns.append(winter_campaign)
 
@@ -808,9 +781,9 @@ Return in this JSON format:
                     "Financing options and programs",
                     "School district analysis",
                     "Timeline and process overview",
-                    "Common mistakes to avoid"
-                ]
-            }
+                    "Common mistakes to avoid",
+                ],
+            },
         )
         lead_magnets.append(buyer_guide)
 
@@ -826,9 +799,9 @@ Return in this JSON format:
                     "Shift-friendly neighborhoods",
                     "Commute optimization strategies",
                     "Cost of living advantages",
-                    "Community resources"
-                ]
-            }
+                    "Community resources",
+                ],
+            },
         )
         lead_magnets.append(logistics_guide)
 
@@ -844,18 +817,16 @@ Return in this JSON format:
                     "Market trend analysis",
                     "Rental demand by area",
                     "Cash flow projections",
-                    "Tax advantage strategies"
-                ]
-            }
+                    "Tax advantage strategies",
+                ],
+            },
         )
         lead_magnets.append(investment_guide)
 
         return lead_magnets
 
     async def track_campaign_performance(
-        self,
-        campaign_id: str,
-        performance_data: Dict[str, Any]
+        self, campaign_id: str, performance_data: Dict[str, Any]
     ) -> CampaignPerformance:
         """Track and analyze campaign performance"""
 
@@ -863,10 +834,7 @@ Return in this JSON format:
         valid_fields = {f.name for f in CampaignPerformance.__dataclass_fields__.values()}
         filtered_data = {k: v for k, v in performance_data.items() if k in valid_fields}
 
-        performance = CampaignPerformance(
-            campaign_id=campaign_id,
-            **filtered_data
-        )
+        performance = CampaignPerformance(campaign_id=campaign_id, **filtered_data)
 
         # Analyze A/B test results if applicable
         if "variants" in performance_data:
@@ -878,14 +846,14 @@ Return in this JSON format:
         # Generate recommendations for optimization
         recommendations = await self._generate_optimization_recommendations(performance)
 
-        logger.info(f"Tracked performance for campaign {campaign_id}: {performance.leads_generated} leads, {performance.roi_percentage:.1f}% ROI")
+        logger.info(
+            f"Tracked performance for campaign {campaign_id}: {performance.leads_generated} leads, {performance.roi_percentage:.1f}% ROI"
+        )
 
         return performance
 
     async def _analyze_ab_test_results(
-        self,
-        performance: CampaignPerformance,
-        variants_data: List[Dict[str, Any]]
+        self, performance: CampaignPerformance, variants_data: List[Dict[str, Any]]
     ) -> CampaignPerformance:
         """Analyze A/B test statistical significance"""
 
@@ -908,10 +876,7 @@ Return in this JSON format:
 
         return performance
 
-    async def _generate_optimization_recommendations(
-        self,
-        performance: CampaignPerformance
-    ) -> List[str]:
+    async def _generate_optimization_recommendations(self, performance: CampaignPerformance) -> List[str]:
         """Generate optimization recommendations based on performance"""
 
         recommendations = []
@@ -934,10 +899,7 @@ Return in this JSON format:
 
         return recommendations
 
-    async def get_campaign_analytics(
-        self,
-        date_range: Optional[Tuple[str, str]] = None
-    ) -> Dict[str, Any]:
+    async def get_campaign_analytics(self, date_range: Optional[Tuple[str, str]] = None) -> Dict[str, Any]:
         """Get comprehensive campaign analytics"""
 
         if not date_range:
@@ -957,9 +919,9 @@ Return in this JSON format:
                 "facebook": {"impressions": 0, "leads": 0},
                 "instagram": {"impressions": 0, "leads": 0},
                 "email": {"impressions": 0, "leads": 0},
-                "linkedin": {"impressions": 0, "leads": 0}
+                "linkedin": {"impressions": 0, "leads": 0},
             },
-            "ab_test_insights": []
+            "ab_test_insights": [],
         }
 
         # Aggregate performance data (simplified for demo)
@@ -970,7 +932,7 @@ Return in this JSON format:
     async def _cache_campaign_brief(self, brief: CampaignBrief):
         """Cache campaign brief"""
         cache_key = f"campaign_brief:{brief.campaign_id}"
-        await self.cache.set(cache_key, asdict(brief), ttl=7*24*3600)  # 7 days
+        await self.cache.set(cache_key, asdict(brief), ttl=7 * 24 * 3600)  # 7 days
 
     async def _load_campaign_brief(self, campaign_id: str) -> Optional[CampaignBrief]:
         """Load campaign brief from cache"""
@@ -984,16 +946,17 @@ Return in this JSON format:
         """Cache generated content"""
         cache_key = f"campaign_content:{campaign_id}"
         content_data = [asdict(c) for c in content]
-        await self.cache.set(cache_key, content_data, ttl=30*24*3600)  # 30 days
+        await self.cache.set(cache_key, content_data, ttl=30 * 24 * 3600)  # 30 days
 
     async def _cache_campaign_performance(self, performance: CampaignPerformance):
         """Cache campaign performance data"""
         cache_key = f"campaign_performance:{performance.campaign_id}"
-        await self.cache.set(cache_key, asdict(performance), ttl=90*24*3600)  # 90 days
+        await self.cache.set(cache_key, asdict(performance), ttl=90 * 24 * 3600)  # 90 days
 
 
 # Singleton instance
 _automated_marketing_engine = None
+
 
 def get_automated_marketing_engine() -> AutomatedMarketingEngine:
     """Get singleton Automated Marketing Engine instance"""

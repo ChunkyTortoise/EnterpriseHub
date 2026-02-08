@@ -19,51 +19,54 @@ Expected Benefits:
 - Enable predictable monthly spending patterns
 """
 
+import asyncio
 import json
-from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from enum import Enum
-import asyncio
 from decimal import Decimal
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 
 class BudgetStatus(Enum):
     """Budget status levels for different threshold conditions."""
-    HEALTHY = "healthy"           # < 60% of budget used
-    WARNING = "warning"           # 60-80% of budget used
-    CRITICAL = "critical"         # 80-95% of budget used
-    EXCEEDED = "exceeded"         # > 95% of budget used
-    BLOCKED = "blocked"           # Budget fully exhausted
+
+    HEALTHY = "healthy"  # < 60% of budget used
+    WARNING = "warning"  # 60-80% of budget used
+    CRITICAL = "critical"  # 80-95% of budget used
+    EXCEEDED = "exceeded"  # > 95% of budget used
+    BLOCKED = "blocked"  # Budget fully exhausted
 
 
 class BudgetType(Enum):
     """Types of budgets for different scoping levels."""
-    GLOBAL = "global"             # Platform-wide budget
-    LOCATION = "location"         # Per-location budget
-    CONTACT = "contact"           # Per-contact conversation budget
-    AGENT = "agent"               # Per-agent type budget
-    DAILY = "daily"               # Daily spending limit
-    MONTHLY = "monthly"           # Monthly spending limit
+
+    GLOBAL = "global"  # Platform-wide budget
+    LOCATION = "location"  # Per-location budget
+    CONTACT = "contact"  # Per-contact conversation budget
+    AGENT = "agent"  # Per-agent type budget
+    DAILY = "daily"  # Daily spending limit
+    MONTHLY = "monthly"  # Monthly spending limit
 
 
 @dataclass
 class BudgetLimit:
     """Configuration for a specific budget limit."""
+
     budget_type: BudgetType
-    budget_id: str               # Unique identifier (location_id, contact_id, etc.)
-    max_tokens_monthly: int      # Maximum tokens per month
-    max_tokens_daily: int        # Maximum tokens per day
-    max_cost_monthly: Decimal    # Maximum cost per month ($)
-    max_cost_daily: Decimal      # Maximum cost per day ($)
+    budget_id: str  # Unique identifier (location_id, contact_id, etc.)
+    max_tokens_monthly: int  # Maximum tokens per month
+    max_tokens_daily: int  # Maximum tokens per day
+    max_cost_monthly: Decimal  # Maximum cost per month ($)
+    max_cost_daily: Decimal  # Maximum cost per day ($)
     soft_threshold: float = 0.8  # Warning threshold (80%)
-    hard_threshold: float = 0.95 # Block threshold (95%)
-    reset_day: int = 1           # Day of month to reset (1-28)
+    hard_threshold: float = 0.95  # Block threshold (95%)
+    reset_day: int = 1  # Day of month to reset (1-28)
     created_at: datetime = field(default_factory=datetime.utcnow)
     is_active: bool = True
 
@@ -71,12 +74,13 @@ class BudgetLimit:
 @dataclass
 class BudgetUsage:
     """Current usage tracking for a budget."""
+
     budget_id: str
     budget_type: BudgetType
     current_tokens_monthly: int = 0
     current_tokens_daily: int = 0
-    current_cost_monthly: Decimal = Decimal('0.00')
-    current_cost_daily: Decimal = Decimal('0.00')
+    current_cost_monthly: Decimal = Decimal("0.00")
+    current_cost_daily: Decimal = Decimal("0.00")
     last_updated: datetime = field(default_factory=datetime.utcnow)
     last_reset: datetime = field(default_factory=datetime.utcnow)
 
@@ -84,6 +88,7 @@ class BudgetUsage:
 @dataclass
 class BudgetCheck:
     """Result of a budget check before API call."""
+
     is_allowed: bool
     budget_status: BudgetStatus
     remaining_tokens_daily: int
@@ -107,32 +112,32 @@ class TokenBudgetService:
         """Initialize the budget service."""
         self.redis = redis_client
         self.token_costs = {
-            "input_per_1m": Decimal('3.00'),        # $3 per 1M input tokens
-            "output_per_1m": Decimal('15.00'),      # $15 per 1M output tokens
-            "cache_creation_per_1m": Decimal('0.75'), # 25% of input cost
-            "cache_read_per_1m": Decimal('0.30')    # 10% of input cost
+            "input_per_1m": Decimal("3.00"),  # $3 per 1M input tokens
+            "output_per_1m": Decimal("15.00"),  # $15 per 1M output tokens
+            "cache_creation_per_1m": Decimal("0.75"),  # 25% of input cost
+            "cache_read_per_1m": Decimal("0.30"),  # 10% of input cost
         }
 
         # Default budget limits
         self.default_limits = {
             BudgetType.LOCATION: {
-                "max_tokens_monthly": 1_000_000,    # 1M tokens per location per month
-                "max_tokens_daily": 50_000,         # 50K tokens per location per day
-                "max_cost_monthly": Decimal('100.00'),  # $100 per location per month
-                "max_cost_daily": Decimal('5.00')   # $5 per location per day
+                "max_tokens_monthly": 1_000_000,  # 1M tokens per location per month
+                "max_tokens_daily": 50_000,  # 50K tokens per location per day
+                "max_cost_monthly": Decimal("100.00"),  # $100 per location per month
+                "max_cost_daily": Decimal("5.00"),  # $5 per location per day
             },
             BudgetType.CONTACT: {
-                "max_tokens_monthly": 50_000,       # 50K tokens per contact per month
-                "max_tokens_daily": 5_000,          # 5K tokens per contact per day
-                "max_cost_monthly": Decimal('10.00'),   # $10 per contact per month
-                "max_cost_daily": Decimal('0.50')   # $0.50 per contact per day
+                "max_tokens_monthly": 50_000,  # 50K tokens per contact per month
+                "max_tokens_daily": 5_000,  # 5K tokens per contact per day
+                "max_cost_monthly": Decimal("10.00"),  # $10 per contact per month
+                "max_cost_daily": Decimal("0.50"),  # $0.50 per contact per day
             },
             BudgetType.AGENT: {
-                "max_tokens_monthly": 200_000,      # 200K tokens per agent type per month
-                "max_tokens_daily": 10_000,         # 10K tokens per agent type per day
-                "max_cost_monthly": Decimal('30.00'),   # $30 per agent type per month
-                "max_cost_daily": Decimal('2.00')   # $2 per agent type per day
-            }
+                "max_tokens_monthly": 200_000,  # 200K tokens per agent type per month
+                "max_tokens_daily": 10_000,  # 10K tokens per agent type per day
+                "max_cost_monthly": Decimal("30.00"),  # $30 per agent type per month
+                "max_cost_daily": Decimal("2.00"),  # $2 per agent type per day
+            },
         }
 
     def calculate_request_cost(
@@ -140,7 +145,7 @@ class TokenBudgetService:
         input_tokens: int,
         estimated_output_tokens: int = 500,
         cache_read_tokens: int = 0,
-        cache_creation_tokens: int = 0
+        cache_creation_tokens: int = 0,
     ) -> Decimal:
         """
         Calculate the estimated cost of a request.
@@ -154,7 +159,7 @@ class TokenBudgetService:
         Returns:
             Total estimated cost in USD
         """
-        costs = Decimal('0.00')
+        costs = Decimal("0.00")
 
         # Regular input tokens
         regular_input = input_tokens - cache_read_tokens - cache_creation_tokens
@@ -180,7 +185,7 @@ class TokenBudgetService:
         estimated_input_tokens: int,
         estimated_output_tokens: int = 500,
         cache_read_tokens: int = 0,
-        priority_boost: bool = False
+        priority_boost: bool = False,
     ) -> BudgetCheck:
         """
         Check if a request is allowed under current budget constraints.
@@ -205,7 +210,7 @@ class TokenBudgetService:
             estimated_cost = self.calculate_request_cost(
                 input_tokens=estimated_input_tokens,
                 estimated_output_tokens=estimated_output_tokens,
-                cache_read_tokens=cache_read_tokens
+                cache_read_tokens=cache_read_tokens,
             )
 
             # Check daily limits
@@ -213,7 +218,9 @@ class TokenBudgetService:
             daily_cost_after = budget_usage.current_cost_daily + estimated_cost
 
             # Check monthly limits
-            monthly_tokens_after = budget_usage.current_tokens_monthly + estimated_input_tokens + estimated_output_tokens
+            monthly_tokens_after = (
+                budget_usage.current_tokens_monthly + estimated_input_tokens + estimated_output_tokens
+            )
             monthly_cost_after = budget_usage.current_cost_monthly + estimated_cost
 
             # Determine budget status
@@ -224,8 +231,7 @@ class TokenBudgetService:
 
             # Use the highest utilization to determine status
             max_utilization = max(
-                daily_token_utilization, daily_cost_utilization,
-                monthly_token_utilization, monthly_cost_utilization
+                daily_token_utilization, daily_cost_utilization, monthly_token_utilization, monthly_cost_utilization
             )
 
             # Determine approval based on thresholds
@@ -253,8 +259,10 @@ class TokenBudgetService:
             # Calculate remaining budget
             remaining_tokens_daily = max(0, budget_limit.max_tokens_daily - budget_usage.current_tokens_daily)
             remaining_tokens_monthly = max(0, budget_limit.max_tokens_monthly - budget_usage.current_tokens_monthly)
-            remaining_cost_daily = max(Decimal('0'), budget_limit.max_cost_daily - budget_usage.current_cost_daily)
-            remaining_cost_monthly = max(Decimal('0'), budget_limit.max_cost_monthly - budget_usage.current_cost_monthly)
+            remaining_cost_daily = max(Decimal("0"), budget_limit.max_cost_daily - budget_usage.current_cost_daily)
+            remaining_cost_monthly = max(
+                Decimal("0"), budget_limit.max_cost_monthly - budget_usage.current_cost_monthly
+            )
 
             # Generate recommendations
             recommended_action = self._get_budget_recommendation(status, max_utilization, priority_boost)
@@ -268,7 +276,7 @@ class TokenBudgetService:
                 remaining_cost_monthly=remaining_cost_monthly,
                 estimated_request_cost=estimated_cost,
                 reason=reason,
-                recommended_action=recommended_action
+                recommended_action=recommended_action,
             )
 
         except Exception as e:
@@ -279,11 +287,11 @@ class TokenBudgetService:
                 budget_status=BudgetStatus.HEALTHY,
                 remaining_tokens_daily=1000,
                 remaining_tokens_monthly=10000,
-                remaining_cost_daily=Decimal('1.00'),
-                remaining_cost_monthly=Decimal('10.00'),
-                estimated_request_cost=Decimal('0.01'),
+                remaining_cost_daily=Decimal("1.00"),
+                remaining_cost_monthly=Decimal("10.00"),
+                estimated_request_cost=Decimal("0.01"),
                 reason=f"Budget check failed: {e}",
-                recommended_action="Monitor budget manually"
+                recommended_action="Monitor budget manually",
             )
 
     async def record_actual_usage(
@@ -294,7 +302,7 @@ class TokenBudgetService:
         output_tokens: int,
         cache_read_tokens: int = 0,
         cache_creation_tokens: int = 0,
-        contact_id: str = "unknown"
+        contact_id: str = "unknown",
     ) -> None:
         """
         Record actual token usage after API call completion.
@@ -314,23 +322,19 @@ class TokenBudgetService:
                 input_tokens=input_tokens,
                 estimated_output_tokens=output_tokens,
                 cache_read_tokens=cache_read_tokens,
-                cache_creation_tokens=cache_creation_tokens
+                cache_creation_tokens=cache_creation_tokens,
             )
 
             total_tokens = input_tokens + output_tokens
 
             # Update budget usage
             await self._update_budget_usage(
-                budget_type=budget_type,
-                budget_id=budget_id,
-                tokens_used=total_tokens,
-                cost_incurred=actual_cost
+                budget_type=budget_type, budget_id=budget_id, tokens_used=total_tokens, cost_incurred=actual_cost
             )
 
             # Log usage for analytics
             logger.info(
-                f"Usage recorded for {budget_type.value}:{budget_id}: "
-                f"{total_tokens} tokens, ${actual_cost:.4f} cost"
+                f"Usage recorded for {budget_type.value}:{budget_id}: {total_tokens} tokens, ${actual_cost:.4f} cost"
             )
 
             # Check for budget alerts
@@ -342,7 +346,7 @@ class TokenBudgetService:
                 budget_type=budget_type,
                 usage=budget_usage,
                 limit=budget_limit,
-                contact_id=contact_id
+                contact_id=contact_id,
             )
 
         except Exception as e:
@@ -365,17 +369,13 @@ class TokenBudgetService:
                         max_cost_monthly=Decimal(data.get("max_cost_monthly", "0")),
                         max_cost_daily=Decimal(data.get("max_cost_daily", "0")),
                         soft_threshold=float(data.get("soft_threshold", 0.8)),
-                        hard_threshold=float(data.get("hard_threshold", 0.95))
+                        hard_threshold=float(data.get("hard_threshold", 0.95)),
                     )
 
             # Use default limits if not found
             defaults = self.default_limits.get(budget_type, self.default_limits[BudgetType.CONTACT])
 
-            return BudgetLimit(
-                budget_type=budget_type,
-                budget_id=budget_id,
-                **defaults
-            )
+            return BudgetLimit(budget_type=budget_type, budget_id=budget_id, **defaults)
 
         except Exception as e:
             logger.error(f"Failed to get budget limit for {budget_type.value}:{budget_id}: {e}")
@@ -385,8 +385,8 @@ class TokenBudgetService:
                 budget_id=budget_id,
                 max_tokens_monthly=10_000,
                 max_tokens_daily=1_000,
-                max_cost_monthly=Decimal('5.00'),
-                max_cost_daily=Decimal('0.25')
+                max_cost_monthly=Decimal("5.00"),
+                max_cost_daily=Decimal("0.25"),
             )
 
     async def get_budget_usage(self, budget_type: BudgetType, budget_id: str) -> BudgetUsage:
@@ -405,7 +405,7 @@ class TokenBudgetService:
                         current_cost_monthly=Decimal(data.get("current_cost_monthly", "0")),
                         current_cost_daily=Decimal(data.get("current_cost_daily", "0")),
                         last_updated=datetime.fromisoformat(data.get("last_updated", datetime.utcnow().isoformat())),
-                        last_reset=datetime.fromisoformat(data.get("last_reset", datetime.utcnow().isoformat()))
+                        last_reset=datetime.fromisoformat(data.get("last_reset", datetime.utcnow().isoformat())),
                     )
 
             # Return empty usage if not found
@@ -416,11 +416,7 @@ class TokenBudgetService:
             return BudgetUsage(budget_id=budget_id, budget_type=budget_type)
 
     async def _update_budget_usage(
-        self,
-        budget_type: BudgetType,
-        budget_id: str,
-        tokens_used: int,
-        cost_incurred: Decimal
+        self, budget_type: BudgetType, budget_id: str, tokens_used: int, cost_incurred: Decimal
     ) -> None:
         """Update budget usage in Redis."""
         try:
@@ -436,12 +432,12 @@ class TokenBudgetService:
             # Check if we need to reset daily usage
             if current_usage.last_updated.date() != now.date():
                 current_usage.current_tokens_daily = 0
-                current_usage.current_cost_daily = Decimal('0')
+                current_usage.current_cost_daily = Decimal("0")
 
             # Check if we need to reset monthly usage
             if current_usage.last_updated.month != now.month or current_usage.last_updated.year != now.year:
                 current_usage.current_tokens_monthly = 0
-                current_usage.current_cost_monthly = Decimal('0')
+                current_usage.current_cost_monthly = Decimal("0")
 
             # Update usage
             current_usage.current_tokens_daily += tokens_used
@@ -451,14 +447,17 @@ class TokenBudgetService:
             current_usage.last_updated = now
 
             # Store updated usage
-            await self.redis.hset(key, mapping={
-                "current_tokens_monthly": current_usage.current_tokens_monthly,
-                "current_tokens_daily": current_usage.current_tokens_daily,
-                "current_cost_monthly": str(current_usage.current_cost_monthly),
-                "current_cost_daily": str(current_usage.current_cost_daily),
-                "last_updated": current_usage.last_updated.isoformat(),
-                "last_reset": current_usage.last_reset.isoformat()
-            })
+            await self.redis.hset(
+                key,
+                mapping={
+                    "current_tokens_monthly": current_usage.current_tokens_monthly,
+                    "current_tokens_daily": current_usage.current_tokens_daily,
+                    "current_cost_monthly": str(current_usage.current_cost_monthly),
+                    "current_cost_daily": str(current_usage.current_cost_daily),
+                    "last_updated": current_usage.last_updated.isoformat(),
+                    "last_reset": current_usage.last_reset.isoformat(),
+                },
+            )
 
             # Set expiration for cleanup (2 months)
             await self.redis.expire(key, 60 * 60 * 24 * 60)  # 60 days
@@ -488,7 +487,7 @@ class TokenBudgetService:
         budget_type: BudgetType,
         usage: BudgetUsage,
         limit: BudgetLimit,
-        contact_id: str = "unknown"
+        contact_id: str = "unknown",
     ) -> None:
         """Check for budget alerts and send notifications."""
         try:
@@ -508,7 +507,7 @@ class TokenBudgetService:
                     budget_type=budget_type,
                     utilization=max_util,
                     contact_id=contact_id,
-                    message=f"Budget {max_util:.1%} utilized - hard threshold exceeded"
+                    message=f"Budget {max_util:.1%} utilized - hard threshold exceeded",
                 )
             elif max_util >= limit.soft_threshold:
                 await self._send_budget_alert(
@@ -517,7 +516,7 @@ class TokenBudgetService:
                     budget_type=budget_type,
                     utilization=max_util,
                     contact_id=contact_id,
-                    message=f"Budget {max_util:.1%} utilized - soft threshold exceeded"
+                    message=f"Budget {max_util:.1%} utilized - soft threshold exceeded",
                 )
 
         except Exception as e:
@@ -530,7 +529,7 @@ class TokenBudgetService:
         budget_type: BudgetType,
         utilization: float,
         contact_id: str,
-        message: str
+        message: str,
     ) -> None:
         """Send budget alert notification."""
         try:
@@ -541,7 +540,7 @@ class TokenBudgetService:
                 "budget_id": budget_id,
                 "contact_id": contact_id,
                 "utilization": utilization,
-                "message": message
+                "message": message,
             }
 
             # Log alert

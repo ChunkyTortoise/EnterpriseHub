@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 
 class PredictionTimeframe(str, Enum):
     """Supported prediction timeframes"""
+
     ONE_WEEK = "1w"
     TWO_WEEKS = "2w"
     ONE_MONTH = "1m"
@@ -54,6 +55,7 @@ class PredictionTimeframe(str, Enum):
 
 class TrendDirection(str, Enum):
     """Compliance trend directions"""
+
     IMPROVING = "improving"
     STABLE = "stable"
     DECLINING = "declining"
@@ -62,6 +64,7 @@ class TrendDirection(str, Enum):
 
 class CompliancePrediction(BaseModel):
     """Predicted compliance score with confidence intervals"""
+
     prediction_id: str = Field(default_factory=lambda: str(uuid4()))
     model_id: str
     current_score: float = Field(..., ge=0, le=100)
@@ -92,6 +95,7 @@ class CompliancePrediction(BaseModel):
 
 class RiskForecast(BaseModel):
     """Forecasted risk level changes"""
+
     forecast_id: str = Field(default_factory=lambda: str(uuid4()))
     model_id: str
     current_risk_level: RiskLevel
@@ -105,8 +109,7 @@ class RiskForecast(BaseModel):
 
     # Mitigation impact estimates
     mitigation_impact: Dict[str, float] = Field(
-        default_factory=dict,
-        description="action -> estimated score improvement"
+        default_factory=dict, description="action -> estimated score improvement"
     )
 
     # Confidence metrics
@@ -127,6 +130,7 @@ class RiskForecast(BaseModel):
 
 class ViolationProbability(BaseModel):
     """Probability of compliance violations"""
+
     model_id: str
     regulation: RegulationType
     probability: float = Field(..., ge=0, le=1)
@@ -138,6 +142,7 @@ class ViolationProbability(BaseModel):
 
 class PreventiveAction(BaseModel):
     """Recommended preventive action"""
+
     action_id: str = Field(default_factory=lambda: str(uuid4()))
     title: str
     description: str
@@ -195,9 +200,7 @@ class PredictiveComplianceEngine:
             ViolationSeverity.INFORMATIONAL: 0.1,
         }
 
-        logger.info(
-            f"PredictiveComplianceEngine initialized with {history_days} days history"
-        )
+        logger.info(f"PredictiveComplianceEngine initialized with {history_days} days history")
 
     async def predict_compliance_score(
         self,
@@ -220,10 +223,7 @@ class PredictiveComplianceEngine:
             raise ValueError("Historical scores required for prediction")
 
         # Extract and sort scores by timestamp
-        sorted_scores = sorted(
-            historical_scores,
-            key=lambda x: x.get("timestamp", datetime.min)
-        )
+        sorted_scores = sorted(historical_scores, key=lambda x: x.get("timestamp", datetime.min))
 
         scores = [s.get("score", 0.0) for s in sorted_scores]
         timestamps = [s.get("timestamp", datetime.now(timezone.utc)) for s in sorted_scores]
@@ -265,14 +265,10 @@ class PredictiveComplianceEngine:
         trend = self._determine_trend(velocity, predicted_score)
 
         # Identify risk factors
-        risk_factors = self._identify_risk_factors(
-            current_score, predicted_score, trend_features, trend
-        )
+        risk_factors = self._identify_risk_factors(current_score, predicted_score, trend_features, trend)
 
         # Generate recommendations
-        recommended_actions = self._generate_recommendations(
-            risk_factors, trend, current_score, predicted_score
-        )
+        recommended_actions = self._generate_recommendations(risk_factors, trend, current_score, predicted_score)
 
         # Calculate feature impacts
         feature_impacts = self._calculate_feature_impacts(trend_features)
@@ -309,16 +305,12 @@ class PredictiveComplianceEngine:
         Returns:
             RiskForecast with predicted risk level and contributing factors
         """
-        current_risk = RiskLevel(
-            current_assessment.get("risk_level", RiskLevel.UNKNOWN.value)
-        )
+        current_risk = RiskLevel(current_assessment.get("risk_level", RiskLevel.UNKNOWN.value))
         current_score = current_assessment.get("risk_score", 50.0)
 
         # Extract historical risk scores
         if historical_assessments:
-            historical_scores = [
-                a.get("risk_score", 50.0) for a in historical_assessments
-            ]
+            historical_scores = [a.get("risk_score", 50.0) for a in historical_assessments]
 
             # Calculate trend
             if len(historical_scores) >= 2:
@@ -335,24 +327,16 @@ class PredictiveComplianceEngine:
         predicted_risk = self._score_to_risk_level(predicted_score)
 
         # Calculate probability of risk level change
-        probability = self._calculate_risk_change_probability(
-            current_score, predicted_score, trend_slope
-        )
+        probability = self._calculate_risk_change_probability(current_score, predicted_score, trend_slope)
 
         # Identify contributing factors
-        contributing_factors = self._identify_contributing_factors(
-            current_assessment, historical_assessments
-        )
+        contributing_factors = self._identify_contributing_factors(current_assessment, historical_assessments)
 
         # Calculate mitigation impact
-        mitigation_impact = await self._estimate_mitigation_impact(
-            current_assessment, predicted_score
-        )
+        mitigation_impact = await self._estimate_mitigation_impact(current_assessment, predicted_score)
 
         # Identify uncertainty factors
-        uncertainty_factors = self._identify_uncertainty_factors(
-            len(historical_assessments), current_assessment
-        )
+        uncertainty_factors = self._identify_uncertainty_factors(len(historical_assessments), current_assessment)
 
         # Adjust confidence based on data quality
         base_confidence = 0.7
@@ -390,10 +374,7 @@ class PredictiveComplianceEngine:
             Dict with violation probabilities by severity
         """
         # Filter violations for this regulation
-        reg_violations = [
-            v for v in historical_violations
-            if v.get("regulation") == regulation
-        ]
+        reg_violations = [v for v in historical_violations if v.get("regulation") == regulation]
 
         # Calculate base probability from violation frequency
         if not reg_violations:
@@ -402,10 +383,7 @@ class PredictiveComplianceEngine:
         else:
             # Calculate violations per month
             now = datetime.now(timezone.utc)
-            recent_violations = [
-                v for v in reg_violations
-                if (now - v.get("detected_at", now)).days <= 90
-            ]
+            recent_violations = [v for v in reg_violations if (now - v.get("detected_at", now)).days <= 90]
             violations_per_month = len(recent_violations) / 3.0
 
             # Convert to probability (saturating function)
@@ -416,14 +394,9 @@ class PredictiveComplianceEngine:
         total_violations = len(reg_violations) if reg_violations else 1
 
         for severity in ViolationSeverity:
-            count = len([
-                v for v in reg_violations
-                if v.get("severity") == severity.value
-            ])
+            count = len([v for v in reg_violations if v.get("severity") == severity.value])
             proportion = count / total_violations if reg_violations else 0.2
-            severity_distribution[severity.value] = (
-                base_probability * proportion * self._severity_weights[severity]
-            )
+            severity_distribution[severity.value] = base_probability * proportion * self._severity_weights[severity]
 
         # Identify contributing factors
         contributing_factors = []
@@ -574,7 +547,7 @@ class PredictiveComplianceEngine:
         sorted_impacts = sorted(impact_estimates.values(), reverse=True)
         for i, impact in enumerate(sorted_impacts):
             # Each subsequent action has diminishing returns
-            diminishing_factor = 0.8 ** i
+            diminishing_factor = 0.8**i
             cumulative += impact * diminishing_factor
 
         impact_estimates["_cumulative_impact"] = round(min(40.0, cumulative), 1)
@@ -633,7 +606,7 @@ class PredictiveComplianceEngine:
 
         # Momentum (rate of change acceleration)
         if len(scores) >= 3:
-            recent_changes = [scores[i] - scores[i-1] for i in range(1, len(scores))]
+            recent_changes = [scores[i] - scores[i - 1] for i in range(1, len(scores))]
             if len(recent_changes) >= 2:
                 features["momentum"] = recent_changes[-1] - recent_changes[-2]
             else:
@@ -643,9 +616,7 @@ class PredictiveComplianceEngine:
 
         return features
 
-    def _calculate_velocity(
-        self, values: List[float], timestamps: List[datetime]
-    ) -> float:
+    def _calculate_velocity(self, values: List[float], timestamps: List[datetime]) -> float:
         """
         Calculate rate of change (score change per week).
 
@@ -713,9 +684,7 @@ class PredictiveComplianceEngine:
 
     # ==================== Prediction Methods ====================
 
-    def _linear_regression_predict(
-        self, x: List[float], y: List[float], future_x: float
-    ) -> Tuple[float, float]:
+    def _linear_regression_predict(self, x: List[float], y: List[float], future_x: float) -> Tuple[float, float]:
         """
         Simple linear regression prediction with confidence.
 
@@ -788,9 +757,7 @@ class PredictiveComplianceEngine:
 
         return smoothed
 
-    def _calculate_confidence(
-        self, predictions: List[float], actuals: List[float]
-    ) -> float:
+    def _calculate_confidence(self, predictions: List[float], actuals: List[float]) -> float:
         """
         Calculate prediction confidence based on historical accuracy.
 
@@ -881,9 +848,7 @@ class PredictiveComplianceEngine:
         risk_factors: List[str] = []
 
         if predicted_score < current_score:
-            risk_factors.append(
-                f"Predicted score decline of {current_score - predicted_score:.1f} points"
-            )
+            risk_factors.append(f"Predicted score decline of {current_score - predicted_score:.1f} points")
 
         if trend_features.get("volatility", 0) > 0.15:
             risk_factors.append("High score volatility indicates instability")
@@ -932,9 +897,7 @@ class PredictiveComplianceEngine:
 
         return recommendations[:5]  # Limit to top 5
 
-    def _calculate_feature_impacts(
-        self, trend_features: Dict[str, float]
-    ) -> Dict[str, float]:
+    def _calculate_feature_impacts(self, trend_features: Dict[str, float]) -> Dict[str, float]:
         """Calculate feature contribution to prediction."""
         impacts: Dict[str, float] = {}
 
@@ -965,22 +928,26 @@ class PredictiveComplianceEngine:
         for dim in dimensions:
             current_val = current_assessment.get(dim, 0)
             if current_val < 70:
-                factors.append({
-                    "factor": dim.replace("_score", "").title(),
-                    "current_value": current_val,
-                    "threshold": 70,
-                    "impact": "high" if current_val < 50 else "medium",
-                    "weight": 0.15,
-                })
+                factors.append(
+                    {
+                        "factor": dim.replace("_score", "").title(),
+                        "current_value": current_val,
+                        "threshold": 70,
+                        "impact": "high" if current_val < 50 else "medium",
+                        "weight": 0.15,
+                    }
+                )
 
         # Check for recent violations
         if current_assessment.get("recent_violations", 0) > 0:
-            factors.append({
-                "factor": "Recent Violations",
-                "current_value": current_assessment.get("recent_violations"),
-                "impact": "high",
-                "weight": 0.20,
-            })
+            factors.append(
+                {
+                    "factor": "Recent Violations",
+                    "current_value": current_assessment.get("recent_violations"),
+                    "impact": "high",
+                    "weight": 0.20,
+                }
+            )
 
         return factors
 
@@ -1030,9 +997,7 @@ class PredictiveComplianceEngine:
 
         return factors
 
-    def _create_action_for_risk_factor(
-        self, risk_factor: str, priority: int
-    ) -> Optional[PreventiveAction]:
+    def _create_action_for_risk_factor(self, risk_factor: str, priority: int) -> Optional[PreventiveAction]:
         """Create preventive action for a specific risk factor."""
         risk_lower = risk_factor.lower()
 
@@ -1099,8 +1064,7 @@ class PredictiveComplianceEngine:
         # Higher probability if crossing a threshold
         thresholds = [85, 70, 50]
         crossing_threshold = any(
-            (current_score > t >= predicted_score) or (current_score < t <= predicted_score)
-            for t in thresholds
+            (current_score > t >= predicted_score) or (current_score < t <= predicted_score) for t in thresholds
         )
 
         base_prob = min(0.95, score_diff / 20)  # 20 point change = ~100% probability

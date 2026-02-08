@@ -13,46 +13,52 @@ This module provides:
 """
 
 import asyncio
-import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Set, Union
-from dataclasses import dataclass, field
-from enum import Enum
-import json
 import hashlib
+import json
+import logging
 import secrets
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Set, Union
 
-from ...services.claude_assistant import ClaudeAssistant
-from ...services.cache_service import CacheService
 from ...ghl_utils.jorge_config import JorgeConfig
+from ...services.cache_service import CacheService
+from ...services.claude_assistant import ClaudeAssistant
 
 logger = logging.getLogger(__name__)
 
+
 class PrivacyRegulation(Enum):
     """Privacy regulation types"""
-    GDPR = "gdpr"                       # General Data Protection Regulation (EU)
-    CCPA = "ccpa"                       # California Consumer Privacy Act
-    PIPEDA = "pipeda"                   # Personal Information Protection (Canada)
-    LGPD = "lgpd"                       # Lei Geral de Proteção (Brazil)
-    PDPA_SINGAPORE = "pdpa_singapore"   # Personal Data Protection Act (Singapore)
-    VIRGINIA_CDPA = "virginia_cdpa"     # Virginia Consumer Data Protection Act
-    COLORADO_CPA = "colorado_cpa"       # Colorado Privacy Act
+
+    GDPR = "gdpr"  # General Data Protection Regulation (EU)
+    CCPA = "ccpa"  # California Consumer Privacy Act
+    PIPEDA = "pipeda"  # Personal Information Protection (Canada)
+    LGPD = "lgpd"  # Lei Geral de Proteção (Brazil)
+    PDPA_SINGAPORE = "pdpa_singapore"  # Personal Data Protection Act (Singapore)
+    VIRGINIA_CDPA = "virginia_cdpa"  # Virginia Consumer Data Protection Act
+    COLORADO_CPA = "colorado_cpa"  # Colorado Privacy Act
     CONNECTICUT_CTDPA = "connecticut_ctdpa"  # Connecticut Data Privacy Act
+
 
 class DataCategory(Enum):
     """Categories of personal data"""
-    CONTACT_INFO = "contact_info"               # Name, address, phone, email
-    FINANCIAL_INFO = "financial_info"          # Bank details, credit info, income
-    IDENTIFICATION = "identification"          # SSN, driver's license, passport
-    TRANSACTION_DATA = "transaction_data"      # Purchase history, property data
-    BEHAVIORAL_DATA = "behavioral_data"        # Website activity, preferences
-    BIOMETRIC_DATA = "biometric_data"          # Fingerprints, facial recognition
-    LOCATION_DATA = "location_data"            # GPS coordinates, property visits
+
+    CONTACT_INFO = "contact_info"  # Name, address, phone, email
+    FINANCIAL_INFO = "financial_info"  # Bank details, credit info, income
+    IDENTIFICATION = "identification"  # SSN, driver's license, passport
+    TRANSACTION_DATA = "transaction_data"  # Purchase history, property data
+    BEHAVIORAL_DATA = "behavioral_data"  # Website activity, preferences
+    BIOMETRIC_DATA = "biometric_data"  # Fingerprints, facial recognition
+    LOCATION_DATA = "location_data"  # GPS coordinates, property visits
     COMMUNICATION_DATA = "communication_data"  # Messages, calls, emails
-    SPECIAL_CATEGORY = "special_category"      # Race, religion, health (GDPR)
+    SPECIAL_CATEGORY = "special_category"  # Race, religion, health (GDPR)
+
 
 class ProcessingPurpose(Enum):
     """Purposes for data processing"""
+
     TRANSACTION_FULFILLMENT = "transaction_fulfillment"
     CUSTOMER_SERVICE = "customer_service"
     MARKETING_COMMUNICATION = "marketing_communication"
@@ -62,48 +68,58 @@ class ProcessingPurpose(Enum):
     BUSINESS_OPERATIONS = "business_operations"
     PRODUCT_IMPROVEMENT = "product_improvement"
 
+
 class LegalBasis(Enum):
     """Legal basis for data processing (GDPR)"""
-    CONSENT = "consent"                         # Article 6(1)(a) - Consent
-    CONTRACT = "contract"                       # Article 6(1)(b) - Contract performance
-    LEGAL_OBLIGATION = "legal_obligation"       # Article 6(1)(c) - Legal obligation
-    VITAL_INTERESTS = "vital_interests"         # Article 6(1)(d) - Vital interests
-    PUBLIC_TASK = "public_task"                # Article 6(1)(e) - Public task
+
+    CONSENT = "consent"  # Article 6(1)(a) - Consent
+    CONTRACT = "contract"  # Article 6(1)(b) - Contract performance
+    LEGAL_OBLIGATION = "legal_obligation"  # Article 6(1)(c) - Legal obligation
+    VITAL_INTERESTS = "vital_interests"  # Article 6(1)(d) - Vital interests
+    PUBLIC_TASK = "public_task"  # Article 6(1)(e) - Public task
     LEGITIMATE_INTERESTS = "legitimate_interests"  # Article 6(1)(f) - Legitimate interests
+
 
 class ConsentStatus(Enum):
     """Consent status types"""
-    GIVEN = "given"                    # Active consent provided
-    WITHDRAWN = "withdrawn"            # Consent withdrawn by data subject
-    EXPIRED = "expired"               # Consent expired (time-based)
-    PENDING = "pending"               # Consent request pending
-    REFUSED = "refused"               # Consent explicitly refused
+
+    GIVEN = "given"  # Active consent provided
+    WITHDRAWN = "withdrawn"  # Consent withdrawn by data subject
+    EXPIRED = "expired"  # Consent expired (time-based)
+    PENDING = "pending"  # Consent request pending
+    REFUSED = "refused"  # Consent explicitly refused
+
 
 class PrivacyRight(Enum):
     """Data subject privacy rights"""
-    ACCESS = "access"                          # Right to access personal data
-    RECTIFICATION = "rectification"           # Right to correct personal data
-    ERASURE = "erasure"                       # Right to deletion ("right to be forgotten")
-    RESTRICTION = "restriction"               # Right to restrict processing
-    PORTABILITY = "portability"              # Right to data portability
-    OBJECTION = "objection"                   # Right to object to processing
-    OPT_OUT = "opt_out"                       # Right to opt out (CCPA)
-    NON_DISCRIMINATION = "non_discrimination" # Right to non-discrimination (CCPA)
+
+    ACCESS = "access"  # Right to access personal data
+    RECTIFICATION = "rectification"  # Right to correct personal data
+    ERASURE = "erasure"  # Right to deletion ("right to be forgotten")
+    RESTRICTION = "restriction"  # Right to restrict processing
+    PORTABILITY = "portability"  # Right to data portability
+    OBJECTION = "objection"  # Right to object to processing
+    OPT_OUT = "opt_out"  # Right to opt out (CCPA)
+    NON_DISCRIMINATION = "non_discrimination"  # Right to non-discrimination (CCPA)
+
 
 @dataclass
 class DataSubject:
     """Data subject (individual whose data is processed)"""
+
     subject_id: str
     identifiers: Dict[str, str]  # email, phone, customer_id, etc.
-    jurisdiction: str            # primary jurisdiction for privacy law
-    consent_records: List['ConsentRecord'] = field(default_factory=list)
+    jurisdiction: str  # primary jurisdiction for privacy law
+    consent_records: List["ConsentRecord"] = field(default_factory=list)
     privacy_preferences: Dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.now)
     last_updated: datetime = field(default_factory=datetime.now)
 
+
 @dataclass
 class ConsentRecord:
     """Individual consent record"""
+
     consent_id: str
     subject_id: str
     data_category: DataCategory
@@ -118,25 +134,29 @@ class ConsentRecord:
     withdrawn_at: Optional[datetime] = None
     withdrawal_reason: Optional[str] = None
 
+
 @dataclass
 class PrivacyRequest:
     """Data subject privacy rights request"""
+
     request_id: str
     subject_id: str
     request_type: PrivacyRight
     regulation: PrivacyRegulation
     description: str
     verification_status: str  # 'pending', 'verified', 'failed'
-    processing_status: str   # 'received', 'in_progress', 'completed', 'rejected'
+    processing_status: str  # 'received', 'in_progress', 'completed', 'rejected'
     requested_at: datetime
     deadline: datetime
     completed_at: Optional[datetime] = None
     response_data: Optional[Dict[str, Any]] = None
     rejection_reason: Optional[str] = None
 
+
 @dataclass
 class DataRetentionPolicy:
     """Data retention and lifecycle policy"""
+
     policy_id: str
     data_category: DataCategory
     processing_purpose: ProcessingPurpose
@@ -146,9 +166,11 @@ class DataRetentionPolicy:
     archive_requirements: Optional[Dict[str, Any]] = None
     created_at: datetime = field(default_factory=datetime.now)
 
+
 @dataclass
 class DataTransfer:
     """Cross-border data transfer record"""
+
     transfer_id: str
     source_country: str
     destination_country: str
@@ -159,6 +181,7 @@ class DataTransfer:
     authorized_at: datetime
     authorized_by: str
     expires_at: Optional[datetime] = None
+
 
 class PrivacyProtectionSystem:
     """
@@ -173,34 +196,44 @@ class PrivacyProtectionSystem:
 
         # Privacy configuration
         self.privacy_config = {
-            'consent_refresh_period': 365,        # days
-            'privacy_request_response_time': 30,  # days (GDPR)
-            'ccpa_request_response_time': 45,     # days (CCPA)
-            'data_retention_check_frequency': 24, # hours
-            'anonymization_threshold': 3,         # minimum for statistical disclosure control
-            'cross_border_transfer_approval_required': True
+            "consent_refresh_period": 365,  # days
+            "privacy_request_response_time": 30,  # days (GDPR)
+            "ccpa_request_response_time": 45,  # days (CCPA)
+            "data_retention_check_frequency": 24,  # hours
+            "anonymization_threshold": 3,  # minimum for statistical disclosure control
+            "cross_border_transfer_approval_required": True,
         }
 
         # Global privacy regulations
         self.privacy_regulations = {
             PrivacyRegulation.GDPR: {
-                'territorial_scope': ['EU', 'EEA'],
-                'extraterritorial_scope': True,  # applies to non-EU processing of EU data
-                'consent_requirements': 'explicit_informed_specific_unambiguous',
-                'data_subject_rights': [PrivacyRight.ACCESS, PrivacyRight.RECTIFICATION, PrivacyRight.ERASURE,
-                                      PrivacyRight.RESTRICTION, PrivacyRight.PORTABILITY, PrivacyRight.OBJECTION],
-                'breach_notification_time': 72,  # hours
-                'maximum_fine': 20000000  # €20M or 4% of global turnover
+                "territorial_scope": ["EU", "EEA"],
+                "extraterritorial_scope": True,  # applies to non-EU processing of EU data
+                "consent_requirements": "explicit_informed_specific_unambiguous",
+                "data_subject_rights": [
+                    PrivacyRight.ACCESS,
+                    PrivacyRight.RECTIFICATION,
+                    PrivacyRight.ERASURE,
+                    PrivacyRight.RESTRICTION,
+                    PrivacyRight.PORTABILITY,
+                    PrivacyRight.OBJECTION,
+                ],
+                "breach_notification_time": 72,  # hours
+                "maximum_fine": 20000000,  # €20M or 4% of global turnover
             },
             PrivacyRegulation.CCPA: {
-                'territorial_scope': ['California'],
-                'consent_requirements': 'opt_out_model',
-                'data_subject_rights': [PrivacyRight.ACCESS, PrivacyRight.ERASURE, PrivacyRight.OPT_OUT,
-                                      PrivacyRight.NON_DISCRIMINATION],
-                'revenue_threshold': 25000000,  # $25M annual revenue
-                'consumer_threshold': 50000,    # 50K consumers
-                'maximum_fine': 7500  # per violation
-            }
+                "territorial_scope": ["California"],
+                "consent_requirements": "opt_out_model",
+                "data_subject_rights": [
+                    PrivacyRight.ACCESS,
+                    PrivacyRight.ERASURE,
+                    PrivacyRight.OPT_OUT,
+                    PrivacyRight.NON_DISCRIMINATION,
+                ],
+                "revenue_threshold": 25000000,  # $25M annual revenue
+                "consumer_threshold": 50000,  # 50K consumers
+                "maximum_fine": 7500,  # per violation
+            },
         }
 
         # Data processing records
@@ -216,21 +249,21 @@ class PrivacyProtectionSystem:
 
         # Jorge-specific privacy considerations
         self.jorge_privacy_framework = {
-            'confrontational_methodology_privacy': {
-                'data_minimization': 'collect_only_essential_for_service',
-                'consent_granularity': 'separate_consent_for_aggressive_tactics',
-                'opt_out_mechanisms': 'easy_withdrawal_from_confrontational_approach'
+            "confrontational_methodology_privacy": {
+                "data_minimization": "collect_only_essential_for_service",
+                "consent_granularity": "separate_consent_for_aggressive_tactics",
+                "opt_out_mechanisms": "easy_withdrawal_from_confrontational_approach",
             },
-            'predictive_intelligence_privacy': {
-                'model_transparency': 'explainable_predictions_upon_request',
-                'algorithmic_fairness': 'regular_bias_audits_and_corrections',
-                'data_anonymization': 'pseudonymization_for_analytics'
+            "predictive_intelligence_privacy": {
+                "model_transparency": "explainable_predictions_upon_request",
+                "algorithmic_fairness": "regular_bias_audits_and_corrections",
+                "data_anonymization": "pseudonymization_for_analytics",
             },
-            'client_data_protection': {
-                'financial_information': 'highest_encryption_standards',
-                'behavioral_analytics': 'aggregated_insights_only',
-                'communication_logs': 'limited_retention_automatic_deletion'
-            }
+            "client_data_protection": {
+                "financial_information": "highest_encryption_standards",
+                "behavioral_analytics": "aggregated_insights_only",
+                "communication_logs": "limited_retention_automatic_deletion",
+            },
         }
 
         # Initialize privacy framework
@@ -254,10 +287,9 @@ class PrivacyProtectionSystem:
             logger.error(f"Privacy framework initialization failed: {str(e)}")
             raise
 
-    async def register_data_subject(self,
-                                  identifiers: Dict[str, str],
-                                  jurisdiction: str,
-                                  initial_consents: Optional[List[Dict[str, Any]]] = None) -> DataSubject:
+    async def register_data_subject(
+        self, identifiers: Dict[str, str], jurisdiction: str, initial_consents: Optional[List[Dict[str, Any]]] = None
+    ) -> DataSubject:
         """
         Register new data subject with privacy framework
         """
@@ -269,18 +301,13 @@ class PrivacyProtectionSystem:
 
             # Create data subject record
             data_subject = DataSubject(
-                subject_id=subject_id,
-                identifiers=identifiers,
-                jurisdiction=jurisdiction,
-                privacy_preferences={}
+                subject_id=subject_id, identifiers=identifiers, jurisdiction=jurisdiction, privacy_preferences={}
             )
 
             # Process initial consents if provided
             if initial_consents:
                 for consent_data in initial_consents:
-                    consent_record = await self._create_consent_record(
-                        subject_id, consent_data
-                    )
+                    consent_record = await self._create_consent_record(subject_id, consent_data)
                     data_subject.consent_records.append(consent_record)
 
             # Store data subject
@@ -296,12 +323,14 @@ class PrivacyProtectionSystem:
             logger.error(f"Data subject registration failed: {str(e)}")
             raise
 
-    async def obtain_consent(self,
-                           subject_id: str,
-                           data_category: DataCategory,
-                           processing_purpose: ProcessingPurpose,
-                           consent_method: str,
-                           evidence: Dict[str, Any]) -> ConsentRecord:
+    async def obtain_consent(
+        self,
+        subject_id: str,
+        data_category: DataCategory,
+        processing_purpose: ProcessingPurpose,
+        consent_method: str,
+        evidence: Dict[str, Any],
+    ) -> ConsentRecord:
         """
         Obtain and record explicit consent from data subject
         """
@@ -335,13 +364,13 @@ class PrivacyProtectionSystem:
                 consent_text=consent_text,
                 obtained_at=datetime.now(),
                 method=consent_method,
-                evidence=evidence
+                evidence=evidence,
             )
 
             # Set expiration if required by jurisdiction
             if await self._requires_consent_refresh(data_subject.jurisdiction):
                 consent_record.expires_at = datetime.now() + timedelta(
-                    days=self.privacy_config['consent_refresh_period']
+                    days=self.privacy_config["consent_refresh_period"]
                 )
 
             # Store consent record
@@ -356,10 +385,7 @@ class PrivacyProtectionSystem:
             logger.error(f"Consent obtaining failed: {str(e)}")
             raise
 
-    async def withdraw_consent(self,
-                             subject_id: str,
-                             consent_id: str,
-                             withdrawal_reason: Optional[str] = None) -> bool:
+    async def withdraw_consent(self, subject_id: str, consent_id: str, withdrawal_reason: Optional[str] = None) -> bool:
         """
         Process consent withdrawal request
         """
@@ -395,11 +421,13 @@ class PrivacyProtectionSystem:
             logger.error(f"Consent withdrawal failed: {str(e)}")
             return False
 
-    async def process_privacy_request(self,
-                                    subject_identifiers: Dict[str, str],
-                                    request_type: PrivacyRight,
-                                    regulation: PrivacyRegulation,
-                                    description: str) -> PrivacyRequest:
+    async def process_privacy_request(
+        self,
+        subject_identifiers: Dict[str, str],
+        request_type: PrivacyRight,
+        regulation: PrivacyRegulation,
+        description: str,
+    ) -> PrivacyRequest:
         """
         Process data subject privacy rights request
         """
@@ -411,9 +439,7 @@ class PrivacyProtectionSystem:
             if not subject_id:
                 # For access requests, we may need to create a record to track the request
                 if request_type == PrivacyRight.ACCESS:
-                    data_subject = await self.register_data_subject(
-                        subject_identifiers, "unknown", []
-                    )
+                    data_subject = await self.register_data_subject(subject_identifiers, "unknown", [])
                     subject_id = data_subject.subject_id
                 else:
                     raise ValueError("Data subject not found")
@@ -431,7 +457,7 @@ class PrivacyProtectionSystem:
                 verification_status="pending",
                 processing_status="received",
                 requested_at=datetime.now(),
-                deadline=deadline
+                deadline=deadline,
             )
 
             # Store request
@@ -497,9 +523,7 @@ class PrivacyProtectionSystem:
             logger.error(f"Privacy request fulfillment failed: {str(e)}")
             raise
 
-    async def anonymize_data(self,
-                           data: Dict[str, Any],
-                           anonymization_level: str = "standard") -> Dict[str, Any]:
+    async def anonymize_data(self, data: Dict[str, Any], anonymization_level: str = "standard") -> Dict[str, Any]:
         """
         Anonymize personal data for analytics and reporting
         """
@@ -521,7 +545,7 @@ class PrivacyProtectionSystem:
             # Validate anonymization effectiveness
             anonymization_quality = await self._validate_anonymization(data, anonymized_data)
 
-            if anonymization_quality['re_identification_risk'] > 0.1:  # 10% threshold
+            if anonymization_quality["re_identification_risk"] > 0.1:  # 10% threshold
                 logger.warning(f"High re-identification risk: {anonymization_quality['re_identification_risk']}")
 
             return anonymized_data
@@ -530,10 +554,9 @@ class PrivacyProtectionSystem:
             logger.error(f"Data anonymization failed: {str(e)}")
             raise
 
-    async def check_cross_border_transfer_compliance(self,
-                                                   source_country: str,
-                                                   destination_country: str,
-                                                   data_categories: List[DataCategory]) -> Dict[str, Any]:
+    async def check_cross_border_transfer_compliance(
+        self, source_country: str, destination_country: str, data_categories: List[DataCategory]
+    ) -> Dict[str, Any]:
         """
         Check compliance for cross-border data transfers
         """
@@ -541,34 +564,32 @@ class PrivacyProtectionSystem:
             logger.info(f"Checking cross-border transfer: {source_country} -> {destination_country}")
 
             compliance_result = {
-                'transfer_allowed': False,
-                'legal_mechanism': None,
-                'required_safeguards': [],
-                'additional_requirements': [],
-                'risk_assessment': {}
+                "transfer_allowed": False,
+                "legal_mechanism": None,
+                "required_safeguards": [],
+                "additional_requirements": [],
+                "risk_assessment": {},
             }
 
             # Check if destination has adequacy decision
             adequacy_status = await self._check_adequacy_decision(source_country, destination_country)
 
-            if adequacy_status['adequate']:
-                compliance_result['transfer_allowed'] = True
-                compliance_result['legal_mechanism'] = 'adequacy_decision'
+            if adequacy_status["adequate"]:
+                compliance_result["transfer_allowed"] = True
+                compliance_result["legal_mechanism"] = "adequacy_decision"
             else:
                 # Check available transfer mechanisms
-                available_mechanisms = await self._identify_transfer_mechanisms(
-                    source_country, destination_country
-                )
+                available_mechanisms = await self._identify_transfer_mechanisms(source_country, destination_country)
 
                 if available_mechanisms:
-                    compliance_result['transfer_allowed'] = True
-                    compliance_result['legal_mechanism'] = available_mechanisms[0]
-                    compliance_result['required_safeguards'] = await self._get_required_safeguards(
+                    compliance_result["transfer_allowed"] = True
+                    compliance_result["legal_mechanism"] = available_mechanisms[0]
+                    compliance_result["required_safeguards"] = await self._get_required_safeguards(
                         available_mechanisms[0]
                     )
 
             # Assess transfer risks
-            compliance_result['risk_assessment'] = await self._assess_transfer_risks(
+            compliance_result["risk_assessment"] = await self._assess_transfer_risks(
                 source_country, destination_country, data_categories
             )
 
@@ -578,8 +599,7 @@ class PrivacyProtectionSystem:
             logger.error(f"Cross-border transfer compliance check failed: {str(e)}")
             raise
 
-    async def generate_privacy_impact_assessment(self,
-                                               processing_activity: Dict[str, Any]) -> Dict[str, Any]:
+    async def generate_privacy_impact_assessment(self, processing_activity: Dict[str, Any]) -> Dict[str, Any]:
         """
         Generate Data Protection Impact Assessment (DPIA)
         """
@@ -587,35 +607,35 @@ class PrivacyProtectionSystem:
             logger.info("Generating Privacy Impact Assessment")
 
             dpia = {
-                'assessment_id': f"dpia_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                'processing_activity': processing_activity,
-                'necessity_assessment': {},
-                'proportionality_assessment': {},
-                'risk_assessment': {},
-                'mitigation_measures': [],
-                'residual_risks': [],
-                'recommendations': [],
-                'approval_status': 'pending',
-                'generated_at': datetime.now().isoformat()
+                "assessment_id": f"dpia_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                "processing_activity": processing_activity,
+                "necessity_assessment": {},
+                "proportionality_assessment": {},
+                "risk_assessment": {},
+                "mitigation_measures": [],
+                "residual_risks": [],
+                "recommendations": [],
+                "approval_status": "pending",
+                "generated_at": datetime.now().isoformat(),
             }
 
             # Assess necessity and proportionality
-            dpia['necessity_assessment'] = await self._assess_processing_necessity(processing_activity)
-            dpia['proportionality_assessment'] = await self._assess_processing_proportionality(processing_activity)
+            dpia["necessity_assessment"] = await self._assess_processing_necessity(processing_activity)
+            dpia["proportionality_assessment"] = await self._assess_processing_proportionality(processing_activity)
 
             # Conduct privacy risk assessment
-            dpia['risk_assessment'] = await self._conduct_privacy_risk_assessment(processing_activity)
+            dpia["risk_assessment"] = await self._conduct_privacy_risk_assessment(processing_activity)
 
             # Identify mitigation measures
-            dpia['mitigation_measures'] = await self._identify_mitigation_measures(dpia['risk_assessment'])
+            dpia["mitigation_measures"] = await self._identify_mitigation_measures(dpia["risk_assessment"])
 
             # Calculate residual risks
-            dpia['residual_risks'] = await self._calculate_residual_risks(
-                dpia['risk_assessment'], dpia['mitigation_measures']
+            dpia["residual_risks"] = await self._calculate_residual_risks(
+                dpia["risk_assessment"], dpia["mitigation_measures"]
             )
 
             # Generate recommendations
-            dpia['recommendations'] = await self._generate_dpia_recommendations(dpia)
+            dpia["recommendations"] = await self._generate_dpia_recommendations(dpia)
 
             return dpia
 
@@ -627,7 +647,7 @@ class PrivacyProtectionSystem:
     def _generate_subject_id(self, identifiers: Dict[str, str]) -> str:
         """Generate unique data subject ID"""
         # Use primary identifier (email) and hash for privacy
-        primary_id = identifiers.get('email', identifiers.get('phone', str(secrets.token_hex(16))))
+        primary_id = identifiers.get("email", identifiers.get("phone", str(secrets.token_hex(16))))
         return hashlib.sha256(primary_id.encode()).hexdigest()[:16]
 
     def _generate_consent_id(self) -> str:
@@ -649,14 +669,14 @@ class PrivacyProtectionSystem:
         return ConsentRecord(
             consent_id=self._generate_consent_id(),
             subject_id=subject_id,
-            data_category=DataCategory(consent_data.get('data_category')),
-            processing_purpose=ProcessingPurpose(consent_data.get('processing_purpose')),
-            legal_basis=LegalBasis(consent_data.get('legal_basis', 'consent')),
+            data_category=DataCategory(consent_data.get("data_category")),
+            processing_purpose=ProcessingPurpose(consent_data.get("processing_purpose")),
+            legal_basis=LegalBasis(consent_data.get("legal_basis", "consent")),
             status=ConsentStatus.GIVEN,
-            consent_text=consent_data.get('consent_text', ''),
+            consent_text=consent_data.get("consent_text", ""),
             obtained_at=datetime.now(),
-            method=consent_data.get('method', 'web_form'),
-            evidence=consent_data.get('evidence', {})
+            method=consent_data.get("method", "web_form"),
+            evidence=consent_data.get("evidence", {}),
         )
 
     async def _initialize_privacy_preferences(self, data_subject: DataSubject):
@@ -664,18 +684,16 @@ class PrivacyProtectionSystem:
         # Implementation for privacy preference initialization
         pass
 
-    async def _determine_legal_basis(self,
-                                   jurisdiction: str,
-                                   data_category: DataCategory,
-                                   processing_purpose: ProcessingPurpose) -> LegalBasis:
+    async def _determine_legal_basis(
+        self, jurisdiction: str, data_category: DataCategory, processing_purpose: ProcessingPurpose
+    ) -> LegalBasis:
         """Determine appropriate legal basis for processing"""
         # Implementation for legal basis determination
         return LegalBasis.CONSENT  # Placeholder
 
-    async def _generate_consent_text(self,
-                                   data_category: DataCategory,
-                                   processing_purpose: ProcessingPurpose,
-                                   jurisdiction: str) -> str:
+    async def _generate_consent_text(
+        self, data_category: DataCategory, processing_purpose: ProcessingPurpose, jurisdiction: str
+    ) -> str:
         """Generate jurisdiction-appropriate consent text"""
         # Implementation for consent text generation
         return f"Consent for processing {data_category.value} for {processing_purpose.value}"

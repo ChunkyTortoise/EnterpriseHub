@@ -1,33 +1,36 @@
-import aiohttp
 import json
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
+import aiohttp
+
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
+
 
 class RetellClient:
     """
     Client for interacting with Retell AI API.
     Handles voice call initialization, management, and webhook validation.
     """
-    
+
     BASE_URL = "https://api.retellai.com"
 
     def __init__(self):
         self.api_key = settings.retell_api_key
         self.agent_id = settings.retell_agent_id
-        
+
         if not self.api_key:
             logger.warning("Retell API Key not found. Voice features will be disabled or mocked.")
 
     async def create_call(
-        self, 
-        to_number: str, 
-        lead_name: str, 
+        self,
+        to_number: str,
+        lead_name: str,
         lead_context: Dict[str, Any],
         metadata: Optional[Dict[str, Any]] = None,
-        from_number: Optional[str] = None
+        from_number: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Initiate an outbound call to a lead.
@@ -36,27 +39,21 @@ class RetellClient:
             return self._mock_call_response(to_number)
 
         url = f"{self.BASE_URL}/v2/create-phone-call"
-        
+
         # Prepare dynamic variables for the Retell agent prompt
-        retell_llm_data = {
-            "lead_name": lead_name,
-            "lead_data": lead_context
-        }
+        retell_llm_data = {"lead_name": lead_name, "lead_data": lead_context}
 
         payload = {
             "from_number": from_number or settings.default_agent_phone,
             "to_number": to_number,
             "agent_id": self.agent_id,
-            "retell_llm_dynamic_variables": retell_llm_data
+            "retell_llm_dynamic_variables": retell_llm_data,
         }
-        
+
         if metadata:
             payload["metadata"] = metadata
 
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
+        headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
 
         async with aiohttp.ClientSession() as session:
             try:
@@ -94,12 +91,13 @@ class RetellClient:
     def _mock_call_response(self, to_number: str) -> Dict[str, Any]:
         """Return a mock response for development/testing without API keys."""
         import uuid
+
         return {
             "call_id": f"mock_call_{uuid.uuid4()}",
             "agent_id": self.agent_id or "mock_agent_id",
             "call_status": "registered",
             "to_number": to_number,
-            "access_token": "mock_access_token"
+            "access_token": "mock_access_token",
         }
 
     @staticmethod

@@ -27,28 +27,25 @@ Integration: Seamlessly integrates with competitive intelligence pipeline
 """
 
 import asyncio
-import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Union, Callable, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
-from decimal import Decimal
-import json
 import hashlib
+import json
+import logging
 import uuid
 from collections import defaultdict
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from decimal import Decimal
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-# Import core services
-from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
+# Import core services
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+
 # Import competitive intelligence components
-from ghl_real_estate_ai.services.competitive_data_pipeline import (
-    ThreatAssessment,
-    ThreatLevel,
-    CompetitorDataPoint
-)
+from ghl_real_estate_ai.services.competitive_data_pipeline import CompetitorDataPoint, ThreatAssessment, ThreatLevel
 
 logger = get_logger(__name__)
 
@@ -206,14 +203,10 @@ class ResponseActionExecutor:
             "total_executions": 0,
             "successful_executions": 0,
             "failed_executions": 0,
-            "avg_execution_time": 0.0
+            "avg_execution_time": 0.0,
         }
 
-    async def execute_action(
-        self,
-        action: Dict[str, Any],
-        execution: ResponseExecution
-    ) -> Dict[str, Any]:
+    async def execute_action(self, action: Dict[str, Any], execution: ResponseExecution) -> Dict[str, Any]:
         """Execute a specific response action."""
         raise NotImplementedError
 
@@ -228,11 +221,7 @@ class GHLCRMExecutor(ResponseActionExecutor):
     def __init__(self):
         super().__init__(ExecutionChannel.GHL_CRM)
 
-    async def execute_action(
-        self,
-        action: Dict[str, Any],
-        execution: ResponseExecution
-    ) -> Dict[str, Any]:
+    async def execute_action(self, action: Dict[str, Any], execution: ResponseExecution) -> Dict[str, Any]:
         """Execute GHL CRM action (lead tagging, campaign trigger, etc.)."""
         try:
             action_type = action.get("type", "")
@@ -250,11 +239,7 @@ class GHLCRMExecutor(ResponseActionExecutor):
             logger.error(f"Error executing GHL CRM action: {e}")
             return {"success": False, "error": str(e)}
 
-    async def _execute_tag_addition(
-        self,
-        action: Dict[str, Any],
-        execution: ResponseExecution
-    ) -> Dict[str, Any]:
+    async def _execute_tag_addition(self, action: Dict[str, Any], execution: ResponseExecution) -> Dict[str, Any]:
         """Execute tag addition to leads."""
         try:
             leads = action.get("target_leads", [])
@@ -271,17 +256,13 @@ class GHLCRMExecutor(ResponseActionExecutor):
                 "leads_updated": len(leads),
                 "tags_added": tags,
                 "cost": 0,  # Tag operations typically have no cost
-                "execution_time_ms": 250
+                "execution_time_ms": 250,
             }
 
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def _execute_campaign_trigger(
-        self,
-        action: Dict[str, Any],
-        execution: ResponseExecution
-    ) -> Dict[str, Any]:
+    async def _execute_campaign_trigger(self, action: Dict[str, Any], execution: ResponseExecution) -> Dict[str, Any]:
         """Execute marketing campaign trigger."""
         try:
             campaign_id = action.get("campaign_id", "")
@@ -297,16 +278,14 @@ class GHLCRMExecutor(ResponseActionExecutor):
                 "target_audience": target_audience,
                 "estimated_reach": action.get("estimated_reach", 100),
                 "cost": Decimal(str(action.get("cost", 50))),
-                "execution_time_ms": 500
+                "execution_time_ms": 500,
             }
 
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def _execute_opportunity_creation(
-        self,
-        action: Dict[str, Any],
-        execution: ResponseExecution
+        self, action: Dict[str, Any], execution: ResponseExecution
     ) -> Dict[str, Any]:
         """Execute opportunity creation in CRM."""
         try:
@@ -321,7 +300,7 @@ class GHLCRMExecutor(ResponseActionExecutor):
                 "opportunity_id": f"opp_{uuid.uuid4().hex[:8]}",
                 "opportunity_value": opportunity_data.get("value", 0),
                 "cost": 0,
-                "execution_time_ms": 200
+                "execution_time_ms": 200,
             }
 
         except Exception as e:
@@ -334,11 +313,7 @@ class EmailMarketingExecutor(ResponseActionExecutor):
     def __init__(self):
         super().__init__(ExecutionChannel.EMAIL_MARKETING)
 
-    async def execute_action(
-        self,
-        action: Dict[str, Any],
-        execution: ResponseExecution
-    ) -> Dict[str, Any]:
+    async def execute_action(self, action: Dict[str, Any], execution: ResponseExecution) -> Dict[str, Any]:
         """Execute email marketing action."""
         try:
             action_type = action.get("type", "")
@@ -355,9 +330,7 @@ class EmailMarketingExecutor(ResponseActionExecutor):
             return {"success": False, "error": str(e)}
 
     async def _send_competitive_alert_email(
-        self,
-        action: Dict[str, Any],
-        execution: ResponseExecution
+        self, action: Dict[str, Any], execution: ResponseExecution
     ) -> Dict[str, Any]:
         """Send competitive alert email."""
         try:
@@ -373,16 +346,14 @@ class EmailMarketingExecutor(ResponseActionExecutor):
                 "recipients_count": len(recipients),
                 "delivery_rate": 0.95,
                 "cost": Decimal(str(len(recipients) * 0.02)),  # $0.02 per email
-                "execution_time_ms": 1200
+                "execution_time_ms": 1200,
             }
 
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def _send_value_proposition_email(
-        self,
-        action: Dict[str, Any],
-        execution: ResponseExecution
+        self, action: Dict[str, Any], execution: ResponseExecution
     ) -> Dict[str, Any]:
         """Send value proposition reinforcement email."""
         try:
@@ -400,7 +371,7 @@ class EmailMarketingExecutor(ResponseActionExecutor):
                 "estimated_open_rate": 0.28,
                 "estimated_click_rate": 0.08,
                 "cost": Decimal("25.00"),
-                "execution_time_ms": 800
+                "execution_time_ms": 800,
             }
 
         except Exception as e:
@@ -440,7 +411,7 @@ class CompetitiveResponseEngine:
             "failed_responses": 0,
             "avg_response_time": 0.0,
             "total_cost": Decimal("0"),
-            "estimated_revenue_protected": Decimal("0")
+            "estimated_revenue_protected": Decimal("0"),
         }
 
         logger.info("CompetitiveResponseEngine initialized")
@@ -456,7 +427,7 @@ class CompetitiveResponseEngine:
 
             # Initialize executors
             for executor in self.executors.values():
-                if hasattr(executor, 'initialize'):
+                if hasattr(executor, "initialize"):
                     await executor.initialize()
 
             logger.info("Response engine initialized successfully")
@@ -479,7 +450,7 @@ class CompetitiveResponseEngine:
             await self.cache.set(
                 f"response_rule:{rule.rule_id}",
                 self._serialize_rule(rule),
-                ttl=86400 * 30  # 30 days
+                ttl=86400 * 30,  # 30 days
             )
 
             logger.info(f"Registered response rule: {rule.rule_name}")
@@ -489,10 +460,7 @@ class CompetitiveResponseEngine:
             logger.error(f"Error registering response rule: {e}")
             raise
 
-    async def process_threat_assessment(
-        self,
-        threat: ThreatAssessment
-    ) -> List[ResponseExecution]:
+    async def process_threat_assessment(self, threat: ThreatAssessment) -> List[ResponseExecution]:
         """Process threat assessment and trigger automated responses."""
         try:
             logger.info(f"Processing threat assessment: {threat.threat_id}")
@@ -526,12 +494,7 @@ class CompetitiveResponseEngine:
             logger.error(f"Error processing threat assessment: {e}")
             return []
 
-    async def approve_response_execution(
-        self,
-        execution_id: str,
-        approved_by: str,
-        approval_notes: str = ""
-    ) -> bool:
+    async def approve_response_execution(self, execution_id: str, approved_by: str, approval_notes: str = "") -> bool:
         """Approve pending response execution."""
         try:
             execution = self.active_executions.get(execution_id)
@@ -547,12 +510,14 @@ class CompetitiveResponseEngine:
             execution.approval_notes = approval_notes
 
             # Add to audit log
-            execution.audit_log.append({
-                "action": "approved",
-                "by": approved_by,
-                "notes": approval_notes,
-                "timestamp": datetime.now().isoformat()
-            })
+            execution.audit_log.append(
+                {
+                    "action": "approved",
+                    "by": approved_by,
+                    "notes": approval_notes,
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
 
             # Execute the response
             await self._execute_response(execution)
@@ -576,9 +541,10 @@ class CompetitiveResponseEngine:
             # Calculate average response time
             completed_executions = [e for e in self.execution_history if e.status == ResponseStatus.COMPLETED]
             avg_response_time = (
-                sum(e.execution_duration_ms for e in completed_executions) /
-                len(completed_executions)
-            ) if completed_executions else 0.0
+                (sum(e.execution_duration_ms for e in completed_executions) / len(completed_executions))
+                if completed_executions
+                else 0.0
+            )
 
             # Calculate cost metrics
             total_cost = sum(e.cost for e in self.execution_history)
@@ -601,13 +567,15 @@ class CompetitiveResponseEngine:
                     "avg_response_time_ms": avg_response_time,
                     "total_cost": float(total_cost),
                     "active_rules": len(self.response_rules),
-                    "pending_approvals": len([e for e in self.active_executions.values() if e.status == ResponseStatus.PENDING])
+                    "pending_approvals": len(
+                        [e for e in self.active_executions.values() if e.status == ResponseStatus.PENDING]
+                    ),
                 },
                 "response_types": dict(response_type_stats),
                 "channel_performance": channel_stats,
                 "recent_performance": await self._calculate_recent_performance(),
                 "cost_breakdown": await self._calculate_cost_breakdown(),
-                "roi_metrics": await self._calculate_roi_metrics()
+                "roi_metrics": await self._calculate_roi_metrics(),
             }
 
         except Exception as e:
@@ -625,20 +593,16 @@ class CompetitiveResponseEngine:
                 description="Respond to competitor price reductions",
                 trigger_conditions=[
                     {"field": "threat_type", "operator": "equals", "value": "aggressive_pricing"},
-                    {"field": "price_reduction", "operator": "greater_than", "value": 0.10}
+                    {"field": "price_reduction", "operator": "greater_than", "value": 0.10},
                 ],
                 threat_level_threshold=ThreatLevel.MEDIUM,
                 response_type=ResponseType.PRICING_ADJUSTMENT,
                 response_actions=[
-                    {
-                        "type": "price_analysis",
-                        "analyze_competitive_position": True,
-                        "recommend_pricing_strategy": True
-                    }
+                    {"type": "price_analysis", "analyze_competitive_position": True, "recommend_pricing_strategy": True}
                 ],
                 execution_channels=[ExecutionChannel.GHL_CRM],
                 approval_level=ApprovalLevel.SUPERVISOR,
-                max_budget=Decimal("1000")
+                max_budget=Decimal("1000"),
             )
 
             # Default marketing response rule
@@ -647,7 +611,7 @@ class CompetitiveResponseEngine:
                 description="Launch defensive marketing when competitor threatens market share",
                 trigger_conditions=[
                     {"field": "threat_type", "operator": "equals", "value": "market_expansion"},
-                    {"field": "threat_level", "operator": "in", "value": ["high", "critical"]}
+                    {"field": "threat_level", "operator": "in", "value": ["high", "critical"]},
                 ],
                 threat_level_threshold=ThreatLevel.HIGH,
                 response_type=ResponseType.MARKETING_CAMPAIGN,
@@ -656,12 +620,12 @@ class CompetitiveResponseEngine:
                         "type": "trigger_campaign",
                         "campaign_id": "defensive_positioning",
                         "target_audience": "at_risk_leads",
-                        "budget": 500
+                        "budget": 500,
                     }
                 ],
                 execution_channels=[ExecutionChannel.GHL_CRM, ExecutionChannel.EMAIL_MARKETING],
                 approval_level=ApprovalLevel.MANAGER,
-                max_budget=Decimal("2500")
+                max_budget=Decimal("2500"),
             )
 
             # Register default rules
@@ -701,8 +665,8 @@ class CompetitiveResponseEngine:
                     "personalization_required": True,
                     "urgency_level": "medium",
                     "call_to_action": "schedule_showing",
-                    "follow_up_required": True
-                }
+                    "follow_up_required": True,
+                },
             )
 
             # Store template
@@ -740,11 +704,7 @@ class CompetitiveResponseEngine:
 
         return applicable_rules
 
-    async def _evaluate_trigger_conditions(
-        self,
-        conditions: List[Dict[str, Any]],
-        threat: ThreatAssessment
-    ) -> bool:
+    async def _evaluate_trigger_conditions(self, conditions: List[Dict[str, Any]], threat: ThreatAssessment) -> bool:
         """Evaluate trigger conditions against threat data."""
         try:
             for condition in conditions:
@@ -762,7 +722,7 @@ class CompetitiveResponseEngine:
                             for evidence in threat.evidence
                             if evidence.raw_data.get(field) is not None
                         ),
-                        None
+                        None,
                     )
 
                 # Evaluate condition
@@ -798,10 +758,13 @@ class CompetitiveResponseEngine:
         try:
             # Check execution limits (count both history and active executions)
             today = datetime.now().date()
-            today_executions = len([
-                e for e in list(self.execution_history) + list(self.active_executions.values())
-                if e.created_at.date() == today and e.rule_id == rule.rule_id
-            ])
+            today_executions = len(
+                [
+                    e
+                    for e in list(self.execution_history) + list(self.active_executions.values())
+                    if e.created_at.date() == today and e.rule_id == rule.rule_id
+                ]
+            )
 
             if today_executions >= rule.max_executions_per_day:
                 return False
@@ -809,10 +772,11 @@ class CompetitiveResponseEngine:
             # Check cooldown period
             last_execution = next(
                 (
-                    e for e in reversed(self.execution_history)
+                    e
+                    for e in reversed(self.execution_history)
                     if e.rule_id == rule.rule_id and e.status == ResponseStatus.COMPLETED
                 ),
-                None
+                None,
             )
 
             if last_execution:
@@ -830,11 +794,7 @@ class CompetitiveResponseEngine:
             logger.error(f"Error checking rule trigger conditions: {e}")
             return False
 
-    async def _create_response_execution(
-        self,
-        rule: ResponseRule,
-        threat: ThreatAssessment
-    ) -> ResponseExecution:
+    async def _create_response_execution(self, rule: ResponseRule, threat: ThreatAssessment) -> ResponseExecution:
         """Create response execution instance."""
         try:
             execution = ResponseExecution(
@@ -845,23 +805,25 @@ class CompetitiveResponseEngine:
                     "threat_type": threat.threat_type,
                     "threat_level": threat.threat_level.value,
                     "competitor_id": threat.competitor_id,
-                    "threat_description": threat.threat_description
+                    "threat_description": threat.threat_description,
                 },
                 response_actions=rule.response_actions.copy(),
                 approval_level=rule.approval_level,
-                status=ResponseStatus.PENDING
+                status=ResponseStatus.PENDING,
             )
 
             # Add to active executions
             self.active_executions[execution.execution_id] = execution
 
             # Add to audit log
-            execution.audit_log.append({
-                "action": "created",
-                "rule_id": rule.rule_id,
-                "threat_id": threat.threat_id,
-                "timestamp": datetime.now().isoformat()
-            })
+            execution.audit_log.append(
+                {
+                    "action": "created",
+                    "rule_id": rule.rule_id,
+                    "threat_id": threat.threat_id,
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
 
             return execution
 
@@ -926,13 +888,15 @@ class CompetitiveResponseEngine:
                 del self.active_executions[execution.execution_id]
 
             # Add to audit log
-            execution.audit_log.append({
-                "action": "completed",
-                "status": execution.status.value,
-                "cost": float(execution.cost),
-                "duration_ms": execution.execution_duration_ms,
-                "timestamp": datetime.now().isoformat()
-            })
+            execution.audit_log.append(
+                {
+                    "action": "completed",
+                    "status": execution.status.value,
+                    "cost": float(execution.cost),
+                    "duration_ms": execution.execution_duration_ms,
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
 
             logger.info(f"Executed response {execution.execution_id}: {execution.status.value}")
 
@@ -942,9 +906,7 @@ class CompetitiveResponseEngine:
             execution.error_messages.append(str(e))
 
     def _determine_execution_channel(
-        self,
-        action: Dict[str, Any],
-        execution: ResponseExecution
+        self, action: Dict[str, Any], execution: ResponseExecution
     ) -> Optional[ExecutionChannel]:
         """Determine appropriate execution channel for action."""
         action_type = action.get("type", "")
@@ -956,7 +918,7 @@ class CompetitiveResponseEngine:
             "create_opportunity": ExecutionChannel.GHL_CRM,
             "send_email": ExecutionChannel.EMAIL_MARKETING,
             "send_competitive_alert": ExecutionChannel.EMAIL_MARKETING,
-            "value_proposition_email": ExecutionChannel.EMAIL_MARKETING
+            "value_proposition_email": ExecutionChannel.EMAIL_MARKETING,
         }
 
         return action_channel_mapping.get(action_type)
@@ -968,15 +930,17 @@ class CompetitiveResponseEngine:
             await self.cache.set(
                 f"pending_approval:{execution.execution_id}",
                 self._serialize_execution(execution),
-                ttl=86400  # 24 hours
+                ttl=86400,  # 24 hours
             )
 
             # Add to audit log
-            execution.audit_log.append({
-                "action": "queued_for_approval",
-                "approval_level": execution.approval_level.value,
-                "timestamp": datetime.now().isoformat()
-            })
+            execution.audit_log.append(
+                {
+                    "action": "queued_for_approval",
+                    "approval_level": execution.approval_level.value,
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
 
             logger.info(f"Queued execution for approval: {execution.execution_id}")
 
@@ -1013,7 +977,7 @@ class CompetitiveResponseEngine:
             "approval_level": rule.approval_level.value,
             "max_budget": float(rule.max_budget),
             "is_active": rule.is_active,
-            "created_at": rule.created_at.isoformat()
+            "created_at": rule.created_at.isoformat(),
         }
 
     def _serialize_execution(self, execution: ResponseExecution) -> Dict[str, Any]:
@@ -1027,7 +991,7 @@ class CompetitiveResponseEngine:
             "approval_level": execution.approval_level.value,
             "created_at": execution.created_at.isoformat(),
             "trigger_data": execution.trigger_data,
-            "response_actions": execution.response_actions
+            "response_actions": execution.response_actions,
         }
 
     async def _update_performance_metrics(self, executions: List[ResponseExecution]) -> None:
@@ -1042,16 +1006,15 @@ class CompetitiveResponseEngine:
         """Calculate recent performance metrics."""
         # Get executions from last 24 hours
         cutoff_time = datetime.now() - timedelta(hours=24)
-        recent_executions = [
-            e for e in self.execution_history
-            if e.created_at >= cutoff_time
-        ]
+        recent_executions = [e for e in self.execution_history if e.created_at >= cutoff_time]
 
         return {
             "executions_24h": len(recent_executions),
-            "success_rate_24h": len([e for e in recent_executions if e.status == ResponseStatus.COMPLETED]) / max(len(recent_executions), 1),
-            "avg_response_time_24h": sum(e.execution_duration_ms for e in recent_executions) / max(len(recent_executions), 1),
-            "total_cost_24h": float(sum(e.cost for e in recent_executions))
+            "success_rate_24h": len([e for e in recent_executions if e.status == ResponseStatus.COMPLETED])
+            / max(len(recent_executions), 1),
+            "avg_response_time_24h": sum(e.execution_duration_ms for e in recent_executions)
+            / max(len(recent_executions), 1),
+            "total_cost_24h": float(sum(e.cost for e in recent_executions)),
         }
 
     async def _calculate_cost_breakdown(self) -> Dict[str, Any]:
@@ -1067,7 +1030,7 @@ class CompetitiveResponseEngine:
         return {
             "by_response_type": dict(cost_by_type),
             "by_channel": dict(cost_by_channel),
-            "total_cost": float(sum(e.cost for e in self.execution_history))
+            "total_cost": float(sum(e.cost for e in self.execution_history)),
         }
 
     async def _calculate_roi_metrics(self) -> Dict[str, Any]:
@@ -1080,7 +1043,7 @@ class CompetitiveResponseEngine:
             "estimated_revenue_protected": float(estimated_revenue_protected),
             "estimated_roi": 5.0,
             "cost_per_response": float(total_cost / max(len(self.execution_history), 1)),
-            "average_response_value": float(estimated_revenue_protected / max(len(self.execution_history), 1))
+            "average_response_value": float(estimated_revenue_protected / max(len(self.execution_history), 1)),
         }
 
 

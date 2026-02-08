@@ -5,23 +5,24 @@ Interactive demonstration of white-label capabilities for high-ticket consulting
 Showcases brand customization, workflow automation, and integration marketplace.
 """
 
-import streamlit as st
-from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
-import pandas as pd
 import asyncio
 import json
-from datetime import datetime
-from typing import Dict, List, Any, Optional
 from dataclasses import asdict
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+import pandas as pd
+import streamlit as st
 
 # Import the white-label service
 from ghl_real_estate_ai.services.white_label_service import (
-    WhiteLabelService,
     BrandingConfig,
     BrandingTier,
+    IntegrationMarketplace,
+    WhiteLabelService,
     WorkflowTemplate,
-    IntegrationMarketplace
 )
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 
 
 class WhiteLabelShowcase:
@@ -49,9 +50,9 @@ class WhiteLabelShowcase:
                     "Multi-agent AI swarm deployment",
                     "Basic brand customization",
                     "Standard workflow automation",
-                    "Email support and training"
+                    "Email support and training",
                 ],
-                "target": "Mid-market teams (10-50 agents)"
+                "target": "Mid-market teams (10-50 agents)",
             },
             "Enterprise Intelligence Platform": {
                 "price": "$50,000 - $75,000",
@@ -62,9 +63,9 @@ class WhiteLabelShowcase:
                     "Full brand integration + custom domain",
                     "Advanced workflow automation engine",
                     "Priority support + dedicated training",
-                    "API access and custom integrations"
+                    "API access and custom integrations",
                 ],
-                "target": "Large organizations (100+ agents)"
+                "target": "Large organizations (100+ agents)",
             },
             "AI Innovation Lab": {
                 "price": "$75,000 - $100,000",
@@ -76,10 +77,10 @@ class WhiteLabelShowcase:
                     "Enterprise SSO and audit logs",
                     "Dedicated support team",
                     "White-label mobile app",
-                    "Data residency compliance"
+                    "Data residency compliance",
                 ],
-                "target": "Enterprise clients + Tech companies"
-            }
+                "target": "Enterprise clients + Tech companies",
+            },
         }
 
         # Demo brand configurations
@@ -93,7 +94,7 @@ class WhiteLabelShowcase:
                 text_color="#2C2C2C",
                 background_color="#FEFCF7",
                 primary_font="Playfair Display",
-                tier=BrandingTier.ENTERPRISE
+                tier=BrandingTier.ENTERPRISE,
             ),
             "Metro Property Solutions": BrandingConfig(
                 company_name="Metro Property Solutions",
@@ -104,7 +105,7 @@ class WhiteLabelShowcase:
                 text_color="#1F2937",
                 background_color="#F8FAFC",
                 primary_font="Inter",
-                tier=BrandingTier.PROFESSIONAL
+                tier=BrandingTier.PROFESSIONAL,
             ),
             "Coastal Realty Network": BrandingConfig(
                 company_name="Coastal Realty Network",
@@ -115,14 +116,15 @@ class WhiteLabelShowcase:
                 text_color="#0F172A",
                 background_color="#F0F9FF",
                 primary_font="Nunito Sans",
-                tier=BrandingTier.BASIC
-            )
+                tier=BrandingTier.BASIC,
+            ),
         }
 
     def render_showcase(self):
         """Render the complete white-label showcase interface."""
 
-        st.markdown("""
+        st.markdown(
+            """
         <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                     padding: 2rem; border-radius: 16px; color: white; margin-bottom: 2rem;
                     box-shadow: 0 8px 32px rgba(0,0,0,0.3);'>
@@ -134,15 +136,14 @@ class WhiteLabelShowcase:
                 <strong>Justify $25K-$100K consulting engagements with enterprise customization</strong>
             </p>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
         # Main showcase tabs
-        tab1, tab2, tab3, tab4 = st.tabs([
-            "🎯 Consulting Packages",
-            "🎨 Brand Customization",
-            "⚙️ Workflow Engine",
-            "🔌 Integration Marketplace"
-        ])
+        tab1, tab2, tab3, tab4 = st.tabs(
+            ["🎯 Consulting Packages", "🎨 Brand Customization", "⚙️ Workflow Engine", "🔌 Integration Marketplace"]
+        )
 
         with tab1:
             self._render_consulting_packages()
@@ -168,23 +169,22 @@ class WhiteLabelShowcase:
         # Package comparison
         packages_df = []
         for package_name, details in self.consulting_packages.items():
-            packages_df.append({
-                "Package": package_name,
-                "Investment": details["price"],
-                "Timeline": details["duration"],
-                "Target Market": details["target"],
-                "Tier": details["tier"].value.title(),
-                "Key Features": len(details["features"])
-            })
+            packages_df.append(
+                {
+                    "Package": package_name,
+                    "Investment": details["price"],
+                    "Timeline": details["duration"],
+                    "Target Market": details["target"],
+                    "Tier": details["tier"].value.title(),
+                    "Key Features": len(details["features"]),
+                }
+            )
 
         df = pd.DataFrame(packages_df)
         st.dataframe(df, use_container_width=True)
 
         # Selected package details
-        selected_package = st.selectbox(
-            "Select package for detailed features:",
-            list(self.consulting_packages.keys())
-        )
+        selected_package = st.selectbox("Select package for detailed features:", list(self.consulting_packages.keys()))
 
         if selected_package:
             package_details = self.consulting_packages[selected_package]
@@ -218,10 +218,7 @@ class WhiteLabelShowcase:
         st.markdown("**Live demonstration of white-label customization capabilities**")
 
         # Brand selection
-        selected_brand = st.selectbox(
-            "Choose a demo brand to customize:",
-            list(self.demo_brands.keys())
-        )
+        selected_brand = st.selectbox("Choose a demo brand to customize:", list(self.demo_brands.keys()))
 
         if selected_brand:
             brand_config = self.demo_brands[selected_brand]
@@ -241,29 +238,28 @@ class WhiteLabelShowcase:
 
                 # Typography
                 font_options = ["Inter", "Playfair Display", "Nunito Sans", "Roboto", "Open Sans"]
-                primary_font = st.selectbox("Primary Font", font_options,
-                                          index=font_options.index(brand_config.primary_font))
+                primary_font = st.selectbox(
+                    "Primary Font", font_options, index=font_options.index(brand_config.primary_font)
+                )
 
                 # Tier selection
-                tier = st.selectbox("Consulting Tier",
-                                  [tier.value.title() for tier in BrandingTier],
-                                  index=list(BrandingTier).index(brand_config.tier))
+                tier = st.selectbox(
+                    "Consulting Tier",
+                    [tier.value.title() for tier in BrandingTier],
+                    index=list(BrandingTier).index(brand_config.tier),
+                )
 
             with col2:
                 st.markdown("#### Live Preview")
 
                 # Generate live preview
-                self._render_brand_preview(
-                    company_name, primary_color, secondary_color,
-                    accent_color, primary_font
-                )
+                self._render_brand_preview(company_name, primary_color, secondary_color, accent_color, primary_font)
 
             # Feature availability based on tier
             st.markdown("#### Tier-Based Feature Availability")
             self._render_tier_features(BrandingTier(tier.lower()))
 
-    def _render_brand_preview(self, company_name: str, primary: str, secondary: str,
-                            accent: str, font: str):
+    def _render_brand_preview(self, company_name: str, primary: str, secondary: str, accent: str, font: str):
         """Render live brand preview."""
 
         preview_html = f"""
@@ -350,9 +346,7 @@ class WhiteLabelShowcase:
             # Get workflows for each tier
             workflows_by_tier = {}
             for tier in BrandingTier:
-                workflows = run_async(
-                    self.service.get_available_workflows(tier)
-                )
+                workflows = run_async(self.service.get_available_workflows(tier))
                 workflows_by_tier[tier] = workflows
 
         except Exception as e:
@@ -361,8 +355,7 @@ class WhiteLabelShowcase:
 
         # Tier selector
         selected_tier = st.selectbox(
-            "Select consulting tier to view available workflows:",
-            [tier.value.title() for tier in BrandingTier]
+            "Select consulting tier to view available workflows:", [tier.value.title() for tier in BrandingTier]
         )
 
         tier_enum = BrandingTier(selected_tier.lower())
@@ -388,21 +381,21 @@ class WhiteLabelShowcase:
                 # Actions
                 st.markdown("**Automated Actions:**")
                 for i, action in enumerate(selected_workflow.actions, 1):
-                    action_type = action.get('type', 'Unknown').replace('_', ' ').title()
+                    action_type = action.get("type", "Unknown").replace("_", " ").title()
                     st.markdown(f"{i}. {action_type}")
 
             with col2:
                 st.markdown("**Configuration Options:**")
                 for field in selected_workflow.customizable_fields:
-                    field_name = field.replace('_', ' ').title()
+                    field_name = field.replace("_", " ").title()
                     st.markdown(f"🔧 {field_name}")
 
                 # Conditions
                 if selected_workflow.conditions:
                     st.markdown("**Trigger Conditions:**")
                     for condition in selected_workflow.conditions:
-                        field = condition.get('field', '').replace('_', ' ').title()
-                        operator = condition.get('operator', '').replace('_', ' ')
+                        field = condition.get("field", "").replace("_", " ").title()
+                        operator = condition.get("operator", "").replace("_", " ")
                         st.markdown(f"• {field} {operator}")
 
         # Workflow builder preview
@@ -413,7 +406,9 @@ class WhiteLabelShowcase:
         """Render enterprise integration marketplace."""
 
         st.markdown("### 🔌 Enterprise Integration Marketplace")
-        st.markdown("**Connect with leading enterprise platforms - implementation complexity varies by consulting tier**")
+        st.markdown(
+            "**Connect with leading enterprise platforms - implementation complexity varies by consulting tier**"
+        )
 
         try:
             loop = asyncio.new_event_loop()
@@ -422,9 +417,7 @@ class WhiteLabelShowcase:
             # Get integrations for each tier
             integrations_by_tier = {}
             for tier in BrandingTier:
-                integrations = run_async(
-                    self.service.get_integration_marketplace(tier)
-                )
+                integrations = run_async(self.service.get_integration_marketplace(tier))
                 integrations_by_tier[tier] = integrations
 
         except Exception as e:
@@ -473,9 +466,7 @@ class WhiteLabelShowcase:
         with col2:
             st.markdown("#### Investment")
             selected_package = st.selectbox(
-                "Consulting Package:",
-                list(self.consulting_packages.keys()),
-                key="roi_package"
+                "Consulting Package:", list(self.consulting_packages.keys()), key="roi_package"
             )
 
             # Extract investment amount (use midpoint)
@@ -531,7 +522,7 @@ class WhiteLabelShowcase:
             "White-Label Mobile App": tier == BrandingTier.ENTERPRISE,
             "Dedicated Support": tier == BrandingTier.ENTERPRISE,
             "Audit Logs": tier == BrandingTier.ENTERPRISE,
-            "Data Residency": tier == BrandingTier.ENTERPRISE
+            "Data Residency": tier == BrandingTier.ENTERPRISE,
         }
 
         cols = st.columns(2)
@@ -629,7 +620,7 @@ class WhiteLabelShowcase:
             "API Access": tier != BrandingTier.BASIC,
             "Enterprise SSO": tier == BrandingTier.ENTERPRISE,
             "Mobile App": tier == BrandingTier.ENTERPRISE,
-            "Dedicated Support": tier == BrandingTier.ENTERPRISE
+            "Dedicated Support": tier == BrandingTier.ENTERPRISE,
         }
 
 

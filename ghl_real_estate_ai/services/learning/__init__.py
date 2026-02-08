@@ -15,38 +15,34 @@ Provides:
 
 # Core interfaces and data structures
 from .interfaces import (
-    # Enums
-    EventType,
-    FeatureType,
-    ModelType,
-    LearningMode,
-    ConfidenceLevel,
-
     # Data structures
     BehavioralEvent,
+    ConfidenceLevel,
+    # Type aliases
+    EventFilter,
+    # Enums
+    EventType,
+    FeatureDict,
+    FeatureExtractionError,
+    FeatureType,
     FeatureVector,
-    LearningContext,
-    ModelPrediction,
-    TrainingResult,
-
     # Core interfaces
     IBehaviorTracker,
     IFeatureEngineer,
     ILearningModel,
-    IPersonalizationEngine,
     ILearningService,
-
+    IPersonalizationEngine,
+    LearningContext,
     # Exceptions
     LearningError,
+    LearningMode,
     ModelNotTrainedError,
-    FeatureExtractionError,
+    ModelPrediction,
+    ModelType,
+    PredictionBatch,
     PredictionError,
     TrainingError,
-
-    # Type aliases
-    EventFilter,
-    FeatureDict,
-    PredictionBatch
+    TrainingResult,
 )
 
 # Version information
@@ -62,32 +58,28 @@ __all__ = [
     "ModelType",
     "LearningMode",
     "ConfidenceLevel",
-
     # Data structures
     "BehavioralEvent",
     "FeatureVector",
     "LearningContext",
     "ModelPrediction",
     "TrainingResult",
-
     # Interfaces
     "IBehaviorTracker",
     "IFeatureEngineer",
     "ILearningModel",
     "IPersonalizationEngine",
     "ILearningService",
-
     # Exceptions
     "LearningError",
     "ModelNotTrainedError",
     "FeatureExtractionError",
     "PredictionError",
     "TrainingError",
-
     # Type aliases
     "EventFilter",
     "FeatureDict",
-    "PredictionBatch"
+    "PredictionBatch",
 ]
 
 
@@ -99,16 +91,12 @@ def get_version_info():
         "description": __description__,
         "interfaces_count": len(__all__),
         "supported_event_types": len(EventType),
-        "supported_model_types": len(ModelType)
+        "supported_model_types": len(ModelType),
     }
 
 
 def create_behavioral_event(
-    event_type: EventType,
-    lead_id: str = None,
-    agent_id: str = None,
-    property_id: str = None,
-    event_data: dict = None
+    event_type: EventType, lead_id: str = None, agent_id: str = None, property_id: str = None, event_data: dict = None
 ) -> BehavioralEvent:
     """
     Convenience function to create behavioral events.
@@ -133,15 +121,12 @@ def create_behavioral_event(
         lead_id=lead_id,
         agent_id=agent_id,
         property_id=property_id,
-        event_data=event_data or {}
+        event_data=event_data or {},
     )
 
 
 def create_learning_context(
-    session_id: str = None,
-    max_results: int = 10,
-    min_confidence: float = 0.5,
-    debug_mode: bool = False
+    session_id: str = None, max_results: int = 10, min_confidence: float = 0.5, debug_mode: bool = False
 ) -> LearningContext:
     """
     Convenience function to create learning context.
@@ -160,33 +145,28 @@ def create_learning_context(
         max_results=max_results,
         min_confidence=min_confidence,
         debug_mode=debug_mode,
-        tracking_enabled=True
+        tracking_enabled=True,
     )
 
 
 # Quick start examples
 EXAMPLE_EVENTS = {
     "property_view": lambda lead_id, property_id: create_behavioral_event(
-        EventType.PROPERTY_VIEW,
-        lead_id=lead_id,
-        property_id=property_id,
-        event_data={"view_duration_seconds": 30.5}
+        EventType.PROPERTY_VIEW, lead_id=lead_id, property_id=property_id, event_data={"view_duration_seconds": 30.5}
     ),
-
     "property_like": lambda lead_id, property_id: create_behavioral_event(
         EventType.PROPERTY_SWIPE,
         lead_id=lead_id,
         property_id=property_id,
-        event_data={"swipe_direction": "right", "liked": True}
+        event_data={"swipe_direction": "right", "liked": True},
     ),
-
     "booking_request": lambda lead_id, agent_id, property_id: create_behavioral_event(
         EventType.BOOKING_REQUEST,
         lead_id=lead_id,
         agent_id=agent_id,
         property_id=property_id,
-        event_data={"booking_type": "tour", "urgency": "high"}
-    )
+        event_data={"booking_type": "tour", "urgency": "high"},
+    ),
 }
 
 
@@ -204,7 +184,6 @@ event = create_behavioral_event(
     event_data={"view_duration_seconds": 45.2}
 )
 """,
-
         "create_feature_vector": """
 # Create feature vector for machine learning
 from ghl_real_estate_ai.services.learning import FeatureVector
@@ -219,7 +198,6 @@ features = FeatureVector(
     }
 )
 """,
-
         "setup_learning_context": """
 # Setup context for personalized recommendations
 from ghl_real_estate_ai.services.learning import create_learning_context
@@ -230,7 +208,7 @@ context = create_learning_context(
     min_confidence=0.7,
     debug_mode=True
 )
-"""
+""",
     }
 
 

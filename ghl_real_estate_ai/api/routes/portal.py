@@ -11,9 +11,9 @@ from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.portal_swipe_manager import (
+    FeedbackCategory,
     PortalSwipeManager,
     SwipeAction,
-    FeedbackCategory,
 )
 
 logger = get_logger(__name__)
@@ -26,12 +26,14 @@ swipe_manager = PortalSwipeManager()
 # Request/Response Models
 class SwipeFeedback(BaseModel):
     """Feedback for a pass action."""
+
     category: str = Field(..., description="Feedback category: price_too_high, location, style, etc.")
     text: Optional[str] = Field(None, description="Optional text feedback from user")
 
 
 class SwipeRequest(BaseModel):
     """Request model for swipe actions."""
+
     lead_id: str = Field(..., description="GHL contact ID")
     property_id: str = Field(..., description="Property/MLS listing ID")
     action: str = Field(..., description="Action: 'like' or 'pass'")
@@ -42,6 +44,7 @@ class SwipeRequest(BaseModel):
 
 class SwipeResponse(BaseModel):
     """Response model for swipe actions."""
+
     status: str
     trigger_sms: bool = False
     high_intent: bool = False
@@ -54,18 +57,18 @@ class SwipeResponse(BaseModel):
 async def handle_swipe(request: SwipeRequest):
     """
     Handle a swipe action (like or pass) from the client portal.
-    
+
     **Actions for LIKE:**
     - Tags lead in GHL with 'portal_liked_property' and 'hot_lead'
     - Adds note to contact
     - Detects high-intent behavior (3+ likes in 10 minutes)
     - Triggers speed-to-lead SMS for high intent
-    
+
     **Actions for PASS:**
     - Logs negative signal to avoid similar properties
     - Updates lead preferences based on feedback
     - Adjusts matching criteria (e.g., lower budget if price too high)
-    
+
     **Example Request:**
     ```json
     {
@@ -76,7 +79,7 @@ async def handle_swipe(request: SwipeRequest):
       "time_on_card": 12.5
     }
     ```
-    
+
     **Example Request with Feedback:**
     ```json
     {
@@ -93,17 +96,14 @@ async def handle_swipe(request: SwipeRequest):
     ```
     """
     logger.info(f"Swipe request: {request.lead_id} -> {request.property_id} ({request.action})")
-    
+
     try:
         # Validate action
         if request.action not in ["like", "pass"]:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid action '{request.action}'. Must be 'like' or 'pass'."
-            )
-        
+            raise HTTPException(status_code=400, detail=f"Invalid action '{request.action}'. Must be 'like' or 'pass'.")
+
         action = SwipeAction.LIKE if request.action == "like" else SwipeAction.PASS
-        
+
         # Convert feedback if present
         feedback_dict = None
         if request.feedback:
@@ -111,7 +111,7 @@ async def handle_swipe(request: SwipeRequest):
                 "category": request.feedback.category,
                 "text": request.feedback.text or "",
             }
-        
+
         # Process the swipe
         result = await swipe_manager.handle_swipe(
             lead_id=request.lead_id,
@@ -121,9 +121,9 @@ async def handle_swipe(request: SwipeRequest):
             feedback=feedback_dict,
             time_on_card=request.time_on_card,
         )
-        
+
         return SwipeResponse(**result)
-        
+
     except Exception as e:
         logger.error(f"Error handling swipe: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -133,14 +133,14 @@ async def handle_swipe(request: SwipeRequest):
 async def get_lead_stats(lead_id: str):
     """
     Get swipe statistics for a specific lead.
-    
+
     Returns:
     - Total interactions
     - Number of likes and passes
     - Like rate percentage
     - Pass reasons breakdown
     - Recent activity indicators
-    
+
     **Example Response:**
     ```json
     {
@@ -159,7 +159,7 @@ async def get_lead_stats(lead_id: str):
     ```
     """
     logger.info(f"Getting stats for lead: {lead_id}")
-    
+
     try:
         stats = swipe_manager.get_lead_stats(lead_id)
         return stats
@@ -172,7 +172,7 @@ async def get_lead_stats(lead_id: str):
 async def get_feedback_categories():
     """
     Get available feedback categories for pass actions.
-    
+
     Used by frontend to display feedback options to users.
     """
     return {
@@ -192,66 +192,55 @@ async def get_feedback_categories():
 async def get_lead_interactions(lead_id: str, limit: int = 50):
     """
     Get recent interactions for a specific lead.
-    
+
     Args:
         lead_id: GHL contact ID
         limit: Maximum number of interactions to return (default: 50)
     """
     logger.info(f"Getting interactions for lead: {lead_id}")
-    
+
     try:
         # Filter interactions for this lead
-        lead_interactions = [
-            i for i in swipe_manager.interactions
-            if i["lead_id"] == lead_id
-        ]
-        
+        lead_interactions = [i for i in swipe_manager.interactions if i["lead_id"] == lead_id]
+
         # Sort by timestamp descending (most recent first)
-        lead_interactions.sort(
-            key=lambda x: x["timestamp"],
-            reverse=True
-        )
-        
+        lead_interactions.sort(key=lambda x: x["timestamp"], reverse=True)
+
         return {
             "lead_id": lead_id,
             "total": len(lead_interactions),
             "interactions": lead_interactions[:limit],
         }
-        
+
     except Exception as e:
         logger.error(f"Error getting lead interactions: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/deck/{lead_id}")
-async def get_smart_deck(
-    lead_id: str,
-    location_id: str,
-    limit: int = 10,
-    min_score: float = 0.5
-):
+async def get_smart_deck(lead_id: str, location_id: str, limit: int = 10, min_score: float = 0.5):
     """
     Get a smart, curated deck of properties for a lead.
-    
+
     This is the **AI Recommendation Engine** that transforms the portal from
     a static list to a dynamic, learning system.
-    
+
     **Intelligence Features:**
     - Excludes properties already swiped (no repeats)
     - Filters out properties similar to rejected ones
     - Applies learned preferences (budget adjustments, bedroom requirements)
     - Scores and ranks by match quality
-    
+
     **How It Learns:**
     1. If lead rejects 3+ properties as "too expensive" → Lowers budget by 15%
     2. If lead rejects 2+ as "too small" → Increases bedroom minimum
     3. Tracks negative matches to avoid similar properties
-    
+
     **Example Request:**
     ```
     GET /api/portal/deck/contact_123?location_id=loc_xyz&limit=10
     ```
-    
+
     **Example Response:**
     ```json
     {
@@ -279,7 +268,7 @@ async def get_smart_deck(
       }
     }
     ```
-    
+
     Args:
         lead_id: GHL contact ID
         location_id: GHL location/tenant ID
@@ -287,25 +276,20 @@ async def get_smart_deck(
         min_score: Minimum match score 0-1 (default: 0.5)
     """
     logger.info(f"Fetching smart deck for lead: {lead_id}")
-    
+
     try:
         # Get the smart, curated deck
         deck = await swipe_manager.get_smart_deck(
-            lead_id=lead_id,
-            location_id=location_id,
-            limit=limit,
-            min_score=min_score
+            lead_id=lead_id, location_id=location_id, limit=limit, min_score=min_score
         )
-        
+
         # Get seen count for context
         seen_count = len(swipe_manager._get_seen_property_ids(lead_id))
-        
+
         # Get preferences for transparency
-        context = await swipe_manager.memory_service.get_context(
-            lead_id, location_id=location_id
-        )
+        context = await swipe_manager.memory_service.get_context(lead_id, location_id=location_id)
         preferences = context.get("extracted_preferences", {})
-        
+
         return {
             "lead_id": lead_id,
             "location_id": location_id,
@@ -314,7 +298,7 @@ async def get_smart_deck(
             "seen_count": seen_count,
             "preferences_applied": preferences,
         }
-        
+
     except Exception as e:
         logger.error(f"Error getting smart deck: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -328,12 +312,8 @@ async def get_smart_deck_legacy(contact_id: str, location_id: Optional[str] = No
     try:
         # Use provided location_id or default from settings
         loc_id = location_id or settings.ghl_location_id
-        
-        deck = await swipe_manager.get_smart_deck(
-            lead_id=contact_id,
-            location_id=loc_id,
-            limit=10
-        )
+
+        deck = await swipe_manager.get_smart_deck(lead_id=contact_id, location_id=loc_id, limit=10)
         return {"deck": deck}
     except Exception as e:
         logger.error(f"Error in legacy smart deck: {e}")

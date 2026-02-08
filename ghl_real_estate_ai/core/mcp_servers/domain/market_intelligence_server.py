@@ -3,10 +3,12 @@ Market Intelligence MCP Server
 Exposes specialized market analysis tools for national and local real estate markets.
 """
 
-from fastmcp import FastMCP
 import asyncio
 import json
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
+from fastmcp import FastMCP
+
 from ghl_real_estate_ai.services.national_market_intelligence import NationalMarketIntelligence
 
 # Create the MCP server
@@ -14,6 +16,7 @@ mcp = FastMCP("MarketIntelligence")
 
 # Initialize the service
 market_service = NationalMarketIntelligence()
+
 
 @mcp.tool()
 async def get_market_analysis(market_id: str) -> str:
@@ -31,6 +34,7 @@ async def get_market_analysis(market_id: str) -> str:
     except Exception as e:
         return f"Error getting analysis for market {market_id}: {str(e)}"
 
+
 @mcp.tool()
 async def compare_markets(market_ids: List[str]) -> str:
     """
@@ -42,6 +46,7 @@ async def compare_markets(market_ids: List[str]) -> str:
     except Exception as e:
         return f"Error comparing markets {market_ids}: {str(e)}"
 
+
 @mcp.tool()
 async def get_opportunity_score(market_id: str) -> str:
     """
@@ -52,6 +57,7 @@ async def get_opportunity_score(market_id: str) -> str:
         return json.dumps(score_data, indent=2, default=str)
     except Exception as e:
         return f"Error calculating opportunity score for {market_id}: {str(e)}"
+
 
 if __name__ == "__main__":
     mcp.run()

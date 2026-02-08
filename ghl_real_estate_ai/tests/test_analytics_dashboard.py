@@ -3,26 +3,29 @@ Tests for Analytics Dashboard
 
 Validates dashboard load performance, data processing, and visualization rendering.
 """
-import pytest
+
 import json
-import time
-from pathlib import Path
-from datetime import datetime, timedelta
 
 # Import dashboard functions (since we can't run streamlit directly in tests)
 import sys
+import time
+from datetime import datetime, timedelta
+from pathlib import Path
+
+import pytest
+
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root / "streamlit_demo"))
 
 from analytics import (
-    load_mock_data,
-    filter_conversations_by_date,
     calculate_aggregate_metrics,
-    create_lead_score_distribution_chart,
     create_classification_pie_chart,
     create_conversation_timeline,
+    create_intent_breakdown,
+    create_lead_score_distribution_chart,
     create_response_time_chart,
-    create_intent_breakdown
+    filter_conversations_by_date,
+    load_mock_data,
 )
 
 
@@ -67,9 +70,18 @@ class TestDataLoading:
         conversations = data["conversations"]
 
         required_fields = [
-            "conversation_id", "location_id", "contact_id", "contact_name",
-            "start_time", "message_count", "lead_score", "classification",
-            "intent", "response_time_avg_seconds", "sentiment", "conversion_probability"
+            "conversation_id",
+            "location_id",
+            "contact_id",
+            "contact_name",
+            "start_time",
+            "message_count",
+            "lead_score",
+            "classification",
+            "intent",
+            "response_time_avg_seconds",
+            "sentiment",
+            "conversion_probability",
         ]
 
         for conv in conversations:
@@ -82,8 +94,12 @@ class TestDataLoading:
         health = data["system_health"]
 
         required_metrics = [
-            "total_api_calls_24h", "avg_response_time_ms", "uptime_percentage",
-            "error_rate_percentage", "sms_sent_24h", "sms_compliance_rate"
+            "total_api_calls_24h",
+            "avg_response_time_ms",
+            "uptime_percentage",
+            "error_rate_percentage",
+            "sms_sent_24h",
+            "sms_compliance_rate",
         ]
 
         for metric in required_metrics:
@@ -96,6 +112,7 @@ class TestDataFiltering:
     def test_filter_conversations_by_date(self):
         """Test date range filtering."""
         from datetime import timezone
+
         data = load_mock_data()
         conversations = data["conversations"]
 
@@ -175,7 +192,7 @@ class TestMetricsCalculation:
                 "classification": "hot",
                 "contact_id": "c1",
                 "response_time_avg_seconds": 10,
-                "conversion_probability": 0.9
+                "conversion_probability": 0.9,
             },
             {
                 "message_count": 5,
@@ -183,8 +200,8 @@ class TestMetricsCalculation:
                 "classification": "warm",
                 "contact_id": "c2",
                 "response_time_avg_seconds": 20,
-                "conversion_probability": 0.5
-            }
+                "conversion_probability": 0.5,
+            },
         ]
 
         metrics = calculate_aggregate_metrics(test_conversations)
@@ -322,6 +339,7 @@ class TestEdgeCases:
     def test_empty_date_range(self):
         """Test filtering with no matching dates."""
         from datetime import timezone
+
         data = load_mock_data()
         conversations = data["conversations"]
 

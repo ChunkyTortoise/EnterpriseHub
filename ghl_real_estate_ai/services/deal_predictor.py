@@ -298,9 +298,7 @@ class DealClosingPredictor:
         count = 0
         for conv in conversations:
             if conv.get("sender") == "lead":
-                if any(
-                    word in conv.get("message", "").lower() for word in objection_words
-                ):
+                if any(word in conv.get("message", "").lower() for word in objection_words):
                     count += 1
         return count
 
@@ -314,9 +312,7 @@ class DealClosingPredictor:
         for conv in conversations:
             if conv.get("sender") == "lead":
                 total_lead_messages += 1
-                if any(
-                    word in conv.get("message", "").lower() for word in positive_words
-                ):
+                if any(word in conv.get("message", "").lower() for word in positive_words):
                     positive_count += 1
 
         return positive_count / total_lead_messages if total_lead_messages > 0 else 0.5
@@ -377,9 +373,9 @@ if __name__ == "__main__":
     print("🎯 Deal Closing Probability Predictor\n")
     print(f"Verdict: {prediction['verdict']}\n")
     print("Closing Probabilities:")
-    print(f"  30 days: {prediction['probabilities']['30_days']*100:.1f}%")
-    print(f"  60 days: {prediction['probabilities']['60_days']*100:.1f}%")
-    print(f"  90 days: {prediction['probabilities']['90_days']*100:.1f}%\n")
+    print(f"  30 days: {prediction['probabilities']['30_days'] * 100:.1f}%")
+    print(f"  60 days: {prediction['probabilities']['60_days'] * 100:.1f}%")
+    print(f"  90 days: {prediction['probabilities']['90_days'] * 100:.1f}%\n")
     print(f"Expected Revenue (30 days): {prediction['expected_revenue']['30_days']}\n")
     print("Positive Factors:")
     for factor in prediction["positive_factors"]:

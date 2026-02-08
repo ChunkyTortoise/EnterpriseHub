@@ -12,12 +12,12 @@ from uuid import uuid4
 
 from src.core.types import DocumentChunk, Metadata
 from src.retrieval import (
-    BM25Index,
     BM25Config,
-    HybridSearcher,
+    BM25Index,
     HybridSearchConfig,
+    HybridSearcher,
     ReciprocalRankFusion,
-    WeightedScoreFusion
+    WeightedScoreFusion,
 )
 
 
@@ -33,19 +33,19 @@ async def main():
             document_id=doc_id,
             content="Python is a powerful programming language for data science and machine learning",
             index=0,
-            metadata=Metadata(title="Python Programming")
+            metadata=Metadata(title="Python Programming"),
         ),
         DocumentChunk(
             document_id=doc_id,
             content="Machine learning algorithms enable computers to learn patterns from data",
             index=1,
-            metadata=Metadata(title="Machine Learning")
+            metadata=Metadata(title="Machine Learning"),
         ),
         DocumentChunk(
             document_id=doc_id,
             content="Data preprocessing and feature engineering are crucial for model performance",
             index=2,
-            metadata=Metadata(title="Data Preprocessing")
+            metadata=Metadata(title="Data Preprocessing"),
         ),
     ]
 
@@ -96,6 +96,7 @@ async def main():
 
     # Create mock results for testing
     from src.core.types import SearchResult
+
     dense_mock = [SearchResult(chunk=test_corpus[0], score=0.9, rank=1, distance=0.1)]
     sparse_mock = [SearchResult(chunk=test_corpus[1], score=0.8, rank=1, distance=0.2)]
 

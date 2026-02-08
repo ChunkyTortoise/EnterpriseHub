@@ -9,16 +9,18 @@ Implements 2026 real estate best practices:
 
 Based on research: "Predictive seller intelligence will dominate" - Fello.ai 2026
 """
+
 import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
 import logging
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.database_service import get_database
 
 logger = get_logger(__name__)
@@ -147,7 +149,6 @@ class BehavioralTriggerEngine:
             BehavioralSignal.MORTGAGE_CALCULATOR_USAGE: 0.18,
             BehavioralSignal.CALENDAR_SCHEDULING: 0.18,
             BehavioralSignal.DOCUMENT_UPLOADS: 0.15,
-
             # Medium Intent Signals (8-15%)
             BehavioralSignal.NEIGHBORHOOD_RESEARCH: 0.15,
             BehavioralSignal.MARKET_REPORT_ENGAGEMENT: 0.15,
@@ -161,7 +162,6 @@ class BehavioralTriggerEngine:
             BehavioralSignal.PHONE_CALL_DURATION: 0.10,
             BehavioralSignal.INSPECTION_SERVICE_INQUIRY: 0.08,
             BehavioralSignal.INSURANCE_QUOTE_REQUESTS: 0.08,
-
             # Engagement Signals (4-8%)
             BehavioralSignal.PROPERTY_DETAIL_DOWNLOADS: 0.08,
             BehavioralSignal.SCHOOL_DISTRICT_RESEARCH: 0.07,
@@ -175,7 +175,6 @@ class BehavioralTriggerEngine:
             BehavioralSignal.EMAIL_OPENS: 0.05,
             BehavioralSignal.NEWSLETTER_ENGAGEMENT: 0.04,
             BehavioralSignal.BLOG_POST_ENGAGEMENT: 0.04,
-
             # Behavioral Pattern Signals (2-5%)
             BehavioralSignal.SESSION_DURATION_LONG: 0.05,
             BehavioralSignal.REPEAT_VISITOR: 0.04,
@@ -185,7 +184,6 @@ class BehavioralTriggerEngine:
             BehavioralSignal.MOBILE_USAGE_PATTERN: 0.03,
             BehavioralSignal.SMS_RESPONSES: 0.03,
             BehavioralSignal.WEBSITE_VISITS: 0.03,
-
             # Community Signals (2-4%)
             BehavioralSignal.SOCIAL_MEDIA_ENGAGEMENT: 0.04,
             BehavioralSignal.TESTIMONIAL_VIEWS: 0.03,
@@ -196,9 +194,7 @@ class BehavioralTriggerEngine:
         # Recency decay factor (hours)
         self.recency_decay_hours = 72  # 3 days
 
-    async def analyze_lead_behavior(
-        self, lead_id: str, activity_data: Dict[str, Any]
-    ) -> PredictiveSellScore:
+    async def analyze_lead_behavior(self, lead_id: str, activity_data: Dict[str, Any]) -> PredictiveSellScore:
         """
         Analyze lead behavior and generate predictive score.
 
@@ -235,17 +231,13 @@ class BehavioralTriggerEngine:
         intent_level = self._classify_intent(likelihood_score)
 
         # Predict optimal contact time
-        contact_window = await self._predict_optimal_contact_time(
-            lead_id, activity_data
-        )
+        contact_window = await self._predict_optimal_contact_time(lead_id, activity_data)
 
         # Determine best channel
         recommended_channel = await self._predict_best_channel(activity_data)
 
         # Generate personalized message
-        recommended_message = await self._generate_personalized_message(
-            lead_id, patterns, intent_level
-        )
+        recommended_message = await self._generate_personalized_message(lead_id, patterns, intent_level)
 
         # Calculate confidence
         confidence = self._calculate_confidence(patterns)
@@ -276,9 +268,7 @@ class BehavioralTriggerEngine:
 
         return score
 
-    async def detect_selling_signals(
-        self, contact_id: str, activity_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def detect_selling_signals(self, contact_id: str, activity_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Detect selling signals for a contact (predictive intelligence).
 
@@ -311,9 +301,7 @@ class BehavioralTriggerEngine:
             "timestamp": score.timestamp.isoformat(),
         }
 
-    async def get_high_intent_leads(
-        self, min_likelihood: float = 50.0, limit: int = 50
-    ) -> List[str]:
+    async def get_high_intent_leads(self, min_likelihood: float = 50.0, limit: int = 50) -> List[str]:
         """
         Get leads with high intent scores for autonomous follow-up.
 
@@ -333,9 +321,7 @@ class BehavioralTriggerEngine:
 
     # Private helper methods
 
-    async def _extract_patterns(
-        self, lead_id: str, activity_data: Dict[str, Any]
-    ) -> List[BehavioralPattern]:
+    async def _extract_patterns(self, lead_id: str, activity_data: Dict[str, Any]) -> List[BehavioralPattern]:
         """Extract behavioral patterns from activity data."""
         patterns = []
 
@@ -365,9 +351,7 @@ class BehavioralTriggerEngine:
                     trend = self._detect_trend(activities)
 
                     # Calculate score impact
-                    score_impact = self._calculate_signal_impact(
-                        signal_type, frequency, recency_hours, trend
-                    )
+                    score_impact = self._calculate_signal_impact(signal_type, frequency, recency_hours, trend)
 
                     pattern = BehavioralPattern(
                         lead_id=lead_id,
@@ -412,17 +396,13 @@ class BehavioralTriggerEngine:
         recency_multiplier = np.exp(-recency_hours / self.recency_decay_hours)
 
         # Trend multiplier
-        trend_multiplier = {"increasing": 1.3, "stable": 1.0, "decreasing": 0.7}.get(
-            trend, 1.0
-        )
+        trend_multiplier = {"increasing": 1.3, "stable": 1.0, "decreasing": 0.7}.get(trend, 1.0)
 
         impact = base_weight * freq_multiplier * recency_multiplier * trend_multiplier
 
         return min(impact, 1.0)
 
-    async def _calculate_likelihood_score(
-        self, patterns: List[BehavioralPattern]
-    ) -> float:
+    async def _calculate_likelihood_score(self, patterns: List[BehavioralPattern]) -> float:
         """Calculate composite likelihood score (0-100)."""
         if not patterns:
             return 0.0
@@ -446,9 +426,7 @@ class BehavioralTriggerEngine:
         else:
             return IntentLevel.COLD
 
-    async def _predict_optimal_contact_time(
-        self, lead_id: str, activity_data: Dict[str, Any]
-    ) -> Tuple[int, int]:
+    async def _predict_optimal_contact_time(self, lead_id: str, activity_data: Dict[str, Any]) -> Tuple[int, int]:
         """
         Predict optimal contact time window based on activity patterns.
 
@@ -463,11 +441,7 @@ class BehavioralTriggerEngine:
                 for activity in activity_data[activity_type]:
                     timestamp = activity.get("timestamp")
                     if timestamp:
-                        dt = (
-                            datetime.fromisoformat(timestamp)
-                            if isinstance(timestamp, str)
-                            else timestamp
-                        )
+                        dt = datetime.fromisoformat(timestamp) if isinstance(timestamp, str) else timestamp
                         engagement_hours.append(dt.hour)
 
         if engagement_hours:
@@ -493,9 +467,7 @@ class BehavioralTriggerEngine:
 
         # Score email engagement
         if "email_interactions" in activity_data:
-            email_opens = sum(
-                1 for e in activity_data["email_interactions"] if e.get("opened")
-            )
+            email_opens = sum(1 for e in activity_data["email_interactions"] if e.get("opened"))
             channel_scores["email"] = email_opens
 
         # Score SMS engagement
@@ -505,9 +477,7 @@ class BehavioralTriggerEngine:
 
         # Score call engagement
         if "agent_inquiries" in activity_data:
-            call_inquiries = sum(
-                1 for a in activity_data["agent_inquiries"] if a.get("type") == "call"
-            )
+            call_inquiries = sum(1 for a in activity_data["agent_inquiries"] if a.get("type") == "call")
             channel_scores["call"] = call_inquiries * 2  # Weight calls highest
 
         # Return channel with highest score
@@ -535,7 +505,6 @@ class BehavioralTriggerEngine:
                 BehavioralSignal.MORTGAGE_CALCULATOR_USAGE: "🧮 I noticed you're running mortgage calculations! I can connect you with lenders offering great rates. Want to explore your options?",
                 BehavioralSignal.CALENDAR_SCHEDULING: "📅 I see you're looking to schedule time! I have openings this week to discuss your property needs. Shall we set something up?",
                 BehavioralSignal.DOCUMENT_UPLOADS: "📄 Thank you for uploading documents! I'm reviewing everything and will have insights ready for our next conversation.",
-
                 # Medium Intent Signals
                 BehavioralSignal.NEIGHBORHOOD_RESEARCH: "I see you've been exploring neighborhoods. I have deep market knowledge in this area and would be happy to share insights. When works for you?",
                 BehavioralSignal.MARKET_REPORT_ENGAGEMENT: "Great to see you're staying informed on the market! I can provide exclusive insights on current trends. Interested in learning more?",
@@ -547,7 +516,6 @@ class BehavioralTriggerEngine:
                 BehavioralSignal.PROPERTY_COMPARISON_USAGE: "📊 Great to see you comparing properties! I can provide insights on each and help you make the best choice.",
                 BehavioralSignal.CHAT_INTERACTIONS: "💬 Enjoyed our chat! I'm here whenever you have more questions about the market or specific properties.",
                 BehavioralSignal.PHONE_CALL_DURATION: "📱 Thanks for taking time to chat! Following up on our conversation - do you have any other questions?",
-
                 # Engagement Signals
                 BehavioralSignal.PROPERTY_DETAIL_DOWNLOADS: "📋 I see you downloaded property details! I have additional market insights that could be valuable. Want to see them?",
                 BehavioralSignal.SCHOOL_DISTRICT_RESEARCH: "🎓 Researching schools shows great planning! I know the best family-friendly neighborhoods. Want the inside scoop?",
@@ -557,13 +525,11 @@ class BehavioralTriggerEngine:
                 BehavioralSignal.PRICE_ALERT_SUBSCRIPTIONS: "🔔 Great job setting up price alerts! I can also watch for off-market opportunities. Want me to keep an eye out?",
                 BehavioralSignal.WEBINAR_ATTENDANCE: "🎯 Thanks for joining the webinar! I have additional resources that dive deeper into the topics we covered.",
                 BehavioralSignal.VIDEO_CONSUMPTION: "🎬 Glad you found our video content helpful! I have more insider tips to share. Coffee chat soon?",
-
                 # Behavioral Patterns
                 BehavioralSignal.SESSION_DURATION_LONG: "⏱️ I can see you're seriously researching! Your dedication shows you're ready to make a move. Let's talk strategy.",
                 BehavioralSignal.REPEAT_VISITOR: "👋 Welcome back! I love that you keep checking in. Ready to take the next step in your property search?",
                 BehavioralSignal.WEEKEND_BROWSING: "🌅 I notice you browse on weekends! Perfect time for property tours too. Want to see some this Saturday?",
                 BehavioralSignal.EVENING_ACTIVITY: "🌙 I see you research in the evenings! I'm available for after-hours calls if that works better for your schedule.",
-
                 # Community Signals
                 BehavioralSignal.SOCIAL_MEDIA_ENGAGEMENT: "📱 Thanks for following on social! I share exclusive market insights there. Seen anything interesting lately?",
                 BehavioralSignal.REFERRAL_ACTIVITY: "🤝 Thank you for the referral! I'm committed to providing the same excellent service to everyone you send my way.",

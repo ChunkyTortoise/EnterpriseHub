@@ -6,21 +6,27 @@ Supports PostgreSQL, MySQL, SQLite with connection pooling and query optimizatio
 """
 
 import asyncio
-from typing import Dict, List, Optional, Any, Union
-from datetime import datetime, timedelta
 import json
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Union
 
 try:
-    import asyncpg  # PostgreSQL
     import aiomysql  # MySQL
     import aiosqlite  # SQLite
+    import asyncpg  # PostgreSQL
+
     HAS_DB_DRIVERS = True
 except ImportError:
     HAS_DB_DRIVERS = False
 
 from .interfaces import (
-    IPropertyRepository, PropertyQuery, RepositoryResult, RepositoryMetadata,
-    RepositoryError, QueryOperator, SortOrder
+    IPropertyRepository,
+    PropertyQuery,
+    QueryOperator,
+    RepositoryError,
+    RepositoryMetadata,
+    RepositoryResult,
+    SortOrder,
 )
 
 
@@ -53,7 +59,7 @@ class DatabasePropertyRepository(IPropertyRepository):
         if not HAS_DB_DRIVERS:
             raise RepositoryError(
                 "Database repository requires database drivers: asyncpg, aiomysql, aiosqlite",
-                repository_type="database"
+                repository_type="database",
             )
 
         # Configuration
@@ -88,9 +94,7 @@ class DatabasePropertyRepository(IPropertyRepository):
 
         except Exception as e:
             raise RepositoryError(
-                f"Failed to connect to {self.database_type} database: {e}",
-                repository_type="database",
-                original_error=e
+                f"Failed to connect to {self.database_type} database: {e}", repository_type="database", original_error=e
             )
 
     async def disconnect(self):
@@ -114,7 +118,7 @@ class DatabasePropertyRepository(IPropertyRepository):
             "database_type": self.database_type,
             "table_name": self.table_name,
             "pool_size": self.pool_size if self._pool else 0,
-            "issues": []
+            "issues": [],
         }
 
         try:
@@ -177,10 +181,7 @@ class DatabasePropertyRepository(IPropertyRepository):
             # Create metadata
             execution_time = (datetime.now() - start_time).total_seconds() * 1000
             metadata = RepositoryMetadata(
-                source=self.name,
-                query_time_ms=execution_time,
-                cache_hit=False,
-                total_scanned=total_count
+                source=self.name, query_time_ms=execution_time, cache_hit=False, total_scanned=total_count
             )
 
             return RepositoryResult(
@@ -188,14 +189,11 @@ class DatabasePropertyRepository(IPropertyRepository):
                 total_count=total_count,
                 pagination=query.pagination,
                 metadata=metadata,
-                execution_time_ms=execution_time
+                execution_time_ms=execution_time,
             )
 
         except Exception as e:
-            return RepositoryResult(
-                success=False,
-                errors=[f"Database query failed: {str(e)}"]
-            )
+            return RepositoryResult(success=False, errors=[f"Database query failed: {str(e)}"])
 
     async def get_property_by_id(self, property_id: str) -> Optional[Dict[str, Any]]:
         """Get specific property by ID"""
@@ -225,9 +223,21 @@ class DatabasePropertyRepository(IPropertyRepository):
     def get_supported_filters(self) -> List[str]:
         """Get supported filter fields based on schema"""
         default_fields = [
-            "id", "address", "price", "bedrooms", "bathrooms", "sqft",
-            "property_type", "neighborhood", "city", "state", "zip_code",
-            "year_built", "days_on_market", "listing_date", "status"
+            "id",
+            "address",
+            "price",
+            "bedrooms",
+            "bathrooms",
+            "sqft",
+            "property_type",
+            "neighborhood",
+            "city",
+            "state",
+            "zip_code",
+            "year_built",
+            "days_on_market",
+            "listing_date",
+            "status",
         ]
 
         # Add schema-specific fields if configured
@@ -242,24 +252,23 @@ class DatabasePropertyRepository(IPropertyRepository):
             "table_name": self.table_name,
             "pool_size": self.pool_size,
             "connected": self._is_connected,
-            "pool_active": self._pool is not None
+            "pool_active": self._pool is not None,
         }
 
     # Private methods
     async def _connect_postgresql(self):
         """Connect to PostgreSQL database"""
         import asyncpg
+
         self._pool = await asyncpg.create_pool(
-            self.database_url,
-            min_size=1,
-            max_size=self.pool_size,
-            command_timeout=self.query_timeout
+            self.database_url, min_size=1, max_size=self.pool_size, command_timeout=self.query_timeout
         )
 
     async def _connect_mysql(self):
         """Connect to MySQL database"""
-        import aiomysql
         from urllib.parse import urlparse
+
+        import aiomysql
 
         parsed = urlparse(self.database_url)
         self._pool = await aiomysql.create_pool(
@@ -267,14 +276,15 @@ class DatabasePropertyRepository(IPropertyRepository):
             port=parsed.port or 3306,
             user=parsed.username,
             password=parsed.password,
-            db=parsed.path.lstrip('/'),
+            db=parsed.path.lstrip("/"),
             minsize=1,
-            maxsize=self.pool_size
+            maxsize=self.pool_size,
         )
 
     async def _connect_sqlite(self):
         """Connect to SQLite database"""
         import aiosqlite
+
         # SQLite doesn't use connection pooling in the same way
         # We'll create a simple connection manager
         self.database_path = self.database_url.replace("sqlite://", "")
@@ -288,6 +298,7 @@ class DatabasePropertyRepository(IPropertyRepository):
             return self._pool.acquire()
         elif self.database_type == "sqlite":
             import aiosqlite
+
             return aiosqlite.connect(self._pool["path"])
 
     async def _build_sql_query(self, query: PropertyQuery) -> tuple:
@@ -358,7 +369,9 @@ class DatabasePropertyRepository(IPropertyRepository):
             param_counter += len(query.zip_codes)
 
         if query.location:
-            where_conditions.append(f"(city ILIKE {self._get_param_placeholder(param_counter)} OR neighborhood ILIKE {self._get_param_placeholder(param_counter + 1)})")
+            where_conditions.append(
+                f"(city ILIKE {self._get_param_placeholder(param_counter)} OR neighborhood ILIKE {self._get_param_placeholder(param_counter + 1)})"
+            )
             params.extend([f"%{query.location}%", f"%{query.location}%"])
             param_counter += 2
 
@@ -455,20 +468,17 @@ class DatabasePropertyRepository(IPropertyRepository):
             async with self._get_connection() as conn:
                 if self.database_type == "postgresql":
                     result = await conn.fetchval(
-                        "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = $1)",
-                        self.table_name
+                        "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = $1)", self.table_name
                     )
                 elif self.database_type == "mysql":
                     async with conn.cursor() as cursor:
                         await cursor.execute(
-                            "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = %s",
-                            (self.table_name,)
+                            "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = %s", (self.table_name,)
                         )
                         result = (await cursor.fetchone())[0] > 0
                 elif self.database_type == "sqlite":
                     cursor = await conn.execute(
-                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?",
-                        (self.table_name,)
+                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?", (self.table_name,)
                     )
                     result = (await cursor.fetchone())[0] > 0
 
@@ -517,7 +527,7 @@ class DatabasePropertyRepository(IPropertyRepository):
             "status": "VARCHAR(50)",
             "amenities": "TEXT",  # JSON array as text
             "created_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-            "updated_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+            "updated_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
         }
 
     def _build_create_table_sql(self, schema: Dict[str, Any]) -> str:

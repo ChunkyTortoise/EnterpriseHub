@@ -26,31 +26,27 @@ Created: 2026-01-18
 Integration: Seamlessly integrates with competitive intelligence pipeline
 """
 
-import streamlit as st
+import asyncio
+import json
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Union
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import streamlit as st
 from plotly.subplots import make_subplots
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Union
-import asyncio
-import json
+
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 # Import competitive intelligence services
-from ghl_real_estate_ai.services.competitive_data_pipeline import (
-    get_competitive_data_pipeline,
-    ThreatLevel,
-    DataSource
-)
-from ghl_real_estate_ai.services.competitive_intelligence_system import (
-    get_competitive_intelligence_system
-)
+from ghl_real_estate_ai.services.competitive_data_pipeline import DataSource, ThreatLevel, get_competitive_data_pipeline
+from ghl_real_estate_ai.services.competitive_intelligence_system import get_competitive_intelligence_system
 from ghl_real_estate_ai.services.competitive_response_automation import (
-    get_competitive_response_engine,
     ResponseStatus,
-    ResponseType
+    ResponseType,
+    get_competitive_response_engine,
 )
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -68,7 +64,7 @@ def load_competitive_metrics() -> Dict[str, Any]:
                 "data_sources_active": 6,
                 "last_update": datetime.now(),
                 "collection_rate": "95.2%",
-                "data_quality_score": 0.87
+                "data_quality_score": 0.87,
             },
             "threat_assessment": {
                 "active_threats": 3,
@@ -76,14 +72,14 @@ def load_competitive_metrics() -> Dict[str, Any]:
                 "high_threats": 2,
                 "medium_threats": 4,
                 "threat_trend": "increasing",
-                "avg_response_time": "12 minutes"
+                "avg_response_time": "12 minutes",
             },
             "market_intelligence": {
                 "market_position_score": 78.5,
                 "competitive_pressure": "high",
                 "market_share_trend": "stable",
                 "pricing_position": "competitive",
-                "opportunity_score": 82.3
+                "opportunity_score": 82.3,
             },
             "response_automation": {
                 "rules_active": 12,
@@ -91,8 +87,8 @@ def load_competitive_metrics() -> Dict[str, Any]:
                 "success_rate": 87.5,
                 "pending_approvals": 2,
                 "total_cost_24h": 245.50,
-                "estimated_roi": 5.2
-            }
+                "estimated_roi": 5.2,
+            },
         }
     except Exception as e:
         logger.error(f"Error loading competitive metrics: {e}")
@@ -113,7 +109,7 @@ def load_competitor_data() -> pd.DataFrame:
                 "listings_change": 15.2,
                 "social_sentiment": 0.72,
                 "last_activity": "2 hours ago",
-                "status": "⚠️ Active Threat"
+                "status": "⚠️ Active Threat",
             },
             {
                 "name": "Premier Realty Group",
@@ -123,7 +119,7 @@ def load_competitor_data() -> pd.DataFrame:
                 "listings_change": 28.4,
                 "social_sentiment": 0.81,
                 "last_activity": "1 hour ago",
-                "status": "🚨 Critical Alert"
+                "status": "🚨 Critical Alert",
             },
             {
                 "name": "Metro Real Estate",
@@ -133,7 +129,7 @@ def load_competitor_data() -> pd.DataFrame:
                 "listings_change": 8.1,
                 "social_sentiment": 0.68,
                 "last_activity": "6 hours ago",
-                "status": "⚡ Monitoring"
+                "status": "⚡ Monitoring",
             },
             {
                 "name": "Inland Empire Homes",
@@ -143,7 +139,7 @@ def load_competitor_data() -> pd.DataFrame:
                 "listings_change": -3.5,
                 "social_sentiment": 0.59,
                 "last_activity": "12 hours ago",
-                "status": "✅ Stable"
+                "status": "✅ Stable",
             },
             {
                 "name": "California Dream Realty",
@@ -153,8 +149,8 @@ def load_competitor_data() -> pd.DataFrame:
                 "listings_change": 12.7,
                 "social_sentiment": 0.75,
                 "last_activity": "4 hours ago",
-                "status": "⚠️ Active Threat"
-            }
+                "status": "⚠️ Active Threat",
+            },
         ]
 
         return pd.DataFrame(competitors)
@@ -176,27 +172,25 @@ def create_threat_indicator(threat_count: int, threat_type: str) -> str:
 
 def create_market_position_gauge(score: float) -> go.Figure:
     """Create market positioning gauge chart."""
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number+delta",
-        value=score,
-        domain={'x': [0, 1], 'y': [0, 1]},
-        title={'text': "Market Position Score"},
-        delta={'reference': 75},
-        gauge={
-            'axis': {'range': [None, 100]},
-            'bar': {'color': "darkblue"},
-            'steps': [
-                {'range': [0, 50], 'color': "lightgray"},
-                {'range': [50, 80], 'color': "yellow"},
-                {'range': [80, 100], 'color': "green"}
-            ],
-            'threshold': {
-                'line': {'color': "red", 'width': 4},
-                'thickness': 0.75,
-                'value': 90
-            }
-        }
-    ))
+    fig = go.Figure(
+        go.Indicator(
+            mode="gauge+number+delta",
+            value=score,
+            domain={"x": [0, 1], "y": [0, 1]},
+            title={"text": "Market Position Score"},
+            delta={"reference": 75},
+            gauge={
+                "axis": {"range": [None, 100]},
+                "bar": {"color": "darkblue"},
+                "steps": [
+                    {"range": [0, 50], "color": "lightgray"},
+                    {"range": [50, 80], "color": "yellow"},
+                    {"range": [80, 100], "color": "green"},
+                ],
+                "threshold": {"line": {"color": "red", "width": 4}, "thickness": 0.75, "value": 90},
+            },
+        )
+    )
 
     fig.update_layout(height=300)
     return fig
@@ -212,25 +206,17 @@ def create_competitor_threat_matrix(df: pd.DataFrame) -> go.Figure:
         color="threat_level",
         hover_name="name",
         hover_data=["social_sentiment", "last_activity"],
-        color_discrete_map={
-            "Critical": "red",
-            "High": "orange",
-            "Medium": "yellow",
-            "Low": "green"
-        },
+        color_discrete_map={"Critical": "red", "High": "orange", "Medium": "yellow", "Low": "green"},
         title="Competitor Threat Assessment Matrix",
         labels={
             "market_share": "Market Share (%)",
             "price_change_30d": "Price Change (30 days, %)",
-            "listings_change": "Listings Change (%)"
-        }
+            "listings_change": "Listings Change (%)",
+        },
     )
 
     fig.update_layout(
-        height=500,
-        showlegend=True,
-        xaxis_title="Market Share (%)",
-        yaxis_title="Price Change (30 days, %)"
+        height=500, showlegend=True, xaxis_title="Market Share (%)", yaxis_title="Price Change (30 days, %)"
     )
 
     return fig
@@ -239,16 +225,16 @@ def create_competitor_threat_matrix(df: pd.DataFrame) -> go.Figure:
 def create_response_timeline_chart(days: int = 7) -> go.Figure:
     """Create response automation timeline chart."""
     # Mock response data
-    dates = pd.date_range(start=datetime.now() - timedelta(days=days), end=datetime.now(), freq='D')
+    dates = pd.date_range(start=datetime.now() - timedelta(days=days), end=datetime.now(), freq="D")
     responses = []
 
     for date in dates:
         daily_responses = {
-            'date': date,
-            'automated': 2 + int((date.day % 5)),
-            'manual': 1 + int((date.day % 3)),
-            'pending': int((date.day % 2)),
-            'failed': int((date.day % 4) == 0)
+            "date": date,
+            "automated": 2 + int((date.day % 5)),
+            "manual": 1 + int((date.day % 3)),
+            "pending": int((date.day % 2)),
+            "failed": int((date.day % 4) == 0),
         }
         responses.append(daily_responses)
 
@@ -256,39 +242,45 @@ def create_response_timeline_chart(days: int = 7) -> go.Figure:
 
     fig = go.Figure()
 
-    fig.add_trace(go.Scatter(
-        x=df_responses['date'],
-        y=df_responses['automated'],
-        mode='lines+markers',
-        name='Automated Responses',
-        line=dict(color='green', width=3),
-        marker=dict(size=8)
-    ))
+    fig.add_trace(
+        go.Scatter(
+            x=df_responses["date"],
+            y=df_responses["automated"],
+            mode="lines+markers",
+            name="Automated Responses",
+            line=dict(color="green", width=3),
+            marker=dict(size=8),
+        )
+    )
 
-    fig.add_trace(go.Scatter(
-        x=df_responses['date'],
-        y=df_responses['manual'],
-        mode='lines+markers',
-        name='Manual Responses',
-        line=dict(color='blue', width=3),
-        marker=dict(size=8)
-    ))
+    fig.add_trace(
+        go.Scatter(
+            x=df_responses["date"],
+            y=df_responses["manual"],
+            mode="lines+markers",
+            name="Manual Responses",
+            line=dict(color="blue", width=3),
+            marker=dict(size=8),
+        )
+    )
 
-    fig.add_trace(go.Scatter(
-        x=df_responses['date'],
-        y=df_responses['pending'],
-        mode='lines+markers',
-        name='Pending Approval',
-        line=dict(color='orange', width=3),
-        marker=dict(size=8)
-    ))
+    fig.add_trace(
+        go.Scatter(
+            x=df_responses["date"],
+            y=df_responses["pending"],
+            mode="lines+markers",
+            name="Pending Approval",
+            line=dict(color="orange", width=3),
+            marker=dict(size=8),
+        )
+    )
 
     fig.update_layout(
         title="Response Automation Timeline (Last 7 Days)",
         xaxis_title="Date",
         yaxis_title="Number of Responses",
         height=400,
-        hovermode='x unified'
+        hovermode="x unified",
     )
 
     return fig
@@ -296,25 +288,19 @@ def create_response_timeline_chart(days: int = 7) -> go.Figure:
 
 def create_roi_metrics_chart() -> go.Figure:
     """Create ROI metrics visualization."""
-    categories = ['Response Cost', 'Revenue Protected', 'Net Benefit']
+    categories = ["Response Cost", "Revenue Protected", "Net Benefit"]
     values = [2450, 12750, 10300]
-    colors = ['red', 'green', 'blue']
+    colors = ["red", "green", "blue"]
 
-    fig = go.Figure(data=[
-        go.Bar(
-            x=categories,
-            y=values,
-            marker_color=colors,
-            text=[f'${v:,.0f}' for v in values],
-            textposition='auto'
-        )
-    ])
-
-    fig.update_layout(
-        title="Response Automation ROI (Last 30 Days)",
-        yaxis_title="Amount ($)",
-        height=350
+    fig = go.Figure(
+        data=[
+            go.Bar(
+                x=categories, y=values, marker_color=colors, text=[f"${v:,.0f}" for v in values], textposition="auto"
+            )
+        ]
     )
+
+    fig.update_layout(title="Response Automation ROI (Last 30 Days)", yaxis_title="Amount ($)", height=350)
 
     return fig
 
@@ -322,10 +308,7 @@ def create_roi_metrics_chart() -> go.Figure:
 def render_competitive_dashboard():
     """Render the main competitive intelligence dashboard."""
     st.set_page_config(
-        page_title="Competitive Intelligence Dashboard",
-        page_icon="🎯",
-        layout="wide",
-        initial_sidebar_state="expanded"
+        page_title="Competitive Intelligence Dashboard", page_icon="🎯", layout="wide", initial_sidebar_state="expanded"
     )
 
     # Dashboard Header
@@ -361,6 +344,7 @@ def render_competitive_dashboard():
             with st.spinner("Scanning competitors..."):
                 # Simulate scan
                 import time
+
                 time.sleep(2)
                 st.success("Scan completed!")
 
@@ -370,17 +354,13 @@ def render_competitive_dashboard():
         # Time range selector
         st.subheader("Analysis Period")
         time_range = st.selectbox(
-            "Select time range:",
-            ["Last 24 hours", "Last 7 days", "Last 30 days", "Last 90 days"],
-            index=1
+            "Select time range:", ["Last 24 hours", "Last 7 days", "Last 30 days", "Last 90 days"], index=1
         )
 
         # Alert settings
         st.subheader("Alert Settings")
         threat_threshold = st.selectbox(
-            "Minimum threat level for alerts:",
-            ["Low", "Medium", "High", "Critical"],
-            index=2
+            "Minimum threat level for alerts:", ["Low", "Medium", "High", "Critical"], index=2
         )
 
     # Main Dashboard Content
@@ -392,35 +372,20 @@ def render_competitive_dashboard():
             "Market Position",
             f"{metrics['market_intelligence']['market_position_score']:.1f}/100",
             delta="2.3 points",
-            delta_color="normal"
+            delta_color="normal",
         )
 
     with col2:
         threat_count = metrics["threat_assessment"]["active_threats"]
-        st.metric(
-            "Active Threats",
-            threat_count,
-            delta="+1 from yesterday",
-            delta_color="inverse"
-        )
+        st.metric("Active Threats", threat_count, delta="+1 from yesterday", delta_color="inverse")
 
     with col3:
         success_rate = metrics["response_automation"]["success_rate"]
-        st.metric(
-            "Response Success Rate",
-            f"{success_rate:.1f}%",
-            delta="3.2%",
-            delta_color="normal"
-        )
+        st.metric("Response Success Rate", f"{success_rate:.1f}%", delta="3.2%", delta_color="normal")
 
     with col4:
         roi = metrics["response_automation"]["estimated_roi"]
-        st.metric(
-            "ROI (30 days)",
-            f"{roi:.1f}x",
-            delta="0.8x",
-            delta_color="normal"
-        )
+        st.metric("ROI (30 days)", f"{roi:.1f}x", delta="0.8x", delta_color="normal")
 
     st.divider()
 
@@ -454,7 +419,7 @@ def render_competitive_dashboard():
         alert_data = [
             {"time": "2 hours ago", "type": "Price Drop", "competitor": "Premier Realty", "severity": "🚨"},
             {"time": "4 hours ago", "type": "Market Expansion", "competitor": "Elite Properties", "severity": "⚠️"},
-            {"time": "6 hours ago", "type": "Social Campaign", "competitor": "Metro Real Estate", "severity": "⚡"}
+            {"time": "6 hours ago", "type": "Social Campaign", "competitor": "Metro Real Estate", "severity": "⚡"},
         ]
 
         for alert in alert_data:
@@ -476,25 +441,37 @@ def render_competitive_dashboard():
     with col2:
         # Market trends chart
         # Mock trend data
-        trend_dates = pd.date_range(start=datetime.now() - timedelta(days=30), end=datetime.now(), freq='D')
+        trend_dates = pd.date_range(start=datetime.now() - timedelta(days=30), end=datetime.now(), freq="D")
         trend_data = {
-            'date': trend_dates,
-            'our_position': [75 + i*0.3 + (i%7)*2 for i in range(len(trend_dates))],
-            'market_avg': [65 + i*0.1 + (i%5)*1 for i in range(len(trend_dates))],
-            'top_competitor': [82 - i*0.2 + (i%3)*1.5 for i in range(len(trend_dates))]
+            "date": trend_dates,
+            "our_position": [75 + i * 0.3 + (i % 7) * 2 for i in range(len(trend_dates))],
+            "market_avg": [65 + i * 0.1 + (i % 5) * 1 for i in range(len(trend_dates))],
+            "top_competitor": [82 - i * 0.2 + (i % 3) * 1.5 for i in range(len(trend_dates))],
         }
         trend_df = pd.DataFrame(trend_data)
 
         fig_trends = go.Figure()
-        fig_trends.add_trace(go.Scatter(x=trend_df['date'], y=trend_df['our_position'], name='Our Position', line=dict(color='blue', width=3)))
-        fig_trends.add_trace(go.Scatter(x=trend_df['date'], y=trend_df['market_avg'], name='Market Average', line=dict(color='gray', dash='dash')))
-        fig_trends.add_trace(go.Scatter(x=trend_df['date'], y=trend_df['top_competitor'], name='Top Competitor', line=dict(color='red', width=2)))
+        fig_trends.add_trace(
+            go.Scatter(
+                x=trend_df["date"], y=trend_df["our_position"], name="Our Position", line=dict(color="blue", width=3)
+            )
+        )
+        fig_trends.add_trace(
+            go.Scatter(
+                x=trend_df["date"],
+                y=trend_df["market_avg"],
+                name="Market Average",
+                line=dict(color="gray", dash="dash"),
+            )
+        )
+        fig_trends.add_trace(
+            go.Scatter(
+                x=trend_df["date"], y=trend_df["top_competitor"], name="Top Competitor", line=dict(color="red", width=2)
+            )
+        )
 
         fig_trends.update_layout(
-            title="Market Position Trends (30 Days)",
-            xaxis_title="Date",
-            yaxis_title="Position Score",
-            height=300
+            title="Market Position Trends (30 Days)", xaxis_title="Date", yaxis_title="Position Score", height=300
         )
 
         st.plotly_chart(fig_trends, use_container_width=True)
@@ -543,8 +520,20 @@ def render_competitive_dashboard():
             st.markdown("**Pending Approvals**")
 
             approval_data = [
-                {"id": "RESP001", "type": "Price Adjustment", "competitor": "Premier Realty", "cost": "$150", "impact": "High"},
-                {"id": "RESP002", "type": "Marketing Campaign", "competitor": "Elite Properties", "cost": "$500", "impact": "Medium"}
+                {
+                    "id": "RESP001",
+                    "type": "Price Adjustment",
+                    "competitor": "Premier Realty",
+                    "cost": "$150",
+                    "impact": "High",
+                },
+                {
+                    "id": "RESP002",
+                    "type": "Marketing Campaign",
+                    "competitor": "Elite Properties",
+                    "cost": "$500",
+                    "impact": "Medium",
+                },
             ]
 
             for i, approval in enumerate(approval_data[:pending_approvals]):
@@ -583,7 +572,7 @@ def render_competitive_dashboard():
             "Pricing Adjustments": 35,
             "Marketing Campaigns": 25,
             "Customer Outreach": 20,
-            "Defensive Messaging": 20
+            "Defensive Messaging": 20,
         }
 
         for resp_type, percentage in response_types.items():
@@ -606,7 +595,7 @@ def render_competitive_dashboard():
             else:
                 return "background-color: #e8f5e8; color: #2e7d32"
 
-        styled_df = competitor_df.style.applymap(style_threat_level, subset=['threat_level'])
+        styled_df = competitor_df.style.applymap(style_threat_level, subset=["threat_level"])
 
         # Display table with formatting
         st.dataframe(
@@ -620,8 +609,8 @@ def render_competitive_dashboard():
                 "listings_change": st.column_config.NumberColumn("Listings Change", format="%.1f%%"),
                 "social_sentiment": st.column_config.ProgressColumn("Social Sentiment", min_value=0, max_value=1),
                 "last_activity": "Last Activity",
-                "status": "Status"
-            }
+                "status": "Status",
+            },
         )
 
         # Export options
@@ -634,7 +623,7 @@ def render_competitive_dashboard():
                     label="Download CSV",
                     data=csv,
                     file_name=f"competitor_analysis_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
-                    mime="text/csv"
+                    mime="text/csv",
                 )
 
         with col2:
@@ -656,7 +645,7 @@ def render_competitive_dashboard():
             Data Sources: MLS, Social Media, Web Union[Monitoring, Refresh] Rate: 5 minutes
             </div>
             """.format(timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
 
 

@@ -1,19 +1,21 @@
 import os
-from github import Github, Auth
 from typing import Optional
+
+from github import Auth, Github
+
 
 class GitHubManager:
     """The 'Hands' of the Agent: Allows it to read/write its own source code."""
-    
+
     def __init__(self, token: str, repo_name: str):
         self.github = Github(auth=Auth.Token(token))
         self.repo = self.github.get_repo(repo_name)
-        
+
     def get_file_content(self, file_path: str) -> str:
         """Reads code from the repository."""
         try:
             content = self.repo.get_contents(file_path)
-            return content.decoded_content.decode('utf-8')
+            return content.decoded_content.decode("utf-8")
         except Exception as e:
             return f"Error reading {file_path}: {str(e)}"
 

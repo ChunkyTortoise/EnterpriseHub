@@ -27,25 +27,33 @@ Created: January 2026
 """
 
 import asyncio
-import streamlit as st
-from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
-import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
-import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta, date
-from typing import Dict, List, Optional, Any
-from decimal import Decimal
 import json
+from datetime import date, datetime, timedelta
+from decimal import Decimal
+from typing import Any, Dict, List, Optional
+
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import streamlit as st
+from plotly.subplots import make_subplots
+
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 
 # Enterprise Analytics imports
 try:
-    from ghl_real_estate_ai.analytics.revenue_attribution_engine import (
-        RevenueAttributionEngine, AttributionModel, TouchpointType, RevenueEventType
-    )
     from ghl_real_estate_ai.analytics.customer_lifetime_analytics import (
-        CustomerLifetimeAnalytics, CustomerSegment, ChurnRisk, CLVModel
+        ChurnRisk,
+        CLVModel,
+        CustomerLifetimeAnalytics,
+        CustomerSegment,
+    )
+    from ghl_real_estate_ai.analytics.revenue_attribution_engine import (
+        AttributionModel,
+        RevenueAttributionEngine,
+        RevenueEventType,
+        TouchpointType,
     )
     from ghl_real_estate_ai.services.attribution_analytics import AttributionAnalytics
     from ghl_real_estate_ai.services.predictive_analytics_engine import PredictiveAnalyticsEngine
@@ -60,23 +68,15 @@ class MockRevenueAttributionEngine:
     async def get_real_time_metrics(self):
         """Mock real-time revenue metrics."""
         return {
-            "today": {
-                "revenue": 15420.50,
-                "events": 23,
-                "avg_event_value": 670.89
-            },
-            "month_to_date": {
-                "revenue": 287630.75,
-                "events": 412,
-                "avg_event_value": 698.13
-            },
+            "today": {"revenue": 15420.50, "events": 23, "avg_event_value": 670.89},
+            "month_to_date": {"revenue": 287630.75, "events": 412, "avg_event_value": 698.13},
             "top_channels_7d": [
                 {"channel": "Organic Search", "total_revenue": 45620.30, "unique_customers": 89},
                 {"channel": "Paid Search", "total_revenue": 38940.80, "unique_customers": 67},
                 {"channel": "Email Marketing", "total_revenue": 29380.45, "unique_customers": 156},
                 {"channel": "Social Media", "total_revenue": 18750.90, "unique_customers": 234},
-                {"channel": "Direct", "total_revenue": 12450.60, "unique_customers": 45}
-            ]
+                {"channel": "Direct", "total_revenue": 12450.60, "unique_customers": 45},
+            ],
         }
 
     async def generate_attribution_report(self, start_date=None, end_date=None, **kwargs):
@@ -87,20 +87,20 @@ class MockRevenueAttributionEngine:
                 "total_events": 1247,
                 "unique_customers": 589,
                 "avg_revenue_per_customer": 765.48,
-                "top_performing_channel": "Organic Search"
+                "top_performing_channel": "Organic Search",
             },
             "channel_performance": [
                 {"channel": "Organic Search", "total_revenue": 125670.30, "touchpoint_count": 342, "roi": 4.2},
                 {"channel": "Paid Search", "total_revenue": 98540.80, "touchpoint_count": 276, "roi": 3.1},
                 {"channel": "Email Marketing", "total_revenue": 87920.45, "touchpoint_count": 498, "roi": 8.9},
                 {"channel": "Social Media", "total_revenue": 65380.90, "touchpoint_count": 612, "roi": 2.4},
-                {"channel": "Direct", "total_revenue": 73267.80, "touchpoint_count": 189, "roi": 12.8}
+                {"channel": "Direct", "total_revenue": 73267.80, "touchpoint_count": 189, "roi": 12.8},
             ],
             "model_comparison": {
                 "first_touch": {"total_revenue": 450780.25, "avg_touchpoints_per_conversion": 3.2},
                 "last_touch": {"total_revenue": 450780.25, "avg_touchpoints_per_conversion": 3.2},
-                "linear": {"total_revenue": 450780.25, "avg_touchpoints_per_conversion": 3.2}
-            }
+                "linear": {"total_revenue": 450780.25, "avg_touchpoints_per_conversion": 3.2},
+            },
         }
 
 
@@ -114,17 +114,12 @@ class MockCustomerLifetimeAnalytics:
                 "total_customers": 1247,
                 "total_predicted_clv": 2845670.45,
                 "average_clv": 2283.15,
-                "high_value_customers": 89
+                "high_value_customers": 89,
             },
             "churn_analysis": {
                 "total_analyzed": 1247,
-                "risk_distribution": {
-                    "low": 678,
-                    "medium": 342,
-                    "high": 156,
-                    "critical": 71
-                },
-                "high_risk_customers": 227
+                "risk_distribution": {"low": 678, "medium": 342, "high": 156, "critical": 71},
+                "high_risk_customers": 227,
             },
             "segmentation": {
                 "segment_distribution": {
@@ -135,18 +130,33 @@ class MockCustomerLifetimeAnalytics:
                     "at_risk": 167,
                     "promising": 198,
                     "customers_needing_attention": 134,
-                    "hibernating": 80
+                    "hibernating": 80,
                 }
             },
             "top_clv_predictions": [
                 {"customer_id": "cust_001", "predicted_clv": 8450.30, "churn_risk": "low", "segment": "champions"},
                 {"customer_id": "cust_002", "predicted_clv": 7820.45, "churn_risk": "low", "segment": "champions"},
-                {"customer_id": "cust_003", "predicted_clv": 6980.60, "churn_risk": "medium", "segment": "loyal_customers"}
+                {
+                    "customer_id": "cust_003",
+                    "predicted_clv": 6980.60,
+                    "churn_risk": "medium",
+                    "segment": "loyal_customers",
+                },
             ],
             "high_risk_customers": [
-                {"customer_id": "cust_045", "churn_probability": 0.89, "urgency_score": 9, "interventions": ["Immediate call", "Discount offer"]},
-                {"customer_id": "cust_078", "churn_probability": 0.76, "urgency_score": 8, "interventions": ["Success manager", "Training"]}
-            ]
+                {
+                    "customer_id": "cust_045",
+                    "churn_probability": 0.89,
+                    "urgency_score": 9,
+                    "interventions": ["Immediate call", "Discount offer"],
+                },
+                {
+                    "customer_id": "cust_078",
+                    "churn_probability": 0.76,
+                    "urgency_score": 8,
+                    "interventions": ["Success manager", "Training"],
+                },
+            ],
         }
 
     async def get_segment_profiles(self):
@@ -157,15 +167,15 @@ class MockCustomerLifetimeAnalytics:
                 "customer_count": 89,
                 "avg_clv": 5640.80,
                 "retention_strategies": ["VIP treatment", "Exclusive features"],
-                "growth_potential": "high"
+                "growth_potential": "high",
             },
             {
                 "segment": "at_risk",
                 "customer_count": 167,
                 "avg_clv": 2340.50,
                 "retention_strategies": ["Intervention calls", "Win-back offers"],
-                "growth_potential": "critical"
-            }
+                "growth_potential": "critical",
+            },
         ]
 
 
@@ -180,24 +190,24 @@ class MockCompetitiveIntelligence:
                 "competitor_1": 18.7,
                 "competitor_2": 15.2,
                 "competitor_3": 11.9,
-                "others": 41.8
+                "others": 41.8,
             },
             "pricing_analysis": {
                 "our_avg_price": 299.00,
                 "market_avg_price": 345.00,
                 "competitive_advantage": "12% below market",
-                "price_positioning": "value_leader"
+                "price_positioning": "value_leader",
             },
             "feature_comparison": {
                 "ai_powered": {"us": True, "competitor_1": False, "competitor_2": True, "competitor_3": False},
                 "real_time_analytics": {"us": True, "competitor_1": True, "competitor_2": False, "competitor_3": True},
-                "white_label": {"us": True, "competitor_1": False, "competitor_2": False, "competitor_3": False}
+                "white_label": {"us": True, "competitor_1": False, "competitor_2": False, "competitor_3": False},
             },
             "opportunities": [
                 {"area": "AI Integration", "impact": "high", "difficulty": "medium"},
                 {"area": "Mobile App", "impact": "medium", "difficulty": "low"},
-                {"area": "Enterprise Features", "impact": "high", "difficulty": "high"}
-            ]
+                {"area": "Enterprise Features", "impact": "high", "difficulty": "high"},
+            ],
         }
 
 
@@ -210,14 +220,14 @@ def get_analytics_engines():
             "revenue_attribution": RevenueAttributionEngine(),
             "customer_lifetime": CustomerLifetimeAnalytics(),
             "attribution_analytics": AttributionAnalytics(),
-            "predictive_analytics": PredictiveAnalyticsEngine()
+            "predictive_analytics": PredictiveAnalyticsEngine(),
         }
     except Exception as e:
         st.warning(f"Using mock engines due to import error: {e}")
         return {
             "revenue_attribution": MockRevenueAttributionEngine(),
             "customer_lifetime": MockCustomerLifetimeAnalytics(),
-            "competitive_intelligence": MockCompetitiveIntelligence()
+            "competitive_intelligence": MockCompetitiveIntelligence(),
         }
 
 
@@ -228,9 +238,7 @@ def load_real_time_metrics():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        return run_async(
-            engines["revenue_attribution"].get_real_time_metrics()
-        )
+        return run_async(engines["revenue_attribution"].get_real_time_metrics())
     except Exception as e:
         st.error(f"Error loading real-time metrics: {e}")
         return {}
@@ -249,10 +257,7 @@ def load_attribution_report(days_back=30):
     asyncio.set_event_loop(loop)
     try:
         return run_async(
-            engines["revenue_attribution"].generate_attribution_report(
-                start_date=start_date,
-                end_date=end_date
-            )
+            engines["revenue_attribution"].generate_attribution_report(start_date=start_date, end_date=end_date)
         )
     except Exception as e:
         st.error(f"Error loading attribution report: {e}")
@@ -271,12 +276,7 @@ def load_clv_report(days_back=90):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        return run_async(
-            engines["customer_lifetime"].generate_clv_report(
-                start_date=start_date,
-                end_date=end_date
-            )
-        )
+        return run_async(engines["customer_lifetime"].generate_clv_report(start_date=start_date, end_date=end_date))
     except Exception as e:
         st.error(f"Error loading CLV report: {e}")
         return {}
@@ -310,14 +310,12 @@ def render_enterprise_analytics_dashboard():
 
     # Page configuration
     st.set_page_config(
-        page_title="Enterprise Analytics Dashboard",
-        page_icon="🏢",
-        layout="wide",
-        initial_sidebar_state="expanded"
+        page_title="Enterprise Analytics Dashboard", page_icon="🏢", layout="wide", initial_sidebar_state="expanded"
     )
 
     # Custom CSS for executive styling
-    st.markdown("""
+    st.markdown(
+        """
     <style>
     .metric-card {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -372,33 +370,34 @@ def render_enterprise_analytics_dashboard():
         margin: 20px 0;
     }
     </style>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     # Executive Header
-    st.markdown("""
+    st.markdown(
+        """
     <div class="executive-header">
         <h1>🏢 Enterprise Analytics Command Center</h1>
         <h3>Real-Time Revenue Intelligence & Strategic Insights</h3>
         <p>Scale to $5M+ ARR with Data-Driven Decision Making</p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     # Sidebar configuration
     with st.sidebar:
         st.header("🎯 Executive Controls")
 
         # Time range selector
-        time_range = st.selectbox(
-            "Analysis Period",
-            options=["7 days", "30 days", "90 days", "1 year"],
-            index=1
-        )
+        time_range = st.selectbox("Analysis Period", options=["7 days", "30 days", "90 days", "1 year"], index=1)
 
         # Metrics to focus on
         focus_metrics = st.multiselect(
             "Priority Metrics",
             options=["Revenue Attribution", "Customer CLV", "Churn Risk", "Market Share", "ROI Optimization"],
-            default=["Revenue Attribution", "Customer CLV", "Churn Risk"]
+            default=["Revenue Attribution", "Customer CLV", "Churn Risk"],
         )
 
         # Alert settings
@@ -428,13 +427,15 @@ def render_enterprise_analytics_dashboard():
             competitive_data = load_competitive_intelligence()
 
         # Main dashboard tabs
-        tab1, tab2, tab3, tab4, tab5 = st.tabs([
-            "📊 Executive Overview",
-            "💰 Revenue Intelligence",
-            "👥 Customer Analytics",
-            "🎯 Competitive Intel",
-            "🔮 Predictive Insights"
-        ])
+        tab1, tab2, tab3, tab4, tab5 = st.tabs(
+            [
+                "📊 Executive Overview",
+                "💰 Revenue Intelligence",
+                "👥 Customer Analytics",
+                "🎯 Competitive Intel",
+                "🔮 Predictive Insights",
+            ]
+        )
 
         with tab1:
             render_executive_overview(real_time_metrics, attribution_report, clv_report, competitive_data)
@@ -453,13 +454,16 @@ def render_enterprise_analytics_dashboard():
 
         # Auto-refresh implementation
         if auto_refresh:
-            st.markdown("""
+            st.markdown(
+                """
             <script>
             setTimeout(function() {
                 window.parent.document.querySelector('button[title="Rerun"]').click();
             }, 120000); // 2 minutes
             </script>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
     except Exception as e:
         st.error(f"Dashboard loading error: {str(e)}")
@@ -476,48 +480,63 @@ def render_executive_overview(real_time_metrics, attribution_report, clv_report,
 
     with col1:
         today_revenue = real_time_metrics.get("today", {}).get("revenue", 0)
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="metric-card">
             <div class="metric-label">Today's Revenue</div>
             <div class="metric-value">${today_revenue:,.0f}</div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     with col2:
         month_revenue = real_time_metrics.get("month_to_date", {}).get("revenue", 0)
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="metric-card">
             <div class="metric-label">MTD Revenue</div>
             <div class="metric-value">${month_revenue:,.0f}</div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     with col3:
         avg_clv = clv_report.get("summary_metrics", {}).get("average_clv", 0)
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="metric-card">
             <div class="metric-label">Avg Customer CLV</div>
             <div class="metric-value">${avg_clv:,.0f}</div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     with col4:
         high_risk_customers = clv_report.get("churn_analysis", {}).get("high_risk_customers", 0)
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="metric-card">
             <div class="metric-label">High-Risk Customers</div>
             <div class="metric-value">{high_risk_customers}</div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     with col5:
         market_share = competitive_data.get("market_share", {}).get("our_position", 0)
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="metric-card">
             <div class="metric-label">Market Share</div>
             <div class="metric-value">{market_share}%</div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     # Strategic Alerts
     st.subheader("🚨 Strategic Alerts")
@@ -527,14 +546,19 @@ def render_executive_overview(real_time_metrics, attribution_report, clv_report,
     with col1:
         # Critical alerts
         if high_risk_customers > 50:
-            st.markdown("""
+            st.markdown(
+                """
             <div class="alert-critical">
                 <strong>CRITICAL:</strong> High churn risk detected in premium segment
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
         # Revenue opportunities
-        top_channel_revenue = max([ch.get("total_revenue", 0) for ch in real_time_metrics.get("top_channels_7d", [])], default=0)
+        top_channel_revenue = max(
+            [ch.get("total_revenue", 0) for ch in real_time_metrics.get("top_channels_7d", [])], default=0
+        )
         if top_channel_revenue > 40000:
             st.success(f"🎯 **Growth Opportunity**: Top channel generating ${top_channel_revenue:,.0f} weekly")
 
@@ -557,36 +581,29 @@ def render_executive_overview(real_time_metrics, attribution_report, clv_report,
 
     with col1:
         # Revenue trend simulation
-        dates = pd.date_range(start=datetime.now() - timedelta(days=30), end=datetime.now(), freq='D')
+        dates = pd.date_range(start=datetime.now() - timedelta(days=30), end=datetime.now(), freq="D")
         revenue_trend = [month_revenue * (0.8 + 0.4 * np.random.random()) / 30 for _ in dates]
 
         fig_trend = go.Figure()
-        fig_trend.add_trace(go.Scatter(
-            x=dates,
-            y=revenue_trend,
-            mode='lines+markers',
-            name='Daily Revenue',
-            line=dict(color='#2E86C1', width=3)
-        ))
+        fig_trend.add_trace(
+            go.Scatter(
+                x=dates,
+                y=revenue_trend,
+                mode="lines+markers",
+                name="Daily Revenue",
+                line=dict(color="#2E86C1", width=3),
+            )
+        )
 
         # Add trend line
         z = np.polyfit(range(len(revenue_trend)), revenue_trend, 1)
         trend_line = np.poly1d(z)(range(len(revenue_trend)))
 
-        fig_trend.add_trace(go.Scatter(
-            x=dates,
-            y=trend_line,
-            mode='lines',
-            name='Trend',
-            line=dict(color='red', width=2, dash='dash')
-        ))
-
-        fig_trend.update_layout(
-            title="30-Day Revenue Trend",
-            xaxis_title="Date",
-            yaxis_title="Revenue ($)",
-            height=350
+        fig_trend.add_trace(
+            go.Scatter(x=dates, y=trend_line, mode="lines", name="Trend", line=dict(color="red", width=2, dash="dash"))
         )
+
+        fig_trend.update_layout(title="30-Day Revenue Trend", xaxis_title="Date", yaxis_title="Revenue ($)", height=350)
 
         st.plotly_chart(fig_trend, use_container_width=True)
 
@@ -595,20 +612,19 @@ def render_executive_overview(real_time_metrics, attribution_report, clv_report,
         funnel_data = {
             "Stage": ["Visitors", "Leads", "Qualified", "Customers", "Champions"],
             "Count": [10000, 1200, 480, 156, 89],
-            "Conversion": ["", "12%", "40%", "32.5%", "57%"]
+            "Conversion": ["", "12%", "40%", "32.5%", "57%"],
         }
 
-        fig_funnel = go.Figure(go.Funnel(
-            y=funnel_data["Stage"],
-            x=funnel_data["Count"],
-            textinfo="value+percent initial",
-            marker_color=["#3498db", "#2980b9", "#1abc9c", "#16a085", "#27ae60"]
-        ))
-
-        fig_funnel.update_layout(
-            title="Customer Acquisition Funnel",
-            height=350
+        fig_funnel = go.Figure(
+            go.Funnel(
+                y=funnel_data["Stage"],
+                x=funnel_data["Count"],
+                textinfo="value+percent initial",
+                marker_color=["#3498db", "#2980b9", "#1abc9c", "#16a085", "#27ae60"],
+            )
         )
+
+        fig_funnel.update_layout(title="Customer Acquisition Funnel", height=350)
 
         st.plotly_chart(fig_funnel, use_container_width=True)
 
@@ -620,30 +636,30 @@ def render_executive_overview(real_time_metrics, attribution_report, clv_report,
             "priority": "🔴 Critical",
             "action": "Immediate intervention for 71 critical churn-risk customers",
             "impact": "$890K potential revenue loss prevention",
-            "timeline": "Next 7 days"
+            "timeline": "Next 7 days",
         },
         {
             "priority": "🟡 High",
             "action": "Scale top-performing channel (Organic Search) by 30%",
             "impact": "$45K additional monthly revenue",
-            "timeline": "Next 30 days"
+            "timeline": "Next 30 days",
         },
         {
             "priority": "🟢 Medium",
             "action": "Launch competitive AI features to capture market share",
             "impact": "2-3% market share increase",
-            "timeline": "Next 90 days"
-        }
+            "timeline": "Next 90 days",
+        },
     ]
 
     for i, rec in enumerate(recommendations):
-        with st.expander(f"{rec['priority']}: {rec['action']}", expanded=i==0):
+        with st.expander(f"{rec['priority']}: {rec['action']}", expanded=i == 0):
             col1, col2 = st.columns([3, 1])
             with col1:
                 st.write(f"**Expected Impact:** {rec['impact']}")
                 st.write(f"**Timeline:** {rec['timeline']}")
             with col2:
-                st.button(f"Execute Plan {i+1}", key=f"exec_{i}")
+                st.button(f"Execute Plan {i + 1}", key=f"exec_{i}")
 
 
 def render_revenue_intelligence(attribution_report, real_time_metrics):
@@ -660,21 +676,23 @@ def render_revenue_intelligence(attribution_report, real_time_metrics):
         models = list(model_comparison.keys())
         revenues = [model_comparison[model].get("total_revenue", 0) for model in models]
 
-        fig_comparison = go.Figure(data=[
-            go.Bar(
-                x=models,
-                y=revenues,
-                marker_color=['#3498db', '#e74c3c', '#2ecc71'],
-                text=[f"${rev:,.0f}" for rev in revenues],
-                textposition='auto'
-            )
-        ])
+        fig_comparison = go.Figure(
+            data=[
+                go.Bar(
+                    x=models,
+                    y=revenues,
+                    marker_color=["#3498db", "#e74c3c", "#2ecc71"],
+                    text=[f"${rev:,.0f}" for rev in revenues],
+                    textposition="auto",
+                )
+            ]
+        )
 
         fig_comparison.update_layout(
             title="Revenue Attribution by Model",
             xaxis_title="Attribution Model",
             yaxis_title="Attributed Revenue ($)",
-            height=400
+            height=400,
         )
 
         st.plotly_chart(fig_comparison, use_container_width=True)
@@ -692,18 +710,13 @@ def render_revenue_intelligence(attribution_report, real_time_metrics):
             channels = [ch["channel"] for ch in channel_performance]
             revenues = [ch["total_revenue"] for ch in channel_performance]
 
-            fig_revenue = go.Figure(data=[go.Pie(
-                labels=channels,
-                values=revenues,
-                hole=0.4,
-                textinfo='label+percent+value',
-                textfont_size=10
-            )])
-
-            fig_revenue.update_layout(
-                title="Revenue Distribution by Channel",
-                height=400
+            fig_revenue = go.Figure(
+                data=[
+                    go.Pie(labels=channels, values=revenues, hole=0.4, textinfo="label+percent+value", textfont_size=10)
+                ]
             )
+
+            fig_revenue.update_layout(title="Revenue Distribution by Channel", height=400)
 
             st.plotly_chart(fig_revenue, use_container_width=True)
 
@@ -711,20 +724,19 @@ def render_revenue_intelligence(attribution_report, real_time_metrics):
             # ROI by channel
             rois = [ch.get("roi", 0) for ch in channel_performance]
 
-            fig_roi = go.Figure(data=[go.Bar(
-                x=channels,
-                y=rois,
-                marker_color=['#27ae60' if roi > 3 else '#f39c12' if roi > 1 else '#e74c3c' for roi in rois],
-                text=[f"{roi:.1f}x" for roi in rois],
-                textposition='auto'
-            )])
-
-            fig_roi.update_layout(
-                title="ROI by Channel",
-                xaxis_title="Channel",
-                yaxis_title="ROI (x)",
-                height=400
+            fig_roi = go.Figure(
+                data=[
+                    go.Bar(
+                        x=channels,
+                        y=rois,
+                        marker_color=["#27ae60" if roi > 3 else "#f39c12" if roi > 1 else "#e74c3c" for roi in rois],
+                        text=[f"{roi:.1f}x" for roi in rois],
+                        textposition="auto",
+                    )
+                ]
             )
+
+            fig_roi.update_layout(title="ROI by Channel", xaxis_title="Channel", yaxis_title="ROI (x)", height=400)
 
             st.plotly_chart(fig_roi, use_container_width=True)
 
@@ -741,31 +753,25 @@ def render_revenue_intelligence(attribution_report, real_time_metrics):
                 st.metric(
                     f"{channel['channel']} Revenue",
                     f"${channel['total_revenue']:,.0f}",
-                    delta=f"+{channel['total_revenue']*0.15:,.0f}"
+                    delta=f"+{channel['total_revenue'] * 0.15:,.0f}",
                 )
 
             with col2:
                 st.metric(
-                    "Customers",
-                    f"{channel['unique_customers']:,}",
-                    delta=f"+{int(channel['unique_customers']*0.08)}"
+                    "Customers", f"{channel['unique_customers']:,}", delta=f"+{int(channel['unique_customers'] * 0.08)}"
                 )
 
             with col3:
-                avg_revenue_per_customer = channel['total_revenue'] / channel['unique_customers']
+                avg_revenue_per_customer = channel["total_revenue"] / channel["unique_customers"]
                 st.metric(
                     "Avg Revenue/Customer",
                     f"${avg_revenue_per_customer:,.0f}",
-                    delta=f"+${avg_revenue_per_customer*0.05:,.0f}"
+                    delta=f"+${avg_revenue_per_customer * 0.05:,.0f}",
                 )
 
             with col4:
-                efficiency_score = channel['total_revenue'] / (channel['unique_customers'] * 100)  # Mock calculation
-                st.metric(
-                    "Efficiency Score",
-                    f"{efficiency_score:.1f}",
-                    delta=f"+{efficiency_score*0.1:.1f}"
-                )
+                efficiency_score = channel["total_revenue"] / (channel["unique_customers"] * 100)  # Mock calculation
+                st.metric("Efficiency Score", f"{efficiency_score:.1f}", delta=f"+{efficiency_score * 0.1:.1f}")
 
     # Revenue optimization recommendations
     st.subheader("💡 Revenue Optimization Insights")
@@ -773,7 +779,9 @@ def render_revenue_intelligence(attribution_report, real_time_metrics):
     with st.expander("📈 Budget Reallocation Recommendations", expanded=True):
         if channel_performance:
             top_performer = max(channel_performance, key=lambda x: x.get("roi", 0))
-            st.success(f"🎯 **Scale Winner**: Increase {top_performer['channel']} budget by 25% (ROI: {top_performer.get('roi', 0):.1f}x)")
+            st.success(
+                f"🎯 **Scale Winner**: Increase {top_performer['channel']} budget by 25% (ROI: {top_performer.get('roi', 0):.1f}x)"
+            )
 
             underperformer = min(channel_performance, key=lambda x: x.get("roi", 0))
             if underperformer.get("roi", 0) < 2:
@@ -791,32 +799,16 @@ def render_customer_analytics(clv_report):
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.metric(
-            "Total Customers",
-            f"{summary_metrics.get('total_customers', 0):,}",
-            delta="+156"
-        )
+        st.metric("Total Customers", f"{summary_metrics.get('total_customers', 0):,}", delta="+156")
 
     with col2:
-        st.metric(
-            "Total Predicted CLV",
-            f"${summary_metrics.get('total_predicted_clv', 0):,.0f}",
-            delta="+$245K"
-        )
+        st.metric("Total Predicted CLV", f"${summary_metrics.get('total_predicted_clv', 0):,.0f}", delta="+$245K")
 
     with col3:
-        st.metric(
-            "Average CLV",
-            f"${summary_metrics.get('average_clv', 0):,.0f}",
-            delta="+$127"
-        )
+        st.metric("Average CLV", f"${summary_metrics.get('average_clv', 0):,.0f}", delta="+$127")
 
     with col4:
-        st.metric(
-            "High-Value Customers",
-            f"{summary_metrics.get('high_value_customers', 0):,}",
-            delta="+12"
-        )
+        st.metric("High-Value Customers", f"{summary_metrics.get('high_value_customers', 0):,}", delta="+12")
 
     # Customer segmentation analysis
     st.subheader("🎯 Customer Segmentation Analysis")
@@ -834,63 +826,64 @@ def render_customer_analytics(clv_report):
 
             # Color mapping for segments
             colors = {
-                'champions': '#27ae60',
-                'loyal_customers': '#2ecc71',
-                'potential_loyalists': '#3498db',
-                'new_customers': '#9b59b6',
-                'at_risk': '#e74c3c',
-                'promising': '#f39c12',
-                'customers_needing_attention': '#e67e22',
-                'hibernating': '#95a5a6'
+                "champions": "#27ae60",
+                "loyal_customers": "#2ecc71",
+                "potential_loyalists": "#3498db",
+                "new_customers": "#9b59b6",
+                "at_risk": "#e74c3c",
+                "promising": "#f39c12",
+                "customers_needing_attention": "#e67e22",
+                "hibernating": "#95a5a6",
             }
 
-            segment_colors = [colors.get(seg, '#34495e') for seg in segments]
+            segment_colors = [colors.get(seg, "#34495e") for seg in segments]
 
-            fig_segments = go.Figure(data=[go.Pie(
-                labels=[seg.replace('_', ' ').title() for seg in segments],
-                values=counts,
-                hole=0.4,
-                marker_colors=segment_colors,
-                textinfo='label+percent+value'
-            )])
-
-            fig_segments.update_layout(
-                title="Customer Segment Distribution",
-                height=400
+            fig_segments = go.Figure(
+                data=[
+                    go.Pie(
+                        labels=[seg.replace("_", " ").title() for seg in segments],
+                        values=counts,
+                        hole=0.4,
+                        marker_colors=segment_colors,
+                        textinfo="label+percent+value",
+                    )
+                ]
             )
+
+            fig_segments.update_layout(title="Customer Segment Distribution", height=400)
 
             st.plotly_chart(fig_segments, use_container_width=True)
 
         with col2:
             # CLV by segment (mock data based on segments)
             segment_clv = {
-                'champions': 5640,
-                'loyal_customers': 3420,
-                'potential_loyalists': 2180,
-                'new_customers': 890,
-                'at_risk': 2340,
-                'promising': 1560,
-                'customers_needing_attention': 1890,
-                'hibernating': 540
+                "champions": 5640,
+                "loyal_customers": 3420,
+                "potential_loyalists": 2180,
+                "new_customers": 890,
+                "at_risk": 2340,
+                "promising": 1560,
+                "customers_needing_attention": 1890,
+                "hibernating": 540,
             }
 
             segments_for_clv = [seg for seg in segments if seg in segment_clv]
             clv_values = [segment_clv.get(seg, 0) for seg in segments_for_clv]
 
-            fig_clv = go.Figure(data=[go.Bar(
-                y=[seg.replace('_', ' ').title() for seg in segments_for_clv],
-                x=clv_values,
-                orientation='h',
-                marker_color=[colors.get(seg, '#34495e') for seg in segments_for_clv],
-                text=[f"${clv:,}" for clv in clv_values],
-                textposition='auto'
-            )])
-
-            fig_clv.update_layout(
-                title="Average CLV by Segment",
-                xaxis_title="Average CLV ($)",
-                height=400
+            fig_clv = go.Figure(
+                data=[
+                    go.Bar(
+                        y=[seg.replace("_", " ").title() for seg in segments_for_clv],
+                        x=clv_values,
+                        orientation="h",
+                        marker_color=[colors.get(seg, "#34495e") for seg in segments_for_clv],
+                        text=[f"${clv:,}" for clv in clv_values],
+                        textposition="auto",
+                    )
+                ]
             )
+
+            fig_clv.update_layout(title="Average CLV by Segment", xaxis_title="Average CLV ($)", height=400)
 
             st.plotly_chart(fig_clv, use_container_width=True)
 
@@ -907,21 +900,18 @@ def render_customer_analytics(clv_report):
             # Risk level distribution
             risk_levels = list(risk_distribution.keys())
             risk_counts = list(risk_distribution.values())
-            risk_colors = ['#27ae60', '#f39c12', '#e67e22', '#e74c3c']
+            risk_colors = ["#27ae60", "#f39c12", "#e67e22", "#e74c3c"]
 
-            fig_risk = go.Figure(data=[go.Bar(
-                x=risk_levels,
-                y=risk_counts,
-                marker_color=risk_colors,
-                text=risk_counts,
-                textposition='auto'
-            )])
+            fig_risk = go.Figure(
+                data=[
+                    go.Bar(
+                        x=risk_levels, y=risk_counts, marker_color=risk_colors, text=risk_counts, textposition="auto"
+                    )
+                ]
+            )
 
             fig_risk.update_layout(
-                title="Churn Risk Distribution",
-                xaxis_title="Risk Level",
-                yaxis_title="Customer Count",
-                height=300
+                title="Churn Risk Distribution", xaxis_title="Risk Level", yaxis_title="Customer Count", height=300
             )
 
             st.plotly_chart(fig_risk, use_container_width=True)
@@ -932,7 +922,10 @@ def render_customer_analytics(clv_report):
 
             st.markdown("**🔴 Immediate Action Required:**")
             for customer in high_risk_customers:
-                with st.expander(f"Customer {customer.get('customer_id', 'N/A')} (Risk: {customer.get('churn_probability', 0)*100:.0f}%)", expanded=False):
+                with st.expander(
+                    f"Customer {customer.get('customer_id', 'N/A')} (Risk: {customer.get('churn_probability', 0) * 100:.0f}%)",
+                    expanded=False,
+                ):
                     st.write(f"**Urgency Score:** {customer.get('urgency_score', 0)}/10")
                     interventions = customer.get("interventions", [])
                     for intervention in interventions:
@@ -940,8 +933,8 @@ def render_customer_analytics(clv_report):
 
         with col3:
             # CLV at risk
-            critical_risk = risk_distribution.get('critical', 0)
-            high_risk = risk_distribution.get('high', 0)
+            critical_risk = risk_distribution.get("critical", 0)
+            high_risk = risk_distribution.get("high", 0)
             avg_clv_at_risk = 2300  # Mock calculation
 
             total_clv_at_risk = (critical_risk + high_risk) * avg_clv_at_risk
@@ -949,15 +942,15 @@ def render_customer_analytics(clv_report):
             st.metric(
                 "CLV at Risk",
                 f"${total_clv_at_risk:,.0f}",
-                delta=f"-${total_clv_at_risk*0.1:,.0f}",
-                delta_color="inverse"
+                delta=f"-${total_clv_at_risk * 0.1:,.0f}",
+                delta_color="inverse",
             )
 
             st.metric(
                 "Customers at Risk",
                 f"{critical_risk + high_risk:,}",
-                delta=f"+{int((critical_risk + high_risk)*0.05)}",
-                delta_color="inverse"
+                delta=f"+{int((critical_risk + high_risk) * 0.05)}",
+                delta_color="inverse",
             )
 
     # Customer success strategies
@@ -967,7 +960,7 @@ def render_customer_analytics(clv_report):
         "Retention Rate": {"value": 87.3, "target": 90.0, "trend": "+2.1%"},
         "Upsell Rate": {"value": 23.6, "target": 25.0, "trend": "+1.8%"},
         "Customer Satisfaction": {"value": 4.7, "target": 4.8, "trend": "+0.2"},
-        "Time to Value": {"value": 14, "target": 10, "trend": "-3 days"}
+        "Time to Value": {"value": 14, "target": 10, "trend": "-3 days"},
     }
 
     cols = st.columns(4)
@@ -976,7 +969,7 @@ def render_customer_analytics(clv_report):
             st.metric(
                 metric,
                 f"{data['value']}" + ("%" if "Rate" in metric else " days" if "Time" in metric else ""),
-                delta=data['trend']
+                delta=data["trend"],
             )
 
 
@@ -999,21 +992,22 @@ def render_competitive_intelligence(competitive_data):
             shares = list(market_share.values())
 
             # Highlight our position
-            colors = ['#e74c3c' if comp == 'our_position' else '#bdc3c7' for comp in companies]
-            colors[0] = '#27ae60'  # Our position in green
+            colors = ["#e74c3c" if comp == "our_position" else "#bdc3c7" for comp in companies]
+            colors[0] = "#27ae60"  # Our position in green
 
-            fig_market = go.Figure(data=[go.Pie(
-                labels=[comp.replace('_', ' ').title() for comp in companies],
-                values=shares,
-                marker_colors=colors,
-                textinfo='label+percent+value',
-                pull=[0.1 if comp == 'our_position' else 0 for comp in companies]
-            )])
-
-            fig_market.update_layout(
-                title="Market Share Distribution",
-                height=400
+            fig_market = go.Figure(
+                data=[
+                    go.Pie(
+                        labels=[comp.replace("_", " ").title() for comp in companies],
+                        values=shares,
+                        marker_colors=colors,
+                        textinfo="label+percent+value",
+                        pull=[0.1 if comp == "our_position" else 0 for comp in companies],
+                    )
+                ]
             )
+
+            fig_market.update_layout(title="Market Share Distribution", height=400)
 
             st.plotly_chart(fig_market, use_container_width=True)
 
@@ -1043,22 +1037,17 @@ def render_competitive_intelligence(competitive_data):
 
         comparison_data = []
         for feature in features:
-            row = [feature.replace('_', ' ').title()]
+            row = [feature.replace("_", " ").title()]
             for comp in competitors:
                 has_feature = feature_comparison[feature].get(comp, False)
                 row.append("✅" if has_feature else "❌")
             comparison_data.append(row)
 
         df_comparison = pd.DataFrame(
-            comparison_data,
-            columns=["Feature"] + [comp.replace('_', ' ').title() for comp in competitors]
+            comparison_data, columns=["Feature"] + [comp.replace("_", " ").title() for comp in competitors]
         )
 
-        st.dataframe(
-            df_comparison,
-            use_container_width=True,
-            height=200
-        )
+        st.dataframe(df_comparison, use_container_width=True, height=200)
 
     # Pricing analysis
     st.subheader("💰 Pricing Intelligence")
@@ -1088,7 +1077,9 @@ def render_competitive_intelligence(competitive_data):
             opportunity_revenue = price_difference * 1000  # Assume 1000 customers
 
             st.metric("Pricing Gap", f"${price_difference}", help="Potential price increase opportunity")
-            st.metric("Revenue Opportunity", f"${opportunity_revenue:,.0f}", help="If we raised prices to market average")
+            st.metric(
+                "Revenue Opportunity", f"${opportunity_revenue:,.0f}", help="If we raised prices to market average"
+            )
 
     # Strategic opportunities
     st.subheader("🚀 Strategic Opportunities")
@@ -1097,26 +1088,30 @@ def render_competitive_intelligence(competitive_data):
 
     if opportunities:
         for i, opp in enumerate(opportunities):
-            impact_color = {
-                "high": "#27ae60",
-                "medium": "#f39c12",
-                "low": "#95a5a6"
-            }.get(opp.get("impact", "medium"), "#95a5a6")
+            impact_color = {"high": "#27ae60", "medium": "#f39c12", "low": "#95a5a6"}.get(
+                opp.get("impact", "medium"), "#95a5a6"
+            )
 
-            difficulty_color = {
-                "high": "#e74c3c",
-                "medium": "#f39c12",
-                "low": "#27ae60"
-            }.get(opp.get("difficulty", "medium"), "#f39c12")
+            difficulty_color = {"high": "#e74c3c", "medium": "#f39c12", "low": "#27ae60"}.get(
+                opp.get("difficulty", "medium"), "#f39c12"
+            )
 
-            with st.expander(f"💡 {opp.get('area', 'Unknown')} - {opp.get('impact', 'Medium')} Impact", expanded=i==0):
+            with st.expander(
+                f"💡 {opp.get('area', 'Unknown')} - {opp.get('impact', 'Medium')} Impact", expanded=i == 0
+            ):
                 col1, col2, col3 = st.columns(3)
 
                 with col1:
-                    st.markdown(f"**Impact:** <span style='color: {impact_color}'>{opp.get('impact', 'Medium')}</span>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"**Impact:** <span style='color: {impact_color}'>{opp.get('impact', 'Medium')}</span>",
+                        unsafe_allow_html=True,
+                    )
 
                 with col2:
-                    st.markdown(f"**Difficulty:** <span style='color: {difficulty_color}'>{opp.get('difficulty', 'Medium')}</span>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"**Difficulty:** <span style='color: {difficulty_color}'>{opp.get('difficulty', 'Medium')}</span>",
+                        unsafe_allow_html=True,
+                    )
 
                 with col3:
                     if st.button(f"Analyze {opp.get('area')}", key=f"analyze_{i}"):
@@ -1135,7 +1130,7 @@ def render_predictive_insights(attribution_report, clv_report):
 
     with col1:
         # 12-month revenue forecast
-        months = pd.date_range(start=datetime.now(), periods=12, freq='M')
+        months = pd.date_range(start=datetime.now(), periods=12, freq="M")
         base_revenue = 287630  # Current monthly
 
         # Simulate growth with some seasonality
@@ -1149,44 +1144,47 @@ def render_predictive_insights(attribution_report, clv_report):
         fig_forecast = go.Figure()
 
         # Historical data (simulated)
-        historical_months = pd.date_range(start=datetime.now() - timedelta(days=180), end=datetime.now(), freq='M')
+        historical_months = pd.date_range(start=datetime.now() - timedelta(days=180), end=datetime.now(), freq="M")
         historical_revenue = [base_revenue * (0.8 + 0.4 * np.random.random()) for _ in historical_months]
 
-        fig_forecast.add_trace(go.Scatter(
-            x=historical_months,
-            y=historical_revenue,
-            mode='lines+markers',
-            name='Historical',
-            line=dict(color='#3498db', width=2)
-        ))
+        fig_forecast.add_trace(
+            go.Scatter(
+                x=historical_months,
+                y=historical_revenue,
+                mode="lines+markers",
+                name="Historical",
+                line=dict(color="#3498db", width=2),
+            )
+        )
 
-        fig_forecast.add_trace(go.Scatter(
-            x=months,
-            y=forecast,
-            mode='lines+markers',
-            name='Forecast',
-            line=dict(color='#e74c3c', width=2, dash='dash')
-        ))
+        fig_forecast.add_trace(
+            go.Scatter(
+                x=months,
+                y=forecast,
+                mode="lines+markers",
+                name="Forecast",
+                line=dict(color="#e74c3c", width=2, dash="dash"),
+            )
+        )
 
         # Confidence bands
         upper_bound = [f * 1.2 for f in forecast]
         lower_bound = [f * 0.8 for f in forecast]
 
-        fig_forecast.add_trace(go.Scatter(
-            x=list(months) + list(months)[::-1],
-            y=upper_bound + lower_bound[::-1],
-            fill='tonext',
-            fillcolor='rgba(231, 76, 60, 0.2)',
-            line=dict(color='rgba(255,255,255,0)'),
-            name='Confidence Interval',
-            showlegend=False
-        ))
+        fig_forecast.add_trace(
+            go.Scatter(
+                x=list(months) + list(months)[::-1],
+                y=upper_bound + lower_bound[::-1],
+                fill="tonext",
+                fillcolor="rgba(231, 76, 60, 0.2)",
+                line=dict(color="rgba(255,255,255,0)"),
+                name="Confidence Interval",
+                showlegend=False,
+            )
+        )
 
         fig_forecast.update_layout(
-            title="12-Month Revenue Forecast",
-            xaxis_title="Month",
-            yaxis_title="Revenue ($)",
-            height=400
+            title="12-Month Revenue Forecast", xaxis_title="Month", yaxis_title="Revenue ($)", height=400
         )
 
         st.plotly_chart(fig_forecast, use_container_width=True)
@@ -1240,30 +1238,24 @@ def render_predictive_insights(attribution_report, clv_report):
 
         fig_customers = go.Figure()
 
-        fig_customers.add_trace(go.Scatter(
-            x=months_ahead,
-            y=customer_forecast,
-            mode='lines+markers',
-            name='Customer Count',
-            line=dict(color='#27ae60', width=3),
-            fill='tonexty'
-        ))
+        fig_customers.add_trace(
+            go.Scatter(
+                x=months_ahead,
+                y=customer_forecast,
+                mode="lines+markers",
+                name="Customer Count",
+                line=dict(color="#27ae60", width=3),
+                fill="tonexty",
+            )
+        )
 
         # Add milestones
         milestone_5k = next((i for i, c in enumerate(customer_forecast) if c >= 5000), None)
         if milestone_5k:
-            fig_customers.add_hline(
-                y=5000,
-                line_dash="dash",
-                line_color="red",
-                annotation_text="5K Customer Milestone"
-            )
+            fig_customers.add_hline(y=5000, line_dash="dash", line_color="red", annotation_text="5K Customer Milestone")
 
         fig_customers.update_layout(
-            title="Customer Growth Forecast",
-            xaxis_title="Months Ahead",
-            yaxis_title="Total Customers",
-            height=350
+            title="Customer Growth Forecast", xaxis_title="Months Ahead", yaxis_title="Total Customers", height=350
         )
 
         st.plotly_chart(fig_customers, use_container_width=True)
@@ -1275,21 +1267,9 @@ def render_predictive_insights(attribution_report, clv_report):
 
         # Intervention scenarios
         scenarios = {
-            "No Intervention": {
-                "churn_rate": 0.80,
-                "cost": 0,
-                "retained_clv": 0
-            },
-            "Standard Intervention": {
-                "churn_rate": 0.40,
-                "cost": 15000,
-                "retained_clv": 180000
-            },
-            "Aggressive Intervention": {
-                "churn_rate": 0.15,
-                "cost": 35000,
-                "retained_clv": 420000
-            }
+            "No Intervention": {"churn_rate": 0.80, "cost": 0, "retained_clv": 0},
+            "Standard Intervention": {"churn_rate": 0.40, "cost": 15000, "retained_clv": 180000},
+            "Aggressive Intervention": {"churn_rate": 0.15, "cost": 35000, "retained_clv": 420000},
         }
 
         st.markdown("**🛡️ Churn Intervention Scenarios:**")
@@ -1302,7 +1282,7 @@ def render_predictive_insights(attribution_report, clv_report):
                 col_a, col_b = st.columns(2)
                 with col_a:
                     st.metric("Intervention Cost", f"${data['cost']:,}")
-                    st.metric("Expected Churn Rate", f"{data['churn_rate']*100:.0f}%")
+                    st.metric("Expected Churn Rate", f"{data['churn_rate'] * 100:.0f}%")
                 with col_b:
                     st.metric("Retained CLV", f"${data['retained_clv']:,}")
                     st.metric("Net Benefit", f"${net_benefit:,}")
@@ -1314,7 +1294,7 @@ def render_predictive_insights(attribution_report, clv_report):
         "Conservative": {"revenue_growth": 0.15, "churn_rate": 0.08, "market_share": 0.02},
         "Base Case": {"revenue_growth": 0.25, "churn_rate": 0.05, "market_share": 0.03},
         "Optimistic": {"revenue_growth": 0.40, "churn_rate": 0.03, "market_share": 0.05},
-        "Aggressive": {"revenue_growth": 0.60, "churn_rate": 0.02, "market_share": 0.07}
+        "Aggressive": {"revenue_growth": 0.60, "churn_rate": 0.02, "market_share": 0.07},
     }
 
     scenario_results = []
@@ -1324,12 +1304,14 @@ def render_predictive_insights(attribution_report, clv_report):
         final_customers = current_customers * (1 + params["revenue_growth"] - params["churn_rate"])
         market_impact = params["market_share"] * 100
 
-        scenario_results.append({
-            "Scenario": scenario,
-            "12M Revenue": f"${final_revenue:,.0f}",
-            "Customer Count": f"{final_customers:,.0f}",
-            "Market Share": f"+{market_impact:.1f}%"
-        })
+        scenario_results.append(
+            {
+                "Scenario": scenario,
+                "12M Revenue": f"${final_revenue:,.0f}",
+                "Customer Count": f"{final_customers:,.0f}",
+                "Market Share": f"+{market_impact:.1f}%",
+            }
+        )
 
     df_scenarios = pd.DataFrame(scenario_results)
     st.dataframe(df_scenarios, use_container_width=True)
@@ -1342,20 +1324,20 @@ def render_predictive_insights(attribution_report, clv_report):
             "priority": "🔴 Immediate",
             "action": "Deploy churn intervention for 227 high-risk customers",
             "probability": 95,
-            "impact": "$420K CLV protection"
+            "impact": "$420K CLV protection",
         },
         {
             "priority": "🟡 30 Days",
             "action": "Scale top-performing acquisition channel by 40%",
             "probability": 80,
-            "impact": "$75K monthly revenue increase"
+            "impact": "$75K monthly revenue increase",
         },
         {
             "priority": "🟢 90 Days",
             "action": "Launch competitive AI features to capture market share",
             "probability": 65,
-            "impact": "2-3% market share growth"
-        }
+            "impact": "2-3% market share growth",
+        },
     ]
 
     for action in actions:
@@ -1366,10 +1348,10 @@ def render_predictive_insights(attribution_report, clv_report):
                 st.metric("Success Probability", f"{action['probability']}%")
 
             with col2:
-                st.metric("Expected Impact", action['impact'])
+                st.metric("Expected Impact", action["impact"])
 
             with col3:
-                if st.button("Create Action Plan", key=action['action'][:10]):
+                if st.button("Create Action Plan", key=action["action"][:10]):
                     st.info("Action plan creation would be implemented here")
 
 

@@ -12,28 +12,32 @@ This agent provides comprehensive property intelligence including:
 
 import asyncio
 import json
-from typing import Dict, Any, List, Optional, Tuple
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
-from enum import Enum
 import re
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
-from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.agents.cma_generator import CMAGenerator
-from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
+from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 
 logger = get_logger(__name__)
 
+
 class PropertyIntelligenceLevel(Enum):
     """Levels of property intelligence analysis."""
-    BASIC = "basic"               # Quick assessment
-    STANDARD = "standard"         # Comprehensive analysis
-    PREMIUM = "premium"           # Deep dive with predictions
-    INSTITUTIONAL = "institutional" # Investment-grade analysis
+
+    BASIC = "basic"  # Quick assessment
+    STANDARD = "standard"  # Comprehensive analysis
+    PREMIUM = "premium"  # Deep dive with predictions
+    INSTITUTIONAL = "institutional"  # Investment-grade analysis
+
 
 class PropertyType(Enum):
     """Property type classifications."""
+
     SINGLE_FAMILY = "single_family"
     MULTI_FAMILY = "multi_family"
     CONDO = "condo"
@@ -42,8 +46,10 @@ class PropertyType(Enum):
     LAND = "land"
     LUXURY = "luxury"
 
+
 class InvestmentStrategy(Enum):
     """Investment strategy types."""
+
     BUY_AND_HOLD = "buy_and_hold"
     FIX_AND_FLIP = "fix_and_flip"
     RENTAL_INCOME = "rental_income"
@@ -51,9 +57,11 @@ class InvestmentStrategy(Enum):
     WHOLESALE = "wholesale"
     LIVE_IN_FLIP = "live_in_flip"
 
+
 @dataclass
 class PropertyIntelligenceRequest:
     """Request for property intelligence analysis."""
+
     property_address: str
     property_type: PropertyType
     intelligence_level: PropertyIntelligenceLevel
@@ -63,9 +71,11 @@ class PropertyIntelligenceRequest:
     investor_profile: Optional[str] = None  # beginner, intermediate, advanced
     special_requirements: List[str] = field(default_factory=list)
 
+
 @dataclass
 class InvestmentScoring:
     """Investment potential scoring."""
+
     total_score: float  # 0-100
     cash_flow_score: float
     appreciation_score: float
@@ -80,20 +90,24 @@ class InvestmentScoring:
     break_even_analysis: Dict[str, Any]
     exit_strategy_viability: float
 
+
 @dataclass
 class MarketPositioning:
     """Property's position in the market."""
+
     competitive_rank: str  # "top_tier", "mid_market", "value_tier"
-    price_position: str    # "below_market", "at_market", "above_market"
+    price_position: str  # "below_market", "at_market", "above_market"
     days_on_market_prediction: int
     target_buyer_profile: str
     market_absorption_rate: float
     comparable_properties: List[Dict]
     pricing_recommendations: Dict[str, Any]
 
+
 @dataclass
 class PropertyConditionAssessment:
     """Assessment of property condition and needed improvements."""
+
     overall_condition: str  # "excellent", "good", "fair", "poor"
     condition_score: float  # 0-100
 
@@ -116,9 +130,11 @@ class PropertyConditionAssessment:
     value_add_estimate: float
     renovation_timeline: str
 
+
 @dataclass
 class NeighborhoodIntelligence:
     """Comprehensive neighborhood analysis."""
+
     neighborhood_score: float  # 0-100
     walkability_score: float
     school_rating: float
@@ -142,9 +158,11 @@ class NeighborhoodIntelligence:
     rental_yield_potential: float
     future_growth_projections: List[str]
 
+
 @dataclass
 class RiskAssessment:
     """Comprehensive risk analysis."""
+
     overall_risk_level: str  # "low", "moderate", "high", "very_high"
     risk_score: float  # 0-100 (lower is better)
 
@@ -166,9 +184,11 @@ class RiskAssessment:
     legal_considerations: List[str]
     disclosure_items: List[str]
 
+
 @dataclass
 class PropertyIntelligenceReport:
     """Comprehensive property intelligence report."""
+
     property_address: str
     analysis_date: datetime
     intelligence_level: PropertyIntelligenceLevel
@@ -192,6 +212,7 @@ class PropertyIntelligenceReport:
     confidence_level: float
     analysis_accuracy: str
 
+
 class PropertyDataCollector:
     """Collects comprehensive property data from multiple sources."""
 
@@ -202,10 +223,12 @@ class PropertyDataCollector:
             "redfin": {"status": "connected", "reliability": 0.90},
             "public_records": {"status": "connected", "reliability": 0.98},
             "rental_comps": {"status": "connected", "reliability": 0.80},
-            "demographic_data": {"status": "connected", "reliability": 0.92}
+            "demographic_data": {"status": "connected", "reliability": 0.92},
         }
 
-    async def collect_property_data(self, address: str, intelligence_level: PropertyIntelligenceLevel) -> Dict[str, Any]:
+    async def collect_property_data(
+        self, address: str, intelligence_level: PropertyIntelligenceLevel
+    ) -> Dict[str, Any]:
         """Collect comprehensive property data."""
         logger.info(f"Collecting property data for {address} at {intelligence_level.value} level")
 
@@ -215,16 +238,18 @@ class PropertyDataCollector:
             "neighborhood_data": await self._collect_neighborhood_data(address),
             "comparable_sales": await self._collect_comparable_sales(address),
             "rental_comps": await self._collect_rental_comps(address),
-            "public_records": await self._collect_public_records(address)
+            "public_records": await self._collect_public_records(address),
         }
 
         # Add premium data for higher intelligence levels
         if intelligence_level in [PropertyIntelligenceLevel.PREMIUM, PropertyIntelligenceLevel.INSTITUTIONAL]:
-            data.update({
-                "investment_metrics": await self._collect_investment_metrics(address),
-                "predictive_data": await self._collect_predictive_data(address),
-                "institutional_metrics": await self._collect_institutional_metrics(address)
-            })
+            data.update(
+                {
+                    "investment_metrics": await self._collect_investment_metrics(address),
+                    "predictive_data": await self._collect_predictive_data(address),
+                    "institutional_metrics": await self._collect_institutional_metrics(address),
+                }
+            )
 
         return data
 
@@ -242,7 +267,7 @@ class PropertyDataCollector:
             "last_sale_price": 450000,
             "current_list_price": None,
             "property_tax": 8400,
-            "hoa_fees": 0
+            "hoa_fees": 0,
         }
 
     async def _collect_market_data(self, address: str) -> Dict[str, Any]:
@@ -255,7 +280,7 @@ class PropertyDataCollector:
             "days_on_market_avg": 25,
             "inventory_levels": "low",
             "market_trend": "seller_favorable",
-            "seasonal_patterns": {"best_listing_month": "May", "best_buying_month": "November"}
+            "seasonal_patterns": {"best_listing_month": "May", "best_buying_month": "November"},
         }
 
     async def _collect_neighborhood_data(self, address: str) -> Dict[str, Any]:
@@ -268,7 +293,7 @@ class PropertyDataCollector:
             "school_ratings": {"elementary": 8, "middle": 7, "high": 9},
             "crime_index": 15,  # Lower is better
             "amenities": ["parks", "shopping", "restaurants", "gym"],
-            "employment_centers": ["central_rc", "tech_park", "medical_center"]
+            "employment_centers": ["central_rc", "tech_park", "medical_center"],
         }
 
     async def _collect_comparable_sales(self, address: str) -> List[Dict]:
@@ -282,7 +307,7 @@ class PropertyDataCollector:
                 "price_per_sqft": 206,
                 "bedrooms": 4,
                 "bathrooms": 3,
-                "similarity_score": 0.92
+                "similarity_score": 0.92,
             },
             {
                 "address": "456 Nearby Ave",
@@ -292,8 +317,8 @@ class PropertyDataCollector:
                 "price_per_sqft": 202,
                 "bedrooms": 4,
                 "bathrooms": 3.5,
-                "similarity_score": 0.88
-            }
+                "similarity_score": 0.88,
+            },
         ]
 
     async def _collect_rental_comps(self, address: str) -> List[Dict]:
@@ -305,7 +330,7 @@ class PropertyDataCollector:
                 "square_footage": 2300,
                 "bedrooms": 4,
                 "bathrooms": 3,
-                "rent_per_sqft": 1.22
+                "rent_per_sqft": 1.22,
             },
             {
                 "address": "321 Lease Ln",
@@ -313,26 +338,24 @@ class PropertyDataCollector:
                 "square_footage": 2500,
                 "bedrooms": 4,
                 "bathrooms": 3.5,
-                "rent_per_sqft": 1.18
-            }
+                "rent_per_sqft": 1.18,
+            },
         ]
 
     async def _collect_public_records(self, address: str) -> Dict[str, Any]:
         """Collect public records data."""
         return {
-            "ownership_history": [
-                {"owner": "Current Owner", "purchase_date": "2020-03-15", "purchase_price": 450000}
-            ],
+            "ownership_history": [{"owner": "Current Owner", "purchase_date": "2020-03-15", "purchase_price": 450000}],
             "permit_history": [
                 {"permit_type": "bathroom_remodel", "date": "2022-06-01", "cost": 15000},
-                {"permit_type": "roof_replacement", "date": "2021-09-15", "cost": 12000}
+                {"permit_type": "roof_replacement", "date": "2021-09-15", "cost": 12000},
             ],
             "tax_assessment": {
                 "land_value": 125000,
                 "improvement_value": 325000,
                 "total_assessment": 450000,
-                "assessment_date": "2025-01-01"
-            }
+                "assessment_date": "2025-01-01",
+            },
         }
 
     async def _collect_investment_metrics(self, address: str) -> Dict[str, Any]:
@@ -344,7 +367,7 @@ class PropertyDataCollector:
             "appreciation_forecast": 7.5,
             "market_cycle_position": "growth_phase",
             "investor_activity": "high",
-            "flip_potential": 8.5
+            "flip_potential": 8.5,
         }
 
     async def _collect_predictive_data(self, address: str) -> Dict[str, Any]:
@@ -355,7 +378,7 @@ class PropertyDataCollector:
             "price_forecast_5y": 38.1,
             "rental_growth_forecast": 4.5,
             "market_risk_indicators": ["interest_rate_sensitivity", "economic_dependency"],
-            "future_development_impact": "positive"
+            "future_development_impact": "positive",
         }
 
     async def _collect_institutional_metrics(self, address: str) -> Dict[str, Any]:
@@ -366,8 +389,9 @@ class PropertyDataCollector:
             "sensitivity_analysis": {"best_case": 15.2, "base_case": 12.8, "worst_case": 8.9},
             "portfolio_fit_score": 0.85,
             "liquidity_timeline": 180,  # days to sell
-            "institutional_demand": "high"
+            "institutional_demand": "high",
         }
+
 
 class InvestmentAnalysisEngine:
     """Analyzes investment potential and scoring."""
@@ -375,10 +399,9 @@ class InvestmentAnalysisEngine:
     def __init__(self):
         self.claude_assistant = ClaudeAssistant()
 
-    async def analyze_investment_potential(self,
-                                         property_data: Dict[str, Any],
-                                         strategy: InvestmentStrategy,
-                                         investor_profile: str) -> InvestmentScoring:
+    async def analyze_investment_potential(
+        self, property_data: Dict[str, Any], strategy: InvestmentStrategy, investor_profile: str
+    ) -> InvestmentScoring:
         """Analyze investment potential and generate scoring."""
 
         # Base calculations
@@ -388,7 +411,9 @@ class InvestmentAnalysisEngine:
 
         # Strategy-specific analysis
         if strategy == InvestmentStrategy.RENTAL_INCOME:
-            scoring = await self._analyze_rental_strategy(property_data, purchase_price, rental_income, operating_expenses)
+            scoring = await self._analyze_rental_strategy(
+                property_data, purchase_price, rental_income, operating_expenses
+            )
         elif strategy == InvestmentStrategy.FIX_AND_FLIP:
             scoring = await self._analyze_flip_strategy(property_data, purchase_price)
         elif strategy == InvestmentStrategy.BUY_AND_HOLD:
@@ -398,8 +423,9 @@ class InvestmentAnalysisEngine:
 
         return scoring
 
-    async def _analyze_rental_strategy(self, property_data: Dict, purchase_price: float,
-                                     rental_income: float, operating_expenses: float) -> InvestmentScoring:
+    async def _analyze_rental_strategy(
+        self, property_data: Dict, purchase_price: float, rental_income: float, operating_expenses: float
+    ) -> InvestmentScoring:
         """Analyze rental income investment strategy."""
 
         annual_rental = rental_income * 12
@@ -407,7 +433,9 @@ class InvestmentAnalysisEngine:
 
         # Calculate key metrics
         cap_rate = (net_operating_income / purchase_price) * 100
-        cash_flow_monthly = rental_income - (operating_expenses / 12) - (purchase_price * 0.005)  # Assume mortgage payment
+        cash_flow_monthly = (
+            rental_income - (operating_expenses / 12) - (purchase_price * 0.005)
+        )  # Assume mortgage payment
         cash_on_cash = (cash_flow_monthly * 12) / (purchase_price * 0.25) * 100  # 25% down
 
         # Scoring components
@@ -417,8 +445,13 @@ class InvestmentAnalysisEngine:
         liquidity_score = 100 - property_data["market_data"]["days_on_market_avg"]
         market_timing_score = 85 if property_data["market_data"]["market_trend"] == "buyer_favorable" else 75
 
-        total_score = (cash_flow_score * 0.3 + appreciation_score * 0.25 +
-                      risk_score * 0.2 + liquidity_score * 0.15 + market_timing_score * 0.1)
+        total_score = (
+            cash_flow_score * 0.3
+            + appreciation_score * 0.25
+            + risk_score * 0.2
+            + liquidity_score * 0.15
+            + market_timing_score * 0.1
+        )
 
         return InvestmentScoring(
             total_score=min(100, total_score),
@@ -433,9 +466,9 @@ class InvestmentAnalysisEngine:
             break_even_analysis={
                 "months_to_break_even": 24 if cash_flow_monthly > 0 else 60,
                 "total_investment": purchase_price * 0.25,
-                "monthly_cash_flow": cash_flow_monthly
+                "monthly_cash_flow": cash_flow_monthly,
             },
-            exit_strategy_viability=85.0
+            exit_strategy_viability=85.0,
         )
 
     async def _analyze_flip_strategy(self, property_data: Dict, purchase_price: float) -> InvestmentScoring:
@@ -456,8 +489,13 @@ class InvestmentAnalysisEngine:
         liquidity_score = property_data["market_data"]["days_on_market_avg"]
         market_timing_score = 90 if property_data["market_data"]["market_trend"] == "seller_favorable" else 70
 
-        total_score = (cash_flow_score * 0.1 + appreciation_score * 0.4 +
-                      risk_score * 0.25 + liquidity_score * 0.15 + market_timing_score * 0.1)
+        total_score = (
+            cash_flow_score * 0.1
+            + appreciation_score * 0.4
+            + risk_score * 0.25
+            + liquidity_score * 0.15
+            + market_timing_score * 0.1
+        )
 
         return InvestmentScoring(
             total_score=min(100, total_score),
@@ -473,29 +511,37 @@ class InvestmentAnalysisEngine:
                 "purchase_price": purchase_price,
                 "renovation_estimate": renovation_estimate,
                 "arv": arv,
-                "projected_profit": projected_profit
+                "projected_profit": projected_profit,
             },
-            exit_strategy_viability=liquidity_score
+            exit_strategy_viability=liquidity_score,
         )
 
-    async def _analyze_buy_hold_strategy(self, property_data: Dict, purchase_price: float, rental_income: float) -> InvestmentScoring:
+    async def _analyze_buy_hold_strategy(
+        self, property_data: Dict, purchase_price: float, rental_income: float
+    ) -> InvestmentScoring:
         """Analyze buy and hold strategy."""
         # Combination of rental income and long-term appreciation
         rental_scoring = await self._analyze_rental_strategy(property_data, purchase_price, rental_income, 0)
 
         # Adjust for long-term holding
         rental_scoring.appreciation_score *= 1.2  # Higher weight on appreciation
-        rental_scoring.liquidity_score *= 0.8     # Lower weight on liquidity
+        rental_scoring.liquidity_score *= 0.8  # Lower weight on liquidity
 
         # Recalculate total score
-        total_score = (rental_scoring.cash_flow_score * 0.25 + rental_scoring.appreciation_score * 0.35 +
-                      rental_scoring.risk_score * 0.2 + rental_scoring.liquidity_score * 0.1 +
-                      rental_scoring.market_timing_score * 0.1)
+        total_score = (
+            rental_scoring.cash_flow_score * 0.25
+            + rental_scoring.appreciation_score * 0.35
+            + rental_scoring.risk_score * 0.2
+            + rental_scoring.liquidity_score * 0.1
+            + rental_scoring.market_timing_score * 0.1
+        )
 
         rental_scoring.total_score = min(100, total_score)
         return rental_scoring
 
-    async def _analyze_general_investment(self, property_data: Dict, purchase_price: float, rental_income: float) -> InvestmentScoring:
+    async def _analyze_general_investment(
+        self, property_data: Dict, purchase_price: float, rental_income: float
+    ) -> InvestmentScoring:
         """General investment analysis."""
         return await self._analyze_rental_strategy(property_data, purchase_price, rental_income, 0)
 
@@ -519,7 +565,7 @@ class InvestmentAnalysisEngine:
         property_tax = property_data["basic_info"].get("property_tax", 0)
         insurance = property_tax * 0.5  # Rough estimate
         maintenance = property_tax * 0.8  # Maintenance and repairs
-        management = property_tax * 0.3   # Property management
+        management = property_tax * 0.3  # Property management
 
         return property_tax + insurance + maintenance + management
 
@@ -534,6 +580,7 @@ class InvestmentAnalysisEngine:
         current_value = self._estimate_market_value(property_data)
         # Assume 20% increase after renovations
         return current_value * 1.2
+
 
 class PropertyIntelligenceAgent:
     """
@@ -558,15 +605,14 @@ class PropertyIntelligenceAgent:
 
         # Collect comprehensive property data
         property_data = await self.data_collector.collect_property_data(
-            request.property_address,
-            request.intelligence_level
+            request.property_address, request.intelligence_level
         )
 
         # Perform investment analysis
         investment_scoring = await self.investment_analyzer.analyze_investment_potential(
             property_data,
             request.investment_strategy or InvestmentStrategy.BUY_AND_HOLD,
-            request.investor_profile or "intermediate"
+            request.investor_profile or "intermediate",
         )
 
         # Market positioning analysis
@@ -603,7 +649,7 @@ class PropertyIntelligenceAgent:
             action_timeline=recommendations["timeline"],
             executive_summary=await self._generate_executive_summary(investment_scoring, recommendations),
             confidence_level=recommendations["confidence"],
-            analysis_accuracy="high"
+            analysis_accuracy="high",
         )
 
         # Publish analysis event
@@ -612,7 +658,7 @@ class PropertyIntelligenceAgent:
             intelligence_level=request.intelligence_level.value,
             investment_score=investment_scoring.total_score,
             recommendation=recommendations["recommendation"],
-            confidence=recommendations["confidence"]
+            confidence=recommendations["confidence"],
         )
 
         logger.info(f"Property intelligence analysis completed for {request.property_address}")
@@ -622,8 +668,9 @@ class PropertyIntelligenceAgent:
     async def _analyze_market_positioning(self, property_data: Dict) -> MarketPositioning:
         """Analyze property's market positioning."""
 
-        current_value = property_data["basic_info"].get("current_list_price") or \
-                       (property_data["basic_info"]["square_footage"] * property_data["market_data"]["price_per_sqft"])
+        current_value = property_data["basic_info"].get("current_list_price") or (
+            property_data["basic_info"]["square_footage"] * property_data["market_data"]["price_per_sqft"]
+        )
 
         median_value = property_data["market_data"]["median_home_value"]
 
@@ -653,11 +700,13 @@ class PropertyIntelligenceAgent:
             pricing_recommendations={
                 "optimal_list_price": current_value,
                 "price_range": (current_value * 0.95, current_value * 1.05),
-                "strategy": "competitive_pricing"
-            }
+                "strategy": "competitive_pricing",
+            },
         )
 
-    async def _assess_property_condition(self, property_data: Dict, request: PropertyIntelligenceRequest) -> PropertyConditionAssessment:
+    async def _assess_property_condition(
+        self, property_data: Dict, request: PropertyIntelligenceRequest
+    ) -> PropertyConditionAssessment:
         """Assess property condition and improvement opportunities."""
 
         year_built = property_data["basic_info"]["year_built"]
@@ -676,8 +725,9 @@ class PropertyIntelligenceAgent:
 
         # Adjust based on permits/improvements
         permit_history = property_data["public_records"]["permit_history"]
-        recent_improvements = len([p for p in permit_history if
-                                 datetime.strptime(p["date"], "%Y-%m-%d").year >= current_year - 5])
+        recent_improvements = len(
+            [p for p in permit_history if datetime.strptime(p["date"], "%Y-%m-%d").year >= current_year - 5]
+        )
 
         condition_score = min(100, base_score + (recent_improvements * 5))
 
@@ -703,22 +753,20 @@ class PropertyIntelligenceAgent:
             roofing_score=90,  # Recent roof replacement in permits
             immediate_repairs=[
                 {"item": "HVAC tune-up", "cost": 300, "priority": "medium"},
-                {"item": "Plumbing inspection", "cost": 150, "priority": "low"}
+                {"item": "Plumbing inspection", "cost": 150, "priority": "low"},
             ],
             value_add_opportunities=[
                 {"improvement": "Kitchen update", "cost": 25000, "value_add": 35000},
-                {"improvement": "Bathroom remodel", "cost": 15000, "value_add": 20000}
+                {"improvement": "Bathroom remodel", "cost": 15000, "value_add": 20000},
             ],
             cosmetic_improvements=[
                 {"improvement": "Interior paint", "cost": 3000, "value_add": 5000},
-                {"improvement": "Landscaping", "cost": 2000, "value_add": 3000}
+                {"improvement": "Landscaping", "cost": 2000, "value_add": 3000},
             ],
-            major_renovations=[
-                {"renovation": "Addition", "cost": 80000, "value_add": 100000}
-            ],
+            major_renovations=[{"renovation": "Addition", "cost": 80000, "value_add": 100000}],
             total_repair_estimate=450,
             value_add_estimate=70000,
-            renovation_timeline="3-6 months for value-add improvements"
+            renovation_timeline="3-6 months for value-add improvements",
         )
 
     async def _analyze_neighborhood_intelligence(self, property_data: Dict) -> NeighborhoodIntelligence:
@@ -729,18 +777,21 @@ class PropertyIntelligenceAgent:
 
         # Calculate neighborhood score
         neighborhood_score = (
-            min(100, neighborhood_data["walkability_score"]) * 0.2 +
-            (neighborhood_data["school_ratings"]["elementary"] * 10) * 0.25 +
-            (100 - neighborhood_data["crime_index"] * 5) * 0.25 +
-            min(100, neighborhood_data["median_income"] / 1000) * 0.3
+            min(100, neighborhood_data["walkability_score"]) * 0.2
+            + (neighborhood_data["school_ratings"]["elementary"] * 10) * 0.25
+            + (100 - neighborhood_data["crime_index"] * 5) * 0.25
+            + min(100, neighborhood_data["median_income"] / 1000) * 0.3
         )
 
         return NeighborhoodIntelligence(
             neighborhood_score=neighborhood_score,
             walkability_score=neighborhood_data["walkability_score"],
-            school_rating=(neighborhood_data["school_ratings"]["elementary"] +
-                          neighborhood_data["school_ratings"]["middle"] +
-                          neighborhood_data["school_ratings"]["high"]) / 3,
+            school_rating=(
+                neighborhood_data["school_ratings"]["elementary"]
+                + neighborhood_data["school_ratings"]["middle"]
+                + neighborhood_data["school_ratings"]["high"]
+            )
+            / 3,
             crime_index=neighborhood_data["crime_index"],
             amenities_score=len(neighborhood_data["amenities"]) * 10,
             median_income=neighborhood_data["median_income"],
@@ -749,16 +800,16 @@ class PropertyIntelligenceAgent:
             employment_trends=["tech_growth", "healthcare_expansion"],
             price_appreciation_trend=market_data["market_appreciation_5y"],
             rental_demand="high",
-            development_projects=[
-                {"project": "New shopping center", "completion": "2027", "impact": "positive"}
-            ],
+            development_projects=[{"project": "New shopping center", "completion": "2027", "impact": "positive"}],
             gentrification_indicators=["rising_property_values", "new_businesses"],
             investor_activity="moderate",
             rental_yield_potential=6.2,
-            future_growth_projections=["continued_appreciation", "increasing_demand"]
+            future_growth_projections=["continued_appreciation", "increasing_demand"],
         )
 
-    async def _conduct_risk_assessment(self, property_data: Dict, investment_scoring: InvestmentScoring) -> RiskAssessment:
+    async def _conduct_risk_assessment(
+        self, property_data: Dict, investment_scoring: InvestmentScoring
+    ) -> RiskAssessment:
         """Conduct comprehensive risk assessment."""
 
         # Calculate risk factors
@@ -770,12 +821,12 @@ class PropertyIntelligenceAgent:
         regulatory_risk = 15  # Low regulatory risk
 
         overall_risk_score = (
-            market_risk * 0.25 +
-            liquidity_risk * 0.20 +
-            condition_risk * 0.20 +
-            location_risk * 0.15 +
-            financing_risk * 0.10 +
-            regulatory_risk * 0.10
+            market_risk * 0.25
+            + liquidity_risk * 0.20
+            + condition_risk * 0.20
+            + location_risk * 0.15
+            + financing_risk * 0.10
+            + regulatory_risk * 0.10
         )
 
         if overall_risk_score < 25:
@@ -798,23 +849,25 @@ class PropertyIntelligenceAgent:
             regulatory_risk=regulatory_risk,
             identified_risks=[
                 {"risk": "Market volatility", "probability": "medium", "impact": "high"},
-                {"risk": "Interest rate changes", "probability": "high", "impact": "medium"}
+                {"risk": "Interest rate changes", "probability": "high", "impact": "medium"},
             ],
             mitigation_strategies=[
                 {"strategy": "Diversified portfolio", "effectiveness": "high"},
-                {"strategy": "Fixed-rate financing", "effectiveness": "medium"}
+                {"strategy": "Fixed-rate financing", "effectiveness": "medium"},
             ],
             risk_timeline={"short_term": "low", "medium_term": "moderate", "long_term": "low"},
             insurance_considerations=["property_insurance", "liability_coverage"],
             legal_considerations=["title_insurance", "proper_disclosures"],
-            disclosure_items=["roof_replacement_2021", "bathroom_remodel_2022"]
+            disclosure_items=["roof_replacement_2021", "bathroom_remodel_2022"],
         )
 
-    async def _generate_strategic_recommendations(self,
-                                                property_data: Dict,
-                                                investment_scoring: InvestmentScoring,
-                                                market_positioning: MarketPositioning,
-                                                request: PropertyIntelligenceRequest) -> Dict[str, Any]:
+    async def _generate_strategic_recommendations(
+        self,
+        property_data: Dict,
+        investment_scoring: InvestmentScoring,
+        market_positioning: MarketPositioning,
+        request: PropertyIntelligenceRequest,
+    ) -> Dict[str, Any]:
         """Generate strategic investment recommendations."""
 
         # Determine overall recommendation
@@ -860,7 +913,7 @@ class PropertyIntelligenceAgent:
             "immediate": "Conduct property inspection and financing pre-approval",
             "30_days": "Complete due diligence and finalize purchase",
             "90_days": "Implement value-add improvements if applicable",
-            "1_year": "Review performance and market conditions"
+            "1_year": "Review performance and market conditions",
         }
 
         # Confidence calculation
@@ -872,7 +925,7 @@ class PropertyIntelligenceAgent:
             "opportunities": opportunities,
             "concerns": concerns,
             "timeline": timeline,
-            "confidence": confidence
+            "confidence": confidence,
         }
 
     async def _generate_executive_summary(self, investment_scoring: InvestmentScoring, recommendations: Dict) -> str:
@@ -883,33 +936,36 @@ class PropertyIntelligenceAgent:
 
         Investment Score: {investment_scoring.total_score}/100
         Projected ROI: {investment_scoring.projected_roi:.1f}%
-        Recommendation: {recommendations['recommendation']}
+        Recommendation: {recommendations["recommendation"]}
 
-        Key Opportunities: {', '.join(recommendations['opportunities'])}
-        Main Concerns: {', '.join(recommendations['concerns'])}
+        Key Opportunities: {", ".join(recommendations["opportunities"])}
+        Main Concerns: {", ".join(recommendations["concerns"])}
 
         Create a 2-3 sentence executive summary highlighting the most important points for an investor.
         """
 
         response = await self.claude_assistant.analyze_with_context(summary_prompt)
-        return response.get("content", "Comprehensive property analysis completed with detailed investment metrics and strategic recommendations.")
+        return response.get(
+            "content",
+            "Comprehensive property analysis completed with detailed investment metrics and strategic recommendations.",
+        )
+
 
 # --- Factory Functions ---
 
+
 def get_property_intelligence_agent() -> PropertyIntelligenceAgent:
     """Get singleton Property Intelligence Agent instance."""
-    if not hasattr(get_property_intelligence_agent, '_instance'):
+    if not hasattr(get_property_intelligence_agent, "_instance"):
         get_property_intelligence_agent._instance = PropertyIntelligenceAgent()
     return get_property_intelligence_agent._instance
 
+
 # --- Event Publisher Extensions ---
+
 
 async def publish_property_intelligence_analysis(event_publisher, **kwargs):
     """Publish property intelligence analysis event."""
     await event_publisher.publish_event(
-        event_type="property_intelligence_analysis",
-        data={
-            **kwargs,
-            "timestamp": datetime.now().isoformat()
-        }
+        event_type="property_intelligence_analysis", data={**kwargs, "timestamp": datetime.now().isoformat()}
     )

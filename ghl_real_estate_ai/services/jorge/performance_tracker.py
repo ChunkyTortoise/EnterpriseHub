@@ -2,22 +2,22 @@
 Jorge Performance Tracker Service
 
 Tracks latency, throughput, cache hits, and SLA compliance for all Jorge bot operations.
-Uses in-memory storage with rolling windows (1h, 24h, 7d) and provides 
+Uses in-memory storage with rolling windows (1h, 24h, 7d) and provides
 percentile-based latency stats, throughput metrics, and SLA violation detection.
 
 Usage:
     tracker = PerformanceTracker()
-    
+
     # Manual tracking
     await tracker.track_operation("lead_bot", "qualify", 1500, True)
-    
+
     # Context manager for async operations
     async with tracker.track_async_operation("lead_bot", "process"):
         await process_lead()
-    
+
     # Get stats
     stats = await tracker.get_bot_stats("lead_bot")
-    
+
     # Check SLA compliance
     compliance = await tracker.check_sla_compliance()
 
@@ -79,6 +79,7 @@ VALID_BOT_NAMES = frozenset(["lead_bot", "buyer_bot", "seller_bot", "handoff"])
 @dataclass
 class _OperationEntry:
     """A single recorded operation timing."""
+
     timestamp: float
     duration_ms: float
     success: bool = True
@@ -89,6 +90,7 @@ class _OperationEntry:
 @dataclass
 class _SLATarget:
     """SLA target thresholds for an operation."""
+
     operation: str
     target_p50_ms: float
     target_p95_ms: float
@@ -100,7 +102,7 @@ class PerformanceTracker:
 
     Thread-safe, in-memory performance monitoring with rolling-window
     storage and percentile-based latency analysis.
-    
+
     Supports:
     - Response time tracking (P50, P95, P99)
     - Request counts (success, error, total)
@@ -123,24 +125,23 @@ class PerformanceTracker:
     def __init__(self) -> None:
         if self._initialized:
             return
-        
+
         # Rolling windows: bot -> operation -> window -> deque of entries
         self._operations: Dict[str, Dict[str, Dict[str, deque]]] = {}
         self._sla_targets: Dict[str, Dict[str, _SLATarget]] = {}
         self._data_lock = threading.Lock()
         self._initialized = True
-        
+
         # Initialize data structures for each bot and window
         for bot_name in VALID_BOT_NAMES:
             self._operations[bot_name] = {}
             for window_name in WINDOWS:
                 self._operations[bot_name][window_name] = deque(maxlen=10000)
-        
+
         # Register default SLAs from audit spec
         self._register_default_slas()
-        
-        logger.info("PerformanceTracker initialized with %d bots, %d windows", 
-                   len(VALID_BOT_NAMES), len(WINDOWS))
+
+        logger.info("PerformanceTracker initialized with %d bots, %d windows", len(VALID_BOT_NAMES), len(WINDOWS))
 
     def _register_default_slas(self) -> None:
         """Register SLA targets from SLA_CONFIG."""
@@ -265,7 +266,7 @@ class PerformanceTracker:
             raise ValueError(f"Invalid window '{window}'. Must be one of {list(WINDOWS.keys())}")
 
         durations = self._get_durations_in_window(bot_name, window)
-        
+
         if not durations:
             return 0.0
 
@@ -303,7 +304,7 @@ class PerformanceTracker:
             raise ValueError(f"Invalid window '{window}'. Must be one of {list(WINDOWS.keys())}")
 
         entries = self._get_entries_in_window(bot_name, window)
-        
+
         if not entries:
             return {
                 "p50": 0.0,
@@ -322,7 +323,7 @@ class PerformanceTracker:
 
         durations = [e.duration_ms for e in entries]
         sorted_durations = sorted(durations)
-        
+
         success_count = sum(1 for e in entries if e.success)
         error_count = len(entries) - success_count
         cache_hit_count = sum(1 for e in entries if e.cache_hit)
@@ -352,10 +353,10 @@ class PerformanceTracker:
             Dict mapping bot names to their statistics dicts.
         """
         stats: Dict[str, Any] = {}
-        
+
         for bot_name in VALID_BOT_NAMES:
             stats[bot_name] = await self.get_bot_stats(bot_name, window)
-        
+
         return stats
 
     async def check_sla_compliance(self, window: str = "1h") -> List[Dict[str, Any]]:
@@ -375,42 +376,38 @@ class PerformanceTracker:
                 - violations: List of violation messages
         """
         compliance_list: List[Dict[str, Any]] = []
-        
+
         for bot_name in VALID_BOT_NAMES:
             if bot_name not in self._sla_targets:
                 continue
-            
+
             for operation, target in self._sla_targets[bot_name].items():
                 stats = await self.get_bot_stats(bot_name, window)
                 violations: List[str] = []
-                
+
                 if stats["count"] > 0:
                     if stats["p50"] > target.target_p50_ms:
-                        violations.append(
-                            f"p50 {stats['p50']:.1f}ms exceeds target {target.target_p50_ms:.0f}ms"
-                        )
+                        violations.append(f"p50 {stats['p50']:.1f}ms exceeds target {target.target_p50_ms:.0f}ms")
                     if stats["p95"] > target.target_p95_ms:
-                        violations.append(
-                            f"p95 {stats['p95']:.1f}ms exceeds target {target.target_p95_ms:.0f}ms"
-                        )
+                        violations.append(f"p95 {stats['p95']:.1f}ms exceeds target {target.target_p95_ms:.0f}ms")
                     if target.target_p99_ms > 0 and stats["p99"] > target.target_p99_ms:
-                        violations.append(
-                            f"p99 {stats['p99']:.1f}ms exceeds target {target.target_p99_ms:.0f}ms"
-                        )
-                
-                compliance_list.append({
-                    "bot_name": bot_name,
-                    "operation": operation,
-                    "compliant": len(violations) == 0,
-                    "p50_target": target.target_p50_ms,
-                    "p95_target": target.target_p95_ms,
-                    "p99_target": target.target_p99_ms,
-                    "p50_actual": stats["p50"],
-                    "p95_actual": stats["p95"],
-                    "p99_actual": stats["p99"],
-                    "violations": violations,
-                })
-        
+                        violations.append(f"p99 {stats['p99']:.1f}ms exceeds target {target.target_p99_ms:.0f}ms")
+
+                compliance_list.append(
+                    {
+                        "bot_name": bot_name,
+                        "operation": operation,
+                        "compliant": len(violations) == 0,
+                        "p50_target": target.target_p50_ms,
+                        "p95_target": target.target_p95_ms,
+                        "p99_target": target.target_p99_ms,
+                        "p50_actual": stats["p50"],
+                        "p95_actual": stats["p95"],
+                        "p99_actual": stats["p99"],
+                        "violations": violations,
+                    }
+                )
+
         return compliance_list
 
     # ── Internal Helpers ──────────────────────────────────────────────
@@ -479,9 +476,7 @@ class PerformanceTracker:
         upper_idx = min(lower_idx + 1, n - 1)
         fraction = rank - lower_idx
 
-        value = sorted_data[lower_idx] + fraction * (
-            sorted_data[upper_idx] - sorted_data[lower_idx]
-        )
+        value = sorted_data[lower_idx] + fraction * (sorted_data[upper_idx] - sorted_data[lower_idx])
         return round(value, 2)
 
     # ── Testing Support ───────────────────────────────────────────────
@@ -499,6 +494,7 @@ class PerformanceTracker:
 
 # ── Decorator for Performance Tracking ─────────────────────────────────
 
+
 def track_performance(bot_name: str, operation: str):
     """Decorator to track performance of async functions.
 
@@ -515,6 +511,7 @@ def track_performance(bot_name: str, operation: str):
     Returns:
         Decorator function.
     """
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -530,11 +527,14 @@ def track_performance(bot_name: str, operation: str):
             finally:
                 elapsed_ms = (time.perf_counter() - start) * 1000.0
                 await tracker.track_operation(bot_name, operation, elapsed_ms, success)
+
         return wrapper
+
     return decorator
 
 
 # ── Convenience Functions ─────────────────────────────────────────────
+
 
 async def get_performance_summary(window: str = "1h") -> Dict[str, Any]:
     """Get a performance summary for all bots.
@@ -548,16 +548,16 @@ async def get_performance_summary(window: str = "1h") -> Dict[str, Any]:
     tracker = PerformanceTracker()
     all_stats = await tracker.get_all_stats(window)
     compliance = await tracker.check_sla_compliance(window)
-    
+
     # Calculate overall metrics
     total_operations = sum(s["count"] for s in all_stats.values())
     total_success = sum(s["success_count"] for s in all_stats.values())
     total_errors = sum(s["error_count"] for s in all_stats.values())
     total_cache_hits = sum(s["cache_hit_count"] for s in all_stats.values())
-    
+
     # Count SLA violations
     sla_violations = [c for c in compliance if not c["compliant"]]
-    
+
     return {
         "window": window,
         "timestamp": time.time(),

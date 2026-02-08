@@ -26,9 +26,7 @@ class BulkOperationsManager:
             location_id: GHL Location ID for multi-tenant support
         """
         self.location_id = location_id
-        self.operations_dir = (
-            Path(__file__).parent.parent / "data" / "bulk_operations" / location_id
-        )
+        self.operations_dir = Path(__file__).parent.parent / "data" / "bulk_operations" / location_id
         self.operations_dir.mkdir(parents=True, exist_ok=True)
         self.operations_file = self.operations_dir / "operations.json"
         self.operations_history = self._load_operations()
@@ -148,15 +146,11 @@ class BulkOperationsManager:
 
             # Update operation with results
             operation["results"] = results
-            operation["status"] = (
-                "completed" if results.get("successful", 0) > 0 else "failed"
-            )
+            operation["status"] = "completed" if results.get("successful", 0) > 0 else "failed"
 
         except Exception as e:
             operation["status"] = "failed"
-            operation["results"]["errors"].append(
-                {"error": str(e), "timestamp": datetime.now().isoformat()}
-            )
+            operation["results"]["errors"].append({"error": str(e), "timestamp": datetime.now().isoformat()})
 
         # Complete operation
         operation["completed_at"] = datetime.now().isoformat()
@@ -267,9 +261,7 @@ class BulkOperationsManager:
 
         return results
 
-    def _personalize_message(
-        self, template: str, contact_id: str, contact_data: Dict[str, Any]
-    ) -> str:
+    def _personalize_message(self, template: str, contact_id: str, contact_data: Dict[str, Any]) -> str:
         """
         Personalize message template with contact data.
 
@@ -478,9 +470,7 @@ class BulkOperationsManager:
             "duration_seconds": operation.get("duration_seconds", 0),
         }
 
-    def list_operations(
-        self, status_filter: Optional[str] = None, limit: int = 10
-    ) -> List[Dict[str, Any]]:
+    def list_operations(self, status_filter: Optional[str] = None, limit: int = 10) -> List[Dict[str, Any]]:
         """
         List recent bulk operations.
 
@@ -610,9 +600,7 @@ class BulkOperationsManager:
             if op.get("duration_seconds"):
                 durations.append(op["duration_seconds"])
 
-        success_rate = (
-            (total_successful / total_processed * 100) if total_processed > 0 else 0.0
-        )
+        success_rate = (total_successful / total_processed * 100) if total_processed > 0 else 0.0
         avg_duration = sum(durations) / len(durations) if durations else 0.0
 
         return {

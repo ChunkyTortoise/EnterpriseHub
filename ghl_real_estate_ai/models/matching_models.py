@@ -4,13 +4,14 @@ Defines all data structures for the 15-factor contextual matching algorithm.
 """
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
-from datetime import datetime
 
 
 class LeadSegment(Enum):
     """Lead segments for behavioral weighting"""
+
     FAMILY_WITH_KIDS = "family_with_kids"
     YOUNG_PROFESSIONAL = "young_professional"
     INVESTOR = "investor"
@@ -22,15 +23,17 @@ class LeadSegment(Enum):
 
 class MatchFactorType(Enum):
     """Types of matching factors"""
+
     TRADITIONAL = "traditional"  # budget, location, bedrooms, type
-    LIFESTYLE = "lifestyle"      # schools, commute, walkability, safety
-    CONTEXTUAL = "contextual"    # HOA, lot size, age, parking
+    LIFESTYLE = "lifestyle"  # schools, commute, walkability, safety
+    CONTEXTUAL = "contextual"  # HOA, lot size, age, parking
     MARKET_TIMING = "market_timing"  # days on market, price trends
 
 
 @dataclass
 class FactorScore:
     """Individual factor score with reasoning"""
+
     factor_name: str
     raw_score: float  # 0.0 to 1.0
     weighted_score: float  # raw_score * weight
@@ -43,6 +46,7 @@ class FactorScore:
 @dataclass
 class TraditionalScores:
     """Traditional real estate matching factors"""
+
     budget: FactorScore
     location: FactorScore
     bedrooms: FactorScore
@@ -54,6 +58,7 @@ class TraditionalScores:
 @dataclass
 class SchoolScore:
     """School quality scoring"""
+
     elementary_rating: Optional[float]
     middle_rating: Optional[float]
     high_rating: Optional[float]
@@ -67,6 +72,7 @@ class SchoolScore:
 @dataclass
 class CommuteScore:
     """Commute analysis"""
+
     to_downtown_minutes: Optional[int]
     to_workplace_minutes: Optional[int]
     public_transit_access: float  # 0.0 to 1.0
@@ -78,6 +84,7 @@ class CommuteScore:
 @dataclass
 class WalkabilityScore:
     """Walkability assessment"""
+
     walk_score: Optional[int]  # 0-100 Walk Score API
     nearby_amenities_count: int
     grocery_distance_miles: Optional[float]
@@ -90,6 +97,7 @@ class WalkabilityScore:
 @dataclass
 class SafetyScore:
     """Safety and crime assessment"""
+
     crime_rate_per_1000: Optional[float]
     neighborhood_safety_rating: Optional[float]  # 1-10 scale
     police_response_time: Optional[int]  # minutes
@@ -100,6 +108,7 @@ class SafetyScore:
 @dataclass
 class LifestyleScores:
     """Lifestyle compatibility factors"""
+
     schools: SchoolScore
     commute: CommuteScore
     walkability: WalkabilityScore
@@ -111,6 +120,7 @@ class LifestyleScores:
 @dataclass
 class ContextualScores:
     """Property contextual factors"""
+
     hoa_fee_score: FactorScore
     lot_size_score: FactorScore
     home_age_score: FactorScore
@@ -122,6 +132,7 @@ class ContextualScores:
 @dataclass
 class MarketTimingScore:
     """Market timing and opportunity scoring"""
+
     days_on_market_score: float  # longer DOM = more negotiable
     price_trend_score: float  # recent reductions = opportunity
     inventory_scarcity_score: float  # low inventory = act fast
@@ -134,6 +145,7 @@ class MarketTimingScore:
 @dataclass
 class BehavioralProfile:
     """Lead behavioral analysis for adaptive weighting"""
+
     segment: LeadSegment
     past_likes: List[str]  # property IDs
     past_passes: List[str]  # property IDs
@@ -147,6 +159,7 @@ class BehavioralProfile:
 @dataclass
 class AdaptiveWeights:
     """Dynamically calculated weights per lead"""
+
     traditional_weights: Dict[str, float]
     lifestyle_weights: Dict[str, float]
     contextual_weights: Dict[str, float]
@@ -159,6 +172,7 @@ class AdaptiveWeights:
 @dataclass
 class MatchScoreBreakdown:
     """Detailed scoring breakdown"""
+
     traditional_scores: TraditionalScores
     lifestyle_scores: LifestyleScores
     contextual_scores: ContextualScores
@@ -172,6 +186,7 @@ class MatchScoreBreakdown:
 @dataclass
 class MatchReasoning:
     """Human-readable match explanation"""
+
     primary_strengths: List[str]  # Top 3-5 reasons why it matches
     secondary_benefits: List[str]  # Additional positives
     potential_concerns: List[str]  # Honest drawbacks
@@ -184,6 +199,7 @@ class MatchReasoning:
 @dataclass
 class PropertyMatch:
     """Complete property match result"""
+
     property: Dict[str, Any]  # Original property data
     overall_score: float  # Final weighted score 0.0-1.0
     score_breakdown: MatchScoreBreakdown
@@ -202,6 +218,7 @@ class PropertyMatch:
 @dataclass
 class MatchingContext:
     """Context for matching session"""
+
     lead_id: str
     preferences: Dict[str, Any]
     behavioral_profile: BehavioralProfile
@@ -226,7 +243,7 @@ DEFAULT_SEGMENT_WEIGHTS = {
         "bedrooms": 0.15,
         "location": 0.10,
         "lot_size": 0.08,
-        "walkability": 0.07
+        "walkability": 0.07,
     },
     LeadSegment.YOUNG_PROFESSIONAL: {
         "commute": 0.25,
@@ -234,7 +251,7 @@ DEFAULT_SEGMENT_WEIGHTS = {
         "budget": 0.20,
         "location": 0.15,
         "property_type": 0.10,
-        "market_timing": 0.10
+        "market_timing": 0.10,
     },
     LeadSegment.INVESTOR: {
         "market_timing": 0.30,
@@ -242,7 +259,7 @@ DEFAULT_SEGMENT_WEIGHTS = {
         "property_condition": 0.15,
         "location": 0.15,
         "days_on_market": 0.10,
-        "hoa_fee": 0.05
+        "hoa_fee": 0.05,
     },
     LeadSegment.LUXURY_BUYER: {
         "location": 0.30,
@@ -250,7 +267,7 @@ DEFAULT_SEGMENT_WEIGHTS = {
         "lot_size": 0.15,
         "amenities": 0.15,
         "sqft": 0.10,
-        "budget": 0.05  # Less sensitive to price
+        "budget": 0.05,  # Less sensitive to price
     },
     LeadSegment.FIRST_TIME_BUYER: {
         "budget": 0.30,
@@ -258,7 +275,7 @@ DEFAULT_SEGMENT_WEIGHTS = {
         "location": 0.15,
         "property_condition": 0.15,
         "sqft": 0.15,
-        "safety": 0.10
+        "safety": 0.10,
     },
     LeadSegment.RETIREE: {
         "safety": 0.25,
@@ -266,7 +283,7 @@ DEFAULT_SEGMENT_WEIGHTS = {
         "amenities": 0.15,
         "location": 0.15,
         "hoa_fee": 0.15,
-        "budget": 0.10
+        "budget": 0.10,
     },
     LeadSegment.DOWNSIZER: {
         "location": 0.25,
@@ -274,8 +291,8 @@ DEFAULT_SEGMENT_WEIGHTS = {
         "budget": 0.20,
         "walkability": 0.15,
         "sqft": 0.10,
-        "lot_size": 0.10
-    }
+        "lot_size": 0.10,
+    },
 }
 
 FACTOR_WEIGHTS_BASE = {
@@ -286,19 +303,16 @@ FACTOR_WEIGHTS_BASE = {
     "bathrooms": 0.05,
     "property_type": 0.05,
     "sqft": 0.05,
-
     # Lifestyle factors (25% total)
     "schools": 0.08,
     "commute": 0.06,
     "walkability": 0.06,
     "safety": 0.05,
-
     # Contextual factors (10% total)
     "hoa_fee": 0.03,
     "lot_size": 0.03,
     "home_age": 0.02,
     "parking": 0.02,
-
     # Market timing (5% total)
-    "market_timing": 0.05
+    "market_timing": 0.05,
 }

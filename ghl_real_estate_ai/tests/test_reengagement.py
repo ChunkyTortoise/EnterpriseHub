@@ -8,13 +8,15 @@ Tests:
 4. Integration with GHL client for sending
 5. Silent lead detection from memory
 """
+
 import asyncio
-import os
-import pytest
-from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
-from pathlib import Path
 import json
+import os
+from datetime import datetime, timedelta
+from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 # Set dummy env vars for Pydantic Settings validation
 os.environ["ANTHROPIC_API_KEY"] = "sk-test-key"
@@ -22,11 +24,12 @@ os.environ["GHL_API_KEY"] = "ghl-test-key"
 os.environ["GHL_LOCATION_ID"] = "loc-test-123"
 
 import sys
+
 sys.path.append(os.path.join(os.getcwd(), "ghl-real-estate-ai"))
 
-from ghl_real_estate_ai.services.reengagement_engine import ReengagementEngine, ReengagementTrigger
 from ghl_real_estate_ai.prompts.reengagement_templates import REENGAGEMENT_TEMPLATES
 from ghl_real_estate_ai.services.memory_service import MemoryService
+from ghl_real_estate_ai.services.reengagement_engine import ReengagementEngine, ReengagementTrigger
 
 
 @pytest.mark.asyncio
@@ -44,13 +47,9 @@ async def test_trigger_detection_24h():
         "contact_id": test_contact_id,
         "last_interaction_at": last_interaction.isoformat(),
         "conversation_history": [
-            {
-                "role": "user",
-                "content": "Looking to buy a house",
-                "timestamp": last_interaction.isoformat()
-            }
+            {"role": "user", "content": "Looking to buy a house", "timestamp": last_interaction.isoformat()}
         ],
-        "extracted_preferences": {"goal": "buy"}
+        "extracted_preferences": {"goal": "buy"},
     }
 
     # Should trigger 24h re-engagement
@@ -76,13 +75,9 @@ async def test_trigger_detection_48h():
         "contact_id": test_contact_id,
         "last_interaction_at": last_interaction.isoformat(),
         "conversation_history": [
-            {
-                "role": "user",
-                "content": "Thinking about selling",
-                "timestamp": last_interaction.isoformat()
-            }
+            {"role": "user", "content": "Thinking about selling", "timestamp": last_interaction.isoformat()}
         ],
-        "extracted_preferences": {"goal": "sell"}
+        "extracted_preferences": {"goal": "sell"},
     }
 
     # Should trigger 48h re-engagement
@@ -108,13 +103,9 @@ async def test_trigger_detection_72h():
         "contact_id": test_contact_id,
         "last_interaction_at": last_interaction.isoformat(),
         "conversation_history": [
-            {
-                "role": "user",
-                "content": "Just browsing",
-                "timestamp": last_interaction.isoformat()
-            }
+            {"role": "user", "content": "Just browsing", "timestamp": last_interaction.isoformat()}
         ],
-        "extracted_preferences": {}
+        "extracted_preferences": {},
     }
 
     # Should trigger 72h re-engagement
@@ -140,12 +131,8 @@ async def test_no_trigger_for_recent_interactions():
         "contact_id": test_contact_id,
         "last_interaction_at": last_interaction.isoformat(),
         "conversation_history": [
-            {
-                "role": "user",
-                "content": "Looking to buy",
-                "timestamp": last_interaction.isoformat()
-            }
-        ]
+            {"role": "user", "content": "Looking to buy", "timestamp": last_interaction.isoformat()}
+        ],
     }
 
     # Should NOT trigger
@@ -163,33 +150,22 @@ async def test_message_template_selection():
     engine = ReengagementEngine()
 
     # Test 24h template
-    msg_24h = engine.get_message_for_trigger(
-        ReengagementTrigger.HOURS_24,
-        contact_name="Sarah",
-        action="buy"
-    )
-    assert "still a priority" in msg_24h.lower() or "still interested" in msg_24h.lower(), \
+    msg_24h = engine.get_message_for_trigger(ReengagementTrigger.HOURS_24, contact_name="Sarah", action="buy")
+    assert "still a priority" in msg_24h.lower() or "still interested" in msg_24h.lower(), (
         "24h message should ask about priority"
+    )
     print(f"  24h message: {msg_24h}")
 
     # Test 48h template
-    msg_48h = engine.get_message_for_trigger(
-        ReengagementTrigger.HOURS_48,
-        contact_name="Mike",
-        action="sell"
-    )
-    assert "close your file" in msg_48h.lower() or "still looking" in msg_48h.lower(), \
+    msg_48h = engine.get_message_for_trigger(ReengagementTrigger.HOURS_48, contact_name="Mike", action="sell")
+    assert "close your file" in msg_48h.lower() or "still looking" in msg_48h.lower(), (
         "48h message should mention closing file"
+    )
     print(f"  48h message: {msg_48h}")
 
     # Test 72h template
-    msg_72h = engine.get_message_for_trigger(
-        ReengagementTrigger.HOURS_72,
-        contact_name="Lisa",
-        action="buy"
-    )
-    assert "last chance" in msg_72h.lower() or "move on" in msg_72h.lower(), \
-        "72h message should be final/direct"
+    msg_72h = engine.get_message_for_trigger(ReengagementTrigger.HOURS_72, contact_name="Lisa", action="buy")
+    assert "last chance" in msg_72h.lower() or "move on" in msg_72h.lower(), "72h message should be final/direct"
     print(f"  72h message: {msg_72h}")
 
     print("✅ Template selection working correctly")
@@ -215,8 +191,7 @@ async def test_sms_character_limit_compliance():
         message = engine.get_message_for_trigger(trigger, name, action)
         char_count = len(message)
 
-        assert char_count <= 160, \
-            f"Message exceeds 160 chars: {char_count} chars\nMessage: {message}"
+        assert char_count <= 160, f"Message exceeds 160 chars: {char_count} chars\nMessage: {message}"
 
         print(f"  ✅ {trigger.value} ({name}, {action}): {char_count} chars")
 
@@ -242,18 +217,14 @@ async def test_integration_with_ghl_client():
             {
                 "role": "user",
                 "content": "Looking to buy",
-                "timestamp": (datetime.utcnow() - timedelta(hours=25)).isoformat()
+                "timestamp": (datetime.utcnow() - timedelta(hours=25)).isoformat(),
             }
         ],
-        "extracted_preferences": {"goal": "buy"}
+        "extracted_preferences": {"goal": "buy"},
     }
 
     # Send re-engagement message
-    result = await engine.send_reengagement_message(
-        contact_id="test_integration",
-        contact_name="John",
-        context=context
-    )
+    result = await engine.send_reengagement_message(contact_id="test_integration", contact_name="John", context=context)
 
     assert result is not None, "Should return send result"
     assert result["status"] == "sent", "Message should be sent"
@@ -286,10 +257,10 @@ async def test_silent_lead_detection_from_memory():
             {
                 "role": "user",
                 "content": "Interested in buying",
-                "timestamp": (datetime.utcnow() - timedelta(hours=49)).isoformat()
+                "timestamp": (datetime.utcnow() - timedelta(hours=49)).isoformat(),
             }
         ],
-        "extracted_preferences": {"goal": "buy"}
+        "extracted_preferences": {"goal": "buy"},
     }
 
     with open(memory_dir / f"{silent_contact_id}.json", "w") as f:
@@ -304,9 +275,9 @@ async def test_silent_lead_detection_from_memory():
             {
                 "role": "user",
                 "content": "What's available?",
-                "timestamp": (datetime.utcnow() - timedelta(hours=2)).isoformat()
+                "timestamp": (datetime.utcnow() - timedelta(hours=2)).isoformat(),
             }
-        ]
+        ],
     }
 
     with open(memory_dir / f"{active_contact_id}.json", "w") as f:
@@ -346,9 +317,9 @@ async def test_prevents_duplicate_reengagement():
             {
                 "role": "user",
                 "content": "Looking to buy",
-                "timestamp": (datetime.utcnow() - timedelta(hours=25)).isoformat()
+                "timestamp": (datetime.utcnow() - timedelta(hours=25)).isoformat(),
             }
-        ]
+        ],
     }
 
     # Should NOT trigger again for 24h
@@ -361,6 +332,7 @@ async def test_prevents_duplicate_reengagement():
 
 
 if __name__ == "__main__":
+
     async def run_all_tests():
         print("=" * 80)
         print("Re-engagement Engine Test Suite")

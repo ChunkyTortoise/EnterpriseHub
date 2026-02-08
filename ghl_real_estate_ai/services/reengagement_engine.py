@@ -37,28 +37,28 @@ Usage:
 
 import asyncio
 import json
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-from dataclasses import dataclass
 
 from ghl_real_estate_ai.api.schemas.ghl import MessageType
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.prompts.reengagement_templates import get_reengagement_message
-from ghl_real_estate_ai.services.ghl_client import GHLClient
-from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.core.llm_client import LLMClient
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.prompts.reengagement_templates import get_reengagement_message
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 
 # ENHANCED: Import ChurnEventTracker for recovery workflow integration
 from ghl_real_estate_ai.services.churn_prediction_engine import (
     ChurnEventTracker,
-    ChurnReason,
     ChurnEventType,
-    RecoveryEligibility
+    ChurnReason,
+    RecoveryEligibility,
 )
+from ghl_real_estate_ai.services.ghl_client import GHLClient
+from ghl_real_estate_ai.services.memory_service import MemoryService
 
 logger = get_logger(__name__)
 
@@ -75,21 +75,24 @@ class ReengagementTrigger(Enum):
 # ENHANCED: Recovery Campaign System for Churned Leads
 # ============================================================================
 
+
 class RecoveryCampaignType(Enum):
     """Recovery campaign types for churned leads based on churn reason and CLV."""
 
-    WIN_BACK_AGGRESSIVE = "win_back_aggressive"    # High CLV, recoverable reasons
-    WIN_BACK_NURTURE = "win_back_nurture"         # Medium CLV, timing/budget issues
-    MARKET_COMEBACK = "market_comeback"           # Market condition related churn
-    VALUE_PROPOSITION = "value_proposition"       # Competition/service related churn
-    FINAL_ATTEMPT = "final_attempt"              # Last attempt before permanent churn
+    WIN_BACK_AGGRESSIVE = "win_back_aggressive"  # High CLV, recoverable reasons
+    WIN_BACK_NURTURE = "win_back_nurture"  # Medium CLV, timing/budget issues
+    MARKET_COMEBACK = "market_comeback"  # Market condition related churn
+    VALUE_PROPOSITION = "value_proposition"  # Competition/service related churn
+    FINAL_ATTEMPT = "final_attempt"  # Last attempt before permanent churn
+
 
 class CLVTier(Enum):
     """Customer Lifetime Value tiers for campaign prioritization."""
 
-    HIGH_VALUE = "high_value"      # $50K+ potential commission value
+    HIGH_VALUE = "high_value"  # $50K+ potential commission value
     MEDIUM_VALUE = "medium_value"  # $20K-50K potential commission value
-    LOW_VALUE = "low_value"        # <$20K potential commission value
+    LOW_VALUE = "low_value"  # <$20K potential commission value
+
 
 @dataclass
 class RecoveryCampaignTemplate:
@@ -111,6 +114,7 @@ class RecoveryCampaignTemplate:
     # Success metrics
     expected_recovery_rate: float
     roi_threshold: float
+
 
 @dataclass
 class CLVEstimate:
@@ -162,10 +166,7 @@ class ReengagementEngine:
         """
         self.ghl_client = ghl_client or GHLClient()
         self.memory_service = memory_service or MemoryService(storage_type="file")
-        self.llm_client = LLMClient(
-            provider="claude",
-            model=settings.claude_model
-        )
+        self.llm_client = LLMClient(provider="claude", model=settings.claude_model)
         self.analytics = AnalyticsService()
 
         # ENHANCED: Initialize ChurnEventTracker for recovery campaigns
@@ -174,9 +175,7 @@ class ReengagementEngine:
         # ENHANCED: Load recovery campaign templates
         self.recovery_templates = self._load_recovery_campaign_templates()
 
-    async def detect_trigger(
-        self, context: Dict[str, Any]
-    ) -> Optional[ReengagementTrigger]:
+    async def detect_trigger(self, context: Dict[str, Any]) -> Optional[ReengagementTrigger]:
         """
         Detect if a lead needs re-engagement based on time elapsed.
 
@@ -195,17 +194,13 @@ class ReengagementEngine:
         # Get last interaction timestamp
         last_interaction_str = context.get("last_interaction_at")
         if not last_interaction_str:
-            logger.warning(
-                f"No last_interaction_at for contact {context.get('contact_id')}"
-            )
+            logger.warning(f"No last_interaction_at for contact {context.get('contact_id')}")
             return None
 
         try:
             last_interaction = datetime.fromisoformat(last_interaction_str)
         except (ValueError, TypeError) as e:
-            logger.error(
-                f"Invalid timestamp format: {last_interaction_str}, error: {e}"
-            )
+            logger.error(f"Invalid timestamp format: {last_interaction_str}, error: {e}")
             return None
 
         # Calculate hours since last interaction
@@ -252,7 +247,7 @@ class ReengagementEngine:
         """
         history = context.get("conversation_history", [])
         preferences = context.get("extracted_preferences", {})
-        
+
         prompt = f"""You are a senior Real Estate Concierge on Jorge's team. A lead has gone silent and you need to re-engage them.
 
 LEAD NAME: {contact_name}
@@ -275,11 +270,11 @@ Example: "Hi {contact_name}, I just saw a new 3-bed in Austin that hits your $50
                 prompt=prompt,
                 system_prompt="You are an expert Real Estate Concierge. Be direct, helpful, and concise.",
                 temperature=0.7,
-                max_tokens=150
+                max_tokens=150,
             )
-            
+
             # Record usage
-            location_id = context.get('location_id', 'unknown')
+            location_id = context.get("location_id", "unknown")
             await self.analytics.track_llm_usage(
                 location_id=location_id,
                 model=response.model,
@@ -287,7 +282,7 @@ Example: "Hi {contact_name}, I just saw a new 3-bed in Austin that hits your $50
                 input_tokens=response.input_tokens or 0,
                 output_tokens=response.output_tokens or 0,
                 cached=False,
-                contact_id=context.get('contact_id')
+                contact_id=context.get("contact_id"),
             )
 
             return response.content.strip()
@@ -325,9 +320,7 @@ Example: "Hi {contact_name}, I just saw a new 3-bed in Austin that hits your $50
             is_seller=is_seller,
         )
 
-    def _determine_lead_goal(
-        self, context: Dict[str, Any]
-    ) -> tuple[Optional[str], Optional[bool], Optional[bool]]:
+    def _determine_lead_goal(self, context: Dict[str, Any]) -> tuple[Optional[str], Optional[bool], Optional[bool]]:
         """
         Determine lead's goal (buy/sell) from context.
 
@@ -382,7 +375,7 @@ Example: "Hi {contact_name}, I just saw a new 3-bed in Austin that hits your $50
 
         # Try agentic message first (Phase 4)
         message = await self.agentic_reengagement(contact_name, context)
-        
+
         # Fallback to template if agentic fails or returns empty
         if not message:
             message = self.get_message_for_trigger(
@@ -400,9 +393,7 @@ Example: "Hi {contact_name}, I just saw a new 3-bed in Austin that hits your $50
 
         # Send via GHL
         try:
-            result = await self.ghl_client.send_message(
-                contact_id=contact_id, message=message, channel=MessageType.SMS
-            )
+            result = await self.ghl_client.send_message(contact_id=contact_id, message=message, channel=MessageType.SMS)
 
             # Update context to track re-engagement
             context["last_reengagement_trigger"] = trigger.value
@@ -433,9 +424,7 @@ Example: "Hi {contact_name}, I just saw a new 3-bed in Austin that hits your $50
             )
             return None
 
-    async def scan_for_silent_leads(
-        self, memory_dir: Optional[Path] = None
-    ) -> List[Dict[str, Any]]:
+    async def scan_for_silent_leads(self, memory_dir: Optional[Path] = None) -> List[Dict[str, Any]]:
         """
         Scan memory service for silent leads that need re-engagement.
 
@@ -476,9 +465,7 @@ Example: "Hi {contact_name}, I just saw a new 3-bed in Austin that hits your $50
                             "contact_name": contact_name,
                             "context": context,
                             "trigger": trigger,
-                            "hours_since_interaction": self._calculate_hours_since(
-                                context
-                            ),
+                            "hours_since_interaction": self._calculate_hours_since(context),
                         }
                     )
 
@@ -626,9 +613,8 @@ Jorge's Team""",
                 delay_hours=48,  # 2 days after churn
                 max_attempts=3,
                 expected_recovery_rate=0.35,
-                roi_threshold=5000.0
+                roi_threshold=5000.0,
             ),
-
             RecoveryCampaignTemplate(
                 campaign_type=RecoveryCampaignType.WIN_BACK_NURTURE,
                 target_clv_tier=CLVTier.MEDIUM_VALUE,
@@ -655,9 +641,8 @@ Jorge's Team""",
                 delay_hours=168,  # 1 week after churn
                 max_attempts=2,
                 expected_recovery_rate=0.25,
-                roi_threshold=3000.0
+                roi_threshold=3000.0,
             ),
-
             RecoveryCampaignTemplate(
                 campaign_type=RecoveryCampaignType.MARKET_COMEBACK,
                 target_clv_tier=CLVTier.HIGH_VALUE,
@@ -680,9 +665,8 @@ Jorge's Team""",
                 delay_hours=72,  # 3 days after churn
                 max_attempts=2,
                 expected_recovery_rate=0.40,
-                roi_threshold=8000.0
+                roi_threshold=8000.0,
             ),
-
             RecoveryCampaignTemplate(
                 campaign_type=RecoveryCampaignType.VALUE_PROPOSITION,
                 target_clv_tier=CLVTier.HIGH_VALUE,
@@ -705,9 +689,8 @@ P.S. - I'll keep an eye out for any exceptional properties in {preferred_area}, 
                 delay_hours=336,  # 2 weeks after churn
                 max_attempts=1,
                 expected_recovery_rate=0.15,
-                roi_threshold=1000.0
+                roi_threshold=1000.0,
             ),
-
             RecoveryCampaignTemplate(
                 campaign_type=RecoveryCampaignType.FINAL_ATTEMPT,
                 target_clv_tier=CLVTier.MEDIUM_VALUE,
@@ -729,8 +712,8 @@ Jorge's Team""",
                 delay_hours=720,  # 30 days after churn
                 max_attempts=1,
                 expected_recovery_rate=0.10,
-                roi_threshold=500.0
-            )
+                roi_threshold=500.0,
+            ),
         ]
 
     async def calculate_clv_estimate(self, contact_id: str, context: Dict[str, Any]) -> CLVEstimate:
@@ -754,7 +737,8 @@ Jorge's Team""",
             # Parse budget range
             if "k" in budget_str or "$" in budget_str:
                 import re
-                numbers = re.findall(r'\d+', budget_str)
+
+                numbers = re.findall(r"\d+", budget_str)
                 if numbers:
                     # Take the higher number if range, single number if just one
                     budget_value = int(numbers[-1])
@@ -777,19 +761,17 @@ Jorge's Team""",
             return CLVEstimate(
                 lead_id=contact_id,
                 estimated_transaction_value=estimated_transaction_value,
-                probability_multiplier=probability_multiplier
+                probability_multiplier=probability_multiplier,
             )
 
         except Exception as e:
             logger.error(f"Error calculating CLV for {contact_id}: {str(e)}")
             # Return conservative estimate
-            return CLVEstimate(
-                lead_id=contact_id,
-                estimated_transaction_value=400000,
-                probability_multiplier=0.8
-            )
+            return CLVEstimate(lead_id=contact_id, estimated_transaction_value=400000, probability_multiplier=0.8)
 
-    def select_recovery_campaign(self, churn_reason: ChurnReason, clv_estimate: CLVEstimate) -> Optional[RecoveryCampaignTemplate]:
+    def select_recovery_campaign(
+        self, churn_reason: ChurnReason, clv_estimate: CLVEstimate
+    ) -> Optional[RecoveryCampaignTemplate]:
         """
         Select appropriate recovery campaign template based on churn reason and CLV.
 
@@ -805,9 +787,8 @@ Jorge's Team""",
 
         for template in self.recovery_templates:
             # Check if CLV tier matches or is compatible
-            clv_compatible = (
-                template.target_clv_tier == clv_estimate.clv_tier or
-                (template.target_clv_tier == CLVTier.HIGH_VALUE and clv_estimate.clv_tier == CLVTier.MEDIUM_VALUE)
+            clv_compatible = template.target_clv_tier == clv_estimate.clv_tier or (
+                template.target_clv_tier == CLVTier.HIGH_VALUE and clv_estimate.clv_tier == CLVTier.MEDIUM_VALUE
             )
 
             # Check if churn reason matches
@@ -821,8 +802,9 @@ Jorge's Team""",
 
         if not compatible_templates:
             # Fallback to final attempt if no perfect match
-            fallback_templates = [t for t in self.recovery_templates
-                                if t.campaign_type == RecoveryCampaignType.FINAL_ATTEMPT]
+            fallback_templates = [
+                t for t in self.recovery_templates if t.campaign_type == RecoveryCampaignType.FINAL_ATTEMPT
+            ]
             return fallback_templates[0] if fallback_templates else None
 
         # Select the template with highest expected recovery rate
@@ -844,7 +826,11 @@ Jorge's Team""",
 
                 for event in events:
                     # Check eligibility for recovery
-                    is_eligible, eligibility_status, attempts_remaining = await self.churn_tracker.check_recovery_eligibility(contact_id)
+                    (
+                        is_eligible,
+                        eligibility_status,
+                        attempts_remaining,
+                    ) = await self.churn_tracker.check_recovery_eligibility(contact_id)
 
                     if is_eligible and attempts_remaining > 0:
                         # Get context for CLV calculation
@@ -857,19 +843,23 @@ Jorge's Team""",
                         clv_estimate = await self.calculate_clv_estimate(contact_id, context)
 
                         # Select appropriate campaign
-                        campaign_template = self.select_recovery_campaign(event.churn_reason or ChurnReason.OTHER, clv_estimate)
+                        campaign_template = self.select_recovery_campaign(
+                            event.churn_reason or ChurnReason.OTHER, clv_estimate
+                        )
 
                         if campaign_template:
-                            recovery_leads.append({
-                                "contact_id": contact_id,
-                                "contact_name": self._extract_contact_name(context),
-                                "churn_event": event,
-                                "churn_reason": event.churn_reason,
-                                "clv_estimate": clv_estimate,
-                                "campaign_template": campaign_template,
-                                "attempts_remaining": attempts_remaining,
-                                "context": context
-                            })
+                            recovery_leads.append(
+                                {
+                                    "contact_id": contact_id,
+                                    "contact_name": self._extract_contact_name(context),
+                                    "churn_event": event,
+                                    "churn_reason": event.churn_reason,
+                                    "clv_estimate": clv_estimate,
+                                    "campaign_template": campaign_template,
+                                    "attempts_remaining": attempts_remaining,
+                                    "context": context,
+                                }
+                            )
 
             logger.info(f"Found {len(recovery_leads)} recovery-eligible leads")
             return recovery_leads
@@ -878,7 +868,13 @@ Jorge's Team""",
             logger.error(f"Error scanning for recovery eligible leads: {str(e)}")
             return []
 
-    async def send_recovery_campaign(self, contact_id: str, churn_reason: ChurnReason, clv_estimate: CLVEstimate, context: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+    async def send_recovery_campaign(
+        self,
+        contact_id: str,
+        churn_reason: ChurnReason,
+        clv_estimate: CLVEstimate,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> Optional[Dict[str, Any]]:
         """
         Send recovery campaign to a churned lead.
 
@@ -915,18 +911,10 @@ Jorge's Team""",
             contact_name = self._extract_contact_name(context)
 
             # Personalize message
-            message = self._personalize_recovery_message(
-                campaign_template.sms_template,
-                contact_name,
-                preferences
-            )
+            message = self._personalize_recovery_message(campaign_template.sms_template, contact_name, preferences)
 
             # Send via GHL
-            result = await self.ghl_client.send_message(
-                contact_id=contact_id,
-                message=message,
-                channel=MessageType.SMS
-            )
+            result = await self.ghl_client.send_message(contact_id=contact_id, message=message, channel=MessageType.SMS)
 
             # Update context
             context["last_recovery_campaign"] = {
@@ -934,7 +922,7 @@ Jorge's Team""",
                 "campaign_type": campaign_template.campaign_type.value,
                 "sent_at": datetime.utcnow().isoformat(),
                 "clv_tier": clv_estimate.clv_tier.value,
-                "estimated_clv": clv_estimate.estimated_clv
+                "estimated_clv": clv_estimate.estimated_clv,
             }
 
             await self.memory_service.save_context(
@@ -950,8 +938,8 @@ Jorge's Team""",
                     "campaign_id": campaign_id,
                     "campaign_type": campaign_template.campaign_type.value,
                     "clv_tier": clv_estimate.clv_tier.value,
-                    "estimated_clv": clv_estimate.estimated_clv
-                }
+                    "estimated_clv": clv_estimate.estimated_clv,
+                },
             )
 
             return result
@@ -981,8 +969,8 @@ Jorge's Team""",
             "neighborhood": preferences.get("neighborhood", "your neighborhood"),
             "bedrooms": preferences.get("bedrooms", "3"),
             "property_type": preferences.get("property_type", "home"),
-            "phone": settings.jorge_phone if hasattr(settings, 'jorge_phone') else "(555) 123-4567",
-            "price_formatted": "TBD"  # Would be filled with actual property price
+            "phone": settings.jorge_phone if hasattr(settings, "jorge_phone") else "(555) 123-4567",
+            "price_formatted": "TBD",  # Would be filled with actual property price
         }
 
         # Replace placeholders
@@ -1012,7 +1000,7 @@ Jorge's Team""",
             "dry_run": dry_run,
             "clv_breakdown": {"high": 0, "medium": 0, "low": 0},
             "campaign_types": {},
-            "results": []
+            "results": [],
         }
 
         for lead in recovery_leads:
@@ -1032,44 +1020,50 @@ Jorge's Team""",
                 logger.info(
                     f"[DRY RUN] Would send {campaign_type} recovery to {contact_id} (CLV: ${clv_estimate.estimated_clv:,.0f})"
                 )
-                summary["results"].append({
-                    "contact_id": contact_id,
-                    "campaign_type": campaign_type,
-                    "clv_tier": clv_estimate.clv_tier.value,
-                    "estimated_clv": clv_estimate.estimated_clv,
-                    "status": "dry_run"
-                })
+                summary["results"].append(
+                    {
+                        "contact_id": contact_id,
+                        "campaign_type": campaign_type,
+                        "clv_tier": clv_estimate.clv_tier.value,
+                        "estimated_clv": clv_estimate.estimated_clv,
+                        "status": "dry_run",
+                    }
+                )
             else:
                 result = await self.send_recovery_campaign(
                     contact_id=contact_id,
                     churn_reason=lead["churn_reason"] or ChurnReason.OTHER,
                     clv_estimate=clv_estimate,
-                    context=context
+                    context=context,
                 )
 
                 if result:
                     summary["campaigns_sent"] += 1
-                    summary["results"].append({
-                        "contact_id": contact_id,
-                        "campaign_type": campaign_type,
-                        "clv_tier": clv_estimate.clv_tier.value,
-                        "estimated_clv": clv_estimate.estimated_clv,
-                        "status": "sent",
-                        "message_id": result.get("messageId")
-                    })
+                    summary["results"].append(
+                        {
+                            "contact_id": contact_id,
+                            "campaign_type": campaign_type,
+                            "clv_tier": clv_estimate.clv_tier.value,
+                            "estimated_clv": clv_estimate.estimated_clv,
+                            "status": "sent",
+                            "message_id": result.get("messageId"),
+                        }
+                    )
                 else:
                     summary["errors"] += 1
-                    summary["results"].append({
-                        "contact_id": contact_id,
-                        "campaign_type": campaign_type,
-                        "clv_tier": clv_estimate.clv_tier.value,
-                        "estimated_clv": clv_estimate.estimated_clv,
-                        "status": "error"
-                    })
+                    summary["results"].append(
+                        {
+                            "contact_id": contact_id,
+                            "campaign_type": campaign_type,
+                            "clv_tier": clv_estimate.clv_tier.value,
+                            "estimated_clv": clv_estimate.estimated_clv,
+                            "status": "error",
+                        }
+                    )
 
         logger.info(
             f"Recovery campaign batch complete: {summary['campaigns_sent']} sent, {summary['errors']} errors",
-            extra=summary
+            extra=summary,
         )
 
         return summary

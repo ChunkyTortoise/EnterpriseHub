@@ -15,18 +15,19 @@ Author: Claude Code Assistant
 Created: 2026-01-25
 """
 
-import streamlit as st
 import asyncio
 import json
+import os
+import sys
 import time
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from datetime import datetime, timedelta, timezone
-from typing import Dict, Any, List, Optional
-import sys
-import os
-from pathlib import Path
+import streamlit as st
 
 # Add project paths for imports
 current_file = Path(__file__).resolve()
@@ -36,41 +37,50 @@ sys.path.insert(0, str(current_file.parent.parent))
 
 # Page Configuration
 st.set_page_config(
-    page_title="Jorge AI | Consolidated Dashboard",
-    page_icon="🤖",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    page_title="Jorge AI | Consolidated Dashboard", page_icon="🤖", layout="wide", initial_sidebar_state="expanded"
 )
 
 # Safe imports with fallbacks
 try:
     from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
+
     ASYNC_UTILS_AVAILABLE = True
 except ImportError:
     ASYNC_UTILS_AVAILABLE = False
+
     def run_async(coro):
         import asyncio
+
         try:
             return asyncio.run(coro)
         except:
             return None
 
+
 # Import styling and components
 try:
     from ghl_real_estate_ai.streamlit_demo.obsidian_theme import (
-        inject_elite_css, style_obsidian_chart, render_dossier_block,
-        render_neural_progress, get_svg_icon, render_terminal_log,
-        render_voice_waveform, render_tactical_dock, render_journey_line
+        get_svg_icon,
+        inject_elite_css,
+        render_dossier_block,
+        render_journey_line,
+        render_neural_progress,
+        render_tactical_dock,
+        render_terminal_log,
+        render_voice_waveform,
+        style_obsidian_chart,
     )
+
     ELITE_STYLING = True
 except ImportError:
     ELITE_STYLING = False
 
 # Import bot services
 try:
+    from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
     from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
     from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
-    from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
+
     BOT_SERVICES_AVAILABLE = True
 except ImportError:
     BOT_SERVICES_AVAILABLE = False
@@ -79,9 +89,11 @@ except ImportError:
 try:
     from ghl_real_estate_ai.services.analytics_service import AnalyticsService
     from ghl_real_estate_ai.services.event_publisher import get_event_publisher
+
     ANALYTICS_AVAILABLE = True
 except ImportError:
     ANALYTICS_AVAILABLE = False
+
 
 class ConsolidatedBotManager:
     """Consolidated manager for all Jorge AI bots with streamlined data access."""
@@ -115,24 +127,24 @@ class ConsolidatedBotManager:
                 "uptime": 99.8,
                 "active_conversations": 25,
                 "total_interactions_today": 347,
-                "messages_per_minute": 10.1
+                "messages_per_minute": 10.1,
             },
             "bot_performance": {
                 "lead_bot": {"score": 94.2, "status": "🟢", "active": 12},
                 "buyer_bot": {"score": 89.7, "status": "🟢", "active": 8},
-                "seller_bot": {"score": 84.7, "status": "🟢", "active": 5}
+                "seller_bot": {"score": 84.7, "status": "🟢", "active": 5},
             },
             "key_metrics": {
                 "leads_qualified_today": 23,
                 "properties_matched": 45,
                 "listings_secured": 7,
-                "revenue_attributed": 127500
+                "revenue_attributed": 127500,
             },
             "alerts": [
                 {"level": "success", "message": "All systems operating normally"},
                 {"level": "info", "message": "Peak performance achieved at 2:30 PM"},
-                {"level": "warning", "message": "Weekend conversion 8% below target"}
-            ]
+                {"level": "warning", "message": "Weekend conversion 8% below target"},
+            ],
         }
 
     async def get_consolidated_metrics(self, bot_type: str) -> Dict[str, Any]:
@@ -144,15 +156,15 @@ class ConsolidatedBotManager:
                     "response_time": 2.3,
                     "efficiency_score": 87.5,
                     "sequence_completion": 78.9,
-                    "reengagement_rate": 68.4
+                    "reengagement_rate": 68.4,
                 },
                 "analytics": {
                     "total_sequences": 127,
                     "day_3_response": 45.2,
                     "day_7_success": 62.8,
                     "day_30_recovery": 23.4,
-                    "hot_leads_generated": 18
-                }
+                    "hot_leads_generated": 18,
+                },
             },
             "buyer_bot": {
                 "performance": {
@@ -160,15 +172,15 @@ class ConsolidatedBotManager:
                     "response_time": 1.8,
                     "conversion_rate": 23.4,
                     "satisfaction_score": 4.7,
-                    "showing_booking_rate": 31.2
+                    "showing_booking_rate": 31.2,
                 },
                 "analytics": {
                     "buyers_qualified": 64,
                     "properties_matched": 178,
                     "showings_booked": 23,
                     "offers_submitted": 7,
-                    "closed_transactions": 3
-                }
+                    "closed_transactions": 3,
+                },
             },
             "seller_bot": {
                 "performance": {
@@ -176,16 +188,16 @@ class ConsolidatedBotManager:
                     "stall_detection": 91.3,
                     "close_rate": 67.8,
                     "jorge_effectiveness": 84.7,
-                    "frs_average": 78.9
+                    "frs_average": 78.9,
                 },
                 "analytics": {
                     "total_qualifications": 89,
                     "hot_leads": 12,
                     "voice_handoffs": 8,
                     "listings_secured": 7,
-                    "take_away_success": 73.4
-                }
-            }
+                    "take_away_success": 73.4,
+                },
+            },
         }
         return base_metrics.get(bot_type, {})
 
@@ -194,7 +206,7 @@ class ConsolidatedBotManager:
         responses = {
             "lead_bot": f"Lead Bot: Thanks for your message '{message}'. I'm setting up your follow-up sequence based on your interest level.",
             "buyer_bot": f"Buyer Bot: I understand you're looking for properties. Based on '{message}', I've found 3 matches in your criteria.",
-            "seller_bot": f"Jorge: {message}? Let me be direct - are you actually ready to sell or just testing the waters?"
+            "seller_bot": f"Jorge: {message}? Let me be direct - are you actually ready to sell or just testing the waters?",
         }
 
         return {
@@ -202,30 +214,33 @@ class ConsolidatedBotManager:
             "bot_type": bot_type,
             "confidence": 87.3,
             "next_action": "continue_conversation" if bot_type != "seller_bot" else "apply_pressure",
-            "context_updated": True
+            "context_updated": True,
         }
+
 
 @st.cache_resource
 def get_consolidated_manager():
     return ConsolidatedBotManager()
 
+
 def render_sidebar():
     """Render the streamlined navigation sidebar."""
     with st.sidebar:
-        st.markdown("""
+        st.markdown(
+            """
         <div style="text-align: center; padding: 1rem 0;">
             <h2 style="color: #1E88E5; font-family: 'Space Grotesk', sans-serif;">🤖 JORGE AI</h2>
             <p style="color: #8B949E; font-size: 0.8rem; letter-spacing: 0.1em;">CONSOLIDATED COMMAND</p>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
         st.markdown("---")
 
         # Streamlined navigation
         selected_view = st.radio(
-            "Dashboard View:",
-            ["📊 Overview", "🎯 Lead Bot", "🏠 Buyer Bot", "💼 Seller Bot", "⚙️ Settings"],
-            index=0
+            "Dashboard View:", ["📊 Overview", "🎯 Lead Bot", "🏠 Buyer Bot", "💼 Seller Bot", "⚙️ Settings"], index=0
         )
 
         st.markdown("---")
@@ -249,6 +264,7 @@ def render_sidebar():
         st.caption("v2.0.0-Consolidated")
 
         return selected_view
+
 
 def render_overview_dashboard():
     """Render the consolidated overview dashboard."""
@@ -286,29 +302,32 @@ def render_overview_dashboard():
         scores = [
             bot_performance.get("lead_bot", {}).get("score", 0),
             bot_performance.get("buyer_bot", {}).get("score", 0),
-            bot_performance.get("seller_bot", {}).get("score", 0)
+            bot_performance.get("seller_bot", {}).get("score", 0),
         ]
         active_counts = [
             bot_performance.get("lead_bot", {}).get("active", 0),
             bot_performance.get("buyer_bot", {}).get("active", 0),
-            bot_performance.get("seller_bot", {}).get("active", 0)
+            bot_performance.get("seller_bot", {}).get("active", 0),
         ]
 
         fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=bots, y=scores,
-            mode='markers+lines',
-            marker=dict(size=[x*3 for x in active_counts], color=scores, colorscale='Blues'),
-            name="Performance Score",
-            text=[f"{s}%<br>{a} active" for s, a in zip(scores, active_counts)],
-            textposition="middle center"
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=bots,
+                y=scores,
+                mode="markers+lines",
+                marker=dict(size=[x * 3 for x in active_counts], color=scores, colorscale="Blues"),
+                name="Performance Score",
+                text=[f"{s}%<br>{a} active" for s, a in zip(scores, active_counts)],
+                textposition="middle center",
+            )
+        )
 
         fig.update_layout(
             title="Bot Performance vs Active Conversations",
             xaxis_title="Bot Type",
             yaxis_title="Performance Score",
-            height=300
+            height=300,
         )
 
         if ELITE_STYLING:
@@ -356,18 +375,19 @@ def render_overview_dashboard():
         st.metric("Total Interactions", system_health.get("total_interactions_today", 0))
         st.metric("Peak Concurrent", "17 conversations", help="Highest concurrent load today")
 
+
 def render_bot_dashboard(bot_type: str):
     """Render consolidated dashboard for a specific bot."""
     bot_names = {
         "lead_bot": "🎯 Lead Bot Command Center",
         "buyer_bot": "🏠 Buyer Bot Command Center",
-        "seller_bot": "💼 Seller Bot Command Center"
+        "seller_bot": "💼 Seller Bot Command Center",
     }
 
     bot_descriptions = {
         "lead_bot": "**3-7-30 Day Follow-up Sequences & Lead Nurturing**",
         "buyer_bot": "**Property Matching & Buyer Qualification**",
-        "seller_bot": "**Confrontational Qualification & Stall-Breaking**"
+        "seller_bot": "**Confrontational Qualification & Stall-Breaking**",
     }
 
     st.header(bot_names.get(bot_type, "Bot Dashboard"))
@@ -407,6 +427,7 @@ def render_bot_dashboard(bot_type: str):
         with tab3:
             render_consolidated_analytics(bot_type, metrics.get("analytics", {}))
 
+
 def render_lead_chat_and_pipeline(manager, metrics):
     """Consolidated Lead Bot chat and pipeline view."""
     col_chat, col_pipeline = st.columns([2, 1])
@@ -415,12 +436,12 @@ def render_lead_chat_and_pipeline(manager, metrics):
         st.subheader("💬 Lead Conversation")
 
         # Chat interface
-        if 'lead_chat_history' not in st.session_state:
+        if "lead_chat_history" not in st.session_state:
             st.session_state.lead_chat_history = []
 
         # Display recent messages
         for msg in st.session_state.lead_chat_history[-5:]:  # Show last 5 messages
-            if msg['sender'] == 'user':
+            if msg["sender"] == "user":
                 st.markdown(f"**Lead**: {msg['content']}")
             else:
                 st.markdown(f"**Lead Bot**: {msg['content']}")
@@ -431,20 +452,16 @@ def render_lead_chat_and_pipeline(manager, metrics):
         if st.button("Send to Lead Bot", use_container_width=True):
             if user_message:
                 # Add to history
-                st.session_state.lead_chat_history.append({
-                    'sender': 'user',
-                    'content': user_message,
-                    'timestamp': datetime.now()
-                })
+                st.session_state.lead_chat_history.append(
+                    {"sender": "user", "content": user_message, "timestamp": datetime.now()}
+                )
 
                 # Get response
                 response = run_async(manager.chat_with_bot("lead_bot", user_message))
                 if response:
-                    st.session_state.lead_chat_history.append({
-                        'sender': 'bot',
-                        'content': response['response_content'],
-                        'timestamp': datetime.now()
-                    })
+                    st.session_state.lead_chat_history.append(
+                        {"sender": "bot", "content": response["response_content"], "timestamp": datetime.now()}
+                    )
                 st.rerun()
 
     with col_pipeline:
@@ -454,19 +471,20 @@ def render_lead_chat_and_pipeline(manager, metrics):
         pipeline_leads = [
             {"name": "Sarah J.", "step": "Day 7", "score": 85},
             {"name": "Mike C.", "step": "Day 3", "score": 73},
-            {"name": "Jennifer W.", "step": "Day 30", "score": 91}
+            {"name": "Jennifer W.", "step": "Day 30", "score": 91},
         ]
 
         for lead in pipeline_leads:
             with st.container():
                 st.write(f"**{lead['name']}** - {lead['step']}")
-                st.progress(lead['score']/100)
+                st.progress(lead["score"] / 100)
                 st.caption(f"Score: {lead['score']}")
                 st.divider()
 
         # Quick stats
         st.metric("Active Sequences", "23", delta="+5")
         st.metric("Response Rate", "78.9%", delta="+3.2%")
+
 
 def render_buyer_chat_and_properties(manager, metrics):
     """Consolidated Buyer Bot chat and properties view."""
@@ -476,12 +494,12 @@ def render_buyer_chat_and_properties(manager, metrics):
         st.subheader("💬 Buyer Conversation")
 
         # Chat interface
-        if 'buyer_chat_history' not in st.session_state:
+        if "buyer_chat_history" not in st.session_state:
             st.session_state.buyer_chat_history = []
 
         # Display recent messages
         for msg in st.session_state.buyer_chat_history[-5:]:
-            if msg['sender'] == 'user':
+            if msg["sender"] == "user":
                 st.markdown(f"**Buyer**: {msg['content']}")
             else:
                 st.markdown(f"**Buyer Bot**: {msg['content']}")
@@ -491,19 +509,15 @@ def render_buyer_chat_and_properties(manager, metrics):
 
         if st.button("Send to Buyer Bot", use_container_width=True):
             if user_message:
-                st.session_state.buyer_chat_history.append({
-                    'sender': 'user',
-                    'content': user_message,
-                    'timestamp': datetime.now()
-                })
+                st.session_state.buyer_chat_history.append(
+                    {"sender": "user", "content": user_message, "timestamp": datetime.now()}
+                )
 
                 response = run_async(manager.chat_with_bot("buyer_bot", user_message))
                 if response:
-                    st.session_state.buyer_chat_history.append({
-                        'sender': 'bot',
-                        'content': response['response_content'],
-                        'timestamp': datetime.now()
-                    })
+                    st.session_state.buyer_chat_history.append(
+                        {"sender": "bot", "content": response["response_content"], "timestamp": datetime.now()}
+                    )
                 st.rerun()
 
     with col_properties:
@@ -513,7 +527,7 @@ def render_buyer_chat_and_properties(manager, metrics):
         matches = [
             {"address": "123 Oak St", "price": "$725K", "match": "92%"},
             {"address": "456 Pine Ave", "price": "$685K", "match": "87%"},
-            {"address": "789 Elm Dr", "price": "$750K", "match": "84%"}
+            {"address": "789 Elm Dr", "price": "$750K", "match": "84%"},
         ]
 
         for prop in matches:
@@ -525,6 +539,7 @@ def render_buyer_chat_and_properties(manager, metrics):
         st.metric("Matches Sent", "45", delta="+12")
         st.metric("Accuracy", "89.7%", delta="+1.8%")
 
+
 def render_seller_chat_and_qualification(manager, metrics):
     """Consolidated Seller Bot chat and qualification view."""
     col_chat, col_qualification = st.columns([2, 1])
@@ -533,12 +548,12 @@ def render_seller_chat_and_qualification(manager, metrics):
         st.subheader("💬 Jorge's Qualification")
 
         # Chat interface
-        if 'seller_chat_history' not in st.session_state:
+        if "seller_chat_history" not in st.session_state:
             st.session_state.seller_chat_history = []
 
         # Display recent messages
         for msg in st.session_state.seller_chat_history[-5:]:
-            if msg['sender'] == 'user':
+            if msg["sender"] == "user":
                 st.markdown(f"**Seller**: {msg['content']}")
             else:
                 st.markdown(f"**Jorge**: {msg['content']}")
@@ -548,22 +563,18 @@ def render_seller_chat_and_qualification(manager, metrics):
 
         if st.button("Send to Jorge", use_container_width=True):
             if user_message:
-                st.session_state.seller_chat_history.append({
-                    'sender': 'user',
-                    'content': user_message,
-                    'timestamp': datetime.now()
-                })
+                st.session_state.seller_chat_history.append(
+                    {"sender": "user", "content": user_message, "timestamp": datetime.now()}
+                )
 
                 response = run_async(manager.chat_with_bot("seller_bot", user_message))
                 if response:
-                    st.session_state.seller_chat_history.append({
-                        'sender': 'bot',
-                        'content': response['response_content'],
-                        'timestamp': datetime.now()
-                    })
+                    st.session_state.seller_chat_history.append(
+                        {"sender": "bot", "content": response["response_content"], "timestamp": datetime.now()}
+                    )
 
                     # Show Jorge's strategy
-                    if response.get('next_action') == 'apply_pressure':
+                    if response.get("next_action") == "apply_pressure":
                         st.warning("🎯 Strategy: Take-away close deployed")
                 st.rerun()
 
@@ -574,17 +585,18 @@ def render_seller_chat_and_qualification(manager, metrics):
         qualifications = [
             {"seller": "Robert M.", "frs": 84, "status": "🟡 Stalling"},
             {"seller": "Lisa D.", "frs": 92, "status": "🟢 Hot"},
-            {"seller": "Tom W.", "frs": 67, "status": "🔴 Resistant"}
+            {"seller": "Tom W.", "frs": 67, "status": "🔴 Resistant"},
         ]
 
         for qual in qualifications:
             st.write(f"**{qual['seller']}** - FRS: {qual['frs']}")
-            st.write(qual['status'])
+            st.write(qual["status"])
             st.divider()
 
         # Quick stats
         st.metric("Qualifications", "12", delta="+3")
         st.metric("Close Rate", "67.8%", delta="+3.4%")
+
 
 def render_consolidated_performance(bot_type: str, performance_data: Dict[str, Any]):
     """Render consolidated performance metrics for any bot."""
@@ -629,19 +641,17 @@ def render_consolidated_performance(bot_type: str, performance_data: Dict[str, A
     st.markdown("### 📈 Performance Trends")
 
     # Mock trend data
-    dates = pd.date_range(start='2026-01-18', periods=7, freq='D')
-    trend_data = {
-        "Date": dates,
-        "Performance": [85.2, 87.4, 89.1, 88.3, 91.7, 93.2, 90.8],
-        "Target": [85] * 7
-    }
+    dates = pd.date_range(start="2026-01-18", periods=7, freq="D")
+    trend_data = {"Date": dates, "Performance": [85.2, 87.4, 89.1, 88.3, 91.7, 93.2, 90.8], "Target": [85] * 7}
 
     df_trend = pd.DataFrame(trend_data)
-    fig = px.line(df_trend, x="Date", y=["Performance", "Target"],
-                  title=f"{bot_type.replace('_', ' ').title()} Performance Trend")
+    fig = px.line(
+        df_trend, x="Date", y=["Performance", "Target"], title=f"{bot_type.replace('_', ' ').title()} Performance Trend"
+    )
     if ELITE_STYLING:
         fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
+
 
 def render_consolidated_analytics(bot_type: str, analytics_data: Dict[str, Any]):
     """Render consolidated analytics for any bot."""
@@ -653,12 +663,8 @@ def render_consolidated_analytics(bot_type: str, analytics_data: Dict[str, Any])
 
         with col1:
             st.markdown("**Sequence Performance**")
-            sequence_data = {
-                "Step": ["Day 3", "Day 7", "Day 14", "Day 30"],
-                "Success": [45.2, 62.8, 38.5, 23.4]
-            }
-            fig = px.bar(pd.DataFrame(sequence_data), x="Step", y="Success",
-                        title="Sequence Step Success Rates")
+            sequence_data = {"Step": ["Day 3", "Day 7", "Day 14", "Day 30"], "Success": [45.2, 62.8, 38.5, 23.4]}
+            fig = px.bar(pd.DataFrame(sequence_data), x="Step", y="Success", title="Sequence Step Success Rates")
             if ELITE_STYLING:
                 fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
@@ -668,7 +674,7 @@ def render_consolidated_analytics(bot_type: str, analytics_data: Dict[str, Any])
             st.success("🟢 Response time improved 15% this week")
             st.warning("🟡 Day 30 sequences need refresh")
             st.info("🔵 Peak performance during business hours")
-            st.metric("Hot Leads Generated", analytics_data.get('hot_leads_generated', 0))
+            st.metric("Hot Leads Generated", analytics_data.get("hot_leads_generated", 0))
 
     elif bot_type == "buyer_bot":
         col1, col2 = st.columns(2)
@@ -677,7 +683,7 @@ def render_consolidated_analytics(bot_type: str, analytics_data: Dict[str, Any])
             st.markdown("**Match Performance by Price**")
             price_data = {
                 "Range": ["$300-500K", "$500-700K", "$700-900K", "$900K+"],
-                "Accuracy": [85.2, 89.7, 92.1, 87.3]
+                "Accuracy": [85.2, 89.7, 92.1, 87.3],
             }
             fig = px.bar(pd.DataFrame(price_data), x="Range", y="Accuracy")
             if ELITE_STYLING:
@@ -686,10 +692,10 @@ def render_consolidated_analytics(bot_type: str, analytics_data: Dict[str, Any])
 
         with col2:
             st.markdown("**Conversion Funnel**")
-            st.metric("Buyers Qualified", analytics_data.get('buyers_qualified', 0))
-            st.metric("Properties Matched", analytics_data.get('properties_matched', 0))
-            st.metric("Showings Booked", analytics_data.get('showings_booked', 0))
-            st.metric("Offers Submitted", analytics_data.get('offers_submitted', 0))
+            st.metric("Buyers Qualified", analytics_data.get("buyers_qualified", 0))
+            st.metric("Properties Matched", analytics_data.get("properties_matched", 0))
+            st.metric("Showings Booked", analytics_data.get("showings_booked", 0))
+            st.metric("Offers Submitted", analytics_data.get("offers_submitted", 0))
 
     elif bot_type == "seller_bot":
         col1, col2 = st.columns(2)
@@ -698,7 +704,7 @@ def render_consolidated_analytics(bot_type: str, analytics_data: Dict[str, Any])
             st.markdown("**Jorge's Effectiveness**")
             strategy_data = {
                 "Strategy": ["Take-Away", "Direct", "Pressure", "Reality"],
-                "Success": [91.4, 78.5, 67.3, 72.8]
+                "Success": [91.4, 78.5, 67.3, 72.8],
             }
             fig = px.bar(pd.DataFrame(strategy_data), x="Strategy", y="Success")
             if ELITE_STYLING:
@@ -707,10 +713,11 @@ def render_consolidated_analytics(bot_type: str, analytics_data: Dict[str, Any])
 
         with col2:
             st.markdown("**Qualification Results**")
-            st.metric("Total Qualifications", analytics_data.get('total_qualifications', 0))
-            st.metric("Hot Leads", analytics_data.get('hot_leads', 0))
-            st.metric("Voice Handoffs", analytics_data.get('voice_handoffs', 0))
-            st.metric("Listings Secured", analytics_data.get('listings_secured', 0))
+            st.metric("Total Qualifications", analytics_data.get("total_qualifications", 0))
+            st.metric("Hot Leads", analytics_data.get("hot_leads", 0))
+            st.metric("Voice Handoffs", analytics_data.get("voice_handoffs", 0))
+            st.metric("Listings Secured", analytics_data.get("listings_secured", 0))
+
 
 def render_global_settings():
     """Render centralized settings for all bots."""
@@ -718,9 +725,9 @@ def render_global_settings():
     st.markdown("**Centralized settings for all Jorge AI bots**")
 
     # Global settings tabs
-    general_tab, bots_tab, compliance_tab, advanced_tab = st.tabs([
-        "🔧 General", "🤖 Bot Config", "⚖️ Compliance", "🚀 Advanced"
-    ])
+    general_tab, bots_tab, compliance_tab, advanced_tab = st.tabs(
+        ["🔧 General", "🤖 Bot Config", "⚖️ Compliance", "🚀 Advanced"]
+    )
 
     with general_tab:
         col1, col2 = st.columns(2)
@@ -742,8 +749,7 @@ def render_global_settings():
     with bots_tab:
         st.subheader("Individual Bot Configuration")
 
-        bot_config = st.selectbox("Select Bot to Configure",
-                                  ["Lead Bot", "Buyer Bot", "Seller Bot (Jorge)"])
+        bot_config = st.selectbox("Select Bot to Configure", ["Lead Bot", "Buyer Bot", "Seller Bot (Jorge)"])
 
         if bot_config == "Seller Bot (Jorge)":
             col1, col2 = st.columns(2)
@@ -778,9 +784,8 @@ def render_global_settings():
             st.selectbox("Logging Level", ["Info", "Debug", "Warning", "Error"])
 
         with col2:
-            st.json({"webhook_url": "https://api.example.com/webhook",
-                    "retry_attempts": 3,
-                    "timeout_ms": 5000})
+            st.json({"webhook_url": "https://api.example.com/webhook", "retry_attempts": 3, "timeout_ms": 5000})
+
 
 def main():
     """Main application function."""
@@ -789,7 +794,8 @@ def main():
         inject_elite_css()
 
     # Header
-    st.markdown("""
+    st.markdown(
+        """
         <div style="background: linear-gradient(135deg, #1E88E5 0%, #6366F1 100%);
                     padding: 2rem; border-radius: 16px; margin-bottom: 2rem; text-align: center;">
             <h1 style="color: white; margin: 0; font-size: 2.5rem; font-weight: 700;">
@@ -799,7 +805,9 @@ def main():
                 Streamlined Command Center - 39% Fewer Tabs, 100% More Efficiency
             </p>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     # Sidebar navigation
     selected_view = render_sidebar()
@@ -815,6 +823,7 @@ def main():
         render_bot_dashboard("seller_bot")
     elif selected_view == "⚙️ Settings":
         render_global_settings()
+
 
 if __name__ == "__main__":
     main()

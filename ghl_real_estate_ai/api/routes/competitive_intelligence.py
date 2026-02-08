@@ -32,43 +32,40 @@ Created: 2026-01-18
 Integration: Seamlessly integrates with existing EnterpriseHub architecture
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Path, BackgroundTasks
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import List, Dict, Any, Optional, Union
-from datetime import datetime, timedelta
-from pydantic import BaseModel, Field
-from enum import Enum
 import logging
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Union
 
-# Import competitive intelligence services
-from ghl_real_estate_ai.services.competitive_data_pipeline import (
-    get_competitive_data_pipeline,
-    CompetitorDataPoint,
-    MarketInsight,
-    ThreatAssessment,
-    DataSource,
-    DataType,
-    ThreatLevel
-)
-from ghl_real_estate_ai.services.competitive_intelligence_system import (
-    get_competitive_intelligence_system,
-    IntelligenceReport
-)
-from ghl_real_estate_ai.services.competitive_response_automation import (
-    get_competitive_response_engine
-)
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Query
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from pydantic import BaseModel, Field
 
 # Import shared dependencies
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 
+# Import competitive intelligence services
+from ghl_real_estate_ai.services.competitive_data_pipeline import (
+    CompetitorDataPoint,
+    DataSource,
+    DataType,
+    MarketInsight,
+    ThreatAssessment,
+    ThreatLevel,
+    get_competitive_data_pipeline,
+)
+from ghl_real_estate_ai.services.competitive_intelligence_system import (
+    IntelligenceReport,
+    get_competitive_intelligence_system,
+)
+from ghl_real_estate_ai.services.competitive_response_automation import get_competitive_response_engine
+
 logger = get_logger(__name__)
 
 # Initialize router
 router = APIRouter(
-    prefix="/api/v1/competitive-intelligence",
-    tags=["Competitive Intelligence"],
-    dependencies=[Depends(HTTPBearer())]
+    prefix="/api/v1/competitive-intelligence", tags=["Competitive Intelligence"], dependencies=[Depends(HTTPBearer())]
 )
 
 # Security
@@ -76,6 +73,7 @@ security = HTTPBearer()
 
 
 # Request/Response Models
+
 
 class CompetitorMonitoringRequest(BaseModel):
     """Request model for competitor monitoring setup."""
@@ -91,7 +89,9 @@ class MarketAnalysisRequest(BaseModel):
 
     market_area: str = Field(..., min_length=2, max_length=100)
     time_period: int = Field(30, ge=1, le=365, description="Analysis period in days")
-    analysis_types: List[str] = Field(["pricing", "inventory", "competition"], description="Types of analysis to perform")
+    analysis_types: List[str] = Field(
+        ["pricing", "inventory", "competition"], description="Types of analysis to perform"
+    )
     include_forecasts: bool = Field(False, description="Include predictive forecasts")
 
 
@@ -158,6 +158,7 @@ class PerformanceMetricsResponse(BaseModel):
 
 # Authentication and Authorization
 
+
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Validate JWT token and extract user information."""
     try:
@@ -167,7 +168,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
             "user_id": "user_123",
             "email": "user@example.com",
             "roles": ["competitor_analyst", "admin"],
-            "permissions": ["read:competitive_data", "write:competitive_data", "admin:competitive_system"]
+            "permissions": ["read:competitive_data", "write:competitive_data", "admin:competitive_system"],
         }
     except Exception as e:
         logger.error(f"Authentication failed: {e}")
@@ -176,20 +177,23 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 
 async def require_permission(permission: str):
     """Dependency for checking user permissions."""
+
     def permission_checker(user: dict = Depends(get_current_user)):
         if permission not in user.get("permissions", []):
             raise HTTPException(status_code=403, detail=f"Permission required: {permission}")
         return user
+
     return permission_checker
 
 
 # Data Collection and Monitoring Endpoints
 
+
 @router.post("/monitoring/start", response_model=Dict[str, Any])
 async def start_competitive_monitoring(
     request: CompetitorMonitoringRequest,
     background_tasks: BackgroundTasks,
-    user: dict = Depends(require_permission("write:competitive_data"))
+    user: dict = Depends(require_permission("write:competitive_data")),
 ):
     """
     Start real-time competitive monitoring for specified competitors.
@@ -204,9 +208,7 @@ async def start_competitive_monitoring(
         data_pipeline = get_competitive_data_pipeline()
 
         # Start monitoring
-        monitoring_started = await data_pipeline.start_real_time_monitoring(
-            competitor_ids=request.competitor_ids
-        )
+        monitoring_started = await data_pipeline.start_real_time_monitoring(competitor_ids=request.competitor_ids)
 
         if not monitoring_started:
             raise HTTPException(status_code=500, detail="Failed to start monitoring system")
@@ -218,7 +220,7 @@ async def start_competitive_monitoring(
             "competitors": request.competitor_ids,
             "started_at": datetime.now().isoformat(),
             "monitoring_frequency": request.monitoring_frequency,
-            "data_sources": request.data_sources or "all"
+            "data_sources": request.data_sources or "all",
         }
         await cache.set(f"monitoring:log:{datetime.now().strftime('%Y%m%d%H%M')}", monitoring_log, ttl=86400)
 
@@ -228,7 +230,7 @@ async def start_competitive_monitoring(
             "monitoring_frequency": request.monitoring_frequency,
             "estimated_data_points_per_hour": len(request.competitor_ids) * 12,  # Estimate
             "started_at": datetime.now().isoformat(),
-            "monitoring_id": f"monitor_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+            "monitoring_id": f"monitor_{datetime.now().strftime('%Y%m%d%H%M%S')}",
         }
 
     except Exception as e:
@@ -237,9 +239,7 @@ async def start_competitive_monitoring(
 
 
 @router.post("/monitoring/stop", response_model=Dict[str, Any])
-async def stop_competitive_monitoring(
-    user: dict = Depends(require_permission("write:competitive_data"))
-):
+async def stop_competitive_monitoring(user: dict = Depends(require_permission("write:competitive_data"))):
     """
     Stop real-time competitive monitoring.
 
@@ -263,7 +263,7 @@ async def stop_competitive_monitoring(
             "stopped_at": datetime.now().isoformat(),
             "final_metrics": performance_metrics,
             "data_retention_days": 30,
-            "stopped_by": user["user_id"]
+            "stopped_by": user["user_id"],
         }
 
     except Exception as e:
@@ -276,7 +276,7 @@ async def get_competitor_data(
     competitor_id: str = Path(..., description="Competitor identifier"),
     data_sources: Optional[List[str]] = Query(None, description="Filter by data sources"),
     time_range_hours: int = Query(24, ge=1, le=168, description="Data time range in hours"),
-    user: dict = Depends(require_permission("read:competitive_data"))
+    user: dict = Depends(require_permission("read:competitive_data")),
 ):
     """
     Retrieve competitive data for a specific competitor.
@@ -300,8 +300,7 @@ async def get_competitor_data(
 
         # Collect competitor data
         data_points = await data_pipeline.collect_competitor_data(
-            competitor_id=competitor_id,
-            data_sources=source_filters
+            competitor_id=competitor_id, data_sources=source_filters
         )
 
         # Calculate quality metrics
@@ -322,7 +321,9 @@ async def get_competitor_data(
                     "data_type": dp.data_type.value,
                     "collected_at": dp.collected_at.isoformat(),
                     "confidence_score": dp.confidence_score,
-                    "summary": dp.ai_insights.get("analysis", "No analysis available") if dp.ai_insights else "Raw data"
+                    "summary": dp.ai_insights.get("analysis", "No analysis available")
+                    if dp.ai_insights
+                    else "Raw data",
                 }
                 for dp in data_points
             ],
@@ -330,14 +331,16 @@ async def get_competitor_data(
                 "total_data_points": len(data_points),
                 "data_sources_used": len(set(dp.data_source.value for dp in data_points)),
                 "collection_time_range": f"{time_range_hours} hours",
-                "most_recent_collection": max((dp.collected_at for dp in data_points), default=datetime.now()).isoformat()
+                "most_recent_collection": max(
+                    (dp.collected_at for dp in data_points), default=datetime.now()
+                ).isoformat(),
             },
             quality_metrics={
                 "average_quality_score": avg_quality,
                 "high_quality_data_points": len([qs for qs in quality_scores if qs > 0.8]),
-                "data_coverage": len(data_points) / max(len(DataType), 1)
+                "data_coverage": len(data_points) / max(len(DataType), 1),
             },
-            last_updated=datetime.now()
+            last_updated=datetime.now(),
         )
 
     except Exception as e:
@@ -347,10 +350,10 @@ async def get_competitor_data(
 
 # Market Analysis and Intelligence Endpoints
 
+
 @router.post("/market-analysis", response_model=MarketIntelligenceResponse)
 async def analyze_market_trends(
-    request: MarketAnalysisRequest,
-    user: dict = Depends(require_permission("read:competitive_data"))
+    request: MarketAnalysisRequest, user: dict = Depends(require_permission("read:competitive_data"))
 ):
     """
     Perform comprehensive market trend analysis.
@@ -366,8 +369,7 @@ async def analyze_market_trends(
 
         # Generate market insights
         insights = await data_pipeline.analyze_market_trends(
-            market_area=request.market_area,
-            time_period=request.time_period
+            market_area=request.market_area, time_period=request.time_period
         )
 
         # Get competitive intelligence system for additional analysis
@@ -375,24 +377,25 @@ async def analyze_market_trends(
 
         # Generate comprehensive intelligence report
         intelligence_report = await intelligence_system.generate_intelligence_report(
-            market_areas=[request.market_area],
-            analysis_period=f"{request.time_period}_days"
+            market_areas=[request.market_area], analysis_period=f"{request.time_period}_days"
         )
 
         # Format insights for response
         formatted_insights = []
         for insight in insights:
-            formatted_insights.append({
-                "insight_id": insight.insight_id,
-                "type": insight.insight_type,
-                "title": insight.title,
-                "description": insight.description,
-                "key_findings": insight.key_findings,
-                "confidence_score": insight.confidence_score,
-                "impact_assessment": insight.impact_assessment,
-                "strategic_implications": insight.strategic_implications,
-                "recommended_actions": insight.recommended_actions
-            })
+            formatted_insights.append(
+                {
+                    "insight_id": insight.insight_id,
+                    "type": insight.insight_type,
+                    "title": insight.title,
+                    "description": insight.description,
+                    "key_findings": insight.key_findings,
+                    "confidence_score": insight.confidence_score,
+                    "impact_assessment": insight.impact_assessment,
+                    "strategic_implications": insight.strategic_implications,
+                    "recommended_actions": insight.recommended_actions,
+                }
+            )
 
         # Compile trend analysis
         trend_analysis = {
@@ -401,7 +404,7 @@ async def analyze_market_trends(
             "inventory_trend": "decreasing",
             "competition_intensity": "high",
             "opportunity_indicators": ["first_time_buyer_market", "investor_interest"],
-            "risk_indicators": ["interest_rate_sensitivity", "inventory_shortage"]
+            "risk_indicators": ["interest_rate_sensitivity", "inventory_shortage"],
         }
 
         # Competitive landscape analysis
@@ -412,14 +415,14 @@ async def analyze_market_trends(
             "differentiation_opportunities": [
                 "Technology integration",
                 "Customer service excellence",
-                "Local market expertise"
+                "Local market expertise",
             ],
             "threat_level": "medium",
             "competitive_advantages": [
                 "AI-powered insights",
                 "Real-time monitoring",
-                "Comprehensive market intelligence"
-            ]
+                "Comprehensive market intelligence",
+            ],
         }
 
         # Strategic recommendations
@@ -428,7 +431,7 @@ async def analyze_market_trends(
             "Strengthen local market positioning",
             "Enhance customer experience and retention",
             "Develop niche market specializations",
-            "Improve competitive response capabilities"
+            "Improve competitive response capabilities",
         ]
 
         return MarketIntelligenceResponse(
@@ -439,7 +442,7 @@ async def analyze_market_trends(
             competitive_landscape=competitive_landscape,
             strategic_recommendations=strategic_recommendations,
             confidence_score=intelligence_report.confidence_score,
-            generated_at=datetime.now()
+            generated_at=datetime.now(),
         )
 
     except Exception as e:
@@ -449,10 +452,10 @@ async def analyze_market_trends(
 
 # Threat Detection and Assessment Endpoints
 
+
 @router.post("/threats/detect", response_model=ThreatAssessmentResponse)
 async def detect_competitive_threats(
-    request: ThreatDetectionRequest,
-    user: dict = Depends(require_permission("read:competitive_data"))
+    request: ThreatDetectionRequest, user: dict = Depends(require_permission("read:competitive_data"))
 ):
     """
     Detect and assess competitive threats.
@@ -490,20 +493,22 @@ async def detect_competitive_threats(
         # Format threats for response
         formatted_threats = []
         for threat in threats:
-            formatted_threats.append({
-                "threat_id": threat.threat_id,
-                "competitor_id": threat.competitor_id,
-                "threat_type": threat.threat_type,
-                "threat_level": threat.threat_level.value,
-                "description": threat.threat_description,
-                "potential_impact": threat.potential_impact,
-                "affected_markets": threat.affected_markets,
-                "timeline": threat.timeline,
-                "confidence_level": threat.confidence_level,
-                "recommended_response": threat.recommended_response,
-                "response_urgency": threat.response_urgency,
-                "evidence_count": len(threat.evidence)
-            })
+            formatted_threats.append(
+                {
+                    "threat_id": threat.threat_id,
+                    "competitor_id": threat.competitor_id,
+                    "threat_type": threat.threat_type,
+                    "threat_level": threat.threat_level.value,
+                    "description": threat.threat_description,
+                    "potential_impact": threat.potential_impact,
+                    "affected_markets": threat.affected_markets,
+                    "timeline": threat.timeline,
+                    "confidence_level": threat.confidence_level,
+                    "recommended_response": threat.recommended_response,
+                    "response_urgency": threat.response_urgency,
+                    "evidence_count": len(threat.evidence),
+                }
+            )
 
         # Risk summary
         high_threats = [t for t in threats if t.threat_level in [ThreatLevel.HIGH, ThreatLevel.CRITICAL]]
@@ -512,7 +517,7 @@ async def detect_competitive_threats(
             "high_priority_threats": len(high_threats),
             "overall_risk_level": "high" if len(high_threats) > 2 else "medium" if len(threats) > 0 else "low",
             "immediate_action_required": len([t for t in threats if t.response_urgency == "immediate"]),
-            "threat_categories": list(set(t.threat_type for t in threats))
+            "threat_categories": list(set(t.threat_type for t in threats)),
         }
 
         # Alert recommendations
@@ -522,11 +527,13 @@ async def detect_competitive_threats(
         if len(threats) > 5:
             alert_recommendations.append("Consider enhanced monitoring frequency")
 
-        alert_recommendations.extend([
-            "Review competitive response protocols",
-            "Update threat monitoring thresholds",
-            "Assess defensive positioning strategies"
-        ])
+        alert_recommendations.extend(
+            [
+                "Review competitive response protocols",
+                "Update threat monitoring thresholds",
+                "Assess defensive positioning strategies",
+            ]
+        )
 
         # Response strategies
         response_strategies = [
@@ -535,22 +542,22 @@ async def detect_competitive_threats(
                 "description": "Adjust pricing strategy to counter competitive pressure",
                 "timeline": "immediate",
                 "cost_impact": "low",
-                "effectiveness": "high"
+                "effectiveness": "high",
             },
             {
                 "strategy": "Enhanced Value Proposition",
                 "description": "Strengthen service differentiation and value communication",
                 "timeline": "short_term",
                 "cost_impact": "medium",
-                "effectiveness": "high"
+                "effectiveness": "high",
             },
             {
                 "strategy": "Competitive Countermeasures",
                 "description": "Develop specific responses to identified threats",
                 "timeline": "medium_term",
                 "cost_impact": "medium",
-                "effectiveness": "medium"
-            }
+                "effectiveness": "medium",
+            },
         ]
 
         return ThreatAssessmentResponse(
@@ -558,7 +565,7 @@ async def detect_competitive_threats(
             risk_summary=risk_summary,
             alert_recommendations=alert_recommendations,
             response_strategies=response_strategies,
-            assessment_time=datetime.now()
+            assessment_time=datetime.now(),
         )
 
     except Exception as e:
@@ -568,10 +575,10 @@ async def detect_competitive_threats(
 
 # Response Automation Endpoints
 
+
 @router.post("/responses/configure", response_model=Dict[str, Any])
 async def configure_competitive_response(
-    request: CompetitiveResponseRequest,
-    user: dict = Depends(require_permission("write:competitive_data"))
+    request: CompetitiveResponseRequest, user: dict = Depends(require_permission("write:competitive_data"))
 ):
     """
     Configure automated competitive response rules.
@@ -592,12 +599,12 @@ async def configure_competitive_response(
             "approval_required": request.approval_required,
             "created_by": user["user_id"],
             "created_at": datetime.now().isoformat(),
-            "status": "active"
+            "status": "active",
         }
 
         # Store configuration in cache for now
         cache = get_cache_service()
-        await cache.set(f"response_config:{response_config['response_id']}", response_config, ttl=86400*30)
+        await cache.set(f"response_config:{response_config['response_id']}", response_config, ttl=86400 * 30)
 
         return {
             "status": "response_configured",
@@ -606,7 +613,7 @@ async def configure_competitive_response(
             "approval_workflow": "enabled" if request.approval_required else "disabled",
             "trigger_conditions": len(request.trigger_conditions),
             "estimated_response_time": "5-15 minutes" if request.automation_level == "automatic" else "manual",
-            "configured_at": datetime.now().isoformat()
+            "configured_at": datetime.now().isoformat(),
         }
 
     except Exception as e:
@@ -616,10 +623,9 @@ async def configure_competitive_response(
 
 # System Performance and Health Endpoints
 
+
 @router.get("/system/performance", response_model=PerformanceMetricsResponse)
-async def get_system_performance_metrics(
-    user: dict = Depends(require_permission("read:competitive_data"))
-):
+async def get_system_performance_metrics(user: dict = Depends(require_permission("read:competitive_data"))):
     """
     Get comprehensive system performance metrics.
 
@@ -639,7 +645,7 @@ async def get_system_performance_metrics(
             "monitored_competitors": performance_metrics.get("monitored_competitors", 0),
             "average_collection_time_ms": 1250.0,
             "collection_errors_24h": 5,
-            "data_sources_active": len(DataSource)
+            "data_sources_active": len(DataSource),
         }
 
         # Processing metrics
@@ -649,7 +655,7 @@ async def get_system_performance_metrics(
             "processed_items_24h": 450,
             "processing_errors_24h": 8,
             "ai_enrichment_rate": 0.78,
-            "batch_processing_efficiency": 0.89
+            "batch_processing_efficiency": 0.89,
         }
 
         # Quality metrics
@@ -659,7 +665,7 @@ async def get_system_performance_metrics(
             "error_rate": performance_metrics.get("error_rate", 0.0),
             "data_completeness": 0.84,
             "accuracy_score": 0.91,
-            "timeliness_score": 0.88
+            "timeliness_score": 0.88,
         }
 
         # System health
@@ -670,7 +676,7 @@ async def get_system_performance_metrics(
             "database_connection_pool": 85.0,
             "memory_usage_percent": 68.0,
             "cpu_usage_percent": 45.0,
-            "disk_usage_percent": 32.0
+            "disk_usage_percent": 32.0,
         }
 
         # Uptime stats
@@ -679,7 +685,7 @@ async def get_system_performance_metrics(
             "monitoring_uptime_percent": 99.2,
             "api_availability_percent": 99.8,
             "last_restart": (datetime.now() - timedelta(hours=72)).isoformat(),
-            "scheduled_maintenance": None
+            "scheduled_maintenance": None,
         }
 
         return PerformanceMetricsResponse(
@@ -687,7 +693,7 @@ async def get_system_performance_metrics(
             processing_metrics=processing_metrics,
             quality_metrics=quality_metrics,
             system_health=system_health,
-            uptime_stats=uptime_stats
+            uptime_stats=uptime_stats,
         )
 
     except Exception as e:
@@ -696,9 +702,7 @@ async def get_system_performance_metrics(
 
 
 @router.get("/system/health", response_model=Dict[str, Any])
-async def get_system_health(
-    user: dict = Depends(require_permission("read:competitive_data"))
-):
+async def get_system_health(user: dict = Depends(require_permission("read:competitive_data"))):
     """
     Get system health status and diagnostics.
 
@@ -733,7 +737,7 @@ async def get_system_health(
             "api_endpoints": "healthy",
             "authentication": "healthy",
             "monitoring_system": "healthy",
-            "background_tasks": "healthy"
+            "background_tasks": "healthy",
         }
 
         # Overall health
@@ -747,11 +751,9 @@ async def get_system_health(
             "unhealthy_components": unhealthy_components,
             "system_version": "1.0.0",
             "health_check_duration_ms": 125,
-            "recommendations": [
-                "System operating normally"
-            ] if overall_status == "healthy" else [
-                f"Address issues with: {', '.join(unhealthy_components)}"
-            ]
+            "recommendations": ["System operating normally"]
+            if overall_status == "healthy"
+            else [f"Address issues with: {', '.join(unhealthy_components)}"],
         }
 
     except Exception as e:
@@ -761,16 +763,17 @@ async def get_system_health(
             "timestamp": datetime.now().isoformat(),
             "error": str(e),
             "components": {},
-            "recommendations": ["System experiencing errors - check logs"]
+            "recommendations": ["System experiencing errors - check logs"],
         }
 
 
 # Data Management Endpoints
 
+
 @router.delete("/data/cleanup", response_model=Dict[str, Any])
 async def cleanup_expired_data(
     retention_days: int = Query(30, ge=1, le=365, description="Data retention period in days"),
-    user: dict = Depends(require_permission("admin:competitive_system"))
+    user: dict = Depends(require_permission("admin:competitive_system")),
 ):
     """
     Clean up expired competitive intelligence data.
@@ -794,9 +797,9 @@ async def cleanup_expired_data(
             "retention_days": retention_days,
             "cleaned_records": cleanup_result.get("cleaned_records", 0),
             "retained_records": cleanup_result.get("retained_records", 0),
-            "cleanup_time": datetime.now().isoformat()
+            "cleanup_time": datetime.now().isoformat(),
         }
-        await cache.set(f"cleanup:log:{datetime.now().strftime('%Y%m%d%H%M')}", cleanup_log, ttl=86400*7)
+        await cache.set(f"cleanup:log:{datetime.now().strftime('%Y%m%d%H%M')}", cleanup_log, ttl=86400 * 7)
 
         return {
             "status": "cleanup_completed",
@@ -805,7 +808,7 @@ async def cleanup_expired_data(
             "records_retained": cleanup_result.get("retained_records", 0),
             "storage_freed_mb": cleanup_result.get("cleaned_records", 0) * 0.5,  # Estimate
             "cleanup_time": datetime.now().isoformat(),
-            "performed_by": user["user_id"]
+            "performed_by": user["user_id"],
         }
 
     except Exception as e:
@@ -818,7 +821,7 @@ async def generate_intelligence_report(
     market_areas: List[str] = Query(..., description="Market areas to analyze"),
     analysis_period: str = Query("30_days", pattern="^(Union[7_days, 30_days]|Union[90_days, 1_year])$"),
     report_format: str = Query("summary", pattern="^(Union[summary, detailed]|executive)$"),
-    user: dict = Depends(require_permission("read:competitive_data"))
+    user: dict = Depends(require_permission("read:competitive_data")),
 ):
     """
     Generate comprehensive competitive intelligence report.
@@ -834,8 +837,7 @@ async def generate_intelligence_report(
 
         # Generate comprehensive report
         intelligence_report = await intelligence_system.generate_intelligence_report(
-            market_areas=market_areas,
-            analysis_period=analysis_period
+            market_areas=market_areas, analysis_period=analysis_period
         )
 
         # Format report based on requested format
@@ -846,7 +848,7 @@ async def generate_intelligence_report(
                 "market_positioning_score": intelligence_report.market_positioning_score,
                 "strategic_recommendations": intelligence_report.strategic_recommendations[:5],  # Top 5
                 "competitive_advantage_areas": intelligence_report.competitive_advantage_areas,
-                "vulnerability_areas": intelligence_report.vulnerability_areas
+                "vulnerability_areas": intelligence_report.vulnerability_areas,
             }
         elif report_format == "detailed":
             report_content = {
@@ -857,12 +859,14 @@ async def generate_intelligence_report(
                 "analysis_period": analysis_period,
                 "insights": [
                     {
-                        "type": insight.insight_type.value if hasattr(insight.insight_type, 'value') else insight.insight_type,
+                        "type": insight.insight_type.value
+                        if hasattr(insight.insight_type, "value")
+                        else insight.insight_type,
                         "title": insight.title,
                         "description": insight.description,
                         "confidence": insight.confidence,
                         "action_required": insight.action_required,
-                        "urgency": insight.urgency
+                        "urgency": insight.urgency,
                     }
                     for insight in intelligence_report.key_insights
                 ],
@@ -874,7 +878,7 @@ async def generate_intelligence_report(
                 "vulnerability_areas": intelligence_report.vulnerability_areas,
                 "confidence_score": intelligence_report.confidence_score,
                 "participating_agents": [agent.value for agent in intelligence_report.participating_agents],
-                "next_update_due": intelligence_report.next_update_due.isoformat()
+                "next_update_due": intelligence_report.next_update_due.isoformat(),
             }
         else:  # summary
             report_content = {
@@ -884,11 +888,13 @@ async def generate_intelligence_report(
                     "total_insights": len(intelligence_report.key_insights),
                     "high_priority": len([i for i in intelligence_report.key_insights if i.action_required]),
                     "threat_level": intelligence_report.threat_assessment.get("overall_threat_level", "medium"),
-                    "opportunity_count": len(intelligence_report.opportunity_analysis.get("significant_opportunities", []))
+                    "opportunity_count": len(
+                        intelligence_report.opportunity_analysis.get("significant_opportunities", [])
+                    ),
                 },
                 "positioning_score": intelligence_report.market_positioning_score,
                 "top_recommendations": intelligence_report.strategic_recommendations[:3],
-                "confidence_score": intelligence_report.confidence_score
+                "confidence_score": intelligence_report.confidence_score,
             }
 
         return {
@@ -898,13 +904,16 @@ async def generate_intelligence_report(
             "metadata": {
                 "market_areas_analyzed": len(market_areas),
                 "analysis_period": analysis_period,
-                "data_sources_used": len(set(
-                    source.value for insight in intelligence_report.key_insights
-                    for source in getattr(insight, 'data_sources', [])
-                )),
+                "data_sources_used": len(
+                    set(
+                        source.value
+                        for insight in intelligence_report.key_insights
+                        for source in getattr(insight, "data_sources", [])
+                    )
+                ),
                 "generation_time_ms": 2450,
-                "generated_by": user["user_id"]
-            }
+                "generated_by": user["user_id"],
+            },
         }
 
     except Exception as e:

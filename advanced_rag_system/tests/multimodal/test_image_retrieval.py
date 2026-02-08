@@ -15,7 +15,6 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from src.core.exceptions import RetrievalError
 from src.multimodal.image_retriever import (
     ImageRetriever,
@@ -50,6 +49,7 @@ class TestMockCLIPEmbeddingProvider:
 
         # Embeddings should be normalized
         import math
+
         for emb in embeddings:
             magnitude = math.sqrt(sum(x * x for x in emb))
             assert abs(magnitude - 1.0) < 0.01
@@ -73,6 +73,7 @@ class TestMockCLIPEmbeddingProvider:
 
         # Should be normalized
         import math
+
         magnitude = math.sqrt(sum(x * x for x in embedding))
         assert abs(magnitude - 1.0) < 0.01
 

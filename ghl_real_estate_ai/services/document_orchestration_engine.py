@@ -25,31 +25,32 @@ Status: Production-Ready Intelligent Document Management
 """
 
 import asyncio
-import uuid
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
-from dataclasses import dataclass, field
-from enum import Enum
-import logging
 import base64
 import hashlib
+import logging
+import uuid
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.services.ghl_client import GHLClient
 from ghl_real_estate_ai.services.optimized_cache_service import get_cache_service
-from ghl_real_estate_ai.core.llm_client import get_llm_client
 
 logger = logging.getLogger(__name__)
 
 
 class DocumentType(Enum):
     """Types of documents in real estate transactions."""
+
     # Contract Documents
     PURCHASE_AGREEMENT = "purchase_agreement"
     ADDENDUMS = "addendums"
     AMENDMENT = "amendment"
-    
+
     # Buyer Documents
     PRE_APPROVAL_LETTER = "pre_approval_letter"
     LOAN_APPLICATION = "loan_application"
@@ -59,28 +60,28 @@ class DocumentType(Enum):
     TAX_RETURNS = "tax_returns"
     PROOF_OF_FUNDS = "proof_of_funds"
     HOMEOWNERS_INSURANCE = "homeowners_insurance"
-    
+
     # Seller Documents
     PROPERTY_DISCLOSURE = "property_disclosure"
     TITLE_DEED = "title_deed"
     SURVEY = "survey"
     HOME_WARRANTY = "home_warranty"
-    
+
     # Inspection Documents
     INSPECTION_REPORT = "inspection_report"
     INSPECTION_RESPONSE = "inspection_response"
     REPAIR_ESTIMATES = "repair_estimates"
     COMPLETION_CERTIFICATES = "completion_certificates"
-    
+
     # Appraisal Documents
     APPRAISAL_REPORT = "appraisal_report"
     COMPARABLE_SALES = "comparable_sales"
-    
+
     # Title Documents
     TITLE_COMMITMENT = "title_commitment"
     TITLE_INSURANCE = "title_insurance"
     EASEMENT_DOCUMENTS = "easement_documents"
-    
+
     # Closing Documents
     CLOSING_DISCLOSURE = "closing_disclosure"
     SETTLEMENT_STATEMENT = "settlement_statement"
@@ -92,8 +93,9 @@ class DocumentType(Enum):
 
 class DocumentStatus(Enum):
     """Document collection status."""
+
     NOT_REQUESTED = "not_requested"
-    REQUESTED = "requested" 
+    REQUESTED = "requested"
     PENDING = "pending"
     PARTIAL = "partial"
     RECEIVED = "received"
@@ -106,6 +108,7 @@ class DocumentStatus(Enum):
 
 class DeliveryChannel(Enum):
     """Document delivery channels."""
+
     EMAIL = "email"
     SMS = "sms"
     PORTAL = "portal"
@@ -116,6 +119,7 @@ class DeliveryChannel(Enum):
 
 class ValidationLevel(Enum):
     """Document validation levels."""
+
     BASIC = "basic"  # File format, size checks
     CONTENT = "content"  # Content validation using AI
     COMPLIANCE = "compliance"  # Legal/regulatory compliance
@@ -125,6 +129,7 @@ class ValidationLevel(Enum):
 @dataclass
 class DocumentTemplate:
     """Template for document generation."""
+
     template_id: str
     name: str
     document_type: DocumentType
@@ -139,6 +144,7 @@ class DocumentTemplate:
 @dataclass
 class DocumentRule:
     """Business rules for document requirements."""
+
     rule_id: str
     name: str
     conditions: Dict[str, Any]  # When this rule applies
@@ -152,6 +158,7 @@ class DocumentRule:
 @dataclass
 class DocumentRequest:
     """Document request with intelligent tracking."""
+
     request_id: str
     transaction_id: str
     document_type: DocumentType
@@ -163,32 +170,32 @@ class DocumentRequest:
     status: DocumentStatus = DocumentStatus.NOT_REQUESTED
     due_date: Optional[datetime] = None
     priority: int = 3  # 1-5, 5 being highest
-    
+
     # Tracking
     request_sent_at: Optional[datetime] = None
     last_reminder_at: Optional[datetime] = None
     reminders_sent: int = 0
     max_reminders: int = 3
-    
+
     # Content
     received_content: Optional[bytes] = None
     file_name: Optional[str] = None
     file_hash: Optional[str] = None
     validation_level: ValidationLevel = ValidationLevel.BASIC
     validation_results: Dict[str, Any] = field(default_factory=dict)
-    
+
     # Metadata
     template_id: Optional[str] = None
     generated_content: Optional[str] = None
     signature_required: bool = False
     signature_status: str = "not_required"  # not_required, pending, signed
     docusign_envelope_id: Optional[str] = None
-    
+
     # Follow-up
     follow_up_schedule: List[datetime] = field(default_factory=list)
     escalation_triggered: bool = False
     manual_review_required: bool = False
-    
+
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
 
@@ -196,6 +203,7 @@ class DocumentRequest:
 @dataclass
 class ValidationResult:
     """Document validation result."""
+
     is_valid: bool
     confidence_score: float  # 0.0 to 1.0
     validation_level: ValidationLevel
@@ -209,39 +217,39 @@ class ValidationResult:
 class DocumentOrchestrationEngine:
     """
     Intelligent document orchestration and management system.
-    
+
     Handles complete document lifecycle from initial request through
     validation, storage, and compliance tracking with minimal human intervention.
     """
-    
+
     def __init__(
         self,
         claude_assistant: Optional[ClaudeAssistant] = None,
         ghl_client: Optional[GHLClient] = None,
-        cache_service = None
+        cache_service=None,
     ):
         self.claude_assistant = claude_assistant or ClaudeAssistant()
         self.ghl_client = ghl_client or GHLClient()
         self.cache = cache_service or get_cache_service()
         self.llm_client = get_llm_client()
-        
+
         # Document management
         self.active_requests: Dict[str, DocumentRequest] = {}
         self.document_templates: Dict[str, DocumentTemplate] = {}
         self.validation_rules: Dict[DocumentType, Dict[str, Any]] = {}
         self.business_rules: List[DocumentRule] = []
-        
+
         # Configuration
         self.max_file_size_mb = 25
-        self.allowed_file_types = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.tiff']
+        self.allowed_file_types = [".pdf", ".doc", ".docx", ".jpg", ".jpeg", ".png", ".tiff"]
         self.ai_validation_confidence_threshold = 0.8
         self.auto_approve_threshold = 0.95
-        
+
         # State management
         self.is_running = False
         self.orchestration_task: Optional[asyncio.Task] = None
         self.processing_interval_seconds = 180  # Check every 3 minutes
-        
+
         # Performance metrics
         self.metrics = {
             "documents_requested": 0,
@@ -251,14 +259,14 @@ class DocumentOrchestrationEngine:
             "auto_generated": 0,
             "average_collection_time_hours": 0.0,
             "validation_accuracy": 0.0,
-            "compliance_rate": 0.0
+            "compliance_rate": 0.0,
         }
-        
+
         # Initialize system
         self._initialize_templates()
         self._initialize_validation_rules()
         self._initialize_business_rules()
-        
+
         logger.info("🧠 Document Orchestration Engine initialized")
 
     async def start_orchestration(self):
@@ -266,40 +274,36 @@ class DocumentOrchestrationEngine:
         if self.is_running:
             logger.warning("⚠️ Document orchestration already running")
             return
-        
+
         self.is_running = True
         self.orchestration_task = asyncio.create_task(self._orchestration_loop())
-        
+
         logger.info("🚀 Document Orchestration Engine started")
 
     async def stop_orchestration(self):
         """Stop the document orchestration engine."""
         self.is_running = False
-        
+
         if self.orchestration_task:
             self.orchestration_task.cancel()
             try:
                 await self.orchestration_task
             except asyncio.CancelledError:
                 pass
-        
+
         logger.info("⏹️ Document Orchestration Engine stopped")
 
-    async def initiate_document_collection(
-        self, 
-        transaction_id: str, 
-        transaction_data: Dict[str, Any]
-    ) -> List[str]:
+    async def initiate_document_collection(self, transaction_id: str, transaction_data: Dict[str, Any]) -> List[str]:
         """
         Initiate intelligent document collection for a transaction.
-        
+
         Analyzes transaction details and automatically generates appropriate
         document requests based on business rules and requirements.
         """
         try:
             # Analyze transaction to determine required documents
             required_docs = await self._analyze_transaction_requirements(transaction_data)
-            
+
             # Generate document requests
             request_ids = []
             for doc_requirement in required_docs:
@@ -307,42 +311,40 @@ class DocumentOrchestrationEngine:
                 if request:
                     self.active_requests[request.request_id] = request
                     request_ids.append(request.request_id)
-                    
+
                     # Auto-send if configured
-                    if doc_requirement.get('auto_request', True):
+                    if doc_requirement.get("auto_request", True):
                         await self._send_document_request(request)
-            
-            logger.info(f"📋 Initiated document collection for transaction {transaction_id}: {len(request_ids)} requests")
+
+            logger.info(
+                f"📋 Initiated document collection for transaction {transaction_id}: {len(request_ids)} requests"
+            )
             self.metrics["documents_requested"] += len(request_ids)
-            
+
             return request_ids
-            
+
         except Exception as e:
             logger.error(f"❌ Failed to initiate document collection: {e}")
             return []
 
     async def receive_document(
-        self, 
-        request_id: str, 
-        file_content: bytes, 
-        file_name: str,
-        submitted_by: str = "client"
+        self, request_id: str, file_content: bytes, file_name: str, submitted_by: str = "client"
     ) -> Dict[str, Any]:
         """
         Receive and process a document submission.
-        
+
         Performs intelligent validation and determines next steps automatically.
         """
         try:
             request = self.active_requests.get(request_id)
             if not request:
                 return {"success": False, "error": "Document request not found"}
-            
+
             # Validate file
             validation_result = await self._validate_file(file_content, file_name)
             if not validation_result["valid"]:
                 return {"success": False, "error": validation_result["error"]}
-            
+
             # Store file content and metadata
             file_hash = hashlib.sha256(file_content).hexdigest()
             request.received_content = file_content
@@ -350,11 +352,11 @@ class DocumentOrchestrationEngine:
             request.file_hash = file_hash
             request.status = DocumentStatus.UNDER_REVIEW
             request.updated_at = datetime.now()
-            
+
             # Perform intelligent validation
             validation = await self._perform_ai_validation(request, file_content)
             request.validation_results = validation.__dict__
-            
+
             # Determine status based on validation
             if validation.is_valid and validation.confidence_score >= self.auto_approve_threshold:
                 request.status = DocumentStatus.APPROVED
@@ -366,17 +368,17 @@ class DocumentOrchestrationEngine:
                 request.status = DocumentStatus.UNDER_REVIEW
                 request.manual_review_required = True
                 await self._escalate_for_manual_review(request, validation)
-            
+
             # Update metrics
             self.metrics["documents_received"] += 1
             if validation.is_valid:
                 self.metrics["documents_validated"] += 1
             else:
                 self.metrics["documents_rejected"] += 1
-            
+
             # Send confirmation
             await self._send_document_confirmation(request, validation)
-            
+
             return {
                 "success": True,
                 "status": request.status.value,
@@ -384,19 +386,16 @@ class DocumentOrchestrationEngine:
                     "is_valid": validation.is_valid,
                     "confidence": validation.confidence_score,
                     "issues": validation.issues,
-                    "suggestions": validation.suggestions
-                }
+                    "suggestions": validation.suggestions,
+                },
             }
-            
+
         except Exception as e:
             logger.error(f"❌ Error receiving document: {e}")
             return {"success": False, "error": str(e)}
 
     async def generate_document_from_template(
-        self, 
-        template_id: str, 
-        variables: Dict[str, Any],
-        transaction_id: str
+        self, template_id: str, variables: Dict[str, Any], transaction_id: str
     ) -> Optional[str]:
         """
         Generate a document from a template with intelligent variable substitution.
@@ -406,10 +405,10 @@ class DocumentOrchestrationEngine:
             if not template:
                 logger.error(f"Template {template_id} not found")
                 return None
-            
+
             # Use Claude to intelligently fill template
             generated_content = await self._generate_template_content(template, variables)
-            
+
             if generated_content:
                 # Create document request for generated content
                 request = DocumentRequest(
@@ -423,20 +422,20 @@ class DocumentOrchestrationEngine:
                     status=DocumentStatus.COMPLETED,
                     generated_content=generated_content,
                     template_id=template_id,
-                    signature_required=template.requires_signature
+                    signature_required=template.requires_signature,
                 )
-                
+
                 self.active_requests[request.request_id] = request
                 self.metrics["auto_generated"] += 1
-                
+
                 # If signature required, initiate DocuSign workflow
                 if template.requires_signature:
                     await self._initiate_signature_workflow(request)
-                
+
                 return request.request_id
-            
+
             return None
-            
+
         except Exception as e:
             logger.error(f"❌ Error generating document from template: {e}")
             return None
@@ -447,28 +446,22 @@ class DocumentOrchestrationEngine:
         """
         try:
             transaction_requests = [
-                req for req in self.active_requests.values() 
-                if req.transaction_id == transaction_id
+                req for req in self.active_requests.values() if req.transaction_id == transaction_id
             ]
-            
+
             compliance_report = {
                 "transaction_id": transaction_id,
                 "overall_compliance": True,
                 "completion_percentage": 0.0,
-                "required_documents": {
-                    "total": 0,
-                    "completed": 0,
-                    "pending": 0,
-                    "missing": 0
-                },
+                "required_documents": {"total": 0, "completed": 0, "pending": 0, "missing": 0},
                 "compliance_issues": [],
                 "action_items": [],
-                "documents": []
+                "documents": [],
             }
-            
+
             required_docs = [req for req in transaction_requests if req.required]
             compliance_report["required_documents"]["total"] = len(required_docs)
-            
+
             for request in transaction_requests:
                 doc_info = {
                     "document_type": request.document_type.value,
@@ -476,9 +469,9 @@ class DocumentOrchestrationEngine:
                     "status": request.status.value,
                     "required": request.required,
                     "due_date": request.due_date.isoformat() if request.due_date else None,
-                    "compliance_status": "compliant"
+                    "compliance_status": "compliant",
                 }
-                
+
                 # Check compliance
                 if request.required:
                     if request.status == DocumentStatus.APPROVED:
@@ -489,28 +482,26 @@ class DocumentOrchestrationEngine:
                         compliance_report["required_documents"]["missing"] += 1
                         compliance_report["overall_compliance"] = False
                         doc_info["compliance_status"] = "non_compliant"
-                        
+
                         if request.due_date and datetime.now() > request.due_date:
                             compliance_report["compliance_issues"].append(
                                 f"{request.title} is overdue (due {request.due_date.strftime('%m/%d/%Y')})"
                             )
-                            compliance_report["action_items"].append(
-                                f"Follow up on overdue document: {request.title}"
-                            )
-                
+                            compliance_report["action_items"].append(f"Follow up on overdue document: {request.title}")
+
                 compliance_report["documents"].append(doc_info)
-            
+
             # Calculate completion percentage
             if compliance_report["required_documents"]["total"] > 0:
                 completion = compliance_report["required_documents"]["completed"]
                 total = compliance_report["required_documents"]["total"]
                 compliance_report["completion_percentage"] = (completion / total) * 100
-            
+
             # Update metrics
             self.metrics["compliance_rate"] = compliance_report["completion_percentage"] / 100
-            
+
             return compliance_report
-            
+
         except Exception as e:
             logger.error(f"❌ Error checking compliance: {e}")
             return {"error": str(e)}
@@ -524,7 +515,7 @@ class DocumentOrchestrationEngine:
                 await self._send_scheduled_reminders()
                 await self._update_metrics()
                 await asyncio.sleep(self.processing_interval_seconds)
-                
+
         except asyncio.CancelledError:
             logger.info("🛑 Document orchestration loop cancelled")
         except Exception as e:
@@ -535,10 +526,11 @@ class DocumentOrchestrationEngine:
         """Process all pending document requests."""
         try:
             pending_requests = [
-                req for req in self.active_requests.values()
+                req
+                for req in self.active_requests.values()
                 if req.status in [DocumentStatus.NOT_REQUESTED, DocumentStatus.REQUESTED]
             ]
-            
+
             for request in pending_requests:
                 # Check if ready to send
                 if request.status == DocumentStatus.NOT_REQUESTED:
@@ -546,12 +538,12 @@ class DocumentOrchestrationEngine:
                     should_send = await self._should_send_request(request)
                     if should_send:
                         await self._send_document_request(request)
-                        
+
                 # Check for follow-up reminders
                 elif request.status == DocumentStatus.REQUESTED:
                     if await self._should_send_reminder(request):
                         await self._send_document_reminder(request)
-                        
+
         except Exception as e:
             logger.error(f"❌ Error processing pending requests: {e}")
 
@@ -559,17 +551,18 @@ class DocumentOrchestrationEngine:
         """Check for overdue documents and trigger appropriate actions."""
         try:
             now = datetime.now()
-            
+
             for request in self.active_requests.values():
-                if (request.due_date and 
-                    now > request.due_date and 
-                    request.status not in [DocumentStatus.APPROVED, DocumentStatus.COMPLETED] and
-                    not request.escalation_triggered):
-                    
+                if (
+                    request.due_date
+                    and now > request.due_date
+                    and request.status not in [DocumentStatus.APPROVED, DocumentStatus.COMPLETED]
+                    and not request.escalation_triggered
+                ):
                     # Trigger escalation
                     await self._escalate_overdue_document(request)
                     request.escalation_triggered = True
-                    
+
         except Exception as e:
             logger.error(f"❌ Error checking overdue documents: {e}")
 
@@ -577,102 +570,108 @@ class DocumentOrchestrationEngine:
         """Analyze transaction to determine required documents."""
         try:
             requirements = []
-            
+
             # Basic requirements for all transactions
-            requirements.extend([
-                {
-                    "document_type": DocumentType.PURCHASE_AGREEMENT,
-                    "title": "Purchase Agreement",
-                    "description": "Fully executed purchase agreement",
-                    "required": True,
-                    "requested_from": "both_parties",
-                    "deadline_days": 1,
-                    "auto_request": True
-                },
-                {
-                    "document_type": DocumentType.PROPERTY_DISCLOSURE,
-                    "title": "Property Disclosure Statement",
-                    "description": "Seller's property condition disclosure",
-                    "required": True,
-                    "requested_from": "seller",
-                    "deadline_days": 3,
-                    "auto_request": True
-                }
-            ])
-            
+            requirements.extend(
+                [
+                    {
+                        "document_type": DocumentType.PURCHASE_AGREEMENT,
+                        "title": "Purchase Agreement",
+                        "description": "Fully executed purchase agreement",
+                        "required": True,
+                        "requested_from": "both_parties",
+                        "deadline_days": 1,
+                        "auto_request": True,
+                    },
+                    {
+                        "document_type": DocumentType.PROPERTY_DISCLOSURE,
+                        "title": "Property Disclosure Statement",
+                        "description": "Seller's property condition disclosure",
+                        "required": True,
+                        "requested_from": "seller",
+                        "deadline_days": 3,
+                        "auto_request": True,
+                    },
+                ]
+            )
+
             # Financing-dependent documents
             loan_amount = transaction_data.get("loan_amount", 0)
             if loan_amount and loan_amount > 0:
-                requirements.extend([
+                requirements.extend(
+                    [
+                        {
+                            "document_type": DocumentType.PRE_APPROVAL_LETTER,
+                            "title": "Pre-Approval Letter",
+                            "description": "Current pre-approval letter from lender",
+                            "required": True,
+                            "requested_from": "buyer",
+                            "deadline_days": 2,
+                            "auto_request": True,
+                        },
+                        {
+                            "document_type": DocumentType.EMPLOYMENT_VERIFICATION,
+                            "title": "Employment Verification",
+                            "description": "Letter of employment verification",
+                            "required": True,
+                            "requested_from": "buyer",
+                            "deadline_days": 5,
+                            "auto_request": True,
+                        },
+                        {
+                            "document_type": DocumentType.BANK_STATEMENTS,
+                            "title": "Bank Statements",
+                            "description": "Last 2 months of bank statements",
+                            "required": True,
+                            "requested_from": "buyer",
+                            "deadline_days": 5,
+                            "auto_request": True,
+                        },
+                    ]
+                )
+            else:
+                # Cash purchase
+                requirements.append(
                     {
-                        "document_type": DocumentType.PRE_APPROVAL_LETTER,
-                        "title": "Pre-Approval Letter",
-                        "description": "Current pre-approval letter from lender",
+                        "document_type": DocumentType.PROOF_OF_FUNDS,
+                        "title": "Proof of Funds",
+                        "description": "Proof of funds for cash purchase",
                         "required": True,
                         "requested_from": "buyer",
                         "deadline_days": 2,
-                        "auto_request": True
-                    },
-                    {
-                        "document_type": DocumentType.EMPLOYMENT_VERIFICATION,
-                        "title": "Employment Verification",
-                        "description": "Letter of employment verification",
-                        "required": True,
-                        "requested_from": "buyer",
-                        "deadline_days": 5,
-                        "auto_request": True
-                    },
-                    {
-                        "document_type": DocumentType.BANK_STATEMENTS,
-                        "title": "Bank Statements",
-                        "description": "Last 2 months of bank statements",
-                        "required": True,
-                        "requested_from": "buyer", 
-                        "deadline_days": 5,
-                        "auto_request": True
+                        "auto_request": True,
                     }
-                ])
-            else:
-                # Cash purchase
-                requirements.append({
-                    "document_type": DocumentType.PROOF_OF_FUNDS,
-                    "title": "Proof of Funds",
-                    "description": "Proof of funds for cash purchase",
-                    "required": True,
-                    "requested_from": "buyer",
-                    "deadline_days": 2,
-                    "auto_request": True
-                })
-            
+                )
+
             # Apply business rules
             for rule in self.business_rules:
                 if self._rule_applies(rule, transaction_data):
                     for doc_type in rule.required_documents:
-                        requirements.append({
-                            "document_type": doc_type,
-                            "title": doc_type.value.replace('_', ' ').title(),
-                            "description": f"Required by rule: {rule.name}",
-                            "required": True,
-                            "requested_from": "buyer",  # Default
-                            "deadline_days": rule.deadline_days,
-                            "auto_request": rule.auto_request
-                        })
-            
+                        requirements.append(
+                            {
+                                "document_type": doc_type,
+                                "title": doc_type.value.replace("_", " ").title(),
+                                "description": f"Required by rule: {rule.name}",
+                                "required": True,
+                                "requested_from": "buyer",  # Default
+                                "deadline_days": rule.deadline_days,
+                                "auto_request": rule.auto_request,
+                            }
+                        )
+
             return requirements
-            
+
         except Exception as e:
             logger.error(f"❌ Error analyzing transaction requirements: {e}")
             return []
 
     async def _create_document_request(
-        self, 
-        transaction_id: str, 
-        requirement: Dict[str, Any]
+        self, transaction_id: str, requirement: Dict[str, Any]
     ) -> Optional[DocumentRequest]:
         """Create a document request from a requirement."""
         try:
             due_date = datetime.now() + timedelta(days=requirement.get("deadline_days", 7))
-            
+
             request = DocumentRequest(
                 request_id=str(uuid.uuid4()),
                 transaction_id=transaction_id,
@@ -682,14 +681,14 @@ class DocumentOrchestrationEngine:
                 required=requirement.get("required", True),
                 requested_from=requirement.get("requested_from", "buyer"),
                 due_date=due_date,
-                follow_up_schedule=self._generate_follow_up_schedule(due_date)
+                follow_up_schedule=self._generate_follow_up_schedule(due_date),
             )
-            
+
             # Determine delivery channels based on recipient
             request.delivery_channels = self._determine_delivery_channels(request.requested_from)
-            
+
             return request
-            
+
         except Exception as e:
             logger.error(f"❌ Error creating document request: {e}")
             return None
@@ -699,22 +698,22 @@ class DocumentOrchestrationEngine:
         try:
             # Generate personalized request message
             message = await self._generate_request_message(request)
-            
+
             # Send via primary channel
             primary_channel = request.delivery_channels[0] if request.delivery_channels else DeliveryChannel.EMAIL
             success = await self._send_via_channel(request, message, primary_channel)
-            
+
             if success:
                 request.status = DocumentStatus.REQUESTED
                 request.request_sent_at = datetime.now()
                 request.updated_at = datetime.now()
-                
+
                 logger.info(f"📤 Document request sent: {request.title}")
                 return True
             else:
                 logger.error(f"❌ Failed to send document request: {request.title}")
                 return False
-                
+
         except Exception as e:
             logger.error(f"❌ Error sending document request: {e}")
             return False
@@ -729,7 +728,7 @@ class DocumentOrchestrationEngine:
             - Document: {request.title}
             - Description: {request.description}
             - Required: {request.required}
-            - Due Date: {request.due_date.strftime('%B %d, %Y') if request.due_date else 'ASAP'}
+            - Due Date: {request.due_date.strftime("%B %d, %Y") if request.due_date else "ASAP"}
             - Requested From: {request.requested_from}
             
             Requirements:
@@ -741,15 +740,11 @@ class DocumentOrchestrationEngine:
             
             Generate a concise, clear message:
             """
-            
-            response = await self.llm_client.generate(
-                prompt=prompt,
-                max_tokens=300,
-                temperature=0.7
-            )
-            
+
+            response = await self.llm_client.generate(prompt=prompt, max_tokens=300, temperature=0.7)
+
             return response.content.strip() if response.content else self._get_fallback_request_message(request)
-            
+
         except Exception as e:
             logger.error(f"Error generating request message: {e}")
             return self._get_fallback_request_message(request)
@@ -758,7 +753,7 @@ class DocumentOrchestrationEngine:
         """Get fallback request message."""
         urgency = " (Required)" if request.required else " (Requested)"
         due_text = f" by {request.due_date.strftime('%B %d, %Y')}" if request.due_date else ""
-        
+
         return f"""
         Hi! We need your {request.title}{urgency} to keep your home transaction on track.
         
@@ -775,7 +770,7 @@ class DocumentOrchestrationEngine:
             # Convert file content to text for analysis (simplified)
             # In production, this would use proper PDF/document parsing
             content_preview = str(file_content[:1000])  # First 1000 bytes as preview
-            
+
             # Use Claude for intelligent validation
             validation_prompt = f"""
             Analyze this document submission for a real estate transaction.
@@ -798,13 +793,9 @@ class DocumentOrchestrationEngine:
             - issues (list of strings)
             - suggestions (list of strings)
             """
-            
-            response = await self.llm_client.generate(
-                prompt=validation_prompt,
-                max_tokens=400,
-                temperature=0.3
-            )
-            
+
+            response = await self.llm_client.generate(prompt=validation_prompt, max_tokens=400, temperature=0.3)
+
             # Parse AI response (simplified - would use proper JSON parsing)
             if response.content and "is_valid" in response.content:
                 # Extract validation info from AI response
@@ -812,29 +803,29 @@ class DocumentOrchestrationEngine:
                 confidence = 0.8  # Default confidence
                 issues = []
                 suggestions = []
-                
+
                 # Try to extract more details (simplified)
                 if "issues" in response.content.lower():
                     issues = ["Document format may need review"]
                 if "suggestions" in response.content.lower():
                     suggestions = ["Consider providing a clearer scan"]
-                
+
             else:
                 # Fallback validation
                 is_valid = True
                 confidence = 0.7
                 issues = []
                 suggestions = []
-            
+
             return ValidationResult(
                 is_valid=is_valid,
                 confidence_score=confidence,
                 validation_level=ValidationLevel.CONTENT,
                 issues=issues,
                 suggestions=suggestions,
-                validated_by="ai_system"
+                validated_by="ai_system",
             )
-            
+
         except Exception as e:
             logger.error(f"Error in AI validation: {e}")
             # Return conservative validation result
@@ -844,7 +835,7 @@ class DocumentOrchestrationEngine:
                 validation_level=ValidationLevel.BASIC,
                 issues=[f"Validation error: {str(e)}"],
                 suggestions=["Manual review recommended"],
-                validated_by="ai_system_fallback"
+                validated_by="ai_system_fallback",
             )
 
     async def _validate_file(self, file_content: bytes, file_name: str) -> Dict[str, Any]:
@@ -855,26 +846,23 @@ class DocumentOrchestrationEngine:
             if file_size_mb > self.max_file_size_mb:
                 return {
                     "valid": False,
-                    "error": f"File too large: {file_size_mb:.1f}MB (max: {self.max_file_size_mb}MB)"
+                    "error": f"File too large: {file_size_mb:.1f}MB (max: {self.max_file_size_mb}MB)",
                 }
-            
+
             # Check file extension
             file_ext = Path(file_name).suffix.lower()
             if file_ext not in self.allowed_file_types:
                 return {
                     "valid": False,
-                    "error": f"File type not allowed: {file_ext} (allowed: {', '.join(self.allowed_file_types)})"
+                    "error": f"File type not allowed: {file_ext} (allowed: {', '.join(self.allowed_file_types)})",
                 }
-            
+
             # Basic content validation (check if file is not corrupted)
             if len(file_content) < 100:  # Minimum file size
-                return {
-                    "valid": False,
-                    "error": "File appears to be empty or corrupted"
-                }
-            
+                return {"valid": False, "error": "File appears to be empty or corrupted"}
+
             return {"valid": True}
-            
+
         except Exception as e:
             return {"valid": False, "error": f"Validation error: {str(e)}"}
 
@@ -888,27 +876,27 @@ class DocumentOrchestrationEngine:
             "lender": [DeliveryChannel.EMAIL],
             "title_company": [DeliveryChannel.EMAIL],
             "inspector": [DeliveryChannel.EMAIL],
-            "appraiser": [DeliveryChannel.EMAIL]
+            "appraiser": [DeliveryChannel.EMAIL],
         }
-        
+
         return channel_map.get(requested_from, [DeliveryChannel.EMAIL])
 
     def _generate_follow_up_schedule(self, due_date: Optional[datetime]) -> List[datetime]:
         """Generate intelligent follow-up schedule."""
         if not due_date:
             due_date = datetime.now() + timedelta(days=7)
-        
+
         follow_ups = []
         now = datetime.now()
-        
+
         # Reminder schedule: 2 days before, 1 day before, on due date, 1 day after
         reminders = [-2, -1, 0, 1]
-        
+
         for days_offset in reminders:
             reminder_time = due_date + timedelta(days=days_offset)
             if reminder_time > now:
                 follow_ups.append(reminder_time)
-        
+
         return follow_ups
 
     async def _should_send_request(self, request: DocumentRequest) -> bool:
@@ -921,25 +909,18 @@ class DocumentOrchestrationEngine:
         """Determine if a reminder should be sent."""
         if request.reminders_sent >= request.max_reminders:
             return False
-        
+
         if not request.follow_up_schedule:
             return False
-        
+
         now = datetime.now()
         for reminder_time in request.follow_up_schedule:
-            if (now >= reminder_time and 
-                (not request.last_reminder_at or 
-                 reminder_time > request.last_reminder_at)):
+            if now >= reminder_time and (not request.last_reminder_at or reminder_time > request.last_reminder_at):
                 return True
-        
+
         return False
 
-    async def _send_via_channel(
-        self, 
-        request: DocumentRequest, 
-        message: str, 
-        channel: DeliveryChannel
-    ) -> bool:
+    async def _send_via_channel(self, request: DocumentRequest, message: str, channel: DeliveryChannel) -> bool:
         """Send document request via specific channel."""
         try:
             if channel == DeliveryChannel.EMAIL:
@@ -953,7 +934,7 @@ class DocumentOrchestrationEngine:
             else:
                 logger.warning(f"Unsupported delivery channel: {channel}")
                 return False
-                
+
         except Exception as e:
             logger.error(f"Error sending via {channel}: {e}")
             return False
@@ -1017,11 +998,7 @@ class DocumentOrchestrationEngine:
         # Implementation for confirmation messages
         pass
 
-    async def _generate_template_content(
-        self, 
-        template: DocumentTemplate, 
-        variables: Dict[str, Any]
-    ) -> Optional[str]:
+    async def _generate_template_content(self, template: DocumentTemplate, variables: Dict[str, Any]) -> Optional[str]:
         """Generate content from template using Claude."""
         # Implementation for template content generation
         return template.template_content
@@ -1074,18 +1051,19 @@ class DocumentOrchestrationEngine:
             if status not in active_by_status:
                 active_by_status[status] = 0
             active_by_status[status] += 1
-        
+
         return {
             "is_running": self.is_running,
             "total_active_requests": len(self.active_requests),
             "requests_by_status": active_by_status,
             "metrics": self.metrics,
-            "processing_interval_seconds": self.processing_interval_seconds
+            "processing_interval_seconds": self.processing_interval_seconds,
         }
 
 
 # Global singleton
 _document_orchestrator = None
+
 
 def get_document_orchestration_engine() -> DocumentOrchestrationEngine:
     """Get singleton document orchestration engine."""

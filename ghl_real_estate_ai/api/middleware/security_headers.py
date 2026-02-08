@@ -9,14 +9,17 @@ Features:
 - Production-ready security configuration
 """
 
-from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi import Request
-import uuid
 import os
+import uuid
 from datetime import datetime
+
+from fastapi import Request
+from starlette.middleware.base import BaseHTTPMiddleware
+
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
+
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Enhanced security headers middleware with OWASP compliance."""
@@ -27,7 +30,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         environment: str = None,
         enable_csp: bool = True,
         enable_hsts: bool = True,
-        enable_request_id: bool = True
+        enable_request_id: bool = True,
     ):
         super().__init__(app)
         self.environment = environment or os.getenv("ENVIRONMENT", "development")
@@ -39,7 +42,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         self.csp_policies = {
             "development": self._get_development_csp(),
             "staging": self._get_staging_csp(),
-            "production": self._get_production_csp()
+            "production": self._get_production_csp(),
         }
 
     def _get_development_csp(self) -> str:
@@ -119,20 +122,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         )
 
         # HSTS for HTTPS
-        if self.enable_hsts and (
-            request.url.scheme == "https" or
-            self.environment == "production"
-        ):
-            headers["Strict-Transport-Security"] = (
-                "max-age=31536000; includeSubDomains; preload"
-            )
+        if self.enable_hsts and (request.url.scheme == "https" or self.environment == "production"):
+            headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
 
         # Content Security Policy
         if self.enable_csp:
-            csp_policy = self.csp_policies.get(
-                self.environment,
-                self.csp_policies["production"]
-            )
+            csp_policy = self.csp_policies.get(self.environment, self.csp_policies["production"])
 
             # Add nonce for inline scripts/styles in production
             if self.environment == "production":
@@ -159,7 +154,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Request-ID"] = request_id
 
         # Store request ID in request state for logging
-        if hasattr(request, 'state'):
+        if hasattr(request, "state"):
             request.state.request_id = request_id
 
         return request_id
@@ -179,8 +174,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "method": request.method,
                 "environment": self.environment,
                 "timestamp": datetime.utcnow().isoformat(),
-                "event_id": "SEC_001"
-            }
+                "event_id": "SEC_001",
+            },
         )
 
     def _get_client_ip(self, request: Request) -> str:
@@ -188,7 +183,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # Check forwarded headers
         forwarded_for = request.headers.get("X-Forwarded-For")
         if forwarded_for:
-            return forwarded_for.split(',')[0].strip()
+            return forwarded_for.split(",")[0].strip()
 
         real_ip = request.headers.get("X-Real-IP")
         if real_ip:
@@ -199,8 +194,15 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     def _detect_suspicious_headers(self, request: Request) -> bool:
         """Detect potentially malicious request headers."""
         suspicious_patterns = [
-            'script', 'javascript:', 'vbscript:', 'onload=', 'onerror=',
-            '<script', '</script', '<?php', '<?xml'
+            "script",
+            "javascript:",
+            "vbscript:",
+            "onload=",
+            "onerror=",
+            "<script",
+            "</script",
+            "<?php",
+            "<?xml",
         ]
 
         for header_name, header_value in request.headers.items():
@@ -214,8 +216,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                             "header_name": header_name,
                             "header_value": header_value[:100],  # Truncate for safety
                             "ip_address": self._get_client_ip(request),
-                            "event_id": "SEC_002"
-                        }
+                            "event_id": "SEC_002",
+                        },
                     )
                     return True
         return False
@@ -241,6 +243,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
             # Log security event (sampling for performance)
             import random
+
             if random.random() < 0.01:  # Log 1% of requests for monitoring
                 self._log_security_event(request, request_id)
 
@@ -249,17 +252,19 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 # Additional security utilities
 
+
 def generate_secure_token() -> str:
     """Generate a cryptographically secure token."""
     return uuid.uuid4().hex
 
+
 def validate_content_type(content_type: str) -> bool:
     """Validate that content type is safe."""
     allowed_types = [
-        'application/json',
-        'application/x-www-form-urlencoded',
-        'multipart/form-data',
-        'text/plain',
-        'application/octet-stream'
+        "application/json",
+        "application/x-www-form-urlencoded",
+        "multipart/form-data",
+        "text/plain",
+        "application/octet-stream",
     ]
     return any(content_type.startswith(allowed) for allowed in allowed_types)

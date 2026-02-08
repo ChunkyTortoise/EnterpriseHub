@@ -1,14 +1,15 @@
 """Tests for Unified Channel Router."""
 
-import pytest
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from ghl_real_estate_ai.services.unified_channel_router import (
-    UnifiedChannelRouter,
     ChannelType,
+    DeliveryResult,
     DeliveryStatus,
     MessagePriority,
-    DeliveryResult,
+    UnifiedChannelRouter,
 )
 
 
@@ -20,6 +21,7 @@ def router():
 # -------------------------------------------------------------------------
 # Basic delivery
 # -------------------------------------------------------------------------
+
 
 class TestBasicDelivery:
     @pytest.mark.asyncio
@@ -62,6 +64,7 @@ class TestBasicDelivery:
 # Compliance blocking
 # -------------------------------------------------------------------------
 
+
 class TestCompliance:
     @pytest.mark.asyncio
     async def test_blocked_message_not_delivered(self, router):
@@ -90,6 +93,7 @@ class TestCompliance:
 # SMS formatting
 # -------------------------------------------------------------------------
 
+
 class TestSMSFormatting:
     @pytest.mark.asyncio
     async def test_long_sms_truncated(self, router):
@@ -115,6 +119,7 @@ class TestSMSFormatting:
 # -------------------------------------------------------------------------
 # Fallback routing
 # -------------------------------------------------------------------------
+
 
 class TestFallback:
     @pytest.mark.asyncio
@@ -149,6 +154,7 @@ class TestFallback:
 # Channel preference learning
 # -------------------------------------------------------------------------
 
+
 class TestPreferenceLearning:
     @pytest.mark.asyncio
     async def test_preference_updated_on_delivery(self, router):
@@ -168,15 +174,14 @@ class TestPreferenceLearning:
         for _ in range(5):
             await router.send_message("c_10", "Email pref", preferred_channel="email")
 
-        result = await router.send_message(
-            "c_10", "Urgent!", preferred_channel="sms", priority="urgent"
-        )
+        result = await router.send_message("c_10", "Urgent!", preferred_channel="sms", priority="urgent")
         assert result.channel_used == ChannelType.SMS
 
 
 # -------------------------------------------------------------------------
 # Analytics
 # -------------------------------------------------------------------------
+
 
 class TestAnalytics:
     @pytest.mark.asyncio
@@ -223,6 +228,7 @@ class TestAnalytics:
 # -------------------------------------------------------------------------
 # Channel handler registration
 # -------------------------------------------------------------------------
+
 
 class TestHandlerRegistration:
     @pytest.mark.asyncio

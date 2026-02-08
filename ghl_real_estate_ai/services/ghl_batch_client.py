@@ -15,21 +15,21 @@ Performance Improvements:
 """
 
 import asyncio
-import time
-import json
-from typing import Dict, List, Optional, Any, Tuple, Set, Callable
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
-from enum import Enum
-from collections import defaultdict
 import hashlib
+import json
+import time
+from collections import defaultdict
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 import aiohttp
 from aiohttp import ClientTimeout
 
-from ghl_real_estate_ai.services.enhanced_ghl_client import GHLConfig, GHLContact
-from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.enhanced_ghl_client import GHLConfig, GHLContact
 
 logger = get_logger(__name__)
 
@@ -45,6 +45,7 @@ CACHE_TTL_API_RESULTS = 300  # Cache API results for 5 minutes
 
 class BatchRequestType(Enum):
     """Types of batchable GHL API requests."""
+
     CONTACT_CREATE = "contact_create"
     CONTACT_UPDATE = "contact_update"
     CONTACT_GET = "contact_get"
@@ -69,9 +70,9 @@ class BatchRequest:
     def get_dedup_key(self) -> str:
         """Generate key for request deduplication."""
         key_data = {
-            'type': self.request_type.value,
-            'contact_id': self.contact_id,
-            'data_hash': hashlib.md5(json.dumps(self.data, sort_keys=True).encode()).hexdigest()
+            "type": self.request_type.value,
+            "contact_id": self.contact_id,
+            "data_hash": hashlib.md5(json.dumps(self.data, sort_keys=True).encode()).hexdigest(),
         }
         return json.dumps(key_data, sort_keys=True)
 
@@ -156,17 +157,17 @@ class GHLBatchClient:
                 limit_per_host=20,  # Max connections per host
                 ttl_dns_cache=300,  # DNS cache TTL
                 use_dns_cache=True,
-                keepalive_timeout=60
+                keepalive_timeout=60,
             )
 
             self.session = aiohttp.ClientSession(
                 timeout=timeout,
                 connector=connector,
                 headers={
-                    'Authorization': f'Bearer {self.config.api_key}',
-                    'Content-Type': 'application/json',
-                    'User-Agent': 'Jorge-Real-Estate-AI/2.0 (Batch-Optimized)'
-                }
+                    "Authorization": f"Bearer {self.config.api_key}",
+                    "Content-Type": "application/json",
+                    "User-Agent": "Jorge-Real-Estate-AI/2.0 (Batch-Optimized)",
+                },
             )
 
         # Start background batch processor
@@ -195,11 +196,7 @@ class GHLBatchClient:
 
         batch_requests = []
         for contact_data in contacts:
-            request = BatchRequest(
-                request_type=BatchRequestType.CONTACT_CREATE,
-                contact_id=None,
-                data=contact_data
-            )
+            request = BatchRequest(request_type=BatchRequestType.CONTACT_CREATE, contact_id=None, data=contact_data)
             batch_requests.append(request)
 
         return await self._submit_batch_requests(batch_requests)
@@ -211,9 +208,7 @@ class GHLBatchClient:
         batch_requests = []
         for contact_id, update_data in updates:
             request = BatchRequest(
-                request_type=BatchRequestType.CONTACT_UPDATE,
-                contact_id=contact_id,
-                data=update_data
+                request_type=BatchRequestType.CONTACT_UPDATE, contact_id=contact_id, data=update_data
             )
             batch_requests.append(request)
 
@@ -225,20 +220,12 @@ class GHLBatchClient:
 
         batch_requests = []
         for contact_id, tags in contact_tags:
-            request = BatchRequest(
-                request_type=BatchRequestType.TAG_ADD,
-                contact_id=contact_id,
-                data={'tags': tags}
-            )
+            request = BatchRequest(request_type=BatchRequestType.TAG_ADD, contact_id=contact_id, data={"tags": tags})
             batch_requests.append(request)
 
         return await self._submit_batch_requests(batch_requests)
 
-    async def sync_lead_data_optimized(
-        self,
-        tenant_id: str,
-        lead_updates: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    async def sync_lead_data_optimized(self, tenant_id: str, lead_updates: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         High-performance lead data sync with intelligent batching.
 
@@ -250,7 +237,7 @@ class GHLBatchClient:
         start_time = time.time()
 
         if not lead_updates:
-            return {'synchronized': 0, 'time_ms': 0}
+            return {"synchronized": 0, "time_ms": 0}
 
         # Group operations by type for optimal batching
         contact_updates = []
@@ -258,19 +245,19 @@ class GHLBatchClient:
         custom_field_updates = []
 
         for lead_update in lead_updates:
-            contact_id = lead_update.get('contact_id')
+            contact_id = lead_update.get("contact_id")
 
             # Contact data updates
-            if 'contact_data' in lead_update:
-                contact_updates.append((contact_id, lead_update['contact_data']))
+            if "contact_data" in lead_update:
+                contact_updates.append((contact_id, lead_update["contact_data"]))
 
             # Tag operations
-            if 'add_tags' in lead_update:
-                tag_operations.append((contact_id, lead_update['add_tags']))
+            if "add_tags" in lead_update:
+                tag_operations.append((contact_id, lead_update["add_tags"]))
 
             # Custom field updates
-            if 'custom_fields' in lead_update:
-                custom_field_updates.append((contact_id, lead_update['custom_fields']))
+            if "custom_fields" in lead_update:
+                custom_field_updates.append((contact_id, lead_update["custom_fields"]))
 
         # Execute batched operations in parallel
         batch_tasks = []
@@ -305,11 +292,11 @@ class GHLBatchClient:
 
         # Cache sync results for potential duplicate requests
         sync_summary = {
-            'synchronized': successful_syncs,
-            'total_requests': total_requests,
-            'time_ms': elapsed_ms,
-            'success_rate': (successful_syncs / max(total_requests, 1)) * 100,
-            'tenant_id': tenant_id
+            "synchronized": successful_syncs,
+            "total_requests": total_requests,
+            "time_ms": elapsed_ms,
+            "success_rate": (successful_syncs / max(total_requests, 1)) * 100,
+            "tenant_id": tenant_id,
         }
 
         cache_key = f"tenant:{tenant_id}:lead_sync_summary"
@@ -358,11 +345,7 @@ class GHLBatchClient:
                     result = await asyncio.wait_for(future, timeout=timeout_seconds)
                     results.append(result)
                 except asyncio.TimeoutError:
-                    error_result = BatchResult(
-                        request_id=request.request_id,
-                        success=False,
-                        error="Request timeout"
-                    )
+                    error_result = BatchResult(request_id=request.request_id, success=False, error="Request timeout")
                     results.append(error_result)
 
         return results
@@ -386,7 +369,7 @@ class GHLBatchClient:
 
                         # Group requests into optimal batches
                         for i in range(0, len(requests), BATCH_SIZE_OPTIMAL):
-                            batch = requests[i:i + BATCH_SIZE_OPTIMAL]
+                            batch = requests[i : i + BATCH_SIZE_OPTIMAL]
                             batch_task = self._execute_batch(request_type, batch)
                             batch_tasks.append(batch_task)
 
@@ -443,11 +426,7 @@ class GHLBatchClient:
 
             # Create error results for all requests
             for request in requests:
-                error_result = BatchResult(
-                    request_id=request.request_id,
-                    success=False,
-                    error=str(e)
-                )
+                error_result = BatchResult(request_id=request.request_id, success=False, error=str(e))
 
                 # Notify waiting future if callback exists
                 if request.callback:
@@ -464,18 +443,18 @@ class GHLBatchClient:
         contacts_data = []
         for request in requests:
             contact = {
-                'email': request.data.get('email'),
-                'phone': request.data.get('phone'),
-                'firstName': request.data.get('first_name'),
-                'lastName': request.data.get('last_name'),
-                'source': request.data.get('source', 'Jorge-AI'),
-                'tags': request.data.get('tags', [])
+                "email": request.data.get("email"),
+                "phone": request.data.get("phone"),
+                "firstName": request.data.get("first_name"),
+                "lastName": request.data.get("last_name"),
+                "source": request.data.get("source", "Jorge-AI"),
+                "tags": request.data.get("tags", []),
             }
             # Remove None values
             contact = {k: v for k, v in contact.items() if v is not None}
             contacts_data.append(contact)
 
-        payload = {'contacts': contacts_data}
+        payload = {"contacts": contacts_data}
 
         try:
             async with self.session.post(url, json=payload) as response:
@@ -485,14 +464,10 @@ class GHLBatchClient:
 
                     # Map results back to requests
                     for i, request in enumerate(requests):
-                        success = i < len(result_data.get('contacts', []))
-                        contact_data = result_data['contacts'][i] if success else None
+                        success = i < len(result_data.get("contacts", []))
+                        contact_data = result_data["contacts"][i] if success else None
 
-                        result = BatchResult(
-                            request_id=request.request_id,
-                            success=success,
-                            data=contact_data
-                        )
+                        result = BatchResult(request_id=request.request_id, success=success, data=contact_data)
                         results.append(result)
 
                     return results
@@ -501,13 +476,7 @@ class GHLBatchClient:
 
         except Exception as e:
             # Return error results for all requests
-            return [
-                BatchResult(
-                    request_id=request.request_id,
-                    success=False,
-                    error=str(e)
-                ) for request in requests
-            ]
+            return [BatchResult(request_id=request.request_id, success=False, error=str(e)) for request in requests]
 
     async def _batch_update_contacts(self, requests: List[BatchRequest]) -> List[BatchResult]:
         """Execute batch contact updates."""
@@ -524,11 +493,7 @@ class GHLBatchClient:
 
         for i, result in enumerate(update_results):
             if isinstance(result, Exception):
-                batch_result = BatchResult(
-                    request_id=requests[i].request_id,
-                    success=False,
-                    error=str(result)
-                )
+                batch_result = BatchResult(request_id=requests[i].request_id, success=False, error=str(result))
             else:
                 batch_result = result
 
@@ -544,25 +509,17 @@ class GHLBatchClient:
             async with self.session.put(url, json=request.data) as response:
                 if response.status == 200:
                     result_data = await response.json()
-                    return BatchResult(
-                        request_id=request.request_id,
-                        success=True,
-                        data=result_data
-                    )
+                    return BatchResult(request_id=request.request_id, success=True, data=result_data)
                 else:
                     error_text = await response.text()
                     return BatchResult(
                         request_id=request.request_id,
                         success=False,
-                        error=f"API error: {response.status} - {error_text}"
+                        error=f"API error: {response.status} - {error_text}",
                     )
 
         except Exception as e:
-            return BatchResult(
-                request_id=request.request_id,
-                success=False,
-                error=str(e)
-            )
+            return BatchResult(request_id=request.request_id, success=False, error=str(e))
 
     async def _batch_add_tags(self, requests: List[BatchRequest]) -> List[BatchResult]:
         """Execute batch tag additions."""
@@ -578,11 +535,7 @@ class GHLBatchClient:
 
         for i, result in enumerate(tag_results):
             if isinstance(result, Exception):
-                batch_result = BatchResult(
-                    request_id=requests[i].request_id,
-                    success=False,
-                    error=str(result)
-                )
+                batch_result = BatchResult(request_id=requests[i].request_id, success=False, error=str(result))
             else:
                 batch_result = result
 
@@ -598,25 +551,17 @@ class GHLBatchClient:
             async with self.session.post(url, json=request.data) as response:
                 if response.status in [200, 201]:
                     result_data = await response.json()
-                    return BatchResult(
-                        request_id=request.request_id,
-                        success=True,
-                        data=result_data
-                    )
+                    return BatchResult(request_id=request.request_id, success=True, data=result_data)
                 else:
                     error_text = await response.text()
                     return BatchResult(
                         request_id=request.request_id,
                         success=False,
-                        error=f"API error: {response.status} - {error_text}"
+                        error=f"API error: {response.status} - {error_text}",
                     )
 
         except Exception as e:
-            return BatchResult(
-                request_id=request.request_id,
-                success=False,
-                error=str(e)
-            )
+            return BatchResult(request_id=request.request_id, success=False, error=str(e))
 
     async def _update_custom_fields_batch(self, updates: List[Tuple[str, Dict[str, Any]]]) -> List[BatchResult]:
         """Update custom fields for multiple contacts."""
@@ -625,7 +570,7 @@ class GHLBatchClient:
             request = BatchRequest(
                 request_type=BatchRequestType.CUSTOM_FIELD_UPDATE,
                 contact_id=contact_id,
-                data={'customFields': custom_fields}
+                data={"customFields": custom_fields},
             )
             batch_requests.append(request)
 
@@ -645,11 +590,7 @@ class GHLBatchClient:
 
         for i, result in enumerate(individual_results):
             if isinstance(result, Exception):
-                batch_result = BatchResult(
-                    request_id=requests[i].request_id,
-                    success=False,
-                    error=str(result)
-                )
+                batch_result = BatchResult(request_id=requests[i].request_id, success=False, error=str(result))
             else:
                 batch_result = result
 
@@ -664,7 +605,7 @@ class GHLBatchClient:
         return BatchResult(
             request_id=request.request_id,
             success=True,
-            data={'message': f'Individual request {request.request_type.value} executed'}
+            data={"message": f"Individual request {request.request_type.value} executed"},
         )
 
     # RATE LIMITING
@@ -676,9 +617,7 @@ class GHLBatchClient:
         async with self.rate_limit_lock:
             # Remove timestamps older than 1 minute
             cutoff_time = current_time - 60
-            self.request_timestamps = [
-                ts for ts in self.request_timestamps if ts > cutoff_time
-            ]
+            self.request_timestamps = [ts for ts in self.request_timestamps if ts > cutoff_time]
 
             # Check if we can make the request
             if len(self.request_timestamps) >= RATE_LIMIT_REQUESTS_PER_MINUTE:
@@ -702,24 +641,24 @@ class GHLBatchClient:
         cache_stats = await self.cache.get_cache_stats()
 
         return {
-            'batch_metrics': {
-                'total_requests': self.metrics.total_requests,
-                'batched_requests': self.metrics.batched_requests,
-                'successful_requests': self.metrics.successful_requests,
-                'failed_requests': self.metrics.failed_requests,
-                'deduplicated_requests': self.metrics.deduplicated_requests,
-                'average_response_time_ms': self.metrics.average_response_time_ms,
-                'success_rate_percent': self.metrics.success_rate_percent,
-                'batch_efficiency_percent': self.metrics.batch_efficiency_percent,
-                'rate_limit_violations': self.metrics.rate_limit_violations,
-                'retries_executed': self.metrics.retries_executed
+            "batch_metrics": {
+                "total_requests": self.metrics.total_requests,
+                "batched_requests": self.metrics.batched_requests,
+                "successful_requests": self.metrics.successful_requests,
+                "failed_requests": self.metrics.failed_requests,
+                "deduplicated_requests": self.metrics.deduplicated_requests,
+                "average_response_time_ms": self.metrics.average_response_time_ms,
+                "success_rate_percent": self.metrics.success_rate_percent,
+                "batch_efficiency_percent": self.metrics.batch_efficiency_percent,
+                "rate_limit_violations": self.metrics.rate_limit_violations,
+                "retries_executed": self.metrics.retries_executed,
             },
-            'performance_improvement': {
-                'latency_reduction_percent': 70,  # Typical improvement
-                'rate_limit_reduction_percent': 85,
-                'throughput_improvement_percent': 60
+            "performance_improvement": {
+                "latency_reduction_percent": 70,  # Typical improvement
+                "rate_limit_reduction_percent": 85,
+                "throughput_improvement_percent": 60,
             },
-            'cache_performance': cache_stats
+            "cache_performance": cache_stats,
         }
 
     async def reset_metrics(self):
@@ -730,6 +669,7 @@ class GHLBatchClient:
 
 # Global service instance
 _batch_client = None
+
 
 def get_ghl_batch_client(config: Optional[GHLConfig] = None) -> GHLBatchClient:
     """Get singleton GHL batch client."""

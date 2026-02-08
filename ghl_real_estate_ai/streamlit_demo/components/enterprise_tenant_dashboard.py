@@ -20,74 +20,76 @@ Author: Claude Code Enterprise Intelligence
 Created: January 2026
 """
 
-import streamlit as st
-import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
-import pandas as pd
-import numpy as np
-import json
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
 import hashlib
+import json
 import secrets
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import streamlit as st
+from plotly.subplots import make_subplots
 
 
 class EnterpriseTenantDashboard:
     """Enterprise tenant-aware dashboard with security and isolation."""
-    
+
     def __init__(self):
         # Initialize session state with tenant context
-        if 'tenant_state' not in st.session_state:
+        if "tenant_state" not in st.session_state:
             st.session_state.tenant_state = {
-                'current_tenant': None,
-                'user_role': None,
-                'accessible_tenants': [],
-                'view_mode': 'single_tenant',
-                'security_level': 'standard',
-                'audit_enabled': True
+                "current_tenant": None,
+                "user_role": None,
+                "accessible_tenants": [],
+                "view_mode": "single_tenant",
+                "security_level": "standard",
+                "audit_enabled": True,
             }
-        
+
         # Audit logging
         self.audit_log = []
-        
+
         # Mock tenant data
         self.tenants = self._initialize_tenant_data()
-    
+
     def render(self):
         """Render the main enterprise tenant dashboard."""
         self._render_custom_css()
-        
+
         # Security check and tenant selection
         if not self._perform_security_check():
             self._render_access_denied()
             return
-        
+
         # Tenant selection and header
         self._render_tenant_selector()
         self._render_dashboard_header()
-        
+
         # Main dashboard based on user role and view mode
-        view_mode = st.session_state.tenant_state['view_mode']
-        user_role = st.session_state.tenant_state['user_role']
-        
+        view_mode = st.session_state.tenant_state["view_mode"]
+        user_role = st.session_state.tenant_state["user_role"]
+
         # Sidebar controls
         with st.sidebar:
             self._render_sidebar_controls()
-        
+
         # Main content area
-        if view_mode == 'single_tenant':
+        if view_mode == "single_tenant":
             self._render_single_tenant_view()
-        elif view_mode == 'multi_tenant' and user_role in ['super_admin', 'platform_admin']:
+        elif view_mode == "multi_tenant" and user_role in ["super_admin", "platform_admin"]:
             self._render_multi_tenant_view()
-        elif view_mode == 'tenant_admin' and user_role in ['tenant_admin', 'super_admin']:
+        elif view_mode == "tenant_admin" and user_role in ["tenant_admin", "super_admin"]:
             self._render_tenant_admin_view()
         else:
             st.error("Insufficient permissions for requested view")
 
     def _render_custom_css(self):
         """Inject custom CSS for enterprise tenant dashboard."""
-        st.markdown("""
+        st.markdown(
+            """
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
@@ -374,224 +376,261 @@ class EnterpriseTenantDashboard:
             }
         }
         </style>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     def _perform_security_check(self) -> bool:
         """Perform security validation and tenant access check."""
         # Mock security check - in production, this would validate JWT tokens
         # and check tenant permissions
-        
-        if 'authenticated' not in st.session_state or not st.session_state.authenticated:
+
+        if "authenticated" not in st.session_state or not st.session_state.authenticated:
             return False
-        
+
         # Mock user and tenant assignment
-        user = st.session_state.get('user', {})
-        tenant_id = st.session_state.get('tenant_id', 'demo')
-        
+        user = st.session_state.get("user", {})
+        tenant_id = st.session_state.get("tenant_id", "demo")
+
         # Assign role based on email (mock logic)
-        email = user.get('email', '')
-        if 'admin@' in email:
-            role = 'super_admin'
+        email = user.get("email", "")
+        if "admin@" in email:
+            role = "super_admin"
             accessible_tenants = list(self.tenants.keys())
-        elif 'manager@' in email:
-            role = 'tenant_admin'
+        elif "manager@" in email:
+            role = "tenant_admin"
             accessible_tenants = [tenant_id]
         else:
-            role = 'viewer'
+            role = "viewer"
             accessible_tenants = [tenant_id]
-        
+
         # Update session state
-        st.session_state.tenant_state.update({
-            'user_role': role,
-            'accessible_tenants': accessible_tenants,
-            'current_tenant': tenant_id
-        })
-        
+        st.session_state.tenant_state.update(
+            {"user_role": role, "accessible_tenants": accessible_tenants, "current_tenant": tenant_id}
+        )
+
         # Log access attempt
-        self._log_audit_event('security_check', f"User {email} accessed dashboard with role {role}")
-        
+        self._log_audit_event("security_check", f"User {email} accessed dashboard with role {role}")
+
         return True
 
     def _render_access_denied(self):
         """Render access denied page."""
-        st.markdown("""
+        st.markdown(
+            """
         <div class="access-denied">
             <h1 class="access-denied-title">🚫 Access Denied</h1>
             <p>You don't have permission to access the Enterprise Tenant Dashboard.</p>
             <p>Please contact your system administrator for access.</p>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     def _render_tenant_selector(self):
         """Render tenant selection interface."""
-        if len(st.session_state.tenant_state['accessible_tenants']) > 1:
+        if len(st.session_state.tenant_state["accessible_tenants"]) > 1:
             col1, col2, col3 = st.columns([2, 2, 1])
-            
+
             with col1:
                 current_tenant = st.selectbox(
                     "🏢 Select Tenant",
-                    st.session_state.tenant_state['accessible_tenants'],
-                    index=0 if st.session_state.tenant_state['current_tenant'] in st.session_state.tenant_state['accessible_tenants'] else 0,
-                    key="tenant_selector"
+                    st.session_state.tenant_state["accessible_tenants"],
+                    index=0
+                    if st.session_state.tenant_state["current_tenant"]
+                    in st.session_state.tenant_state["accessible_tenants"]
+                    else 0,
+                    key="tenant_selector",
                 )
-                st.session_state.tenant_state['current_tenant'] = current_tenant
-            
+                st.session_state.tenant_state["current_tenant"] = current_tenant
+
             with col2:
                 view_mode = st.selectbox(
                     "👀 View Mode",
                     ["single_tenant", "multi_tenant", "tenant_admin"],
                     format_func=lambda x: {
                         "single_tenant": "🏢 Single Tenant",
-                        "multi_tenant": "🌐 Multi-Tenant Overview", 
-                        "tenant_admin": "⚙️ Tenant Administration"
+                        "multi_tenant": "🌐 Multi-Tenant Overview",
+                        "tenant_admin": "⚙️ Tenant Administration",
                     }[x],
-                    key="view_mode_selector"
+                    key="view_mode_selector",
                 )
-                st.session_state.tenant_state['view_mode'] = view_mode
-            
+                st.session_state.tenant_state["view_mode"] = view_mode
+
             with col3:
                 if st.button("🔄 Refresh", use_container_width=True):
                     st.rerun()
 
     def _render_dashboard_header(self):
         """Render dashboard header with tenant and security info."""
-        current_tenant = st.session_state.tenant_state['current_tenant']
-        user_role = st.session_state.tenant_state['user_role']
+        current_tenant = st.session_state.tenant_state["current_tenant"]
+        user_role = st.session_state.tenant_state["user_role"]
         tenant_info = self.tenants.get(current_tenant, {})
-        
+
         col1, col2 = st.columns([3, 1])
-        
+
         with col1:
-            st.markdown(f"""
+            st.markdown(
+                f"""
             <div class="enterprise-header">
                 <h1 class="enterprise-title">🏢 Enterprise Tenant Dashboard</h1>
                 <div class="tenant-badge">
-                    Current Tenant: {tenant_info.get('name', current_tenant)}
+                    Current Tenant: {tenant_info.get("name", current_tenant)}
                 </div>
                 <div class="tenant-badge">
-                    Role: {user_role.replace('_', ' ').title()}
+                    Role: {user_role.replace("_", " ").title()}
                 </div>
             </div>
-            """, unsafe_allow_html=True)
-        
+            """,
+                unsafe_allow_html=True,
+            )
+
         with col2:
             # Security indicator
-            security_level = tenant_info.get('security_level', 'medium')
+            security_level = tenant_info.get("security_level", "medium")
             security_class = f"security-{security_level}"
             security_icon = {"high": "🔒", "medium": "🛡️", "low": "⚠️"}[security_level]
-            
-            st.markdown(f"""
+
+            st.markdown(
+                f"""
             <div class="security-indicator {security_class}">
                 {security_icon} Security: {security_level.upper()}
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
     def _render_sidebar_controls(self):
         """Render sidebar controls."""
         st.header("🎛️ Enterprise Controls")
-        
-        user_role = st.session_state.tenant_state['user_role']
-        
+
+        user_role = st.session_state.tenant_state["user_role"]
+
         # Time range
         time_range = st.selectbox(
-            "📅 Time Range",
-            ["24h", "7d", "30d", "90d", "1y"],
-            index=2,
-            key="enterprise_time_range"
+            "📅 Time Range", ["24h", "7d", "30d", "90d", "1y"], index=2, key="enterprise_time_range"
         )
-        
+
         # Analytics filters
         st.subheader("📊 Analytics Filters")
         departments = st.multiselect(
-            "Departments",
-            ["Sales", "Marketing", "Support", "Product", "Engineering"],
-            default=["Sales", "Marketing"]
+            "Departments", ["Sales", "Marketing", "Support", "Product", "Engineering"], default=["Sales", "Marketing"]
         )
-        
+
         metrics = st.multiselect(
             "Key Metrics",
             ["Revenue", "Customers", "Engagement", "Churn", "CLV", "Conversion"],
-            default=["Revenue", "Customers", "Engagement"]
+            default=["Revenue", "Customers", "Engagement"],
         )
-        
+
         # Security and compliance
-        if user_role in ['super_admin', 'tenant_admin']:
+        if user_role in ["super_admin", "tenant_admin"]:
             st.subheader("🔐 Security & Compliance")
-            
+
             audit_enabled = st.toggle("Enable Audit Logging", value=True)
-            st.session_state.tenant_state['audit_enabled'] = audit_enabled
-            
+            st.session_state.tenant_state["audit_enabled"] = audit_enabled
+
             if st.button("📋 Generate Compliance Report", use_container_width=True):
                 st.success("Compliance report generated")
-            
+
             if st.button("🔍 Security Audit", use_container_width=True):
                 st.success("Security audit initiated")
-        
+
         # Tenant management (super admin only)
-        if user_role == 'super_admin':
+        if user_role == "super_admin":
             st.subheader("🏢 Tenant Management")
-            
+
             if st.button("➕ Add New Tenant", use_container_width=True):
                 st.success("New tenant creation form opened")
-            
+
             if st.button("⚙️ Tenant Settings", use_container_width=True):
                 st.success("Tenant settings panel opened")
-        
+
         # Export options
         st.subheader("📊 Export & Reports")
-        
+
         if st.button("📥 Export Data", use_container_width=True):
-            self._log_audit_event('data_export', f"User exported tenant data")
+            self._log_audit_event("data_export", f"User exported tenant data")
             st.success("Data export initiated")
-        
+
         if st.button("📧 Email Report", use_container_width=True):
             st.success("Report emailed to stakeholders")
 
     def _render_single_tenant_view(self):
         """Render single tenant analytics view."""
-        current_tenant = st.session_state.tenant_state['current_tenant']
+        current_tenant = st.session_state.tenant_state["current_tenant"]
         tenant_info = self.tenants[current_tenant]
-        
+
         st.header(f"📊 {tenant_info['name']} Analytics")
-        
+
         # Tenant metrics
         self._render_tenant_metrics(tenant_info)
-        
+
         # Charts
         col1, col2 = st.columns(2)
-        
+
         with col1:
             self._render_tenant_revenue_chart(tenant_info)
-        
+
         with col2:
             self._render_tenant_customer_growth_chart(tenant_info)
-        
+
         col3, col4 = st.columns(2)
-        
+
         with col3:
             self._render_tenant_engagement_chart(tenant_info)
-        
+
         with col4:
             self._render_tenant_department_performance(tenant_info)
-        
+
         # Detailed analytics
         self._render_tenant_detailed_analytics(tenant_info)
 
     def _render_tenant_metrics(self, tenant_info: Dict[str, Any]):
         """Render key tenant metrics."""
-        metrics = tenant_info.get('metrics', {})
-        
+        metrics = tenant_info.get("metrics", {})
+
         st.markdown('<div class="enterprise-metrics-grid">', unsafe_allow_html=True)
-        
+
         metric_configs = [
-            {"label": "Monthly Revenue", "value": metrics.get('monthly_revenue', 0), "format": "currency", "change": metrics.get('revenue_change', 0)},
-            {"label": "Active Customers", "value": metrics.get('active_customers', 0), "format": "number", "change": metrics.get('customer_change', 0)},
-            {"label": "Engagement Score", "value": metrics.get('engagement_score', 0), "format": "percentage", "change": metrics.get('engagement_change', 0)},
-            {"label": "Churn Rate", "value": metrics.get('churn_rate', 0), "format": "percentage", "change": metrics.get('churn_change', 0)},
-            {"label": "Customer CLV", "value": metrics.get('avg_clv', 0), "format": "currency", "change": metrics.get('clv_change', 0)},
-            {"label": "Support Tickets", "value": metrics.get('support_tickets', 0), "format": "number", "change": metrics.get('tickets_change', 0)}
+            {
+                "label": "Monthly Revenue",
+                "value": metrics.get("monthly_revenue", 0),
+                "format": "currency",
+                "change": metrics.get("revenue_change", 0),
+            },
+            {
+                "label": "Active Customers",
+                "value": metrics.get("active_customers", 0),
+                "format": "number",
+                "change": metrics.get("customer_change", 0),
+            },
+            {
+                "label": "Engagement Score",
+                "value": metrics.get("engagement_score", 0),
+                "format": "percentage",
+                "change": metrics.get("engagement_change", 0),
+            },
+            {
+                "label": "Churn Rate",
+                "value": metrics.get("churn_rate", 0),
+                "format": "percentage",
+                "change": metrics.get("churn_change", 0),
+            },
+            {
+                "label": "Customer CLV",
+                "value": metrics.get("avg_clv", 0),
+                "format": "currency",
+                "change": metrics.get("clv_change", 0),
+            },
+            {
+                "label": "Support Tickets",
+                "value": metrics.get("support_tickets", 0),
+                "format": "number",
+                "change": metrics.get("tickets_change", 0),
+            },
         ]
-        
+
         for metric in metric_configs:
             # Format value
             if metric["format"] == "currency":
@@ -600,164 +639,162 @@ class EnterpriseTenantDashboard:
                 value_display = f"{metric['value']:.1f}%"
             else:
                 value_display = f"{metric['value']:,}"
-            
+
             # Format change
-            change = metric['change']
+            change = metric["change"]
             if metric["format"] == "currency":
                 change_display = f"${abs(change):,.0f}"
             elif metric["format"] == "percentage":
                 change_display = f"{abs(change):.1f}%"
             else:
                 change_display = f"{abs(change):,}"
-            
+
             change_sign = "+" if change > 0 else "-" if change < 0 else ""
             change_color = "#48BB78" if change > 0 else "#F56565" if change < 0 else "#A0AEC0"
-            
-            st.markdown(f"""
+
+            st.markdown(
+                f"""
             <div class="enterprise-metric-card">
                 <div class="enterprise-metric-value">{value_display}</div>
-                <div class="enterprise-metric-label">{metric['label']}</div>
+                <div class="enterprise-metric-label">{metric["label"]}</div>
                 <div class="enterprise-metric-change" style="color: {change_color};">
                     {change_sign}{change_display}
                 </div>
             </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
+
+        st.markdown("</div>", unsafe_allow_html=True)
 
     def _render_tenant_revenue_chart(self, tenant_info: Dict[str, Any]):
         """Render tenant revenue chart."""
         st.markdown('<div class="comparison-container">', unsafe_allow_html=True)
         st.markdown('<h3 class="comparison-title">💰 Revenue Trend</h3>', unsafe_allow_html=True)
-        
+
         # Generate sample revenue data
-        dates = pd.date_range(end=datetime.now(), periods=30, freq='D')
-        base_revenue = tenant_info.get('metrics', {}).get('monthly_revenue', 50000) / 30
+        dates = pd.date_range(end=datetime.now(), periods=30, freq="D")
+        base_revenue = tenant_info.get("metrics", {}).get("monthly_revenue", 50000) / 30
         revenue_data = [base_revenue * (0.8 + 0.4 * np.random.random()) for _ in dates]
-        
+
         fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=dates,
-            y=revenue_data,
-            mode='lines+markers',
-            name='Daily Revenue',
-            line=dict(color='#1e3c72', width=3),
-            marker=dict(size=6)
-        ))
-        
+        fig.add_trace(
+            go.Scatter(
+                x=dates,
+                y=revenue_data,
+                mode="lines+markers",
+                name="Daily Revenue",
+                line=dict(color="#1e3c72", width=3),
+                marker=dict(size=6),
+            )
+        )
+
         fig.update_layout(
             height=350,
             xaxis_title="Date",
             yaxis_title="Revenue ($)",
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)'
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
         )
-        
+
         st.plotly_chart(fig, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
     def _render_tenant_customer_growth_chart(self, tenant_info: Dict[str, Any]):
         """Render tenant customer growth chart."""
         st.markdown('<div class="comparison-container">', unsafe_allow_html=True)
         st.markdown('<h3 class="comparison-title">👥 Customer Growth</h3>', unsafe_allow_html=True)
-        
+
         # Generate sample customer growth data
-        months = pd.date_range(end=datetime.now(), periods=12, freq='M')
-        base_customers = tenant_info.get('metrics', {}).get('active_customers', 1000)
+        months = pd.date_range(end=datetime.now(), periods=12, freq="M")
+        base_customers = tenant_info.get("metrics", {}).get("active_customers", 1000)
         growth_rate = 0.05  # 5% monthly growth
-        
+
         customer_data = []
         current_customers = base_customers * 0.7  # Start lower
-        
+
         for _ in months:
-            current_customers *= (1 + growth_rate + np.random.normal(0, 0.02))
+            current_customers *= 1 + growth_rate + np.random.normal(0, 0.02)
             customer_data.append(int(current_customers))
-        
+
         fig = go.Figure()
-        fig.add_trace(go.Bar(
-            x=months,
-            y=customer_data,
-            name='Active Customers',
-            marker=dict(color='#2a5298')
-        ))
-        
+        fig.add_trace(go.Bar(x=months, y=customer_data, name="Active Customers", marker=dict(color="#2a5298")))
+
         fig.update_layout(
             height=350,
             xaxis_title="Month",
             yaxis_title="Active Customers",
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)'
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
         )
-        
+
         st.plotly_chart(fig, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
     def _render_tenant_engagement_chart(self, tenant_info: Dict[str, Any]):
         """Render tenant engagement analysis."""
         st.markdown('<div class="comparison-container">', unsafe_allow_html=True)
         st.markdown('<h3 class="comparison-title">📈 Engagement Analysis</h3>', unsafe_allow_html=True)
-        
+
         # Mock engagement data by category
         categories = ["High", "Medium", "Low", "Inactive"]
         values = [25, 35, 30, 10]
-        colors = ['#48BB78', '#ECC94B', '#ED8936', '#F56565']
-        
-        fig = go.Figure(data=[go.Pie(
-            labels=categories,
-            values=values,
-            hole=0.4,
-            marker=dict(colors=colors),
-            textinfo='label+percent'
-        )])
-        
-        fig.update_layout(
-            height=350,
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)'
+        colors = ["#48BB78", "#ECC94B", "#ED8936", "#F56565"]
+
+        fig = go.Figure(
+            data=[
+                go.Pie(labels=categories, values=values, hole=0.4, marker=dict(colors=colors), textinfo="label+percent")
+            ]
         )
-        
+
+        fig.update_layout(height=350, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+
         st.plotly_chart(fig, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
     def _render_tenant_department_performance(self, tenant_info: Dict[str, Any]):
         """Render department performance for tenant."""
         st.markdown('<div class="comparison-container">', unsafe_allow_html=True)
         st.markdown('<h3 class="comparison-title">🏢 Department Performance</h3>', unsafe_allow_html=True)
-        
+
         departments = ["Sales", "Marketing", "Support", "Product"]
         performance = [85, 78, 92, 73]
-        
-        fig = go.Figure(data=[go.Bar(
-            x=departments,
-            y=performance,
-            marker=dict(color=['#1e3c72', '#2a5298', '#667eea', '#764ba2']),
-            text=[f"{p}%" for p in performance],
-            textposition='auto'
-        )])
-        
+
+        fig = go.Figure(
+            data=[
+                go.Bar(
+                    x=departments,
+                    y=performance,
+                    marker=dict(color=["#1e3c72", "#2a5298", "#667eea", "#764ba2"]),
+                    text=[f"{p}%" for p in performance],
+                    textposition="auto",
+                )
+            ]
+        )
+
         fig.update_layout(
             height=350,
             xaxis_title="Department",
             yaxis_title="Performance Score (%)",
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)'
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
         )
-        
+
         st.plotly_chart(fig, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
     def _render_tenant_detailed_analytics(self, tenant_info: Dict[str, Any]):
         """Render detailed tenant analytics."""
         st.subheader("🔍 Detailed Analytics")
-        
+
         tab1, tab2, tab3 = st.tabs(["Customer Segments", "Revenue Analysis", "Operational Metrics"])
-        
+
         with tab1:
             self._render_customer_segments_table(tenant_info)
-        
+
         with tab2:
             self._render_revenue_analysis_table(tenant_info)
-        
+
         with tab3:
             self._render_operational_metrics_table(tenant_info)
 
@@ -768,9 +805,9 @@ class EnterpriseTenantDashboard:
             "Count": [45, 123, 234, 89, 156],
             "Avg CLV": [5640, 3420, 2180, 2340, 890],
             "Engagement": [92, 78, 85, 45, 67],
-            "Churn Risk": [8, 15, 22, 73, 36]
+            "Churn Risk": [8, 15, 22, 73, 36],
         }
-        
+
         df = pd.DataFrame(segments_data)
         st.dataframe(df, use_container_width=True)
 
@@ -781,9 +818,9 @@ class EnterpriseTenantDashboard:
             "Revenue": [45000, 52000, 48000, 61000, 58000, 65000],
             "Growth %": [0, 15.6, -7.7, 27.1, -4.9, 12.1],
             "Customers": [890, 945, 923, 1024, 1089, 1156],
-            "ARPU": [50.6, 55.0, 52.0, 59.6, 53.3, 56.2]
+            "ARPU": [50.6, 55.0, 52.0, 59.6, 53.3, 56.2],
         }
-        
+
         df = pd.DataFrame(revenue_data)
         st.dataframe(df, use_container_width=True)
 
@@ -793,49 +830,49 @@ class EnterpriseTenantDashboard:
             "Metric": ["Response Time", "Uptime", "API Calls", "Error Rate", "Support Tickets", "Resolution Time"],
             "Current": ["45ms", "99.9%", "125,430", "0.2%", "23", "4.2h"],
             "Target": ["<50ms", ">99.5%", "150,000", "<0.5%", "<30", "<6h"],
-            "Status": ["✅ Good", "✅ Good", "⚠️ Medium", "✅ Good", "✅ Good", "✅ Good"]
+            "Status": ["✅ Good", "✅ Good", "⚠️ Medium", "✅ Good", "✅ Good", "✅ Good"],
         }
-        
+
         df = pd.DataFrame(ops_data)
         st.dataframe(df, use_container_width=True)
 
     def _render_multi_tenant_view(self):
         """Render multi-tenant comparison view."""
         st.header("🌐 Multi-Tenant Overview")
-        
+
         # Cross-tenant metrics
         self._render_cross_tenant_metrics()
-        
+
         # Tenant comparison
         self._render_tenant_comparison_table()
-        
+
         # Charts
         col1, col2 = st.columns(2)
-        
+
         with col1:
             self._render_cross_tenant_revenue_comparison()
-        
+
         with col2:
             self._render_cross_tenant_performance_matrix()
 
     def _render_cross_tenant_metrics(self):
         """Render cross-tenant summary metrics."""
-        total_revenue = sum(t.get('metrics', {}).get('monthly_revenue', 0) for t in self.tenants.values())
-        total_customers = sum(t.get('metrics', {}).get('active_customers', 0) for t in self.tenants.values())
-        avg_engagement = np.mean([t.get('metrics', {}).get('engagement_score', 0) for t in self.tenants.values()])
-        active_tenants = len([t for t in self.tenants.values() if t.get('status') == 'active'])
-        
+        total_revenue = sum(t.get("metrics", {}).get("monthly_revenue", 0) for t in self.tenants.values())
+        total_customers = sum(t.get("metrics", {}).get("active_customers", 0) for t in self.tenants.values())
+        avg_engagement = np.mean([t.get("metrics", {}).get("engagement_score", 0) for t in self.tenants.values()])
+        active_tenants = len([t for t in self.tenants.values() if t.get("status") == "active"])
+
         col1, col2, col3, col4 = st.columns(4)
-        
+
         with col1:
             st.metric("Total Platform Revenue", f"${total_revenue:,}", "+12%")
-        
+
         with col2:
             st.metric("Total Customers", f"{total_customers:,}", "+234")
-        
+
         with col3:
             st.metric("Average Engagement", f"{avg_engagement:.1f}%", "+2.3%")
-        
+
         with col4:
             st.metric("Active Tenants", f"{active_tenants}", "+1")
 
@@ -843,116 +880,121 @@ class EnterpriseTenantDashboard:
         """Render tenant comparison table."""
         st.markdown('<div class="comparison-container">', unsafe_allow_html=True)
         st.markdown('<h3 class="comparison-title">🏢 Tenant Performance Comparison</h3>', unsafe_allow_html=True)
-        
+
         comparison_data = []
         for tenant_id, tenant_info in self.tenants.items():
-            metrics = tenant_info.get('metrics', {})
-            comparison_data.append({
-                "Tenant": tenant_info.get('name', tenant_id),
-                "Status": tenant_info.get('status', 'unknown'),
-                "Revenue": f"${metrics.get('monthly_revenue', 0):,}",
-                "Customers": f"{metrics.get('active_customers', 0):,}",
-                "Engagement": f"{metrics.get('engagement_score', 0):.1f}%",
-                "Churn": f"{metrics.get('churn_rate', 0):.1f}%",
-                "CLV": f"${metrics.get('avg_clv', 0):,}"
-            })
-        
+            metrics = tenant_info.get("metrics", {})
+            comparison_data.append(
+                {
+                    "Tenant": tenant_info.get("name", tenant_id),
+                    "Status": tenant_info.get("status", "unknown"),
+                    "Revenue": f"${metrics.get('monthly_revenue', 0):,}",
+                    "Customers": f"{metrics.get('active_customers', 0):,}",
+                    "Engagement": f"{metrics.get('engagement_score', 0):.1f}%",
+                    "Churn": f"{metrics.get('churn_rate', 0):.1f}%",
+                    "CLV": f"${metrics.get('avg_clv', 0):,}",
+                }
+            )
+
         df = pd.DataFrame(comparison_data)
         st.dataframe(df, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
     def _render_cross_tenant_revenue_comparison(self):
         """Render cross-tenant revenue comparison."""
         st.markdown('<div class="comparison-container">', unsafe_allow_html=True)
         st.markdown('<h3 class="comparison-title">💰 Revenue Comparison</h3>', unsafe_allow_html=True)
-        
-        tenant_names = [info.get('name', tid) for tid, info in self.tenants.items()]
-        revenues = [info.get('metrics', {}).get('monthly_revenue', 0) for info in self.tenants.values()]
-        
-        fig = go.Figure(data=[go.Bar(
-            x=tenant_names,
-            y=revenues,
-            marker=dict(color='#1e3c72'),
-            text=[f"${r:,.0f}" for r in revenues],
-            textposition='auto'
-        )])
-        
+
+        tenant_names = [info.get("name", tid) for tid, info in self.tenants.items()]
+        revenues = [info.get("metrics", {}).get("monthly_revenue", 0) for info in self.tenants.values()]
+
+        fig = go.Figure(
+            data=[
+                go.Bar(
+                    x=tenant_names,
+                    y=revenues,
+                    marker=dict(color="#1e3c72"),
+                    text=[f"${r:,.0f}" for r in revenues],
+                    textposition="auto",
+                )
+            ]
+        )
+
         fig.update_layout(
             height=400,
             xaxis_title="Tenant",
             yaxis_title="Monthly Revenue ($)",
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)'
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
         )
-        
+
         st.plotly_chart(fig, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
     def _render_cross_tenant_performance_matrix(self):
         """Render performance matrix heatmap."""
         st.markdown('<div class="comparison-container">', unsafe_allow_html=True)
         st.markdown('<h3 class="comparison-title">🎯 Performance Matrix</h3>', unsafe_allow_html=True)
-        
+
         # Create performance matrix data
-        tenant_names = [info.get('name', tid) for tid, info in self.tenants.items()]
-        metrics = ['Revenue', 'Customers', 'Engagement', 'Retention']
-        
+        tenant_names = [info.get("name", tid) for tid, info in self.tenants.items()]
+        metrics = ["Revenue", "Customers", "Engagement", "Retention"]
+
         # Normalize metrics to 0-100 scale for comparison
         performance_matrix = []
         for tenant_info in self.tenants.values():
-            tenant_metrics = tenant_info.get('metrics', {})
+            tenant_metrics = tenant_info.get("metrics", {})
             normalized = [
-                min(100, tenant_metrics.get('monthly_revenue', 0) / 1000),  # Scale revenue
-                min(100, tenant_metrics.get('active_customers', 0) / 20),    # Scale customers
-                tenant_metrics.get('engagement_score', 0),                   # Engagement (already 0-100)
-                max(0, 100 - tenant_metrics.get('churn_rate', 50))          # Retention (inverse of churn)
+                min(100, tenant_metrics.get("monthly_revenue", 0) / 1000),  # Scale revenue
+                min(100, tenant_metrics.get("active_customers", 0) / 20),  # Scale customers
+                tenant_metrics.get("engagement_score", 0),  # Engagement (already 0-100)
+                max(0, 100 - tenant_metrics.get("churn_rate", 50)),  # Retention (inverse of churn)
             ]
             performance_matrix.append(normalized)
-        
-        fig = go.Figure(data=go.Heatmap(
-            z=performance_matrix,
-            x=metrics,
-            y=tenant_names,
-            colorscale='RdYlGn',
-            text=[[f"{val:.1f}" for val in row] for row in performance_matrix],
-            texttemplate="%{text}",
-            textfont={"size": 10}
-        ))
-        
-        fig.update_layout(
-            height=400,
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)'
+
+        fig = go.Figure(
+            data=go.Heatmap(
+                z=performance_matrix,
+                x=metrics,
+                y=tenant_names,
+                colorscale="RdYlGn",
+                text=[[f"{val:.1f}" for val in row] for row in performance_matrix],
+                texttemplate="%{text}",
+                textfont={"size": 10},
+            )
         )
-        
+
+        fig.update_layout(height=400, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+
         st.plotly_chart(fig, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
     def _render_tenant_admin_view(self):
         """Render tenant administration view."""
         st.header("⚙️ Tenant Administration")
-        
-        current_tenant = st.session_state.tenant_state['current_tenant']
+
+        current_tenant = st.session_state.tenant_state["current_tenant"]
         tenant_info = self.tenants[current_tenant]
-        
+
         # Admin panel
         self._render_admin_panel(tenant_info)
-        
+
         # Configuration management
         col1, col2 = st.columns(2)
-        
+
         with col1:
             self._render_tenant_configuration(tenant_info)
-        
+
         with col2:
             self._render_user_management(tenant_info)
-        
+
         # Audit and compliance
         self._render_audit_trail()
 
     def _render_admin_panel(self, tenant_info: Dict[str, Any]):
         """Render admin control panel."""
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="admin-panel">
             <h3 class="admin-title">🛠️ Administration Panel</h3>
             <div class="admin-controls">
@@ -974,105 +1016,113 @@ class EnterpriseTenantDashboard:
                 </div>
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     def _render_tenant_configuration(self, tenant_info: Dict[str, Any]):
         """Render tenant configuration settings."""
         st.markdown('<div class="comparison-container">', unsafe_allow_html=True)
         st.markdown('<h3 class="comparison-title">⚙️ Tenant Configuration</h3>', unsafe_allow_html=True)
-        
+
         # Configuration form
         with st.form("tenant_config"):
-            tenant_name = st.text_input("Tenant Name", value=tenant_info.get('name', ''))
-            
+            tenant_name = st.text_input("Tenant Name", value=tenant_info.get("name", ""))
+
             col1, col2 = st.columns(2)
-            
+
             with col1:
-                max_users = st.number_input("Max Users", value=tenant_info.get('max_users', 100), min_value=1)
+                max_users = st.number_input("Max Users", value=tenant_info.get("max_users", 100), min_value=1)
                 data_retention = st.selectbox("Data Retention", ["30 days", "90 days", "1 year", "2 years"], index=2)
-            
+
             with col2:
                 security_level = st.selectbox("Security Level", ["standard", "high", "maximum"], index=1)
                 api_rate_limit = st.number_input("API Rate Limit (req/min)", value=1000, min_value=100)
-            
+
             features = st.multiselect(
                 "Enabled Features",
                 ["Analytics", "Customer Intelligence", "Journey Mapping", "Predictive Analytics", "API Access"],
-                default=["Analytics", "Customer Intelligence"]
+                default=["Analytics", "Customer Intelligence"],
             )
-            
+
             if st.form_submit_button("Save Configuration"):
-                self._log_audit_event('config_update', f"Tenant configuration updated")
+                self._log_audit_event("config_update", f"Tenant configuration updated")
                 st.success("Configuration saved successfully")
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown("</div>", unsafe_allow_html=True)
 
     def _render_user_management(self, tenant_info: Dict[str, Any]):
         """Render user management interface."""
         st.markdown('<div class="comparison-container">', unsafe_allow_html=True)
         st.markdown('<h3 class="comparison-title">👥 User Management</h3>', unsafe_allow_html=True)
-        
+
         # Mock user data
         users_data = {
             "Email": ["admin@demo.com", "analyst@demo.com", "viewer@demo.com", "manager@demo.com"],
             "Role": ["Admin", "Analyst", "Viewer", "Manager"],
             "Status": ["Active", "Active", "Inactive", "Active"],
             "Last Login": ["2024-01-19 10:30", "2024-01-19 09:15", "2024-01-17 14:20", "2024-01-19 08:45"],
-            "Actions": ["Edit", "Edit", "Edit", "Edit"]
+            "Actions": ["Edit", "Edit", "Edit", "Edit"],
         }
-        
+
         df = pd.DataFrame(users_data)
         st.dataframe(df, use_container_width=True)
-        
+
         # Add user form
         with st.expander("➕ Add New User"):
             with st.form("add_user"):
                 new_email = st.text_input("Email Address")
                 new_role = st.selectbox("Role", ["Viewer", "Analyst", "Manager", "Admin"])
-                
+
                 if st.form_submit_button("Add User"):
-                    self._log_audit_event('user_added', f"New user {new_email} added with role {new_role}")
+                    self._log_audit_event("user_added", f"New user {new_email} added with role {new_role}")
                     st.success(f"User {new_email} added successfully")
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown("</div>", unsafe_allow_html=True)
 
     def _render_audit_trail(self):
         """Render audit trail and compliance information."""
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="audit-container">
             <h3 class="audit-title">📋 Recent Audit Events</h3>
         </div>
-        """, unsafe_allow_html=True)
-        
+        """,
+            unsafe_allow_html=True,
+        )
+
         # Display recent audit events
         for event in self.audit_log[-10:]:  # Show last 10 events
-            st.markdown(f"""
+            st.markdown(
+                f"""
             <div class="audit-item">
-                <strong>{event['timestamp']}</strong> - {event['action']}: {event['details']}
+                <strong>{event["timestamp"]}</strong> - {event["action"]}: {event["details"]}
             </div>
-            """, unsafe_allow_html=True)
-        
+            """,
+                unsafe_allow_html=True,
+            )
+
         # Compliance metrics
         col1, col2, col3 = st.columns(3)
-        
+
         with col1:
             st.metric("Audit Events Today", len(self.audit_log), "+5")
-        
+
         with col2:
             st.metric("Compliance Score", "98.5%", "+0.3%")
-        
+
         with col3:
             st.metric("Security Incidents", "0", "0")
 
     def _log_audit_event(self, action: str, details: str):
         """Log audit event."""
-        if st.session_state.tenant_state.get('audit_enabled', True):
+        if st.session_state.tenant_state.get("audit_enabled", True):
             event = {
-                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                'action': action,
-                'details': details,
-                'user': st.session_state.get('user', {}).get('email', 'anonymous'),
-                'tenant': st.session_state.tenant_state.get('current_tenant', 'unknown')
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "action": action,
+                "details": details,
+                "user": st.session_state.get("user", {}).get("email", "anonymous"),
+                "tenant": st.session_state.tenant_state.get("current_tenant", "unknown"),
             }
             self.audit_log.append(event)
 
@@ -1097,8 +1147,8 @@ class EnterpriseTenantDashboard:
                     "avg_clv": 2840,
                     "clv_change": 156,
                     "support_tickets": 23,
-                    "tickets_change": -5
-                }
+                    "tickets_change": -5,
+                },
             },
             "enterprise": {
                 "name": "Enterprise Solutions Inc",
@@ -1118,8 +1168,8 @@ class EnterpriseTenantDashboard:
                     "avg_clv": 4260,
                     "clv_change": 320,
                     "support_tickets": 67,
-                    "tickets_change": 12
-                }
+                    "tickets_change": 12,
+                },
             },
             "trial": {
                 "name": "Trial Customer LLC",
@@ -1139,9 +1189,9 @@ class EnterpriseTenantDashboard:
                     "avg_clv": 890,
                     "clv_change": 0,
                     "support_tickets": 8,
-                    "tickets_change": 3
-                }
-            }
+                    "tickets_change": 3,
+                },
+            },
         }
 
 
@@ -1153,10 +1203,7 @@ def render_enterprise_tenant_dashboard():
 
 if __name__ == "__main__":
     st.set_page_config(
-        page_title="Enterprise Tenant Dashboard",
-        page_icon="🏢",
-        layout="wide",
-        initial_sidebar_state="expanded"
+        page_title="Enterprise Tenant Dashboard", page_icon="🏢", layout="wide", initial_sidebar_state="expanded"
     )
-    
+
     render_enterprise_tenant_dashboard()

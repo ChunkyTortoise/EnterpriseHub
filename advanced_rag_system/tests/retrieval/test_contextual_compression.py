@@ -1,9 +1,10 @@
 """Tests for contextual compression system."""
 
-import pytest
-from uuid import uuid4
 from typing import List
+from uuid import uuid4
 
+import pytest
+from src.core.types import DocumentChunk, SearchResult
 from src.retrieval.contextual_compression import (
     AbstractiveCompressor,
     AllocationStrategy,
@@ -20,8 +21,6 @@ from src.retrieval.contextual_compression import (
     TokenBudgetManager,
     TokenCounter,
 )
-from src.core.types import DocumentChunk, SearchResult
-
 
 # ============================================================================
 # Fixtures
@@ -136,9 +135,7 @@ class TestRelevanceScorer:
             content="Python is a great programming language",
         )
 
-        score = await relevance_scorer.score_document(
-            doc, "Python programming", ScoringMethod.KEYWORD
-        )
+        score = await relevance_scorer.score_document(doc, "Python programming", ScoringMethod.KEYWORD)
 
         assert score.overall_score > 0
         assert score.document_id == doc.id
@@ -152,18 +149,14 @@ class TestRelevanceScorer:
             content="Java is an object-oriented language",
         )
 
-        score = await relevance_scorer.score_document(
-            doc, "Python programming", ScoringMethod.KEYWORD
-        )
+        score = await relevance_scorer.score_document(doc, "Python programming", ScoringMethod.KEYWORD)
 
         assert score.overall_score == 0
 
     @pytest.mark.asyncio
     async def test_score_documents_batch(self, relevance_scorer, sample_documents):
         """Test scoring multiple documents."""
-        scores = await relevance_scorer.score_documents(
-            sample_documents, "Python programming", ScoringMethod.KEYWORD
-        )
+        scores = await relevance_scorer.score_documents(sample_documents, "Python programming", ScoringMethod.KEYWORD)
 
         assert len(scores) == 3
         # First document should have highest score (mentions Python)
@@ -177,9 +170,7 @@ class TestRelevanceScorer:
             content="Python is great. Java is also good. Python is easy.",
         )
 
-        score = await relevance_scorer.score_document(
-            doc, "Python", ScoringMethod.KEYWORD
-        )
+        score = await relevance_scorer.score_document(doc, "Python", ScoringMethod.KEYWORD)
 
         assert len(score.segment_scores) > 0
         # At least one segment should have high score (mentions Python)
@@ -419,9 +410,7 @@ class TestContextualCompressor:
         config = CompressionConfig(min_relevance_threshold=0.8)
         compressor_with_threshold = ContextualCompressor(config=config)
 
-        result = await compressor_with_threshold.compress(
-            sample_documents, "very specific topic"
-        )
+        result = await compressor_with_threshold.compress(sample_documents, "very specific topic")
 
         # May filter out documents below threshold
         assert len(result.compressed_documents) <= len(sample_documents)
@@ -443,10 +432,7 @@ class TestContextualCompressor:
     @pytest.mark.asyncio
     async def test_compress_results(self, compressor, sample_documents):
         """Test compression of search results."""
-        results = [
-            SearchResult(chunk=doc, score=0.9, rank=i + 1)
-            for i, doc in enumerate(sample_documents)
-        ]
+        results = [SearchResult(chunk=doc, score=0.9, rank=i + 1) for i, doc in enumerate(sample_documents)]
 
         result = await compressor.compress_results(results, "programming")
 
@@ -599,10 +585,7 @@ class TestCompressionIntegration:
         assert result.compression_ratio < 1.0
 
         # First document should be included (about Python)
-        first_doc_compressed = any(
-            str(d.original_id) == str(docs[0].id)
-            for d in result.compressed_documents
-        )
+        first_doc_compressed = any(str(d.original_id) == str(docs[0].id) for d in result.compressed_documents)
         assert first_doc_compressed
 
     @pytest.mark.asyncio

@@ -9,20 +9,21 @@ FastAPI router providing comprehensive compliance management endpoints:
 - Real-time metrics and monitoring
 """
 
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Union
-from uuid import uuid4
 import csv
 import io
 import json
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Union
+from uuid import uuid4
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status, Response
-from pydantic import BaseModel, Field, ConfigDict
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response, status
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
+from ..database.database import AsyncSessionLocal, get_db
 from ..models.compliance_models import (
     AIModelRegistration,
     ComplianceScore,
@@ -35,7 +36,6 @@ from ..models.compliance_models import (
 )
 from ..services.compliance_service import ComplianceService
 from ..services.report_generator import ComplianceReportGenerator
-from ..database.database import get_db, AsyncSessionLocal
 
 logger = get_logger(__name__)
 
@@ -46,6 +46,7 @@ router = APIRouter(prefix="/api/v1/compliance", tags=["compliance"])
 # =============================================================================
 # Dependency Injection
 # =============================================================================
+
 
 async def get_compliance_service(db: AsyncSession = Depends(get_db)) -> ComplianceService:
     """
@@ -89,7 +90,7 @@ class ModelRegistrationRequest(BaseModel):
                 "deployment_location": "cloud",
                 "intended_use": "Direct interaction with customers for support tickets",
                 "applicable_regulations": ["eu_ai_act", "gdpr"],
-                "personal_data_processed": True
+                "personal_data_processed": True,
             }
         }
     )
@@ -97,23 +98,15 @@ class ModelRegistrationRequest(BaseModel):
 
     name: str = Field(..., description="Model name", min_length=1, max_length=255)
     version: str = Field(..., description="Model version", min_length=1, max_length=50)
-    description: str = Field(
-        ..., description="Model description", min_length=1, max_length=2000
-    )
+    description: str = Field(..., description="Model description", min_length=1, max_length=2000)
     model_type: str = Field(
         ...,
         description="Type of model (classification, regression, nlp, computer_vision, etc.)",
     )
-    provider: str = Field(
-        ..., description="Model provider (internal, anthropic, openai, google, etc.)"
-    )
-    deployment_location: str = Field(
-        ..., description="Deployment location (cloud, on_premise, hybrid)"
-    )
+    provider: str = Field(..., description="Model provider (internal, anthropic, openai, google, etc.)")
+    deployment_location: str = Field(..., description="Deployment location (cloud, on_premise, hybrid)")
     intended_use: str = Field(..., description="Intended use description")
-    data_sources: List[str] = Field(
-        default_factory=list, description="List of data sources used"
-    )
+    data_sources: List[str] = Field(default_factory=list, description="List of data sources used")
     applicable_regulations: List[str] = Field(
         default_factory=list,
         description="Applicable regulatory frameworks (eu_ai_act, hipaa, gdpr, etc.)",
@@ -126,12 +119,8 @@ class ModelRegistrationRequest(BaseModel):
         default_factory=lambda: ["us"],
         description="Data residency regions (eu, us, etc.)",
     )
-    personal_data_processed: bool = Field(
-        default=False, description="Whether the model processes personal data"
-    )
-    sensitive_data_processed: bool = Field(
-        default=False, description="Whether the model processes sensitive data"
-    )
+    personal_data_processed: bool = Field(default=False, description="Whether the model processes personal data")
+    sensitive_data_processed: bool = Field(default=False, description="Whether the model processes sensitive data")
 
 
 class ModelRegistrationResponse(BaseModel):
@@ -152,7 +141,7 @@ class ComplianceCheckRequest(BaseModel):
                 "model_id": "mod_12345",
                 "check_types": ["full"],
                 "async_mode": True,
-                "context": {"deployment_tier": "production", "data_sensitivity": "high"}
+                "context": {"deployment_tier": "production", "data_sensitivity": "high"},
             }
         }
     )
@@ -167,20 +156,23 @@ class ComplianceCheckRequest(BaseModel):
         default=False,
         description="Whether to run assessment asynchronously",
     )
-    context: Optional[Dict[str, Any]] = Field(
-        default=None, description="Additional context for assessment"
-    )
+    context: Optional[Dict[str, Any]] = Field(default=None, description="Additional context for assessment")
+
 
 class BatchAssessmentRequest(BaseModel):
     """Request model for batch compliance assessment."""
+
     model_ids: List[str] = Field(..., description="List of model IDs to assess")
     context: Optional[Dict[str, Any]] = Field(default=None)
 
+
 class BatchAssessmentResponse(BaseModel):
     """Response for batch assessment trigger."""
+
     batch_id: str
     message: str
     model_count: int
+
 
 class ComplianceCheckResponse(BaseModel):
     """Response model for compliance assessment."""
@@ -191,9 +183,7 @@ class ComplianceCheckResponse(BaseModel):
     risk_level: str = Field(..., description="Risk classification")
     violation_count: int = Field(..., description="Number of violations detected")
     status: str = Field(..., description="Assessment status")
-    completed_at: Optional[datetime] = Field(
-        default=None, description="Completion timestamp"
-    )
+    completed_at: Optional[datetime] = Field(default=None, description="Completion timestamp")
 
 
 class ViolationResponse(BaseModel):
@@ -206,9 +196,7 @@ class ViolationResponse(BaseModel):
     description: str = Field(..., description="Detailed description")
     detected_at: datetime = Field(..., description="Detection timestamp")
     status: str = Field(..., description="Current status")
-    potential_fine: Optional[float] = Field(
-        default=None, description="Potential fine amount"
-    )
+    potential_fine: Optional[float] = Field(default=None, description="Potential fine amount")
     is_overdue: bool = Field(default=False, description="Whether remediation is overdue")
 
 
@@ -216,38 +204,25 @@ class ViolationAcknowledgeRequest(BaseModel):
     """Request model for acknowledging a violation."""
 
     acknowledged_by: str = Field(..., description="User acknowledging the violation")
-    notes: Optional[str] = Field(
-        default=None, description="Acknowledgment notes"
-    )
+    notes: Optional[str] = Field(default=None, description="Acknowledgment notes")
 
 
 class ReportRequest(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
-            "example": {
-                "model_id": "mod_12345",
-                "report_type": "detailed",
-                "format": "pdf",
-                "period_days": 90
-            }
+            "example": {"model_id": "mod_12345", "report_type": "detailed", "format": "pdf", "period_days": 90}
         }
     )
     """Request model for generating compliance reports."""
 
-    model_id: Optional[str] = Field(
-        default=None, description="Optional model ID for specific model report"
-    )
+    model_id: Optional[str] = Field(default=None, description="Optional model ID for specific model report")
     report_type: str = Field(
         default="executive",
         description="Report type (executive, detailed, audit, regulatory)",
     )
     format: str = Field(default="json", description="Output format (json, pdf, html)")
-    regulation: Optional[str] = Field(
-        default=None, description="Specific regulation for regulatory reports"
-    )
-    period_days: int = Field(
-        default=30, description="Reporting period in days", ge=1, le=365
-    )
+    regulation: Optional[str] = Field(default=None, description="Specific regulation for regulatory reports")
+    period_days: int = Field(default=30, description="Reporting period in days", ge=1, le=365)
 
 
 class ReportResponse(BaseModel):
@@ -256,9 +231,7 @@ class ReportResponse(BaseModel):
     report_id: str = Field(..., description="Generated report ID")
     status: str = Field(..., description="Generation status")
     message: str = Field(..., description="Status message")
-    download_url: Optional[str] = Field(
-        default=None, description="URL to download the report"
-    )
+    download_url: Optional[str] = Field(default=None, description="URL to download the report")
 
 
 class ModelSummary(BaseModel):
@@ -279,39 +252,23 @@ class DashboardSummary(BaseModel):
 
     total_models: int = Field(..., description="Total registered models")
     compliant_models: int = Field(..., description="Fully compliant models")
-    partially_compliant_models: int = Field(
-        ..., description="Partially compliant models"
-    )
+    partially_compliant_models: int = Field(..., description="Partially compliant models")
     non_compliant_models: int = Field(..., description="Non-compliant models")
     total_violations: int = Field(..., description="Total active violations")
     critical_violations: int = Field(..., description="Critical severity violations")
-    average_compliance_score: float = Field(
-        ..., description="Average compliance score across all models"
-    )
-    potential_exposure: float = Field(
-        ..., description="Total potential regulatory exposure"
-    )
+    average_compliance_score: float = Field(..., description="Average compliance score across all models")
+    potential_exposure: float = Field(..., description="Total potential regulatory exposure")
 
 
 class ComplianceMetricsResponse(BaseModel):
     """Response model for compliance metrics."""
 
-    compliance_rate: float = Field(
-        ..., description="Percentage of compliant models"
-    )
+    compliance_rate: float = Field(..., description="Percentage of compliant models")
     average_score: float = Field(..., description="Average compliance score")
-    violation_trend: str = Field(
-        ..., description="Violation trend (improving, stable, declining)"
-    )
-    assessments_this_month: int = Field(
-        ..., description="Number of assessments this month"
-    )
-    risk_distribution: Dict[str, int] = Field(
-        ..., description="Distribution of models by risk level"
-    )
-    regulation_coverage: Dict[str, int] = Field(
-        ..., description="Number of models per regulation"
-    )
+    violation_trend: str = Field(..., description="Violation trend (improving, stable, declining)")
+    assessments_this_month: int = Field(..., description="Number of assessments this month")
+    risk_distribution: Dict[str, int] = Field(..., description="Distribution of models by risk level")
+    regulation_coverage: Dict[str, int] = Field(..., description="Number of models per regulation")
 
 
 # =============================================================================
@@ -393,9 +350,7 @@ async def register_model(
 )
 async def list_models(
     skip: int = Query(default=0, ge=0, description="Number of records to skip"),
-    limit: int = Query(
-        default=100, ge=1, le=500, description="Maximum records to return"
-    ),
+    limit: int = Query(default=100, ge=1, le=500, description="Maximum records to return"),
     risk_level: Optional[str] = Query(
         default=None, description="Filter by risk level (minimal, limited, high, unacceptable)"
     ),
@@ -438,10 +393,10 @@ async def list_models(
 
         # Apply pagination (DB query might return all for now if filtering not pushed down completely for pagination)
         # Note: service.list_models should ideally handle pagination, but for now we do it here if service doesn't.
-        # Looking at service implementation, it calls repo.list_models which does not take pagination params 
+        # Looking at service implementation, it calls repo.list_models which does not take pagination params
         # (wait, I implemented repo list_models to take skip/limit!).
         # But service list_models didn't expose skip/limit.
-        # I'll update service list_models later if needed, but for now slicing list is safer 
+        # I'll update service list_models later if needed, but for now slicing list is safer
         # since service.list_models implementation in my write_file call didn't pass skip/limit.
         paginated_models = models[skip : skip + limit]
 
@@ -538,26 +493,30 @@ async def _run_assessment_background(
     async with AsyncSessionLocal() as session:
         try:
             service = ComplianceService(session=session)
-            
+
             _pending_assessments[assessment_id]["status"] = "in_progress"
 
             score, risk, violations = await service.assess_compliance(model_id, context)
 
-            _pending_assessments[assessment_id].update({
-                "status": "completed",
-                "compliance_score": score.overall_score,
-                "risk_level": risk.risk_level.value,
-                "violation_count": len(violations),
-                "completed_at": datetime.now(timezone.utc).isoformat(),
-            })
+            _pending_assessments[assessment_id].update(
+                {
+                    "status": "completed",
+                    "compliance_score": score.overall_score,
+                    "risk_level": risk.risk_level.value,
+                    "violation_count": len(violations),
+                    "completed_at": datetime.now(timezone.utc).isoformat(),
+                }
+            )
 
             logger.info(f"Background assessment {assessment_id} completed")
 
         except Exception as e:
-            _pending_assessments[assessment_id].update({
-                "status": "failed",
-                "error": str(e),
-            })
+            _pending_assessments[assessment_id].update(
+                {
+                    "status": "failed",
+                    "error": str(e),
+                }
+            )
             logger.error(f"Background assessment {assessment_id} failed: {e}")
 
 
@@ -615,9 +574,7 @@ async def assess_compliance(
 
         # Synchronous assessment
         logger.info(f"Running sync assessment for model {request.model_id}")
-        score, risk, violations = await service.assess_compliance(
-            request.model_id, request.context
-        )
+        score, risk, violations = await service.assess_compliance(request.model_id, request.context)
 
         return ComplianceCheckResponse(
             assessment_id=assessment_id,
@@ -643,29 +600,30 @@ async def assess_compliance(
             detail=f"Failed to assess compliance: {str(e)}",
         )
 
+
 @router.post(
     "/assess/batch",
     response_model=BatchAssessmentResponse,
     summary="Batch Compliance Assessment",
-    description="Trigger assessment for multiple models."
+    description="Trigger assessment for multiple models.",
 )
 async def assess_batch(
     request: BatchAssessmentRequest,
     background_tasks: BackgroundTasks,
-    service: ComplianceService = Depends(get_compliance_service)
+    service: ComplianceService = Depends(get_compliance_service),
 ) -> BatchAssessmentResponse:
     """
     Trigger batch assessment. Always runs asynchronously.
     """
     batch_id = str(uuid4())
     logger.info(f"Starting batch assessment {batch_id} for {len(request.model_ids)} models")
-    
+
     # Verify models exist first
     valid_ids = []
     for mid in request.model_ids:
         if await service.get_model(mid):
             valid_ids.append(mid)
-    
+
     for mid in valid_ids:
         assessment_id = str(uuid4())
         _pending_assessments[assessment_id] = {
@@ -675,18 +633,14 @@ async def assess_batch(
             "status": "pending",
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
-        background_tasks.add_task(
-            _run_assessment_background,
-            assessment_id,
-            mid,
-            request.context
-        )
-        
+        background_tasks.add_task(_run_assessment_background, assessment_id, mid, request.context)
+
     return BatchAssessmentResponse(
         batch_id=batch_id,
         message=f"Scheduled assessments for {len(valid_ids)} valid models",
-        model_count=len(valid_ids)
+        model_count=len(valid_ids),
     )
+
 
 @router.get(
     "/assess/{assessment_id}",
@@ -766,7 +720,7 @@ async def get_violations(
                 detected_at=v.detected_at,
                 status=v.status,
                 potential_fine=v.potential_fine,
-                is_overdue=v.is_overdue, # Pydantic model doesn't have is_overdue property mapped from DB unless computed.
+                is_overdue=v.is_overdue,  # Pydantic model doesn't have is_overdue property mapped from DB unless computed.
                 # DBPolicyViolation doesn't have is_overdue column.
                 # However, ViolationResponse expects it.
                 # We can calculate it here or map it.
@@ -810,20 +764,18 @@ async def acknowledge_violation(
         # Update violation status
         violation = await service.violation_repo.get(violation_id)
         if not violation:
-             raise HTTPException(
+            raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Violation {violation_id} not found",
             )
-            
+
         violation.status = "acknowledged"
         violation.acknowledged_at = datetime.now(timezone.utc)
         violation.acknowledged_by = request.acknowledged_by
-        
+
         await service.session.flush()
 
-        logger.info(
-            f"Violation {violation_id} acknowledged by {request.acknowledged_by}"
-        )
+        logger.info(f"Violation {violation_id} acknowledged by {request.acknowledged_by}")
 
         return {
             "violation_id": violation_id,
@@ -857,13 +809,11 @@ async def _generate_report_background(
         try:
             service = ComplianceService(session=session)
             generator = ComplianceReportGenerator(service, enable_ai_narratives=False)
-            
+
             _generated_reports[report_id]["status"] = "generating"
 
             if request.report_type == "executive":
-                report = await generator.generate_executive_summary(
-                    period_days=request.period_days
-                )
+                report = await generator.generate_executive_summary(period_days=request.period_days)
             elif request.report_type == "regulatory" and request.regulation:
                 try:
                     regulation = RegulationType(request.regulation.lower())
@@ -877,23 +827,25 @@ async def _generate_report_background(
                     period_days=request.period_days,
                 )
             else:
-                report = await generator.generate_executive_summary(
-                    period_days=request.period_days
-                )
+                report = await generator.generate_executive_summary(period_days=request.period_days)
 
-            _generated_reports[report_id].update({
-                "status": "completed",
-                "report": report.model_dump(),
-                "completed_at": datetime.now(timezone.utc).isoformat(),
-            })
+            _generated_reports[report_id].update(
+                {
+                    "status": "completed",
+                    "report": report.model_dump(),
+                    "completed_at": datetime.now(timezone.utc).isoformat(),
+                }
+            )
 
             logger.info(f"Report {report_id} generated successfully")
 
         except Exception as e:
-            _generated_reports[report_id].update({
-                "status": "failed",
-                "error": str(e),
-            })
+            _generated_reports[report_id].update(
+                {
+                    "status": "failed",
+                    "error": str(e),
+                }
+            )
             logger.error(f"Report generation {report_id} failed: {e}")
 
 
@@ -957,14 +909,10 @@ async def get_report(report_id: str) -> Dict[str, Any]:
     return _generated_reports[report_id]
 
 
-@router.get(
-    "/reports/export",
-    summary="Export Data",
-    description="Export compliance data in CSV or JSON format."
-)
+@router.get("/reports/export", summary="Export Data", description="Export compliance data in CSV or JSON format.")
 async def export_data(
     format: str = Query("json", pattern="^(Union[json, csv])$"),
-    service: ComplianceService = Depends(get_compliance_service)
+    service: ComplianceService = Depends(get_compliance_service),
 ):
     """
     Export all compliance data.
@@ -973,27 +921,29 @@ async def export_data(
     data = []
     for m in models:
         score = await service.get_compliance_score(m.model_id)
-        data.append({
-            "id": m.model_id,
-            "name": m.name,
-            "status": m.compliance_status.value,
-            "risk": m.risk_level.value,
-            "score": score.overall_score if score else 0
-        })
-    
+        data.append(
+            {
+                "id": m.model_id,
+                "name": m.name,
+                "status": m.compliance_status.value,
+                "risk": m.risk_level.value,
+                "score": score.overall_score if score else 0,
+            }
+        )
+
     if format == "json":
         return data
-    
+
     # CSV
     output = io.StringIO()
     writer = csv.DictWriter(output, fieldnames=["id", "name", "status", "risk", "score"])
     writer.writeheader()
     writer.writerows(data)
-    
+
     return Response(
         content=output.getvalue(),
         media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=compliance_export.csv"}
+        headers={"Content-Disposition": "attachment; filename=compliance_export.csv"},
     )
 
 
@@ -1020,17 +970,11 @@ async def get_dashboard_summary(
         return DashboardSummary(
             total_models=dashboard_data["summary"]["total_models"],
             compliant_models=dashboard_data["compliance_distribution"]["compliant"],
-            partially_compliant_models=dashboard_data["compliance_distribution"][
-                "partially_compliant"
-            ],
-            non_compliant_models=dashboard_data["compliance_distribution"][
-                "non_compliant"
-            ],
+            partially_compliant_models=dashboard_data["compliance_distribution"]["partially_compliant"],
+            non_compliant_models=dashboard_data["compliance_distribution"]["non_compliant"],
             total_violations=dashboard_data["summary"]["total_violations"],
             critical_violations=dashboard_data["summary"]["critical_violations"],
-            average_compliance_score=dashboard_data["summary"][
-                "average_compliance_score"
-            ],
+            average_compliance_score=dashboard_data["summary"]["average_compliance_score"],
             potential_exposure=dashboard_data["summary"]["potential_exposure"],
         )
 
@@ -1097,9 +1041,7 @@ async def get_compliance_metrics(
     summary="Health Check",
     description="Health check endpoint for the compliance API.",
 )
-async def compliance_health(
-    db: AsyncSession = Depends(get_db)
-) -> Dict[str, Any]:
+async def compliance_health(db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
     """
     Health check for compliance API endpoints.
     Checks DB connection.
@@ -1109,7 +1051,7 @@ async def compliance_health(
         db_status = "connected"
     except Exception as e:
         db_status = f"disconnected: {e}"
-        
+
     return {
         "status": "healthy" if db_status == "connected" else "unhealthy",
         "service": "compliance-api",

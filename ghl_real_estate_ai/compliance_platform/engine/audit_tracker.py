@@ -6,12 +6,12 @@ Aligned with EU AI Act Article 12, HIPAA audit requirements, and SOX compliance.
 """
 
 import asyncio
-import json
 import hashlib
+import json
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Callable
+from typing import Any, Callable, Dict, List, Optional
 from uuid import uuid4
 
 from ..models.compliance_models import (
@@ -24,6 +24,7 @@ from ..models.compliance_models import (
 
 class AuditEventType:
     """Audit event type constants"""
+
     # Model lifecycle
     MODEL_REGISTERED = "model_registered"
     MODEL_UPDATED = "model_updated"
@@ -216,15 +217,18 @@ class ComplianceAuditTracker:
 
     def _compute_hash(self, record: AuditRecord) -> str:
         """Compute SHA-256 hash for audit record"""
-        content = json.dumps({
-            "record_id": record.record_id,
-            "timestamp": record.timestamp.isoformat(),
-            "event_type": record.event_type,
-            "entity_id": record.entity_id,
-            "action": record.action,
-            "actor_id": record.actor_id,
-            "previous_hash": self._last_hash,
-        }, sort_keys=True)
+        content = json.dumps(
+            {
+                "record_id": record.record_id,
+                "timestamp": record.timestamp.isoformat(),
+                "event_type": record.event_type,
+                "entity_id": record.entity_id,
+                "action": record.action,
+                "actor_id": record.actor_id,
+                "previous_hash": self._last_hash,
+            },
+            sort_keys=True,
+        )
 
         return hashlib.sha256(content.encode()).hexdigest()
 
@@ -538,7 +542,7 @@ class ComplianceAuditTracker:
         results.sort(key=lambda r: r.timestamp, reverse=True)
 
         # Apply pagination
-        return results[offset:offset + limit]
+        return results[offset : offset + limit]
 
     async def get_entity_history(
         self,
@@ -560,13 +564,15 @@ class ComplianceAuditTracker:
 
         custody_chain = []
         for record in reversed(records):  # Chronological order
-            custody_chain.append({
-                "timestamp": record.timestamp.isoformat(),
-                "action": record.action,
-                "actor": record.actor_name or record.actor_id or "system",
-                "description": record.description,
-                "compliance_impact": record.compliance_impact,
-            })
+            custody_chain.append(
+                {
+                    "timestamp": record.timestamp.isoformat(),
+                    "action": record.action,
+                    "actor": record.actor_name or record.actor_id or "system",
+                    "description": record.description,
+                    "compliance_impact": record.compliance_impact,
+                }
+            )
 
         return custody_chain
 
@@ -638,7 +644,7 @@ class ComplianceAuditTracker:
                 lines.append(
                     f"{r.timestamp.isoformat()},{r.event_type},{r.entity_type},"
                     f"{r.entity_id},{r.action},{r.actor_id or 'system'},"
-                    f"\"{r.description}\",{r.compliance_impact}"
+                    f'"{r.description}",{r.compliance_impact}'
                 )
             return "\n".join(lines)
 

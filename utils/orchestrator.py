@@ -225,19 +225,14 @@ class AgentRegistry:
         """
         for stage in workflow.stages:
             if stage.agent_id not in self._agents:
-                raise ValueError(
-                    f"Workflow '{workflow.workflow_id}' references "
-                    f"unregistered agent '{stage.agent_id}'"
-                )
+                raise ValueError(f"Workflow '{workflow.workflow_id}' references unregistered agent '{stage.agent_id}'")
 
         # Validate dependencies exist
         stage_ids = {stage.stage_id for stage in workflow.stages}
         for stage in workflow.stages:
             for dep in stage.depends_on:
                 if dep not in stage_ids:
-                    raise ValueError(
-                        f"Stage '{stage.stage_id}' depends on non-existent stage '{dep}'"
-                    )
+                    raise ValueError(f"Stage '{stage.stage_id}' depends on non-existent stage '{dep}'")
 
         logger.info(f"Workflow '{workflow.workflow_id}' validated successfully")
         return True
@@ -315,9 +310,7 @@ class Orchestrator:
         # Check required fields (those with non-None values in schema)
         for field_name, field_type in agent.input_schema.items():
             if field_name not in inputs:
-                raise ValidationError(
-                    f"Missing required input '{field_name}' for agent '{agent.agent_id}'"
-                )
+                raise ValidationError(f"Missing required input '{field_name}' for agent '{agent.agent_id}'")
 
             # Type checking
             if field_type is not None and not isinstance(inputs[field_name], field_type):
@@ -328,9 +321,7 @@ class Orchestrator:
 
         return True
 
-    def validate_outputs(
-        self, agent: Agent, outputs: Dict[str, Any]
-    ) -> Optional[Any]:  # Returns ValidationResult
+    def validate_outputs(self, agent: Agent, outputs: Dict[str, Any]) -> Optional[Any]:  # Returns ValidationResult
         """
         Validate outputs against agent's output schema.
 
@@ -347,15 +338,11 @@ class Orchestrator:
         # Basic validation (detailed validation happens in validators.py)
         for field_name in agent.output_schema:
             if field_name not in outputs:
-                logger.warning(
-                    f"Agent '{agent.agent_id}' missing expected output field '{field_name}'"
-                )
+                logger.warning(f"Agent '{agent.agent_id}' missing expected output field '{field_name}'")
 
         return None  # Detailed validation handled by ValidatorBot
 
-    def execute_agent(
-        self, agent: Agent, inputs: Dict[str, Any], context: Dict[str, Any]
-    ) -> AgentResult:
+    def execute_agent(self, agent: Agent, inputs: Dict[str, Any], context: Dict[str, Any]) -> AgentResult:
         """
         Execute single agent with validation.
 
@@ -539,7 +526,7 @@ class Orchestrator:
             # Update context with outputs
             if result.status == AgentStatus.SUCCESS:
                 context.update(result.outputs)
-                
+
                 # Execute validation rules after each stage to catch issues early
                 for rule in workflow.validation_rules:
                     try:

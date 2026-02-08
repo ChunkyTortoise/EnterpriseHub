@@ -4,16 +4,17 @@ Provides REST endpoints for customer journey orchestration.
 Matches frontend CustomerJourneyAPI.ts expectations.
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Query
-from typing import Dict, List, Any, Optional, Union
-from pydantic import BaseModel, Field
-from datetime import datetime, timedelta
 import uuid
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Union
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.agents.customer_journey_orchestrator import get_customer_journey_orchestrator
-from ghl_real_estate_ai.services.event_publisher import get_event_publisher
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.api.middleware.enhanced_auth import get_current_user_optional
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/api/customer-journey", tags=["customer-journey"])
@@ -22,8 +23,10 @@ router = APIRouter(prefix="/api/customer-journey", tags=["customer-journey"])
 # RESPONSE MODELS (Match Frontend TypeScript Interfaces)
 # ============================================================================
 
+
 class JourneyStep(BaseModel):
     """Journey step matching frontend interface."""
+
     id: str
     name: str
     description: str
@@ -42,8 +45,10 @@ class JourneyStep(BaseModel):
     failureReasons: Optional[List[str]] = None
     metadata: Optional[Dict[str, Any]] = None
 
+
 class CustomerJourney(BaseModel):
     """Customer journey matching frontend interface."""
+
     id: str
     customerId: str
     customerName: str
@@ -64,8 +69,10 @@ class CustomerJourney(BaseModel):
     customizations: Optional[Dict[str, Any]] = None
     notifications: List[Dict[str, Any]]
 
+
 class JourneyAnalytics(BaseModel):
     """Journey analytics matching frontend interface."""
+
     totalJourneys: int
     activeJourneys: int
     completedJourneys: int
@@ -76,8 +83,10 @@ class JourneyAnalytics(BaseModel):
     agentPerformance: Dict[str, Dict[str, Any]]
     bottleneckAnalysis: List[Dict[str, Any]]
 
+
 class JourneyTemplate(BaseModel):
     """Journey template matching frontend interface."""
+
     id: str
     type: str  # 'FIRST_TIME_BUYER' | 'INVESTOR' | 'SELLER' | 'COMMERCIAL'
     name: str
@@ -87,8 +96,10 @@ class JourneyTemplate(BaseModel):
     successRate: float
     version: str
 
+
 class HandoffEvent(BaseModel):
     """Handoff event matching frontend interface."""
+
     id: str
     journeyId: str
     fromAgent: str
@@ -102,19 +113,24 @@ class HandoffEvent(BaseModel):
     duration: Optional[int] = None
     failureReason: Optional[str] = None
 
+
 class JourneyOptimization(BaseModel):
     """Journey optimization matching frontend interface."""
+
     journeyId: str
     recommendations: List[Dict[str, Any]]
     predictedOutcomes: Dict[str, Any]
     riskAssessment: Dict[str, Any]
 
+
 # ============================================================================
 # REQUEST MODELS
 # ============================================================================
 
+
 class CreateJourneyRequest(BaseModel):
     """Request model for creating a journey."""
+
     customerId: str
     customerName: str
     customerEmail: Optional[str] = None
@@ -125,23 +141,29 @@ class CreateJourneyRequest(BaseModel):
     context: Optional[Dict[str, Any]] = None
     customizations: Optional[Dict[str, Any]] = None
 
+
 class UpdateJourneyRequest(BaseModel):
     """Request model for updating a journey."""
+
     status: Optional[str] = None
     priority: Optional[str] = None
     context: Optional[Dict[str, Any]] = None
     customizations: Optional[Dict[str, Any]] = None
 
+
 class HandoffRequest(BaseModel):
     """Request model for initiating handoffs."""
+
     toAgent: str
     handoffType: str  # 'SEQUENTIAL' | 'COLLABORATIVE' | 'ESCALATION'
     contextData: Optional[Dict[str, Any]] = None
     notes: Optional[str] = None
 
+
 # ============================================================================
 # MOCK DATA GENERATORS
 # ============================================================================
+
 
 def generate_mock_journey_steps() -> List[JourneyStep]:
     """Generate mock journey steps."""
@@ -161,7 +183,7 @@ def generate_mock_journey_steps() -> List[JourneyStep]:
             nextSteps=["step-2"],
             handoffType="SEQUENTIAL",
             completionCriteria=["Contact established", "Basic info collected"],
-            metadata={"temperature": "hot"}
+            metadata={"temperature": "hot"},
         ),
         JourneyStep(
             id="step-2",
@@ -179,7 +201,7 @@ def generate_mock_journey_steps() -> List[JourneyStep]:
             handoffType="COLLABORATIVE",
             requirements=["Initial contact completed"],
             completionCriteria=["Needs identified", "Budget confirmed"],
-            metadata={"analysis_depth": "comprehensive"}
+            metadata={"analysis_depth": "comprehensive"},
         ),
         JourneyStep(
             id="step-3",
@@ -197,7 +219,7 @@ def generate_mock_journey_steps() -> List[JourneyStep]:
             handoffType="SEQUENTIAL",
             requirements=["Needs analysis completed"],
             completionCriteria=["Properties identified", "Initial screening done"],
-            metadata={"match_criteria": "strict"}
+            metadata={"match_criteria": "strict"},
         ),
         JourneyStep(
             id="step-4",
@@ -215,7 +237,7 @@ def generate_mock_journey_steps() -> List[JourneyStep]:
             handoffType="ESCALATION",
             requirements=["Property matching completed"],
             completionCriteria=["Offer presented", "Terms negotiated"],
-            metadata={"negotiation_style": "tactical_empathy"}
+            metadata={"negotiation_style": "tactical_empathy"},
         ),
         JourneyStep(
             id="step-5",
@@ -233,10 +255,11 @@ def generate_mock_journey_steps() -> List[JourneyStep]:
             handoffType="SEQUENTIAL",
             requirements=["Negotiation completed"],
             completionCriteria=["Contract signed", "Closing completed"],
-            metadata={"transaction_type": "purchase"}
-        )
+            metadata={"transaction_type": "purchase"},
+        ),
     ]
     return steps
+
 
 def generate_mock_journeys() -> List[CustomerJourney]:
     """Generate mock customer journeys."""
@@ -257,56 +280,59 @@ def generate_mock_journeys() -> List[CustomerJourney]:
         current_step = 2 if status == "active" else (5 if status == "completed" else 1)
         completion_percentage = int((current_step / len(steps)) * 100)
 
-        journeys.append(CustomerJourney(
-            id=journey_id,
-            customerId=customer_id,
-            customerName=f"Customer {i + 1}",
-            customerEmail=f"customer{i + 1}@example.com",
-            customerPhone=f"+1-555-{1000 + i}",
-            type=journey_type,
-            status=status,
-            priority=priority,
-            currentStep=current_step,
-            totalSteps=len(steps),
-            completionPercentage=completion_percentage,
-            startTime=(datetime.now() - timedelta(days=i % 7)).isoformat(),
-            estimatedCompletion=(datetime.now() + timedelta(days=3)).isoformat() if status == "active" else None,
-            actualCompletion=(datetime.now() - timedelta(days=1)).isoformat() if status == "completed" else None,
-            steps=steps,
-            analytics={
-                "avgResponseTime": 2400 + (i * 100),
-                "customerSatisfaction": 4.2 + (i % 5) * 0.2,
-                "handoffEfficiency": 85 + (i % 15),
-                "touchpoints": 15 + (i % 10),
-                "stageDropoffs": {"initial": 5, "needs": 8, "matching": 12},
-                "bottlenecks": ["property_matching"] if i % 3 == 0 else []
-            },
-            context={
-                "budget": 500000 + (i * 50000),
-                "timeframe": f"{30 + i * 10} days",
-                "preferences": ["modern", "downtown"] if i % 2 else ["traditional", "suburban"],
-                "requirements": ["parking", "good_schools"] if i % 3 else ["investment_potential"],
-                "marketSegment": "luxury" if i % 4 == 0 else "standard",
-                "leadSource": "website" if i % 2 else "referral",
-                "assignedAgent": f"agent-{i % 3 + 1}"
-            },
-            customizations={
-                "skipSteps": ["step-1"] if status == "completed" else [],
-                "additionalSteps": [],
-                "priorityBoosts": {"negotiation": 1.5} if priority == "high" else {}
-            },
-            notifications=[
-                {
-                    "id": f"notif-{i}-1",
-                    "type": "milestone",
-                    "message": f"Journey step {current_step} completed",
-                    "timestamp": (datetime.now() - timedelta(hours=2)).isoformat(),
-                    "acknowledged": True
-                }
-            ]
-        ))
+        journeys.append(
+            CustomerJourney(
+                id=journey_id,
+                customerId=customer_id,
+                customerName=f"Customer {i + 1}",
+                customerEmail=f"customer{i + 1}@example.com",
+                customerPhone=f"+1-555-{1000 + i}",
+                type=journey_type,
+                status=status,
+                priority=priority,
+                currentStep=current_step,
+                totalSteps=len(steps),
+                completionPercentage=completion_percentage,
+                startTime=(datetime.now() - timedelta(days=i % 7)).isoformat(),
+                estimatedCompletion=(datetime.now() + timedelta(days=3)).isoformat() if status == "active" else None,
+                actualCompletion=(datetime.now() - timedelta(days=1)).isoformat() if status == "completed" else None,
+                steps=steps,
+                analytics={
+                    "avgResponseTime": 2400 + (i * 100),
+                    "customerSatisfaction": 4.2 + (i % 5) * 0.2,
+                    "handoffEfficiency": 85 + (i % 15),
+                    "touchpoints": 15 + (i % 10),
+                    "stageDropoffs": {"initial": 5, "needs": 8, "matching": 12},
+                    "bottlenecks": ["property_matching"] if i % 3 == 0 else [],
+                },
+                context={
+                    "budget": 500000 + (i * 50000),
+                    "timeframe": f"{30 + i * 10} days",
+                    "preferences": ["modern", "downtown"] if i % 2 else ["traditional", "suburban"],
+                    "requirements": ["parking", "good_schools"] if i % 3 else ["investment_potential"],
+                    "marketSegment": "luxury" if i % 4 == 0 else "standard",
+                    "leadSource": "website" if i % 2 else "referral",
+                    "assignedAgent": f"agent-{i % 3 + 1}",
+                },
+                customizations={
+                    "skipSteps": ["step-1"] if status == "completed" else [],
+                    "additionalSteps": [],
+                    "priorityBoosts": {"negotiation": 1.5} if priority == "high" else {},
+                },
+                notifications=[
+                    {
+                        "id": f"notif-{i}-1",
+                        "type": "milestone",
+                        "message": f"Journey step {current_step} completed",
+                        "timestamp": (datetime.now() - timedelta(hours=2)).isoformat(),
+                        "acknowledged": True,
+                    }
+                ],
+            )
+        )
 
     return journeys
+
 
 def generate_mock_templates() -> List[JourneyTemplate]:
     """Generate mock journey templates."""
@@ -321,48 +347,48 @@ def generate_mock_templates() -> List[JourneyTemplate]:
                     "name": "Education & Onboarding",
                     "description": "Educate about home buying process",
                     "agentId": "education-specialist",
-                    "estimatedDuration": 3600
+                    "estimatedDuration": 3600,
                 },
                 {
                     "name": "Financial Pre-qualification",
                     "description": "Assess financial readiness and pre-approval",
                     "agentId": "financial-advisor",
-                    "estimatedDuration": 2400
+                    "estimatedDuration": 2400,
                 },
                 {
                     "name": "Needs Discovery",
                     "description": "Identify specific needs and preferences",
                     "agentId": "needs-specialist",
-                    "estimatedDuration": 1800
+                    "estimatedDuration": 1800,
                 },
                 {
                     "name": "Market Education",
                     "description": "Educate about local market conditions",
                     "agentId": "market-educator",
-                    "estimatedDuration": 1800
+                    "estimatedDuration": 1800,
                 },
                 {
                     "name": "Property Search",
                     "description": "Search and present suitable properties",
                     "agentId": "property-specialist",
-                    "estimatedDuration": 7200
+                    "estimatedDuration": 7200,
                 },
                 {
                     "name": "Viewing Coordination",
                     "description": "Coordinate and conduct property viewings",
                     "agentId": "showing-coordinator",
-                    "estimatedDuration": 14400
+                    "estimatedDuration": 14400,
                 },
                 {
                     "name": "Offer & Negotiation",
                     "description": "Guide through offer and negotiation process",
                     "agentId": "negotiation-specialist",
-                    "estimatedDuration": 7200
-                }
+                    "estimatedDuration": 7200,
+                },
             ],
             estimatedDuration=38400,  # ~11 hours over several days
             successRate=0.82,
-            version="v1.0"
+            version="v1.0",
         ),
         JourneyTemplate(
             id="template-investor",
@@ -374,45 +400,46 @@ def generate_mock_templates() -> List[JourneyTemplate]:
                     "name": "Investment Strategy",
                     "description": "Define investment goals and strategy",
                     "agentId": "investment-strategist",
-                    "estimatedDuration": 2400
+                    "estimatedDuration": 2400,
                 },
                 {
                     "name": "Market Analysis",
                     "description": "Comprehensive market analysis and opportunities",
                     "agentId": "market-analyst",
-                    "estimatedDuration": 3600
+                    "estimatedDuration": 3600,
                 },
                 {
                     "name": "Financial Modeling",
                     "description": "ROI analysis and financial projections",
                     "agentId": "financial-modeler",
-                    "estimatedDuration": 3600
+                    "estimatedDuration": 3600,
                 },
                 {
                     "name": "Property Screening",
                     "description": "Screen properties based on investment criteria",
                     "agentId": "investment-screener",
-                    "estimatedDuration": 7200
+                    "estimatedDuration": 7200,
                 },
                 {
                     "name": "Due Diligence",
                     "description": "Comprehensive property analysis and inspection",
                     "agentId": "due-diligence-specialist",
-                    "estimatedDuration": 14400
+                    "estimatedDuration": 14400,
                 },
                 {
                     "name": "Negotiation & Acquisition",
                     "description": "Strategic negotiation for optimal terms",
                     "agentId": "investment-negotiator",
-                    "estimatedDuration": 10800
-                }
+                    "estimatedDuration": 10800,
+                },
             ],
             estimatedDuration=42000,  # ~12 hours
             successRate=0.75,
-            version="v1.0"
-        )
+            version="v1.0",
+        ),
     ]
     return templates
+
 
 def generate_mock_analytics() -> JourneyAnalytics:
     """Generate mock journey analytics."""
@@ -422,57 +449,32 @@ def generate_mock_analytics() -> JourneyAnalytics:
         completedJourneys=89,
         avgCompletionTime=259200,  # 72 hours
         avgSatisfactionScore=4.3,
-        completionRateByType={
-            "FIRST_TIME_BUYER": 0.82,
-            "INVESTOR": 0.75,
-            "SELLER": 0.89,
-            "COMMERCIAL": 0.65
-        },
+        completionRateByType={"FIRST_TIME_BUYER": 0.82, "INVESTOR": 0.75, "SELLER": 0.89, "COMMERCIAL": 0.65},
         stageAnalysis={
-            "initial_contact": {
-                "count": 67,
-                "avgDuration": 1800,
-                "dropoffRate": 12.2,
-                "successRate": 87.8
-            },
-            "needs_analysis": {
-                "count": 59,
-                "avgDuration": 2400,
-                "dropoffRate": 8.5,
-                "successRate": 91.5
-            },
-            "property_matching": {
-                "count": 54,
-                "avgDuration": 4200,
-                "dropoffRate": 15.7,
-                "successRate": 84.3
-            },
-            "negotiation": {
-                "count": 42,
-                "avgDuration": 7200,
-                "dropoffRate": 19.0,
-                "successRate": 81.0
-            }
+            "initial_contact": {"count": 67, "avgDuration": 1800, "dropoffRate": 12.2, "successRate": 87.8},
+            "needs_analysis": {"count": 59, "avgDuration": 2400, "dropoffRate": 8.5, "successRate": 91.5},
+            "property_matching": {"count": 54, "avgDuration": 4200, "dropoffRate": 15.7, "successRate": 84.3},
+            "negotiation": {"count": 42, "avgDuration": 7200, "dropoffRate": 19.0, "successRate": 81.0},
         },
         agentPerformance={
             "adaptive-jorge": {
                 "journeysHandled": 89,
                 "avgHandoffTime": 1200,
                 "satisfactionScore": 4.5,
-                "successRate": 0.87
+                "successRate": 0.87,
             },
             "property-intelligence": {
                 "journeysHandled": 67,
                 "avgHandoffTime": 2400,
                 "satisfactionScore": 4.2,
-                "successRate": 0.84
+                "successRate": 0.84,
             },
             "realtime-intent": {
                 "journeysHandled": 78,
                 "avgHandoffTime": 850,
                 "satisfactionScore": 4.4,
-                "successRate": 0.91
-            }
+                "successRate": 0.91,
+            },
         },
         bottleneckAnalysis=[
             {
@@ -480,21 +482,23 @@ def generate_mock_analytics() -> JourneyAnalytics:
                 "frequency": 23,
                 "avgDelay": 3600,
                 "causes": ["Limited inventory", "Complex requirements"],
-                "recommendations": ["Expand search criteria", "Use AI-powered matching"]
+                "recommendations": ["Expand search criteria", "Use AI-powered matching"],
             },
             {
                 "stage": "negotiation",
                 "frequency": 15,
                 "avgDelay": 7200,
                 "causes": ["Multiple offers", "Financing delays"],
-                "recommendations": ["Pre-approval verification", "Competitive strategies"]
-            }
-        ]
+                "recommendations": ["Pre-approval verification", "Competitive strategies"],
+            },
+        ],
     )
+
 
 # ============================================================================
 # JOURNEY MANAGEMENT ENDPOINTS
 # ============================================================================
+
 
 @router.get("/journeys")
 async def get_journeys(
@@ -504,7 +508,7 @@ async def get_journeys(
     assignedAgent: Optional[str] = Query(default=None),
     limit: int = Query(default=50, ge=1, le=1000),
     offset: int = Query(default=0, ge=0),
-    current_user = Depends(get_current_user_optional)
+    current_user=Depends(get_current_user_optional),
 ):
     """
     Get customer journeys with optional filtering.
@@ -533,14 +537,10 @@ async def get_journeys(
 
         # Apply pagination
         total = len(filtered_journeys)
-        paginated_journeys = filtered_journeys[offset:offset + limit]
+        paginated_journeys = filtered_journeys[offset : offset + limit]
         has_more = offset + len(paginated_journeys) < total
 
-        result = {
-            "journeys": paginated_journeys,
-            "total": total,
-            "hasMore": has_more
-        }
+        result = {"journeys": paginated_journeys, "total": total, "hasMore": has_more}
 
         logger.info(f"Retrieved {len(paginated_journeys)} journeys (total: {total})")
         return result
@@ -549,11 +549,9 @@ async def get_journeys(
         logger.error(f"Error fetching journeys: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch journeys")
 
+
 @router.get("/journeys/{journey_id}", response_model=CustomerJourney)
-async def get_journey(
-    journey_id: str,
-    current_user = Depends(get_current_user_optional)
-):
+async def get_journey(journey_id: str, current_user=Depends(get_current_user_optional)):
     """
     Get a specific customer journey by ID.
     """
@@ -576,11 +574,9 @@ async def get_journey(
         logger.error(f"Error fetching journey {journey_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch journey {journey_id}")
 
+
 @router.post("/journeys", response_model=CustomerJourney)
-async def create_journey(
-    request: CreateJourneyRequest,
-    current_user = Depends(get_current_user_optional)
-):
+async def create_journey(request: CreateJourneyRequest, current_user=Depends(get_current_user_optional)):
     """
     Create a new customer journey.
     """
@@ -617,21 +613,24 @@ async def create_journey(
                 "handoffEfficiency": 0,
                 "touchpoints": 0,
                 "stageDropoffs": {},
-                "bottlenecks": []
+                "bottlenecks": [],
             },
             context=request.context or {},
             customizations=request.customizations,
-            notifications=[]
+            notifications=[],
         )
 
         # Publish journey created event
         event_publisher = get_event_publisher()
-        await event_publisher.publish_event("journey_created", {
-            "journey_id": journey_id,
-            "customer_id": request.customerId,
-            "type": request.type,
-            "timestamp": datetime.now().isoformat()
-        })
+        await event_publisher.publish_event(
+            "journey_created",
+            {
+                "journey_id": journey_id,
+                "customer_id": request.customerId,
+                "type": request.type,
+                "timestamp": datetime.now().isoformat(),
+            },
+        )
 
         logger.info(f"Journey {journey_id} created successfully")
         return journey
@@ -640,11 +639,10 @@ async def create_journey(
         logger.error(f"Error creating journey: {e}")
         raise HTTPException(status_code=500, detail="Failed to create journey")
 
+
 @router.put("/journeys/{journey_id}", response_model=CustomerJourney)
 async def update_journey(
-    journey_id: str,
-    request: UpdateJourneyRequest,
-    current_user = Depends(get_current_user_optional)
+    journey_id: str, request: UpdateJourneyRequest, current_user=Depends(get_current_user_optional)
 ):
     """
     Update an existing customer journey.
@@ -672,11 +670,14 @@ async def update_journey(
 
         # Publish journey updated event
         event_publisher = get_event_publisher()
-        await event_publisher.publish_event("journey_updated", {
-            "journey_id": journey_id,
-            "updates": request.dict(exclude_none=True),
-            "timestamp": datetime.now().isoformat()
-        })
+        await event_publisher.publish_event(
+            "journey_updated",
+            {
+                "journey_id": journey_id,
+                "updates": request.dict(exclude_none=True),
+                "timestamp": datetime.now().isoformat(),
+            },
+        )
 
         logger.info(f"Journey {journey_id} updated successfully")
         return journey
@@ -687,11 +688,9 @@ async def update_journey(
         logger.error(f"Error updating journey {journey_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to update journey {journey_id}")
 
+
 @router.delete("/journeys/{journey_id}")
-async def delete_journey(
-    journey_id: str,
-    current_user = Depends(get_current_user_optional)
-):
+async def delete_journey(journey_id: str, current_user=Depends(get_current_user_optional)):
     """
     Delete a customer journey.
     """
@@ -703,10 +702,9 @@ async def delete_journey(
 
         # Publish journey deleted event
         event_publisher = get_event_publisher()
-        await event_publisher.publish_event("journey_deleted", {
-            "journey_id": journey_id,
-            "timestamp": datetime.now().isoformat()
-        })
+        await event_publisher.publish_event(
+            "journey_deleted", {"journey_id": journey_id, "timestamp": datetime.now().isoformat()}
+        )
 
         logger.info(f"Journey {journey_id} deleted successfully")
         return {"success": True, "journeyId": journey_id}
@@ -715,16 +713,15 @@ async def delete_journey(
         logger.error(f"Error deleting journey {journey_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to delete journey {journey_id}")
 
+
 # ============================================================================
 # STEP MANAGEMENT ENDPOINTS
 # ============================================================================
 
+
 @router.put("/journeys/{journey_id}/steps/{step_id}", response_model=JourneyStep)
 async def update_step(
-    journey_id: str,
-    step_id: str,
-    updates: Dict[str, Any],
-    current_user = Depends(get_current_user_optional)
+    journey_id: str, step_id: str, updates: Dict[str, Any], current_user=Depends(get_current_user_optional)
 ):
     """
     Update a specific journey step.
@@ -750,12 +747,13 @@ async def update_step(
         logger.error(f"Error updating step {step_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to update step {step_id}")
 
+
 @router.post("/journeys/{journey_id}/steps/{step_id}/complete", response_model=JourneyStep)
 async def complete_step(
     journey_id: str,
     step_id: str,
     output: Optional[Dict[str, Any]] = None,
-    current_user = Depends(get_current_user_optional)
+    current_user=Depends(get_current_user_optional),
 ):
     """
     Mark a journey step as completed.
@@ -767,12 +765,15 @@ async def complete_step(
 
         # Publish step completed event
         event_publisher = get_event_publisher()
-        await event_publisher.publish_event("journey_step_completed", {
-            "journey_id": journey_id,
-            "step_id": step_id,
-            "completion_data": output,
-            "timestamp": datetime.now().isoformat()
-        })
+        await event_publisher.publish_event(
+            "journey_step_completed",
+            {
+                "journey_id": journey_id,
+                "step_id": step_id,
+                "completion_data": output,
+                "timestamp": datetime.now().isoformat(),
+            },
+        )
 
         # Mock completed step
         steps = generate_mock_journey_steps()
@@ -790,14 +791,16 @@ async def complete_step(
         logger.error(f"Error completing step {step_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to complete step {step_id}")
 
+
 # ============================================================================
 # ANALYTICS ENDPOINTS
 # ============================================================================
 
+
 @router.get("/analytics", response_model=JourneyAnalytics)
 async def get_analytics(
     timeframe: str = Query(default="week", pattern="^(Union[day, week]|Union[month, quarter])$"),
-    current_user = Depends(get_current_user_optional)
+    current_user=Depends(get_current_user_optional),
 ):
     """
     Get journey analytics for specified timeframe.
@@ -815,15 +818,14 @@ async def get_analytics(
         logger.error(f"Error fetching journey analytics: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch journey analytics")
 
+
 # ============================================================================
 # TEMPLATE ENDPOINTS
 # ============================================================================
 
+
 @router.get("/templates", response_model=List[JourneyTemplate])
-async def get_templates(
-    type: Optional[str] = Query(default=None),
-    current_user = Depends(get_current_user_optional)
-):
+async def get_templates(type: Optional[str] = Query(default=None), current_user=Depends(get_current_user_optional)):
     """
     Get journey templates, optionally filtered by type.
     """

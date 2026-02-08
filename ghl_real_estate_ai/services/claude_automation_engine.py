@@ -2,17 +2,18 @@
 Claude Automation Engine - Intelligent Report & Script Generation
 Replaces hardcoded templates with dynamic Claude AI generation
 """
+
 import asyncio
 import json
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Union
-from dataclasses import dataclass, asdict
 from enum import Enum
+from typing import Any, Dict, List, Optional, Union
 
-from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator, ClaudeOrchestrator, ClaudeTaskType
-from ghl_real_estate_ai.services.memory_service import MemoryService
-from ghl_real_estate_ai.services.claude_enhanced_lead_scorer import ClaudeEnhancedLeadScorer
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+from ghl_real_estate_ai.services.claude_enhanced_lead_scorer import ClaudeEnhancedLeadScorer
+from ghl_real_estate_ai.services.claude_orchestrator import ClaudeOrchestrator, ClaudeTaskType, get_claude_orchestrator
+from ghl_real_estate_ai.services.memory_service import MemoryService
 
 
 class ReportType(Enum):
@@ -39,6 +40,7 @@ class ScriptType(Enum):
 @dataclass
 class AutomatedReport:
     """Generated report with Claude intelligence"""
+
     report_id: str
     report_type: ReportType
     title: str
@@ -59,6 +61,7 @@ class AutomatedReport:
 @dataclass
 class AutomatedScript:
     """Generated communication script with personalization"""
+
     script_id: str
     script_type: ScriptType
     lead_id: str
@@ -87,18 +90,19 @@ class ClaudeAutomationEngine:
     - Real-time adaptation based on performance feedback
     """
 
-    def __init__(self,
-                 claude_orchestrator: Optional[ClaudeOrchestrator] = None,
-                 memory_service: Optional[MemoryService] = None,
-                 enhanced_scorer: Optional[ClaudeEnhancedLeadScorer] = None):
+    def __init__(
+        self,
+        claude_orchestrator: Optional[ClaudeOrchestrator] = None,
+        memory_service: Optional[MemoryService] = None,
+        enhanced_scorer: Optional[ClaudeEnhancedLeadScorer] = None,
+    ):
         # Local imports to avoid circular dependencies
         from ghl_real_estate_ai.services.claude_enhanced_lead_scorer import ClaudeEnhancedLeadScorer
-        from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
 
         self.claude = claude_orchestrator or get_claude_orchestrator()
         self.memory = memory_service or MemoryService()
         self.analytics = AnalyticsService()
-        
+
         try:
             self.scorer = enhanced_scorer or ClaudeEnhancedLeadScorer()
         except Exception as e:
@@ -111,18 +115,20 @@ class ClaudeAutomationEngine:
             "scripts_generated": 0,
             "avg_generation_time_ms": 0,
             "success_rate": 0.0,
-            "user_satisfaction_score": 0.0
+            "user_satisfaction_score": 0.0,
         }
 
         # Template system for system prompts
         self.report_prompts = self._load_report_prompts()
         self.script_prompts = self._load_script_prompts()
 
-    async def generate_automated_report(self,
-                                      report_type: ReportType,
-                                      data: Dict[str, Any],
-                                      market_context: Optional[Dict[str, Any]] = None,
-                                      time_period: Optional[str] = None) -> AutomatedReport:
+    async def generate_automated_report(
+        self,
+        report_type: ReportType,
+        data: Dict[str, Any],
+        market_context: Optional[Dict[str, Any]] = None,
+        time_period: Optional[str] = None,
+    ) -> AutomatedReport:
         """
         Generate intelligent reports with Claude analysis and strategic insights.
 
@@ -139,32 +145,26 @@ class ClaudeAutomationEngine:
 
         try:
             # Step 1: Prepare context for Claude
-            report_context = await self._prepare_report_context(
-                data, market_context, time_period
-            )
+            report_context = await self._prepare_report_context(data, market_context, time_period)
 
             # Step 2: Generate Claude analysis
             claude_response = await self.claude.synthesize_report(
-                metrics=data,
-                report_type=report_type.value,
-                market_context=market_context
+                metrics=data, report_type=report_type.value, market_context=market_context
             )
-            
+
             # Record usage
-            location_id = data.get('location_id', 'unknown')
+            location_id = data.get("location_id", "unknown")
             await self.analytics.track_llm_usage(
                 location_id=location_id,
                 model=claude_response.model or "claude-3-5-sonnet",
                 provider=claude_response.provider or "claude",
                 input_tokens=claude_response.input_tokens or 0,
                 output_tokens=claude_response.output_tokens or 0,
-                cached=False
+                cached=False,
             )
 
             # Step 3: Parse and structure the response
-            structured_report = await self._parse_report_response(
-                claude_response, report_type, data, report_context
-            )
+            structured_report = await self._parse_report_response(claude_response, report_type, data, report_context)
 
             # Step 4: Calculate generation time
             generation_time = (datetime.now() - start_time).total_seconds() * 1000
@@ -184,7 +184,7 @@ class ClaudeAutomationEngine:
                 generated_at=datetime.now(),
                 generation_time_ms=int(generation_time),
                 confidence_score=structured_report.get("confidence", 0.8),
-                sources=claude_response.sources
+                sources=claude_response.sources,
             )
 
             # Update metrics
@@ -198,12 +198,14 @@ class ClaudeAutomationEngine:
             # Return fallback report
             return self._create_fallback_report(report_type, data, str(e))
 
-    async def generate_personalized_script(self,
-                                         script_type: ScriptType,
-                                         lead_id: str,
-                                         channel: str = "sms",
-                                         context_override: Optional[Dict[str, Any]] = None,
-                                         variants: int = 3) -> AutomatedScript:
+    async def generate_personalized_script(
+        self,
+        script_type: ScriptType,
+        lead_id: str,
+        channel: str = "sms",
+        context_override: Optional[Dict[str, Any]] = None,
+        variants: int = 3,
+    ) -> AutomatedScript:
         """
         Generate personalized communication scripts using lead intelligence.
 
@@ -228,11 +230,11 @@ class ClaudeAutomationEngine:
                 lead_id=lead_id,
                 script_type=script_type.value,
                 channel=channel,
-                variants=1  # Generate primary first
+                variants=1,  # Generate primary first
             )
-            
+
             # Record usage
-            location_id = lead_context.get('preferences', {}).get('location_id', 'unknown')
+            location_id = lead_context.get("preferences", {}).get("location_id", "unknown")
             await self.analytics.track_llm_usage(
                 location_id=location_id,
                 model=claude_response.model or "claude-3-5-sonnet",
@@ -240,19 +242,16 @@ class ClaudeAutomationEngine:
                 input_tokens=claude_response.input_tokens or 0,
                 output_tokens=claude_response.output_tokens or 0,
                 cached=False,
-                contact_id=lead_id
+                contact_id=lead_id,
             )
 
             # Step 3: Generate A/B testing variants
             variants_response = None
             if variants > 1:
                 variants_response = await self.claude.generate_script(
-                    lead_id=lead_id,
-                    script_type=script_type.value,
-                    channel=channel,
-                    variants=variants - 1
+                    lead_id=lead_id, script_type=script_type.value, channel=channel, variants=variants - 1
                 )
-                
+
                 # Record variants usage
                 await self.analytics.track_llm_usage(
                     location_id=location_id,
@@ -261,13 +260,11 @@ class ClaudeAutomationEngine:
                     input_tokens=variants_response.input_tokens or 0,
                     output_tokens=variants_response.output_tokens or 0,
                     cached=False,
-                    contact_id=lead_id
+                    contact_id=lead_id,
                 )
 
             # Step 4: Parse and structure scripts
-            structured_script = await self._parse_script_response(
-                claude_response, variants_response, lead_context
-            )
+            structured_script = await self._parse_script_response(claude_response, variants_response, lead_context)
 
             # Step 5: Calculate generation time
             generation_time = (datetime.now() - start_time).total_seconds() * 1000
@@ -286,7 +283,7 @@ class ClaudeAutomationEngine:
                 a_b_testing_variants=structured_script.get("a_b_variants", []),
                 generated_at=datetime.now(),
                 generation_time_ms=int(generation_time),
-                lead_context=lead_context
+                lead_context=lead_context,
             )
 
             # Update metrics
@@ -300,10 +297,9 @@ class ClaudeAutomationEngine:
             # Return fallback script
             return self._create_fallback_script(script_type, lead_id, channel, str(e))
 
-    async def generate_intervention_strategy(self,
-                                           lead_id: str,
-                                           churn_risk: float,
-                                           intervention_urgency: str = "medium") -> Dict[str, Any]:
+    async def generate_intervention_strategy(
+        self, lead_id: str, churn_risk: float, intervention_urgency: str = "medium"
+    ) -> Dict[str, Any]:
         """
         Generate comprehensive intervention strategy for at-risk leads.
         """
@@ -315,16 +311,15 @@ class ClaudeAutomationEngine:
             churn_prediction = {
                 "risk_score_7d": churn_risk,
                 "urgency": intervention_urgency,
-                "lead_context": lead_context
+                "lead_context": lead_context,
             }
 
             claude_response = await self.claude.orchestrate_intervention(
-                lead_id=lead_id,
-                churn_prediction=churn_prediction
+                lead_id=lead_id, churn_prediction=churn_prediction
             )
-            
+
             # Record usage
-            location_id = lead_context.get('preferences', {}).get('location_id', 'unknown')
+            location_id = lead_context.get("preferences", {}).get("location_id", "unknown")
             await self.analytics.track_llm_usage(
                 location_id=location_id,
                 model=claude_response.model or "claude-3-5-sonnet",
@@ -332,7 +327,7 @@ class ClaudeAutomationEngine:
                 input_tokens=claude_response.input_tokens or 0,
                 output_tokens=claude_response.output_tokens or 0,
                 cached=False,
-                contact_id=lead_id
+                contact_id=lead_id,
             )
 
             return {
@@ -341,22 +336,21 @@ class ClaudeAutomationEngine:
                 "recommended_actions": claude_response.recommended_actions,
                 "reasoning": claude_response.reasoning,
                 "confidence": claude_response.confidence,
-                "sources": claude_response.sources
+                "sources": claude_response.sources,
             }
 
         except Exception as e:
             return {
                 "success": False,
                 "error": str(e),
-                "strategy": f"Fallback: High-touch outreach for lead {lead_id} with {churn_risk:.1f}% churn risk"
+                "strategy": f"Fallback: High-touch outreach for lead {lead_id} with {churn_risk:.1f}% churn risk",
             }
 
     # Private helper methods
 
-    async def _prepare_report_context(self,
-                                    data: Dict[str, Any],
-                                    market_context: Optional[Dict[str, Any]],
-                                    time_period: Optional[str]) -> Dict[str, Any]:
+    async def _prepare_report_context(
+        self, data: Dict[str, Any], market_context: Optional[Dict[str, Any]], time_period: Optional[str]
+    ) -> Dict[str, Any]:
         """Prepare comprehensive context for report generation"""
 
         context = {
@@ -365,7 +359,7 @@ class ClaudeAutomationEngine:
             "time_period": time_period or "current_period",
             "agent_name": "Jorge",  # Could be parameterized
             "market_location": "Austin",  # Could be dynamic
-            "reporting_timestamp": datetime.now().isoformat()
+            "reporting_timestamp": datetime.now().isoformat(),
         }
 
         # Add performance benchmarks if available
@@ -374,16 +368,16 @@ class ClaudeAutomationEngine:
             context["performance_benchmarks"] = {
                 "industry_avg_conversion": 2.5,
                 "market_avg_response_time": 4.2,
-                "seasonal_adjustments": {}
+                "seasonal_adjustments": {},
             }
         except:
             pass
 
         return context
 
-    async def _prepare_lead_context(self,
-                                  lead_id: str,
-                                  context_override: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def _prepare_lead_context(
+        self, lead_id: str, context_override: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Prepare comprehensive lead context for script generation"""
 
         try:
@@ -394,9 +388,7 @@ class ClaudeAutomationEngine:
             lead_data = memory_context.get("extracted_preferences", {})
             lead_data.update(context_override or {})
 
-            scoring_result = await self.scorer.analyze_lead_comprehensive(
-                lead_id, lead_data
-            )
+            scoring_result = await self.scorer.analyze_lead_comprehensive(lead_id, lead_data)
 
             return {
                 "lead_id": lead_id,
@@ -407,8 +399,8 @@ class ClaudeAutomationEngine:
                 "personality_profile": {
                     "communication_style": self._infer_communication_style(memory_context),
                     "decision_making_style": self._infer_decision_style(memory_context),
-                    "urgency_level": self._infer_urgency(memory_context)
-                }
+                    "urgency_level": self._infer_urgency(memory_context),
+                },
             }
 
         except Exception as e:
@@ -420,8 +412,8 @@ class ClaudeAutomationEngine:
                 "personality_profile": {
                     "communication_style": "unknown",
                     "decision_making_style": "unknown",
-                    "urgency_level": "medium"
-                }
+                    "urgency_level": "medium",
+                },
             }
 
     def _infer_communication_style(self, memory_context: Dict[str, Any]) -> str:
@@ -464,34 +456,35 @@ class ClaudeAutomationEngine:
         else:
             return "low"
 
-    async def _parse_report_response(self,
-                                   claude_response: Any,
-                                   report_type: ReportType,
-                                   data: Dict[str, Any],
-                                   context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _parse_report_response(
+        self, claude_response: Any, report_type: ReportType, data: Dict[str, Any], context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Parse Claude's report response into structured format"""
 
-        content = claude_response.content if hasattr(claude_response, 'content') else str(claude_response)
+        content = claude_response.content if hasattr(claude_response, "content") else str(claude_response)
 
         # Basic parsing - could be enhanced with more sophisticated extraction
         return {
             "title": f"{report_type.value.replace('_', ' ').title()} Report",
-            "executive_summary": self._extract_section(content, "EXECUTIVE SUMMARY", "PERFORMANCE ANALYSIS") or content[:200] + "...",
+            "executive_summary": self._extract_section(content, "EXECUTIVE SUMMARY", "PERFORMANCE ANALYSIS")
+            or content[:200] + "...",
             "key_findings": self._extract_list(content, "KEY FINDINGS") or ["Analysis completed"],
             "strategic_insights": self._extract_list(content, "STRATEGIC INSIGHTS") or ["Insights generated"],
-            "risk_assessment": {"overall_risk": "medium", "details": self._extract_section(content, "RISK ASSESSMENT", "OPPORTUNITIES")},
+            "risk_assessment": {
+                "overall_risk": "medium",
+                "details": self._extract_section(content, "RISK ASSESSMENT", "OPPORTUNITIES"),
+            },
             "opportunities": self._extract_list(content, "OPPORTUNITIES") or ["Opportunities identified"],
             "action_items": self._extract_action_items(content) or [{"action": "Review report", "priority": "medium"}],
-            "confidence": 0.8  # Could be extracted from response
+            "confidence": 0.8,  # Could be extracted from response
         }
 
-    async def _parse_script_response(self,
-                                   primary_response: Any,
-                                   variants_response: Optional[Any],
-                                   lead_context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _parse_script_response(
+        self, primary_response: Any, variants_response: Optional[Any], lead_context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Parse Claude's script response into structured format"""
 
-        primary_content = primary_response.content if hasattr(primary_response, 'content') else str(primary_response)
+        primary_content = primary_response.content if hasattr(primary_response, "content") else str(primary_response)
 
         result = {
             "primary_script": self._extract_primary_script(primary_content),
@@ -500,12 +493,14 @@ class ClaudeAutomationEngine:
             "personalization_notes": self._extract_personalization_notes(primary_content, lead_context),
             "success_probability": self._extract_probability(primary_content, "success", 60.0),
             "expected_response_rate": self._extract_probability(primary_content, "response", 30.0),
-            "a_b_variants": []
+            "a_b_variants": [],
         }
 
         # Add variants if available
         if variants_response:
-            variants_content = variants_response.content if hasattr(variants_response, 'content') else str(variants_response)
+            variants_content = (
+                variants_response.content if hasattr(variants_response, "content") else str(variants_response)
+            )
             result["alternative_scripts"] = self._extract_script_variants(variants_content)
             result["a_b_variants"] = result["alternative_scripts"]
 
@@ -535,14 +530,14 @@ class ClaudeAutomationEngine:
             if not section:
                 return []
 
-            lines = section.split('\n')
+            lines = section.split("\n")
             items = []
 
             for line in lines:
                 line = line.strip()
-                if line.startswith(('•', '-', '*')) or (line and line[0].isdigit() and '.' in line):
+                if line.startswith(("•", "-", "*")) or (line and line[0].isdigit() and "." in line):
                     # Remove bullet/number and add to list
-                    clean_line = line.lstrip('•-*0123456789. ').strip()
+                    clean_line = line.lstrip("•-*0123456789. ").strip()
                     if clean_line:
                         items.append(clean_line)
 
@@ -562,24 +557,20 @@ class ClaudeAutomationEngine:
             elif "later" in item.lower() or "eventual" in item.lower():
                 priority = "low"
 
-            action_items.append({
-                "action": item,
-                "priority": priority,
-                "category": "general"
-            })
+            action_items.append({"action": item, "priority": priority, "category": "general"})
 
         return action_items
 
     def _extract_primary_script(self, content: str) -> str:
         """Extract the primary script from response"""
         # Look for script markers or just use first substantial paragraph
-        lines = content.split('\n')
+        lines = content.split("\n")
         script_lines = []
 
         capturing = False
         for line in lines:
             line = line.strip()
-            if 'script:' in line.lower() or '"' in line:
+            if "script:" in line.lower() or '"' in line:
                 capturing = True
                 if '"' in line:
                     # Extract quoted text
@@ -590,11 +581,11 @@ class ClaudeAutomationEngine:
                 break  # End of script section
 
         if script_lines:
-            return ' '.join(script_lines)
+            return " ".join(script_lines)
 
         # Fallback: use first few sentences
-        sentences = content.split('. ')
-        return '. '.join(sentences[:3]) + '.' if sentences else content[:200]
+        sentences = content.split(". ")
+        return ". ".join(sentences[:3]) + "." if sentences else content[:200]
 
     def _extract_objection_responses(self, content: str) -> Dict[str, str]:
         """Extract objection handling responses"""
@@ -603,7 +594,7 @@ class ClaudeAutomationEngine:
         return {
             "price_too_high": "I understand price is a concern. Let's look at the value proposition...",
             "need_to_think": "Of course! What specific aspects would you like to discuss?",
-            "comparing_options": "Smart approach! Let me show you why this stands out..."
+            "comparing_options": "Smart approach! Let me show you why this stands out...",
         }
 
     def _extract_personalization_notes(self, content: str, lead_context: Dict[str, Any]) -> str:
@@ -629,21 +620,21 @@ class ClaudeAutomationEngine:
         variants = []
 
         # Look for numbered variants or sections
-        lines = content.split('\n')
+        lines = content.split("\n")
         current_variant = []
 
         for line in lines:
             line = line.strip()
-            if line.startswith(('1.', '2.', '3.', 'variant', 'option')) or 'script' in line.lower():
+            if line.startswith(("1.", "2.", "3.", "variant", "option")) or "script" in line.lower():
                 if current_variant:
-                    variants.append(' '.join(current_variant))
+                    variants.append(" ".join(current_variant))
                     current_variant = []
-            elif line and not line.startswith(('#', '##')):
+            elif line and not line.startswith(("#", "##")):
                 current_variant.append(line)
 
         # Add last variant
         if current_variant:
-            variants.append(' '.join(current_variant))
+            variants.append(" ".join(current_variant))
 
         return variants[:5]  # Limit to 5 variants
 
@@ -664,10 +655,12 @@ class ClaudeAutomationEngine:
             generated_at=datetime.now(),
             generation_time_ms=0,
             confidence_score=0.1,
-            sources=["Fallback System"]
+            sources=["Fallback System"],
         )
 
-    def _create_fallback_script(self, script_type: ScriptType, lead_id: str, channel: str, error: str) -> AutomatedScript:
+    def _create_fallback_script(
+        self, script_type: ScriptType, lead_id: str, channel: str, error: str
+    ) -> AutomatedScript:
         """Create fallback script when Claude generation fails"""
         return AutomatedScript(
             script_id=f"fallback_{int(datetime.now().timestamp())}",
@@ -683,7 +676,7 @@ class ClaudeAutomationEngine:
             a_b_testing_variants=[],
             generated_at=datetime.now(),
             generation_time_ms=0,
-            lead_context={"error": error}
+            lead_context={"error": error},
         )
 
     def _load_report_prompts(self) -> Dict[str, str]:
@@ -714,9 +707,7 @@ class ClaudeAutomationEngine:
             # Update average generation time
             count = self.metrics["reports_generated"]
             current_avg = self.metrics["avg_generation_time_ms"]
-            self.metrics["avg_generation_time_ms"] = (
-                (current_avg * (count - 1) + generation_time) / count
-            )
+            self.metrics["avg_generation_time_ms"] = (current_avg * (count - 1) + generation_time) / count
 
     def _update_script_metrics(self, generation_time: float, success: bool):
         """Update script generation metrics"""
@@ -726,15 +717,13 @@ class ClaudeAutomationEngine:
             # Update average generation time
             count = self.metrics["scripts_generated"]
             current_avg = self.metrics["avg_generation_time_ms"]
-            self.metrics["avg_generation_time_ms"] = (
-                (current_avg * (count - 1) + generation_time) / count
-            )
+            self.metrics["avg_generation_time_ms"] = (current_avg * (count - 1) + generation_time) / count
 
     def get_automation_metrics(self) -> Dict[str, Any]:
         """Get automation engine performance metrics"""
         return {
             **self.metrics,
-            "total_automations": self.metrics["reports_generated"] + self.metrics["scripts_generated"]
+            "total_automations": self.metrics["reports_generated"] + self.metrics["scripts_generated"],
         }
 
 
@@ -748,6 +737,4 @@ async def generate_weekly_report(data: Dict[str, Any]) -> AutomatedReport:
 async def generate_lead_script(lead_id: str, script_type: str, channel: str = "sms") -> AutomatedScript:
     """Generate personalized lead script"""
     engine = ClaudeAutomationEngine()
-    return await engine.generate_personalized_script(
-        ScriptType(script_type), lead_id, channel
-    )
+    return await engine.generate_personalized_script(ScriptType(script_type), lead_id, channel)

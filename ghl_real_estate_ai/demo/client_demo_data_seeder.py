@@ -13,15 +13,15 @@ Features:
 import asyncio
 import json
 import random
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional
-from dataclasses import dataclass, asdict
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.ghl_service import GHLService
 from ghl_real_estate_ai.services.memory_service import MemoryService
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -29,9 +29,11 @@ logger = get_logger(__name__)
 # DEMO DATA MODELS
 # =============================================================================
 
+
 @dataclass
 class DemoLead:
     """Realistic lead profile for client demonstrations."""
+
     name: str
     phone: str
     email: str
@@ -59,9 +61,11 @@ class DemoLead:
     last_contact: datetime
     next_followup: Optional[datetime]
 
+
 @dataclass
 class DemoProperty:
     """Property listing for demonstration."""
+
     address: str
     city: str
     state: str
@@ -87,9 +91,11 @@ class DemoProperty:
     selling_points: List[str]
     potential_objections: List[str]
 
+
 @dataclass
 class DemoConversation:
     """Bot conversation for demonstration."""
+
     lead_id: str
     conversation_type: str  # qualification, objection_handling, follow_up
     bot_name: str  # jorge_seller_bot, lead_bot
@@ -109,6 +115,7 @@ class DemoConversation:
     # Demo metadata
     demo_scenario: str
     learning_points: List[str]
+
 
 class ClientDemoDataSeeder:
     """
@@ -144,11 +151,7 @@ class ClientDemoDataSeeder:
         """
         logger.info("🎭 Seeding complete demo environment for client presentations...")
 
-        seeding_summary = {
-            "seeding_started": datetime.now().isoformat(),
-            "demo_scenarios": [],
-            "data_summary": {}
-        }
+        seeding_summary = {"seeding_started": datetime.now().isoformat(), "demo_scenarios": [], "data_summary": {}}
 
         try:
             # Seed core demo data
@@ -161,23 +164,27 @@ class ClientDemoDataSeeder:
             # Create demo scenarios for presentations
             scenarios = await self._create_presentation_scenarios(leads, conversations)
 
-            seeding_summary.update({
-                "data_summary": {
-                    "leads_created": len(leads),
-                    "properties_created": len(properties),
-                    "conversations_created": len(conversations),
-                    "appointments_scheduled": len(appointments),
-                    "demo_scenarios": len(scenarios)
-                },
-                "demo_scenarios": scenarios,
-                "seeding_completed": datetime.now().isoformat()
-            })
+            seeding_summary.update(
+                {
+                    "data_summary": {
+                        "leads_created": len(leads),
+                        "properties_created": len(properties),
+                        "conversations_created": len(conversations),
+                        "appointments_scheduled": len(appointments),
+                        "demo_scenarios": len(scenarios),
+                    },
+                    "demo_scenarios": scenarios,
+                    "seeding_completed": datetime.now().isoformat(),
+                }
+            )
 
             # Cache demo data for quick access during presentations
             await self._cache_demo_data_for_presentations(seeding_summary)
 
-            logger.info(f"✅ Demo environment seeded successfully: {len(leads)} leads, "
-                       f"{len(properties)} properties, {len(conversations)} conversations")
+            logger.info(
+                f"✅ Demo environment seeded successfully: {len(leads)} leads, "
+                f"{len(properties)} properties, {len(conversations)} conversations"
+            )
 
             return seeding_summary
 
@@ -212,9 +219,8 @@ class ClientDemoDataSeeder:
                 success_probability=0.89,
                 conversation_count=4,
                 last_contact=datetime.now() - timedelta(days=2),
-                next_followup=datetime.now() + timedelta(days=1)
+                next_followup=datetime.now() + timedelta(days=1),
             ),
-
             DemoLead(
                 name="Michael Rodriguez",
                 phone="(555) 234-5678",
@@ -235,9 +241,8 @@ class ClientDemoDataSeeder:
                 success_probability=0.84,
                 conversation_count=6,
                 last_contact=datetime.now() - timedelta(days=1),
-                next_followup=datetime.now() + timedelta(hours=8)
+                next_followup=datetime.now() + timedelta(hours=8),
             ),
-
             # Warm Leads (Medium Temperature, Needs Nurturing)
             DemoLead(
                 name="Jennifer Chen",
@@ -259,9 +264,8 @@ class ClientDemoDataSeeder:
                 success_probability=0.71,
                 conversation_count=3,
                 last_contact=datetime.now() - timedelta(days=5),
-                next_followup=datetime.now() + timedelta(days=2)
+                next_followup=datetime.now() + timedelta(days=2),
             ),
-
             DemoLead(
                 name="David Thompson",
                 phone="(555) 456-7890",
@@ -282,9 +286,8 @@ class ClientDemoDataSeeder:
                 success_probability=0.63,
                 conversation_count=2,
                 last_contact=datetime.now() - timedelta(days=7),
-                next_followup=datetime.now() + timedelta(days=3)
+                next_followup=datetime.now() + timedelta(days=3),
             ),
-
             # Cold Leads (Low Temperature, Difficult Conversions)
             DemoLead(
                 name="Robert Williams",
@@ -306,9 +309,8 @@ class ClientDemoDataSeeder:
                 success_probability=0.28,
                 conversation_count=1,
                 last_contact=datetime.now() - timedelta(days=12),
-                next_followup=datetime.now() + timedelta(days=7)
+                next_followup=datetime.now() + timedelta(days=7),
             ),
-
             # Success Stories (Closed Deals)
             DemoLead(
                 name="Lisa Martinez",
@@ -330,14 +332,12 @@ class ClientDemoDataSeeder:
                 success_probability=1.0,
                 conversation_count=8,
                 last_contact=datetime.now() - timedelta(days=3),
-                next_followup=None
-            )
+                next_followup=None,
+            ),
         ]
 
         # Add additional diverse leads to reach target count
-        additional_leads = await self._generate_additional_demo_leads(
-            self.demo_leads_count - len(demo_leads)
-        )
+        additional_leads = await self._generate_additional_demo_leads(self.demo_leads_count - len(demo_leads))
         demo_leads.extend(additional_leads)
 
         # Store leads in demo database/cache
@@ -373,14 +373,10 @@ class ClientDemoDataSeeder:
                     "Recently updated kitchen",
                     "Great school district",
                     "Walking distance to park",
-                    "Low maintenance yard"
+                    "Low maintenance yard",
                 ],
-                potential_objections=[
-                    "Older construction",
-                    "Small lot size"
-                ]
+                potential_objections=["Older construction", "Small lot size"],
             ),
-
             DemoProperty(
                 address="2156 Pine Street",
                 city="Cedar Park",
@@ -398,18 +394,9 @@ class ClientDemoDataSeeder:
                 price_per_sqft=181,
                 demo_scenario="downsizing_success",
                 market_trend="appreciating",
-                selling_points=[
-                    "Modern construction",
-                    "Open floor plan",
-                    "Energy efficient",
-                    "Quiet neighborhood"
-                ],
-                potential_objections=[
-                    "Smaller than typical for area",
-                    "No garage"
-                ]
+                selling_points=["Modern construction", "Open floor plan", "Energy efficient", "Quiet neighborhood"],
+                potential_objections=["Smaller than typical for area", "No garage"],
             ),
-
             # Add more diverse properties
             DemoProperty(
                 address="7825 Waterfront Drive",
@@ -432,14 +419,10 @@ class ClientDemoDataSeeder:
                     "Lake Travis waterfront",
                     "Custom chef's kitchen",
                     "Private boat dock",
-                    "Smart home technology"
+                    "Smart home technology",
                 ],
-                potential_objections=[
-                    "High price point",
-                    "Limited buyer pool",
-                    "Market softening"
-                ]
-            )
+                potential_objections=["High price point", "Limited buyer pool", "Market softening"],
+            ),
         ]
 
         # Generate additional properties
@@ -492,8 +475,8 @@ class ClientDemoDataSeeder:
                 learning_points=[
                     "Jorge's direct questioning style",
                     "Effective objection handling",
-                    "Temperature qualification methodology"
-                ]
+                    "Temperature qualification methodology",
+                ],
             )
             conversations.append(qualification_conv)
 
@@ -515,8 +498,8 @@ class ClientDemoDataSeeder:
                 learning_points=[
                     "3-7-30 day nurture sequence",
                     "Value-based follow-up",
-                    "Appointment setting strategy"
-                ]
+                    "Appointment setting strategy",
+                ],
             )
             conversations.append(followup_conv)
 
@@ -530,36 +513,36 @@ class ClientDemoDataSeeder:
                 "sender": "jorge_seller_bot",
                 "message": f"Hi {lead.name}, Jorge here. I see you're interested in selling at {lead.property_address}. Let me ask you straight up - are you actually ready to sell, or just curious about the market?",
                 "sentiment": "direct",
-                "intent": "qualification"
+                "intent": "qualification",
             },
             {
                 "timestamp": "2024-01-15T14:31:15Z",
                 "sender": "lead",
                 "message": "Well, I'm thinking about it. My job situation might change soon.",
                 "sentiment": "uncertain",
-                "intent": "exploration"
+                "intent": "exploration",
             },
             {
                 "timestamp": "2024-01-15T14:31:45Z",
                 "sender": "jorge_seller_bot",
                 "message": "Thinking about it won't sell your house. When do you need to make a decision - 30 days, 60 days, or are we talking 6 months from now?",
                 "sentiment": "confrontational",
-                "intent": "timeline_qualification"
+                "intent": "timeline_qualification",
             },
             {
                 "timestamp": "2024-01-15T14:32:30Z",
                 "sender": "lead",
                 "message": f"Probably within the next {lead.timeline.replace('_', ' ')}. It depends on the job offer.",
                 "sentiment": "responsive",
-                "intent": "timeline_provided"
+                "intent": "timeline_provided",
             },
             {
                 "timestamp": "2024-01-15T14:33:00Z",
                 "sender": "jorge_seller_bot",
                 "message": f"Good. Now, what do you think your house is worth? And don't tell me what Zillow says - that's garbage data.",
                 "sentiment": "direct",
-                "intent": "price_qualification"
-            }
+                "intent": "price_qualification",
+            },
         ]
 
     def _generate_followup_messages(self, lead: DemoLead) -> List[Dict[str, Any]]:
@@ -570,22 +553,22 @@ class ClientDemoDataSeeder:
                 "sender": "lead_bot",
                 "message": f"Hi {lead.name}! Following up on our conversation about selling {lead.property_address}. I've prepared a market analysis showing properties like yours are selling within 18 days on average. Would you like to see the specific comparables?",
                 "sentiment": "professional",
-                "intent": "value_delivery"
+                "intent": "value_delivery",
             },
             {
                 "timestamp": "2024-01-18T10:45:22Z",
                 "sender": "lead",
                 "message": "Yes, I'd like to see that. What price range are similar properties selling for?",
                 "sentiment": "interested",
-                "intent": "price_inquiry"
+                "intent": "price_inquiry",
             },
             {
                 "timestamp": "2024-01-18T10:46:15Z",
                 "sender": "lead_bot",
-                "message": f"Based on recent sales, properties in your area are selling between ${lead.property_value-20000:,} and ${lead.property_value+15000:,}. Your property has some unique advantages that could position it at the higher end. Should we schedule 15 minutes to review the full analysis?",
+                "message": f"Based on recent sales, properties in your area are selling between ${lead.property_value - 20000:,} and ${lead.property_value + 15000:,}. Your property has some unique advantages that could position it at the higher end. Should we schedule 15 minutes to review the full analysis?",
                 "sentiment": "consultative",
-                "intent": "appointment_setting"
-            }
+                "intent": "appointment_setting",
+            },
         ]
 
     # =========================================================================
@@ -602,20 +585,20 @@ class ClientDemoDataSeeder:
                 "scenario": "investor_portfolio",
                 "personality": "numbers_focused",
                 "motivation": "portfolio_optimization",
-                "temp_range": (45, 70)
+                "temp_range": (45, 70),
             },
             {
                 "scenario": "family_expansion",
                 "personality": "family_focused",
                 "motivation": "growing_family",
-                "temp_range": (60, 85)
+                "temp_range": (60, 85),
             },
             {
                 "scenario": "retirement_planning",
                 "personality": "security_minded",
                 "motivation": "retirement_preparation",
-                "temp_range": (50, 75)
-            }
+                "temp_range": (50, 75),
+            },
         ]
 
         for i in range(count):
@@ -641,7 +624,7 @@ class ClientDemoDataSeeder:
                 success_probability=random.uniform(0.2, 0.9),
                 conversation_count=random.randint(1, 5),
                 last_contact=datetime.now() - timedelta(days=random.randint(1, 14)),
-                next_followup=datetime.now() + timedelta(days=random.randint(1, 7))
+                next_followup=datetime.now() + timedelta(days=random.randint(1, 7)),
             )
 
             lead.asking_price = int(lead.property_value * random.uniform(0.95, 1.05))
@@ -678,7 +661,7 @@ class ClientDemoDataSeeder:
                 demo_scenario="market_variety",
                 market_trend=random.choice(["appreciating", "stable", "competitive"]),
                 selling_points=self._generate_selling_points(prop_type),
-                potential_objections=self._generate_potential_objections()
+                potential_objections=self._generate_potential_objections(),
             )
 
             properties.append(prop)
@@ -740,19 +723,32 @@ class ClientDemoDataSeeder:
     def _generate_selling_points(self, property_type: str) -> List[str]:
         """Generate realistic selling points for properties."""
         all_points = [
-            "Updated kitchen", "Great school district", "Low maintenance",
-            "Energy efficient", "Open floor plan", "Large lot",
-            "Modern fixtures", "Quiet neighborhood", "Near shopping",
-            "Updated bathrooms", "Hardwood floors", "Two-car garage"
+            "Updated kitchen",
+            "Great school district",
+            "Low maintenance",
+            "Energy efficient",
+            "Open floor plan",
+            "Large lot",
+            "Modern fixtures",
+            "Quiet neighborhood",
+            "Near shopping",
+            "Updated bathrooms",
+            "Hardwood floors",
+            "Two-car garage",
         ]
         return random.sample(all_points, random.randint(3, 5))
 
     def _generate_potential_objections(self) -> List[str]:
         """Generate realistic objections for properties."""
         objections = [
-            "Older construction", "Small lot", "Busy street",
-            "Needs updates", "High HOA fees", "No garage",
-            "Limited storage", "Steep stairs"
+            "Older construction",
+            "Small lot",
+            "Busy street",
+            "Needs updates",
+            "High HOA fees",
+            "No garage",
+            "Limited storage",
+            "Steep stairs",
         ]
         return random.sample(objections, random.randint(1, 3))
 
@@ -774,7 +770,7 @@ class ClientDemoDataSeeder:
                     "duration_minutes": 60,
                     "location": lead.property_address,
                     "status": "scheduled",
-                    "demo_scenario": lead.demo_scenario
+                    "demo_scenario": lead.demo_scenario,
                 }
                 appointments.append(appointment)
 
@@ -784,16 +780,21 @@ class ClientDemoDataSeeder:
         """Generate demo performance metrics for presentation."""
         return {
             "total_pipeline_value": sum(lead.property_value for lead in leads if lead.seller_temperature > 50),
-            "projected_monthly_commission": sum(lead.property_value * 0.06 for lead in leads if lead.seller_temperature > 70) / 3,
+            "projected_monthly_commission": sum(
+                lead.property_value * 0.06 for lead in leads if lead.seller_temperature > 70
+            )
+            / 3,
             "avg_response_time_hours": 1.8,
             "lead_to_appointment_rate": 0.34,
             "appointment_to_listing_rate": 0.67,
             "avg_days_to_close": 21,
             "client_satisfaction_score": 4.8,
-            "bot_automation_savings_hours": 23.5
+            "bot_automation_savings_hours": 23.5,
         }
 
-    async def _create_presentation_scenarios(self, leads: List[DemoLead], conversations: List[DemoConversation]) -> List[Dict[str, Any]]:
+    async def _create_presentation_scenarios(
+        self, leads: List[DemoLead], conversations: List[DemoConversation]
+    ) -> List[Dict[str, Any]]:
         """Create guided presentation scenarios for client demos."""
         return [
             {
@@ -804,10 +805,10 @@ class ClientDemoDataSeeder:
                 "key_points": [
                     "Direct qualification approach",
                     "Rapid temperature assessment",
-                    "Efficient conversion to appointment"
+                    "Efficient conversion to appointment",
                 ],
                 "estimated_duration_minutes": 8,
-                "roi_highlight": "22-day average sale cycle"
+                "roi_highlight": "22-day average sale cycle",
             },
             {
                 "scenario_name": "objection_handling_mastery",
@@ -817,10 +818,10 @@ class ClientDemoDataSeeder:
                 "key_points": [
                     "Confrontational but respectful approach",
                     "Data-driven responses",
-                    "Objection to opportunity conversion"
+                    "Objection to opportunity conversion",
                 ],
                 "estimated_duration_minutes": 12,
-                "roi_highlight": "67% objection-to-listing conversion rate"
+                "roi_highlight": "67% objection-to-listing conversion rate",
             },
             {
                 "scenario_name": "pipeline_intelligence",
@@ -829,16 +830,16 @@ class ClientDemoDataSeeder:
                 "metrics_focus": [
                     "Real-time pipeline valuation",
                     "Temperature-based prioritization",
-                    "Commission projection accuracy"
+                    "Commission projection accuracy",
                 ],
                 "key_points": [
                     "$2.4M active pipeline management",
                     "Automated follow-up sequences",
-                    "Predictive closing analytics"
+                    "Predictive closing analytics",
                 ],
                 "estimated_duration_minutes": 10,
-                "roi_highlight": "40% increase in pipeline velocity"
-            }
+                "roi_highlight": "40% increase in pipeline velocity",
+            },
         ]
 
 
@@ -847,6 +848,7 @@ class ClientDemoDataSeeder:
 # =============================================================================
 
 _demo_seeder_instance = None
+
 
 async def get_client_demo_seeder() -> ClientDemoDataSeeder:
     """Get singleton demo seeder instance."""
@@ -861,6 +863,7 @@ async def get_client_demo_seeder() -> ClientDemoDataSeeder:
 # =============================================================================
 
 if __name__ == "__main__":
+
     async def main():
         print("🎭 Starting Jorge Platform Demo Data Seeding...")
 

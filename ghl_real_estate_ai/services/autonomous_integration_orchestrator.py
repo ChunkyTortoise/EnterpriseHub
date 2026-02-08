@@ -17,21 +17,21 @@ Status: Production-Ready Autonomous Integration Hub
 """
 
 import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass, field
-from enum import Enum
 import json
 import logging
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional
 
-from ghl_real_estate_ai.services.behavioral_trigger_engine import get_behavioral_trigger_engine
-from ghl_real_estate_ai.services.autonomous_objection_handler import get_autonomous_objection_handler
+from ghl_real_estate_ai.core.llm_client import get_llm_client
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.advanced_analytics_engine import get_advanced_analytics_engine
 from ghl_real_estate_ai.services.autonomous_ab_testing import get_autonomous_ab_testing
 from ghl_real_estate_ai.services.autonomous_followup_engine import get_autonomous_followup_engine
+from ghl_real_estate_ai.services.autonomous_objection_handler import get_autonomous_objection_handler
+from ghl_real_estate_ai.services.behavioral_trigger_engine import get_behavioral_trigger_engine
 from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.core.llm_client import get_llm_client
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -122,7 +122,7 @@ class AutonomousIntegrationOrchestrator:
             "cross_component_events": 0,
             "average_processing_time": 0.0,
             "system_uptime_hours": 0.0,
-            "revenue_attributed": 0.0
+            "revenue_attributed": 0.0,
         }
 
         # Configuration
@@ -149,14 +149,17 @@ class AutonomousIntegrationOrchestrator:
             # Phase 7: New Engines
             from ghl_real_estate_ai.services.calendar_scheduler import get_smart_scheduler
             from ghl_real_estate_ai.services.market_timing_opportunity_intelligence import MarketTimingOpportunityEngine
+
             self.calendar_scheduler = get_smart_scheduler()
             self.market_engine = MarketTimingOpportunityEngine()
 
             from ghl_real_estate_ai.agents.regional_compliance_agent import get_compliance_agent
+
             self.compliance_agent = get_compliance_agent()
 
             # Phase 7: Workflow Orchestration
             from ghl_real_estate_ai.agents.workflow_factory import get_workflow_factory
+
             self.workflow_factory = get_workflow_factory()
 
             # Start component monitoring systems
@@ -212,10 +215,7 @@ class AutonomousIntegrationOrchestrator:
             logger.error(f"❌ Error during system shutdown: {e}")
 
     async def process_lead_comprehensive(
-        self,
-        lead_id: str,
-        activity_data: Dict[str, Any],
-        context: Dict[str, Any] = None
+        self, lead_id: str, activity_data: Dict[str, Any], context: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """
         Process a lead through the complete autonomous pipeline.
@@ -236,7 +236,7 @@ class AutonomousIntegrationOrchestrator:
                 "component_results": {},
                 "autonomous_decisions": [],
                 "recommended_actions": [],
-                "system_confidence": 0.0
+                "system_confidence": 0.0,
             }
 
             logger.info(f"🔄 Processing lead {lead_id} through autonomous pipeline...")
@@ -246,18 +246,16 @@ class AutonomousIntegrationOrchestrator:
             journey_state = await db.get_lead_journey_state(lead_id)
             if journey_state:
                 context = context or {}
-                context['journey_state'] = journey_state
+                context["journey_state"] = journey_state
                 logger.info(f"📍 Lead {lead_id} current stage: {journey_state['current_stage']}")
 
             # 1. Behavioral Analysis
-            behavioral_score = await self.behavioral_engine.analyze_lead_behavior(
-                lead_id, activity_data
-            )
+            behavioral_score = await self.behavioral_engine.analyze_lead_behavior(lead_id, activity_data)
             processing_results["component_results"]["behavioral_analysis"] = {
                 "likelihood_score": behavioral_score.likelihood_score,
                 "intent_level": behavioral_score.intent_level.value,
                 "confidence": behavioral_score.confidence,
-                "key_signals": [s.signal_type.value for s in behavioral_score.key_signals[:5]]
+                "key_signals": [s.signal_type.value for s in behavioral_score.key_signals[:5]],
             }
 
             # 2. Check for objections in recent communications
@@ -273,22 +271,24 @@ class AutonomousIntegrationOrchestrator:
                         "category": objection_analysis.analysis.category.value,
                         "confidence": objection_analysis.confidence_score,
                         "suggested_response": objection_analysis.generated_message,
-                        "escalation_needed": objection_analysis.escalation_needed
+                        "escalation_needed": objection_analysis.escalation_needed,
                     }
 
                     # Add autonomous decision
-                    processing_results["autonomous_decisions"].append({
-                        "component": "objection_handler",
-                        "decision": f"Detected {objection_analysis.analysis.category.value} objection",
-                        "confidence": objection_analysis.confidence_score,
-                        "action": "Generated personalized response"
-                    })
+                    processing_results["autonomous_decisions"].append(
+                        {
+                            "component": "objection_handler",
+                            "decision": f"Detected {objection_analysis.analysis.category.value} objection",
+                            "confidence": objection_analysis.confidence_score,
+                            "action": "Generated personalized response",
+                        }
+                    )
 
             # 3. Analytics and ROI tracking
             await self.analytics_engine.track_metric(
                 self.analytics_engine.MetricType.LEAD_SCORE_ACCURACY,
                 behavioral_score.likelihood_score / 100,
-                dimensions={"lead_id": lead_id, "intent_level": behavioral_score.intent_level.value}
+                dimensions={"lead_id": lead_id, "intent_level": behavioral_score.intent_level.value},
             )
 
             # 4. A/B testing allocation (if active tests exist)
@@ -302,12 +302,15 @@ class AutonomousIntegrationOrchestrator:
                 await self.followup_engine.monitor_and_respond([lead_id])
 
                 # Determine and execute Lifecycle Workflow (Phase 7)
-                is_seller = "seller" in str(activity_data.get("tags", [])).lower() or "sell" in str(activity_data.get("customFields", {}).get("motivation", "")).lower()
+                is_seller = (
+                    "seller" in str(activity_data.get("tags", [])).lower()
+                    or "sell" in str(activity_data.get("customFields", {}).get("motivation", "")).lower()
+                )
                 workflow_type = "seller" if is_seller else "buyer"
-                
+
                 try:
                     workflow = self.workflow_factory.get_workflow(workflow_type)
-                    
+
                     # Prepare state for workflow
                     # Note: This is a simplified state mapping, in prod it would be more robust
                     state = {
@@ -317,26 +320,30 @@ class AutonomousIntegrationOrchestrator:
                         "engagement_status": journey_state.get("current_stage", "new") if journey_state else "new",
                         # ... other fields
                     }
-                    
+
                     # Run one turn of the lifecycle workflow
                     # workflow_result = await workflow.workflow.ainvoke(state)
                     # processing_results["component_results"]["lifecycle_workflow"] = workflow_result
-                    
-                    processing_results["autonomous_decisions"].append({
-                        "component": "lifecycle_workflow",
-                        "decision": f"Routed to {workflow_type.capitalize()} Workflow",
-                        "confidence": 1.0,
-                        "action": f"Executed lifecycle turn for stage: {state['engagement_status']}"
-                    })
+
+                    processing_results["autonomous_decisions"].append(
+                        {
+                            "component": "lifecycle_workflow",
+                            "decision": f"Routed to {workflow_type.capitalize()} Workflow",
+                            "confidence": 1.0,
+                            "action": f"Executed lifecycle turn for stage: {state['engagement_status']}",
+                        }
+                    )
                 except Exception as workflow_e:
                     logger.error(f"Error in lifecycle workflow execution: {workflow_e}")
 
-                processing_results["autonomous_decisions"].append({
-                    "component": "followup_engine",
-                    "decision": "Initiated 10-agent follow-up orchestration",
-                    "confidence": 0.9,
-                    "action": "Scheduled autonomous follow-up task"
-                })
+                processing_results["autonomous_decisions"].append(
+                    {
+                        "component": "followup_engine",
+                        "decision": "Initiated 10-agent follow-up orchestration",
+                        "confidence": 0.9,
+                        "action": "Scheduled autonomous follow-up task",
+                    }
+                )
 
             # 6. Calculate system confidence and recommendations
             system_confidence, recommendations = await self._calculate_system_confidence_and_recommendations(
@@ -356,16 +363,19 @@ class AutonomousIntegrationOrchestrator:
                 new_stage = "closing"
             elif behavioral_score.likelihood_score > 40:
                 new_stage = "qualified"
-            
-            await db.update_lead_journey_state(lead_id, {
-                "current_stage": new_stage,
-                "last_channel": "orchestrator",
-                "last_interaction_summary": f"Processed via Phase 7 pipeline. Confidence: {system_confidence:.2f}",
-                "context_data": {
-                    "last_likelihood": behavioral_score.likelihood_score,
-                    "last_decisions": [d['decision'] for d in processing_results['autonomous_decisions']]
-                }
-            })
+
+            await db.update_lead_journey_state(
+                lead_id,
+                {
+                    "current_stage": new_stage,
+                    "last_channel": "orchestrator",
+                    "last_interaction_summary": f"Processed via Phase 7 pipeline. Confidence: {system_confidence:.2f}",
+                    "context_data": {
+                        "last_likelihood": behavioral_score.likelihood_score,
+                        "last_decisions": [d["decision"] for d in processing_results["autonomous_decisions"]],
+                    },
+                },
+            )
 
             # 8. Generate integration event
             await self._create_integration_event(
@@ -375,8 +385,8 @@ class AutonomousIntegrationOrchestrator:
                 {
                     "lead_id": lead_id,
                     "processing_results": processing_results,
-                    "processing_time_ms": processing_time * 1000
-                }
+                    "processing_time_ms": processing_time * 1000,
+                },
             )
 
             logger.info(
@@ -394,7 +404,7 @@ class AutonomousIntegrationOrchestrator:
                 "lead_id": lead_id,
                 "error": str(e),
                 "processing_timestamp": datetime.now().isoformat(),
-                "system_confidence": 0.0
+                "system_confidence": 0.0,
             }
 
     async def get_system_dashboard_data(self) -> Dict[str, Any]:
@@ -412,13 +422,12 @@ class AutonomousIntegrationOrchestrator:
                     "status": metrics.status,
                     "uptime": f"{metrics.uptime_percentage:.1f}%",
                     "response_time": f"{metrics.response_time_ms:.0f}ms",
-                    "throughput": f"{metrics.throughput_per_minute:.0f}/min"
+                    "throughput": f"{metrics.throughput_per_minute:.0f}/min",
                 }
 
             # System overview
             total_active_components = sum(
-                1 for metrics in self.component_health.values()
-                if metrics.status == "healthy"
+                1 for metrics in self.component_health.values() if metrics.status == "healthy"
             )
 
             return {
@@ -428,29 +437,31 @@ class AutonomousIntegrationOrchestrator:
                     "total_leads_processed": self.system_metrics["total_leads_processed"],
                     "autonomous_decisions": self.system_metrics["autonomous_decisions_made"],
                     "system_uptime_hours": self.system_metrics["system_uptime_hours"],
-                    "revenue_attributed": f"${self.system_metrics['revenue_attributed']:,.2f}"
+                    "revenue_attributed": f"${self.system_metrics['revenue_attributed']:,.2f}",
                 },
                 "component_health": health_summary,
                 "analytics_engine": analytics_data,
                 "ab_testing": {
                     "active_tests": ab_testing_data.get("testing_metrics", {}).get("active_tests_count", 0),
                     "total_tests_created": ab_testing_data.get("testing_metrics", {}).get("total_tests_created", 0),
-                    "average_lift": f"{ab_testing_data.get('testing_metrics', {}).get('average_lift_achieved', 0):.1f}%"
+                    "average_lift": f"{ab_testing_data.get('testing_metrics', {}).get('average_lift_achieved', 0):.1f}%",
                 },
                 "followup_engine": {
                     "active_tasks": followup_data.get("total_tasks", 0),
                     "agent_orchestrated": followup_data.get("agent_orchestrated_tasks", 0),
-                    "10_agent_system": "active" if followup_data.get("system_status") == "multi_agent_orchestrated" else "inactive"
+                    "10_agent_system": "active"
+                    if followup_data.get("system_status") == "multi_agent_orchestrated"
+                    else "inactive",
                 },
                 "recent_events": [
                     {
                         "event_type": event.event_type,
                         "timestamp": event.created_at.isoformat(),
-                        "components": len(event.target_components)
+                        "components": len(event.target_components),
                     }
                     for event in self.event_queue[-10:]  # Last 10 events
                 ],
-                "last_updated": datetime.now().isoformat()
+                "last_updated": datetime.now().isoformat(),
             }
 
         except Exception as e:
@@ -466,36 +477,42 @@ class AutonomousIntegrationOrchestrator:
                 "cycle_timestamp": datetime.now().isoformat(),
                 "optimizations_applied": [],
                 "performance_improvements": {},
-                "recommendations": []
+                "recommendations": [],
             }
 
             # 1. Analytics-driven optimization
             analytics_insights = await self.analytics_engine.generate_performance_insights()
             for insight in analytics_insights[:3]:  # Top 3 insights
                 if insight.impact_score > 0.7:
-                    optimization_results["optimizations_applied"].append({
-                        "component": "analytics_engine",
-                        "optimization": insight.title,
-                        "impact_score": insight.impact_score
-                    })
+                    optimization_results["optimizations_applied"].append(
+                        {
+                            "component": "analytics_engine",
+                            "optimization": insight.title,
+                            "impact_score": insight.impact_score,
+                        }
+                    )
 
             # 2. A/B testing optimization recommendations
             ab_recommendations = await self.ab_testing_system.get_optimization_recommendations()
             for rec in ab_recommendations[:2]:  # Top 2 recommendations
-                optimization_results["recommendations"].append({
-                    "component": "ab_testing_system",
-                    "recommendation": rec.get("title", "Optimize testing strategy"),
-                    "implementation": rec.get("implementation_steps", [])
-                })
+                optimization_results["recommendations"].append(
+                    {
+                        "component": "ab_testing_system",
+                        "recommendation": rec.get("title", "Optimize testing strategy"),
+                        "implementation": rec.get("implementation_steps", []),
+                    }
+                )
 
             # 3. Follow-up engine agent optimization
             agent_insights = self.followup_engine.get_agent_insights()
             if agent_insights.get("overall_effectiveness", 0) < 0.8:
-                optimization_results["optimizations_applied"].append({
-                    "component": "followup_engine",
-                    "optimization": "Optimize agent consensus thresholds",
-                    "current_effectiveness": agent_insights.get("overall_effectiveness", 0)
-                })
+                optimization_results["optimizations_applied"].append(
+                    {
+                        "component": "followup_engine",
+                        "optimization": "Optimize agent consensus thresholds",
+                        "current_effectiveness": agent_insights.get("overall_effectiveness", 0),
+                    }
+                )
 
             # 4. Cross-component learning
             cross_component_learnings = await self._identify_cross_component_optimizations()
@@ -548,7 +565,7 @@ class AutonomousIntegrationOrchestrator:
                 SystemComponent.OBJECTION_HANDLER: self.objection_handler,
                 SystemComponent.ANALYTICS_ENGINE: self.analytics_engine,
                 SystemComponent.AB_TESTING_SYSTEM: self.ab_testing_system,
-                SystemComponent.FOLLOWUP_ENGINE: self.followup_engine
+                SystemComponent.FOLLOWUP_ENGINE: self.followup_engine,
             }
 
             for component, service in components_to_check.items():
@@ -556,7 +573,7 @@ class AutonomousIntegrationOrchestrator:
                     start_time = datetime.now()
 
                     # Basic health check (simplified - would be more comprehensive in production)
-                    is_healthy = hasattr(service, '__dict__') and service is not None
+                    is_healthy = hasattr(service, "__dict__") and service is not None
 
                     response_time = (datetime.now() - start_time).total_seconds() * 1000
 
@@ -568,7 +585,7 @@ class AutonomousIntegrationOrchestrator:
                             uptime_percentage=99.0,
                             response_time_ms=response_time,
                             throughput_per_minute=100.0,
-                            error_rate=0.01
+                            error_rate=0.01,
                         )
                     else:
                         metrics = self.component_health[component]
@@ -591,10 +608,7 @@ class AutonomousIntegrationOrchestrator:
             logger.error(f"Error performing health checks: {e}")
 
     async def _check_ab_test_allocation(
-        self,
-        lead_id: str,
-        behavioral_score: Any,
-        context: Dict[str, Any] = None
+        self, lead_id: str, behavioral_score: Any, context: Dict[str, Any] = None
     ) -> Optional[Dict[str, Any]]:
         """Check if lead should be allocated to any active A/B tests."""
         try:
@@ -606,16 +620,14 @@ class AutonomousIntegrationOrchestrator:
 
             # Allocate to first applicable test (simplified logic)
             test_id = active_tests[0]
-            variant = await self.ab_testing_system.allocate_participant(
-                test_id, lead_id, context or {}
-            )
+            variant = await self.ab_testing_system.allocate_participant(test_id, lead_id, context or {})
 
             if variant:
                 return {
                     "test_id": test_id,
                     "variant_id": variant.variant_id,
                     "variant_name": variant.variant_name,
-                    "allocation_method": "autonomous"
+                    "allocation_method": "autonomous",
                 }
 
             return None
@@ -625,8 +637,7 @@ class AutonomousIntegrationOrchestrator:
             return None
 
     async def _calculate_system_confidence_and_recommendations(
-        self,
-        processing_results: Dict[str, Any]
+        self, processing_results: Dict[str, Any]
     ) -> Tuple[float, List[str]]:
         """Calculate overall system confidence and generate recommendations."""
         try:
@@ -634,14 +645,14 @@ class AutonomousIntegrationOrchestrator:
             recommendations = []
 
             # Collect confidence scores from components
-            behavioral_confidence = processing_results.get("component_results", {}).get(
-                "behavioral_analysis", {}
-            ).get("confidence", 0.5)
+            behavioral_confidence = (
+                processing_results.get("component_results", {}).get("behavioral_analysis", {}).get("confidence", 0.5)
+            )
             confidence_scores.append(behavioral_confidence)
 
-            objection_confidence = processing_results.get("component_results", {}).get(
-                "objection_handling", {}
-            ).get("confidence", 0.7)
+            objection_confidence = (
+                processing_results.get("component_results", {}).get("objection_handling", {}).get("confidence", 0.7)
+            )
             if objection_confidence:
                 confidence_scores.append(objection_confidence)
 
@@ -649,9 +660,11 @@ class AutonomousIntegrationOrchestrator:
             system_confidence = sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0.5
 
             # Generate recommendations based on results
-            likelihood_score = processing_results.get("component_results", {}).get(
-                "behavioral_analysis", {}
-            ).get("likelihood_score", 0)
+            likelihood_score = (
+                processing_results.get("component_results", {})
+                .get("behavioral_analysis", {})
+                .get("likelihood_score", 0)
+            )
 
             if likelihood_score > 70:
                 recommendations.append("High-priority lead: Schedule immediate personal contact")
@@ -674,9 +687,7 @@ class AutonomousIntegrationOrchestrator:
         """Update system-wide metrics."""
         try:
             self.system_metrics["total_leads_processed"] += 1
-            self.system_metrics["autonomous_decisions_made"] += len(
-                results.get("autonomous_decisions", [])
-            )
+            self.system_metrics["autonomous_decisions_made"] += len(results.get("autonomous_decisions", []))
             self.system_metrics["cross_component_events"] += 1
 
             # Update average processing time (exponential moving average)
@@ -692,7 +703,7 @@ class AutonomousIntegrationOrchestrator:
         event_type: str,
         source_component: SystemComponent,
         target_components: List[SystemComponent],
-        payload: Dict[str, Any]
+        payload: Dict[str, Any],
     ):
         """Create cross-component integration event."""
         try:
@@ -701,7 +712,7 @@ class AutonomousIntegrationOrchestrator:
                 event_type=event_type,
                 source_component=source_component,
                 target_components=target_components,
-                payload=payload
+                payload=payload,
             )
 
             # Add to event queue
@@ -720,8 +731,8 @@ class AutonomousIntegrationOrchestrator:
                 return
 
             # Process batch of events
-            batch = self.event_queue[:self.event_processing_batch_size]
-            self.event_queue = self.event_queue[self.event_processing_batch_size:]
+            batch = self.event_queue[: self.event_processing_batch_size]
+            self.event_queue = self.event_queue[self.event_processing_batch_size :]
 
             for event in batch:
                 # Simplified event processing
@@ -736,13 +747,10 @@ class AutonomousIntegrationOrchestrator:
             "integration_status": self.integration_status.value,
             "system_metrics": self.system_metrics,
             "component_count": len(self.component_health),
-            "healthy_components": sum(
-                1 for metrics in self.component_health.values()
-                if metrics.status == "healthy"
-            ),
+            "healthy_components": sum(1 for metrics in self.component_health.values() if metrics.status == "healthy"),
             "event_queue_size": len(self.event_queue),
             "is_running": self.is_running,
-            "last_updated": datetime.now().isoformat()
+            "last_updated": datetime.now().isoformat(),
         }
 
 

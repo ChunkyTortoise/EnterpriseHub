@@ -41,12 +41,12 @@ F = TypeVar("F", bound=Callable[..., Any])
 # Try to import OpenTelemetry packages
 try:
     from opentelemetry import trace
+    from opentelemetry.context import Context
+    from opentelemetry.sdk.resources import SERVICE_NAME, SERVICE_VERSION, Resource
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
-    from opentelemetry.sdk.resources import Resource, SERVICE_NAME, SERVICE_VERSION
-    from opentelemetry.trace import Status, StatusCode, SpanKind
+    from opentelemetry.trace import SpanKind, Status, StatusCode
     from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
-    from opentelemetry.context import Context
 
     OPENTELEMETRY_AVAILABLE = True
 except ImportError:
@@ -112,10 +112,12 @@ class Tracer:
         """Initialize OpenTelemetry tracer."""
         try:
             # Create resource
-            resource = Resource.create({
-                SERVICE_NAME: self.service_name,
-                SERVICE_VERSION: self.service_version,
-            })
+            resource = Resource.create(
+                {
+                    SERVICE_NAME: self.service_name,
+                    SERVICE_VERSION: self.service_version,
+                }
+            )
 
             # Create provider
             provider = TracerProvider(resource=resource)
@@ -269,6 +271,7 @@ class Tracer:
             Current span or noop span
         """
         if not self._initialized or self._tracer is None:
+
             class NoopSpan:
                 def set_attribute(self, key: str, value: Any) -> None:
                     pass
@@ -316,7 +319,7 @@ class Tracer:
             exception: Exception to record
         """
         span = self.get_current_span()
-        if span and hasattr(span, 'record_exception'):
+        if span and hasattr(span, "record_exception"):
             span.record_exception(exception)
 
     def inject_context(self, carrier: Dict[str, str]) -> Dict[str, str]:
@@ -345,6 +348,7 @@ class Tracer:
         """
         if not self._initialized or self._propagator is None:
             from opentelemetry.context import Context
+
             return Context()
 
         return self._propagator.extract(carrier)
@@ -386,6 +390,7 @@ def trace_span(
             return await do_processing(query)
         ```
     """
+
     def decorator(func: F) -> F:
         span_name = name or func.__name__
         is_async = asyncio.iscoroutinefunction(func)

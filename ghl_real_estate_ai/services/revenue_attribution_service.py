@@ -17,21 +17,23 @@ This service enables validation of all financial claims.
 
 import asyncio
 import json
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass, asdict
-from enum import Enum
-from decimal import Decimal
 import logging
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from decimal import Decimal
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
-from ghl_real_estate_ai.services.database_service import get_database, DatabaseService
-from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.database_service import DatabaseService, get_database
 
 logger = get_logger(__name__)
 
+
 class AttributionModel(Enum):
     """Attribution models for revenue tracking"""
+
     FIRST_TOUCH = "first_touch"
     LAST_TOUCH = "last_touch"
     LINEAR = "linear"
@@ -39,8 +41,10 @@ class AttributionModel(Enum):
     POSITION_BASED = "position_based"
     DATA_DRIVEN = "data_driven"
 
+
 class TouchpointType(Enum):
     """Types of customer touchpoints"""
+
     ORGANIC_SEARCH = "organic_search"
     PAID_SEARCH = "paid_search"
     SOCIAL_MEDIA = "social_media"
@@ -60,17 +64,21 @@ class TouchpointType(Enum):
     AI_CHURN_PREVENTION = "ai_churn_prevention"
     AI_AB_TESTING = "ai_ab_testing"
 
+
 class ConversionType(Enum):
     """Types of conversions tracked"""
+
     PROPERTY_PURCHASE = "property_purchase"
     LISTING_AGREEMENT = "listing_agreement"
     RENTAL_AGREEMENT = "rental_agreement"
     QUALIFIED_LEAD = "qualified_lead"
     CONSULTATION_BOOKED = "consultation_booked"
 
+
 @dataclass
 class Touchpoint:
     """Customer touchpoint data"""
+
     touchpoint_id: str
     lead_id: str
     touchpoint_type: TouchpointType
@@ -96,9 +104,11 @@ class Touchpoint:
     # Attribution Weight (calculated)
     attribution_weight: Optional[float] = None
 
+
 @dataclass
 class Conversion:
     """Conversion event data"""
+
     conversion_id: str
     lead_id: str
     conversion_type: ConversionType
@@ -123,9 +133,11 @@ class Conversion:
     validation_date: Optional[datetime] = None
     validator_id: Optional[str] = None
 
+
 @dataclass
 class AttributionResult:
     """Revenue attribution calculation result"""
+
     lead_id: str
     conversion: Conversion
     touchpoints: List[Touchpoint]
@@ -133,8 +145,8 @@ class AttributionResult:
 
     # Attribution Breakdown
     touchpoint_attributions: Dict[str, float]  # touchpoint_id -> attribution_weight
-    channel_attributions: Dict[str, Decimal]   # channel -> attributed_revenue
-    ai_system_attributions: Dict[str, Decimal] # ai_system -> attributed_revenue
+    channel_attributions: Dict[str, Decimal]  # channel -> attributed_revenue
+    ai_system_attributions: Dict[str, Decimal]  # ai_system -> attributed_revenue
 
     # Validation Metrics
     attribution_confidence: float
@@ -144,6 +156,7 @@ class AttributionResult:
     # Meta
     calculated_at: datetime
     calculation_version: str = "1.0"
+
 
 class RevenueAttributionService:
     """Production revenue attribution service for validating $4.91M ARR claims"""
@@ -155,18 +168,15 @@ class RevenueAttributionService:
         # Attribution model configurations
         self.attribution_models = {
             AttributionModel.FIRST_TOUCH: {"decay_rate": 0.0},
-            AttributionModel.LAST_TOUCH: {"decay_rate": float('inf')},
+            AttributionModel.LAST_TOUCH: {"decay_rate": float("inf")},
             AttributionModel.LINEAR: {"decay_rate": 0.0},
             AttributionModel.TIME_DECAY: {"decay_rate": 0.7, "half_life_days": 7},
             AttributionModel.POSITION_BASED: {
                 "first_touch_weight": 0.4,
                 "last_touch_weight": 0.4,
-                "middle_touch_weight": 0.2
+                "middle_touch_weight": 0.2,
             },
-            AttributionModel.DATA_DRIVEN: {
-                "ml_model_enabled": True,
-                "min_conversion_data": 100
-            }
+            AttributionModel.DATA_DRIVEN: {"ml_model_enabled": True, "min_conversion_data": 100},
         }
 
         # AI System Configuration for Attribution
@@ -174,38 +184,38 @@ class RevenueAttributionService:
             "autonomous_followup": {
                 "touchpoint_types": [TouchpointType.AI_FOLLOW_UP, TouchpointType.AI_OBJECTION_HANDLING],
                 "target_arr": Decimal("225000"),  # $225K ARR target
-                "commission_rate": 0.03
+                "commission_rate": 0.03,
             },
             "neural_property_matching": {
                 "touchpoint_types": [TouchpointType.AI_PROPERTY_MATCHING],
                 "target_arr": Decimal("400000"),  # $400K ARR target
-                "commission_rate": 0.025
+                "commission_rate": 0.025,
             },
             "predictive_lead_scoring": {
                 "touchpoint_types": [TouchpointType.AI_LEAD_SCORING, TouchpointType.AI_BEHAVIORAL_TRIGGERS],
                 "target_arr": Decimal("200000"),  # $200K ARR target
-                "commission_rate": 0.02
+                "commission_rate": 0.02,
             },
             "pricing_intelligence": {
                 "touchpoint_types": [TouchpointType.AI_PRICING_INTELLIGENCE, TouchpointType.AI_MARKET_ANALYSIS],
                 "target_arr": Decimal("400000"),  # $400K ARR target
-                "commission_rate": 0.025
+                "commission_rate": 0.025,
             },
             "churn_prevention": {
                 "touchpoint_types": [TouchpointType.AI_CHURN_PREVENTION],
                 "target_arr": Decimal("300000"),  # $300K ARR target
-                "commission_rate": 0.035
+                "commission_rate": 0.035,
             },
             "ab_testing_optimization": {
                 "touchpoint_types": [TouchpointType.AI_AB_TESTING],
                 "target_arr": Decimal("150000"),  # $150K ARR target
-                "commission_rate": 0.02
+                "commission_rate": 0.02,
             },
             "competitive_intelligence": {
                 "touchpoint_types": [TouchpointType.AI_MARKET_ANALYSIS],
                 "target_arr": Decimal("300000"),  # $300K ARR target
-                "commission_rate": 0.025
-            }
+                "commission_rate": 0.025,
+            },
         }
 
         logger.info("Initialized Revenue Attribution Service for $4.91M ARR validation")
@@ -219,12 +229,7 @@ class RevenueAttributionService:
     # ============================================================================
 
     async def track_touchpoint(
-        self,
-        lead_id: str,
-        touchpoint_type: TouchpointType,
-        channel: str,
-        source: str,
-        **metadata
+        self, lead_id: str, touchpoint_type: TouchpointType, channel: str, source: str, **metadata
     ) -> str:
         """Track a customer touchpoint for attribution"""
 
@@ -235,15 +240,15 @@ class RevenueAttributionService:
             timestamp=datetime.utcnow(),
             channel=channel,
             source=source,
-            campaign_id=metadata.get('campaign_id'),
-            ai_system=metadata.get('ai_system'),
-            ai_confidence=metadata.get('ai_confidence'),
-            ai_features_used=metadata.get('ai_features_used', []),
-            page_url=metadata.get('page_url'),
-            referrer=metadata.get('referrer'),
-            device_type=metadata.get('device_type'),
-            duration_seconds=metadata.get('duration_seconds'),
-            interactions=metadata.get('interactions')
+            campaign_id=metadata.get("campaign_id"),
+            ai_system=metadata.get("ai_system"),
+            ai_confidence=metadata.get("ai_confidence"),
+            ai_features_used=metadata.get("ai_features_used", []),
+            page_url=metadata.get("page_url"),
+            referrer=metadata.get("referrer"),
+            device_type=metadata.get("device_type"),
+            duration_seconds=metadata.get("duration_seconds"),
+            interactions=metadata.get("interactions"),
         )
 
         # Store touchpoint in database
@@ -279,8 +284,8 @@ class RevenueAttributionService:
                 "referrer": touchpoint.referrer,
                 "device_type": touchpoint.device_type,
                 "duration_seconds": touchpoint.duration_seconds,
-                "interactions": touchpoint.interactions
-            }
+                "interactions": touchpoint.interactions,
+            },
         }
 
         await self.db.log_communication(comm_data)
@@ -307,12 +312,7 @@ class RevenueAttributionService:
     # ============================================================================
 
     async def track_conversion(
-        self,
-        lead_id: str,
-        conversion_type: ConversionType,
-        revenue: Decimal,
-        commission: Decimal,
-        **metadata
+        self, lead_id: str, conversion_type: ConversionType, revenue: Decimal, commission: Decimal, **metadata
     ) -> str:
         """Track a conversion event and calculate attribution"""
 
@@ -323,17 +323,14 @@ class RevenueAttributionService:
             conversion_date=datetime.utcnow(),
             revenue=revenue,
             commission=commission,
-            profit_margin=metadata.get('profit_margin'),
-            property_id=metadata.get('property_id'),
-            agent_id=metadata.get('agent_id'),
-            close_reason=metadata.get('close_reason')
+            profit_margin=metadata.get("profit_margin"),
+            property_id=metadata.get("property_id"),
+            agent_id=metadata.get("agent_id"),
+            close_reason=metadata.get("close_reason"),
         )
 
         # Calculate attribution
-        attribution_result = await self.calculate_attribution(
-            conversion,
-            model=AttributionModel.DATA_DRIVEN
-        )
+        attribution_result = await self.calculate_attribution(conversion, model=AttributionModel.DATA_DRIVEN)
 
         # Store attribution result
         await self._store_attribution_result(attribution_result)
@@ -346,9 +343,7 @@ class RevenueAttributionService:
         return conversion.conversion_id
 
     async def calculate_attribution(
-        self,
-        conversion: Conversion,
-        model: AttributionModel = AttributionModel.DATA_DRIVEN
+        self, conversion: Conversion, model: AttributionModel = AttributionModel.DATA_DRIVEN
     ) -> AttributionResult:
         """Calculate revenue attribution for a conversion"""
 
@@ -359,19 +354,14 @@ class RevenueAttributionService:
         attribution_window = timedelta(days=90)
         cutoff_date = conversion.conversion_date - attribution_window
 
-        relevant_touchpoints = [
-            tp for tp in touchpoints
-            if tp.timestamp >= cutoff_date
-        ]
+        relevant_touchpoints = [tp for tp in touchpoints if tp.timestamp >= cutoff_date]
 
         if not relevant_touchpoints:
             logger.warning(f"No touchpoints found for lead {conversion.lead_id} in attribution window")
             return self._create_empty_attribution(conversion, model)
 
         # Calculate attribution weights based on model
-        touchpoint_attributions = await self._calculate_touchpoint_weights(
-            relevant_touchpoints, model
-        )
+        touchpoint_attributions = await self._calculate_touchpoint_weights(relevant_touchpoints, model)
 
         # Calculate channel and AI system attributions
         channel_attributions = self._calculate_channel_attributions(
@@ -383,9 +373,7 @@ class RevenueAttributionService:
         )
 
         # Calculate confidence and validation metrics
-        attribution_confidence = self._calculate_attribution_confidence(
-            relevant_touchpoints, touchpoint_attributions
-        )
+        attribution_confidence = self._calculate_attribution_confidence(relevant_touchpoints, touchpoint_attributions)
 
         return AttributionResult(
             lead_id=conversion.lead_id,
@@ -396,7 +384,7 @@ class RevenueAttributionService:
             channel_attributions=channel_attributions,
             ai_system_attributions=ai_system_attributions,
             attribution_confidence=attribution_confidence,
-            calculated_at=datetime.utcnow()
+            calculated_at=datetime.utcnow(),
         )
 
     async def _get_lead_touchpoints(self, lead_id: str) -> List[Touchpoint]:
@@ -407,9 +395,7 @@ class RevenueAttributionService:
         cached_touchpoints = await self.cache.get(cache_key)
 
         if cached_touchpoints:
-            return [
-                Touchpoint(**tp_data) for tp_data in cached_touchpoints
-            ]
+            return [Touchpoint(**tp_data) for tp_data in cached_touchpoints]
 
         # Get from database
         if not self.db:
@@ -419,36 +405,34 @@ class RevenueAttributionService:
 
         touchpoints = []
         for comm in comm_logs:
-            if comm.get('direction') == 'system_touchpoint' and comm.get('metadata'):
-                metadata = comm['metadata']
+            if comm.get("direction") == "system_touchpoint" and comm.get("metadata"):
+                metadata = comm["metadata"]
                 if isinstance(metadata, str):
                     metadata = json.loads(metadata)
 
-                if 'touchpoint_type' in metadata:
+                if "touchpoint_type" in metadata:
                     touchpoint = Touchpoint(
-                        touchpoint_id=metadata.get('touchpoint_id', f"tp_{comm['id']}"),
+                        touchpoint_id=metadata.get("touchpoint_id", f"tp_{comm['id']}"),
                         lead_id=lead_id,
-                        touchpoint_type=TouchpointType(metadata['touchpoint_type']),
-                        timestamp=comm['sent_at'],
-                        channel=comm['channel'],
-                        source=metadata.get('source', 'unknown'),
-                        ai_system=metadata.get('ai_system'),
-                        ai_confidence=metadata.get('ai_confidence'),
-                        ai_features_used=metadata.get('ai_features_used', []),
-                        page_url=metadata.get('page_url'),
-                        referrer=metadata.get('referrer'),
-                        device_type=metadata.get('device_type'),
-                        duration_seconds=metadata.get('duration_seconds'),
-                        interactions=metadata.get('interactions')
+                        touchpoint_type=TouchpointType(metadata["touchpoint_type"]),
+                        timestamp=comm["sent_at"],
+                        channel=comm["channel"],
+                        source=metadata.get("source", "unknown"),
+                        ai_system=metadata.get("ai_system"),
+                        ai_confidence=metadata.get("ai_confidence"),
+                        ai_features_used=metadata.get("ai_features_used", []),
+                        page_url=metadata.get("page_url"),
+                        referrer=metadata.get("referrer"),
+                        device_type=metadata.get("device_type"),
+                        duration_seconds=metadata.get("duration_seconds"),
+                        interactions=metadata.get("interactions"),
                     )
                     touchpoints.append(touchpoint)
 
         return touchpoints
 
     async def _calculate_touchpoint_weights(
-        self,
-        touchpoints: List[Touchpoint],
-        model: AttributionModel
+        self, touchpoints: List[Touchpoint], model: AttributionModel
     ) -> Dict[str, float]:
         """Calculate attribution weights for touchpoints"""
 
@@ -485,7 +469,7 @@ class RevenueAttributionService:
             # Calculate weights with time decay
             for tp in touchpoints:
                 days_ago = (latest_timestamp - tp.timestamp).days
-                weight = (decay_rate ** (days_ago / half_life_days))
+                weight = decay_rate ** (days_ago / half_life_days)
                 weights[tp.touchpoint_id] = weight
                 total_weight += weight
 
@@ -522,10 +506,7 @@ class RevenueAttributionService:
 
         return weights
 
-    async def _calculate_data_driven_attribution(
-        self,
-        touchpoints: List[Touchpoint]
-    ) -> Dict[str, float]:
+    async def _calculate_data_driven_attribution(self, touchpoints: List[Touchpoint]) -> Dict[str, float]:
         """Calculate data-driven attribution using ML insights"""
 
         # For now, use a hybrid approach based on AI system confidence
@@ -544,7 +525,7 @@ class RevenueAttributionService:
 
                 # Confidence bonus
                 if tp.ai_confidence:
-                    score *= (1 + tp.ai_confidence)  # Up to 2x more for high confidence
+                    score *= 1 + tp.ai_confidence  # Up to 2x more for high confidence
 
             # Engagement bonus
             if tp.duration_seconds and tp.duration_seconds > 30:
@@ -566,10 +547,7 @@ class RevenueAttributionService:
             return {tp.touchpoint_id: 1.0 / len(touchpoints) for tp in touchpoints}
 
     def _calculate_channel_attributions(
-        self,
-        touchpoints: List[Touchpoint],
-        touchpoint_attributions: Dict[str, float],
-        total_revenue: Decimal
+        self, touchpoints: List[Touchpoint], touchpoint_attributions: Dict[str, float], total_revenue: Decimal
     ) -> Dict[str, Decimal]:
         """Calculate revenue attribution by channel"""
 
@@ -581,16 +559,10 @@ class RevenueAttributionService:
                 channel_weights[tp.channel] = 0
             channel_weights[tp.channel] += weight
 
-        return {
-            channel: total_revenue * Decimal(str(weight))
-            for channel, weight in channel_weights.items()
-        }
+        return {channel: total_revenue * Decimal(str(weight)) for channel, weight in channel_weights.items()}
 
     def _calculate_ai_system_attributions(
-        self,
-        touchpoints: List[Touchpoint],
-        touchpoint_attributions: Dict[str, float],
-        total_revenue: Decimal
+        self, touchpoints: List[Touchpoint], touchpoint_attributions: Dict[str, float], total_revenue: Decimal
     ) -> Dict[str, Decimal]:
         """Calculate revenue attribution by AI system"""
 
@@ -603,15 +575,10 @@ class RevenueAttributionService:
                     ai_system_weights[tp.ai_system] = 0
                 ai_system_weights[tp.ai_system] += weight
 
-        return {
-            ai_system: total_revenue * Decimal(str(weight))
-            for ai_system, weight in ai_system_weights.items()
-        }
+        return {ai_system: total_revenue * Decimal(str(weight)) for ai_system, weight in ai_system_weights.items()}
 
     def _calculate_attribution_confidence(
-        self,
-        touchpoints: List[Touchpoint],
-        touchpoint_attributions: Dict[str, float]
+        self, touchpoints: List[Touchpoint], touchpoint_attributions: Dict[str, float]
     ) -> float:
         """Calculate confidence score for attribution"""
 
@@ -638,10 +605,7 @@ class RevenueAttributionService:
                 confidence_factors.append(avg_ai_confidence * 0.2)
 
         # Engagement depth
-        engaged_touchpoints = [
-            tp for tp in touchpoints
-            if tp.duration_seconds and tp.duration_seconds > 30
-        ]
+        engaged_touchpoints = [tp for tp in touchpoints if tp.duration_seconds and tp.duration_seconds > 30]
         if engaged_touchpoints:
             confidence_factors.append(0.2)
 
@@ -650,11 +614,7 @@ class RevenueAttributionService:
 
         return min(1.0, sum(confidence_factors))
 
-    def _create_empty_attribution(
-        self,
-        conversion: Conversion,
-        model: AttributionModel
-    ) -> AttributionResult:
+    def _create_empty_attribution(self, conversion: Conversion, model: AttributionModel) -> AttributionResult:
         """Create empty attribution result for conversions without touchpoints"""
 
         return AttributionResult(
@@ -666,7 +626,7 @@ class RevenueAttributionService:
             channel_attributions={},
             ai_system_attributions={},
             attribution_confidence=0.0,
-            calculated_at=datetime.utcnow()
+            calculated_at=datetime.utcnow(),
         )
 
     # ============================================================================
@@ -674,9 +634,7 @@ class RevenueAttributionService:
     # ============================================================================
 
     async def validate_arr_claims(
-        self,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None
+        self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None
     ) -> Dict[str, Any]:
         """Validate the $4.91M ARR claims with actual attribution data"""
 
@@ -694,7 +652,7 @@ class RevenueAttributionService:
                 "message": "No attribution data available for validation",
                 "claimed_arr": 4910000,
                 "validated_arr": 0,
-                "confidence": 0.0
+                "confidence": 0.0,
             }
 
         # Calculate actual AI system attributions
@@ -737,35 +695,43 @@ class RevenueAttributionService:
                 "target_arr": float(target),
                 "validated_arr": float(actual),
                 "achievement_rate": float(achievement_rate),
-                "status": "ACHIEVED" if achievement_rate >= 90 else "UNDERPERFORMED" if achievement_rate >= 50 else "FAILED"
+                "status": "ACHIEVED"
+                if achievement_rate >= 90
+                else "UNDERPERFORMED"
+                if achievement_rate >= 50
+                else "FAILED",
             }
 
         return {
-            "validation_status": "VALIDATED" if validation_confidence >= 0.8 else "PARTIAL" if validation_confidence >= 0.5 else "FAILED",
+            "validation_status": "VALIDATED"
+            if validation_confidence >= 0.8
+            else "PARTIAL"
+            if validation_confidence >= 0.5
+            else "FAILED",
             "validation_confidence": float(validation_confidence),
             "validation_date": datetime.utcnow().isoformat(),
-
             # Financial Validation
             "claimed_arr": float(claimed_total),
             "validated_arr": float(total_validated_revenue),
             "variance": float(total_validated_revenue - claimed_total),
-            "variance_percentage": float(((total_validated_revenue - claimed_total) / claimed_total) * 100) if claimed_total > 0 else 0,
-
+            "variance_percentage": float(((total_validated_revenue - claimed_total) / claimed_total) * 100)
+            if claimed_total > 0
+            else 0,
             # Data Quality
             "total_conversions": total_conversions,
             "high_confidence_conversions": high_confidence_attributions,
-            "data_quality_score": (high_confidence_attributions / total_conversions) * 100 if total_conversions > 0 else 0,
-
+            "data_quality_score": (high_confidence_attributions / total_conversions) * 100
+            if total_conversions > 0
+            else 0,
             # System Breakdown
             "ai_system_validations": system_validations,
             "ai_system_totals": {k: float(v) for k, v in ai_system_totals.items()},
-
             # Period
             "analysis_period": {
                 "start_date": start_date.isoformat(),
                 "end_date": end_date.isoformat(),
-                "days": period_days
-            }
+                "days": period_days,
+            },
         }
 
     async def get_revenue_dashboard_data(self) -> Dict[str, Any]:
@@ -788,7 +754,7 @@ class RevenueAttributionService:
             "weekly_trends": weekly_revenue,
             "conversion_funnel": conversion_funnel,
             "top_performing_ai_systems": top_performing_ai,
-            "dashboard_generated": datetime.utcnow().isoformat()
+            "dashboard_generated": datetime.utcnow().isoformat(),
         }
 
     # ============================================================================
@@ -810,16 +776,19 @@ class RevenueAttributionService:
             "commission_amount": result.conversion.commission,
             "touchpoint_attributions": result.touchpoint_attributions,
             "journey_length_days": (
-                result.conversion.conversion_date -
-                min(tp.timestamp for tp in result.touchpoints)
-            ).days if result.touchpoints else 0,
+                result.conversion.conversion_date - min(tp.timestamp for tp in result.touchpoints)
+            ).days
+            if result.touchpoints
+            else 0,
             "total_touchpoints": len(result.touchpoints),
             "first_touchpoint_date": min(tp.timestamp for tp in result.touchpoints) if result.touchpoints else None,
             "conversion_touchpoint_date": result.conversion.conversion_date,
             "channel_mix": {k: float(v) for k, v in result.channel_attributions.items()},
-            "ai_system_attribution": sum(result.ai_system_attributions.values()) if result.ai_system_attributions else Decimal("0"),
+            "ai_system_attribution": sum(result.ai_system_attributions.values())
+            if result.ai_system_attributions
+            else Decimal("0"),
             "analysis_date": result.calculated_at,
-            "validated": True  # Auto-validate for now
+            "validated": True,  # Auto-validate for now
         }
 
         # This would require extending the database schema or creating new tables
@@ -833,19 +802,15 @@ class RevenueAttributionService:
             "metadata": {
                 "attribution_result": attribution_data,
                 "conversion_id": result.conversion.conversion_id,
-                "result_version": result.calculation_version
-            }
+                "result_version": result.calculation_version,
+            },
         }
 
         await self.db.log_communication(comm_data)
 
         logger.info(f"Stored attribution result for conversion {result.conversion.conversion_id}")
 
-    async def _get_attribution_results(
-        self,
-        start_date: datetime,
-        end_date: datetime
-    ) -> List[AttributionResult]:
+    async def _get_attribution_results(self, start_date: datetime, end_date: datetime) -> List[AttributionResult]:
         """Get attribution results from storage"""
         if not self.db:
             await self.initialize()
@@ -907,14 +872,14 @@ class RevenueAttributionService:
                     "total_revenue": Decimal("0"),
                     "conversion_count": 0,
                     "ai_attributed_revenue": Decimal("0"),
-                    "avg_confidence": 0
+                    "avg_confidence": 0,
                 }
 
             weekly_data[week_start]["total_revenue"] += result.conversion.revenue
             weekly_data[week_start]["conversion_count"] += 1
-            weekly_data[week_start]["ai_attributed_revenue"] += sum(
-                result.ai_system_attributions.values()
-            ) if result.ai_system_attributions else Decimal("0")
+            weekly_data[week_start]["ai_attributed_revenue"] += (
+                sum(result.ai_system_attributions.values()) if result.ai_system_attributions else Decimal("0")
+            )
             weekly_data[week_start]["avg_confidence"] += result.attribution_confidence
 
         # Calculate averages and convert to list
@@ -947,8 +912,8 @@ class RevenueAttributionService:
                 "qualified_to_sql": 34.3,
                 "sql_to_opportunity": 66.7,
                 "opportunity_to_close": 30.0,
-                "overall": 2.4
-            }
+                "overall": 2.4,
+            },
         }
 
     def _analyze_ai_system_performance(self, results: List[AttributionResult]) -> List[Dict[str, Any]]:
@@ -964,7 +929,7 @@ class RevenueAttributionService:
                         "total_attributed_revenue": Decimal("0"),
                         "conversion_count": 0,
                         "avg_confidence": 0,
-                        "avg_revenue_per_conversion": 0
+                        "avg_revenue_per_conversion": 0,
                     }
 
                 system_performance[ai_system]["total_attributed_revenue"] += revenue
@@ -986,11 +951,13 @@ class RevenueAttributionService:
         # Sort by total attributed revenue
         return sorted(performance_list, key=lambda x: x["total_attributed_revenue"], reverse=True)
 
+
 # ============================================================================
 # SERVICE FACTORY AND HELPERS
 # ============================================================================
 
 _attribution_service: Optional[RevenueAttributionService] = None
+
 
 async def get_attribution_service() -> RevenueAttributionService:
     """Get global attribution service instance"""
@@ -1002,13 +969,10 @@ async def get_attribution_service() -> RevenueAttributionService:
 
     return _attribution_service
 
+
 # Convenience functions for common operations
 async def track_ai_touchpoint(
-    lead_id: str,
-    ai_system: str,
-    touchpoint_type: TouchpointType,
-    confidence: float = 1.0,
-    **metadata
+    lead_id: str, ai_system: str, touchpoint_type: TouchpointType, confidence: float = 1.0, **metadata
 ) -> str:
     """Convenience function to track AI system touchpoint"""
     service = await get_attribution_service()
@@ -1019,33 +983,31 @@ async def track_ai_touchpoint(
         source=ai_system,
         ai_system=ai_system,
         ai_confidence=confidence,
-        **metadata
+        **metadata,
     )
 
+
 async def track_conversion_with_attribution(
-    lead_id: str,
-    conversion_type: ConversionType,
-    revenue: Decimal,
-    commission: Decimal,
-    **metadata
+    lead_id: str, conversion_type: ConversionType, revenue: Decimal, commission: Decimal, **metadata
 ) -> Tuple[str, AttributionResult]:
     """Convenience function to track conversion with immediate attribution"""
     service = await get_attribution_service()
-    conversion_id = await service.track_conversion(
-        lead_id, conversion_type, revenue, commission, **metadata
-    )
+    conversion_id = await service.track_conversion(lead_id, conversion_type, revenue, commission, **metadata)
 
     # Get the attribution result
     # In a real implementation, you'd retrieve this from storage
     # For now, return a placeholder
     return conversion_id, None
 
+
 async def validate_revenue_claims() -> Dict[str, Any]:
     """Convenience function to validate all ARR claims"""
     service = await get_attribution_service()
     return await service.validate_arr_claims()
 
+
 if __name__ == "__main__":
+
     async def test_attribution_service():
         """Test attribution service functionality"""
         service = RevenueAttributionService()
@@ -1061,7 +1023,7 @@ if __name__ == "__main__":
             source="neural_property_matcher",
             ai_system="neural_property_matching",
             ai_confidence=0.89,
-            ai_features_used=["price_matching", "location_preference", "feature_similarity"]
+            ai_features_used=["price_matching", "location_preference", "feature_similarity"],
         )
         print(f"Tracked touchpoint: {touchpoint_id}")
 
@@ -1071,7 +1033,7 @@ if __name__ == "__main__":
             conversion_type=ConversionType.PROPERTY_PURCHASE,
             revenue=Decimal("450000"),
             commission=Decimal("13500"),
-            property_id="prop_789"
+            property_id="prop_789",
         )
         print(f"Tracked conversion: {conversion_id}")
 

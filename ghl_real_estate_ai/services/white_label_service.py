@@ -5,13 +5,13 @@ Provides comprehensive white-labeling capabilities for high-ticket consulting en
 Enables custom branding, domain management, and client-specific platform deployments.
 """
 
-import json
 import asyncio
+import json
+from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Dict, List, Any, Optional, Union
-from pathlib import Path
-from dataclasses import dataclass, asdict
 from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -21,9 +21,10 @@ logger = get_logger(__name__)
 
 class BrandingTier(Enum):
     """White-label branding tiers for consulting packages."""
-    BASIC = "basic"           # $25K package - Basic color/logo customization
+
+    BASIC = "basic"  # $25K package - Basic color/logo customization
     PROFESSIONAL = "professional"  # $50K package - Full brand integration
-    ENTERPRISE = "enterprise"      # $75K+ package - Complete custom platform
+    ENTERPRISE = "enterprise"  # $75K+ package - Complete custom platform
 
 
 @dataclass
@@ -140,17 +141,16 @@ class WhiteLabelService:
                 actions=[
                     {"type": "trigger_agent_swarm", "agents": ["demographic", "behavioral", "predictive"]},
                     {"type": "generate_strategic_report", "format": "executive_summary"},
-                    {"type": "update_crm", "fields": ["lead_score", "conversion_probability"]}
+                    {"type": "update_crm", "fields": ["lead_score", "conversion_probability"]},
                 ],
                 conditions=[
                     {"field": "lead_source", "operator": "not_empty"},
-                    {"field": "contact_data", "operator": "has_minimum_fields"}
+                    {"field": "contact_data", "operator": "has_minimum_fields"},
                 ],
                 customizable_fields=["scoring_weights", "report_format", "notification_channels"],
                 consulting_tier=BrandingTier.PROFESSIONAL,
-                estimated_value="85+ hours/month automation savings"
+                estimated_value="85+ hours/month automation savings",
             ),
-
             WorkflowTemplate(
                 template_id="predictive_churn_prevention",
                 name="Predictive Churn Prevention Engine",
@@ -161,17 +161,16 @@ class WhiteLabelService:
                     {"type": "analyze_engagement_patterns", "lookback_days": 30},
                     {"type": "calculate_churn_probability", "model": "ensemble_ml"},
                     {"type": "trigger_retention_campaign", "personalization": "claude_ai"},
-                    {"type": "schedule_followup", "cadence": "adaptive"}
+                    {"type": "schedule_followup", "cadence": "adaptive"},
                 ],
                 conditions=[
                     {"field": "churn_score", "operator": "greater_than", "value": 0.7},
-                    {"field": "customer_value", "operator": "greater_than", "value": "$1000"}
+                    {"field": "customer_value", "operator": "greater_than", "value": "$1000"},
                 ],
                 customizable_fields=["churn_threshold", "campaign_templates", "retention_strategies"],
                 consulting_tier=BrandingTier.ENTERPRISE,
-                estimated_value="40% churn reduction, $500K+ annual revenue retention"
+                estimated_value="40% churn reduction, $500K+ annual revenue retention",
             ),
-
             WorkflowTemplate(
                 template_id="executive_intelligence_reporting",
                 name="Executive Intelligence Dashboard",
@@ -182,15 +181,13 @@ class WhiteLabelService:
                     {"type": "aggregate_performance_metrics", "timeframe": "monthly"},
                     {"type": "generate_strategic_insights", "ai_engine": "claude_consultant"},
                     {"type": "calculate_roi_attribution", "method": "multi_touch"},
-                    {"type": "create_executive_presentation", "format": "mobile_optimized"}
+                    {"type": "create_executive_presentation", "format": "mobile_optimized"},
                 ],
-                conditions=[
-                    {"field": "data_quality", "operator": "above_threshold", "value": 0.9}
-                ],
+                conditions=[{"field": "data_quality", "operator": "above_threshold", "value": 0.9}],
                 customizable_fields=["kpi_selection", "reporting_frequency", "executive_preferences"],
                 consulting_tier=BrandingTier.ENTERPRISE,
-                estimated_value="C-suite decision making acceleration, strategic alignment"
-            )
+                estimated_value="C-suite decision making acceleration, strategic alignment",
+            ),
         ]
 
         # Save templates
@@ -209,9 +206,8 @@ class WhiteLabelService:
                 required_credentials=["client_id", "client_secret", "instance_url", "refresh_token"],
                 supported_features=["custom_fields", "lead_routing", "opportunity_sync", "activity_tracking"],
                 consulting_tier=BrandingTier.ENTERPRISE,
-                implementation_complexity="complex"
+                implementation_complexity="complex",
             ),
-
             IntegrationMarketplace(
                 integration_id="hubspot_premium",
                 name="HubSpot Premium Integration",
@@ -220,11 +216,15 @@ class WhiteLabelService:
                 setup_instructions="Private app setup with custom scopes and property management",
                 api_endpoints=["/api/hubspot/contacts", "/api/hubspot/workflows", "/api/hubspot/analytics"],
                 required_credentials=["access_token", "portal_id"],
-                supported_features=["workflow_automation", "custom_properties", "advanced_analytics", "email_sequences"],
+                supported_features=[
+                    "workflow_automation",
+                    "custom_properties",
+                    "advanced_analytics",
+                    "email_sequences",
+                ],
                 consulting_tier=BrandingTier.PROFESSIONAL,
-                implementation_complexity="moderate"
+                implementation_complexity="moderate",
             ),
-
             IntegrationMarketplace(
                 integration_id="microsoft_dynamics",
                 name="Microsoft Dynamics 365 Enterprise",
@@ -235,8 +235,8 @@ class WhiteLabelService:
                 required_credentials=["tenant_id", "client_id", "client_secret", "dynamics_url"],
                 supported_features=["entity_management", "power_automate", "power_bi_integration", "custom_workflows"],
                 consulting_tier=BrandingTier.ENTERPRISE,
-                implementation_complexity="complex"
-            )
+                implementation_complexity="complex",
+            ),
         ]
 
         # Save integrations
@@ -267,10 +267,10 @@ class WhiteLabelService:
                 "tenant_id": tenant_id,
                 "config": config_dict,
                 "created_at": datetime.utcnow().isoformat(),
-                "last_updated": datetime.utcnow().isoformat()
+                "last_updated": datetime.utcnow().isoformat(),
             }
 
-            with open(brand_file, 'w') as f:
+            with open(brand_file, "w") as f:
                 json.dump(brand_data, f, indent=2)
 
             # Generate CSS variables and custom theme
@@ -291,7 +291,7 @@ class WhiteLabelService:
             return None
 
         try:
-            with open(brand_file, 'r') as f:
+            with open(brand_file, "r") as f:
                 brand_data = json.load(f)
 
             config_dict = brand_data["config"]
@@ -314,7 +314,7 @@ class WhiteLabelService:
 
         try:
             # Load existing config
-            with open(brand_file, 'r') as f:
+            with open(brand_file, "r") as f:
                 brand_data = json.load(f)
 
             # Apply updates
@@ -325,7 +325,7 @@ class WhiteLabelService:
             brand_data["last_updated"] = datetime.utcnow().isoformat()
 
             # Save updated config
-            with open(brand_file, 'w') as f:
+            with open(brand_file, "w") as f:
                 json.dump(brand_data, f, indent=2)
 
             # Regenerate theme if visual changes
@@ -347,7 +347,7 @@ class WhiteLabelService:
         workflows = []
         for template_file in self.templates_dir.glob("workflow_*.json"):
             try:
-                with open(template_file, 'r') as f:
+                with open(template_file, "r") as f:
                     template_data = json.load(f)
 
                 # Convert consulting_tier string back to enum
@@ -360,7 +360,7 @@ class WhiteLabelService:
                 tier_hierarchy = {
                     BrandingTier.BASIC: [BrandingTier.BASIC],
                     BrandingTier.PROFESSIONAL: [BrandingTier.BASIC, BrandingTier.PROFESSIONAL],
-                    BrandingTier.ENTERPRISE: [BrandingTier.BASIC, BrandingTier.PROFESSIONAL, BrandingTier.ENTERPRISE]
+                    BrandingTier.ENTERPRISE: [BrandingTier.BASIC, BrandingTier.PROFESSIONAL, BrandingTier.ENTERPRISE],
                 }
 
                 if template.consulting_tier in tier_hierarchy[consulting_tier]:
@@ -377,7 +377,7 @@ class WhiteLabelService:
         integrations = []
         for integration_file in self.integrations_dir.glob("integration_*.json"):
             try:
-                with open(integration_file, 'r') as f:
+                with open(integration_file, "r") as f:
                     integration_data = json.load(f)
 
                 # Convert consulting_tier string back to enum
@@ -390,7 +390,7 @@ class WhiteLabelService:
                 tier_hierarchy = {
                     BrandingTier.BASIC: [BrandingTier.BASIC],
                     BrandingTier.PROFESSIONAL: [BrandingTier.BASIC, BrandingTier.PROFESSIONAL],
-                    BrandingTier.ENTERPRISE: [BrandingTier.BASIC, BrandingTier.PROFESSIONAL, BrandingTier.ENTERPRISE]
+                    BrandingTier.ENTERPRISE: [BrandingTier.BASIC, BrandingTier.PROFESSIONAL, BrandingTier.ENTERPRISE],
                 }
 
                 if integration.consulting_tier in tier_hierarchy[consulting_tier]:
@@ -406,11 +406,9 @@ class WhiteLabelService:
 
         try:
             # Update brand config with domain
-            await self.update_brand_config(brand_id, {
-                "custom_domain": domain,
-                "ssl_enabled": True,
-                "ssl_config": ssl_config
-            })
+            await self.update_brand_config(
+                brand_id, {"custom_domain": domain, "ssl_enabled": True, "ssl_config": ssl_config}
+            )
 
             # In a production system, this would:
             # 1. Configure DNS settings
@@ -496,7 +494,7 @@ class WhiteLabelService:
 }}
 
 /* Custom CSS overrides */
-{config.custom_css or ''}
+{config.custom_css or ""}
 """
 
         # Save theme file
@@ -504,7 +502,7 @@ class WhiteLabelService:
         theme_dir.mkdir(exist_ok=True)
         theme_file = theme_dir / f"{brand_id}_theme.css"
 
-        with open(theme_file, 'w') as f:
+        with open(theme_file, "w") as f:
             f.write(css_theme)
 
         logger.info(f"Generated custom theme for brand {brand_id}")
@@ -516,7 +514,7 @@ class WhiteLabelService:
         # Convert enum values to their string values for JSON serialization
         if "consulting_tier" in template_dict and isinstance(template_dict["consulting_tier"], BrandingTier):
             template_dict["consulting_tier"] = template_dict["consulting_tier"].value
-        with open(template_file, 'w') as f:
+        with open(template_file, "w") as f:
             json.dump(template_dict, f, indent=2, default=self._enum_serializer)
 
     def _save_integration_config(self, integration: IntegrationMarketplace):
@@ -526,7 +524,7 @@ class WhiteLabelService:
         # Convert enum values to their string values for JSON serialization
         if "consulting_tier" in integration_dict and isinstance(integration_dict["consulting_tier"], BrandingTier):
             integration_dict["consulting_tier"] = integration_dict["consulting_tier"].value
-        with open(integration_file, 'w') as f:
+        with open(integration_file, "w") as f:
             json.dump(integration_dict, f, indent=2, default=self._enum_serializer)
 
     @staticmethod
@@ -547,37 +545,29 @@ class WhiteLabelService:
             "brand_id": brand_id,
             "tenant_id": tenant_id,
             "deployment_type": "white_label",
-
             # Branding
             "branding": asdict(brand_config),
-
             # Custom Domain
             "domain_config": {
                 "custom_domain": brand_config.custom_domain,
                 "ssl_enabled": brand_config.ssl_enabled,
-                "cdn_enabled": brand_config.tier != BrandingTier.BASIC
+                "cdn_enabled": brand_config.tier != BrandingTier.BASIC,
             },
-
             # Feature Flags
             "features": brand_config.feature_flags,
-
             # Available Workflows
             "workflows": [asdict(w) for w in await self.get_available_workflows(brand_config.tier)],
-
             # Integration Marketplace
             "integrations": [asdict(i) for i in await self.get_integration_marketplace(brand_config.tier)],
-
             # Theme Assets
             "theme_config": {
                 "css_file": f"data/white_label/themes/{brand_id}_theme.css",
                 "logo_url": brand_config.logo_url,
-                "favicon_url": brand_config.favicon_url
+                "favicon_url": brand_config.favicon_url,
             },
-
             # Consulting Tier Capabilities
             "tier_capabilities": self._get_tier_capabilities(brand_config.tier),
-
-            "generated_at": datetime.utcnow().isoformat()
+            "generated_at": datetime.utcnow().isoformat(),
         }
 
         return deployment_config
@@ -589,32 +579,36 @@ class WhiteLabelService:
             "custom_branding": True,
             "basic_analytics": True,
             "standard_integrations": True,
-            "email_support": True
+            "email_support": True,
         }
 
         if tier == BrandingTier.PROFESSIONAL:
-            base_capabilities.update({
-                "advanced_analytics": True,
-                "workflow_automation": True,
-                "priority_support": True,
-                "custom_domains": True,
-                "api_access": True
-            })
+            base_capabilities.update(
+                {
+                    "advanced_analytics": True,
+                    "workflow_automation": True,
+                    "priority_support": True,
+                    "custom_domains": True,
+                    "api_access": True,
+                }
+            )
 
         elif tier == BrandingTier.ENTERPRISE:
-            base_capabilities.update({
-                "advanced_analytics": True,
-                "workflow_automation": True,
-                "priority_support": True,
-                "custom_domains": True,
-                "api_access": True,
-                "dedicated_support": True,
-                "custom_integrations": True,
-                "white_label_mobile_app": True,
-                "enterprise_sso": True,
-                "audit_logs": True,
-                "data_residency": True
-            })
+            base_capabilities.update(
+                {
+                    "advanced_analytics": True,
+                    "workflow_automation": True,
+                    "priority_support": True,
+                    "custom_domains": True,
+                    "api_access": True,
+                    "dedicated_support": True,
+                    "custom_integrations": True,
+                    "white_label_mobile_app": True,
+                    "enterprise_sso": True,
+                    "audit_logs": True,
+                    "data_residency": True,
+                }
+            )
 
         return base_capabilities
 

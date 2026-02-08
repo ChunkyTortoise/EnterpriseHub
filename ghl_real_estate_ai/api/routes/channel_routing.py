@@ -7,13 +7,14 @@ cross-channel analytics, and delivery tracking.
 
 import logging
 from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.unified_channel_router import (
     get_channel_router,
 )
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -26,6 +27,7 @@ router = APIRouter(
 # ---------------------------------------------------------------------------
 # Request / Response Models
 # ---------------------------------------------------------------------------
+
 
 class SendMessageRequest(BaseModel):
     contact_id: str = Field(..., description="Contact identifier")
@@ -63,6 +65,7 @@ class BatchSendRequest(BaseModel):
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
 
 @router.post("/send", response_model=DeliveryResponse)
 async def send_message(request: SendMessageRequest):
@@ -107,13 +110,15 @@ async def send_messages_batch(request: BatchSendRequest):
                 metadata=msg.metadata,
                 subject=msg.subject,
             )
-            results.append({
-                "contact_id": result.contact_id,
-                "message_id": result.message_id,
-                "channel_used": result.channel_used.value,
-                "delivery_status": result.delivery_status.value,
-                "compliance_status": result.compliance_status,
-            })
+            results.append(
+                {
+                    "contact_id": result.contact_id,
+                    "message_id": result.message_id,
+                    "channel_used": result.channel_used.value,
+                    "delivery_status": result.delivery_status.value,
+                    "compliance_status": result.compliance_status,
+                }
+            )
         delivered = sum(1 for r in results if r["delivery_status"] in ("sent", "delivered", "fallback"))
         return {"results": results, "total": len(results), "delivered": delivered}
     except Exception as e:

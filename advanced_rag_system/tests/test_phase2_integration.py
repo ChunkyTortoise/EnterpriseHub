@@ -4,19 +4,19 @@ This module provides end-to-end tests for Phase 2 deliverables including
 BM25 sparse retrieval, hybrid search with RRF fusion, and performance validation.
 """
 
-import pytest
 import asyncio
 import time
-from uuid import uuid4
 from typing import List
+from uuid import uuid4
 
+import pytest
 from src.core.types import DocumentChunk, Metadata
 from src.retrieval import (
-    BM25Index,
     BM25Config,
-    HybridSearcher,
-    HybridSearchConfig,
+    BM25Index,
     FusionConfig,
+    HybridSearchConfig,
+    HybridSearcher,
     ReciprocalRankFusion,
     WeightedScoreFusion,
 )
@@ -34,49 +34,49 @@ class TestPhase2Integration:
                 document_id=doc_id,
                 content="Python is a high-level programming language widely used for web development, data science, artificial intelligence, and scientific computing",
                 index=0,
-                metadata=Metadata(title="Python Programming", tags=["programming", "python"])
+                metadata=Metadata(title="Python Programming", tags=["programming", "python"]),
             ),
             DocumentChunk(
                 document_id=doc_id,
                 content="Machine learning algorithms like neural networks, decision trees, and support vector machines enable computers to learn from data",
                 index=1,
-                metadata=Metadata(title="Machine Learning Basics", tags=["ml", "algorithms"])
+                metadata=Metadata(title="Machine Learning Basics", tags=["ml", "algorithms"]),
             ),
             DocumentChunk(
                 document_id=doc_id,
                 content="Data preprocessing involves cleaning, transforming, and preparing raw data for analysis using tools like pandas and numpy",
                 index=2,
-                metadata=Metadata(title="Data Preprocessing", tags=["data", "preprocessing"])
+                metadata=Metadata(title="Data Preprocessing", tags=["data", "preprocessing"]),
             ),
             DocumentChunk(
                 document_id=doc_id,
                 content="Natural language processing enables computers to understand, interpret, and generate human language using techniques like tokenization and embeddings",
                 index=3,
-                metadata=Metadata(title="NLP Fundamentals", tags=["nlp", "language"])
+                metadata=Metadata(title="NLP Fundamentals", tags=["nlp", "language"]),
             ),
             DocumentChunk(
                 document_id=doc_id,
                 content="Deep learning frameworks like TensorFlow and PyTorch provide tools for building and training complex neural network architectures",
                 index=4,
-                metadata=Metadata(title="Deep Learning Frameworks", tags=["deep-learning", "frameworks"])
+                metadata=Metadata(title="Deep Learning Frameworks", tags=["deep-learning", "frameworks"]),
             ),
             DocumentChunk(
                 document_id=doc_id,
                 content="Statistical analysis and data visualization help researchers discover patterns and insights in large datasets",
                 index=5,
-                metadata=Metadata(title="Statistical Analysis", tags=["statistics", "visualization"])
+                metadata=Metadata(title="Statistical Analysis", tags=["statistics", "visualization"]),
             ),
             DocumentChunk(
                 document_id=doc_id,
                 content="Software engineering practices include version control, testing, documentation, and continuous integration for maintainable code",
                 index=6,
-                metadata=Metadata(title="Software Engineering", tags=["engineering", "practices"])
+                metadata=Metadata(title="Software Engineering", tags=["engineering", "practices"]),
             ),
             DocumentChunk(
                 document_id=doc_id,
                 content="Database systems store and manage structured data efficiently using SQL queries and indexing for fast retrieval",
                 index=7,
-                metadata=Metadata(title="Database Systems", tags=["database", "sql"])
+                metadata=Metadata(title="Database Systems", tags=["database", "sql"]),
             ),
         ]
 
@@ -105,9 +105,9 @@ class TestPhase2Integration:
             # Validate results structure
             assert isinstance(results, list)
             for result in results:
-                assert hasattr(result, 'chunk')
-                assert hasattr(result, 'score')
-                assert hasattr(result, 'rank')
+                assert hasattr(result, "chunk")
+                assert hasattr(result, "score")
+                assert hasattr(result, "rank")
                 assert 0.0 <= result.score <= 1.0
                 assert result.rank >= 1
 
@@ -122,7 +122,7 @@ class TestPhase2Integration:
             enable_dense=True,  # Uses stub for now
             enable_sparse=True,
             parallel_execution=True,
-            top_k_final=5
+            top_k_final=5,
         )
 
         fusion_config = FusionConfig(rrf_k=60.0)
@@ -137,7 +137,7 @@ class TestPhase2Integration:
         assert isinstance(results, list)
         # Results should come from sparse search since dense is stubbed
         if results:
-            assert all(hasattr(result, 'explanation') for result in results)
+            assert all(hasattr(result, "explanation") for result in results)
             # Check that results are properly ranked
             scores = [result.score for result in results]
             assert scores == sorted(scores, reverse=True)
@@ -147,11 +147,7 @@ class TestPhase2Integration:
         """Test hybrid search with weighted fusion."""
         # Configure hybrid searcher with weighted fusion
         hybrid_config = HybridSearchConfig(
-            fusion_method="weighted",
-            enable_dense=True,
-            enable_sparse=True,
-            parallel_execution=True,
-            top_k_final=5
+            fusion_method="weighted", enable_dense=True, enable_sparse=True, parallel_execution=True, top_k_final=5
         )
 
         fusion_config = FusionConfig(dense_weight=0.6, sparse_weight=0.4)
@@ -189,7 +185,7 @@ class TestPhase2Integration:
         await sequential_searcher.search("data science machine learning")
         sequential_time = time.perf_counter() - start_time
 
-        print(f"Parallel: {parallel_time*1000:.2f}ms, Sequential: {sequential_time*1000:.2f}ms")
+        print(f"Parallel: {parallel_time * 1000:.2f}ms, Sequential: {sequential_time * 1000:.2f}ms")
 
         # Both should complete quickly (under 100ms)
         assert parallel_time < 0.1
@@ -210,7 +206,7 @@ class TestPhase2Integration:
         bm25_time = time.perf_counter() - start_time
 
         # BM25 should be under 20ms as per target
-        assert bm25_time < 0.02, f"BM25 search took {bm25_time*1000:.2f}ms, target <20ms"
+        assert bm25_time < 0.02, f"BM25 search took {bm25_time * 1000:.2f}ms, target <20ms"
 
         # Validate search accuracy (should return relevant results)
         if results:
@@ -232,7 +228,7 @@ class TestPhase2Integration:
             top_k_sparse=10,
             top_k_final=5,
             dense_threshold=0.1,
-            sparse_threshold=0.1
+            sparse_threshold=0.1,
         )
 
         searcher = HybridSearcher(hybrid_config=hybrid_config)
@@ -256,7 +252,7 @@ class TestPhase2Integration:
             search_time = time.perf_counter() - start_time
 
             # Validate search time (should be under 100ms target)
-            assert search_time < 0.1, f"Search took {search_time*1000:.2f}ms, target <100ms"
+            assert search_time < 0.1, f"Search took {search_time * 1000:.2f}ms, target <100ms"
 
             # Validate results structure
             assert isinstance(results, list)
@@ -296,13 +292,11 @@ class TestPhase2Integration:
         from src.core.types import SearchResult
 
         dense_search_results = [
-            SearchResult(chunk=chunk, score=0.9, rank=i+1, distance=0.1)
-            for i, chunk in enumerate(dense_results)
+            SearchResult(chunk=chunk, score=0.9, rank=i + 1, distance=0.1) for i, chunk in enumerate(dense_results)
         ]
 
         sparse_search_results = [
-            SearchResult(chunk=chunk, score=0.8, rank=i+1, distance=0.2)
-            for i, chunk in enumerate(sparse_results)
+            SearchResult(chunk=chunk, score=0.8, rank=i + 1, distance=0.2) for i, chunk in enumerate(sparse_results)
         ]
 
         # Test RRF fusion
@@ -368,16 +362,8 @@ if __name__ == "__main__":
         # Create test corpus
         doc_id = uuid4()
         corpus = [
-            DocumentChunk(
-                document_id=doc_id,
-                content="Python programming for data science",
-                index=0
-            ),
-            DocumentChunk(
-                document_id=doc_id,
-                content="Machine learning with scikit-learn",
-                index=1
-            ),
+            DocumentChunk(document_id=doc_id, content="Python programming for data science", index=0),
+            DocumentChunk(document_id=doc_id, content="Machine learning with scikit-learn", index=1),
         ]
 
         await test.test_phase2_success_criteria_validation(corpus)

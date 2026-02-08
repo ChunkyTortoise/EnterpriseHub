@@ -4,15 +4,15 @@ Validates the numpy-based in-memory vector store that serves as a
 fallback when ChromaDB is unavailable (pydantic v2 on Python 3.14).
 """
 
-import pytest
-import numpy as np
-from uuid import uuid4
 from typing import List
+from uuid import uuid4
 
-from src.core.types import DocumentChunk, Metadata, SearchResult
+import numpy as np
+import pytest
 from src.core.exceptions import NotFoundError, VectorStoreError
+from src.core.types import DocumentChunk, Metadata, SearchResult
+from src.vector_store.base import SearchOptions, VectorStoreConfig
 from src.vector_store.in_memory_store import InMemoryVectorStore
-from src.vector_store.base import VectorStoreConfig, SearchOptions
 
 
 def _make_chunk(content: str, dim: int = 8) -> DocumentChunk:
@@ -87,9 +87,7 @@ class TestInMemoryVectorStoreAddDelete:
     async def test_add_missing_embedding_raises(self):
         store = InMemoryVectorStore(VectorStoreConfig(dimension=8))
         await store.initialize()
-        chunk = DocumentChunk(
-            document_id=uuid4(), content="no embedding", index=0, metadata=Metadata()
-        )
+        chunk = DocumentChunk(document_id=uuid4(), content="no embedding", index=0, metadata=Metadata())
         with pytest.raises(VectorStoreError, match="no embedding"):
             await store.add_chunks([chunk])
 

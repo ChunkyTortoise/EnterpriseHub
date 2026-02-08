@@ -4,19 +4,20 @@ Enables AI model training across customer deployments without data sharing.
 Creates unbeatable competitive advantages through distributed learning.
 """
 
-from typing import Dict, List, Optional, Any, Union, Tuple
-from datetime import datetime, timedelta
-from decimal import Decimal
 import asyncio
-import uuid
+import hashlib
 import json
 import logging
-import hashlib
-import numpy as np
-from dataclasses import dataclass, asdict
-from enum import Enum
+import uuid
 from abc import ABC, abstractmethod
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from decimal import Decimal
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import cryptography.fernet as fernet
+import numpy as np
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
@@ -30,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 class LearningAlgorithm(Enum):
     """Federated learning algorithms."""
+
     FEDERATED_AVERAGING = "federated_averaging"
     FEDERATED_SGD = "federated_sgd"
     SECURE_AGGREGATION = "secure_aggregation"
@@ -39,14 +41,16 @@ class LearningAlgorithm(Enum):
 
 class PrivacyLevel(Enum):
     """Privacy protection levels."""
-    BASIC = "basic"                    # Basic anonymization
-    ENHANCED = "enhanced"              # Differential privacy
-    MAXIMUM = "maximum"                # Homomorphic encryption
+
+    BASIC = "basic"  # Basic anonymization
+    ENHANCED = "enhanced"  # Differential privacy
+    MAXIMUM = "maximum"  # Homomorphic encryption
     ZERO_KNOWLEDGE = "zero_knowledge"  # Zero-knowledge proofs
 
 
 class ClientType(Enum):
     """Types of federated learning clients."""
+
     ENTERPRISE = "enterprise"
     SMB = "small_medium_business"
     STARTUP = "startup"
@@ -57,6 +61,7 @@ class ClientType(Enum):
 @dataclass
 class FederatedClient:
     """Federated learning client configuration."""
+
     client_id: str
     client_name: str
     client_type: ClientType
@@ -74,6 +79,7 @@ class FederatedClient:
 @dataclass
 class ModelUpdate:
     """Model update from federated client."""
+
     update_id: str
     client_id: str
     model_version: str
@@ -88,6 +94,7 @@ class ModelUpdate:
 @dataclass
 class GlobalModelState:
     """Global federated model state."""
+
     model_id: str
     model_version: str
     aggregated_weights: bytes
@@ -102,6 +109,7 @@ class GlobalModelState:
 @dataclass
 class FederatedTrainingRound:
     """Single round of federated training."""
+
     round_id: str
     model_id: str
     round_number: int
@@ -173,7 +181,7 @@ class SecureAggregator(PrivacyPreservingAggregator):
             "differential_privacy_satisfied": True,
             "secure_aggregation_verified": True,
             "individual_privacy_protected": True,
-            "privacy_violations": []
+            "privacy_violations": [],
         }
 
         # Check differential privacy budget
@@ -183,7 +191,9 @@ class SecureAggregator(PrivacyPreservingAggregator):
         # Validate encryption
         for update in updates:
             if not await self._verify_encryption(update):
-                validation_results["privacy_violations"].append(f"Encryption verification failed for {update.update_id}")
+                validation_results["privacy_violations"].append(
+                    f"Encryption verification failed for {update.update_id}"
+                )
 
         validation_results["individual_privacy_protected"] = len(validation_results["privacy_violations"]) == 0
 
@@ -263,10 +273,7 @@ class FederatedLearningNetwork:
     - Continuous model improvement
     """
 
-    def __init__(self,
-                 llm_client: LLMClient,
-                 cache_service: CacheService,
-                 database_service: DatabaseService):
+    def __init__(self, llm_client: LLMClient, cache_service: CacheService, database_service: DatabaseService):
         self.llm_client = llm_client
         self.cache = cache_service
         self.db = database_service
@@ -292,9 +299,9 @@ class FederatedLearningNetwork:
         logger.info("Federated Learning Network initialized")
 
     @enhanced_error_handler
-    async def register_federated_client(self,
-                                      client_info: Dict[str, Any],
-                                      privacy_requirements: PrivacyLevel) -> FederatedClient:
+    async def register_federated_client(
+        self, client_info: Dict[str, Any], privacy_requirements: PrivacyLevel
+    ) -> FederatedClient:
         """
         Register new client in federated learning network.
 
@@ -322,7 +329,7 @@ class FederatedLearningNetwork:
             reputation_score=1.0,
             geographic_region=client_info.get("region", "unknown"),
             industry_vertical=client_info.get("industry", "real_estate"),
-            active=True
+            active=True,
         )
 
         # Store client configuration
@@ -339,10 +346,9 @@ class FederatedLearningNetwork:
         return client
 
     @enhanced_error_handler
-    async def coordinate_federated_training(self,
-                                          model_id: str,
-                                          target_accuracy: float = 0.95,
-                                          max_rounds: int = 10) -> Dict[str, Any]:
+    async def coordinate_federated_training(
+        self, model_id: str, target_accuracy: float = 0.95, max_rounds: int = 10
+    ) -> Dict[str, Any]:
         """
         Coordinate federated training across client network.
 
@@ -370,7 +376,7 @@ class FederatedLearningNetwork:
             convergence_threshold=self.convergence_threshold,
             started_at=datetime.utcnow(),
             completed_at=None,
-            status="active"
+            status="active",
         )
 
         self.active_training_rounds[round_id] = training_round
@@ -382,7 +388,7 @@ class FederatedLearningNetwork:
             "current_accuracy": 0.0,
             "convergence_achieved": False,
             "privacy_guarantees": {},
-            "model_improvements": []
+            "model_improvements": [],
         }
 
         try:
@@ -432,7 +438,9 @@ class FederatedLearningNetwork:
             coordination_results["privacy_guarantees"] = await self._validate_training_privacy(training_round)
 
             # Calculate model improvements
-            coordination_results["model_improvements"] = await self._calculate_model_improvements(model_id, training_round)
+            coordination_results["model_improvements"] = await self._calculate_model_improvements(
+                model_id, training_round
+            )
 
         except Exception as e:
             logger.error(f"Federated training coordination failed: {e}")
@@ -442,9 +450,9 @@ class FederatedLearningNetwork:
         return coordination_results
 
     @enhanced_error_handler
-    async def privacy_preserving_insights(self,
-                                        query: str,
-                                        privacy_level: PrivacyLevel = PrivacyLevel.ENHANCED) -> Dict[str, Any]:
+    async def privacy_preserving_insights(
+        self, query: str, privacy_level: PrivacyLevel = PrivacyLevel.ENHANCED
+    ) -> Dict[str, Any]:
         """
         Generate insights from federated knowledge without compromising privacy.
 
@@ -485,7 +493,7 @@ class FederatedLearningNetwork:
             "contributing_clients": aggregated_insights["client_count"],
             "confidence_score": aggregated_insights["confidence"],
             "privacy_guarantees": aggregated_insights["privacy_proof"],
-            "federated_advantage": aggregated_insights["network_advantage"]
+            "federated_advantage": aggregated_insights["network_advantage"],
         }
 
     @enhanced_error_handler
@@ -522,25 +530,25 @@ class FederatedLearningNetwork:
                 "total_clients": total_clients,
                 "active_clients": active_clients,
                 "geographic_diversity": len(regions),
-                "industry_diversity": len(industries)
+                "industry_diversity": len(industries),
             },
             "privacy_distribution": privacy_levels,
             "model_metrics": {
                 "global_models": network_models,
                 "training_rounds": total_training_rounds,
-                "avg_model_accuracy": await self._calculate_average_model_accuracy()
+                "avg_model_accuracy": await self._calculate_average_model_accuracy(),
             },
             "collective_intelligence": {
                 "intelligence_score": intelligence_score,
                 "knowledge_coverage": await self._calculate_knowledge_coverage(),
-                "learning_velocity": await self._calculate_learning_velocity()
+                "learning_velocity": await self._calculate_learning_velocity(),
             },
             "network_effects": network_effects,
             "competitive_advantage": {
                 "data_network_value": intelligence_score * total_clients,
                 "privacy_preservation_advantage": await self._calculate_privacy_advantage(),
-                "knowledge_moat_strength": await self._calculate_knowledge_moat()
-            }
+                "knowledge_moat_strength": await self._calculate_knowledge_moat(),
+            },
         }
 
     # Private implementation methods
@@ -555,7 +563,7 @@ class FederatedLearningNetwork:
             "client_id": client.client_id,
             "api_key": hashlib.sha256(f"{client.client_id}_{datetime.utcnow()}".encode()).hexdigest(),
             "encryption_key": "federated_encryption_key",
-            "privacy_token": f"privacy_{uuid.uuid4()}"
+            "privacy_token": f"privacy_{uuid.uuid4()}",
         }
 
     async def _send_federated_onboarding(self, client: FederatedClient, credentials: Dict[str, str]) -> None:
@@ -563,22 +571,22 @@ class FederatedLearningNetwork:
         logger.info(f"Sending federated onboarding to {client.client_name}")
         # Would send SDK, documentation, and credentials
 
-    async def _select_training_clients(self, model_id: str, training_round: FederatedTrainingRound) -> List[FederatedClient]:
+    async def _select_training_clients(
+        self, model_id: str, training_round: FederatedTrainingRound
+    ) -> List[FederatedClient]:
         """Select clients for federated training round."""
         # Filter active clients
         available_clients = [c for c in self.federated_clients.values() if c.active]
 
         # Sort by reputation and relevance
         sorted_clients = sorted(
-            available_clients,
-            key=lambda c: c.reputation_score * c.contribution_score,
-            reverse=True
+            available_clients, key=lambda c: c.reputation_score * c.contribution_score, reverse=True
         )
 
         # Select clients ensuring diversity
         selected_clients = await self._ensure_client_diversity(sorted_clients)
 
-        return selected_clients[:self.max_clients_per_round]
+        return selected_clients[: self.max_clients_per_round]
 
     async def _ensure_client_diversity(self, clients: List[FederatedClient]) -> List[FederatedClient]:
         """Ensure diversity in client selection."""
@@ -588,8 +596,7 @@ class FederatedLearningNetwork:
         industries_covered = set()
 
         for client in clients:
-            if (client.geographic_region not in regions_covered or
-                client.industry_vertical not in industries_covered):
+            if client.geographic_region not in regions_covered or client.industry_vertical not in industries_covered:
                 diverse_clients.append(client)
                 regions_covered.add(client.geographic_region)
                 industries_covered.add(client.industry_vertical)
@@ -626,7 +633,7 @@ class FederatedLearningNetwork:
                     privacy_proof="differential_privacy_proof",
                     contribution_score=client.reputation_score,
                     validation_metrics={"accuracy": 0.92, "loss": 0.08},
-                    timestamp=datetime.utcnow()
+                    timestamp=datetime.utcnow(),
                 )
                 updates.append(update)
 
@@ -652,7 +659,7 @@ class FederatedLearningNetwork:
                 performance_metrics={},
                 privacy_budget_used=0.0,
                 last_updated=datetime.utcnow(),
-                next_round_scheduled=datetime.utcnow() + timedelta(hours=24)
+                next_round_scheduled=datetime.utcnow() + timedelta(hours=24),
             )
         else:
             global_model = self.global_models[model_id]
@@ -675,7 +682,7 @@ class FederatedLearningNetwork:
             "accuracy": current_accuracy,
             "target_accuracy": target_accuracy,
             "converged": converged,
-            "improvement_rate": 0.02
+            "improvement_rate": 0.02,
         }
 
     async def _update_client_reputations(self, updates: List[ModelUpdate]) -> None:
@@ -697,24 +704,16 @@ class FederatedLearningNetwork:
             "differential_privacy_satisfied": True,
             "secure_aggregation_verified": True,
             "privacy_budget_within_limits": True,
-            "individual_privacy_protected": True
+            "individual_privacy_protected": True,
         }
 
-    async def _calculate_model_improvements(self, model_id: str, training_round: FederatedTrainingRound) -> List[Dict[str, Any]]:
+    async def _calculate_model_improvements(
+        self, model_id: str, training_round: FederatedTrainingRound
+    ) -> List[Dict[str, Any]]:
         """Calculate improvements from federated training."""
         return [
-            {
-                "metric": "accuracy",
-                "improvement": 0.05,
-                "baseline": 0.88,
-                "new_value": 0.93
-            },
-            {
-                "metric": "generalization",
-                "improvement": 0.12,
-                "baseline": 0.75,
-                "new_value": 0.87
-            }
+            {"metric": "accuracy", "improvement": 0.05, "baseline": 0.88, "new_value": 0.93},
+            {"metric": "generalization", "improvement": 0.12, "baseline": 0.75, "new_value": 0.87},
         ]
 
     # Additional helper methods...
@@ -727,25 +726,29 @@ class FederatedLearningNetwork:
                 response = {
                     "client_id": client.client_id,
                     "insights": {"pattern_strength": 0.85, "confidence": 0.9},
-                    "privacy_proof": "differential_privacy_applied"
+                    "privacy_proof": "differential_privacy_applied",
                 }
                 responses.append(response)
         return responses
 
-    async def _aggregate_private_insights(self, responses: List[Dict[str, Any]], privacy_level: PrivacyLevel) -> Dict[str, Any]:
+    async def _aggregate_private_insights(
+        self, responses: List[Dict[str, Any]], privacy_level: PrivacyLevel
+    ) -> Dict[str, Any]:
         """Aggregate insights while preserving privacy."""
         return {
             "summary": {"aggregated_pattern": 0.87, "network_confidence": 0.91},
             "client_count": len(responses),
             "confidence": 0.91,
             "privacy_proof": "secure_aggregation_verified",
-            "network_advantage": len(responses) * 0.1  # Network advantage from scale
+            "network_advantage": len(responses) * 0.1,  # Network advantage from scale
         }
 
     async def _calculate_collective_intelligence_score(self) -> float:
         """Calculate collective intelligence score of federated network."""
         total_clients = len(self.federated_clients)
-        avg_reputation = np.mean([c.reputation_score for c in self.federated_clients.values()]) if self.federated_clients else 0
+        avg_reputation = (
+            np.mean([c.reputation_score for c in self.federated_clients.values()]) if self.federated_clients else 0
+        )
 
         # Intelligence score increases with network size and quality
         base_score = min(1.0, total_clients / 100.0)  # Max 1.0 for 100+ clients
@@ -758,7 +761,7 @@ class FederatedLearningNetwork:
         return {
             "metcalfe_value": len(self.federated_clients) ** 2,
             "knowledge_amplification": len(self.federated_clients) * 1.2,
-            "collective_accuracy_boost": 0.15 * len(self.federated_clients) / 100
+            "collective_accuracy_boost": 0.15 * len(self.federated_clients) / 100,
         }
 
     async def _calculate_average_model_accuracy(self) -> float:
@@ -766,10 +769,7 @@ class FederatedLearningNetwork:
         if not self.global_models:
             return 0.0
 
-        total_accuracy = sum(
-            model.performance_metrics.get("accuracy", 0.0)
-            for model in self.global_models.values()
-        )
+        total_accuracy = sum(model.performance_metrics.get("accuracy", 0.0) for model in self.global_models.values())
         return total_accuracy / len(self.global_models)
 
     async def _calculate_knowledge_coverage(self) -> float:

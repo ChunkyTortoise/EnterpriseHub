@@ -16,9 +16,7 @@ from typing import Any, Dict, List, Optional
 class SocialMediaSyndication:
     """Service for multi-platform listing syndication"""
 
-    def create_social_posts(
-        self, listing: Dict[str, Any], platforms: List[str] = None
-    ) -> Dict[str, Any]:
+    def create_social_posts(self, listing: Dict[str, Any], platforms: List[str] = None) -> Dict[str, Any]:
         """
         Generate social media posts for listing
 
@@ -141,9 +139,9 @@ def demo_social_syndication():
     print("SOCIAL MEDIA POSTS GENERATED\n")
 
     for platform, post in posts["posts"].items():
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
         print(f"{platform.upper()}")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
         print(post.get("caption") or post.get("text"))
         print(f"\nOptimal Time: {post['optimal_time']}")
         print(f"Type: {post['type']}\n")

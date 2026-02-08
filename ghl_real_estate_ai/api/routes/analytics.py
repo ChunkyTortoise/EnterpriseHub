@@ -24,51 +24,47 @@ import json
 import time
 import uuid
 from datetime import datetime
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query, Path, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, WebSocket, WebSocketDisconnect, status
 from fastapi.security import HTTPBearer
 from pydantic import ValidationError
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.api.middleware import get_current_user
+
 # from ghl_real_estate_ai.api.middleware.enhanced_auth import verify_analytics_permission  # TODO: Fix this import
 from ghl_real_estate_ai.api.middleware.rate_limiter import RateLimitMiddleware
 from ghl_real_estate_ai.api.schemas.analytics import (
-    # Request/Response Models
-    SHAPAnalyticsRequest,
-    SHAPWaterfallResponse,
+    AnalyticsError,
+    # WebSocket Event Models
+    AnalyticsWebSocketEvent,
+    EventPriority,
+    EventType,
     FeatureTrendResponse,
+    HotZoneDetectionEvent,
+    MarketChangeEvent,
     MarketHeatmapRequest,
     MarketHeatmapResponse,
     MarketMetricsResponse,
-    AnalyticsError,
     PerformanceMetrics,
-
-    # WebSocket Event Models
-    AnalyticsWebSocketEvent,
+    # Request/Response Models
+    SHAPAnalyticsRequest,
     SHAPUpdateEvent,
-    MarketChangeEvent,
-    HotZoneDetectionEvent,
-    EventType,
-    EventPriority
+    SHAPWaterfallResponse,
 )
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.event_publisher import get_event_publisher
+from ghl_real_estate_ai.services.market_intelligence_engine import get_market_intelligence_engine
 
 # Service Imports
 from ghl_real_estate_ai.services.shap_analytics_enhanced import get_shap_analytics_enhanced
-from ghl_real_estate_ai.services.market_intelligence_engine import get_market_intelligence_engine
 from ghl_real_estate_ai.services.websocket_server import get_websocket_manager
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 
 logger = get_logger(__name__)
 
 # Router Configuration
-router = APIRouter(
-    prefix="/api/v1/analytics",
-    tags=["Advanced Analytics"],
-    dependencies=[Depends(get_current_user)]
-)
+router = APIRouter(prefix="/api/v1/analytics", tags=["Advanced Analytics"], dependencies=[Depends(get_current_user)])
 
 # Service Instances
 shap_analytics = get_shap_analytics_enhanced()
@@ -86,13 +82,14 @@ _endpoint_metrics = {
     "shap_trends": {"requests": 0, "total_time_ms": 0.0, "errors": 0, "cache_hits": 0},
     "market_heatmap": {"requests": 0, "total_time_ms": 0.0, "errors": 0, "cache_hits": 0},
     "market_metrics": {"requests": 0, "total_time_ms": 0.0, "errors": 0, "cache_hits": 0},
-    "websocket": {"connections": 0, "messages_sent": 0, "errors": 0}
+    "websocket": {"connections": 0, "messages_sent": 0, "errors": 0},
 }
 
 
 # ============================================================================
 # SHAP Analytics Endpoints
 # ============================================================================
+
 
 @router.post(
     "/shap/waterfall",
@@ -103,12 +100,11 @@ _endpoint_metrics = {
         200: {"description": "SHAP waterfall data generated successfully"},
         400: {"description": "Invalid request parameters", "model": AnalyticsError},
         404: {"description": "Lead not found", "model": AnalyticsError},
-        500: {"description": "Internal server error", "model": AnalyticsError}
-    }
+        500: {"description": "Internal server error", "model": AnalyticsError},
+    },
 )
 async def generate_shap_waterfall(
-    request: SHAPAnalyticsRequest,
-    current_user: Dict = Depends(get_current_user)
+    request: SHAPAnalyticsRequest, current_user: Dict = Depends(get_current_user)
 ) -> SHAPWaterfallResponse:
     """
     Generate SHAP waterfall chart data for interactive visualization.
@@ -132,23 +128,20 @@ async def generate_shap_waterfall(
 
         # Validate lead access permissions (user can only access their leads)
         if not await _validate_lead_access(request.lead_id, current_user):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied for specified lead"
-            )
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied for specified lead")
 
         # Generate waterfall data using enhanced SHAP service
         waterfall_data = await shap_analytics.generate_waterfall_data(
             lead_id=request.lead_id,
             include_comparison=bool(request.comparison_lead_ids),
-            comparison_lead_ids=request.comparison_lead_ids
+            comparison_lead_ids=request.comparison_lead_ids,
         )
 
         # Calculate response time
         processing_time_ms = (time.time() - start_time) * 1000
 
         # Check if result was cached
-        cached = hasattr(waterfall_data, '_cached') and waterfall_data._cached
+        cached = hasattr(waterfall_data, "_cached") and waterfall_data._cached
         if cached:
             _endpoint_metrics[endpoint_name]["cache_hits"] += 1
 
@@ -158,7 +151,7 @@ async def generate_shap_waterfall(
             waterfall_data=waterfall_data,
             processing_time_ms=processing_time_ms,
             cached=cached,
-            generated_at=datetime.utcnow()
+            generated_at=datetime.utcnow(),
         )
 
         # Update performance metrics
@@ -177,10 +170,7 @@ async def generate_shap_waterfall(
         processing_time_ms = (time.time() - start_time) * 1000
 
         logger.warning(f"SHAP waterfall validation error: {e} [request_id: {request_id}]")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid request: {str(e)}"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid request: {str(e)}")
 
     except FileNotFoundError:
         _endpoint_metrics[endpoint_name]["errors"] += 1
@@ -189,7 +179,7 @@ async def generate_shap_waterfall(
         logger.warning(f"Lead not found: {request.lead_id} [request_id: {request_id}]")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Lead {request.lead_id} not found or insufficient data for analysis"
+            detail=f"Lead {request.lead_id} not found or insufficient data for analysis",
         )
 
     except Exception as e:
@@ -198,8 +188,7 @@ async def generate_shap_waterfall(
 
         logger.error(f"SHAP waterfall error: {e} [request_id: {request_id}]", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to generate SHAP waterfall analysis"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate SHAP waterfall analysis"
         )
 
 
@@ -211,14 +200,14 @@ async def generate_shap_waterfall(
     responses={
         200: {"description": "Feature trend data generated successfully"},
         400: {"description": "Invalid feature name or parameters", "model": AnalyticsError},
-        500: {"description": "Internal server error", "model": AnalyticsError}
-    }
+        500: {"description": "Internal server error", "model": AnalyticsError},
+    },
 )
 async def get_feature_trends(
     feature_name: str = Path(..., description="Feature name to analyze"),
     time_range_days: int = Query(30, ge=1, le=365, description="Time range in days"),
     granularity: str = Query("daily", pattern="^(hourly|daily|weekly)$", description="Time granularity"),
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
 ) -> FeatureTrendResponse:
     """
     Get feature value trends over time for time-series visualization.
@@ -236,8 +225,12 @@ async def get_feature_trends(
     try:
         # Validate feature name
         valid_features = [
-            "response_time_hours", "message_length_avg", "timeline_urgency",
-            "financial_readiness", "property_specificity", "engagement_score"
+            "response_time_hours",
+            "message_length_avg",
+            "timeline_urgency",
+            "financial_readiness",
+            "property_specificity",
+            "engagement_score",
         ]
 
         if feature_name not in valid_features:
@@ -250,9 +243,7 @@ async def get_feature_trends(
 
         # Generate trend data using enhanced SHAP service
         trend_data = await shap_analytics.generate_feature_trend_data(
-            feature_name=feature_name,
-            time_range_days=time_range_days,
-            granularity=granularity
+            feature_name=feature_name, time_range_days=time_range_days, granularity=granularity
         )
 
         # Calculate summary statistics
@@ -261,8 +252,10 @@ async def get_feature_trends(
             "mean": sum(values) / len(values) if values else 0.0,
             "min": min(values) if values else 0.0,
             "max": max(values) if values else 0.0,
-            "std_dev": (sum([(x - sum(values)/len(values))**2 for x in values]) / len(values))**0.5 if len(values) > 1 else 0.0,
-            "trend_direction": "increasing" if len(values) >= 2 and values[-1] > values[0] else "stable"
+            "std_dev": (sum([(x - sum(values) / len(values)) ** 2 for x in values]) / len(values)) ** 0.5
+            if len(values) > 1
+            else 0.0,
+            "trend_direction": "increasing" if len(values) >= 2 and values[-1] > values[0] else "stable",
         }
 
         # Calculate response time
@@ -275,7 +268,7 @@ async def get_feature_trends(
             trend_data=trend_data,
             processing_time_ms=processing_time_ms,
             cached=False,  # Will be set by caching layer
-            summary_stats=summary_stats
+            summary_stats=summary_stats,
         )
 
         # Update performance metrics
@@ -291,10 +284,7 @@ async def get_feature_trends(
     except ValueError as e:
         _endpoint_metrics[endpoint_name]["errors"] += 1
         logger.warning(f"Feature trends validation error: {e} [request_id: {request_id}]")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
     except Exception as e:
         _endpoint_metrics[endpoint_name]["errors"] += 1
@@ -303,13 +293,14 @@ async def get_feature_trends(
         logger.error(f"Feature trends error: {e} [request_id: {request_id}]", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate feature trend analysis for {feature_name}"
+            detail=f"Failed to generate feature trend analysis for {feature_name}",
         )
 
 
 # ============================================================================
 # Market Intelligence Endpoints
 # ============================================================================
+
 
 @router.post(
     "/market/heatmap",
@@ -319,12 +310,11 @@ async def get_feature_trends(
     responses={
         200: {"description": "Market heatmap data generated successfully"},
         400: {"description": "Invalid request parameters", "model": AnalyticsError},
-        500: {"description": "Internal server error", "model": AnalyticsError}
-    }
+        500: {"description": "Internal server error", "model": AnalyticsError},
+    },
 )
 async def generate_market_heatmap(
-    request: MarketHeatmapRequest,
-    current_user: Dict = Depends(get_current_user)
+    request: MarketHeatmapRequest, current_user: Dict = Depends(get_current_user)
 ) -> MarketHeatmapResponse:
     """
     Generate market intelligence heatmap data for Deck.gl visualization.
@@ -350,18 +340,15 @@ async def generate_market_heatmap(
             heatmap_data = await market_intelligence.generate_lead_density_heatmap(
                 time_range_days=request.time_range_days,
                 granularity=request.granularity,
-                min_threshold=request.min_threshold
+                min_threshold=request.min_threshold,
             )
         else:
             # For other metrics, use the comprehensive metrics calculation
             metrics = await market_intelligence.calculate_market_metrics(
-                region=request.region,
-                time_range_days=request.time_range_days
+                region=request.region, time_range_days=request.time_range_days
             )
             # Extract relevant heatmap data from metrics
-            heatmap_data = await _extract_heatmap_from_metrics(
-                metrics, request.metric_type, request.granularity
-            )
+            heatmap_data = await _extract_heatmap_from_metrics(metrics, request.metric_type, request.granularity)
 
         # Calculate response time
         processing_time_ms = (time.time() - start_time) * 1000
@@ -375,12 +362,12 @@ async def generate_market_heatmap(
                 "north": market_intelligence.austin_bounds.north,
                 "south": market_intelligence.austin_bounds.south,
                 "east": market_intelligence.austin_bounds.east,
-                "west": market_intelligence.austin_bounds.west
+                "west": market_intelligence.austin_bounds.west,
             },
             processing_time_ms=processing_time_ms,
             data_points_count=len(heatmap_data),
             cached=False,  # Will be set by caching layer
-            generated_at=datetime.utcnow()
+            generated_at=datetime.utcnow(),
         )
 
         # Update performance metrics
@@ -396,10 +383,7 @@ async def generate_market_heatmap(
     except ValueError as e:
         _endpoint_metrics[endpoint_name]["errors"] += 1
         logger.warning(f"Market heatmap validation error: {e} [request_id: {request_id}]")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
     except Exception as e:
         _endpoint_metrics[endpoint_name]["errors"] += 1
@@ -408,7 +392,7 @@ async def generate_market_heatmap(
         logger.error(f"Market heatmap error: {e} [request_id: {request_id}]", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate market heatmap for {request.metric_type.value}"
+            detail=f"Failed to generate market heatmap for {request.metric_type.value}",
         )
 
 
@@ -419,14 +403,14 @@ async def generate_market_heatmap(
     description="Calculate comprehensive market intelligence metrics with hot zone detection. Optimized for <100ms response time.",
     responses={
         200: {"description": "Market metrics calculated successfully"},
-        500: {"description": "Internal server error", "model": AnalyticsError}
-    }
+        500: {"description": "Internal server error", "model": AnalyticsError},
+    },
 )
 async def get_comprehensive_market_metrics(
     region: str = Query("austin_tx", description="Geographic region identifier"),
     time_range_days: int = Query(30, ge=1, le=365, description="Time range for analysis"),
     include_hot_zones: bool = Query(True, description="Include hot zone detection"),
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
 ) -> MarketMetricsResponse:
     """
     Get comprehensive market intelligence metrics with hot zone detection.
@@ -448,10 +432,7 @@ async def get_comprehensive_market_metrics(
         )
 
         # Calculate comprehensive market metrics
-        metrics = await market_intelligence.calculate_market_metrics(
-            region=region,
-            time_range_days=time_range_days
-        )
+        metrics = await market_intelligence.calculate_market_metrics(region=region, time_range_days=time_range_days)
 
         # Filter hot zones if requested
         if not include_hot_zones:
@@ -467,7 +448,7 @@ async def get_comprehensive_market_metrics(
             metrics=metrics,
             processing_time_ms=processing_time_ms,
             cached=False,  # Will be set by caching layer
-            generated_at=datetime.utcnow()
+            generated_at=datetime.utcnow(),
         )
 
         # Update performance metrics
@@ -488,8 +469,7 @@ async def get_comprehensive_market_metrics(
 
         logger.error(f"Market metrics error: {e} [request_id: {request_id}]", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to calculate market metrics for {region}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to calculate market metrics for {region}"
         )
 
 
@@ -497,15 +477,14 @@ async def get_comprehensive_market_metrics(
 # Performance and Health Endpoints
 # ============================================================================
 
+
 @router.get(
     "/performance",
     response_model=List[PerformanceMetrics],
     summary="Get Analytics Performance Metrics",
-    description="Retrieve performance metrics for all analytics endpoints for monitoring and optimization."
+    description="Retrieve performance metrics for all analytics endpoints for monitoring and optimization.",
 )
-async def get_analytics_performance(
-    current_user: Dict = Depends(get_current_user)
-) -> List[PerformanceMetrics]:
+async def get_analytics_performance(current_user: Dict = Depends(get_current_user)) -> List[PerformanceMetrics]:
     """Get comprehensive performance metrics for analytics endpoints."""
 
     try:
@@ -538,7 +517,7 @@ async def get_analytics_performance(
                 cache_hit_rate=round(cache_hit_rate, 3),
                 total_requests=metrics["requests"],
                 error_rate=round(error_rate, 3),
-                timestamp=datetime.utcnow()
+                timestamp=datetime.utcnow(),
             )
 
             performance_data.append(performance_metrics)
@@ -549,15 +528,14 @@ async def get_analytics_performance(
     except Exception as e:
         logger.error(f"Failed to get performance metrics: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve performance metrics"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve performance metrics"
         )
 
 
 @router.post("/cache/clear")
 async def clear_analytics_cache(
     pattern: Optional[str] = Query(None, description="Cache key pattern to clear"),
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
 ):
     """Clear analytics cache, optionally by pattern."""
 
@@ -574,21 +552,17 @@ async def clear_analytics_cache(
 
     except Exception as e:
         logger.error(f"Failed to clear cache: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to clear analytics cache"
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to clear analytics cache")
 
 
 # ============================================================================
 # WebSocket Real-Time Analytics Endpoint
 # ============================================================================
 
+
 @router.websocket("/ws/analytics/{session_id}")
 async def analytics_websocket(
-    websocket: WebSocket,
-    session_id: str,
-    token: str = Query(None, description="Authentication token")
+    websocket: WebSocket, session_id: str, token: str = Query(None, description="Authentication token")
 ):
     """
     Real-time analytics updates via WebSocket connection.
@@ -629,9 +603,9 @@ async def analytics_websocket(
                 "message": "Connected to analytics stream",
                 "session_id": session_id,
                 "available_events": [e.value for e in EventType],
-                "connection_time": datetime.utcnow().isoformat()
+                "connection_time": datetime.utcnow().isoformat(),
             },
-            priority=EventPriority.LOW
+            priority=EventPriority.LOW,
         )
 
         await websocket.send_text(welcome_event.model_dump_json())
@@ -651,7 +625,7 @@ async def analytics_websocket(
                 heartbeat = {
                     "event_type": "heartbeat",
                     "timestamp": datetime.utcnow().isoformat(),
-                    "connection_status": "active"
+                    "connection_status": "active",
                 }
                 await websocket.send_text(json.dumps(heartbeat))
                 _endpoint_metrics["websocket"]["messages_sent"] += 1
@@ -682,6 +656,7 @@ async def analytics_websocket(
 # Helper Functions
 # ============================================================================
 
+
 async def _validate_lead_access(lead_id: str, user: Dict) -> bool:
     """Validate that user has access to the specified lead."""
 
@@ -692,11 +667,7 @@ async def _validate_lead_access(lead_id: str, user: Dict) -> bool:
     return True
 
 
-async def _extract_heatmap_from_metrics(
-    metrics: Dict[str, Any],
-    metric_type,
-    granularity
-) -> List:
+async def _extract_heatmap_from_metrics(metrics: Dict[str, Any], metric_type, granularity) -> List:
     """Extract heatmap data from comprehensive metrics for non-lead-density metrics."""
 
     # This is a simplified implementation
@@ -723,7 +694,7 @@ async def _authenticate_websocket(token: Optional[str]) -> Optional[Dict]:
         return {
             "user_id": "user_123",
             "role": "analytics_user",
-            "permissions": ["analytics_read", "analytics_websocket"]
+            "permissions": ["analytics_read", "analytics_websocket"],
         }
 
     except Exception as e:
@@ -731,12 +702,7 @@ async def _authenticate_websocket(token: Optional[str]) -> Optional[Dict]:
         return None
 
 
-async def _handle_websocket_message(
-    websocket: WebSocket,
-    connection_id: str,
-    message: str,
-    user_context: Dict
-):
+async def _handle_websocket_message(websocket: WebSocket, connection_id: str, message: str, user_context: Dict):
     """Handle incoming WebSocket messages from client."""
 
     try:
@@ -750,7 +716,7 @@ async def _handle_websocket_message(
             response = {
                 "type": "subscription_confirmed",
                 "events": event_types,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
             await websocket.send_text(json.dumps(response))
             _endpoint_metrics["websocket"]["messages_sent"] += 1
@@ -762,17 +728,14 @@ async def _handle_websocket_message(
             response = {
                 "type": "unsubscription_confirmed",
                 "events": event_types,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
             await websocket.send_text(json.dumps(response))
             _endpoint_metrics["websocket"]["messages_sent"] += 1
 
         elif message_type == "ping":
             # Handle ping/pong for connection health
-            response = {
-                "type": "pong",
-                "timestamp": datetime.utcnow().isoformat()
-            }
+            response = {"type": "pong", "timestamp": datetime.utcnow().isoformat()}
             await websocket.send_text(json.dumps(response))
             _endpoint_metrics["websocket"]["messages_sent"] += 1
 

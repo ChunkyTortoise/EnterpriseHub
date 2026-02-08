@@ -16,8 +16,8 @@ import random
 import pytest
 
 from ghl_real_estate_ai.services.jorge.performance_tracker import (
-    PerformanceTracker,
     SLA_CONFIG,
+    PerformanceTracker,
 )
 
 BOT_NAME = "lead_bot"
@@ -53,9 +53,7 @@ class TestLeadBotBaseline:
             await tracker.track_operation(BOT_NAME, OPERATION, lat)
 
         stats = await tracker.get_bot_stats(BOT_NAME)
-        assert stats["p50"] <= P50_TARGET, (
-            f"P50 {stats['p50']:.1f}ms exceeds {P50_TARGET}ms"
-        )
+        assert stats["p50"] <= P50_TARGET, f"P50 {stats['p50']:.1f}ms exceeds {P50_TARGET}ms"
 
     @pytest.mark.asyncio
     async def test_p95_within_sla(self):
@@ -64,9 +62,7 @@ class TestLeadBotBaseline:
             await tracker.track_operation(BOT_NAME, OPERATION, lat)
 
         stats = await tracker.get_bot_stats(BOT_NAME)
-        assert stats["p95"] <= P95_TARGET, (
-            f"P95 {stats['p95']:.1f}ms exceeds {P95_TARGET}ms"
-        )
+        assert stats["p95"] <= P95_TARGET, f"P95 {stats['p95']:.1f}ms exceeds {P95_TARGET}ms"
 
     @pytest.mark.asyncio
     async def test_p99_within_sla(self):
@@ -75,9 +71,7 @@ class TestLeadBotBaseline:
             await tracker.track_operation(BOT_NAME, OPERATION, lat)
 
         stats = await tracker.get_bot_stats(BOT_NAME)
-        assert stats["p99"] <= P99_TARGET, (
-            f"P99 {stats['p99']:.1f}ms exceeds {P99_TARGET}ms"
-        )
+        assert stats["p99"] <= P99_TARGET, f"P99 {stats['p99']:.1f}ms exceeds {P99_TARGET}ms"
 
     @pytest.mark.asyncio
     async def test_concurrent_load_50_users(self):
@@ -90,10 +84,7 @@ class TestLeadBotBaseline:
                 await tracker.track_operation(BOT_NAME, OPERATION, lat)
 
         batch_size = len(latencies) // 50
-        tasks = [
-            _record(latencies[i * batch_size : (i + 1) * batch_size])
-            for i in range(50)
-        ]
+        tasks = [_record(latencies[i * batch_size : (i + 1) * batch_size]) for i in range(50)]
         await asyncio.gather(*tasks)
 
         stats = await tracker.get_bot_stats(BOT_NAME)

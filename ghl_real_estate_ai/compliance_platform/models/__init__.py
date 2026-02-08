@@ -1,26 +1,25 @@
 """Compliance Platform Data Models"""
 
 from .compliance_models import (
-    ComplianceStatus,
-    RiskLevel,
-    RegulationType,
-    ViolationSeverity,
-    ComplianceScore,
-    RiskAssessment,
-    PolicyViolation,
-    ComplianceReport,
-    AuditRecord,
-    RemediationAction,
     AIModelRegistration,
+    AuditRecord,
     ComplianceCertification,
+    ComplianceReport,
+    ComplianceScore,
+    ComplianceStatus,
+    PolicyViolation,
+    RegulationType,
+    RemediationAction,
+    RiskAssessment,
+    RiskLevel,
+    ViolationSeverity,
 )
-
 from .risk_models import (
     RiskCategory,
     RiskIndicator,
     RiskMatrix,
-    RiskTrend,
     RiskMitigation,
+    RiskTrend,
 )
 
 __all__ = [

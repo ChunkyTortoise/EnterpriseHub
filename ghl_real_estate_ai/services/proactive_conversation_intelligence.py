@@ -28,46 +28,45 @@ Architecture Integration:
 """
 
 import asyncio
-import json
-import time
 import hashlib
+import json
 import statistics
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Set
-from dataclasses import asdict
+import time
 import uuid
+from dataclasses import asdict
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.services.event_publisher import get_event_publisher
-from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
-from ghl_real_estate_ai.services.claude_conversation_intelligence import get_conversation_intelligence
 from ghl_real_estate_ai.models.ai_concierge_models import (
-    # Core Models
-    ProactiveInsight,
-    CoachingOpportunity,
-    StrategyRecommendation,
-    ConversationQualityScore,
-    ConversationTrajectory,
-
-    # Enums
-    InsightType,
-    InsightPriority,
     CoachingCategory,
-    StrategyType,
+    CoachingOpportunity,
+    ConversationQualityScore,
     ConversationStage,
     ConversationTone,
-
+    ConversationTrajectory,
+    InsightPriority,
+    # Enums
+    InsightType,
     # Event Models
-    ProactiveEvent
+    ProactiveEvent,
+    # Core Models
+    ProactiveInsight,
+    StrategyRecommendation,
+    StrategyType,
 )
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
+from ghl_real_estate_ai.services.claude_conversation_intelligence import get_conversation_intelligence
+from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 
 # Import ML engine for fast behavioral scoring
 try:
     from bots.shared.ml_analytics_engine import get_ml_engine
+
     ML_ENGINE_AVAILABLE = True
 except ImportError:
     ML_ENGINE_AVAILABLE = False
@@ -142,7 +141,7 @@ class ProactiveConversationIntelligence:
             "cache_hit_rate": 0.0,
             "active_monitoring_sessions": 0,
             "ml_inference_time_ms": 0.0,
-            "last_reset": datetime.utcnow()
+            "last_reset": datetime.utcnow(),
         }
 
         logger.info("ProactiveConversationIntelligence initialized with semantic caching and ML integration")
@@ -152,56 +151,77 @@ class ProactiveConversationIntelligence:
         return {
             "price_objection": {
                 "keywords": [
-                    "too expensive", "can't afford", "price is high", "budget", "cost too much",
-                    "cheaper option", "need to save money", "financial constraints"
+                    "too expensive",
+                    "can't afford",
+                    "price is high",
+                    "budget",
+                    "cost too much",
+                    "cheaper option",
+                    "need to save money",
+                    "financial constraints",
                 ],
                 "response_strategies": [
                     "Acknowledge concern and pivot to value",
                     "Share ROI examples from similar clients",
-                    "Break down cost vs. potential loss of not acting"
+                    "Break down cost vs. potential loss of not acting",
                 ],
                 "confidence_threshold": 0.75,
-                "urgency": InsightPriority.HIGH
+                "urgency": InsightPriority.HIGH,
             },
             "timing_objection": {
                 "keywords": [
-                    "not ready", "need more time", "thinking about it", "maybe later",
-                    "next year", "not the right time", "too busy right now"
+                    "not ready",
+                    "need more time",
+                    "thinking about it",
+                    "maybe later",
+                    "next year",
+                    "not the right time",
+                    "too busy right now",
                 ],
                 "response_strategies": [
                     "Explore what 'ready' means specifically",
                     "Highlight market timing advantages",
-                    "Create structured timeline with milestones"
+                    "Create structured timeline with milestones",
                 ],
                 "confidence_threshold": 0.70,
-                "urgency": InsightPriority.MEDIUM
+                "urgency": InsightPriority.MEDIUM,
             },
             "authority_objection": {
                 "keywords": [
-                    "talk to spouse", "need to discuss", "decision together", "ask my partner",
-                    "family meeting", "get approval", "check with wife/husband"
+                    "talk to spouse",
+                    "need to discuss",
+                    "decision together",
+                    "ask my partner",
+                    "family meeting",
+                    "get approval",
+                    "check with wife/husband",
                 ],
                 "response_strategies": [
                     "Include decision maker in conversation",
                     "Provide materials for partner discussion",
-                    "Schedule three-way call/meeting"
+                    "Schedule three-way call/meeting",
                 ],
                 "confidence_threshold": 0.80,
-                "urgency": InsightPriority.HIGH
+                "urgency": InsightPriority.HIGH,
             },
             "trust_objection": {
                 "keywords": [
-                    "don't know you", "never heard of you", "need references", "prove yourself",
-                    "seems too good", "sounds fishy", "not sure about this"
+                    "don't know you",
+                    "never heard of you",
+                    "need references",
+                    "prove yourself",
+                    "seems too good",
+                    "sounds fishy",
+                    "not sure about this",
                 ],
                 "response_strategies": [
                     "Share testimonials and case studies",
                     "Provide references and credentials",
-                    "Offer low-risk trial or guarantee"
+                    "Offer low-risk trial or guarantee",
                 ],
                 "confidence_threshold": 0.75,
-                "urgency": InsightPriority.HIGH
-            }
+                "urgency": InsightPriority.HIGH,
+            },
         }
 
     def _initialize_coaching_patterns(self) -> Dict[str, Dict[str, Any]]:
@@ -211,46 +231,46 @@ class ProactiveConversationIntelligence:
                 "triggers": [
                     "Personal information shared but not acknowledged",
                     "Emotional language not reflected back",
-                    "Opportunity for common ground missed"
+                    "Opportunity for common ground missed",
                 ],
                 "coaching_insight": "Look for personal connection opportunities to build rapport",
                 "technique": "Active listening with personal connection bridges",
                 "success_probability": 0.85,
-                "category": CoachingCategory.RAPPORT_BUILDING
+                "category": CoachingCategory.RAPPORT_BUILDING,
             },
             "weak_value_articulation": {
                 "triggers": [
                     "Generic benefits mentioned without personalization",
                     "No specific examples or stories shared",
-                    "Features listed without benefit translation"
+                    "Features listed without benefit translation",
                 ],
                 "coaching_insight": "Transform features into personal benefits with specific examples",
                 "technique": "Story-driven value demonstration with client-specific outcomes",
                 "success_probability": 0.80,
-                "category": CoachingCategory.VALUE_PROPOSITION
+                "category": CoachingCategory.VALUE_PROPOSITION,
             },
             "objection_avoidance": {
                 "triggers": [
                     "Objection raised but quickly moved past",
                     "Concern mentioned but not fully addressed",
-                    "Defensive response to pushback"
+                    "Defensive response to pushback",
                 ],
                 "coaching_insight": "Embrace objections as buying signals and address them fully",
                 "technique": "Feel-Felt-Found method with complete resolution",
                 "success_probability": 0.75,
-                "category": CoachingCategory.OBJECTION_HANDLING
+                "category": CoachingCategory.OBJECTION_HANDLING,
             },
             "no_closing_attempt": {
                 "triggers": [
                     "Conversation ending without clear next step",
                     "Interest shown but no commitment request",
-                    "Value established but no call to action"
+                    "Value established but no call to action",
                 ],
                 "coaching_insight": "Always ask for the next step - closing is helping them decide",
                 "technique": "Assumptive close with specific next action",
                 "success_probability": 0.90,
-                "category": CoachingCategory.CLOSING_TECHNIQUES
-            }
+                "category": CoachingCategory.CLOSING_TECHNIQUES,
+            },
         }
 
     def _initialize_strategy_triggers(self) -> Dict[str, Dict[str, Any]]:
@@ -261,40 +281,40 @@ class ProactiveConversationIntelligence:
                     "Questions about available properties",
                     "Timeline mentions for moving",
                     "Property preference discussions",
-                    "Financing questions"
+                    "Financing questions",
                 ],
                 "strategy": StrategyType.PIVOT_TO_BUYER,
                 "description": "Lead showing buyer interest - pivot to dual representation",
                 "implementation": "Acknowledge seller discussion completion, transition to buyer needs",
                 "impact_score": 0.85,
-                "urgency": "soon"
+                "urgency": "soon",
             },
             "stalling_conversation": {
                 "triggers": [
                     "Repeated vague responses",
                     "Long response delays",
                     "Avoiding commitment questions",
-                    "Passive engagement"
+                    "Passive engagement",
                 ],
                 "strategy": StrategyType.ESCALATE_URGENCY,
                 "description": "Create appropriate urgency to prevent conversation stalling",
                 "implementation": "Introduce market timing factors and scarcity elements",
                 "impact_score": 0.70,
-                "urgency": "immediate"
+                "urgency": "immediate",
             },
             "high_engagement_opportunity": {
                 "triggers": [
                     "Multiple questions asked",
                     "Quick response times",
                     "Detail-seeking behavior",
-                    "Positive tone indicators"
+                    "Positive tone indicators",
                 ],
                 "strategy": StrategyType.SCHEDULE_MEETING,
                 "description": "High engagement - perfect time to request meeting",
                 "implementation": "Leverage momentum to secure face-to-face meeting",
                 "impact_score": 0.80,
-                "urgency": "immediate"
-            }
+                "urgency": "immediate",
+            },
         }
 
     # ============================================================================
@@ -321,8 +341,7 @@ class ProactiveConversationIntelligence:
 
             # Create monitoring task
             monitoring_task = asyncio.create_task(
-                self._monitoring_loop(conversation_id),
-                name=f"monitor_{conversation_id}"
+                self._monitoring_loop(conversation_id), name=f"monitor_{conversation_id}"
             )
 
             self.active_monitors[conversation_id] = monitoring_task
@@ -417,7 +436,9 @@ class ProactiveConversationIntelligence:
                         processing_time_ms = (time.time() - start_time) * 1000
                         self._update_performance_metrics(processing_time_ms)
 
-                        logger.debug(f"Generated {len(insights)} insights for {conversation_id} in {processing_time_ms:.1f}ms")
+                        logger.debug(
+                            f"Generated {len(insights)} insights for {conversation_id} in {processing_time_ms:.1f}ms"
+                        )
 
                 except Exception as e:
                     logger.error(f"Error in monitoring loop for {conversation_id}: {e}")
@@ -431,9 +452,7 @@ class ProactiveConversationIntelligence:
             logger.error(f"Monitoring loop error for {conversation_id}: {e}")
 
     async def analyze_conversation_state(
-        self,
-        conversation_id: str,
-        conversation_data: Optional[Dict[str, Any]] = None
+        self, conversation_id: str, conversation_data: Optional[Dict[str, Any]] = None
     ) -> List[ProactiveInsight]:
         """
         Main intelligence analysis method that detects patterns and generates insights.
@@ -476,10 +495,7 @@ class ProactiveConversationIntelligence:
             cache_key_with_hash = f"{cache_key}:{messages_hash}"
 
             # Check semantic cache
-            cached_insights = await self.semantic_cache.get_similar(
-                cache_key_with_hash,
-                threshold=0.85
-            )
+            cached_insights = await self.semantic_cache.get_similar(cache_key_with_hash, threshold=0.85)
 
             if cached_insights:
                 logger.debug(f"Cache hit for conversation analysis: {conversation_id}")
@@ -495,8 +511,7 @@ class ProactiveConversationIntelligence:
             objection_task = self.predict_objections(messages, conversation_id)
 
             coaching_ops, strategy_recs, quality_insights, objection_predictions = await asyncio.gather(
-                coaching_task, strategy_task, quality_task, objection_task,
-                return_exceptions=True
+                coaching_task, strategy_task, quality_task, objection_task, return_exceptions=True
             )
 
             # Convert results to insights (handling exceptions)
@@ -504,7 +519,7 @@ class ProactiveConversationIntelligence:
                 (coaching_ops, InsightType.COACHING),
                 (strategy_recs, InsightType.STRATEGY_PIVOT),
                 (quality_insights, InsightType.CONVERSATION_QUALITY),
-                (objection_predictions, InsightType.OBJECTION_PREDICTION)
+                (objection_predictions, InsightType.OBJECTION_PREDICTION),
             ]:
                 if not isinstance(result_set, Exception):
                     for item in result_set:
@@ -523,18 +538,14 @@ class ProactiveConversationIntelligence:
             processing_time_ms = (time.time() - start_time) * 1000
             self.performance_metrics["total_insights_generated"] += len(insights)
 
-            logger.debug(
-                f"Generated {len(insights)} insights for {conversation_id} "
-                f"in {processing_time_ms:.1f}ms"
-            )
+            logger.debug(f"Generated {len(insights)} insights for {conversation_id} in {processing_time_ms:.1f}ms")
 
             return insights
 
         except Exception as e:
             processing_time_ms = (time.time() - start_time) * 1000
             logger.error(
-                f"Failed to analyze conversation state for {conversation_id}: {e} "
-                f"(took {processing_time_ms:.1f}ms)"
+                f"Failed to analyze conversation state for {conversation_id}: {e} (took {processing_time_ms:.1f}ms)"
             )
             return []
 
@@ -543,9 +554,7 @@ class ProactiveConversationIntelligence:
     # ============================================================================
 
     async def detect_coaching_opportunities(
-        self,
-        messages: List[Dict[str, Any]],
-        conversation_id: str
+        self, messages: List[Dict[str, Any]], conversation_id: str
     ) -> List[CoachingOpportunity]:
         """
         Detect real-time coaching opportunities using pattern analysis.
@@ -564,9 +573,7 @@ class ProactiveConversationIntelligence:
                     # Simple pattern matching (in production, use more sophisticated NLP)
                     if await self._detect_pattern_in_messages(recent_messages, trigger):
                         # Generate ML confidence score if available
-                        confidence = await self._get_ml_confidence_score(
-                            recent_messages, pattern_name
-                        )
+                        confidence = await self._get_ml_confidence_score(recent_messages, pattern_name)
 
                         if confidence >= 0.7:  # High confidence threshold for coaching
                             opportunity = CoachingOpportunity(
@@ -583,10 +590,10 @@ class ProactiveConversationIntelligence:
                                 conversation_context={
                                     "conversation_id": conversation_id,
                                     "trigger_pattern": trigger,
-                                    "message_count": len(recent_messages)
+                                    "message_count": len(recent_messages),
                                 },
                                 immediate_application=True,
-                                learning_objective=f"Improve {pattern_config['category'].value} skills"
+                                learning_objective=f"Improve {pattern_config['category'].value} skills",
                             )
                             opportunities.append(opportunity)
 
@@ -596,9 +603,7 @@ class ProactiveConversationIntelligence:
         return opportunities
 
     async def detect_strategy_pivots(
-        self,
-        messages: List[Dict[str, Any]],
-        conversation_id: str
+        self, messages: List[Dict[str, Any]], conversation_id: str
     ) -> List[StrategyRecommendation]:
         """
         Detect strategic pivot opportunities based on conversation patterns.
@@ -633,16 +638,12 @@ class ProactiveConversationIntelligence:
                             trigger_config["strategy"], conversation_id
                         ),
                         conversation_pivot=trigger_config["implementation"],
-                        expected_outcome=await self._predict_strategy_outcome(
-                            trigger_config["strategy"], messages
-                        ),
+                        expected_outcome=await self._predict_strategy_outcome(trigger_config["strategy"], messages),
                         impact_score=trigger_config["impact_score"],
                         urgency_level=trigger_config["urgency"],
                         trigger_conditions=detected_triggers,
-                        success_indicators=await self._generate_success_indicators(
-                            trigger_config["strategy"]
-                        ),
-                        risk_level="low" if trigger_score >= 3 else "medium"
+                        success_indicators=await self._generate_success_indicators(trigger_config["strategy"]),
+                        risk_level="low" if trigger_score >= 3 else "medium",
                     )
                     recommendations.append(recommendation)
 
@@ -651,11 +652,7 @@ class ProactiveConversationIntelligence:
 
         return recommendations
 
-    async def predict_objections(
-        self,
-        messages: List[Dict[str, Any]],
-        conversation_id: str
-    ) -> List[Dict[str, Any]]:
+    async def predict_objections(self, messages: List[Dict[str, Any]], conversation_id: str) -> List[Dict[str, Any]]:
         """
         Predict likely objections based on conversation patterns and lead behavior.
 
@@ -680,9 +677,7 @@ class ProactiveConversationIntelligence:
 
                 # Get ML confidence if available
                 if self.ml_engine:
-                    ml_confidence = await self._get_ml_confidence_score(
-                        recent_messages, f"objection_{objection_type}"
-                    )
+                    ml_confidence = await self._get_ml_confidence_score(recent_messages, f"objection_{objection_type}")
                     objection_probability = max(objection_probability, ml_confidence)
 
                 # Generate prediction if probability exceeds threshold
@@ -695,8 +690,8 @@ class ProactiveConversationIntelligence:
                         "urgency": pattern_config["urgency"],
                         "conversation_context": {
                             "conversation_id": conversation_id,
-                            "recent_message_count": len(recent_messages)
-                        }
+                            "recent_message_count": len(recent_messages),
+                        },
                     }
                     predictions.append(prediction)
 
@@ -706,9 +701,7 @@ class ProactiveConversationIntelligence:
         return predictions
 
     async def assess_conversation_quality(
-        self,
-        messages: List[Dict[str, Any]],
-        conversation_id: str
+        self, messages: List[Dict[str, Any]], conversation_id: str
     ) -> List[Dict[str, Any]]:
         """
         Assess conversation quality across multiple dimensions.
@@ -749,9 +742,7 @@ class ProactiveConversationIntelligence:
                     "improvement_areas": await self._identify_improvement_areas(
                         engagement_score, response_quality_score, conversation_flow_score
                     ),
-                    "specific_recommendations": await self._generate_quality_recommendations(
-                        overall_score, messages
-                    )
+                    "specific_recommendations": await self._generate_quality_recommendations(overall_score, messages),
                 }
                 quality_insights.append(quality_insight)
 
@@ -787,27 +778,23 @@ class ProactiveConversationIntelligence:
                         "id": f"msg_1",
                         "content": "Hi, I'm interested in selling my property",
                         "sender_type": "lead",
-                        "timestamp": datetime.utcnow() - timedelta(minutes=10)
+                        "timestamp": datetime.utcnow() - timedelta(minutes=10),
                     },
                     {
                         "id": f"msg_2",
                         "content": "Great! I'd love to help you with that. What's driving your decision to sell?",
                         "sender_type": "agent",
-                        "timestamp": datetime.utcnow() - timedelta(minutes=9)
+                        "timestamp": datetime.utcnow() - timedelta(minutes=9),
                     },
                     {
                         "id": f"msg_3",
                         "content": "Well, the market seems good and we need a bigger place",
                         "sender_type": "lead",
-                        "timestamp": datetime.utcnow() - timedelta(minutes=8)
-                    }
+                        "timestamp": datetime.utcnow() - timedelta(minutes=8),
+                    },
                 ],
-                "lead_profile": {
-                    "lead_id": f"lead_{conversation_id}",
-                    "ml_score": 72.5,
-                    "stage": "qualification"
-                },
-                "last_updated": datetime.utcnow()
+                "lead_profile": {"lead_id": f"lead_{conversation_id}", "ml_score": 72.5, "stage": "qualification"},
+                "last_updated": datetime.utcnow(),
             }
 
             # Cache for 1 minute
@@ -819,11 +806,7 @@ class ProactiveConversationIntelligence:
             logger.error(f"Failed to get conversation data for {conversation_id}: {e}")
             return None
 
-    async def _get_ml_confidence_score(
-        self,
-        messages: List[Dict[str, Any]],
-        pattern_type: str
-    ) -> float:
+    async def _get_ml_confidence_score(self, messages: List[Dict[str, Any]], pattern_type: str) -> float:
         """
         Get ML confidence score for pattern detection using existing ML engine.
 
@@ -839,10 +822,7 @@ class ProactiveConversationIntelligence:
             features = await self._extract_message_features(messages, pattern_type)
 
             # Get prediction from existing ML engine
-            prediction = await self.ml_engine.predict_behavioral_pattern(
-                features=features,
-                pattern_type=pattern_type
-            )
+            prediction = await self.ml_engine.predict_behavioral_pattern(features=features, pattern_type=pattern_type)
 
             # Track ML inference time
             ml_time_ms = (time.time() - start_time) * 1000
@@ -854,11 +834,7 @@ class ProactiveConversationIntelligence:
             logger.warning(f"ML confidence scoring failed for {pattern_type}: {e}")
             return 0.6  # Fallback confidence score
 
-    async def _extract_message_features(
-        self,
-        messages: List[Dict[str, Any]],
-        pattern_type: str
-    ) -> Dict[str, float]:
+    async def _extract_message_features(self, messages: List[Dict[str, Any]], pattern_type: str) -> Dict[str, float]:
         """
         Extract features from messages for ML analysis.
 
@@ -882,7 +858,7 @@ class ProactiveConversationIntelligence:
                 "objection_price": ["expensive", "cost", "budget", "afford"],
                 "objection_timing": ["ready", "time", "later", "think"],
                 "coaching_rapport": ["I", "me", "my", "personal"],
-                "strategy_buyer": ["buy", "purchase", "looking", "house"]
+                "strategy_buyer": ["buy", "purchase", "looking", "house"],
             }
 
             keyword_matches = 0
@@ -899,7 +875,7 @@ class ProactiveConversationIntelligence:
                 "exclamation_ratio": exclamation_count / total_messages if total_messages > 0 else 0,
                 "keyword_match_ratio": keyword_matches / total_messages if total_messages > 0 else 0,
                 "conversation_length_minutes": 10.0,  # Simplified - calculate from timestamps
-                "response_time_avg": 2.0  # Simplified - calculate from actual timestamps
+                "response_time_avg": 2.0,  # Simplified - calculate from actual timestamps
             }
 
             return features
@@ -908,11 +884,7 @@ class ProactiveConversationIntelligence:
             logger.error(f"Failed to extract message features: {e}")
             return {}
 
-    async def _detect_pattern_in_messages(
-        self,
-        messages: List[Dict[str, Any]],
-        pattern: str
-    ) -> bool:
+    async def _detect_pattern_in_messages(self, messages: List[Dict[str, Any]], pattern: str) -> bool:
         """Simple pattern detection in message content."""
         try:
             all_content = " ".join([msg.get("content", "") for msg in messages]).lower()
@@ -925,10 +897,7 @@ class ProactiveConversationIntelligence:
         return pattern.lower() in text.lower()
 
     async def _convert_to_proactive_insight(
-        self,
-        item: Any,
-        insight_type: InsightType,
-        conversation_id: str
+        self, item: Any, insight_type: InsightType, conversation_id: str
     ) -> Optional[ProactiveInsight]:
         """
         Convert various analysis results to standardized ProactiveInsight format.
@@ -947,7 +916,7 @@ class ProactiveConversationIntelligence:
                     expected_impact=item.success_probability * 0.9,
                     conversation_context=item.conversation_context,
                     applicable_stage=ConversationStage.QUALIFICATION,  # Default
-                    expires_at=datetime.utcnow() + timedelta(minutes=30)
+                    expires_at=datetime.utcnow() + timedelta(minutes=30),
                 )
 
             elif isinstance(item, StrategyRecommendation):
@@ -963,7 +932,7 @@ class ProactiveConversationIntelligence:
                     expected_impact=item.impact_score,
                     conversation_context={"strategy_type": item.strategy_type.value},
                     applicable_stage=ConversationStage.QUALIFICATION,
-                    expires_at=datetime.utcnow() + timedelta(hours=1)
+                    expires_at=datetime.utcnow() + timedelta(hours=1),
                 )
 
             elif isinstance(item, dict):
@@ -981,7 +950,7 @@ class ProactiveConversationIntelligence:
                         expected_impact=0.8,
                         conversation_context=item["conversation_context"],
                         applicable_stage=ConversationStage.VALUE_PRESENTATION,
-                        expires_at=datetime.utcnow() + timedelta(minutes=15)
+                        expires_at=datetime.utcnow() + timedelta(minutes=15),
                     )
 
                 elif "quality_type" in item:
@@ -997,7 +966,7 @@ class ProactiveConversationIntelligence:
                         expected_impact=0.7,
                         conversation_context={"quality_scores": item},
                         applicable_stage=ConversationStage.QUALIFICATION,
-                        expires_at=datetime.utcnow() + timedelta(minutes=45)
+                        expires_at=datetime.utcnow() + timedelta(minutes=45),
                     )
 
             return None
@@ -1009,11 +978,7 @@ class ProactiveConversationIntelligence:
     # Additional helper methods would be implemented here...
     # (Due to length constraints, I'm including the core structure)
 
-    async def _publish_proactive_insight_event(
-        self,
-        conversation_id: str,
-        insight: ProactiveInsight
-    ):
+    async def _publish_proactive_insight_event(self, conversation_id: str, insight: ProactiveInsight):
         """Publish proactive insight event via WebSocket."""
         try:
             event_data = {
@@ -1025,25 +990,18 @@ class ProactiveConversationIntelligence:
                 "description": insight.description,
                 "confidence_score": insight.confidence_score,
                 "recommended_actions": insight.recommended_actions,
-                "created_at": insight.created_at.isoformat()
+                "created_at": insight.created_at.isoformat(),
             }
 
             # Publish through existing event publisher
-            await self.event_publisher.publish_proactive_insight(
-                conversation_id=conversation_id,
-                insight=insight
-            )
+            await self.event_publisher.publish_proactive_insight(conversation_id=conversation_id, insight=insight)
 
             logger.debug(f"Published proactive insight event: {insight.insight_type.value}")
 
         except Exception as e:
             logger.error(f"Failed to publish proactive insight event: {e}")
 
-    def _update_insight_history(
-        self,
-        conversation_id: str,
-        insights: List[ProactiveInsight]
-    ):
+    def _update_insight_history(self, conversation_id: str, insights: List[ProactiveInsight]):
         """Update insight history with LRU management."""
         if conversation_id not in self.insight_history:
             self.insight_history[conversation_id] = []
@@ -1059,7 +1017,11 @@ class ProactiveConversationIntelligence:
             # Remove oldest conversation
             oldest_conversation = min(
                 self.insight_history.keys(),
-                key=lambda cid: self.monitoring_states.get(cid, type('obj', (), {'monitoring_started_at': datetime.min})).monitoring_started_at
+                key=lambda cid: (
+                    self.monitoring_states.get(
+                        cid, type("obj", (), {"monitoring_started_at": datetime.min})
+                    ).monitoring_started_at
+                ),
             )
             del self.insight_history[oldest_conversation]
 
@@ -1081,18 +1043,35 @@ class ProactiveConversationIntelligence:
             "active_monitoring_sessions": len(self.active_monitors),
             "ml_inference_time_ms": self.performance_metrics["ml_inference_time_ms"],
             "target_generation_time_ms": 2000.0,  # <2s target
-            "performance_status": "good" if self.performance_metrics["average_generation_time_ms"] < 2000.0 else "needs_optimization"
+            "performance_status": "good"
+            if self.performance_metrics["average_generation_time_ms"] < 2000.0
+            else "needs_optimization",
         }
 
     # Placeholder methods that would be fully implemented
-    async def _generate_example_response(self, category, messages): return "Example response..."
-    async def _generate_implementation_steps(self, strategy, conv_id): return ["Step 1", "Step 2"]
-    async def _predict_strategy_outcome(self, strategy, messages): return "Improved engagement expected"
-    async def _generate_success_indicators(self, strategy): return ["Indicator 1", "Indicator 2"]
-    async def _analyze_response_quality(self, messages): return 75.0
-    async def _analyze_conversation_flow(self, messages): return 80.0
-    async def _identify_improvement_areas(self, eng, qual, flow): return ["Area 1", "Area 2"]
-    async def _generate_quality_recommendations(self, score, messages): return ["Recommendation 1"]
+    async def _generate_example_response(self, category, messages):
+        return "Example response..."
+
+    async def _generate_implementation_steps(self, strategy, conv_id):
+        return ["Step 1", "Step 2"]
+
+    async def _predict_strategy_outcome(self, strategy, messages):
+        return "Improved engagement expected"
+
+    async def _generate_success_indicators(self, strategy):
+        return ["Indicator 1", "Indicator 2"]
+
+    async def _analyze_response_quality(self, messages):
+        return 75.0
+
+    async def _analyze_conversation_flow(self, messages):
+        return 80.0
+
+    async def _identify_improvement_areas(self, eng, qual, flow):
+        return ["Area 1", "Area 2"]
+
+    async def _generate_quality_recommendations(self, score, messages):
+        return ["Recommendation 1"]
 
 
 # ============================================================================
@@ -1100,6 +1079,7 @@ class ProactiveConversationIntelligence:
 # ============================================================================
 
 _proactive_intelligence_instance = None
+
 
 def get_proactive_conversation_intelligence() -> ProactiveConversationIntelligence:
     """Get singleton instance of ProactiveConversationIntelligence."""

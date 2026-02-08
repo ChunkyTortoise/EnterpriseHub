@@ -96,28 +96,24 @@ class WorkflowValidator:
             # Check action type
             action = step.get("action")
             if not action:
-                self.errors.append(f"Step {i+1}: Missing action")
+                self.errors.append(f"Step {i + 1}: Missing action")
                 continue
 
             if action not in self.VALID_ACTIONS:
-                self.errors.append(f"Step {i+1}: Invalid action '{action}'")
+                self.errors.append(f"Step {i + 1}: Invalid action '{action}'")
 
             # Check required fields for action
             if action in self.REQUIRED_FIELDS:
                 for field in self.REQUIRED_FIELDS[action]:
                     if field not in step and field not in step.get("data", {}):
-                        self.errors.append(
-                            f"Step {i+1}: Missing required field '{field}' for action '{action}'"
-                        )
+                        self.errors.append(f"Step {i + 1}: Missing required field '{field}' for action '{action}'")
 
     def _check_for_loops(self, steps: List[Dict[str, Any]]):
         """Check for infinite loops"""
         # Simple check: no step should reference itself
         for i, step in enumerate(steps):
             if "next_step" in step and step["next_step"] == i:
-                self.errors.append(
-                    f"Step {i+1}: Infinite loop detected (references itself)"
-                )
+                self.errors.append(f"Step {i + 1}: Infinite loop detected (references itself)")
 
     def _validate_timing(self, steps: List[Dict[str, Any]]):
         """Validate timing makes sense"""
@@ -126,17 +122,15 @@ class WorkflowValidator:
             delay = step.get("delay_minutes", 0)
 
             if delay < 0:
-                self.errors.append(f"Step {i+1}: Negative delay not allowed")
+                self.errors.append(f"Step {i + 1}: Negative delay not allowed")
 
             if delay > 43200:  # 30 days
-                self.warnings.append(f"Step {i+1}: Very long delay ({delay} minutes)")
+                self.warnings.append(f"Step {i + 1}: Very long delay ({delay} minutes)")
 
             total_delay += delay
 
         if total_delay > 129600:  # 90 days
-            self.warnings.append(
-                f"Workflow total duration is very long ({total_delay/1440:.1f} days)"
-            )
+            self.warnings.append(f"Workflow total duration is very long ({total_delay / 1440:.1f} days)")
 
 
 if __name__ == "__main__":

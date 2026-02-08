@@ -4,12 +4,13 @@ Covers interaction recording, input validation, handoff recording,
 bot and system summaries, alerting integration, and singleton reset.
 """
 
-import pytest
 from unittest.mock import MagicMock
 
+import pytest
+
 from ghl_real_estate_ai.services.jorge.bot_metrics_collector import (
-    BotMetricsCollector,
     VALID_BOT_TYPES,
+    BotMetricsCollector,
 )
 
 
@@ -29,9 +30,7 @@ class TestBotMetricsCollector:
     def test_record_bot_interaction_valid(self):
         """Recording a valid interaction stores it in the collector."""
         collector = BotMetricsCollector()
-        collector.record_bot_interaction(
-            bot_type="lead", duration_ms=250.0, success=True, cache_hit=True
-        )
+        collector.record_bot_interaction(bot_type="lead", duration_ms=250.0, success=True, cache_hit=True)
 
         assert len(collector._interactions) == 1
         interaction = collector._interactions[0]
@@ -46,18 +45,14 @@ class TestBotMetricsCollector:
         """Recording with an unrecognized bot_type raises ValueError."""
         collector = BotMetricsCollector()
         with pytest.raises(ValueError, match="Invalid bot_type 'unknown'"):
-            collector.record_bot_interaction(
-                bot_type="unknown", duration_ms=100.0, success=True
-            )
+            collector.record_bot_interaction(bot_type="unknown", duration_ms=100.0, success=True)
 
     # ── 3. Record handoff ──────────────────────────────────────────────
 
     def test_record_handoff(self):
         """Recording a handoff stores source, target, success, and duration."""
         collector = BotMetricsCollector()
-        collector.record_handoff(
-            source="lead", target="buyer", success=True, duration_ms=120.0
-        )
+        collector.record_handoff(source="lead", target="buyer", success=True, duration_ms=120.0)
 
         assert len(collector._handoffs) == 1
         handoff = collector._handoffs[0]
@@ -164,9 +159,7 @@ class TestBotMetricsCollector:
         assert mock_alerting.record_metric.call_count == 7
 
         # Collect the metric names that were recorded
-        recorded_names = {
-            call.args[0] for call in mock_alerting.record_metric.call_args_list
-        }
+        recorded_names = {call.args[0] for call in mock_alerting.record_metric.call_args_list}
         expected_names = {
             "error_rate",
             "cache_hit_rate",

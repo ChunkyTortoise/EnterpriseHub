@@ -17,29 +17,29 @@ Coverage Target: 85%+ for all Twilio operations
 
 import asyncio
 import json
+from datetime import datetime, timedelta
+from typing import Any, Dict
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 import pytest_asyncio
-from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, Any
 
 # Import the module under test
 try:
     from ghl_real_estate_ai.services.twilio_client import (
+        MessageStatus,
+        OptOutRecord,
+        PhoneNumberInfo,
+        SMSMessage,
+        TwilioAPIException,
         TwilioClient,
         TwilioConfig,
-        SMSMessage,
-        PhoneNumberInfo,
-        OptOutRecord,
-        MessageStatus,
-        TwilioAPIException
     )
 except (ImportError, TypeError, AttributeError):
     pytest.skip("required imports unavailable", allow_module_level=True)
 
 # Import test utilities
-from tests.mocks.external_services import MockTwilioClient
-from tests.mocks.external_services import MockWebhookPayloads
+from tests.mocks.external_services import MockTwilioClient, MockWebhookPayloads
 
 
 class TestTwilioConfig:
@@ -128,11 +128,7 @@ class TestTwilioClient:
     @pytest_asyncio.fixture
     async def twilio_client(self):
         """Create Twilio client with mocked dependencies"""
-        config = TwilioConfig(
-            account_sid="test_account_sid",
-            auth_token="test_auth_token",
-            phone_number="+15551234567"
-        )
+        config = TwilioConfig(account_sid="test_account_sid", auth_token="test_auth_token", phone_number="+15551234567")
 
         # Mock cache service
         mock_cache = AsyncMock()
@@ -168,11 +164,7 @@ class TestTwilioClient:
     @pytest.mark.asyncio
     async def test_client_context_manager(self):
         """Test client as async context manager"""
-        config = TwilioConfig(
-            account_sid="test_sid",
-            auth_token="test_token",
-            phone_number="+15551234567"
-        )
+        config = TwilioConfig(account_sid="test_sid", auth_token="test_token", phone_number="+15551234567")
 
         mock_cache = AsyncMock()
         mock_cache.get = AsyncMock(return_value=[])
@@ -217,11 +209,7 @@ class TestPhoneNumberValidation:
     @pytest_asyncio.fixture
     async def twilio_client(self):
         """Create Twilio client for phone validation testing"""
-        config = TwilioConfig(
-            account_sid="test_sid",
-            auth_token="test_token",
-            phone_number="+15551234567"
-        )
+        config = TwilioConfig(account_sid="test_sid", auth_token="test_token", phone_number="+15551234567")
         client = TwilioClient(config)
         # Mock the sync_client to prevent real API calls
         client.sync_client = MagicMock()
@@ -290,8 +278,8 @@ class TestPhoneNumberValidation:
         from twilio.base.exceptions import TwilioRestException
 
         # When Twilio returns 20404, the method returns PhoneNumberInfo with valid=False
-        twilio_client.sync_client.lookups.v1.phone_numbers.return_value.fetch.side_effect = (
-            TwilioRestException(status=404, uri="/PhoneNumbers", msg="Phone number not found", code=20404)
+        twilio_client.sync_client.lookups.v1.phone_numbers.return_value.fetch.side_effect = TwilioRestException(
+            status=404, uri="/PhoneNumbers", msg="Phone number not found", code=20404
         )
 
         result = await twilio_client.validate_phone_number("+999999999")
@@ -319,11 +307,7 @@ class TestSMSSending:
     @pytest_asyncio.fixture
     async def twilio_client(self):
         """Create Twilio client for SMS testing"""
-        config = TwilioConfig(
-            account_sid="test_sid",
-            auth_token="test_token",
-            phone_number="+15551234567"
-        )
+        config = TwilioConfig(account_sid="test_sid", auth_token="test_token", phone_number="+15551234567")
 
         mock_cache = AsyncMock()
         mock_cache.get = AsyncMock(return_value=None)
@@ -370,7 +354,7 @@ class TestSMSSending:
 
         # The service always adds the compliance footer via _add_compliance_footer
         call_args = twilio_client.sync_client.messages.create.call_args
-        body_sent = call_args[1]['body'] if 'body' in (call_args[1] or {}) else call_args.kwargs.get('body', '')
+        body_sent = call_args[1]["body"] if "body" in (call_args[1] or {}) else call_args.kwargs.get("body", "")
         assert "Reply STOP to opt out" in body_sent
 
     @pytest.mark.asyncio
@@ -380,28 +364,20 @@ class TestSMSSending:
         twilio_client._opt_out_cache.add("+15557890123")
 
         with pytest.raises(TwilioAPIException, match="opted out"):
-            await twilio_client.send_sms(
-                to="+15557890123",
-                message="This should not be sent"
-            )
+            await twilio_client.send_sms(to="+15557890123", message="This should not be sent")
 
     @pytest.mark.asyncio
     async def test_send_sms_api_error(self, twilio_client):
         """Test SMS sending when API returns error"""
         # Mock API error
         from twilio.base.exceptions import TwilioRestException
+
         twilio_client.sync_client.messages.create.side_effect = TwilioRestException(
-            status=400,
-            uri="/Messages",
-            msg="Invalid 'To' Phone Number",
-            code=21211
+            status=400, uri="/Messages", msg="Invalid 'To' Phone Number", code=21211
         )
 
         with pytest.raises(TwilioAPIException, match="SMS sending failed"):
-            await twilio_client.send_sms(
-                to="+15557890123",
-                message="This will fail"
-            )
+            await twilio_client.send_sms(to="+15557890123", message="This will fail")
 
     @pytest.mark.asyncio
     async def test_send_sms_rate_limiting(self, twilio_client):
@@ -412,10 +388,7 @@ class TestSMSSending:
         # Send multiple messages concurrently
         tasks = []
         for i in range(3):
-            task = twilio_client.send_sms(
-                to=f"+155512345{i:02d}",
-                message=f"Message {i}"
-            )
+            task = twilio_client.send_sms(to=f"+155512345{i:02d}", message=f"Message {i}")
             tasks.append(task)
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -431,11 +404,7 @@ class TestTemplatedSMS:
     @pytest_asyncio.fixture
     async def twilio_client(self):
         """Create Twilio client for template testing"""
-        config = TwilioConfig(
-            account_sid="test_sid",
-            auth_token="test_token",
-            phone_number="+15551234567"
-        )
+        config = TwilioConfig(account_sid="test_sid", auth_token="test_token", phone_number="+15551234567")
 
         mock_cache = AsyncMock()
         mock_cache.get = AsyncMock(return_value=None)
@@ -469,9 +438,7 @@ class TestTemplatedSMS:
             mock_tls.return_value = mock_service
 
             result = await twilio_client.send_templated_sms(
-                to="+15557890123",
-                template_name="instant_response",
-                variables=variables
+                to="+15557890123", template_name="instant_response", variables=variables
             )
 
         assert isinstance(result, SMSMessage)
@@ -491,9 +458,7 @@ class TestTemplatedSMS:
             mock_tls.return_value = mock_service
 
             result = await twilio_client.send_templated_sms(
-                to="+15557890123",
-                template_name="follow_up_24h",
-                variables=variables
+                to="+15557890123", template_name="follow_up_24h", variables=variables
             )
 
         assert isinstance(result, SMSMessage)
@@ -508,9 +473,7 @@ class TestTemplatedSMS:
 
             with pytest.raises(TwilioAPIException, match="not found"):
                 await twilio_client.send_templated_sms(
-                    to="+15557890123",
-                    template_name="nonexistent_template",
-                    variables={}
+                    to="+15557890123", template_name="nonexistent_template", variables={}
                 )
 
     @pytest.mark.asyncio
@@ -540,11 +503,7 @@ class TestOptOutManagement:
     @pytest_asyncio.fixture
     async def twilio_client(self):
         """Create Twilio client for opt-out testing"""
-        config = TwilioConfig(
-            account_sid="test_sid",
-            auth_token="test_token",
-            phone_number="+15551234567"
-        )
+        config = TwilioConfig(account_sid="test_sid", auth_token="test_token", phone_number="+15551234567")
 
         # Mock cache service
         mock_cache = AsyncMock()
@@ -636,11 +595,7 @@ class TestWebhookProcessing:
     @pytest_asyncio.fixture
     async def twilio_client(self):
         """Create Twilio client for webhook testing"""
-        config = TwilioConfig(
-            account_sid="test_sid",
-            auth_token="test_token",
-            phone_number="+15551234567"
-        )
+        config = TwilioConfig(account_sid="test_sid", auth_token="test_token", phone_number="+15551234567")
 
         # Mock cache service
         mock_cache = AsyncMock()
@@ -658,10 +613,10 @@ class TestWebhookProcessing:
     async def test_process_status_webhook_delivered(self, twilio_client):
         """Test processing delivery status webhook"""
         webhook_data = {
-            'MessageSid': 'SM123456789',
-            'MessageStatus': 'delivered',
-            'To': '+15557890123',
-            'From': '+15551234567',
+            "MessageSid": "SM123456789",
+            "MessageStatus": "delivered",
+            "To": "+15557890123",
+            "From": "+15551234567",
         }
 
         mock_request = MagicMock()
@@ -681,11 +636,11 @@ class TestWebhookProcessing:
     async def test_process_status_webhook_failed(self, twilio_client):
         """Test processing failed message status webhook"""
         webhook_data = {
-            'MessageSid': 'SM123456789',
-            'MessageStatus': 'failed',
-            'ErrorCode': '30007',
-            'ErrorMessage': 'Message delivery failed',
-            'To': '+15557890123'
+            "MessageSid": "SM123456789",
+            "MessageStatus": "failed",
+            "ErrorCode": "30007",
+            "ErrorMessage": "Message delivery failed",
+            "To": "+15557890123",
         }
 
         mock_request = MagicMock()
@@ -704,10 +659,10 @@ class TestWebhookProcessing:
     async def test_process_incoming_webhook_normal_message(self, twilio_client):
         """Test processing incoming message webhook"""
         webhook_data = {
-            'MessageSid': 'SM987654321',
-            'From': '+15557890123',
-            'To': '+15551234567',
-            'Body': 'Yes, I am still interested in viewing properties'
+            "MessageSid": "SM987654321",
+            "From": "+15557890123",
+            "To": "+15551234567",
+            "Body": "Yes, I am still interested in viewing properties",
         }
 
         mock_request = MagicMock()
@@ -726,12 +681,7 @@ class TestWebhookProcessing:
     @pytest.mark.asyncio
     async def test_process_incoming_webhook_opt_out(self, twilio_client):
         """Test processing incoming opt-out message"""
-        webhook_data = {
-            'MessageSid': 'SM987654321',
-            'From': '+15557890123',
-            'To': '+15551234567',
-            'Body': 'STOP'
-        }
+        webhook_data = {"MessageSid": "SM987654321", "From": "+15557890123", "To": "+15551234567", "Body": "STOP"}
 
         mock_request = MagicMock()
 
@@ -742,29 +692,24 @@ class TestWebhookProcessing:
             mock_sf_cls.return_value = mock_sf
 
             # Mock send_sms to prevent actual sending of confirmation
-            with patch.object(twilio_client, 'send_sms', new_callable=AsyncMock):
+            with patch.object(twilio_client, "send_sms", new_callable=AsyncMock):
                 result = await twilio_client.process_incoming_webhook(mock_request, webhook_data)
 
         assert result is True
 
         # Verify number was opted out
-        assert '+15557890123' in twilio_client._opt_out_cache
+        assert "+15557890123" in twilio_client._opt_out_cache
 
     @pytest.mark.asyncio
     async def test_process_incoming_webhook_opt_in(self, twilio_client):
         """Test processing incoming opt-in message"""
-        phone_number = '+15557890123'
+        phone_number = "+15557890123"
 
         # First opt out
-        await twilio_client.process_opt_out(phone_number, 'user_request')
+        await twilio_client.process_opt_out(phone_number, "user_request")
 
         # Then receive opt-in message
-        webhook_data = {
-            'MessageSid': 'SM987654321',
-            'From': phone_number,
-            'To': '+15551234567',
-            'Body': 'START'
-        }
+        webhook_data = {"MessageSid": "SM987654321", "From": phone_number, "To": "+15551234567", "Body": "START"}
 
         mock_request = MagicMock()
 
@@ -775,7 +720,7 @@ class TestWebhookProcessing:
             mock_sf_cls.return_value = mock_sf
 
             # Mock send_sms to prevent actual sending of confirmation
-            with patch.object(twilio_client, 'send_sms', new_callable=AsyncMock):
+            with patch.object(twilio_client, "send_sms", new_callable=AsyncMock):
                 result = await twilio_client.process_incoming_webhook(mock_request, webhook_data)
 
         assert result is True
@@ -787,7 +732,7 @@ class TestWebhookProcessing:
     async def test_process_incoming_webhook_missing_fields(self, twilio_client):
         """Test processing webhook with missing required fields returns False"""
         webhook_data = {
-            'MessageSid': 'SM987654321',
+            "MessageSid": "SM987654321",
             # Missing 'From', 'To', and empty 'Body'
         }
 
@@ -810,11 +755,7 @@ class TestBulkOperations:
     @pytest_asyncio.fixture
     async def twilio_client(self):
         """Create Twilio client for bulk operations testing"""
-        config = TwilioConfig(
-            account_sid="test_sid",
-            auth_token="test_token",
-            phone_number="+15551234567"
-        )
+        config = TwilioConfig(account_sid="test_sid", auth_token="test_token", phone_number="+15551234567")
 
         mock_cache = AsyncMock()
         mock_cache.get = AsyncMock(return_value=None)
@@ -830,9 +771,9 @@ class TestBulkOperations:
         def mock_create_message(**kwargs):
             return _make_mock_twilio_message(
                 sid=f"SM{abs(hash(kwargs['to'])) % 10**9}",
-                to=kwargs.get('to', '+15557890123'),
-                from_=kwargs.get('from_', '+15551234567'),
-                body=kwargs.get('body', 'test'),
+                to=kwargs.get("to", "+15557890123"),
+                from_=kwargs.get("from_", "+15551234567"),
+                body=kwargs.get("body", "test"),
             )
 
         mock_messages.create.side_effect = mock_create_message
@@ -849,7 +790,7 @@ class TestBulkOperations:
         recipients = [
             {"phone": "+15557890123", "message": "Hi John, your viewing is confirmed!"},
             {"phone": "+15557890124", "message": "Hi Jane, your viewing is confirmed!"},
-            {"phone": "+15557890125", "message": "Hi Bob, your viewing is confirmed!"}
+            {"phone": "+15557890125", "message": "Hi Bob, your viewing is confirmed!"},
         ]
 
         results = await twilio_client.send_bulk_sms(recipients)
@@ -857,7 +798,7 @@ class TestBulkOperations:
         # Verify results returned for all recipients
         assert len(results) == 3
         # All results should have 'phone' key
-        assert all('phone' in result for result in results)
+        assert all("phone" in result for result in results)
         # Verify messages were attempted
         assert twilio_client.sync_client.messages.create.call_count == 3
 
@@ -867,7 +808,7 @@ class TestBulkOperations:
         recipients = [
             {"phone": "+15557890123", "message": "Hi John!"},
             {"phone": "+15557890124", "message": "Hi Invalid!"},
-            {"phone": "+15557890125", "message": "Hi Bob!"}
+            {"phone": "+15557890125", "message": "Hi Bob!"},
         ]
 
         # Add second number to opt-out cache to cause failure
@@ -878,10 +819,10 @@ class TestBulkOperations:
         # All recipients should have results
         assert len(results) == 3
         # At least one should have failed (the opted-out number)
-        failed_results = [r for r in results if not r['success']]
+        failed_results = [r for r in results if not r["success"]]
         assert len(failed_results) >= 1
         # Check error details exist for failed messages
-        assert all('error' in r for r in failed_results)
+        assert all("error" in r for r in failed_results)
 
     @pytest.mark.asyncio
     async def test_send_bulk_sms_rate_limiting(self, twilio_client):
@@ -889,12 +830,10 @@ class TestBulkOperations:
         # Set tight rate limit
         twilio_client._rate_limit_semaphore = asyncio.Semaphore(1)
 
-        recipients = [
-            {"phone": f"+155578901{i:02d}", "message": f"Hi User {i}!"}
-            for i in range(5)
-        ]
+        recipients = [{"phone": f"+155578901{i:02d}", "message": f"Hi User {i}!"} for i in range(5)]
 
         import time
+
         start_time = time.time()
 
         results = await twilio_client.send_bulk_sms(recipients)
@@ -915,11 +854,7 @@ class TestHealthAndMonitoring:
     @pytest_asyncio.fixture
     async def twilio_client(self):
         """Create Twilio client for health testing"""
-        config = TwilioConfig(
-            account_sid="test_sid",
-            auth_token="test_token",
-            phone_number="+15551234567"
-        )
+        config = TwilioConfig(account_sid="test_sid", auth_token="test_token", phone_number="+15551234567")
 
         mock_cache = AsyncMock()
         mock_cache.get = AsyncMock(return_value=None)
@@ -948,11 +883,11 @@ class TestHealthAndMonitoring:
         """Test successful health check"""
         result = await twilio_client.health_check()
 
-        assert result['status'] == 'healthy'
-        assert result['account_status'] == 'active'
-        assert result['phone_number_active'] is True
-        assert 'opt_out_cache_size' in result
-        assert 'timestamp' in result
+        assert result["status"] == "healthy"
+        assert result["account_status"] == "active"
+        assert result["phone_number_active"] is True
+        assert "opt_out_cache_size" in result
+        assert "timestamp" in result
 
     @pytest.mark.asyncio
     async def test_health_check_no_phone_number(self, twilio_client):
@@ -961,43 +896,44 @@ class TestHealthAndMonitoring:
 
         result = await twilio_client.health_check()
 
-        assert result['status'] == 'healthy'
-        assert result['phone_number_active'] is False
+        assert result["status"] == "healthy"
+        assert result["phone_number_active"] is False
 
     @pytest.mark.asyncio
     async def test_health_check_api_failure(self, twilio_client):
         """Test health check when API is unavailable"""
         from twilio.base.exceptions import TwilioRestException
+
         twilio_client.sync_client.api.accounts.return_value.fetch.side_effect = TwilioRestException(
             status=503, uri="/Accounts", msg="Service unavailable"
         )
 
         result = await twilio_client.health_check()
 
-        assert result['status'] == 'unhealthy'
-        assert 'error' in result
+        assert result["status"] == "unhealthy"
+        assert "error" in result
 
     @pytest.mark.asyncio
     async def test_get_usage_stats(self, twilio_client):
         """Test getting usage statistics"""
         # Mock usage records
         mock_record1 = MagicMock()
-        mock_record1.count = '150'
-        mock_record1.price = '7.50'
+        mock_record1.count = "150"
+        mock_record1.price = "7.50"
 
         mock_record2 = MagicMock()
-        mock_record2.count = '25'
-        mock_record2.price = '5.00'
+        mock_record2.count = "25"
+        mock_record2.price = "5.00"
 
         twilio_client.sync_client.usage.records.list.return_value = [mock_record1, mock_record2]
 
         result = await twilio_client.get_usage_stats(days=7)
 
-        assert result['period_days'] == 7
-        assert result['total_messages_sent'] == 175  # 150 + 25
-        assert result['total_cost'] == 12.50  # 7.50 + 5.00
-        assert 'opt_out_count' in result
-        assert 'timestamp' in result
+        assert result["period_days"] == 7
+        assert result["total_messages_sent"] == 175  # 150 + 25
+        assert result["total_cost"] == 12.50  # 7.50 + 5.00
+        assert "opt_out_count" in result
+        assert "timestamp" in result
 
 
 class TestComplianceFeatures:
@@ -1006,11 +942,7 @@ class TestComplianceFeatures:
     @pytest_asyncio.fixture
     async def twilio_client(self):
         """Create Twilio client for compliance testing"""
-        config = TwilioConfig(
-            account_sid="test_sid",
-            auth_token="test_token",
-            phone_number="+15551234567"
-        )
+        config = TwilioConfig(account_sid="test_sid", auth_token="test_token", phone_number="+15551234567")
 
         mock_cache = AsyncMock()
         mock_cache.get = AsyncMock(return_value=None)
@@ -1029,7 +961,10 @@ class TestComplianceFeatures:
         message_with_footer = twilio_client._add_compliance_footer(original_message)
 
         assert "Reply STOP to opt out" in message_with_footer
-        assert original_message.rstrip('.') in message_with_footer or "Your property viewing is confirmed" in message_with_footer
+        assert (
+            original_message.rstrip(".") in message_with_footer
+            or "Your property viewing is confirmed" in message_with_footer
+        )
 
     @pytest.mark.asyncio
     async def test_add_compliance_footer_already_present(self, twilio_client):
@@ -1050,7 +985,7 @@ class TestComplianceFeatures:
             "Stop sending me messages",
             "UNSUBSCRIBE please",
             "QUIT",
-            "END these messages"
+            "END these messages",
         ]
 
         for message in opt_out_messages:
@@ -1087,11 +1022,7 @@ class TestErrorHandlingAndEdgeCases:
     @pytest.mark.asyncio
     async def test_send_sms_twilio_rest_exception(self):
         """Test handling of TwilioRestException during send"""
-        config = TwilioConfig(
-            account_sid="test_sid",
-            auth_token="test_token",
-            phone_number="+15551234567"
-        )
+        config = TwilioConfig(account_sid="test_sid", auth_token="test_token", phone_number="+15551234567")
 
         mock_cache = AsyncMock()
         mock_cache.get = AsyncMock(return_value=None)
@@ -1101,6 +1032,7 @@ class TestErrorHandlingAndEdgeCases:
 
         # Mock timeout via TwilioRestException
         from twilio.base.exceptions import TwilioRestException
+
         mock_sync_client = MagicMock()
         mock_sync_client.messages.create.side_effect = TwilioRestException(
             status=408, uri="/Messages", msg="Request timeout"
@@ -1108,10 +1040,7 @@ class TestErrorHandlingAndEdgeCases:
         client.sync_client = mock_sync_client
 
         with pytest.raises(TwilioAPIException, match="SMS sending failed"):
-            await client.send_sms(
-                to="+15557890123",
-                message="This will timeout"
-            )
+            await client.send_sms(to="+15557890123", message="This will timeout")
 
 
 @pytest.mark.performance
@@ -1121,11 +1050,7 @@ class TestPerformanceCharacteristics:
     @pytest.mark.asyncio
     async def test_bulk_sms_performance(self):
         """Test performance of bulk SMS operations"""
-        config = TwilioConfig(
-            account_sid="test_sid",
-            auth_token="test_token",
-            phone_number="+15551234567"
-        )
+        config = TwilioConfig(account_sid="test_sid", auth_token="test_token", phone_number="+15551234567")
 
         mock_cache = AsyncMock()
         mock_cache.get = AsyncMock(return_value=None)
@@ -1140,9 +1065,9 @@ class TestPerformanceCharacteristics:
         def fast_create(**kwargs):
             return _make_mock_twilio_message(
                 sid=f"SM{abs(hash(kwargs['to'])) % 10**9}",
-                to=kwargs.get('to', '+15557890123'),
-                from_=kwargs.get('from_', '+15551234567'),
-                body=kwargs.get('body', 'test'),
+                to=kwargs.get("to", "+15557890123"),
+                from_=kwargs.get("from_", "+15551234567"),
+                body=kwargs.get("body", "test"),
             )
 
         mock_messages.create.side_effect = fast_create
@@ -1150,12 +1075,10 @@ class TestPerformanceCharacteristics:
         client.sync_client = mock_sync_client
 
         # Test with many recipients -- send_bulk_sms expects dicts with 'phone' and 'message'
-        recipients = [
-            {"phone": f"+155578901{i:02d}", "message": f"Hi User {i}!"}
-            for i in range(50)
-        ]
+        recipients = [{"phone": f"+155578901{i:02d}", "message": f"Hi User {i}!"} for i in range(50)]
 
         import time
+
         start_time = time.time()
 
         results = await client.send_bulk_sms(recipients)
@@ -1172,8 +1095,4 @@ class TestPerformanceCharacteristics:
 
 if __name__ == "__main__":
     # Run specific test classes for development
-    pytest.main([
-        "-v",
-        "tests/services/test_twilio_client.py::TestSMSSending",
-        "--tb=short"
-    ])
+    pytest.main(["-v", "tests/services/test_twilio_client.py::TestSMSSending", "--tb=short"])

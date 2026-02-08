@@ -2,24 +2,27 @@
 Automated ML Pipeline for RAG System
 Demonstrates enterprise MLOps automation and workflow orchestration
 """
+
 import asyncio
+import hashlib
 import json
 import logging
 import subprocess
 import time
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Callable, Union
-from dataclasses import dataclass, asdict, field
+from typing import Any, Callable, Dict, List, Optional, Union
+
 import yaml
-import hashlib
 
 logger = logging.getLogger(__name__)
 
 
 class PipelineStage(Enum):
     """Pipeline execution stages"""
+
     PENDING = "pending"
     RUNNING = "running"
     SUCCESS = "success"
@@ -30,6 +33,7 @@ class PipelineStage(Enum):
 
 class PipelineType(Enum):
     """Types of ML pipelines"""
+
     TRAINING = "training"
     EVALUATION = "evaluation"
     DEPLOYMENT = "deployment"
@@ -41,6 +45,7 @@ class PipelineType(Enum):
 @dataclass
 class PipelineStep:
     """Individual pipeline step configuration"""
+
     name: str
     command: str
     description: str
@@ -62,17 +67,18 @@ class PipelineStep:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization"""
         data = asdict(self)
-        data['stage'] = self.stage.value
+        data["stage"] = self.stage.value
         if self.start_time:
-            data['start_time'] = self.start_time.isoformat()
+            data["start_time"] = self.start_time.isoformat()
         if self.end_time:
-            data['end_time'] = self.end_time.isoformat()
+            data["end_time"] = self.end_time.isoformat()
         return data
 
 
 @dataclass
 class PipelineRun:
     """Pipeline execution run"""
+
     run_id: str
     pipeline_name: str
     pipeline_type: PipelineType
@@ -90,13 +96,13 @@ class PipelineRun:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization"""
         data = asdict(self)
-        data['pipeline_type'] = self.pipeline_type.value
-        data['status'] = self.status.value
-        data['steps'] = [step.to_dict() for step in self.steps]
+        data["pipeline_type"] = self.pipeline_type.value
+        data["status"] = self.status.value
+        data["steps"] = [step.to_dict() for step in self.steps]
         if self.start_time:
-            data['start_time'] = self.start_time.isoformat()
+            data["start_time"] = self.start_time.isoformat()
         if self.end_time:
-            data['end_time'] = self.end_time.isoformat()
+            data["end_time"] = self.end_time.isoformat()
         return data
 
 
@@ -167,12 +173,7 @@ class PipelineExecutor:
 
         return execution_groups
 
-    async def _execute_step(
-        self,
-        step: PipelineStep,
-        run_id: str,
-        run_env: Dict[str, str]
-    ) -> bool:
+    async def _execute_step(self, step: PipelineStep, run_id: str, run_env: Dict[str, str]) -> bool:
         """
         Execute a single pipeline step
 
@@ -189,9 +190,9 @@ class PipelineExecutor:
 
             # Prepare environment
             env = {**run_env, **step.environment}
-            env['PIPELINE_RUN_ID'] = run_id
-            env['PIPELINE_STEP_NAME'] = step.name
-            env['PIPELINE_WORKSPACE'] = str(self.workspace_dir)
+            env["PIPELINE_RUN_ID"] = run_id
+            env["PIPELINE_STEP_NAME"] = step.name
+            env["PIPELINE_WORKSPACE"] = str(self.workspace_dir)
 
             # Execute command with timeout
             process = await asyncio.create_subprocess_shell(
@@ -199,18 +200,15 @@ class PipelineExecutor:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.STDOUT,
                 env=env,
-                cwd=self.workspace_dir
+                cwd=self.workspace_dir,
             )
 
             try:
-                stdout, _ = await asyncio.wait_for(
-                    process.communicate(),
-                    timeout=step.timeout_seconds
-                )
-                step.output = stdout.decode('utf-8', errors='ignore')
+                stdout, _ = await asyncio.wait_for(process.communicate(), timeout=step.timeout_seconds)
+                step.output = stdout.decode("utf-8", errors="ignore")
 
                 # Write output to log file
-                with open(log_file, 'w') as f:
+                with open(log_file, "w") as f:
                     f.write(step.output)
 
                 # Check return code
@@ -259,27 +257,27 @@ class PipelineExecutor:
 
         try:
             # Check exit code
-            if 'exit_code' in step.success_criteria:
+            if "exit_code" in step.success_criteria:
                 # This would be checked in the main execution logic
                 pass
 
             # Check output contains specific text
-            if 'output_contains' in step.success_criteria:
-                required_text = step.success_criteria['output_contains']
+            if "output_contains" in step.success_criteria:
+                required_text = step.success_criteria["output_contains"]
                 if required_text not in (step.output or ""):
                     logger.error(f"Output validation failed: '{required_text}' not found")
                     return False
 
             # Check artifacts exist
-            if 'required_artifacts' in step.success_criteria:
-                for artifact in step.success_criteria['required_artifacts']:
+            if "required_artifacts" in step.success_criteria:
+                for artifact in step.success_criteria["required_artifacts"]:
                     artifact_path = self.workspace_dir / "artifacts" / artifact
                     if not artifact_path.exists():
                         logger.error(f"Required artifact '{artifact}' not found")
                         return False
 
             # Check metrics thresholds
-            if 'metrics_thresholds' in step.success_criteria:
+            if "metrics_thresholds" in step.success_criteria:
                 # Would need to parse metrics from output or artifacts
                 pass
 
@@ -310,11 +308,7 @@ class PipelineExecutor:
             except Exception as e:
                 logger.warning(f"Failed to collect artifact '{artifact_pattern}': {e}")
 
-    async def execute_pipeline(
-        self,
-        pipeline_config: Dict[str, Any],
-        trigger: str = "manual"
-    ) -> PipelineRun:
+    async def execute_pipeline(self, pipeline_config: Dict[str, Any], trigger: str = "manual") -> PipelineRun:
         """
         Execute a complete pipeline
 
@@ -326,9 +320,9 @@ class PipelineExecutor:
             PipelineRun object with execution results
         """
         # Parse configuration
-        pipeline_name = pipeline_config['name']
-        pipeline_type = PipelineType(pipeline_config['type'])
-        steps_config = pipeline_config['steps']
+        pipeline_name = pipeline_config["name"]
+        pipeline_type = PipelineType(pipeline_config["type"])
+        steps_config = pipeline_config["steps"]
 
         # Create pipeline steps
         steps = []
@@ -344,7 +338,7 @@ class PipelineExecutor:
             pipeline_type=pipeline_type,
             trigger=trigger,
             configuration=pipeline_config,
-            steps=steps
+            steps=steps,
         )
 
         self.active_runs[run_id] = run
@@ -367,9 +361,7 @@ class PipelineExecutor:
 
                 for step in group_steps:
                     task = asyncio.create_task(
-                        self._execute_step_with_retry(
-                            step, run_id, pipeline_config.get('environment', {})
-                        )
+                        self._execute_step_with_retry(step, run_id, pipeline_config.get("environment", {}))
                     )
                     tasks.append((step, task))
 
@@ -419,17 +411,12 @@ class PipelineExecutor:
 
         return run
 
-    async def _execute_step_with_retry(
-        self,
-        step: PipelineStep,
-        run_id: str,
-        run_env: Dict[str, str]
-    ) -> bool:
+    async def _execute_step_with_retry(self, step: PipelineStep, run_id: str, run_env: Dict[str, str]) -> bool:
         """Execute step with retry logic"""
         for attempt in range(step.retry_count + 1):
             if attempt > 0:
                 logger.info(f"Retrying step '{step.name}' (attempt {attempt + 1})")
-                await asyncio.sleep(2 ** attempt)  # Exponential backoff
+                await asyncio.sleep(2**attempt)  # Exponential backoff
 
             success = await self._execute_step(step, run_id, run_env)
             if success:
@@ -449,16 +436,16 @@ class PipelineExecutor:
 
         if run.start_time and run.end_time:
             duration = (run.end_time - run.start_time).total_seconds()
-            metrics['total_duration_seconds'] = duration
+            metrics["total_duration_seconds"] = duration
 
         # Step statistics
         successful_steps = sum(1 for step in run.steps if step.stage == PipelineStage.SUCCESS)
         failed_steps = sum(1 for step in run.steps if step.stage == PipelineStage.FAILED)
 
-        metrics['successful_steps'] = successful_steps
-        metrics['failed_steps'] = failed_steps
-        metrics['total_steps'] = len(run.steps)
-        metrics['success_rate'] = successful_steps / len(run.steps) if run.steps else 0
+        metrics["successful_steps"] = successful_steps
+        metrics["failed_steps"] = failed_steps
+        metrics["total_steps"] = len(run.steps)
+        metrics["success_rate"] = successful_steps / len(run.steps) if run.steps else 0
 
         # Average step duration
         step_durations = []
@@ -468,8 +455,8 @@ class PipelineExecutor:
                 step_durations.append(duration)
 
         if step_durations:
-            metrics['avg_step_duration_seconds'] = sum(step_durations) / len(step_durations)
-            metrics['max_step_duration_seconds'] = max(step_durations)
+            metrics["avg_step_duration_seconds"] = sum(step_durations) / len(step_durations)
+            metrics["max_step_duration_seconds"] = max(step_durations)
 
         return metrics
 
@@ -478,7 +465,7 @@ class PipelineExecutor:
         run_file = self.workspace_dir / "runs" / f"{run.run_id}.json"
 
         try:
-            with open(run_file, 'w') as f:
+            with open(run_file, "w") as f:
                 json.dump(run.to_dict(), f, indent=2, default=str)
             logger.info(f"Saved run results to {run_file}")
         except Exception as e:
@@ -488,11 +475,7 @@ class PipelineExecutor:
         """Get status of a pipeline run"""
         return self.active_runs.get(run_id)
 
-    def list_runs(
-        self,
-        pipeline_name: Optional[str] = None,
-        limit: int = 10
-    ) -> List[Dict[str, Any]]:
+    def list_runs(self, pipeline_name: Optional[str] = None, limit: int = 10) -> List[Dict[str, Any]]:
         """List recent pipeline runs"""
         runs_dir = self.workspace_dir / "runs"
         run_files = sorted(runs_dir.glob("*.json"), key=lambda x: x.stat().st_mtime, reverse=True)
@@ -500,10 +483,10 @@ class PipelineExecutor:
         runs = []
         for run_file in run_files[:limit]:
             try:
-                with open(run_file, 'r') as f:
+                with open(run_file, "r") as f:
                     run_data = json.load(f)
 
-                if pipeline_name is None or run_data.get('pipeline_name') == pipeline_name:
+                if pipeline_name is None or run_data.get("pipeline_name") == pipeline_name:
                     runs.append(run_data)
 
             except Exception as e:
@@ -521,12 +504,7 @@ class PipelineBuilder:
 
     def __init__(self, name: str, pipeline_type: PipelineType):
         """Initialize pipeline builder"""
-        self.config = {
-            'name': name,
-            'type': pipeline_type.value,
-            'steps': [],
-            'environment': {}
-        }
+        self.config = {"name": name, "type": pipeline_type.value, "steps": [], "environment": {}}
 
     def add_step(
         self,
@@ -538,27 +516,27 @@ class PipelineBuilder:
         retry_count: int = 3,
         environment: Optional[Dict[str, str]] = None,
         artifacts: Optional[List[str]] = None,
-        success_criteria: Optional[Dict[str, Any]] = None
-    ) -> 'PipelineBuilder':
+        success_criteria: Optional[Dict[str, Any]] = None,
+    ) -> "PipelineBuilder":
         """Add a step to the pipeline"""
         step_config = {
-            'name': name,
-            'command': command,
-            'description': description,
-            'depends_on': depends_on or [],
-            'timeout_seconds': timeout_seconds,
-            'retry_count': retry_count,
-            'environment': environment or {},
-            'artifacts': artifacts or [],
-            'success_criteria': success_criteria or {}
+            "name": name,
+            "command": command,
+            "description": description,
+            "depends_on": depends_on or [],
+            "timeout_seconds": timeout_seconds,
+            "retry_count": retry_count,
+            "environment": environment or {},
+            "artifacts": artifacts or [],
+            "success_criteria": success_criteria or {},
         }
 
-        self.config['steps'].append(step_config)
+        self.config["steps"].append(step_config)
         return self
 
-    def set_environment(self, env: Dict[str, str]) -> 'PipelineBuilder':
+    def set_environment(self, env: Dict[str, str]) -> "PipelineBuilder":
         """Set global environment variables"""
-        self.config['environment'].update(env)
+        self.config["environment"].update(env)
         return self
 
     def build(self) -> Dict[str, Any]:
@@ -575,13 +553,13 @@ class RAGPipelineTemplates:
         """Create model evaluation pipeline"""
         builder = PipelineBuilder("rag_model_evaluation", PipelineType.EVALUATION)
 
-        return (builder
-            .add_step(
+        return (
+            builder.add_step(
                 name="setup_environment",
                 command="python -m pip install -r requirements.txt",
                 description="Install dependencies",
                 timeout_seconds=600,
-                success_criteria={'exit_code': 0}
+                success_criteria={"exit_code": 0},
             )
             .add_step(
                 name="validate_data",
@@ -589,7 +567,7 @@ class RAGPipelineTemplates:
                 description="Validate evaluation datasets",
                 depends_on=["setup_environment"],
                 artifacts=["test_results.xml"],
-                success_criteria={'exit_code': 0, 'output_contains': 'PASSED'}
+                success_criteria={"exit_code": 0, "output_contains": "PASSED"},
             )
             .add_step(
                 name="run_benchmarks",
@@ -598,7 +576,7 @@ class RAGPipelineTemplates:
                 depends_on=["validate_data"],
                 timeout_seconds=1800,
                 artifacts=["benchmark_results/*.json"],
-                success_criteria={'required_artifacts': ['quality_combined.json']}
+                success_criteria={"required_artifacts": ["quality_combined.json"]},
             )
             .add_step(
                 name="generate_report",
@@ -606,12 +584,9 @@ class RAGPipelineTemplates:
                 description="Generate evaluation report",
                 depends_on=["run_benchmarks"],
                 artifacts=["evaluation_report.*"],
-                success_criteria={'required_artifacts': ['evaluation_report.html']}
+                success_criteria={"required_artifacts": ["evaluation_report.html"]},
             )
-            .set_environment({
-                'PYTHONPATH': '.',
-                'RAG_CONFIG': 'config/evaluation.yaml'
-            })
+            .set_environment({"PYTHONPATH": ".", "RAG_CONFIG": "config/evaluation.yaml"})
             .build()
         )
 
@@ -620,19 +595,19 @@ class RAGPipelineTemplates:
         """Create model deployment pipeline"""
         builder = PipelineBuilder("rag_model_deployment", PipelineType.DEPLOYMENT)
 
-        return (builder
-            .add_step(
+        return (
+            builder.add_step(
                 name="validate_model",
                 command="python scripts/validate_model.py --model-path models/current",
                 description="Validate model artifacts",
-                success_criteria={'exit_code': 0}
+                success_criteria={"exit_code": 0},
             )
             .add_step(
                 name="run_smoke_tests",
                 command="python -m pytest tests/test_model_smoke.py -v",
                 description="Run smoke tests",
                 depends_on=["validate_model"],
-                success_criteria={'exit_code': 0}
+                success_criteria={"exit_code": 0},
             )
             .add_step(
                 name="deploy_staging",
@@ -640,7 +615,7 @@ class RAGPipelineTemplates:
                 description="Deploy to staging",
                 depends_on=["run_smoke_tests"],
                 timeout_seconds=900,
-                success_criteria={'output_contains': 'deployment_successful'}
+                success_criteria={"output_contains": "deployment_successful"},
             )
             .add_step(
                 name="integration_tests",
@@ -648,7 +623,7 @@ class RAGPipelineTemplates:
                 description="Run integration tests on staging",
                 depends_on=["deploy_staging"],
                 timeout_seconds=1200,
-                success_criteria={'exit_code': 0}
+                success_criteria={"exit_code": 0},
             )
             .add_step(
                 name="deploy_production",
@@ -656,12 +631,11 @@ class RAGPipelineTemplates:
                 description="Deploy to production",
                 depends_on=["integration_tests"],
                 timeout_seconds=900,
-                success_criteria={'output_contains': 'deployment_successful'}
+                success_criteria={"output_contains": "deployment_successful"},
             )
-            .set_environment({
-                'DEPLOYMENT_CONFIG': 'config/deployment.yaml',
-                'MODEL_REGISTRY_URL': 'http://localhost:5000'
-            })
+            .set_environment(
+                {"DEPLOYMENT_CONFIG": "config/deployment.yaml", "MODEL_REGISTRY_URL": "http://localhost:5000"}
+            )
             .build()
         )
 
@@ -670,13 +644,13 @@ class RAGPipelineTemplates:
         """Create monitoring and drift detection pipeline"""
         builder = PipelineBuilder("rag_monitoring", PipelineType.MONITORING)
 
-        return (builder
-            .add_step(
+        return (
+            builder.add_step(
                 name="collect_metrics",
                 command="python scripts/collect_production_metrics.py --window 1h",
                 description="Collect production metrics",
                 artifacts=["metrics/*.json"],
-                success_criteria={'required_artifacts': ['metrics/current.json']}
+                success_criteria={"required_artifacts": ["metrics/current.json"]},
             )
             .add_step(
                 name="detect_drift",
@@ -684,24 +658,22 @@ class RAGPipelineTemplates:
                 description="Run drift detection",
                 depends_on=["collect_metrics"],
                 artifacts=["drift_report.json"],
-                success_criteria={'exit_code': 0}
+                success_criteria={"exit_code": 0},
             )
             .add_step(
                 name="update_dashboards",
                 command="python scripts/update_monitoring_dashboards.py",
                 description="Update monitoring dashboards",
                 depends_on=["detect_drift"],
-                success_criteria={'exit_code': 0}
+                success_criteria={"exit_code": 0},
             )
             .add_step(
                 name="send_alerts",
                 command="python scripts/process_alerts.py --drift-report drift_report.json",
                 description="Process and send alerts if needed",
                 depends_on=["detect_drift"],
-                success_criteria={'exit_code': 0}
+                success_criteria={"exit_code": 0},
             )
-            .set_environment({
-                'MONITORING_CONFIG': 'config/monitoring.yaml'
-            })
+            .set_environment({"MONITORING_CONFIG": "config/monitoring.yaml"})
             .build()
         )

@@ -85,9 +85,7 @@ class ReciprocalRankFusion:
 
         # Create fused results
         fused_results = []
-        for rank, (chunk_id, fused_score) in enumerate(
-            sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True), 1
-        ):
+        for rank, (chunk_id, fused_score) in enumerate(sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True), 1):
             if rank > self.config.max_results:
                 break
 
@@ -100,8 +98,8 @@ class ReciprocalRankFusion:
                 rank=rank,
                 distance=1.0 - min(fused_score, 1.0),
                 explanation=f"RRF fusion score: {fused_score:.4f} "
-                          f"(from dense: {chunk_id in [r.chunk.id for r in dense_results]}, "
-                          f"sparse: {chunk_id in [r.chunk.id for r in sparse_results]})"
+                f"(from dense: {chunk_id in [r.chunk.id for r in dense_results]}, "
+                f"sparse: {chunk_id in [r.chunk.id for r in sparse_results]})",
             )
             fused_results.append(fused_result)
 
@@ -168,8 +166,8 @@ class WeightedScoreFusion:
                 rank=1,  # Temporary rank, will be updated after sorting
                 distance=1.0 - weighted_score,
                 explanation=f"Weighted fusion: dense={dense_score:.3f} "
-                          f"(w={dense_weight:.2f}), sparse={sparse_score:.3f} "
-                          f"(w={sparse_weight:.2f}), final={weighted_score:.3f}"
+                f"(w={dense_weight:.2f}), sparse={sparse_score:.3f} "
+                f"(w={sparse_weight:.2f}), final={weighted_score:.3f}",
             )
             weighted_results.append(weighted_result)
 
@@ -178,14 +176,14 @@ class WeightedScoreFusion:
 
         # Limit results and update ranks
         final_results = []
-        for rank, result in enumerate(weighted_results[:self.config.max_results], 1):
+        for rank, result in enumerate(weighted_results[: self.config.max_results], 1):
             # Create new result with updated rank
             final_result = SearchResult(
                 chunk=result.chunk,
                 score=result.score,
                 rank=rank,
                 distance=result.distance,
-                explanation=result.explanation
+                explanation=result.explanation,
             )
             final_results.append(final_result)
 
@@ -244,7 +242,7 @@ def normalize_scores(results: List[SearchResult]) -> List[SearchResult]:
             score=normalized_score,
             rank=result.rank,
             distance=1.0 - normalized_score,
-            explanation=result.explanation
+            explanation=result.explanation,
         )
         normalized_results.append(normalized_result)
 

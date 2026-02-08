@@ -2,17 +2,14 @@
 Tests for ML feature engineering pipeline.
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, patch
-import numpy as np
 
-from ghl_real_estate_ai.ml.feature_engineering import (
-    FeatureEngineer,
-    ConversationFeatures,
-    MarketFeatures
-)
+import numpy as np
+import pytest
+
+from ghl_real_estate_ai.ml.feature_engineering import ConversationFeatures, FeatureEngineer, MarketFeatures
 
 
 class TestFeatureEngineer:
@@ -42,30 +39,20 @@ class TestFeatureEngineer:
                 "bedrooms": "3",
                 "bathrooms": "2",
                 "timeline": "ASAP",
-                "motivation": "work relocation"
+                "motivation": "work relocation",
             },
-            "created_at": datetime.now().isoformat()
+            "created_at": datetime.now().isoformat(),
         }
 
     @pytest.fixture
     def mock_minimal_context(self):
         """Create minimal conversation context for edge case testing."""
-        return {
-            "conversation_history": [],
-            "extracted_preferences": {},
-            "created_at": datetime.now().isoformat()
-        }
+        return {"conversation_history": [], "extracted_preferences": {}, "created_at": datetime.now().isoformat()}
 
     @pytest.mark.asyncio
-    async def test_extract_conversation_features_success(
-        self,
-        feature_engineer,
-        mock_conversation_context
-    ):
+    async def test_extract_conversation_features_success(self, feature_engineer, mock_conversation_context):
         """Test successful conversation feature extraction."""
-        features = await feature_engineer.extract_conversation_features(
-            mock_conversation_context
-        )
+        features = await feature_engineer.extract_conversation_features(mock_conversation_context)
 
         assert isinstance(features, ConversationFeatures)
         assert features.message_count == 7
@@ -75,15 +62,9 @@ class TestFeatureEngineer:
         assert "downtown" in str(features).lower() or features.location_specificity > 0
 
     @pytest.mark.asyncio
-    async def test_extract_conversation_features_minimal(
-        self,
-        feature_engineer,
-        mock_minimal_context
-    ):
+    async def test_extract_conversation_features_minimal(self, feature_engineer, mock_minimal_context):
         """Test feature extraction with minimal conversation data."""
-        features = await feature_engineer.extract_conversation_features(
-            mock_minimal_context
-        )
+        features = await feature_engineer.extract_conversation_features(mock_minimal_context)
 
         assert isinstance(features, ConversationFeatures)
         assert features.message_count == 0
@@ -92,11 +73,7 @@ class TestFeatureEngineer:
         assert features.urgency_score >= 0.0  # Should be valid float
 
     @pytest.mark.asyncio
-    async def test_extract_basic_metrics(
-        self,
-        feature_engineer,
-        mock_conversation_context
-    ):
+    async def test_extract_basic_metrics(self, feature_engineer, mock_conversation_context):
         """Test basic metrics extraction."""
         messages = mock_conversation_context["conversation_history"]
         created_at = datetime.now() - timedelta(hours=1)  # 1 hour ago
@@ -108,11 +85,7 @@ class TestFeatureEngineer:
         assert metrics["avg_response_time"] > 0
 
     @pytest.mark.asyncio
-    async def test_analyze_sentiment_engagement(
-        self,
-        feature_engineer,
-        mock_conversation_context
-    ):
+    async def test_analyze_sentiment_engagement(self, feature_engineer, mock_conversation_context):
         """Test sentiment and engagement analysis."""
         messages = mock_conversation_context["conversation_history"]
 
@@ -126,11 +99,7 @@ class TestFeatureEngineer:
         assert 0.0 <= sentiment_data["engagement"] <= 1.0
 
     @pytest.mark.asyncio
-    async def test_analyze_conversation_content(
-        self,
-        feature_engineer,
-        mock_conversation_context
-    ):
+    async def test_analyze_conversation_content(self, feature_engineer, mock_conversation_context):
         """Test conversation content analysis."""
         messages = mock_conversation_context["conversation_history"]
 
@@ -142,11 +111,7 @@ class TestFeatureEngineer:
         assert 0.0 <= content_data["location_specificity"] <= 1.0
 
     @pytest.mark.asyncio
-    async def test_analyze_budget_alignment(
-        self,
-        feature_engineer,
-        mock_conversation_context
-    ):
+    async def test_analyze_budget_alignment(self, feature_engineer, mock_conversation_context):
         """Test budget alignment analysis."""
         prefs = mock_conversation_context["extracted_preferences"]
 
@@ -157,11 +122,7 @@ class TestFeatureEngineer:
         assert 0.0 <= budget_data["confidence"] <= 1.0
 
     @pytest.mark.asyncio
-    async def test_analyze_qualification_completeness(
-        self,
-        feature_engineer,
-        mock_conversation_context
-    ):
+    async def test_analyze_qualification_completeness(self, feature_engineer, mock_conversation_context):
         """Test qualification completeness analysis."""
         prefs = mock_conversation_context["extracted_preferences"]
 
@@ -173,11 +134,7 @@ class TestFeatureEngineer:
         assert qual_data["completeness"] > 0.7
 
     @pytest.mark.asyncio
-    async def test_analyze_behavioral_patterns(
-        self,
-        feature_engineer,
-        mock_conversation_context
-    ):
+    async def test_analyze_behavioral_patterns(self, feature_engineer, mock_conversation_context):
         """Test behavioral pattern analysis."""
         messages = mock_conversation_context["conversation_history"]
 
@@ -237,7 +194,7 @@ class TestFeatureEngineer:
             message_length_variance=500.0,
             response_consistency=0.8,
             weekend_activity=False,
-            late_night_activity=False
+            late_night_activity=False,
         )
 
         market_features = MarketFeatures(
@@ -246,7 +203,7 @@ class TestFeatureEngineer:
             price_trend=0.1,
             seasonal_factor=0.8,
             competition_level=0.6,
-            interest_rate_level=7.0
+            interest_rate_level=7.0,
         )
 
         vector = feature_engineer.create_feature_vector(conv_features, market_features)
@@ -270,7 +227,7 @@ class TestFeatureEngineer:
             "closing_probability",
             "engagement_score",
             "urgency_score",
-            "qualification_completeness"
+            "qualification_completeness",
         ]
 
         for expected in expected_features:
@@ -301,7 +258,7 @@ class TestFeatureEngineer:
             {"budget": "1.5m", "expected_ratio": True},
             {"budget": "around 400000", "expected_ratio": True},
             {"budget": "not sure", "expected_ratio": False},
-            {"budget": "", "expected_ratio": False}
+            {"budget": "", "expected_ratio": False},
         ]
 
         for case in test_cases:
@@ -317,7 +274,7 @@ class TestFeatureEngineer:
     async def test_seasonal_factor_calculation(self, feature_engineer):
         """Test seasonal factor calculation for different months."""
         # Mock current month to test seasonal patterns
-        with patch('ghl_real_estate_ai.ml.feature_engineering.datetime') as mock_datetime:
+        with patch("ghl_real_estate_ai.ml.feature_engineering.datetime") as mock_datetime:
             # Test spring (peak season)
             mock_datetime.now.return_value.month = 5  # May
             features_spring = await feature_engineer.extract_market_features()
@@ -335,7 +292,7 @@ class TestFeatureEngineer:
         context = {
             "conversation_history": [{"role": "user", "text": "test"}],
             "extracted_preferences": {"budget": "500k"},
-            "created_at": datetime.now().isoformat()
+            "created_at": datetime.now().isoformat(),
         }
 
         # First call
@@ -361,12 +318,8 @@ class TestFeatureEngineer:
         # Empty messages but with preferences
         edge_context = {
             "conversation_history": [],
-            "extracted_preferences": {
-                "budget": "1000000",
-                "location": "luxury district",
-                "timeline": "urgent"
-            },
-            "created_at": datetime.now().isoformat()
+            "extracted_preferences": {"budget": "1000000", "location": "luxury district", "timeline": "urgent"},
+            "created_at": datetime.now().isoformat(),
         }
 
         features = await feature_engineer.extract_conversation_features(edge_context)
@@ -378,11 +331,9 @@ class TestFeatureEngineer:
 
         # Very long conversation
         long_conversation = {
-            "conversation_history": [
-                {"role": "user", "text": f"Message {i}"} for i in range(100)
-            ],
+            "conversation_history": [{"role": "user", "text": f"Message {i}"} for i in range(100)],
             "extracted_preferences": {},
-            "created_at": (datetime.now() - timedelta(hours=5)).isoformat()
+            "created_at": (datetime.now() - timedelta(hours=5)).isoformat(),
         }
 
         features_long = await feature_engineer.extract_conversation_features(long_conversation)

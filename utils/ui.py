@@ -101,25 +101,28 @@ THEME = LIGHT_THEME
 
 import plotly.graph_objects as go
 
+
 def sparkline(data: list[float], color: str = "#2563eb", height: int = 40) -> go.Figure:
     """
     Generates a minimal sparkline chart using Plotly.
     """
-    fig = go.Figure(go.Scatter(
-        y=data,
-        mode='lines',
-        fill='tozeroy',
-        line=dict(color=color, width=2),
-        fillcolor=f"{color}33"  # approx 20% opacity
-    ))
+    fig = go.Figure(
+        go.Scatter(
+            y=data,
+            mode="lines",
+            fill="tozeroy",
+            line=dict(color=color, width=2),
+            fillcolor=f"{color}33",  # approx 20% opacity
+        )
+    )
     fig.update_layout(
         showlegend=False,
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
         margin=dict(l=0, r=0, t=0, b=0),
         height=height,
         xaxis=dict(visible=False, fixedrange=True),
-        yaxis=dict(visible=False, fixedrange=True)
+        yaxis=dict(visible=False, fixedrange=True),
     )
     return fig
 
@@ -820,9 +823,7 @@ def setup_interface(theme_mode: str = "light") -> None:
     st.markdown(css, unsafe_allow_html=True)
 
 
-def card_metric(
-    label: str, value: str, delta: Optional[str] = None, help: Optional[str] = None
-) -> None:
+def card_metric(label: str, value: str, delta: Optional[str] = None, help: Optional[str] = None) -> None:
     """
     Displays a metric in a native Streamlit container but styled by global CSS.
     """
@@ -884,10 +885,7 @@ def hero_section(title: str, subtitle: str, background_image: Optional[str] = No
     if background_image:
         b64 = get_base64_image(background_image)
         if b64:
-            bg_style = (
-                f"background-image: url('{b64}'); background-size: cover; "
-                f"background-position: center;"
-            )
+            bg_style = f"background-image: url('{b64}'); background-size: cover; background-position: center;"
             overlay = (
                 f"background: rgba(255, 255, 255, 0.85); "
                 f"backdrop-filter: blur(8px); padding: 3rem; "
@@ -920,9 +918,7 @@ def feature_card(
     if icon_path:
         b64 = get_base64_image(icon_path)
         if b64:
-            icon_display = (
-                f"<img src='{b64}' style='width: 48px; height: 48px; object-fit: contain;'>"
-            )
+            icon_display = f"<img src='{b64}' style='width: 48px; height: 48px; object-fit: contain;'>"
 
     html = (
         f'<article class="metric-card" role="article" '
@@ -1374,11 +1370,7 @@ def animated_metric(
                         letter-spacing: 0.05em;">
                 {label}
             </div>
-            {
-        f'<div style="font-size: 1.75rem;" role="img" aria-label="{label} icon">{icon}</div>'
-        if icon
-        else ""
-    }
+            {f'<div style="font-size: 1.75rem;" role="img" aria-label="{label} icon">{icon}</div>' if icon else ""}
         </div>
         <div style="font-size: 2.25rem; font-weight: 700;
                     color: {main_color}; margin-bottom: 4px;
@@ -1428,8 +1420,7 @@ def glassmorphic_card(
         height: 100%;
     " class="hover-lift">
         {
-        f'<div style="font-size: 2.5rem; margin-bottom: 12px;" '
-        f'role="img" aria-label="{title} icon">{icon}</div>'
+        f'<div style="font-size: 2.5rem; margin-bottom: 12px;" role="img" aria-label="{title} icon">{icon}</div>'
         if icon
         else ""
     }
@@ -1500,8 +1491,7 @@ def progress_bar(
                 {label}
             </span>
             {
-        f'<span style="font-size: 0.875rem; font-weight: 700; '
-        f'color: {bar_color};">{percentage}%</span>'
+        f'<span style="font-size: 0.875rem; font-weight: 700; color: {bar_color};">{percentage}%</span>'
         if show_percentage
         else ""
     }
@@ -1635,9 +1625,7 @@ def login_modal() -> bool:
 
         with login_tab:
             username = st.text_input("Username", placeholder="e.g., croden", key="login_user")
-            password = st.text_input(
-                "Password", type="password", placeholder="••••••••", key="login_pass"
-            )
+            password = st.text_input("Password", type="password", placeholder="••••••••", key="login_pass")
             if st.button("🚀 Access Console", use_container_width=True, type="primary"):
                 if authenticate_user(username, password):
                     st.session_state.authenticated = True
@@ -1648,12 +1636,8 @@ def login_modal() -> bool:
 
         with register_tab:
             new_user = st.text_input("New Username", placeholder="e.g., admin", key="reg_user")
-            new_pass = st.text_input(
-                "New Password", type="password", placeholder="••••••••", key="reg_pass"
-            )
-            confirm_pass = st.text_input(
-                "Confirm Password", type="password", placeholder="••••••••", key="reg_confirm"
-            )
+            new_pass = st.text_input("New Password", type="password", placeholder="••••••••", key="reg_pass")
+            confirm_pass = st.text_input("Confirm Password", type="password", placeholder="••••••••", key="reg_confirm")
             if st.button("✨ Create Account", use_container_width=True):
                 if not new_user or not new_pass:
                     st.error("Please fill in all fields.")
@@ -1688,18 +1672,19 @@ def service_header(title: str, category: str, service_id: str, roi_model: str) -
                     <div style='color: #047857; font-size: 1.0rem; font-weight: 800;'>{roi_model}</div>
                 </div>
                 """,
-                unsafe_allow_html=True
+                unsafe_allow_html=True,
             )
     st.divider()
+
 
 def credential_inventory() -> None:
     """
     Renders the 19 Certifications summary in a professional tabbed interface.
     """
     section_header("Credential Authority", "19 Professional Certifications | 1,768 Training Hours")
-    
+
     tabs = st.tabs(["Generative AI & LLMOps", "Data Science & BI", "Growth & Strategy"])
-    
+
     with tabs[0]:
         col1, col2 = st.columns(2)
         with col1:
@@ -1721,7 +1706,9 @@ def credential_inventory() -> None:
             st.markdown("- **IBM:** BI Analyst Professional (141 hrs)")
             st.markdown("- **Google:** Business Intelligence (80 hrs)")
         with col2:
-            st.info("Building interactive dashboards, predictive modeling, and automated ETL pipelines with Python and SQL.")
+            st.info(
+                "Building interactive dashboards, predictive modeling, and automated ETL pipelines with Python and SQL."
+            )
 
     with tabs[2]:
         col1, col2 = st.columns(2)
@@ -1731,7 +1718,10 @@ def credential_inventory() -> None:
             st.markdown("- **Meta:** Social Media Marketing (83 hrs)")
             st.markdown("- **Vanderbilt:** AI Personal Automation")
         with col2:
-            st.info("Aligning technical implementation with core business KPIs, marketing attribution, and revenue growth.")
+            st.info(
+                "Aligning technical implementation with core business KPIs, marketing attribution, and revenue growth."
+            )
+
 
 def footer() -> None:
     """Renders the standard footer."""

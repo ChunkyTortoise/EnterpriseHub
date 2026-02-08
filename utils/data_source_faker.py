@@ -5,9 +5,10 @@ Generates simulated marketing campaign data to mimic real API responses
 without requiring actual API keys or live connections.
 """
 
-import pandas as pd
-import numpy as np
 from datetime import datetime, timedelta
+
+import numpy as np
+import pandas as pd
 
 
 def generate_campaign_data(
@@ -50,9 +51,7 @@ def generate_campaign_data(
 
         spend = clicks * cost_per_click
 
-        conversions = clicks * (
-            base_conversion_rate + np.random.normal(0, base_conversion_rate * 0.1)
-        )
+        conversions = clicks * (base_conversion_rate + np.random.normal(0, base_conversion_rate * 0.1))
         conversions = max(0, conversions)
 
         revenue = conversions * conversion_value

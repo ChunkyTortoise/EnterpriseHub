@@ -12,22 +12,25 @@ This module provides:
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Union
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from decimal import Decimal
 from enum import Enum
+from typing import Any, Dict, List, Optional, Union
+
 import numpy as np
 import pandas as pd
-from decimal import Decimal
 
-from ...services.claude_assistant import ClaudeAssistant
-from ...services.cache_service import CacheService
 from ...ghl_utils.jorge_config import JorgeConfig
+from ...services.cache_service import CacheService
+from ...services.claude_assistant import ClaudeAssistant
 
 logger = logging.getLogger(__name__)
 
+
 class PredictionType(Enum):
     """Types of predictions the engine can make"""
+
     MARKET_MOVEMENT = "market_movement"
     CLIENT_BEHAVIOR = "client_behavior"
     DEAL_OUTCOME = "deal_outcome"
@@ -35,25 +38,31 @@ class PredictionType(Enum):
     COMMISSION_OPTIMIZATION = "commission_optimization"
     TIMING_INTELLIGENCE = "timing_intelligence"
 
+
 class PredictionConfidence(Enum):
     """Confidence levels for predictions"""
-    VERY_HIGH = "very_high"      # 95%+ confidence
-    HIGH = "high"                # 85-94% confidence
-    MEDIUM = "medium"            # 70-84% confidence
-    LOW = "low"                  # 50-69% confidence
-    VERY_LOW = "very_low"        # <50% confidence
+
+    VERY_HIGH = "very_high"  # 95%+ confidence
+    HIGH = "high"  # 85-94% confidence
+    MEDIUM = "medium"  # 70-84% confidence
+    LOW = "low"  # 50-69% confidence
+    VERY_LOW = "very_low"  # <50% confidence
+
 
 class TimeFrame(Enum):
     """Prediction time frames"""
-    IMMEDIATE = "immediate"      # Next 24 hours
-    SHORT_TERM = "short_term"    # 1-7 days
+
+    IMMEDIATE = "immediate"  # Next 24 hours
+    SHORT_TERM = "short_term"  # 1-7 days
     MEDIUM_TERM = "medium_term"  # 1-4 weeks
-    LONG_TERM = "long_term"      # 1-6 months
-    STRATEGIC = "strategic"      # 6+ months
+    LONG_TERM = "long_term"  # 1-6 months
+    STRATEGIC = "strategic"  # 6+ months
+
 
 @dataclass
 class PredictionContext:
     """Context information for making predictions"""
+
     location: Optional[Dict[str, float]] = None
     client_id: Optional[str] = None
     property_id: Optional[str] = None
@@ -62,9 +71,11 @@ class PredictionContext:
     historical_data: Optional[Dict[str, Any]] = None
     external_factors: Optional[Dict[str, Any]] = None
 
+
 @dataclass
 class PredictionResult:
     """Result of a prediction request"""
+
     prediction_id: str
     prediction_type: PredictionType
     result: Dict[str, Any]
@@ -79,9 +90,11 @@ class PredictionResult:
     created_at: datetime = field(default_factory=datetime.now)
     expires_at: Optional[datetime] = None
 
+
 @dataclass
 class MarketMovementPrediction:
     """Market movement prediction result"""
+
     location_id: str
     current_median_price: Decimal
     predicted_price_30_days: Decimal
@@ -94,9 +107,11 @@ class MarketMovementPrediction:
     optimal_buying_window: Dict[str, datetime]
     jorge_advantage_score: float  # How much edge Jorge has in this market
 
+
 @dataclass
 class ClientBehaviorPrediction:
     """Client behavior prediction result"""
+
     client_id: str
     purchase_probability: float  # 0-100%
     predicted_purchase_timeframe: TimeFrame
@@ -109,9 +124,11 @@ class ClientBehaviorPrediction:
     churn_risk: float  # 0-100%
     jorge_methodology_fit: float  # How well Jorge's style matches client
 
+
 @dataclass
 class DealOutcomePrediction:
     """Deal outcome prediction result"""
+
     deal_id: str
     closing_probability: float  # 0-100%
     predicted_closing_date: datetime
@@ -122,6 +139,7 @@ class DealOutcomePrediction:
     recommended_actions: List[Dict[str, Any]]
     negotiation_leverage: str  # 'strong', 'moderate', 'weak'
     timeline_accuracy: float  # Historical accuracy of timeline predictions
+
 
 class JorgePredictionEngine:
     """
@@ -136,40 +154,40 @@ class JorgePredictionEngine:
 
         # Prediction model configurations
         self.model_configs = {
-            'market_movement': {
-                'accuracy_threshold': 0.85,
-                'update_frequency': 3600,  # 1 hour
-                'data_sources': ['mls', 'zillow', 'economic_indicators', 'social_sentiment']
+            "market_movement": {
+                "accuracy_threshold": 0.85,
+                "update_frequency": 3600,  # 1 hour
+                "data_sources": ["mls", "zillow", "economic_indicators", "social_sentiment"],
             },
-            'client_behavior': {
-                'accuracy_threshold': 0.90,
-                'update_frequency': 1800,  # 30 minutes
-                'data_sources': ['interaction_history', 'behavioral_patterns', 'market_conditions']
+            "client_behavior": {
+                "accuracy_threshold": 0.90,
+                "update_frequency": 1800,  # 30 minutes
+                "data_sources": ["interaction_history", "behavioral_patterns", "market_conditions"],
             },
-            'deal_outcome': {
-                'accuracy_threshold': 0.92,
-                'update_frequency': 900,   # 15 minutes
-                'data_sources': ['deal_history', 'market_conditions', 'negotiation_patterns']
+            "deal_outcome": {
+                "accuracy_threshold": 0.92,
+                "update_frequency": 900,  # 15 minutes
+                "data_sources": ["deal_history", "market_conditions", "negotiation_patterns"],
             },
-            'business_metrics': {
-                'accuracy_threshold': 0.95,
-                'update_frequency': 3600,  # 1 hour
-                'data_sources': ['historical_performance', 'market_trends', 'economic_factors']
-            }
+            "business_metrics": {
+                "accuracy_threshold": 0.95,
+                "update_frequency": 3600,  # 1 hour
+                "data_sources": ["historical_performance", "market_trends", "economic_factors"],
+            },
         }
 
         # Jorge's methodology integration
         self.jorge_methodology = {
-            'commission_targets': {'primary': 0.06, 'acceptable_minimum': 0.055},
-            'confrontational_timing': {
-                'optimal_pressure_points': ['initial_contact', 'price_objection', 'closing'],
-                'relationship_balance_threshold': 0.7
+            "commission_targets": {"primary": 0.06, "acceptable_minimum": 0.055},
+            "confrontational_timing": {
+                "optimal_pressure_points": ["initial_contact", "price_objection", "closing"],
+                "relationship_balance_threshold": 0.7,
             },
-            'client_qualification_thresholds': {
-                'financial_readiness': 75,
-                'psychological_commitment': 70,
-                'urgency_level': 60
-            }
+            "client_qualification_thresholds": {
+                "financial_readiness": 75,
+                "psychological_commitment": 70,
+                "urgency_level": 60,
+            },
         }
 
         # Prediction cache and performance tracking
@@ -177,10 +195,12 @@ class JorgePredictionEngine:
         self.model_performance = {}
         self.prediction_history = []
 
-    async def predict_market_movement(self,
-                                    location: Dict[str, float],
-                                    timeframe: TimeFrame = TimeFrame.MEDIUM_TERM,
-                                    context: Optional[PredictionContext] = None) -> MarketMovementPrediction:
+    async def predict_market_movement(
+        self,
+        location: Dict[str, float],
+        timeframe: TimeFrame = TimeFrame.MEDIUM_TERM,
+        context: Optional[PredictionContext] = None,
+    ) -> MarketMovementPrediction:
         """
         Predict market movement for specific location and timeframe
         """
@@ -229,16 +249,16 @@ class JorgePredictionEngine:
             # Create market movement prediction
             prediction = MarketMovementPrediction(
                 location_id=f"{location.get('lat', 0)},{location.get('lng', 0)}",
-                current_median_price=Decimal(str(prediction_response.get('current_median_price', 0))),
-                predicted_price_30_days=Decimal(str(prediction_response.get('predicted_price_30_days', 0))),
-                predicted_price_90_days=Decimal(str(prediction_response.get('predicted_price_90_days', 0))),
-                price_change_percentage=prediction_response.get('price_change_percentage', 0.0),
-                market_velocity=prediction_response.get('market_velocity', 'steady'),
-                inventory_trend=prediction_response.get('inventory_trend', 'stable'),
-                demand_forecast=prediction_response.get('demand_forecast', 'moderate'),
-                optimal_listing_window=prediction_response.get('optimal_listing_window', {}),
-                optimal_buying_window=prediction_response.get('optimal_buying_window', {}),
-                jorge_advantage_score=prediction_response.get('jorge_advantage_score', 5.0)
+                current_median_price=Decimal(str(prediction_response.get("current_median_price", 0))),
+                predicted_price_30_days=Decimal(str(prediction_response.get("predicted_price_30_days", 0))),
+                predicted_price_90_days=Decimal(str(prediction_response.get("predicted_price_90_days", 0))),
+                price_change_percentage=prediction_response.get("price_change_percentage", 0.0),
+                market_velocity=prediction_response.get("market_velocity", "steady"),
+                inventory_trend=prediction_response.get("inventory_trend", "stable"),
+                demand_forecast=prediction_response.get("demand_forecast", "moderate"),
+                optimal_listing_window=prediction_response.get("optimal_listing_window", {}),
+                optimal_buying_window=prediction_response.get("optimal_buying_window", {}),
+                jorge_advantage_score=prediction_response.get("jorge_advantage_score", 5.0),
             )
 
             # Cache prediction
@@ -251,10 +271,9 @@ class JorgePredictionEngine:
             logger.error(f"Market movement prediction failed: {str(e)}")
             raise
 
-    async def predict_client_behavior(self,
-                                    client_id: str,
-                                    scenario: str = "purchase_timing",
-                                    context: Optional[PredictionContext] = None) -> ClientBehaviorPrediction:
+    async def predict_client_behavior(
+        self, client_id: str, scenario: str = "purchase_timing", context: Optional[PredictionContext] = None
+    ) -> ClientBehaviorPrediction:
         """
         Predict client behavior patterns and optimal engagement timing
         """
@@ -304,32 +323,38 @@ class JorgePredictionEngine:
             # Create client behavior prediction
             prediction = ClientBehaviorPrediction(
                 client_id=client_id,
-                purchase_probability=behavior_response.get('purchase_probability', 50.0),
-                predicted_purchase_timeframe=TimeFrame(behavior_response.get('predicted_purchase_timeframe', 'medium_term')),
-                predicted_budget_range=behavior_response.get('predicted_budget_range', {'min': Decimal('0'), 'max': Decimal('1200000')}),
-                negotiation_style=behavior_response.get('negotiation_style', 'analytical'),
-                decision_factors=behavior_response.get('decision_factors', []),
-                optimal_approach_timing=datetime.now() + timedelta(days=behavior_response.get('optimal_timing_days', 1)),
-                referral_potential=behavior_response.get('referral_potential', 5),
-                lifetime_value_prediction=Decimal(str(behavior_response.get('lifetime_value_prediction', 50000))),
-                churn_risk=behavior_response.get('churn_risk', 20.0),
-                jorge_methodology_fit=behavior_response.get('jorge_methodology_fit', 70.0)
+                purchase_probability=behavior_response.get("purchase_probability", 50.0),
+                predicted_purchase_timeframe=TimeFrame(
+                    behavior_response.get("predicted_purchase_timeframe", "medium_term")
+                ),
+                predicted_budget_range=behavior_response.get(
+                    "predicted_budget_range", {"min": Decimal("0"), "max": Decimal("1200000")}
+                ),
+                negotiation_style=behavior_response.get("negotiation_style", "analytical"),
+                decision_factors=behavior_response.get("decision_factors", []),
+                optimal_approach_timing=datetime.now()
+                + timedelta(days=behavior_response.get("optimal_timing_days", 1)),
+                referral_potential=behavior_response.get("referral_potential", 5),
+                lifetime_value_prediction=Decimal(str(behavior_response.get("lifetime_value_prediction", 50000))),
+                churn_risk=behavior_response.get("churn_risk", 20.0),
+                jorge_methodology_fit=behavior_response.get("jorge_methodology_fit", 70.0),
             )
 
             # Cache prediction
             await self.cache.set(cache_key, prediction.__dict__, ttl=1800)
 
-            logger.info(f"Client behavior prediction completed - Purchase probability: {prediction.purchase_probability}%")
+            logger.info(
+                f"Client behavior prediction completed - Purchase probability: {prediction.purchase_probability}%"
+            )
             return prediction
 
         except Exception as e:
             logger.error(f"Client behavior prediction failed: {str(e)}")
             raise
 
-    async def predict_deal_outcome(self,
-                                 deal_id: str,
-                                 current_stage: str = "negotiation",
-                                 context: Optional[PredictionContext] = None) -> DealOutcomePrediction:
+    async def predict_deal_outcome(
+        self, deal_id: str, current_stage: str = "negotiation", context: Optional[PredictionContext] = None
+    ) -> DealOutcomePrediction:
         """
         Predict deal outcome and optimal strategy for closing
         """
@@ -379,15 +404,15 @@ class JorgePredictionEngine:
             # Create deal outcome prediction
             prediction = DealOutcomePrediction(
                 deal_id=deal_id,
-                closing_probability=deal_response.get('closing_probability', 75.0),
-                predicted_closing_date=datetime.now() + timedelta(days=deal_response.get('closing_days', 30)),
-                predicted_final_price=Decimal(str(deal_response.get('predicted_final_price', 700000))),
-                commission_probability_6_percent=deal_response.get('commission_probability_6_percent', 80.0),
-                risk_factors=deal_response.get('risk_factors', []),
-                success_accelerators=deal_response.get('success_accelerators', []),
-                recommended_actions=deal_response.get('recommended_actions', []),
-                negotiation_leverage=deal_response.get('negotiation_leverage', 'moderate'),
-                timeline_accuracy=deal_response.get('timeline_accuracy', 85.0)
+                closing_probability=deal_response.get("closing_probability", 75.0),
+                predicted_closing_date=datetime.now() + timedelta(days=deal_response.get("closing_days", 30)),
+                predicted_final_price=Decimal(str(deal_response.get("predicted_final_price", 700000))),
+                commission_probability_6_percent=deal_response.get("commission_probability_6_percent", 80.0),
+                risk_factors=deal_response.get("risk_factors", []),
+                success_accelerators=deal_response.get("success_accelerators", []),
+                recommended_actions=deal_response.get("recommended_actions", []),
+                negotiation_leverage=deal_response.get("negotiation_leverage", "moderate"),
+                timeline_accuracy=deal_response.get("timeline_accuracy", 85.0),
             )
 
             # Cache prediction
@@ -400,10 +425,12 @@ class JorgePredictionEngine:
             logger.error(f"Deal outcome prediction failed: {str(e)}")
             raise
 
-    async def predict_business_metrics(self,
-                                     metric_type: str,
-                                     timeframe: TimeFrame = TimeFrame.MEDIUM_TERM,
-                                     context: Optional[PredictionContext] = None) -> Dict[str, Any]:
+    async def predict_business_metrics(
+        self,
+        metric_type: str,
+        timeframe: TimeFrame = TimeFrame.MEDIUM_TERM,
+        context: Optional[PredictionContext] = None,
+    ) -> Dict[str, Any]:
         """
         Predict business metrics and revenue forecasting
         """
@@ -452,16 +479,16 @@ class JorgePredictionEngine:
 
             # Structure business metrics prediction
             prediction = {
-                'metric_type': metric_type,
-                'timeframe': timeframe.value,
-                'revenue_forecast': metrics_response.get('revenue_forecast', {}),
-                'growth_opportunities': metrics_response.get('growth_opportunities', []),
-                'performance_optimization': metrics_response.get('performance_optimization', {}),
-                'strategic_recommendations': metrics_response.get('strategic_recommendations', []),
-                'competitive_intelligence': metrics_response.get('competitive_intelligence', {}),
-                'risk_factors': metrics_response.get('risk_factors', []),
-                'success_probability': metrics_response.get('success_probability', 80.0),
-                'generated_at': datetime.now().isoformat()
+                "metric_type": metric_type,
+                "timeframe": timeframe.value,
+                "revenue_forecast": metrics_response.get("revenue_forecast", {}),
+                "growth_opportunities": metrics_response.get("growth_opportunities", []),
+                "performance_optimization": metrics_response.get("performance_optimization", {}),
+                "strategic_recommendations": metrics_response.get("strategic_recommendations", []),
+                "competitive_intelligence": metrics_response.get("competitive_intelligence", {}),
+                "risk_factors": metrics_response.get("risk_factors", []),
+                "success_probability": metrics_response.get("success_probability", 80.0),
+                "generated_at": datetime.now().isoformat(),
             }
 
             # Cache prediction
@@ -495,28 +522,26 @@ class JorgePredictionEngine:
         try:
             prediction = await self.get_prediction_by_id(prediction_id)
             if not prediction:
-                return {'error': 'Prediction not found'}
+                return {"error": "Prediction not found"}
 
             explanation = {
-                'prediction_id': prediction_id,
-                'prediction_type': prediction.prediction_type.value,
-                'confidence_explanation': self._explain_confidence_level(prediction.confidence_score),
-                'supporting_factors': prediction.supporting_factors,
-                'risk_factors': prediction.risk_factors,
-                'methodology_application': prediction.jorge_methodology_application,
-                'actionable_insights': prediction.actionable_insights,
-                'model_performance': await self._get_model_performance(prediction.prediction_type)
+                "prediction_id": prediction_id,
+                "prediction_type": prediction.prediction_type.value,
+                "confidence_explanation": self._explain_confidence_level(prediction.confidence_score),
+                "supporting_factors": prediction.supporting_factors,
+                "risk_factors": prediction.risk_factors,
+                "methodology_application": prediction.jorge_methodology_application,
+                "actionable_insights": prediction.actionable_insights,
+                "model_performance": await self._get_model_performance(prediction.prediction_type),
             }
 
             return explanation
 
         except Exception as e:
             logger.error(f"Prediction explanation failed: {str(e)}")
-            return {'error': str(e)}
+            return {"error": str(e)}
 
-    async def update_prediction_accuracy(self,
-                                       prediction_id: str,
-                                       actual_outcome: Dict[str, Any]) -> None:
+    async def update_prediction_accuracy(self, prediction_id: str, actual_outcome: Dict[str, Any]) -> None:
         """
         Update prediction accuracy based on actual outcomes
         """
@@ -533,53 +558,57 @@ class JorgePredictionEngine:
             logger.error(f"Prediction accuracy update failed: {str(e)}")
 
     # Helper methods for data gathering and processing
-    async def _gather_market_intelligence(self, location: Dict[str, float], timeframe: TimeFrame, context: Optional[PredictionContext]) -> Dict[str, Any]:
+    async def _gather_market_intelligence(
+        self, location: Dict[str, float], timeframe: TimeFrame, context: Optional[PredictionContext]
+    ) -> Dict[str, Any]:
         """Gather comprehensive market intelligence data"""
         # Implement market data gathering logic
         return {
-            'location': location,
-            'timeframe': timeframe.value,
-            'market_conditions': context.market_conditions if context else {},
-            'mls_data': {},
-            'economic_indicators': {},
-            'social_sentiment': {},
-            'competition_analysis': {}
+            "location": location,
+            "timeframe": timeframe.value,
+            "market_conditions": context.market_conditions if context else {},
+            "mls_data": {},
+            "economic_indicators": {},
+            "social_sentiment": {},
+            "competition_analysis": {},
         }
 
     async def _gather_client_intelligence(self, client_id: str, context: Optional[PredictionContext]) -> Dict[str, Any]:
         """Gather comprehensive client behavior data"""
         # Implement client data gathering logic
         return {
-            'client_id': client_id,
-            'interaction_history': {},
-            'behavioral_patterns': {},
-            'financial_profile': {},
-            'preferences': {},
-            'engagement_metrics': {}
+            "client_id": client_id,
+            "interaction_history": {},
+            "behavioral_patterns": {},
+            "financial_profile": {},
+            "preferences": {},
+            "engagement_metrics": {},
         }
 
     async def _gather_deal_intelligence(self, deal_id: str, context: Optional[PredictionContext]) -> Dict[str, Any]:
         """Gather comprehensive deal data and market context"""
         # Implement deal data gathering logic
         return {
-            'deal_id': deal_id,
-            'deal_history': {},
-            'property_details': {},
-            'market_conditions': {},
-            'negotiation_history': {},
-            'competition_analysis': {}
+            "deal_id": deal_id,
+            "deal_history": {},
+            "property_details": {},
+            "market_conditions": {},
+            "negotiation_history": {},
+            "competition_analysis": {},
         }
 
-    async def _gather_business_intelligence(self, metric_type: str, timeframe: TimeFrame, context: Optional[PredictionContext]) -> Dict[str, Any]:
+    async def _gather_business_intelligence(
+        self, metric_type: str, timeframe: TimeFrame, context: Optional[PredictionContext]
+    ) -> Dict[str, Any]:
         """Gather comprehensive business performance data"""
         # Implement business data gathering logic
         return {
-            'metric_type': metric_type,
-            'timeframe': timeframe.value,
-            'historical_performance': {},
-            'market_trends': {},
-            'team_metrics': {},
-            'competitive_landscape': {}
+            "metric_type": metric_type,
+            "timeframe": timeframe.value,
+            "historical_performance": {},
+            "market_trends": {},
+            "team_metrics": {},
+            "competitive_landscape": {},
         }
 
     def _explain_confidence_level(self, confidence_score: float) -> str:
@@ -597,14 +626,14 @@ class JorgePredictionEngine:
 
     async def _get_model_performance(self, prediction_type: PredictionType) -> Dict[str, Any]:
         """Get current model performance metrics"""
-        return self.model_performance.get(prediction_type.value, {
-            'accuracy': 0.80,
-            'precision': 0.75,
-            'recall': 0.85,
-            'last_updated': datetime.now().isoformat()
-        })
+        return self.model_performance.get(
+            prediction_type.value,
+            {"accuracy": 0.80, "precision": 0.75, "recall": 0.85, "last_updated": datetime.now().isoformat()},
+        )
 
-    async def _calculate_prediction_accuracy(self, prediction: PredictionResult, actual_outcome: Dict[str, Any]) -> float:
+    async def _calculate_prediction_accuracy(
+        self, prediction: PredictionResult, actual_outcome: Dict[str, Any]
+    ) -> float:
         """Calculate accuracy of prediction vs actual outcome"""
         # Implement accuracy calculation logic
         return 0.85  # Placeholder
@@ -615,14 +644,12 @@ class JorgePredictionEngine:
             self.model_performance[prediction_type.value] = {}
 
         # Update running average of accuracy
-        current_accuracy = self.model_performance[prediction_type.value].get('accuracy', 0.8)
+        current_accuracy = self.model_performance[prediction_type.value].get("accuracy", 0.8)
         updated_accuracy = (current_accuracy * 0.9) + (accuracy * 0.1)  # Exponential moving average
 
-        self.model_performance[prediction_type.value].update({
-            'accuracy': updated_accuracy,
-            'last_updated': datetime.now().isoformat(),
-            'last_accuracy': accuracy
-        })
+        self.model_performance[prediction_type.value].update(
+            {"accuracy": updated_accuracy, "last_updated": datetime.now().isoformat(), "last_accuracy": accuracy}
+        )
 
     async def cleanup(self):
         """Clean up prediction engine resources"""

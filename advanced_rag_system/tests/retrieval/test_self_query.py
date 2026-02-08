@@ -1,9 +1,10 @@
 """Tests for self-querying retrieval system."""
 
-import pytest
-from uuid import uuid4
 from typing import List
+from uuid import uuid4
 
+import pytest
+from src.core.types import DocumentChunk, Metadata, SearchResult
 from src.retrieval.self_query import (
     Entity,
     ExecutionStrategy,
@@ -15,16 +16,14 @@ from src.retrieval.self_query import (
     QueryAnalysis,
     QueryAnalyzer,
     QueryIntent,
-    QueryPlanner,
     QueryPlan,
+    QueryPlanner,
     RelevanceScore,
-    SelfQueryRetriever,
     SelfQueryResult,
+    SelfQueryRetriever,
     TemporalRef,
 )
-from src.core.types import DocumentChunk, SearchResult, Metadata
 from src.vector_store.base import SearchOptions
-
 
 # ============================================================================
 # Fixtures
@@ -61,6 +60,7 @@ def fallback_handler():
 @pytest.fixture
 def mock_vector_store():
     """Create mock vector store for testing."""
+
     class MockVectorStore:
         def __init__(self):
             self.documents = []
@@ -149,9 +149,7 @@ class TestQueryAnalyzer:
     @pytest.mark.asyncio
     async def test_determine_combined_intent(self, query_analyzer):
         """Test determining COMBINED intent."""
-        analysis = await query_analyzer.analyze(
-            "What are the benefits of Python programming by John"
-        )
+        analysis = await query_analyzer.analyze("What are the benefits of Python programming by John")
 
         assert analysis.intent in [QueryIntent.COMBINED, QueryIntent.SEARCH]
 
@@ -256,9 +254,7 @@ class TestFilterTranslator:
 
     def test_build_raw_filter_single_condition(self, filter_translator):
         """Test building raw filter with single condition."""
-        conditions = [
-            FilterCondition(field="author", operator=FilterOperator.EQ, value="John")
-        ]
+        conditions = [FilterCondition(field="author", operator=FilterOperator.EQ, value="John")]
 
         raw = filter_translator._build_raw_filter(conditions)
 
@@ -599,9 +595,7 @@ class TestSelfQueryIntegration:
         """Test analysis of complex query."""
         analyzer = QueryAnalyzer()
 
-        analysis = await analyzer.analyze(
-            "What are the latest Python tutorials written by Alice or Bob this month"
-        )
+        analysis = await analyzer.analyze("What are the latest Python tutorials written by Alice or Bob this month")
 
         # Should extract multiple entities
         assert len(analysis.entities) >= 2

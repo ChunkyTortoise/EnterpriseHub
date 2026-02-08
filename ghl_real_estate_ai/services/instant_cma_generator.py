@@ -68,9 +68,7 @@ class InstantCMAGenerator:
         market_analysis = self._analyze_market_trends(market_data or {})
 
         # Generate insights
-        insights = self._generate_insights(
-            subject_property, comparables, price_analysis, market_analysis
-        )
+        insights = self._generate_insights(subject_property, comparables, price_analysis, market_analysis)
 
         # Compile report
         report = {
@@ -81,19 +79,13 @@ class InstantCMAGenerator:
             "price_analysis": price_analysis,
             "market_analysis": market_analysis,
             "insights": insights,
-            "recommendations": self._generate_recommendations(
-                price_analysis, market_analysis, analysis_type
-            ),
-            "executive_summary": self._generate_executive_summary(
-                subject_property, price_analysis, market_analysis
-            ),
+            "recommendations": self._generate_recommendations(price_analysis, market_analysis, analysis_type),
+            "executive_summary": self._generate_executive_summary(subject_property, price_analysis, market_analysis),
         }
 
         return report
 
-    def _generate_sample_comparables(
-        self, subject_property: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    def _generate_sample_comparables(self, subject_property: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate sample comparable properties"""
 
         base_price = subject_property.get("price", 500000)
@@ -115,9 +107,7 @@ class InstantCMAGenerator:
                 "bathrooms": bathrooms + (0.5 if i % 2 == 0 else 0),
                 "sqft": int(sqft_variance),
                 "price": int(price_variance),
-                "sold_date": (datetime.utcnow() - timedelta(days=15 + i * 10)).strftime(
-                    "%Y-%m-%d"
-                ),
+                "sold_date": (datetime.utcnow() - timedelta(days=15 + i * 10)).strftime("%Y-%m-%d"),
                 "days_on_market": 20 + i * 5,
                 "price_per_sqft": price_variance / sqft_variance,
                 "distance_miles": 0.5 + (i * 0.2),
@@ -127,16 +117,12 @@ class InstantCMAGenerator:
 
         return comparables
 
-    def _analyze_pricing(
-        self, subject_property: Dict[str, Any], comparables: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    def _analyze_pricing(self, subject_property: Dict[str, Any], comparables: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Analyze pricing based on comparables"""
 
         # Get comparable prices
         comp_prices = [c["price"] for c in comparables]
-        comp_price_per_sqft = [
-            c.get("price_per_sqft", c["price"] / c["sqft"]) for c in comparables
-        ]
+        comp_price_per_sqft = [c.get("price_per_sqft", c["price"] / c["sqft"]) for c in comparables]
 
         # Calculate statistics
         avg_price = statistics.mean(comp_prices)
@@ -201,16 +187,8 @@ class InstantCMAGenerator:
                 "direction": "increasing" if price_trend > 0 else "decreasing",
                 "timeframe": "12 months",
             },
-            "market_velocity": (
-                "Fast"
-                if days_on_market < 30
-                else "Moderate" if days_on_market < 60 else "Slow"
-            ),
-            "competition_level": (
-                "High"
-                if inventory_levels < 3
-                else "Moderate" if inventory_levels < 6 else "Low"
-            ),
+            "market_velocity": ("Fast" if days_on_market < 30 else "Moderate" if days_on_market < 60 else "Slow"),
+            "competition_level": ("High" if inventory_levels < 3 else "Moderate" if inventory_levels < 6 else "Low"),
         }
 
     def _generate_insights(
@@ -230,16 +208,14 @@ class InstantCMAGenerator:
 
         if asking_price > estimated_value * 1.05:
             insights.append(
-                f"⚠️ Property is priced {((asking_price/estimated_value - 1) * 100):.1f}% above market value. Consider adjusting to ${estimated_value:,} for faster sale."
+                f"⚠️ Property is priced {((asking_price / estimated_value - 1) * 100):.1f}% above market value. Consider adjusting to ${estimated_value:,} for faster sale."
             )
         elif asking_price < estimated_value * 0.95:
             insights.append(
-                f"💰 Property is priced {((1 - asking_price/estimated_value) * 100):.1f}% below market value. Great opportunity for buyers!"
+                f"💰 Property is priced {((1 - asking_price / estimated_value) * 100):.1f}% below market value. Great opportunity for buyers!"
             )
         else:
-            insights.append(
-                f"✅ Property is priced competitively at market value (${estimated_value:,})."
-            )
+            insights.append(f"✅ Property is priced competitively at market value (${estimated_value:,}).")
 
         # Market condition insight
         if market_analysis["market_type"] == "Seller's Market":
@@ -260,19 +236,13 @@ class InstantCMAGenerator:
         # Price trend insight
         price_trend = market_analysis["price_trend"]["percentage"]
         if price_trend > 3:
-            insights.append(
-                f"📈 Market appreciating at {price_trend}% annually. Prices expected to continue rising."
-            )
+            insights.append(f"📈 Market appreciating at {price_trend}% annually. Prices expected to continue rising.")
         elif price_trend < -3:
-            insights.append(
-                f"📉 Market declining {abs(price_trend)}% annually. Act quickly to secure value."
-            )
+            insights.append(f"📉 Market declining {abs(price_trend)}% annually. Act quickly to secure value.")
 
         # Competitive positioning
         comp_count = len(comparables)
-        insights.append(
-            f"🏘️ {comp_count} highly comparable properties analyzed. Strong data confidence."
-        )
+        insights.append(f"🏘️ {comp_count} highly comparable properties analyzed. Strong data confidence.")
 
         return insights
 
@@ -307,11 +277,7 @@ class InstantCMAGenerator:
             recommendations["timing"] = {
                 "best_time": "Spring (March-May) typically sees highest activity",
                 "days_to_sell": market_analysis["avg_days_on_market"],
-                "urgency": (
-                    "High"
-                    if market_analysis["market_velocity"] == "Fast"
-                    else "Moderate"
-                ),
+                "urgency": ("High" if market_analysis["market_velocity"] == "Fast" else "Moderate"),
             }
 
             recommendations["strategy"] = [
@@ -330,11 +296,7 @@ class InstantCMAGenerator:
 
             recommendations["timing"] = {
                 "best_time": "Off-season (Nov-Jan) for better negotiating",
-                "urgency": (
-                    "High"
-                    if market_analysis["market_type"] == "Seller's Market"
-                    else "Low"
-                ),
+                "urgency": ("High" if market_analysis["market_type"] == "Seller's Market" else "Low"),
             }
 
             recommendations["strategy"] = [
@@ -361,16 +323,14 @@ class InstantCMAGenerator:
 
         summary = f"**Comparative Market Analysis for {address}**\n\n"
         summary += f"**Estimated Market Value:** ${estimated_value:,}\n"
-        summary += (
-            f"**Value Range:** ${price_range['low']:,} - ${price_range['high']:,}\n"
-        )
+        summary += f"**Value Range:** ${price_range['low']:,} - ${price_range['high']:,}\n"
         summary += f"**Market Conditions:** {market_type}\n\n"
 
         summary += "**Key Findings:**\n"
-        summary += f"• Based on analysis of {price_analysis['comparables_analysis']['sample_size']} comparable properties\n"
         summary += (
-            f"• Average price per sq ft: ${price_analysis['price_per_sqft']:.2f}\n"
+            f"• Based on analysis of {price_analysis['comparables_analysis']['sample_size']} comparable properties\n"
         )
+        summary += f"• Average price per sq ft: ${price_analysis['price_per_sqft']:.2f}\n"
         summary += f"• Properties selling in {market_analysis['avg_days_on_market']} days on average\n"
         summary += f"• Market trending {market_analysis['price_trend']['direction']} at {market_analysis['price_trend']['percentage']}% annually\n"
 
@@ -442,9 +402,7 @@ def demo_cma_generator():
     print("=" * 70)
     pa = report["price_analysis"]
     print(f"Estimated Value: ${pa['estimated_value']:,}")
-    print(
-        f"Price Range: ${pa['price_range']['low']:,} - ${pa['price_range']['high']:,}"
-    )
+    print(f"Price Range: ${pa['price_range']['low']:,} - ${pa['price_range']['high']:,}")
     print(f"Price per Sq Ft: ${pa['price_per_sqft']:.2f}")
     print(f"Confidence: {pa['confidence_level']}")
 
@@ -456,9 +414,7 @@ def demo_cma_generator():
     print(f"Market Strength: {ma['market_strength']}")
     print(f"Avg Days on Market: {ma['avg_days_on_market']}")
     print(f"Inventory: {ma['inventory_months']} months")
-    print(
-        f"Price Trend: {ma['price_trend']['percentage']}% {ma['price_trend']['direction']}"
-    )
+    print(f"Price Trend: {ma['price_trend']['percentage']}% {ma['price_trend']['direction']}")
 
     print("\n" + "=" * 70)
     print("KEY INSIGHTS")
@@ -478,7 +434,7 @@ def demo_cma_generator():
     for strategy in rec["strategy"]:
         print(f"  • {strategy}")
 
-    print(f"\n{'='*70}\n")
+    print(f"\n{'=' * 70}\n")
 
     return service
 

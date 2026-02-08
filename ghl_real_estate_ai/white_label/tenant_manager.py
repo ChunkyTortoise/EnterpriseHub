@@ -10,21 +10,23 @@ This module provides:
 - Automated tenant provisioning and deployment
 """
 
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any
-from datetime import datetime, timedelta
-from enum import Enum
-import logging
 import asyncio
 import json
+import logging
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
+
 
 class SubscriptionTier(Enum):
     BASIC = "basic"
     PROFESSIONAL = "professional"
     ENTERPRISE = "enterprise"
     FRANCHISE_MASTER = "franchise_master"
+
 
 class RegionType(Enum):
     NORTH_AMERICA = "north_america"
@@ -33,9 +35,11 @@ class RegionType(Enum):
     LATIN_AMERICA = "latin_america"
     MIDDLE_EAST_AFRICA = "middle_east_africa"
 
+
 @dataclass
 class BrandConfiguration:
     """White-label branding configuration for tenant"""
+
     company_name: str
     logo_url: Optional[str] = None
     primary_color: str = "#1a365d"
@@ -45,9 +49,11 @@ class BrandConfiguration:
     email_signature: Optional[str] = None
     marketing_message: str = "Powered by Jorge's AI Technology"
 
+
 @dataclass
 class FeatureConfiguration:
     """Feature set configuration per subscription tier"""
+
     jorge_bot_enabled: bool = True
     lead_bot_automation: bool = True
     predictive_intelligence: bool = False
@@ -64,9 +70,11 @@ class FeatureConfiguration:
     max_leads_per_month: int = 1000
     api_calls_per_month: int = 10000
 
+
 @dataclass
 class RegionalCompliance:
     """Regional compliance and localization settings"""
+
     region: RegionType
     country_code: str
     language: str = "en"
@@ -77,9 +85,11 @@ class RegionalCompliance:
     local_regulations: Dict[str, Any] = field(default_factory=dict)
     commission_structure: Dict[str, float] = field(default_factory=lambda: {"standard": 0.06})
 
+
 @dataclass
 class TenantConfiguration:
     """Complete tenant configuration"""
+
     tenant_id: str
     partner_id: str
     brand_config: BrandConfiguration
@@ -91,6 +101,7 @@ class TenantConfiguration:
     is_active: bool = True
     trial_expires_at: Optional[datetime] = None
     billing_config: Dict[str, Any] = field(default_factory=dict)
+
 
 class GlobalTenantManager:
     """
@@ -111,7 +122,7 @@ class GlobalTenantManager:
                 lead_bot_automation=True,
                 max_agents=5,
                 max_leads_per_month=500,
-                api_calls_per_month=5000
+                api_calls_per_month=5000,
             ),
             SubscriptionTier.PROFESSIONAL: FeatureConfiguration(
                 jorge_bot_enabled=True,
@@ -122,7 +133,7 @@ class GlobalTenantManager:
                 advanced_analytics=True,
                 max_agents=20,
                 max_leads_per_month=2000,
-                api_calls_per_month=25000
+                api_calls_per_month=25000,
             ),
             SubscriptionTier.ENTERPRISE: FeatureConfiguration(
                 jorge_bot_enabled=True,
@@ -138,7 +149,7 @@ class GlobalTenantManager:
                 compliance_automation=True,
                 max_agents=100,
                 max_leads_per_month=10000,
-                api_calls_per_month=100000
+                api_calls_per_month=100000,
             ),
             SubscriptionTier.FRANCHISE_MASTER: FeatureConfiguration(
                 jorge_bot_enabled=True,
@@ -155,8 +166,8 @@ class GlobalTenantManager:
                 global_market_intelligence=True,
                 max_agents=-1,  # Unlimited
                 max_leads_per_month=-1,  # Unlimited
-                api_calls_per_month=-1  # Unlimited
-            )
+                api_calls_per_month=-1,  # Unlimited
+            ),
         }
 
     def _initialize_compliance_templates(self) -> Dict[RegionType, RegionalCompliance]:
@@ -170,11 +181,7 @@ class GlobalTenantManager:
                 timezone="America/New_York",
                 privacy_law="CCPA",
                 data_residency="us-east-1",
-                local_regulations={
-                    "fair_housing_act": True,
-                    "respa_compliance": True,
-                    "state_licensing": "required"
-                }
+                local_regulations={"fair_housing_act": True, "respa_compliance": True, "state_licensing": "required"},
             ),
             RegionType.EUROPE: RegionalCompliance(
                 region=RegionType.EUROPE,
@@ -187,8 +194,8 @@ class GlobalTenantManager:
                 local_regulations={
                     "gdpr_compliance": True,
                     "data_protection_officer": "required",
-                    "consent_management": "explicit"
-                }
+                    "consent_management": "explicit",
+                },
             ),
             RegionType.ASIA_PACIFIC: RegionalCompliance(
                 region=RegionType.ASIA_PACIFIC,
@@ -198,10 +205,7 @@ class GlobalTenantManager:
                 timezone="Australia/Sydney",
                 privacy_law="Privacy_Act",
                 data_residency="ap-southeast-2",
-                local_regulations={
-                    "privacy_act_compliance": True,
-                    "cross_border_disclosure": "restricted"
-                }
+                local_regulations={"privacy_act_compliance": True, "cross_border_disclosure": "restricted"},
             ),
             RegionType.LATIN_AMERICA: RegionalCompliance(
                 region=RegionType.LATIN_AMERICA,
@@ -211,19 +215,18 @@ class GlobalTenantManager:
                 timezone="America/Sao_Paulo",
                 privacy_law="LGPD",
                 data_residency="sa-east-1",
-                local_regulations={
-                    "lgpd_compliance": True,
-                    "data_localization": "required"
-                }
-            )
+                local_regulations={"lgpd_compliance": True, "data_localization": "required"},
+            ),
         }
 
-    async def provision_tenant(self,
-                             partner_id: str,
-                             company_name: str,
-                             subscription_tier: SubscriptionTier,
-                             region: RegionType,
-                             custom_config: Optional[Dict[str, Any]] = None) -> TenantConfiguration:
+    async def provision_tenant(
+        self,
+        partner_id: str,
+        company_name: str,
+        subscription_tier: SubscriptionTier,
+        region: RegionType,
+        custom_config: Optional[Dict[str, Any]] = None,
+    ) -> TenantConfiguration:
         """
         Provision new tenant with complete configuration
         """
@@ -236,7 +239,7 @@ class GlobalTenantManager:
                 company_name=company_name,
                 primary_color=custom_config.get("primary_color", "#1a365d") if custom_config else "#1a365d",
                 secondary_color=custom_config.get("secondary_color", "#2d3748") if custom_config else "#2d3748",
-                custom_domain=custom_config.get("custom_domain") if custom_config else None
+                custom_domain=custom_config.get("custom_domain") if custom_config else None,
             )
 
             # Get feature configuration from template
@@ -267,7 +270,7 @@ class GlobalTenantManager:
                 subscription_tier=subscription_tier,
                 created_at=datetime.now(),
                 last_updated=datetime.now(),
-                trial_expires_at=datetime.now() + timedelta(days=14)  # 14-day trial
+                trial_expires_at=datetime.now() + timedelta(days=14),  # 14-day trial
             )
 
             # Store tenant configuration
@@ -320,7 +323,9 @@ class GlobalTenantManager:
         # Apply data residency requirements
         # Configure privacy law compliance
         # Set up audit logging for regulations
-        logger.info(f"Setting up compliance for tenant: {tenant_config.tenant_id} in region: {tenant_config.regional_config.region.value}")
+        logger.info(
+            f"Setting up compliance for tenant: {tenant_config.tenant_id} in region: {tenant_config.regional_config.region.value}"
+        )
 
     async def _deploy_tenant_customizations(self, tenant_config: TenantConfiguration):
         """Deploy tenant-specific UI and branding customizations"""
@@ -329,10 +334,9 @@ class GlobalTenantManager:
         # Deploy feature-specific UI components
         logger.info(f"Deploying customizations for tenant: {tenant_config.tenant_id}")
 
-    async def update_tenant_subscription(self,
-                                       tenant_id: str,
-                                       new_tier: SubscriptionTier,
-                                       effective_date: Optional[datetime] = None) -> bool:
+    async def update_tenant_subscription(
+        self, tenant_id: str, new_tier: SubscriptionTier, effective_date: Optional[datetime] = None
+    ) -> bool:
         """
         Update tenant subscription tier and features
         """
@@ -358,19 +362,16 @@ class GlobalTenantManager:
             logger.error(f"Failed to update subscription for tenant {tenant_id}: {str(e)}")
             return False
 
-    async def _update_tenant_features(self,
-                                    tenant_config: TenantConfiguration,
-                                    old_tier: SubscriptionTier,
-                                    new_tier: SubscriptionTier):
+    async def _update_tenant_features(
+        self, tenant_config: TenantConfiguration, old_tier: SubscriptionTier, new_tier: SubscriptionTier
+    ):
         """Update tenant features based on subscription change"""
         # Enable/disable features based on new tier
         # Update service limits and quotas
         # Reconfigure UI components
         pass
 
-    async def customize_branding(self,
-                               tenant_id: str,
-                               brand_config: BrandConfiguration) -> bool:
+    async def customize_branding(self, tenant_id: str, brand_config: BrandConfiguration) -> bool:
         """
         Update tenant branding configuration
         """
@@ -423,10 +424,12 @@ class GlobalTenantManager:
                 "created_at": tenant_config.created_at.isoformat(),
                 "days_active": (datetime.now() - tenant_config.created_at).days,
                 "is_active": tenant_config.is_active,
-                "trial_status": "trial" if tenant_config.trial_expires_at and tenant_config.trial_expires_at > datetime.now() else "active",
+                "trial_status": "trial"
+                if tenant_config.trial_expires_at and tenant_config.trial_expires_at > datetime.now()
+                else "active",
                 "usage": await self._calculate_tenant_usage(tenant_id),
                 "feature_utilization": await self._calculate_feature_utilization(tenant_id),
-                "performance": await self._get_tenant_performance_metrics(tenant_id)
+                "performance": await self._get_tenant_performance_metrics(tenant_id),
             }
 
             return metrics
@@ -442,7 +445,7 @@ class GlobalTenantManager:
             "agents_used": 5,
             "leads_processed_this_month": 150,
             "api_calls_this_month": 2500,
-            "storage_used_gb": 2.5
+            "storage_used_gb": 2.5,
         }
 
     async def _calculate_feature_utilization(self, tenant_id: str) -> Dict[str, bool]:
@@ -452,7 +455,7 @@ class GlobalTenantManager:
             "lead_bot": True,
             "predictive_intelligence": False,
             "voice_ai": True,
-            "mobile_app": False
+            "mobile_app": False,
         }
 
     async def _get_tenant_performance_metrics(self, tenant_id: str) -> Dict[str, float]:
@@ -461,7 +464,7 @@ class GlobalTenantManager:
             "avg_response_time_ms": 150.0,
             "lead_conversion_rate": 0.15,
             "bot_accuracy": 0.94,
-            "user_satisfaction": 4.7
+            "user_satisfaction": 4.7,
         }
 
     async def suspend_tenant(self, tenant_id: str, reason: str) -> bool:
@@ -547,12 +550,13 @@ class GlobalTenantManager:
             return {
                 "total_tenants": total_tenants,
                 "active_tenants": active_tenants,
-                "trial_tenants": sum(1 for t in self.tenants.values()
-                                   if t.trial_expires_at and t.trial_expires_at > datetime.now()),
+                "trial_tenants": sum(
+                    1 for t in self.tenants.values() if t.trial_expires_at and t.trial_expires_at > datetime.now()
+                ),
                 "subscription_distribution": subscription_distribution,
                 "regional_distribution": regional_distribution,
                 "total_revenue_potential": await self._calculate_total_revenue_potential(),
-                "platform_health": await self._get_platform_health_metrics()
+                "platform_health": await self._get_platform_health_metrics(),
             }
 
         except Exception as e:
@@ -567,12 +571,8 @@ class GlobalTenantManager:
 
     async def _get_platform_health_metrics(self) -> Dict[str, Any]:
         """Get overall platform health metrics"""
-        return {
-            "avg_uptime": 0.999,
-            "avg_response_time": 120.0,
-            "error_rate": 0.001,
-            "customer_satisfaction": 4.8
-        }
+        return {"avg_uptime": 0.999, "avg_response_time": 120.0, "error_rate": 0.001, "customer_satisfaction": 4.8}
+
 
 # Global instance
 tenant_manager = GlobalTenantManager()

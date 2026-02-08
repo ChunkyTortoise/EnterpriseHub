@@ -293,16 +293,12 @@ class NeighborhoodInsightsEngine:
         walk = profile["walkability"]["walk_score"]
         market = profile["market_trends"]["price_trend_1yr"]
 
-        summary = (
-            f"**{neighborhood}** is a highly desirable neighborhood featuring:\n\n"
-        )
+        summary = f"**{neighborhood}** is a highly desirable neighborhood featuring:\n\n"
         summary += f"🏫 **Excellent Schools** - Average rating of {schools}/10\n"
         summary += f"🛡️ **Very Safe** - Safety score of {safety}/100\n"
         summary += f"🚶 **Walkable** - Walk score of {walk}/100\n"
         summary += f"📈 **Strong Market** - Prices up {market}% in last year\n\n"
-        summary += (
-            f"Perfect for families seeking quality education, safety, and convenience."
-        )
+        summary += f"Perfect for families seeking quality education, safety, and convenience."
 
         return summary
 
@@ -347,9 +343,7 @@ def demo_neighborhood_insights():
 
     print("🏘️ Neighborhood Insights Engine Demo\n")
 
-    profile = service.get_neighborhood_profile(
-        address="123 Main Street", zip_code="12345"
-    )
+    profile = service.get_neighborhood_profile(address="123 Main Street", zip_code="12345")
 
     print("=" * 70)
     print(f"NEIGHBORHOOD PROFILE: {profile['neighborhood']}")
@@ -362,9 +356,7 @@ def demo_neighborhood_insights():
     print("\n\n🏫 SCHOOLS")
     print("-" * 70)
     schools = profile["schools"]
-    print(
-        f"District: {schools['school_district']} (Grade: {schools['district_rating']})"
-    )
+    print(f"District: {schools['school_district']} (Grade: {schools['district_rating']})")
     print(f"Average Rating: {schools['average_rating']}/10")
     print(f"\nNearby Schools:")
     for elem in schools["elementary"][:2]:
@@ -399,7 +391,7 @@ def demo_neighborhood_insights():
     for reason in profile["why_live_here"]:
         print(f"  {reason}")
 
-    print(f"\n{'='*70}\n")
+    print(f"\n{'=' * 70}\n")
 
     return service
 

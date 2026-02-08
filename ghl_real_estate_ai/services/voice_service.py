@@ -38,7 +38,7 @@ class VoiceService:
         # Real STT implementation would go here
         return "Transcription not implemented"
 
-    async def synthesize_speech(self, text: str, voice_id: str = "21m00Tcm4TlvDq8ikWAM") -> bytes: # Default: Rachel
+    async def synthesize_speech(self, text: str, voice_id: str = "21m00Tcm4TlvDq8ikWAM") -> bytes:  # Default: Rachel
         """
         Convert text to speech using ElevenLabs.
         """
@@ -48,18 +48,11 @@ class VoiceService:
 
         # Real TTS implementation with ElevenLabs
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
-        headers = {
-            "Accept": "audio/mpeg",
-            "Content-Type": "application/json",
-            "xi-api-key": self.elevenlabs_api_key
-        }
+        headers = {"Accept": "audio/mpeg", "Content-Type": "application/json", "xi-api-key": self.elevenlabs_api_key}
         data = {
             "text": text,
             "model_id": "eleven_monolingual_v1",
-            "voice_settings": {
-                "stability": 0.5,
-                "similarity_boost": 0.5
-            }
+            "voice_settings": {"stability": 0.5, "similarity_boost": 0.5},
         }
 
         try:
@@ -78,8 +71,10 @@ class VoiceService:
         # This is a placeholder for advanced voice analysis
         return "neutral"
 
+
 # Global service instance
 _voice_service = None
+
 
 def get_voice_service() -> VoiceService:
     """Get the global voice service instance."""

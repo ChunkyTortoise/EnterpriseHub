@@ -16,39 +16,45 @@ This service enables safe production rollout of the $4.91M ARR enhancement syste
 """
 
 import asyncio
+import hashlib
 import json
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Union, Callable
-from dataclasses import dataclass, asdict
-from enum import Enum
 import logging
 import random
-import hashlib
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Union
 
-from ghl_real_estate_ai.services.database_service import get_database, DatabaseService
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.services.production_monitoring_service import get_monitoring_service
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.database_service import DatabaseService, get_database
+from ghl_real_estate_ai.services.production_monitoring_service import get_monitoring_service
 
 logger = get_logger(__name__)
 
+
 class FeatureFlagType(Enum):
     """Types of feature flags"""
+
     BOOLEAN = "boolean"
     PERCENTAGE = "percentage"
     MULTIVARIATE = "multivariate"
     USER_SEGMENT = "user_segment"
 
+
 class DeploymentStrategy(Enum):
     """Deployment strategies"""
+
     IMMEDIATE = "immediate"
     CANARY = "canary"
     BLUE_GREEN = "blue_green"
     ROLLING = "rolling"
     A_B_TEST = "a_b_test"
 
+
 class DeploymentStatus(Enum):
     """Deployment status"""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -56,17 +62,21 @@ class DeploymentStatus(Enum):
     FAILED = "failed"
     PAUSED = "paused"
 
+
 class RollbackTrigger(Enum):
     """Automatic rollback triggers"""
+
     ERROR_RATE = "error_rate"
     RESPONSE_TIME = "response_time"
     BUSINESS_METRIC = "business_metric"
     MANUAL = "manual"
     HEALTH_CHECK = "health_check"
 
+
 @dataclass
 class FeatureFlag:
     """Feature flag configuration"""
+
     flag_id: str
     name: str
     description: str
@@ -104,9 +114,11 @@ class FeatureFlag:
         if self.updated_at is None:
             self.updated_at = datetime.utcnow()
 
+
 @dataclass
 class DeploymentConfig:
     """Deployment configuration"""
+
     deployment_id: str
     feature_flags: List[str]  # Flag IDs being deployed
     deployment_strategy: DeploymentStrategy
@@ -133,9 +145,11 @@ class DeploymentConfig:
         if self.created_at is None:
             self.created_at = datetime.utcnow()
 
+
 @dataclass
 class DeploymentStatus:
     """Current deployment status"""
+
     deployment_id: str
     status: DeploymentStatus
     current_percentage: float
@@ -159,6 +173,7 @@ class DeploymentStatus:
             self.issues = []
         if self.alerts_triggered is None:
             self.alerts_triggered = []
+
 
 class FeatureFlagDeploymentService:
     """Production feature flag and deployment management service"""
@@ -185,7 +200,7 @@ class FeatureFlagDeploymentService:
                 "target_arr": 225000,
                 "dependencies": ["database_service", "claude_assistant"],
                 "health_endpoints": ["/health/followup", "/health/agents"],
-                "business_metrics": ["follow_up_response_rate", "conversion_rate"]
+                "business_metrics": ["follow_up_response_rate", "conversion_rate"],
             },
             "neural_property_matching": {
                 "flag_id": "neural_matching_enabled",
@@ -193,7 +208,7 @@ class FeatureFlagDeploymentService:
                 "target_arr": 400000,
                 "dependencies": ["real_estate_pipeline", "ml_models"],
                 "health_endpoints": ["/health/matching", "/health/ml"],
-                "business_metrics": ["match_accuracy", "user_satisfaction"]
+                "business_metrics": ["match_accuracy", "user_satisfaction"],
             },
             "behavioral_trigger_engine": {
                 "flag_id": "behavioral_triggers_enabled",
@@ -201,7 +216,7 @@ class FeatureFlagDeploymentService:
                 "target_arr": 200000,
                 "dependencies": ["behavioral_processor", "signal_analyzer"],
                 "health_endpoints": ["/health/behavioral", "/health/signals"],
-                "business_metrics": ["signal_accuracy", "trigger_effectiveness"]
+                "business_metrics": ["signal_accuracy", "trigger_effectiveness"],
             },
             "revenue_attribution_system": {
                 "flag_id": "revenue_attribution_enabled",
@@ -209,7 +224,7 @@ class FeatureFlagDeploymentService:
                 "target_arr": 0,  # Infrastructure component
                 "dependencies": ["database_service", "analytics_engine"],
                 "health_endpoints": ["/health/attribution", "/health/analytics"],
-                "business_metrics": ["attribution_confidence", "data_quality"]
+                "business_metrics": ["attribution_confidence", "data_quality"],
             },
             "pricing_intelligence": {
                 "flag_id": "pricing_intelligence_enabled",
@@ -217,7 +232,7 @@ class FeatureFlagDeploymentService:
                 "target_arr": 400000,
                 "dependencies": ["pricing_engine", "market_analyzer"],
                 "health_endpoints": ["/health/pricing", "/health/market"],
-                "business_metrics": ["pricing_accuracy", "valuation_confidence"]
+                "business_metrics": ["pricing_accuracy", "valuation_confidence"],
             },
             "churn_prevention_system": {
                 "flag_id": "churn_prevention_enabled",
@@ -225,7 +240,7 @@ class FeatureFlagDeploymentService:
                 "target_arr": 300000,
                 "dependencies": ["churn_predictor", "intervention_engine"],
                 "health_endpoints": ["/health/churn", "/health/interventions"],
-                "business_metrics": ["churn_prediction_accuracy", "recovery_rate"]
+                "business_metrics": ["churn_prediction_accuracy", "recovery_rate"],
             },
             "competitive_intelligence": {
                 "flag_id": "competitive_intel_enabled",
@@ -233,7 +248,7 @@ class FeatureFlagDeploymentService:
                 "target_arr": 300000,
                 "dependencies": ["competitive_analyzer", "market_monitor"],
                 "health_endpoints": ["/health/competitive", "/health/monitoring"],
-                "business_metrics": ["analysis_accuracy", "response_time"]
+                "business_metrics": ["analysis_accuracy", "response_time"],
             },
             "ab_testing_optimization": {
                 "flag_id": "ab_testing_enabled",
@@ -241,7 +256,7 @@ class FeatureFlagDeploymentService:
                 "target_arr": 150000,
                 "dependencies": ["ab_test_engine", "statistical_analyzer"],
                 "health_endpoints": ["/health/ab_testing", "/health/stats"],
-                "business_metrics": ["test_validity", "optimization_lift"]
+                "business_metrics": ["test_validity", "optimization_lift"],
             },
             "production_monitoring": {
                 "flag_id": "production_monitoring_enabled",
@@ -249,8 +264,8 @@ class FeatureFlagDeploymentService:
                 "target_arr": 0,  # Infrastructure component
                 "dependencies": ["monitoring_service", "alerting_system"],
                 "health_endpoints": ["/health/monitoring", "/health/alerts"],
-                "business_metrics": ["uptime_percentage", "alert_accuracy"]
-            }
+                "business_metrics": ["uptime_percentage", "alert_accuracy"],
+            },
         }
 
         logger.info("Initialized Feature Flag Deployment Service")
@@ -279,7 +294,7 @@ class FeatureFlagDeploymentService:
         description: str,
         flag_type: FeatureFlagType = FeatureFlagType.BOOLEAN,
         deployment_strategy: DeploymentStrategy = DeploymentStrategy.CANARY,
-        **kwargs
+        **kwargs,
     ) -> FeatureFlag:
         """Create a new feature flag"""
 
@@ -289,7 +304,7 @@ class FeatureFlagDeploymentService:
             description=description,
             flag_type=flag_type,
             deployment_strategy=deployment_strategy,
-            **kwargs
+            **kwargs,
         )
 
         # Store flag
@@ -299,11 +314,7 @@ class FeatureFlagDeploymentService:
         logger.info(f"Created feature flag: {flag_id}")
         return flag
 
-    async def update_feature_flag(
-        self,
-        flag_id: str,
-        updates: Dict[str, Any]
-    ) -> bool:
+    async def update_feature_flag(self, flag_id: str, updates: Dict[str, Any]) -> bool:
         """Update existing feature flag"""
 
         if flag_id not in self.active_flags:
@@ -332,7 +343,7 @@ class FeatureFlagDeploymentService:
         flag_id: str,
         user_id: Optional[str] = None,
         user_attributes: Optional[Dict[str, Any]] = None,
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[Dict[str, Any]] = None,
     ) -> Any:
         """Evaluate feature flag for user/context"""
 
@@ -366,16 +377,14 @@ class FeatureFlagDeploymentService:
         flag: FeatureFlag,
         user_id: Optional[str],
         user_attributes: Optional[Dict[str, Any]],
-        context: Optional[Dict[str, Any]]
+        context: Optional[Dict[str, Any]],
     ) -> Any:
         """Internal flag evaluation logic"""
 
         # Check prerequisites
         if flag.prerequisites:
             for prereq_flag_id in flag.prerequisites:
-                prereq_result = await self.evaluate_feature_flag(
-                    prereq_flag_id, user_id, user_attributes, context
-                )
+                prereq_result = await self.evaluate_feature_flag(prereq_flag_id, user_id, user_attributes, context)
                 if not prereq_result:
                     return False
 
@@ -443,10 +452,7 @@ class FeatureFlagDeploymentService:
         return list(flag.variants.keys())[0]  # Fallback to first variant
 
     def _evaluate_user_segment_flag(
-        self,
-        flag: FeatureFlag,
-        user_id: Optional[str],
-        user_attributes: Optional[Dict[str, Any]]
+        self, flag: FeatureFlag, user_id: Optional[str], user_attributes: Optional[Dict[str, Any]]
     ) -> bool:
         """Evaluate user segment targeting"""
 
@@ -486,7 +492,7 @@ class FeatureFlagDeploymentService:
         deployment_strategy: DeploymentStrategy = DeploymentStrategy.CANARY,
         target_percentage: float = 100.0,
         created_by: str = "system",
-        **kwargs
+        **kwargs,
     ) -> str:
         """Create a new deployment"""
 
@@ -496,7 +502,7 @@ class FeatureFlagDeploymentService:
             deployment_strategy=deployment_strategy,
             target_percentage=target_percentage,
             created_by=created_by,
-            **kwargs
+            **kwargs,
         )
 
         # Initialize deployment status
@@ -505,7 +511,7 @@ class FeatureFlagDeploymentService:
             status=DeploymentStatus.PENDING,
             current_percentage=0.0,
             started_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            updated_at=datetime.utcnow(),
         )
 
         # Store deployment
@@ -549,10 +555,7 @@ class FeatureFlagDeploymentService:
 
         while current_percentage < config.target_percentage:
             # Calculate next increment
-            next_percentage = min(
-                current_percentage + config.rollout_increment,
-                config.target_percentage
-            )
+            next_percentage = min(current_percentage + config.rollout_increment, config.target_percentage)
 
             logger.info(f"Deployment {deployment_id}: Rolling out to {next_percentage}%")
 
@@ -560,16 +563,17 @@ class FeatureFlagDeploymentService:
             await self._update_deployment_percentage(config.feature_flags, next_percentage)
 
             # Update deployment status
-            await self._update_deployment_status(deployment_id, {
-                "current_percentage": next_percentage,
-                "status": DeploymentStatus.IN_PROGRESS,
-                "updated_at": datetime.utcnow()
-            })
+            await self._update_deployment_status(
+                deployment_id,
+                {
+                    "current_percentage": next_percentage,
+                    "status": DeploymentStatus.IN_PROGRESS,
+                    "updated_at": datetime.utcnow(),
+                },
+            )
 
             # Monitor deployment health
-            health_check_passed = await self._monitor_deployment_health(
-                deployment_id, config, next_percentage
-            )
+            health_check_passed = await self._monitor_deployment_health(deployment_id, config, next_percentage)
 
             if not health_check_passed:
                 logger.warning(f"Deployment {deployment_id}: Health check failed, rolling back")
@@ -583,11 +587,10 @@ class FeatureFlagDeploymentService:
                 await asyncio.sleep(config.rollout_interval_minutes * 60)
 
         # Mark deployment as completed
-        await self._update_deployment_status(deployment_id, {
-            "status": DeploymentStatus.COMPLETED,
-            "completed_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow()
-        })
+        await self._update_deployment_status(
+            deployment_id,
+            {"status": DeploymentStatus.COMPLETED, "completed_at": datetime.utcnow(), "updated_at": datetime.utcnow()},
+        )
 
         logger.info(f"Deployment {deployment_id} completed successfully")
 
@@ -600,22 +603,22 @@ class FeatureFlagDeploymentService:
         await self._update_deployment_percentage(config.feature_flags, config.target_percentage)
 
         # Update status
-        await self._update_deployment_status(deployment_id, {
-            "current_percentage": config.target_percentage,
-            "status": DeploymentStatus.IN_PROGRESS,
-            "updated_at": datetime.utcnow()
-        })
-
-        # Monitor for safety
-        health_check_passed = await self._monitor_deployment_health(
-            deployment_id, config, config.target_percentage
+        await self._update_deployment_status(
+            deployment_id,
+            {
+                "current_percentage": config.target_percentage,
+                "status": DeploymentStatus.IN_PROGRESS,
+                "updated_at": datetime.utcnow(),
+            },
         )
 
+        # Monitor for safety
+        health_check_passed = await self._monitor_deployment_health(deployment_id, config, config.target_percentage)
+
         if health_check_passed:
-            await self._update_deployment_status(deployment_id, {
-                "status": DeploymentStatus.COMPLETED,
-                "completed_at": datetime.utcnow()
-            })
+            await self._update_deployment_status(
+                deployment_id, {"status": DeploymentStatus.COMPLETED, "completed_at": datetime.utcnow()}
+            )
         else:
             await self._rollback_deployment(deployment_id, "Post-deployment health check failed")
 
@@ -640,11 +643,14 @@ class FeatureFlagDeploymentService:
 
         await self._update_deployment_percentage(config.feature_flags, test_percentage)
 
-        await self._update_deployment_status(deployment_id, {
-            "current_percentage": test_percentage,
-            "status": DeploymentStatus.IN_PROGRESS,
-            "updated_at": datetime.utcnow()
-        })
+        await self._update_deployment_status(
+            deployment_id,
+            {
+                "current_percentage": test_percentage,
+                "status": DeploymentStatus.IN_PROGRESS,
+                "updated_at": datetime.utcnow(),
+            },
+        )
 
         # Run A/B test for specified duration
         test_duration = config.monitoring_duration_minutes * 60
@@ -656,11 +662,10 @@ class FeatureFlagDeploymentService:
         if test_results["winner"] == "treatment":
             # Roll out to 100%
             await self._update_deployment_percentage(config.feature_flags, 100.0)
-            await self._update_deployment_status(deployment_id, {
-                "current_percentage": 100.0,
-                "status": DeploymentStatus.COMPLETED,
-                "completed_at": datetime.utcnow()
-            })
+            await self._update_deployment_status(
+                deployment_id,
+                {"current_percentage": 100.0, "status": DeploymentStatus.COMPLETED, "completed_at": datetime.utcnow()},
+            )
             logger.info(f"A/B test {deployment_id}: Treatment won, rolling out to 100%")
         else:
             # Roll back
@@ -671,10 +676,7 @@ class FeatureFlagDeploymentService:
     # ============================================================================
 
     async def _monitor_deployment_health(
-        self,
-        deployment_id: str,
-        config: DeploymentConfig,
-        current_percentage: float
+        self, deployment_id: str, config: DeploymentConfig, current_percentage: float
     ) -> bool:
         """Monitor deployment health and trigger rollback if needed"""
 
@@ -717,12 +719,15 @@ class FeatureFlagDeploymentService:
             health_checks.append(True)
 
         # Update deployment status with current health
-        await self._update_deployment_status(deployment_id, {
-            "error_rate": error_rate,
-            "avg_response_time": response_time,
-            "issues": issues,
-            "updated_at": datetime.utcnow()
-        })
+        await self._update_deployment_status(
+            deployment_id,
+            {
+                "error_rate": error_rate,
+                "avg_response_time": response_time,
+                "issues": issues,
+                "updated_at": datetime.utcnow(),
+            },
+        )
 
         # Determine overall health
         success_rate = sum(health_checks) / len(health_checks)
@@ -744,18 +749,18 @@ class FeatureFlagDeploymentService:
 
         # Disable all flags in deployment
         for flag_id in config.feature_flags:
-            await self.update_feature_flag(flag_id, {
-                "enabled": False,
-                "rollout_percentage": 0.0
-            })
+            await self.update_feature_flag(flag_id, {"enabled": False, "rollout_percentage": 0.0})
 
         # Update deployment status
-        await self._update_deployment_status(deployment_id, {
-            "status": DeploymentStatus.ROLLED_BACK,
-            "rollback_reason": reason,
-            "updated_at": datetime.utcnow(),
-            "completed_at": datetime.utcnow()
-        })
+        await self._update_deployment_status(
+            deployment_id,
+            {
+                "status": DeploymentStatus.ROLLED_BACK,
+                "rollback_reason": reason,
+                "updated_at": datetime.utcnow(),
+                "completed_at": datetime.utcnow(),
+            },
+        )
 
         # Send alerts
         await self._send_rollback_alert(deployment_id, reason)
@@ -774,7 +779,11 @@ class FeatureFlagDeploymentService:
                                 await self._rollback_deployment(deployment_id, "Automatic rollback triggered")
 
                     # Clean up completed deployments
-                    elif status.status in [DeploymentStatus.COMPLETED, DeploymentStatus.ROLLED_BACK, DeploymentStatus.FAILED]:
+                    elif status.status in [
+                        DeploymentStatus.COMPLETED,
+                        DeploymentStatus.ROLLED_BACK,
+                        DeploymentStatus.FAILED,
+                    ]:
                         if status.completed_at and (datetime.utcnow() - status.completed_at).days >= 1:
                             del self.active_deployments[deployment_id]
 
@@ -792,7 +801,7 @@ class FeatureFlagDeploymentService:
         self,
         system_name: str,
         deployment_strategy: DeploymentStrategy = DeploymentStrategy.CANARY,
-        target_percentage: float = 100.0
+        target_percentage: float = 100.0,
     ) -> str:
         """Deploy a specific enhancement system"""
 
@@ -811,23 +820,17 @@ class FeatureFlagDeploymentService:
                 RollbackTrigger.ERROR_RATE,
                 RollbackTrigger.RESPONSE_TIME,
                 RollbackTrigger.BUSINESS_METRIC,
-                RollbackTrigger.HEALTH_CHECK
+                RollbackTrigger.HEALTH_CHECK,
             ],
             health_check_endpoints=system_config["health_endpoints"],
-            success_criteria={
-                "error_rate_max": 0.05,
-                "response_time_max": 5000,
-                "health_check_success_rate": 0.95
-            }
+            success_criteria={"error_rate_max": 0.05, "response_time_max": 5000, "health_check_success_rate": 0.95},
         )
 
         logger.info(f"Deploying enhancement system {system_name} with deployment {deployment_id}")
         return deployment_id
 
     async def deploy_all_enhancement_systems(
-        self,
-        deployment_strategy: DeploymentStrategy = DeploymentStrategy.CANARY,
-        staggered_rollout: bool = True
+        self, deployment_strategy: DeploymentStrategy = DeploymentStrategy.CANARY, staggered_rollout: bool = True
     ) -> Dict[str, str]:
         """Deploy all enhancement systems"""
 
@@ -843,14 +846,12 @@ class FeatureFlagDeploymentService:
             "pricing_intelligence",
             "churn_prevention_system",
             "competitive_intelligence",
-            "ab_testing_optimization"
+            "ab_testing_optimization",
         ]
 
         for system_name in deployment_order:
             try:
-                deployment_id = await self.deploy_enhancement_system(
-                    system_name, deployment_strategy
-                )
+                deployment_id = await self.deploy_enhancement_system(system_name, deployment_strategy)
                 deployment_ids[system_name] = deployment_id
 
                 # Wait between deployments for staggered rollout
@@ -861,7 +862,9 @@ class FeatureFlagDeploymentService:
                 logger.error(f"Failed to deploy {system_name}: {e}")
                 deployment_ids[system_name] = f"FAILED: {str(e)}"
 
-        logger.info(f"Deployed {len([d for d in deployment_ids.values() if not d.startswith('FAILED')])} enhancement systems")
+        logger.info(
+            f"Deployed {len([d for d in deployment_ids.values() if not d.startswith('FAILED')])} enhancement systems"
+        )
         return deployment_ids
 
     async def get_deployment_status_dashboard(self) -> Dict[str, Any]:
@@ -878,29 +881,33 @@ class FeatureFlagDeploymentService:
                     "flag_enabled": flag.enabled,
                     "rollout_percentage": flag.rollout_percentage,
                     "target_arr": config["target_arr"],
-                    "status": "deployed" if flag.enabled and flag.rollout_percentage >= 100 else "partial" if flag.enabled else "disabled"
+                    "status": "deployed"
+                    if flag.enabled and flag.rollout_percentage >= 100
+                    else "partial"
+                    if flag.enabled
+                    else "disabled",
                 }
             else:
                 system_status[system_name] = {
                     "flag_enabled": False,
                     "rollout_percentage": 0,
                     "target_arr": config["target_arr"],
-                    "status": "not_configured"
+                    "status": "not_configured",
                 }
 
         # Active deployments
         active_deployments = [
-            asdict(status) for status in self.active_deployments.values()
+            asdict(status)
+            for status in self.active_deployments.values()
             if status.status in [DeploymentStatus.PENDING, DeploymentStatus.IN_PROGRESS]
         ]
 
         # Calculate total ARR potential
-        total_target_arr = sum(
-            config["target_arr"] for config in self.enhancement_systems.values()
-        )
+        total_target_arr = sum(config["target_arr"] for config in self.enhancement_systems.values())
 
         deployed_arr = sum(
-            config["target_arr"] for system_name, config in self.enhancement_systems.items()
+            config["target_arr"]
+            for system_name, config in self.enhancement_systems.items()
             if system_status[system_name]["status"] == "deployed"
         )
 
@@ -911,11 +918,11 @@ class FeatureFlagDeploymentService:
                 "partial_systems": len([s for s in system_status.values() if s["status"] == "partial"]),
                 "target_arr": total_target_arr,
                 "deployed_arr": deployed_arr,
-                "deployment_percentage": (deployed_arr / total_target_arr * 100) if total_target_arr > 0 else 0
+                "deployment_percentage": (deployed_arr / total_target_arr * 100) if total_target_arr > 0 else 0,
             },
             "system_status": system_status,
             "active_deployments": active_deployments,
-            "last_updated": datetime.utcnow().isoformat()
+            "last_updated": datetime.utcnow().isoformat(),
         }
 
     # ============================================================================
@@ -939,15 +946,12 @@ class FeatureFlagDeploymentService:
                     enabled=False,  # Start disabled
                     rollout_percentage=0.0,
                     max_error_rate=0.05,
-                    max_response_time=5000
+                    max_response_time=5000,
                 )
                 logger.info(f"Initialized flag for {system_name}: {flag_id}")
 
     def _get_evaluation_cache_key(
-        self,
-        flag_id: str,
-        user_id: Optional[str],
-        user_attributes: Optional[Dict[str, Any]]
+        self, flag_id: str, user_id: Optional[str], user_attributes: Optional[Dict[str, Any]]
     ) -> str:
         """Generate cache key for flag evaluation"""
 
@@ -979,8 +983,8 @@ class FeatureFlagDeploymentService:
                 "metadata": {
                     "flag_id": flag.flag_id,
                     "flag_enabled": flag.enabled,
-                    "rollout_percentage": flag.rollout_percentage
-                }
+                    "rollout_percentage": flag.rollout_percentage,
+                },
             }
             await self.db.log_communication(comm_data)
 
@@ -990,12 +994,7 @@ class FeatureFlagDeploymentService:
         # For now, just log the cache clear operation
         logger.info(f"Clearing evaluation cache for flag: {flag_id}")
 
-    async def _track_flag_evaluation(
-        self,
-        flag_id: str,
-        result: Any,
-        user_id: Optional[str]
-    ):
+    async def _track_flag_evaluation(self, flag_id: str, result: Any, user_id: Optional[str]):
         """Track flag evaluation for analytics"""
 
         if self.monitoring_service:
@@ -1003,17 +1002,16 @@ class FeatureFlagDeploymentService:
                 f"feature_flag_evaluation_{flag_id}",
                 1 if result else 0,
                 "counter",
-                tags={"flag_id": flag_id, "result": str(result)}
+                tags={"flag_id": flag_id, "result": str(result)},
             )
 
     async def _update_deployment_percentage(self, flag_ids: List[str], percentage: float):
         """Update rollout percentage for deployment flags"""
 
         for flag_id in flag_ids:
-            await self.update_feature_flag(flag_id, {
-                "enabled": True if percentage > 0 else False,
-                "rollout_percentage": percentage
-            })
+            await self.update_feature_flag(
+                flag_id, {"enabled": True if percentage > 0 else False, "rollout_percentage": percentage}
+            )
 
     async def _get_current_error_rate(self, flag_ids: List[str]) -> Optional[float]:
         """Get current error rate for deployment"""
@@ -1064,17 +1062,11 @@ class FeatureFlagDeploymentService:
 
     async def _mark_deployment_failed(self, deployment_id: str, error: str):
         """Mark deployment as failed"""
-        await self._update_deployment_status(deployment_id, {
-            "status": DeploymentStatus.FAILED,
-            "issues": [error],
-            "completed_at": datetime.utcnow()
-        })
+        await self._update_deployment_status(
+            deployment_id, {"status": DeploymentStatus.FAILED, "issues": [error], "completed_at": datetime.utcnow()}
+        )
 
-    async def _check_rollback_triggers(
-        self,
-        deployment_id: str,
-        config: DeploymentConfig
-    ) -> bool:
+    async def _check_rollback_triggers(self, deployment_id: str, config: DeploymentConfig) -> bool:
         """Check if any rollback triggers are activated"""
         # Would implement actual rollback trigger logic
         return False
@@ -1083,24 +1075,22 @@ class FeatureFlagDeploymentService:
         """Send alert about deployment rollback"""
         logger.warning(f"DEPLOYMENT ROLLBACK ALERT: {deployment_id} - {reason}")
 
-    async def _analyze_ab_test_results(
-        self,
-        deployment_id: str,
-        config: DeploymentConfig
-    ) -> Dict[str, Any]:
+    async def _analyze_ab_test_results(self, deployment_id: str, config: DeploymentConfig) -> Dict[str, Any]:
         """Analyze A/B test results"""
         # Would implement statistical analysis of A/B test
         return {
             "winner": "treatment",  # Sample result
             "confidence": 0.95,
-            "lift": 0.15
+            "lift": 0.15,
         }
+
 
 # ============================================================================
 # SERVICE FACTORY AND CONVENIENCE FUNCTIONS
 # ============================================================================
 
 _deployment_service: Optional[FeatureFlagDeploymentService] = None
+
 
 async def get_deployment_service() -> FeatureFlagDeploymentService:
     """Get global deployment service instance"""
@@ -1112,34 +1102,36 @@ async def get_deployment_service() -> FeatureFlagDeploymentService:
 
     return _deployment_service
 
+
 # Convenience functions
-async def deploy_enhancement_system(
-    system_name: str,
-    strategy: DeploymentStrategy = DeploymentStrategy.CANARY
-) -> str:
+async def deploy_enhancement_system(system_name: str, strategy: DeploymentStrategy = DeploymentStrategy.CANARY) -> str:
     """Deploy a single enhancement system"""
     service = await get_deployment_service()
     return await service.deploy_enhancement_system(system_name, strategy)
 
+
 async def deploy_all_systems(
-    strategy: DeploymentStrategy = DeploymentStrategy.CANARY,
-    staggered: bool = True
+    strategy: DeploymentStrategy = DeploymentStrategy.CANARY, staggered: bool = True
 ) -> Dict[str, str]:
     """Deploy all enhancement systems"""
     service = await get_deployment_service()
     return await service.deploy_all_enhancement_systems(strategy, staggered)
+
 
 async def get_deployment_dashboard() -> Dict[str, Any]:
     """Get deployment status dashboard"""
     service = await get_deployment_service()
     return await service.get_deployment_status_dashboard()
 
+
 async def check_feature_flag(flag_id: str, user_id: str = None) -> bool:
     """Check if feature flag is enabled for user"""
     service = await get_deployment_service()
     return await service.evaluate_feature_flag(flag_id, user_id)
 
+
 if __name__ == "__main__":
+
     async def test_deployment_service():
         """Test deployment service functionality"""
         service = FeatureFlagDeploymentService()
@@ -1147,11 +1139,7 @@ if __name__ == "__main__":
 
         # Test flag creation and evaluation
         flag = await service.create_feature_flag(
-            "test_flag",
-            "Test Feature",
-            "Test feature flag",
-            enabled=True,
-            rollout_percentage=50.0
+            "test_flag", "Test Feature", "Test feature flag", enabled=True, rollout_percentage=50.0
         )
         print(f"Created flag: {flag.flag_id}")
 
@@ -1159,10 +1147,7 @@ if __name__ == "__main__":
         print(f"Flag evaluation: {result}")
 
         # Test deployment
-        deployment_id = await service.deploy_enhancement_system(
-            "autonomous_followup_engine",
-            DeploymentStrategy.CANARY
-        )
+        deployment_id = await service.deploy_enhancement_system("autonomous_followup_engine", DeploymentStrategy.CANARY)
         print(f"Created deployment: {deployment_id}")
 
         # Test dashboard

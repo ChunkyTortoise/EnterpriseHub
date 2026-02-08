@@ -80,15 +80,11 @@ class SmartAutomationEngine:
 
         elif stage == "warm" and time_since_contact > timedelta(hours=24):
             # Warm lead - daily nurture sequence
-            actions.append(
-                self._create_warm_lead_sequence(lead_id, metadata, conversations)
-            )
+            actions.append(self._create_warm_lead_sequence(lead_id, metadata, conversations))
 
         elif stage == "cold" and time_since_contact > timedelta(days=3):
             # Cold lead - re-engagement sequence
-            actions.extend(
-                self._create_reengagement_sequence(lead_id, metadata, conversations)
-            )
+            actions.extend(self._create_reengagement_sequence(lead_id, metadata, conversations))
 
         # Check for specific triggers
         if self._detect_no_response_pattern(conversations):
@@ -102,9 +98,7 @@ class SmartAutomationEngine:
 
         return actions
 
-    def _create_hot_lead_followup(
-        self, lead_id: str, metadata: Dict
-    ) -> AutomatedAction:
+    def _create_hot_lead_followup(self, lead_id: str, metadata: Dict) -> AutomatedAction:
         """Create immediate follow-up for hot lead"""
         name = metadata.get("name", "there")
         location = metadata.get("location", "the area")
@@ -123,9 +117,7 @@ class SmartAutomationEngine:
             fallback_action="sms_if_no_answer",
         )
 
-    def _create_warm_lead_sequence(
-        self, lead_id: str, metadata: Dict, conversations: List
-    ) -> AutomatedAction:
+    def _create_warm_lead_sequence(self, lead_id: str, metadata: Dict, conversations: List) -> AutomatedAction:
         """Create nurture sequence for warm lead"""
         name = metadata.get("name", "there")
         location = metadata.get("location", "the area")
@@ -151,9 +143,7 @@ class SmartAutomationEngine:
             fallback_action="wait_48h_then_breakup_text",
         )
 
-    def _create_reengagement_sequence(
-        self, lead_id: str, metadata: Dict, conversations: List
-    ) -> List[AutomatedAction]:
+    def _create_reengagement_sequence(self, lead_id: str, metadata: Dict, conversations: List) -> List[AutomatedAction]:
         """Create multi-step re-engagement sequence"""
         name = metadata.get("name", "there")
         location = metadata.get("location", "the area")
@@ -249,9 +239,7 @@ class SmartAutomationEngine:
             fallback_action="wait_24h_then_breakup",
         )
 
-    def _create_value_prop_followup(
-        self, lead_id: str, metadata: Dict
-    ) -> AutomatedAction:
+    def _create_value_prop_followup(self, lead_id: str, metadata: Dict) -> AutomatedAction:
         """Address price objections with value"""
         name = metadata.get("name", "there")
 
@@ -268,9 +256,7 @@ class SmartAutomationEngine:
             fallback_action="send_comparison_chart",
         )
 
-    def _determine_lead_stage(
-        self, score: float, conversations: List, metadata: Dict
-    ) -> str:
+    def _determine_lead_stage(self, score: float, conversations: List, metadata: Dict) -> str:
         """Determine if lead is hot, warm, or cold"""
         if score >= 7.5:
             return "hot"
@@ -284,11 +270,7 @@ class SmartAutomationEngine:
         if not last_contact:
             return timedelta(days=999)  # Very old
 
-        last_dt = (
-            datetime.fromisoformat(last_contact)
-            if isinstance(last_contact, str)
-            else last_contact
-        )
+        last_dt = datetime.fromisoformat(last_contact) if isinstance(last_contact, str) else last_contact
         return datetime.now() - last_dt
 
     def _detect_no_response_pattern(self, conversations: List) -> bool:
@@ -434,11 +416,7 @@ class SmartAutomationEngine:
             if conv.get("sender") == "lead":
                 timestamp = conv.get("timestamp")
                 if timestamp:
-                    dt = (
-                        datetime.fromisoformat(timestamp)
-                        if isinstance(timestamp, str)
-                        else timestamp
-                    )
+                    dt = datetime.fromisoformat(timestamp) if isinstance(timestamp, str) else timestamp
                     response_hours.append(dt.hour)
 
         if response_hours:
@@ -609,11 +587,7 @@ if __name__ == "__main__":
             if conv.get("sender") == "lead":
                 timestamp = conv.get("timestamp")
                 if timestamp:
-                    dt = (
-                        datetime.fromisoformat(timestamp)
-                        if isinstance(timestamp, str)
-                        else timestamp
-                    )
+                    dt = datetime.fromisoformat(timestamp) if isinstance(timestamp, str) else timestamp
                     response_hours.append(dt.hour)
 
         if response_hours:

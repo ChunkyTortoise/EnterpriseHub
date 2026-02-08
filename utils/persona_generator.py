@@ -292,9 +292,7 @@ class TaskProfiler:
             time_sensitivity=time_sensitivity,
         )
 
-        logger.info(
-            f"Task profile built: {task_type.value} task with {len(success_metrics)} metrics"
-        )
+        logger.info(f"Task profile built: {task_type.value} task with {len(success_metrics)} metrics")
 
         return profile
 
@@ -437,9 +435,7 @@ class TaskProfiler:
                 return level
         return UserLevel.INTERMEDIATE
 
-    def _extract_depth_preference(
-        self, task_type: TaskType, answers: Dict[str, Any]
-    ) -> DepthPreference:
+    def _extract_depth_preference(self, task_type: TaskType, answers: Dict[str, Any]) -> DepthPreference:
         """Extract depth preference."""
         depth_str = answers.get("depth", "thorough").lower()
         for depth in DepthPreference:
@@ -698,9 +694,7 @@ class PersonaOrchestrator:
         logger.info("Running Stage 2: Persona B Generation")
         return self.generator.generate(profile)
 
-    def execute_full_pipeline(
-        self, task: str, answers: Optional[Dict[str, Any]] = None
-    ) -> PersonaB:
+    def execute_full_pipeline(self, task: str, answers: Optional[Dict[str, Any]] = None) -> PersonaB:
         """
         Execute full 3-stage pipeline in one call.
 

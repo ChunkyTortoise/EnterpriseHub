@@ -7,14 +7,15 @@ pipeline via REST and webhook endpoints.
 
 import logging
 from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from ghl_real_estate_ai.services.vapi_voice_integration import (
-    get_voice_intelligence,
-    TranscriptSegment,
-)
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.vapi_voice_integration import (
+    TranscriptSegment,
+    get_voice_intelligence,
+)
 
 logger = get_logger(__name__)
 
@@ -28,6 +29,7 @@ router = APIRouter(
 # Request / Response Models
 # ---------------------------------------------------------------------------
 
+
 class TranscriptSegmentInput(BaseModel):
     role: str = Field(..., description="Speaker role: agent, customer, system")
     text: str = Field(..., description="Segment text")
@@ -38,9 +40,7 @@ class TranscriptSegmentInput(BaseModel):
 class AnalyzeTranscriptRequest(BaseModel):
     contact_id: str = Field(..., description="Contact identifier")
     call_id: str = Field(..., description="Call identifier")
-    transcript_segments: List[TranscriptSegmentInput] = Field(
-        ..., min_length=1, description="Transcript segments"
-    )
+    transcript_segments: List[TranscriptSegmentInput] = Field(..., min_length=1, description="Transcript segments")
     call_duration_seconds: float = Field(0.0, description="Call duration")
 
 
@@ -74,6 +74,7 @@ class CallEventResponse(BaseModel):
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
 
 @router.post("/webhook")
 async def process_vapi_webhook(request: Request) -> CallEventResponse:

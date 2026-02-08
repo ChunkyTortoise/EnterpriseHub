@@ -15,6 +15,7 @@ Covers:
 """
 
 import os
+
 os.environ.setdefault("STRIPE_SECRET_KEY", "sk_test_fake_for_testing")
 os.environ.setdefault("STRIPE_WEBHOOK_SECRET", "whsec_test_fake")
 
@@ -38,8 +39,8 @@ def middleware():
 # School Quality Steering
 # ---------------------------------------------------------------------------
 
-class TestSchoolSteering:
 
+class TestSchoolSteering:
     @pytest.mark.asyncio
     async def test_good_schools_flagged(self, middleware):
         result = await middleware.enforce(
@@ -73,8 +74,8 @@ class TestSchoolSteering:
 # Safety Steering
 # ---------------------------------------------------------------------------
 
-class TestSafetySteering:
 
+class TestSafetySteering:
     @pytest.mark.asyncio
     async def test_safe_neighborhood_blocked(self, middleware):
         result = await middleware.enforce(
@@ -105,8 +106,8 @@ class TestSafetySteering:
 # Familial Status
 # ---------------------------------------------------------------------------
 
-class TestFamilialStatus:
 
+class TestFamilialStatus:
     @pytest.mark.asyncio
     async def test_quiet_neighborhood_flagged(self, middleware):
         result = await middleware.enforce(
@@ -137,8 +138,8 @@ class TestFamilialStatus:
 # Availability Steering
 # ---------------------------------------------------------------------------
 
-class TestAvailabilitySteering:
 
+class TestAvailabilitySteering:
     @pytest.mark.asyncio
     async def test_sold_out_area_blocked(self, middleware):
         result = await middleware.enforce(
@@ -161,8 +162,8 @@ class TestAvailabilitySteering:
 # RESPA Violations
 # ---------------------------------------------------------------------------
 
-class TestRESPA:
 
+class TestRESPA:
     @pytest.mark.asyncio
     async def test_kickback_language_blocked(self, middleware):
         result = await middleware.enforce(
@@ -195,8 +196,8 @@ class TestRESPA:
 # Clean Messages
 # ---------------------------------------------------------------------------
 
-class TestCleanMessages:
 
+class TestCleanMessages:
     @pytest.mark.asyncio
     async def test_normal_message_passes(self, middleware):
         result = await middleware.enforce(
@@ -228,8 +229,8 @@ class TestCleanMessages:
 # Conversation-Level Escalation
 # ---------------------------------------------------------------------------
 
-class TestConversationEscalation:
 
+class TestConversationEscalation:
     @pytest.mark.asyncio
     async def test_accumulated_violations_escalate(self, middleware):
         """3+ medium violations across turns should escalate to blocked."""
@@ -269,8 +270,8 @@ class TestConversationEscalation:
 # Safe Alternatives
 # ---------------------------------------------------------------------------
 
-class TestSafeAlternatives:
 
+class TestSafeAlternatives:
     @pytest.mark.asyncio
     async def test_blocked_seller_gets_safe_alternative(self, middleware):
         result = await middleware.enforce(
@@ -306,8 +307,8 @@ class TestSafeAlternatives:
 # Risk Score
 # ---------------------------------------------------------------------------
 
-class TestRiskScore:
 
+class TestRiskScore:
     @pytest.mark.asyncio
     async def test_critical_violation_max_risk(self, middleware):
         result = await middleware.enforce(

@@ -17,27 +17,44 @@ Target: 92%+ lead scoring accuracy, <2s dashboard load time
 import asyncio
 import json
 import time
-from datetime import datetime, timedelta, date
-from typing import Dict, List, Optional, Any, Tuple, Union
+from collections import defaultdict, deque
 from dataclasses import asdict
+from datetime import date, datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import numpy as np
 import pandas as pd
-from collections import defaultdict, deque
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.models.analytics_models import (
+    AnalyticsRequest,
+    AnalyticsResponse,
+    CalibrationBucket,
+    CompetitiveIntel,
+    CompetitivePressure,
+    DropOffAnalysis,
+    ExecutiveSummary,
+    FunnelAnalysis,
+    FunnelMetrics,
+    FunnelStage,
+    GeographicAnalysis,
+    GeographicMetrics,
+    LeadQualityMetrics,
+    LeadQualityTrend,
+    MarketTemperature,
+    MarketTimingInsight,
+    MarketTimingMetrics,
+    MetricCategory,
+    PerformanceGoal,
+    PerformanceSummary,
+    RevenueForecast,
+    SourceROI,
+    TimeSeriesDataPoint,
+)
 from ghl_real_estate_ai.services.advanced_analytics_engine import AdvancedAnalyticsEngine
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.enhanced_lead_intelligence import EnhancedLeadIntelligence
 from ghl_real_estate_ai.services.enhanced_smart_lead_scorer import EnhancedSmartLeadScorer
-from ghl_real_estate_ai.models.analytics_models import (
-    RevenueForecast, FunnelAnalysis, FunnelMetrics, DropOffAnalysis,
-    LeadQualityTrend, LeadQualityMetrics, CalibrationBucket,
-    MarketTimingInsight, MarketTimingMetrics, MarketTemperature,
-    GeographicAnalysis, GeographicMetrics, CompetitivePressure,
-    SourceROI, CompetitiveIntel, PerformanceSummary, ExecutiveSummary,
-    PerformanceGoal, MetricCategory, FunnelStage, TimeSeriesDataPoint,
-    AnalyticsRequest, AnalyticsResponse
-)
 
 logger = get_logger(__name__)
 cache_service = get_cache_service()
@@ -45,8 +62,8 @@ cache_service = get_cache_service()
 # Performance constants
 CACHE_TTL_EXECUTIVE = 300  # 5 minutes for executive summary
 CACHE_TTL_FORECAST = 3600  # 1 hour for forecasts
-CACHE_TTL_FUNNEL = 600     # 10 minutes for funnel data
-CACHE_TTL_QUALITY = 900    # 15 minutes for quality metrics
+CACHE_TTL_FUNNEL = 600  # 10 minutes for funnel data
+CACHE_TTL_QUALITY = 900  # 15 minutes for quality metrics
 FORECAST_ACCURACY_TARGET = 0.85  # 85% accuracy target
 PROCESSING_TIME_SLA_MS = 2000  # 2 second SLA
 
@@ -57,10 +74,12 @@ class JorgeAnalyticsService:
     for Jorge's Enhanced Lead Bot with real-time insights and forecasting.
     """
 
-    def __init__(self,
-                 advanced_analytics: Optional[AdvancedAnalyticsEngine] = None,
-                 lead_intelligence: Optional[EnhancedLeadIntelligence] = None,
-                 lead_scorer: Optional[EnhancedSmartLeadScorer] = None):
+    def __init__(
+        self,
+        advanced_analytics: Optional[AdvancedAnalyticsEngine] = None,
+        lead_intelligence: Optional[EnhancedLeadIntelligence] = None,
+        lead_scorer: Optional[EnhancedSmartLeadScorer] = None,
+    ):
         """Initialize Jorge's analytics service."""
 
         # Core services
@@ -70,12 +89,12 @@ class JorgeAnalyticsService:
 
         # Performance tracking
         self.performance_metrics = {
-            'forecasts_generated': 0,
-            'avg_forecast_accuracy': 0.0,
-            'funnel_analyses_completed': 0,
-            'avg_processing_time_ms': 0.0,
-            'cache_hit_rate': 0.0,
-            'accuracy_improvement_rate': 0.0
+            "forecasts_generated": 0,
+            "avg_forecast_accuracy": 0.0,
+            "funnel_analyses_completed": 0,
+            "avg_processing_time_ms": 0.0,
+            "cache_hit_rate": 0.0,
+            "accuracy_improvement_rate": 0.0,
         }
 
         # Jorge's business context
@@ -95,6 +114,7 @@ class JorgeAnalyticsService:
 
     def _create_mock_analytics(self):
         """Create mock analytics for development."""
+
         class MockAnalytics:
             async def calculate_roi_comprehensive(self, *args, **kwargs):
                 return {"total_roi": 245.5, "cost_per_lead": 67.3, "ltv_cac": 4.2}
@@ -114,33 +134,26 @@ class JorgeAnalyticsService:
             "monthly_revenue_target": 125000,
             "quarterly_revenue_target": 375000,
             "annual_revenue_target": 1700000,
-
             # Market context
             "primary_market": "Rancho Cucamonga",
             "service_area_radius": 15,  # miles
             "avg_commission_rate": 0.025,  # 2.5%
             "avg_deal_value": 18750,  # $750k * 2.5%
-
             # Performance benchmarks
             "target_lead_score_accuracy": 0.92,
             "target_conversion_rate": 0.15,
             "target_response_time_minutes": 5,
             "target_cost_per_lead": 75,
-
             # Operational metrics
             "working_days_per_month": 22,
             "deals_per_month_target": 7,
             "leads_per_day_target": 12,
-
             # Market intelligence
             "competitive_agents": 45,
             "market_share_estimate": 0.08,
             "market_growth_rate": 0.12,
-
             # Seasonal factors (Rancho Cucamonga market)
-            "seasonal_multipliers": {
-                "Q1": 0.85, "Q2": 1.15, "Q3": 1.10, "Q4": 0.90
-            }
+            "seasonal_multipliers": {"Q1": 0.85, "Q2": 1.15, "Q3": 1.10, "Q4": 0.90},
         }
 
     def _initialize_forecasting_models(self):
@@ -148,11 +161,12 @@ class JorgeAnalyticsService:
         self.forecasting_models = {
             "revenue_linear": self._create_linear_model(),
             "revenue_seasonal": self._create_seasonal_model(),
-            "conversion_funnel": self._create_funnel_model()
+            "conversion_funnel": self._create_funnel_model(),
         }
 
     def _create_linear_model(self):
         """Create linear regression model for revenue forecasting."""
+
         # Placeholder for linear model - would use scikit-learn in production
         class SimpleLinearModel:
             def predict(self, historical_data: List[float], horizon_days: int) -> Tuple[float, float, float]:
@@ -181,6 +195,7 @@ class JorgeAnalyticsService:
 
     def _create_seasonal_model(self):
         """Create seasonal adjustment model."""
+
         class SeasonalModel:
             def adjust_for_seasonality(self, forecast: float, target_date: date) -> float:
                 quarter = (target_date.month - 1) // 3 + 1
@@ -191,6 +206,7 @@ class JorgeAnalyticsService:
 
     def _create_funnel_model(self):
         """Create conversion funnel prediction model."""
+
         class FunnelModel:
             def predict_stage_conversion(self, stage: FunnelStage, historical_data: List[float]) -> float:
                 if not historical_data:
@@ -201,7 +217,7 @@ class JorgeAnalyticsService:
                         FunnelStage.APPOINTMENT: 0.75,  # 75% show up
                         FunnelStage.SHOWING: 0.35,  # 35% make offers
                         FunnelStage.OFFER: 0.80,  # 80% get accepted
-                        FunnelStage.UNDER_CONTRACT: 0.92  # 92% close
+                        FunnelStage.UNDER_CONTRACT: 0.92,  # 92% close
                     }
                     return defaults.get(stage, 0.50)
 
@@ -240,14 +256,22 @@ class JorgeAnalyticsService:
                 self.analyze_geographic_performance(request.time_window_days),
                 self.get_source_roi_analysis(request.time_window_days),
                 self.get_competitive_intelligence(),
-                self.get_performance_summary(request.time_window_days)
+                self.get_performance_summary(request.time_window_days),
             ]
 
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
             # Handle any failures gracefully
-            (revenue_forecast, funnel_analysis, lead_quality, market_timing,
-             geographic_analysis, source_roi, competitive_intel, performance_summary) = [
+            (
+                revenue_forecast,
+                funnel_analysis,
+                lead_quality,
+                market_timing,
+                geographic_analysis,
+                source_roi,
+                competitive_intel,
+                performance_summary,
+            ) = [
                 result if not isinstance(result, Exception) else self._create_fallback(type(result))
                 for result in results
             ]
@@ -270,7 +294,7 @@ class JorgeAnalyticsService:
                 key_insights=key_insights,
                 action_items=action_items,
                 risk_factors=risk_factors,
-                opportunities=opportunities
+                opportunities=opportunities,
             )
 
             # Cache result
@@ -354,7 +378,7 @@ class JorgeAnalyticsService:
                 risk_factors=risk_factors,
                 market_conditions=market_conditions,
                 model_version="jorge-hybrid-v1.0",
-                forecast_date=datetime.now().date()
+                forecast_date=datetime.now().date(),
             )
 
             # Cache forecast
@@ -391,53 +415,66 @@ class JorgeAnalyticsService:
             drop_off_points = []
 
             stage_order = [
-                FunnelStage.NEW_LEAD, FunnelStage.QUALIFIED, FunnelStage.APPOINTMENT,
-                FunnelStage.SHOWING, FunnelStage.OFFER, FunnelStage.UNDER_CONTRACT, FunnelStage.CLOSED
+                FunnelStage.NEW_LEAD,
+                FunnelStage.QUALIFIED,
+                FunnelStage.APPOINTMENT,
+                FunnelStage.SHOWING,
+                FunnelStage.OFFER,
+                FunnelStage.UNDER_CONTRACT,
+                FunnelStage.CLOSED,
             ]
 
             prev_count = None
             for i, stage in enumerate(stage_order):
                 stage_data = funnel_data.get(stage.value, {})
-                lead_count = stage_data.get('count', 0)
-                avg_time = stage_data.get('avg_time_days', 0)
+                lead_count = stage_data.get("count", 0)
+                avg_time = stage_data.get("avg_time_days", 0)
 
                 # Calculate conversion rate to this stage
                 if prev_count and prev_count > 0:
                     conversion_rate = lead_count / prev_count
-                    conversion_rates[f"{stage_order[i-1].value}_to_{stage.value}"] = conversion_rate
+                    conversion_rates[f"{stage_order[i - 1].value}_to_{stage.value}"] = conversion_rate
 
                     # Identify drop-offs
                     drop_off_count = prev_count - lead_count
                     drop_off_rate = drop_off_count / prev_count
 
                     if drop_off_rate > 0.4:  # Significant drop-off
-                        drop_off_points.append(DropOffAnalysis(
-                            from_stage=stage_order[i-1],
-                            to_stage=stage,
-                            drop_off_count=drop_off_count,
-                            drop_off_rate=drop_off_rate,
-                            primary_reasons=self._identify_drop_off_reasons(stage_order[i-1], stage),
-                            improvement_opportunities=self._suggest_funnel_improvements(stage_order[i-1], stage)
-                        ))
+                        drop_off_points.append(
+                            DropOffAnalysis(
+                                from_stage=stage_order[i - 1],
+                                to_stage=stage,
+                                drop_off_count=drop_off_count,
+                                drop_off_rate=drop_off_rate,
+                                primary_reasons=self._identify_drop_off_reasons(stage_order[i - 1], stage),
+                                improvement_opportunities=self._suggest_funnel_improvements(stage_order[i - 1], stage),
+                            )
+                        )
                 else:
                     conversion_rate = 1.0 if i == 0 else 0.0
 
-                stages.append(FunnelMetrics(
-                    stage=stage,
-                    lead_count=lead_count,
-                    conversion_rate=conversion_rate,
-                    avg_time_in_stage_days=avg_time,
-                    drop_off_count=prev_count - lead_count if prev_count else 0,
-                    drop_off_percentage=(prev_count - lead_count) / prev_count if prev_count else 0
-                ))
+                stages.append(
+                    FunnelMetrics(
+                        stage=stage,
+                        lead_count=lead_count,
+                        conversion_rate=conversion_rate,
+                        avg_time_in_stage_days=avg_time,
+                        drop_off_count=prev_count - lead_count if prev_count else 0,
+                        drop_off_percentage=(prev_count - lead_count) / prev_count if prev_count else 0,
+                    )
+                )
 
                 prev_count = lead_count
 
             # Identify bottleneck stage
-            bottleneck_stage = min(stages[1:], key=lambda s: s.conversion_rate).stage if len(stages) > 1 else FunnelStage.NEW_LEAD
+            bottleneck_stage = (
+                min(stages[1:], key=lambda s: s.conversion_rate).stage if len(stages) > 1 else FunnelStage.NEW_LEAD
+            )
 
             # Calculate overall metrics
-            overall_conversion_rate = (stages[-1].lead_count / stages[0].lead_count) if stages and stages[0].lead_count > 0 else 0
+            overall_conversion_rate = (
+                (stages[-1].lead_count / stages[0].lead_count) if stages and stages[0].lead_count > 0 else 0
+            )
             avg_lead_to_close_days = sum(s.avg_time_in_stage_days for s in stages)
 
             # Generate optimization opportunities
@@ -456,7 +493,7 @@ class JorgeAnalyticsService:
                 overall_conversion_rate=overall_conversion_rate,
                 avg_lead_to_close_days=avg_lead_to_close_days,
                 improvement_potential_percent=improvement_potential,
-                recommended_actions=self._generate_funnel_recommendations(bottleneck_stage, drop_off_points)
+                recommended_actions=self._generate_funnel_recommendations(bottleneck_stage, drop_off_points),
             )
 
             # Cache analysis
@@ -489,25 +526,31 @@ class JorgeAnalyticsService:
 
             # Calculate basic metrics
             total_leads = len(scoring_data) if scoring_data else 0
-            avg_score = sum(lead['score'] for lead in scoring_data) / total_leads if total_leads > 0 else 0
+            avg_score = sum(lead["score"] for lead in scoring_data) / total_leads if total_leads > 0 else 0
 
             # Score distribution
             score_distribution = self._calculate_score_distribution(scoring_data)
 
             # Accuracy metrics (only for leads with outcomes)
-            leads_with_outcomes = [lead for lead in scoring_data if lead.get('actual_converted') is not None]
+            leads_with_outcomes = [lead for lead in scoring_data if lead.get("actual_converted") is not None]
             accuracy = self._calculate_prediction_accuracy(leads_with_outcomes)
             calibration = self._calculate_calibration_score(leads_with_outcomes)
             false_positive_rate, false_negative_rate = self._calculate_error_rates(leads_with_outcomes)
 
             # Confidence analysis
-            high_confidence_leads = [lead for lead in leads_with_outcomes if lead.get('confidence', 0) > 0.8]
-            low_confidence_leads = [lead for lead in leads_with_outcomes if lead.get('confidence', 0) < 0.5]
+            high_confidence_leads = [lead for lead in leads_with_outcomes if lead.get("confidence", 0) > 0.8]
+            low_confidence_leads = [lead for lead in leads_with_outcomes if lead.get("confidence", 0) < 0.5]
 
-            high_confidence_accuracy = self._calculate_prediction_accuracy(high_confidence_leads) if high_confidence_leads else 0
-            low_confidence_accuracy = self._calculate_prediction_accuracy(low_confidence_leads) if low_confidence_leads else 0
+            high_confidence_accuracy = (
+                self._calculate_prediction_accuracy(high_confidence_leads) if high_confidence_leads else 0
+            )
+            low_confidence_accuracy = (
+                self._calculate_prediction_accuracy(low_confidence_leads) if low_confidence_leads else 0
+            )
 
-            avg_confidence = sum(lead.get('confidence', 0.5) for lead in scoring_data) / total_leads if total_leads > 0 else 0.5
+            avg_confidence = (
+                sum(lead.get("confidence", 0.5) for lead in scoring_data) / total_leads if total_leads > 0 else 0.5
+            )
 
             metrics = LeadQualityMetrics(
                 total_leads_scored=total_leads,
@@ -519,7 +562,7 @@ class JorgeAnalyticsService:
                 false_negative_rate=false_negative_rate,
                 avg_confidence=avg_confidence,
                 high_confidence_accuracy=high_confidence_accuracy,
-                low_confidence_accuracy=low_confidence_accuracy
+                low_confidence_accuracy=low_confidence_accuracy,
             )
 
             # Cache metrics
@@ -556,7 +599,7 @@ class JorgeAnalyticsService:
                 predicted_inventory_change=predictions["inventory_change"],
                 price_movement_forecast=predictions["price_forecast"],
                 seasonal_factors=self._get_seasonal_factors(),
-                economic_indicators=await self._get_economic_indicators()
+                economic_indicators=await self._get_economic_indicators(),
             )
 
             return insight
@@ -585,7 +628,7 @@ class JorgeAnalyticsService:
                     inventory_level=15,
                     market_share_estimate=0.12,
                     competitive_pressure=CompetitivePressure.MEDIUM,
-                    growth_potential=85.0
+                    growth_potential=85.0,
                 ),
                 GeographicMetrics(
                     zip_code="91739",
@@ -602,8 +645,8 @@ class JorgeAnalyticsService:
                     inventory_level=22,
                     market_share_estimate=0.09,
                     competitive_pressure=CompetitivePressure.HIGH,
-                    growth_potential=70.0
-                )
+                    growth_potential=70.0,
+                ),
             ]
 
             # Calculate summary statistics
@@ -615,8 +658,9 @@ class JorgeAnalyticsService:
             best_zip = max(geographic_metrics, key=lambda m: m.conversion_rate).zip_code
             worst_zip = min(geographic_metrics, key=lambda m: m.conversion_rate).zip_code
             highest_revenue_zip = max(geographic_metrics, key=lambda m: m.total_revenue).zip_code
-            most_competitive_zip = max(geographic_metrics,
-                                     key=lambda m: CompetitivePressure.__members__[m.competitive_pressure.value].value).zip_code
+            most_competitive_zip = max(
+                geographic_metrics, key=lambda m: CompetitivePressure.__members__[m.competitive_pressure.value].value
+            ).zip_code
 
             analysis = GeographicAnalysis(
                 total_areas_analyzed=total_areas,
@@ -630,7 +674,7 @@ class JorgeAnalyticsService:
                 market_gaps=["First-time buyer segment in South Rancho"],
                 avg_conversion_rate=avg_conversion,
                 total_market_revenue=total_revenue,
-                geographic_concentration=0.65  # Business concentration metric
+                geographic_concentration=0.65,  # Business concentration metric
             )
 
             return analysis
@@ -658,7 +702,7 @@ class JorgeAnalyticsService:
                     avg_lead_score=74.2,
                     conversion_rate=0.125,
                     cost_per_conversion=1100.00,
-                    measurement_period_days=time_period_days
+                    measurement_period_days=time_period_days,
                 ),
                 SourceROI(
                     source_name="Facebook",
@@ -674,7 +718,7 @@ class JorgeAnalyticsService:
                     avg_lead_score=68.8,
                     conversion_rate=0.095,
                     cost_per_conversion=980.00,
-                    measurement_period_days=time_period_days
+                    measurement_period_days=time_period_days,
                 ),
                 SourceROI(
                     source_name="Referrals",
@@ -690,8 +734,8 @@ class JorgeAnalyticsService:
                     avg_lead_score=92.5,
                     conversion_rate=0.333,
                     cost_per_conversion=125.00,
-                    measurement_period_days=time_period_days
-                )
+                    measurement_period_days=time_period_days,
+                ),
             ]
 
             return sources
@@ -712,16 +756,20 @@ class JorgeAnalyticsService:
                 competitive_pricing_pressure=0.65,  # Moderate pressure
                 avg_competitor_days_on_market=32,
                 top_competitors=["Susan Martinez - RE/MAX", "Mike Chen - Coldwell Banker", "Lisa Johnson - Century 21"],
-                competitive_advantages=["AI-powered lead intelligence", "Sub-5 minute response time", "Local market expertise"],
+                competitive_advantages=[
+                    "AI-powered lead intelligence",
+                    "Sub-5 minute response time",
+                    "Local market expertise",
+                ],
                 competitive_threats=["New tech-enabled brokerages", "Direct buyer programs", "iBuyer competition"],
                 differentiation_opportunities=["Property matching AI", "Predictive analytics", "VR/AR showings"],
                 competitive_strategy_recommendations=[
                     "Emphasize technology differentiation in marketing",
                     "Build stronger referral network",
-                    "Develop premium service tier for luxury market"
+                    "Develop premium service tier for luxury market",
                 ],
                 pricing_recommendations="Maintain competitive 2.5% commission with value justification",
-                positioning_recommendations="Position as 'AI-powered local expert' with data-driven insights"
+                positioning_recommendations="Position as 'AI-powered local expert' with data-driven insights",
             )
 
             return intel
@@ -755,15 +803,15 @@ class JorgeAnalyticsService:
                 goals_ahead=2,
                 performance_alerts=[
                     "Facebook lead quality declining (68.8 avg score)",
-                    "Central Rancho conversion rate below target"
+                    "Central Rancho conversion rate below target",
                 ],
                 improvement_opportunities=[
                     "Optimize Facebook ad targeting for higher quality leads",
                     "Increase geographic focus on Alta Loma (highest ROI)",
-                    "Implement automated follow-up for appointment no-shows"
+                    "Implement automated follow-up for appointment no-shows",
                 ],
                 revenue_forecast_30d=125000.00,
-                conversion_forecast_30d=7
+                conversion_forecast_30d=7,
             )
 
             return summary
@@ -800,7 +848,7 @@ class JorgeAnalyticsService:
             "showing": {"count": 42, "avg_time_days": 3.0},
             "offer": {"count": 15, "avg_time_days": 5.0},
             "under_contract": {"count": 12, "avg_time_days": 35.0},
-            "closed": {"count": 6, "avg_time_days": 7.0}
+            "closed": {"count": 6, "avg_time_days": 7.0},
         }
 
     async def _get_lead_scoring_data(self, days: int) -> List[Dict[str, Any]]:
@@ -815,13 +863,15 @@ class JorgeAnalyticsService:
             conversion_prob = score / 150  # Higher score = higher conversion chance
             converted = np.random.random() < conversion_prob
 
-            leads.append({
-                "score": int(score),
-                "predicted_conversion_probability": conversion_prob,
-                "actual_converted": converted,
-                "confidence": min(1.0, score / 80),  # Higher score = higher confidence
-                "scored_at": datetime.now() - timedelta(days=np.random.randint(0, days))
-            })
+            leads.append(
+                {
+                    "score": int(score),
+                    "predicted_conversion_probability": conversion_prob,
+                    "actual_converted": converted,
+                    "confidence": min(1.0, score / 80),  # Higher score = higher confidence
+                    "scored_at": datetime.now() - timedelta(days=np.random.randint(0, days)),
+                }
+            )
 
         return leads
 
@@ -900,10 +950,14 @@ class JorgeAnalyticsService:
                 false_negatives += 1
 
         # False positive rate = FP / (FP + TN)
-        false_positive_rate = false_positives / (false_positives + true_negatives) if (false_positives + true_negatives) > 0 else 0
+        false_positive_rate = (
+            false_positives / (false_positives + true_negatives) if (false_positives + true_negatives) > 0 else 0
+        )
 
         # False negative rate = FN / (FN + TP)
-        false_negative_rate = false_negatives / (false_negatives + true_positives) if (false_negatives + true_positives) > 0 else 0
+        false_negative_rate = (
+            false_negatives / (false_negatives + true_positives) if (false_negatives + true_positives) > 0 else 0
+        )
 
         return false_positive_rate, false_negative_rate
 
@@ -930,8 +984,8 @@ class JorgeAnalyticsService:
         processing_time_ms = (time.time() - start_time) * 1000
 
         # Update rolling averages
-        current_avg = self.performance_metrics['avg_processing_time_ms']
-        self.performance_metrics['avg_processing_time_ms'] = (current_avg * 0.9) + (processing_time_ms * 0.1)
+        current_avg = self.performance_metrics["avg_processing_time_ms"]
+        self.performance_metrics["avg_processing_time_ms"] = (current_avg * 0.9) + (processing_time_ms * 0.1)
 
     # Fallback methods
     def _create_fallback_forecast(self, horizon_days: int, confidence_level: float) -> RevenueForecast:
@@ -954,7 +1008,7 @@ class JorgeAnalyticsService:
             risk_factors=["Limited historical data available"],
             market_conditions=MarketTemperature.WARM,
             model_version="jorge-fallback-v1.0",
-            forecast_date=datetime.now().date()
+            forecast_date=datetime.now().date(),
         )
 
     async def _create_fallback_executive_summary(self) -> ExecutiveSummary:
@@ -978,14 +1032,13 @@ class JorgeAnalyticsService:
             key_insights=["Analytics system temporarily unavailable"],
             action_items=["Contact support if issues persist"],
             risk_factors=["Limited data visibility"],
-            opportunities=["System improvements in progress"]
+            opportunities=["System improvements in progress"],
         )
 
-    # Additional helper methods would be implemented here...
-    # _generate_executive_insights, _assess_market_conditions, etc.
+        # Additional helper methods would be implemented here...
+        # _generate_executive_insights, _assess_market_conditions, etc.
 
         async def _generate_executive_insights(self, *args) -> Tuple[List[str], List[str], List[str], List[str]]:
-
             """Generate executive insights using AI."""
 
             # Simplified implementation
@@ -998,272 +1051,153 @@ class JorgeAnalyticsService:
 
             opportunities = ["Expand in Alta Loma", "Enhance referral program"]
 
-    
-
             return insights, actions, risks, opportunities
 
-    
-
         def _create_fallback_funnel_analysis(self, time_period_days: int) -> FunnelAnalysis:
-
             """Create fallback funnel analysis."""
 
             stage_order = [
-
-                FunnelStage.NEW_LEAD, FunnelStage.QUALIFIED, FunnelStage.APPOINTMENT,
-
-                FunnelStage.SHOWING, FunnelStage.OFFER, FunnelStage.OFFER_ACCEPTED,
-
-                FunnelStage.ESCROW, FunnelStage.CLOSED
-
+                FunnelStage.NEW_LEAD,
+                FunnelStage.QUALIFIED,
+                FunnelStage.APPOINTMENT,
+                FunnelStage.SHOWING,
+                FunnelStage.OFFER,
+                FunnelStage.OFFER_ACCEPTED,
+                FunnelStage.ESCROW,
+                FunnelStage.CLOSED,
             ]
-
-            
 
             stages = []
 
             for stage in stage_order:
-
-                stages.append(FunnelMetrics(
-
-                    stage=stage,
-
-                    lead_count=0,
-
-                    conversion_rate=0.0,
-
-                    avg_time_in_stage_days=0.0,
-
-                    drop_off_count=0,
-
-                    drop_off_percentage=0.0
-
-                ))
-
-                
+                stages.append(
+                    FunnelMetrics(
+                        stage=stage,
+                        lead_count=0,
+                        conversion_rate=0.0,
+                        avg_time_in_stage_days=0.0,
+                        drop_off_count=0,
+                        drop_off_percentage=0.0,
+                    )
+                )
 
             return FunnelAnalysis(
-
                 time_period_days=time_period_days,
-
                 stages=stages,
-
                 conversion_rates={},
-
                 drop_off_points=[],
-
                 bottleneck_stage=FunnelStage.NEW_LEAD,
-
                 optimization_opportunities=["System initializing..."],
-
                 overall_conversion_rate=0.0,
-
                 avg_lead_to_close_days=0.0,
-
                 improvement_potential_percent=0.0,
-
-                recommended_actions=["Collect more lead data"]
-
+                recommended_actions=["Collect more lead data"],
             )
 
-    
-
         def _create_fallback_quality_metrics(self) -> LeadQualityMetrics:
-
             """Create fallback quality metrics."""
 
             return LeadQualityMetrics(
-
                 total_leads_scored=0,
-
                 avg_lead_score=0.0,
-
                 score_distribution={"0-20": 0, "21-40": 0, "41-60": 0, "61-80": 0, "81-100": 0},
-
                 prediction_accuracy=0.0,
-
                 calibration_score=0.0,
-
                 false_positive_rate=0.0,
-
                 false_negative_rate=0.0,
-
                 avg_confidence=0.0,
-
                 high_confidence_accuracy=0.0,
-
-                low_confidence_accuracy=0.0
-
+                low_confidence_accuracy=0.0,
             )
 
-    
-
         def _create_fallback_market_timing(self) -> MarketTimingInsight:
-
             """Create fallback market timing insight."""
 
             metrics = MarketTimingMetrics(
-
                 active_inventory=0,
-
                 new_listings_count=0,
-
                 inventory_months=0.0,
-
                 buyer_demand_index=0.0,
-
                 showing_activity=0,
-
                 offer_activity=0,
-
                 median_list_price=0.0,
-
                 median_sale_price=0.0,
-
                 price_velocity_percent=0.0,
-
                 avg_days_on_market=0,
-
                 market_temperature=MarketTemperature.WARM,
-
                 best_action="wait",
-
                 confidence_score=0.0,
-
-                analysis_date=datetime.now().date()
-
+                analysis_date=datetime.now().date(),
             )
 
             return MarketTimingInsight(
-
                 current_conditions=metrics,
-
                 historical_trends=[],
-
                 buyer_recommendations=[],
-
                 seller_recommendations=[],
-
                 investor_recommendations=[],
-
                 predicted_peak_season="Unknown",
-
                 predicted_inventory_change="Stable",
-
                 price_movement_forecast="Stable",
-
                 seasonal_factors=[],
-
-                economic_indicators={}
-
+                economic_indicators={},
             )
 
-    
-
         def _create_fallback_geographic_analysis(self) -> GeographicAnalysis:
-
             """Create fallback geographic analysis."""
 
             return GeographicAnalysis(
-
                 total_areas_analyzed=0,
-
                 geographic_metrics=[],
-
                 best_performing_zip="N/A",
-
                 worst_performing_zip="N/A",
-
                 highest_revenue_zip="N/A",
-
                 most_competitive_zip="N/A",
-
                 expansion_opportunities=[],
-
                 underperforming_areas=[],
-
                 market_gaps=[],
-
                 avg_conversion_rate=0.0,
-
                 total_market_revenue=0.0,
-
-                geographic_concentration=0.0
-
+                geographic_concentration=0.0,
             )
 
-    
-
         def _create_fallback_competitive_intel(self) -> CompetitiveIntel:
-
             """Create fallback competitive intelligence."""
 
             return CompetitiveIntel(
-
                 top_competitors=[],
-
                 competitive_advantages=[],
-
                 competitive_threats=[],
-
                 differentiation_opportunities=[],
-
                 competitive_strategy_recommendations=[],
-
                 pricing_recommendations="Market average",
-
-                positioning_recommendations="Standard"
-
+                positioning_recommendations="Standard",
             )
 
-    
-
         def _create_fallback_performance_summary(self, time_period_days: int) -> PerformanceSummary:
-
             """Create fallback performance summary."""
 
             return PerformanceSummary(
-
                 summary_period_days=time_period_days,
-
                 total_revenue=0.0,
-
                 total_conversions=0,
-
                 avg_conversion_rate=0.0,
-
                 lead_scoring_accuracy=0.0,
-
                 revenue_trend="stable",
-
                 conversion_trend="stable",
-
                 quality_trend="stable",
-
                 goals_on_track=0,
-
                 goals_behind=0,
-
                 goals_ahead=0,
-
                 performance_alerts=[],
-
                 improvement_opportunities=[],
-
                 revenue_forecast_30d=0.0,
-
-                conversion_forecast_30d=0
-
+                conversion_forecast_30d=0,
             )
 
-    
-
         def _create_fallback(self, error_type: type) -> Any:
-
             """Create a generic fallback based on type."""
 
             # This is a bit of a hack to handle gather results
 
             return None
-
-    

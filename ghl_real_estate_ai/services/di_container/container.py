@@ -7,36 +7,47 @@ and performance optimization for the GHL Real Estate AI system.
 
 import asyncio
 import inspect
+import logging
 import threading
+import weakref
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from contextlib import asynccontextmanager, contextmanager
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from enum import Enum
 from functools import wraps
 from typing import (
-    Any, Dict, List, Optional, Type, TypeVar, Union, Callable,
-    get_type_hints, get_origin, get_args, Protocol
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Protocol,
+    Type,
+    TypeVar,
+    Union,
+    get_args,
+    get_origin,
+    get_type_hints,
 )
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-import logging
-import weakref
 
-
-T = TypeVar('T')
+T = TypeVar("T")
 logger = logging.getLogger(__name__)
 
 
 class ServiceLifetime(Enum):
     """Service lifetime management options"""
-    SINGLETON = "singleton"      # Single instance for container lifetime
-    TRANSIENT = "transient"      # New instance every resolution
-    SCOPED = "scoped"           # Single instance per scope/request
+
+    SINGLETON = "singleton"  # Single instance for container lifetime
+    TRANSIENT = "transient"  # New instance every resolution
+    SCOPED = "scoped"  # Single instance per scope/request
     THREAD_LOCAL = "thread_local"  # One instance per thread
 
 
 class ServiceState(Enum):
     """Service registration state"""
+
     REGISTERED = "registered"
     INITIALIZING = "initializing"
     READY = "ready"
@@ -47,6 +58,7 @@ class ServiceState(Enum):
 @dataclass
 class ServiceMetadata:
     """Metadata about registered services"""
+
     name: str
     service_type: Type
     implementation: Optional[Type] = None
@@ -65,12 +77,13 @@ class ServiceMetadata:
 @dataclass
 class ResolverContext:
     """Context for service resolution"""
-    container: 'DIContainer'
+
+    container: "DIContainer"
     scope_id: Optional[str] = None
     resolution_stack: List[str] = field(default_factory=list)
     configuration_overrides: Dict[str, Any] = field(default_factory=dict)
 
-    def with_override(self, service_name: str, config: Dict[str, Any]) -> 'ResolverContext':
+    def with_override(self, service_name: str, config: Dict[str, Any]) -> "ResolverContext":
         """Create context with configuration override"""
         new_overrides = self.configuration_overrides.copy()
         new_overrides[service_name] = config
@@ -78,7 +91,7 @@ class ResolverContext:
             container=self.container,
             scope_id=self.scope_id,
             resolution_stack=self.resolution_stack.copy(),
-            configuration_overrides=new_overrides
+            configuration_overrides=new_overrides,
         )
 
 
@@ -96,6 +109,7 @@ class IServiceProvider(Protocol):
 
 class CircularDependencyError(Exception):
     """Raised when circular dependency is detected"""
+
     def __init__(self, dependency_chain: List[str]):
         self.dependency_chain = dependency_chain
         chain_str = " -> ".join(dependency_chain)
@@ -104,11 +118,13 @@ class CircularDependencyError(Exception):
 
 class ServiceNotFoundError(Exception):
     """Raised when requested service is not registered"""
+
     pass
 
 
 class ServiceConfigurationError(Exception):
     """Raised when service configuration is invalid"""
+
     pass
 
 
@@ -151,10 +167,16 @@ class DIContainer(IServiceProvider):
 
         logger.info(f"DI Container '{name}' initialized")
 
-    def register_singleton(self, service_type: Type[T], implementation: Optional[Type[T]] = None,
-                          name: Optional[str] = None, factory: Optional[Callable[..., T]] = None,
-                          tags: Optional[List[str]] = None, configuration: Optional[Dict[str, Any]] = None,
-                          health_check: Optional[Callable] = None) -> 'DIContainer':
+    def register_singleton(
+        self,
+        service_type: Type[T],
+        implementation: Optional[Type[T]] = None,
+        name: Optional[str] = None,
+        factory: Optional[Callable[..., T]] = None,
+        tags: Optional[List[str]] = None,
+        configuration: Optional[Dict[str, Any]] = None,
+        health_check: Optional[Callable] = None,
+    ) -> "DIContainer":
         """Register singleton service"""
         return self._register_service(
             service_type=service_type,
@@ -164,12 +186,18 @@ class DIContainer(IServiceProvider):
             factory=factory,
             tags=tags or [],
             configuration=configuration or {},
-            health_check=health_check
+            health_check=health_check,
         )
 
-    def register_transient(self, service_type: Type[T], implementation: Optional[Type[T]] = None,
-                          name: Optional[str] = None, factory: Optional[Callable[..., T]] = None,
-                          tags: Optional[List[str]] = None, configuration: Optional[Dict[str, Any]] = None) -> 'DIContainer':
+    def register_transient(
+        self,
+        service_type: Type[T],
+        implementation: Optional[Type[T]] = None,
+        name: Optional[str] = None,
+        factory: Optional[Callable[..., T]] = None,
+        tags: Optional[List[str]] = None,
+        configuration: Optional[Dict[str, Any]] = None,
+    ) -> "DIContainer":
         """Register transient service"""
         return self._register_service(
             service_type=service_type,
@@ -178,12 +206,18 @@ class DIContainer(IServiceProvider):
             name=name,
             factory=factory,
             tags=tags or [],
-            configuration=configuration or {}
+            configuration=configuration or {},
         )
 
-    def register_scoped(self, service_type: Type[T], implementation: Optional[Type[T]] = None,
-                       name: Optional[str] = None, factory: Optional[Callable[..., T]] = None,
-                       tags: Optional[List[str]] = None, configuration: Optional[Dict[str, Any]] = None) -> 'DIContainer':
+    def register_scoped(
+        self,
+        service_type: Type[T],
+        implementation: Optional[Type[T]] = None,
+        name: Optional[str] = None,
+        factory: Optional[Callable[..., T]] = None,
+        tags: Optional[List[str]] = None,
+        configuration: Optional[Dict[str, Any]] = None,
+    ) -> "DIContainer":
         """Register scoped service"""
         return self._register_service(
             service_type=service_type,
@@ -192,11 +226,12 @@ class DIContainer(IServiceProvider):
             name=name,
             factory=factory,
             tags=tags or [],
-            configuration=configuration or {}
+            configuration=configuration or {},
         )
 
-    def register_instance(self, service_type: Type[T], instance: T,
-                         name: Optional[str] = None, tags: Optional[List[str]] = None) -> 'DIContainer':
+    def register_instance(
+        self, service_type: Type[T], instance: T, name: Optional[str] = None, tags: Optional[List[str]] = None
+    ) -> "DIContainer":
         """Register existing instance as singleton"""
         service_name = name or self._get_service_name(service_type)
 
@@ -206,7 +241,7 @@ class DIContainer(IServiceProvider):
                 service_type=service_type,
                 lifetime=ServiceLifetime.SINGLETON,
                 tags=tags or [],
-                state=ServiceState.READY
+                state=ServiceState.READY,
             )
 
             self._services[service_name] = metadata
@@ -215,11 +250,17 @@ class DIContainer(IServiceProvider):
             logger.debug(f"Registered instance '{service_name}' of type {service_type.__name__}")
             return self
 
-    def _register_service(self, service_type: Type[T], implementation: Optional[Type[T]] = None,
-                         lifetime: ServiceLifetime = ServiceLifetime.SINGLETON,
-                         name: Optional[str] = None, factory: Optional[Callable] = None,
-                         tags: List[str] = None, configuration: Dict[str, Any] = None,
-                         health_check: Optional[Callable] = None) -> 'DIContainer':
+    def _register_service(
+        self,
+        service_type: Type[T],
+        implementation: Optional[Type[T]] = None,
+        lifetime: ServiceLifetime = ServiceLifetime.SINGLETON,
+        name: Optional[str] = None,
+        factory: Optional[Callable] = None,
+        tags: List[str] = None,
+        configuration: Dict[str, Any] = None,
+        health_check: Optional[Callable] = None,
+    ) -> "DIContainer":
         """Internal service registration"""
 
         if factory and implementation:
@@ -248,7 +289,7 @@ class DIContainer(IServiceProvider):
                 dependencies=dependencies,
                 configuration=configuration or {},
                 health_check=health_check,
-                state=ServiceState.REGISTERED
+                state=ServiceState.REGISTERED,
             )
 
             self._services[service_name] = metadata
@@ -256,24 +297,22 @@ class DIContainer(IServiceProvider):
 
             return self
 
-    def get_service(self, service_type: Type[T], name: Optional[str] = None,
-                   scope_id: Optional[str] = None, **kwargs) -> T:
+    def get_service(
+        self, service_type: Type[T], name: Optional[str] = None, scope_id: Optional[str] = None, **kwargs
+    ) -> T:
         """Get service synchronously"""
         return asyncio.run(self.get_service_async(service_type, name, scope_id, **kwargs))
 
-    async def get_service_async(self, service_type: Type[T], name: Optional[str] = None,
-                               scope_id: Optional[str] = None, **kwargs) -> T:
+    async def get_service_async(
+        self, service_type: Type[T], name: Optional[str] = None, scope_id: Optional[str] = None, **kwargs
+    ) -> T:
         """Get service asynchronously"""
         if self._disposed:
             raise RuntimeError("Container has been disposed")
 
         service_name = name or self._get_service_name(service_type)
 
-        context = ResolverContext(
-            container=self,
-            scope_id=scope_id,
-            configuration_overrides=kwargs
-        )
+        context = ResolverContext(container=self, scope_id=scope_id, configuration_overrides=kwargs)
 
         return await self._resolve_service(service_name, context)
 
@@ -330,7 +369,7 @@ class DIContainer(IServiceProvider):
             self._instances[metadata.name] = instance
 
             # Track disposable instances
-            if hasattr(instance, '__del__') or hasattr(instance, 'dispose'):
+            if hasattr(instance, "__del__") or hasattr(instance, "dispose"):
                 self._disposable_instances.append(weakref.ref(instance))
 
             metadata.state = ServiceState.READY
@@ -351,7 +390,7 @@ class DIContainer(IServiceProvider):
 
     async def _resolve_thread_local(self, metadata: ServiceMetadata, context: ResolverContext) -> Any:
         """Resolve thread-local service"""
-        thread_storage = getattr(self._thread_local_storage, 'instances', None)
+        thread_storage = getattr(self._thread_local_storage, "instances", None)
         if thread_storage is None:
             thread_storage = {}
             self._thread_local_storage.instances = thread_storage
@@ -385,7 +424,7 @@ class DIContainer(IServiceProvider):
             # Run health check if available
             if metadata.health_check:
                 health_result = await self._run_health_check(metadata.health_check, instance)
-                if not health_result.get('healthy', True):
+                if not health_result.get("healthy", True):
                     raise ServiceConfigurationError(f"Health check failed for {metadata.name}: {health_result}")
 
             metadata.state = ServiceState.READY
@@ -403,14 +442,11 @@ class DIContainer(IServiceProvider):
         args = {}
 
         for param_name, param in sig.parameters.items():
-            if param_name == 'config' or param_name == 'configuration':
+            if param_name == "config" or param_name == "configuration":
                 args[param_name] = config
             elif param.annotation != inspect.Parameter.empty:
                 # Resolve dependency by type
-                dependency = await self._resolve_service(
-                    self._get_service_name(param.annotation),
-                    context
-                )
+                dependency = await self._resolve_service(self._get_service_name(param.annotation), context)
                 args[param_name] = dependency
 
         # Invoke factory
@@ -429,16 +465,13 @@ class DIContainer(IServiceProvider):
         args = {}
 
         for param_name, param in sig.parameters.items():
-            if param_name == 'self':
+            if param_name == "self":
                 continue
-            elif param_name in ['config', 'configuration']:
+            elif param_name in ["config", "configuration"]:
                 args[param_name] = config
             elif param.annotation != inspect.Parameter.empty:
                 # Resolve dependency by type
-                dependency = await self._resolve_service(
-                    self._get_service_name(param.annotation),
-                    context
-                )
+                dependency = await self._resolve_service(self._get_service_name(param.annotation), context)
                 args[param_name] = dependency
 
         return implementation(**args)
@@ -452,14 +485,14 @@ class DIContainer(IServiceProvider):
                 result = health_check(instance)
 
             if isinstance(result, bool):
-                return {'healthy': result}
+                return {"healthy": result}
             elif isinstance(result, dict):
                 return result
             else:
-                return {'healthy': True, 'details': str(result)}
+                return {"healthy": True, "details": str(result)}
 
         except Exception as e:
-            return {'healthy': False, 'error': str(e)}
+            return {"healthy": False, "error": str(e)}
 
     def _analyze_dependencies(self, target: Union[Type, Callable]) -> List[str]:
         """Analyze dependencies from type hints"""
@@ -472,7 +505,7 @@ class DIContainer(IServiceProvider):
                 sig = inspect.signature(target)
 
             for param_name, param in sig.parameters.items():
-                if param_name in ['self', 'config', 'configuration']:
+                if param_name in ["self", "config", "configuration"]:
                     continue
 
                 if param.annotation != inspect.Parameter.empty:
@@ -486,7 +519,7 @@ class DIContainer(IServiceProvider):
 
     def _get_service_name(self, service_type: Type) -> str:
         """Generate service name from type"""
-        if hasattr(service_type, '__name__'):
+        if hasattr(service_type, "__name__"):
             return service_type.__name__
         else:
             return str(service_type)
@@ -541,25 +574,25 @@ class DIContainer(IServiceProvider):
     def get_health_status(self) -> Dict[str, Any]:
         """Get container health status"""
         if not self.enable_monitoring:
-            return {'monitoring_disabled': True}
+            return {"monitoring_disabled": True}
 
         health_data = {
-            'container_name': self.name,
-            'total_services': len(self._services),
-            'ready_services': sum(1 for s in self._services.values() if s.state == ServiceState.READY),
-            'error_services': sum(1 for s in self._services.values() if s.state == ServiceState.ERROR),
-            'singleton_instances': len(self._instances),
-            'scoped_instances': sum(len(scope) for scope in self._scoped_instances.values()),
-            'last_check': datetime.utcnow().isoformat(),
-            'services': {}
+            "container_name": self.name,
+            "total_services": len(self._services),
+            "ready_services": sum(1 for s in self._services.values() if s.state == ServiceState.READY),
+            "error_services": sum(1 for s in self._services.values() if s.state == ServiceState.ERROR),
+            "singleton_instances": len(self._instances),
+            "scoped_instances": sum(len(scope) for scope in self._scoped_instances.values()),
+            "last_check": datetime.utcnow().isoformat(),
+            "services": {},
         }
 
         for name, metadata in self._services.items():
-            health_data['services'][name] = {
-                'state': metadata.state.value,
-                'lifetime': metadata.lifetime.value,
-                'access_count': metadata.access_count,
-                'last_accessed': metadata.last_accessed.isoformat() if metadata.last_accessed else None
+            health_data["services"][name] = {
+                "state": metadata.state.value,
+                "lifetime": metadata.lifetime.value,
+                "access_count": metadata.access_count,
+                "last_accessed": metadata.last_accessed.isoformat() if metadata.last_accessed else None,
             }
 
         return health_data
@@ -567,9 +600,9 @@ class DIContainer(IServiceProvider):
     def _dispose_instance(self, instance: Any):
         """Dispose instance synchronously"""
         try:
-            if hasattr(instance, 'dispose') and callable(instance.dispose):
+            if hasattr(instance, "dispose") and callable(instance.dispose):
                 instance.dispose()
-            elif hasattr(instance, '__del__') and callable(instance.__del__):
+            elif hasattr(instance, "__del__") and callable(instance.__del__):
                 instance.__del__()
         except Exception as e:
             logger.error(f"Error disposing instance: {e}")
@@ -577,9 +610,9 @@ class DIContainer(IServiceProvider):
     async def _dispose_instance_async(self, instance: Any):
         """Dispose instance asynchronously"""
         try:
-            if hasattr(instance, 'dispose_async') and callable(instance.dispose_async):
+            if hasattr(instance, "dispose_async") and callable(instance.dispose_async):
                 await instance.dispose_async()
-            elif hasattr(instance, 'dispose') and callable(instance.dispose):
+            elif hasattr(instance, "dispose") and callable(instance.dispose):
                 instance.dispose()
         except Exception as e:
             logger.error(f"Error disposing instance: {e}")

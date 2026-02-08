@@ -9,22 +9,23 @@ Extends the base conversation manager with:
 5. Austin market intelligence integration
 """
 
-from typing import Dict, List, Optional, Any
+import asyncio
+import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import json
-import asyncio
+from typing import Any, Dict, List, Optional
 
-from ghl_real_estate_ai.core.conversation_manager import ConversationManager, AIResponse
-from ghl_real_estate_ai.services.competitor_intelligence import (
-    get_competitor_intelligence, CompetitiveAnalysis, RiskLevel, CompetitorMention
-)
-from ghl_real_estate_ai.prompts.competitive_responses import (
-    get_competitive_response_system, LeadProfile, ResponseType
-)
-from ghl_real_estate_ai.services.competitive_alert_system import get_competitive_alert_system
+from ghl_real_estate_ai.core.conversation_manager import AIResponse, ConversationManager
 from ghl_real_estate_ai.data.austin_market_data import get_austin_market_intelligence
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.prompts.competitive_responses import LeadProfile, ResponseType, get_competitive_response_system
+from ghl_real_estate_ai.services.competitive_alert_system import get_competitive_alert_system
+from ghl_real_estate_ai.services.competitor_intelligence import (
+    CompetitiveAnalysis,
+    CompetitorMention,
+    RiskLevel,
+    get_competitor_intelligence,
+)
 
 logger = get_logger(__name__)
 
@@ -32,6 +33,7 @@ logger = get_logger(__name__)
 @dataclass
 class EnhancedAIResponse(AIResponse):
     """AI response with competitive intelligence"""
+
     competitive_analysis: Optional[CompetitiveAnalysis] = None
     competitive_response_applied: bool = False
     alert_sent: bool = False
@@ -70,7 +72,7 @@ class EnhancedConversationManager(ConversationManager):
         context: Dict[str, Any],
         is_buyer: bool = True,
         tenant_config: Optional[Dict[str, Any]] = None,
-        ghl_client: Optional[Any] = None
+        ghl_client: Optional[Any] = None,
     ) -> EnhancedAIResponse:
         """
         Generate enhanced AI response with competitive intelligence
@@ -94,8 +96,7 @@ class EnhancedConversationManager(ConversationManager):
             logger.info(f"Analyzing message for competitor mentions: {user_message[:100]}...")
 
             competitive_analysis = await self.competitor_intelligence.analyze_conversation(
-                message_text=user_message,
-                conversation_history=context.get("conversation_history", [])
+                message_text=user_message, conversation_history=context.get("conversation_history", [])
             )
 
             # Step 2: Generate base response using parent class
@@ -105,7 +106,7 @@ class EnhancedConversationManager(ConversationManager):
                 context=context,
                 is_buyer=is_buyer,
                 tenant_config=tenant_config,
-                ghl_client=ghl_client
+                ghl_client=ghl_client,
             )
 
             # Step 3: Apply competitive intelligence if needed
@@ -115,7 +116,9 @@ class EnhancedConversationManager(ConversationManager):
             recovery_strategies = []
 
             if competitive_analysis.has_competitor_risk:
-                logger.info(f"Competitor risk detected: {competitive_analysis.risk_level} - {len(competitive_analysis.mentions)} mentions")
+                logger.info(
+                    f"Competitor risk detected: {competitive_analysis.risk_level} - {len(competitive_analysis.mentions)} mentions"
+                )
 
                 # Determine lead profile for targeted response
                 lead_profile = self._determine_lead_profile(context.get("extracted_preferences", {}))
@@ -128,8 +131,8 @@ class EnhancedConversationManager(ConversationManager):
                     conversation_context={
                         "lead_name": contact_name,
                         "property_type": context.get("extracted_preferences", {}).get("property_type"),
-                        "location": context.get("extracted_preferences", {}).get("location")
-                    }
+                        "location": context.get("extracted_preferences", {}).get("location"),
+                    },
                 )
 
                 # Apply competitive response if appropriate
@@ -155,19 +158,24 @@ class EnhancedConversationManager(ConversationManager):
                             competitive_analysis=competitive_analysis,
                             conversation_context={
                                 "message": user_message,
-                                "conversation_history": context.get("conversation_history", [])
-                            }
+                                "conversation_history": context.get("conversation_history", []),
+                            },
                         )
                         alert_sent = True
                         jorge_intervention_required = alert.human_intervention_required
 
-                        logger.info(f"Competitive alert sent: {alert.alert_id} - Channels: {[ch.value for ch in alert.channels_sent]}")
+                        logger.info(
+                            f"Competitive alert sent: {alert.alert_id} - Channels: {[ch.value for ch in alert.channels_sent]}"
+                        )
 
                     except Exception as e:
                         logger.error(f"Failed to send competitive alert: {e}")
 
                 # Add Austin market intelligence for local positioning
-                if any(mention.competitor_name in ["keller_williams", "remax", "coldwell_banker"] for mention in competitive_analysis.mentions):
+                if any(
+                    mention.competitor_name in ["keller_williams", "remax", "coldwell_banker"]
+                    for mention in competitive_analysis.mentions
+                ):
                     market_advantage = self._get_austin_market_advantage(competitive_analysis.mentions)
                     if market_advantage:
                         base_response.message += f"\n\n{market_advantage}"
@@ -177,7 +185,7 @@ class EnhancedConversationManager(ConversationManager):
                 contact_id=lead_id,
                 competitive_analysis=competitive_analysis,
                 context=context,
-                tenant_config=tenant_config
+                tenant_config=tenant_config,
             )
 
             # Step 5: Create enhanced response
@@ -191,10 +199,12 @@ class EnhancedConversationManager(ConversationManager):
                 competitive_response_applied=competitive_response_applied,
                 alert_sent=alert_sent,
                 jorge_intervention_required=jorge_intervention_required,
-                recovery_strategies=recovery_strategies
+                recovery_strategies=recovery_strategies,
             )
 
-            logger.info(f"Enhanced response generated - Competitive risk: {competitive_analysis.risk_level if competitive_analysis.has_competitor_risk else 'None'}")
+            logger.info(
+                f"Enhanced response generated - Competitive risk: {competitive_analysis.risk_level if competitive_analysis.has_competitor_risk else 'None'}"
+            )
 
             return enhanced_response
 
@@ -208,7 +218,7 @@ class EnhancedConversationManager(ConversationManager):
                 context=context,
                 is_buyer=is_buyer,
                 tenant_config=tenant_config,
-                ghl_client=ghl_client
+                ghl_client=ghl_client,
             )
 
             return EnhancedAIResponse(
@@ -221,18 +231,22 @@ class EnhancedConversationManager(ConversationManager):
                 competitive_response_applied=False,
                 alert_sent=False,
                 jorge_intervention_required=False,
-                recovery_strategies=[]
+                recovery_strategies=[],
             )
 
     def _determine_lead_profile(self, extracted_preferences: Dict[str, Any]) -> Optional[LeadProfile]:
         """Determine lead profile based on extracted preferences"""
 
         # Check for investor indicators
-        if any(keyword in str(extracted_preferences).lower() for keyword in ["investment", "rental", "cash flow", "roi"]):
+        if any(
+            keyword in str(extracted_preferences).lower() for keyword in ["investment", "rental", "cash flow", "roi"]
+        ):
             return LeadProfile.INVESTOR
 
         # Check for tech relocation indicators
-        if any(keyword in str(extracted_preferences).lower() for keyword in ["apple", "tech", "relocating", "moving from"]):
+        if any(
+            keyword in str(extracted_preferences).lower() for keyword in ["apple", "tech", "relocating", "moving from"]
+        ):
             return LeadProfile.RELOCATING
 
         # Check for luxury indicators
@@ -257,7 +271,9 @@ class EnhancedConversationManager(ConversationManager):
 
         for mention in competitor_mentions:
             if mention.competitor_name:
-                competitor_insights = self.austin_market_intelligence.get_competitor_positioning(mention.competitor_name)
+                competitor_insights = self.austin_market_intelligence.get_competitor_positioning(
+                    mention.competitor_name
+                )
                 if competitor_insights:
                     advantages = competitor_insights["positioning_strategy"]["jorge_advantages"]
                     if advantages:
@@ -276,7 +292,7 @@ class EnhancedConversationManager(ConversationManager):
         contact_id: str,
         competitive_analysis: CompetitiveAnalysis,
         context: Dict[str, Any],
-        tenant_config: Optional[Dict[str, Any]] = None
+        tenant_config: Optional[Dict[str, Any]] = None,
     ):
         """Update conversation context with competitive intelligence"""
 
@@ -288,13 +304,15 @@ class EnhancedConversationManager(ConversationManager):
 
         # Track competitive mentions over time
         competitive_context["risk_history"] = competitive_context.get("risk_history", [])
-        competitive_context["risk_history"].append({
-            "timestamp": datetime.now().isoformat(),
-            "risk_level": competitive_analysis.risk_level.value,
-            "confidence_score": competitive_analysis.confidence_score,
-            "mentions_count": len(competitive_analysis.mentions),
-            "alert_sent": competitive_analysis.alert_required
-        })
+        competitive_context["risk_history"].append(
+            {
+                "timestamp": datetime.now().isoformat(),
+                "risk_level": competitive_analysis.risk_level.value,
+                "confidence_score": competitive_analysis.confidence_score,
+                "mentions_count": len(competitive_analysis.mentions),
+                "alert_sent": competitive_analysis.alert_required,
+            }
+        )
 
         # Keep only last 10 risk assessments
         competitive_context["risk_history"] = competitive_context["risk_history"][-10:]
@@ -328,10 +346,7 @@ class EnhancedConversationManager(ConversationManager):
         competitive_context = context.get("competitive_intelligence", {})
 
         if not competitive_context:
-            return {
-                "has_competitive_risk": False,
-                "summary": "No competitive risk detected"
-            }
+            return {"has_competitive_risk": False, "summary": "No competitive risk detected"}
 
         risk_history = competitive_context.get("risk_history", [])
         current_risk = competitive_context.get("current_risk_level", "low")
@@ -354,16 +369,13 @@ class EnhancedConversationManager(ConversationManager):
             "total_risk_events": len(risk_history),
             "last_competitive_mention": competitive_context.get("last_competitor_mention"),
             "recovery_strategies_suggested": competitive_context.get("recovery_strategies_suggested", []),
-            "summary": f"Risk Level: {current_risk.title()} | Trend: {risk_trend.title()} | Competitors: {', '.join(competitors) if competitors else 'None'}"
+            "summary": f"Risk Level: {current_risk.title()} | Trend: {risk_trend.title()} | Competitors: {', '.join(competitors) if competitors else 'None'}",
         }
 
         return summary
 
     async def mark_competitive_situation_resolved(
-        self,
-        contact_id: str,
-        resolution_notes: str,
-        location_id: Optional[str] = None
+        self, contact_id: str, resolution_notes: str, location_id: Optional[str] = None
     ):
         """Mark competitive situation as resolved"""
 
@@ -384,8 +396,7 @@ class EnhancedConversationManager(ConversationManager):
             for alert_data in active_alerts:
                 if alert_data.get("lead_id") == contact_id:
                     await self.competitive_alert_system.mark_alert_resolved(
-                        alert_id=alert_data["alert_id"],
-                        resolution_notes=resolution_notes
+                        alert_id=alert_data["alert_id"], resolution_notes=resolution_notes
                     )
 
             logger.info(f"Competitive situation resolved for {contact_id}: {resolution_notes}")
@@ -393,11 +404,7 @@ class EnhancedConversationManager(ConversationManager):
         except Exception as e:
             logger.error(f"Error resolving competitive situation: {e}")
 
-    async def get_recovery_recommendations(
-        self,
-        contact_id: str,
-        location_id: Optional[str] = None
-    ) -> List[str]:
+    async def get_recovery_recommendations(self, contact_id: str, location_id: Optional[str] = None) -> List[str]:
         """Get competitive recovery recommendations for a lead"""
 
         try:
@@ -418,21 +425,21 @@ class EnhancedConversationManager(ConversationManager):
                     "Immediate Jorge intervention required",
                     "Position as backup resource for future opportunities",
                     "Add to long-term nurture campaign",
-                    "Send quarterly Austin market updates"
+                    "Send quarterly Austin market updates",
                 ]
             elif current_risk == "high":
                 recommendations = [
                     "Provide immediate value (market analysis, property insights)",
                     "Offer complimentary second opinion service",
                     "Share relevant success stories and testimonials",
-                    "Schedule follow-up for market insights"
+                    "Schedule follow-up for market insights",
                 ]
             elif current_risk == "medium":
                 recommendations = [
                     "Demonstrate unique technology advantages",
                     "Highlight Jorge's Austin expertise",
                     "Create urgency with market timing insights",
-                    "Offer specialized services (investor analysis, tech relocation)"
+                    "Offer specialized services (investor analysis, tech relocation)",
                 ]
 
             # Add competitor-specific strategies

@@ -29,7 +29,7 @@ class EnterpriseJSONEncoder(json.JSONEncoder):
             return obj.isoformat()
 
         # Handle objects with to_dict method
-        if hasattr(obj, 'to_dict') and callable(getattr(obj, 'to_dict')):
+        if hasattr(obj, "to_dict") and callable(getattr(obj, "to_dict")):
             return obj.to_dict()
 
         # Fallback to string representation
@@ -46,7 +46,7 @@ def serialize_signals(signals: list) -> str:
     # Convert signals to dictionaries first
     signal_dicts = []
     for signal in signals:
-        if hasattr(signal, 'to_dict'):
+        if hasattr(signal, "to_dict"):
             signal_dicts.append(signal.to_dict())
         else:
             # Fallback for signals that don't have to_dict method

@@ -15,21 +15,22 @@ Features:
 Author: Jorge's Real Estate AI Platform - Phase 2.3 Implementation
 """
 
-from typing import Dict, List, Optional, Any, Tuple, Deque
-from dataclasses import dataclass, field
-from datetime import datetime, timezone, timedelta
-from collections import deque
 import asyncio
-import re
 import json
+import re
+from collections import deque
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 from enum import Enum
+from typing import Any, Deque, Dict, List, Optional, Tuple
+
+from ghl_real_estate_ai.agents.intent_decoder import get_intent_decoder
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 # Core service imports
 from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.claude_assistant import get_claude_assistant
-from ghl_real_estate_ai.agents.intent_decoder import get_intent_decoder
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 
 logger = get_logger(__name__)
 
@@ -42,6 +43,7 @@ SENTIMENT_ANALYSIS_WINDOW = 5  # Analyze last 5 messages for trend
 
 class ObjectionType(Enum):
     """Types of objections detected in real estate conversations."""
+
     PRICING = "pricing"
     TIMING = "timing"
     FINANCIAL = "financial"
@@ -54,6 +56,7 @@ class ObjectionType(Enum):
 
 class SentimentLevel(Enum):
     """Sentiment classification levels."""
+
     VERY_POSITIVE = "very_positive"
     POSITIVE = "positive"
     NEUTRAL = "neutral"
@@ -63,6 +66,7 @@ class SentimentLevel(Enum):
 
 class CoachingArea(Enum):
     """Areas for coaching opportunities."""
+
     OBJECTION_HANDLING = "objection_handling"
     NEGOTIATION = "negotiation"
     RAPPORT_BUILDING = "rapport_building"
@@ -74,6 +78,7 @@ class CoachingArea(Enum):
 
 class ResponseTiming(Enum):
     """Recommended timing for responses."""
+
     IMMEDIATE = "immediate"
     WAIT_1H = "wait_1h"
     WAIT_24H = "wait_24h"
@@ -83,6 +88,7 @@ class ResponseTiming(Enum):
 @dataclass
 class ObjectionDetection:
     """Detected objection with context and recommendations."""
+
     objection_type: ObjectionType
     confidence: float  # 0.0-1.0
     severity: str  # low, medium, high
@@ -95,6 +101,7 @@ class ObjectionDetection:
 @dataclass
 class SentimentDataPoint:
     """Single sentiment measurement point."""
+
     timestamp: datetime
     score: float  # -1.0 to 1.0
     level: SentimentLevel
@@ -106,6 +113,7 @@ class SentimentDataPoint:
 @dataclass
 class SentimentTimeline:
     """Complete sentiment analysis timeline."""
+
     conversation_id: str
     overall_sentiment: float  # Average sentiment score
     current_sentiment: SentimentLevel
@@ -119,6 +127,7 @@ class SentimentTimeline:
 @dataclass
 class CoachingOpportunity:
     """Identified coaching opportunity."""
+
     area: CoachingArea
     description: str
     priority: str  # low, medium, high
@@ -132,6 +141,7 @@ class CoachingOpportunity:
 @dataclass
 class ResponseRecommendation:
     """AI-generated response recommendation."""
+
     response_text: str
     confidence: float
     tone: str  # professional, friendly, empathetic, assertive
@@ -144,6 +154,7 @@ class ResponseRecommendation:
 @dataclass
 class ConversationQualityMetrics:
     """Comprehensive conversation quality assessment."""
+
     overall_score: float  # 0-100
     engagement_score: float
     rapport_score: float
@@ -160,6 +171,7 @@ class ConversationQualityMetrics:
 @dataclass
 class ConversationInsight:
     """Complete conversation intelligence analysis result."""
+
     conversation_id: str
     lead_id: str
     location_id: str
@@ -210,12 +222,12 @@ class ConversationIntelligenceService:
 
         # Performance metrics
         self.metrics = {
-            'total_analyses': 0,
-            'avg_processing_time_ms': 0.0,
-            'cache_hit_rate': 0.0,
-            'cache_hits': 0,
-            'cache_misses': 0,
-            'insight_history_leads': 0
+            "total_analyses": 0,
+            "avg_processing_time_ms": 0.0,
+            "cache_hit_rate": 0.0,
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "insight_history_leads": 0,
         }
 
         # Objection patterns (compiled for performance)
@@ -232,6 +244,7 @@ class ConversationIntelligenceService:
         if self._behavior_service is None:
             try:
                 from ghl_real_estate_ai.services.predictive_lead_behavior_service import get_predictive_behavior_service
+
                 self._behavior_service = get_predictive_behavior_service()
             except ImportError:
                 logger.warning("Could not import behavior service - proceeding without behavioral integration")
@@ -244,7 +257,7 @@ class ConversationIntelligenceService:
         lead_id: str,
         location_id: str,
         conversation_history: List[Dict[str, Any]],
-        force_refresh: bool = False
+        force_refresh: bool = False,
     ) -> ConversationInsight:
         """
         Perform comprehensive conversation analysis with intelligence insights.
@@ -264,15 +277,13 @@ class ConversationIntelligenceService:
         try:
             # Check cache first
             if not force_refresh:
-                cached_insight = await self._get_cached_insight(
-                    conversation_id, location_id
-                )
+                cached_insight = await self._get_cached_insight(conversation_id, location_id)
                 if cached_insight:
-                    self.metrics['cache_hits'] += 1
+                    self.metrics["cache_hits"] += 1
                     cached_insight.cache_hit = True
                     return cached_insight
 
-            self.metrics['cache_misses'] += 1
+            self.metrics["cache_misses"] += 1
 
             # Parallel analysis execution for performance
             analysis_tasks = [
@@ -281,7 +292,7 @@ class ConversationIntelligenceService:
                 self.generate_conversation_quality_metrics(conversation_history),
                 self._generate_response_recommendations(conversation_history, lead_id),
                 self._get_behavioral_correlation(lead_id, location_id),
-                self._analyze_intent_correlation(conversation_history, lead_id)
+                self._analyze_intent_correlation(conversation_history, lead_id),
             ]
 
             # Execute all analyses in parallel (target <500ms total)
@@ -311,7 +322,7 @@ class ConversationIntelligenceService:
                 behavioral_correlation=behavioral,
                 intent_analysis=intent,
                 message_count=len(conversation_history),
-                cache_hit=False
+                cache_hit=False,
             )
 
             # Cache the insight
@@ -336,41 +347,37 @@ class ConversationIntelligenceService:
 
         except Exception as e:
             logger.error(f"Conversation analysis failed for {conversation_id}: {e}", exc_info=True)
-            return self._create_fallback_insight(
-                conversation_id, lead_id, location_id, conversation_history
-            )
+            return self._create_fallback_insight(conversation_id, lead_id, location_id, conversation_history)
 
     async def detect_objections_and_recommend_responses(
-        self,
-        conversation_history: List[Dict[str, Any]],
-        lead_id: str
+        self, conversation_history: List[Dict[str, Any]], lead_id: str
     ) -> List[ObjectionDetection]:
         """Detect objections in conversation with response recommendations."""
         try:
             objections = []
 
             for i, message in enumerate(conversation_history):
-                if message.get('direction') != 'inbound':  # Only analyze lead messages
+                if message.get("direction") != "inbound":  # Only analyze lead messages
                     continue
 
-                content = message.get('content', '').lower()
+                content = message.get("content", "").lower()
                 if len(content) < 10:  # Skip very short messages
                     continue
 
                 # Check each objection type
                 for objection_type, patterns in self.objection_patterns.items():
                     for pattern in patterns:
-                        if re.search(pattern['regex'], content):
+                        if re.search(pattern["regex"], content):
                             # Extract context (current message + neighbors)
                             context = self._extract_objection_context(conversation_history, i)
 
                             objection = ObjectionDetection(
                                 objection_type=ObjectionType(objection_type),
-                                confidence=pattern['confidence'],
+                                confidence=pattern["confidence"],
                                 severity=self._determine_objection_severity(content),
                                 context=context,
                                 message_index=i,
-                                suggested_responses=pattern['responses']
+                                suggested_responses=pattern["responses"],
                             )
                             objections.append(objection)
                             break  # One objection per message
@@ -381,20 +388,17 @@ class ConversationIntelligenceService:
             logger.error(f"Objection detection failed: {e}")
             return []
 
-    async def track_sentiment_timeline(
-        self,
-        conversation_history: List[Dict[str, Any]]
-    ) -> SentimentTimeline:
+    async def track_sentiment_timeline(self, conversation_history: List[Dict[str, Any]]) -> SentimentTimeline:
         """Analyze sentiment progression throughout conversation."""
         try:
             data_points = []
             sentiment_scores = []
 
             for i, message in enumerate(conversation_history):
-                if message.get('direction') != 'inbound':  # Only analyze lead messages
+                if message.get("direction") != "inbound":  # Only analyze lead messages
                     continue
 
-                content = message.get('content', '')
+                content = message.get("content", "")
                 if len(content) < 5:  # Skip very short messages
                     continue
 
@@ -403,12 +407,12 @@ class ConversationIntelligenceService:
                 level = self._classify_sentiment_level(score)
 
                 data_point = SentimentDataPoint(
-                    timestamp=datetime.fromisoformat(message.get('timestamp', datetime.now(timezone.utc).isoformat())),
+                    timestamp=datetime.fromisoformat(message.get("timestamp", datetime.now(timezone.utc).isoformat())),
                     score=score,
                     level=level,
                     confidence=0.8,  # Basic confidence for pattern matching
                     message_text=content[:100],  # Truncate for storage
-                    message_index=i
+                    message_index=i,
                 )
                 data_points.append(data_point)
                 sentiment_scores.append(score)
@@ -423,9 +427,7 @@ class ConversationIntelligenceService:
             risk_level = self._assess_sentiment_risk(overall_sentiment, trend, volatility)
 
             # Generate recommendations
-            recommendations = self._generate_sentiment_recommendations(
-                overall_sentiment, trend, risk_level
-            )
+            recommendations = self._generate_sentiment_recommendations(overall_sentiment, trend, risk_level)
 
             return SentimentTimeline(
                 conversation_id="",  # Will be filled by caller
@@ -435,7 +437,7 @@ class ConversationIntelligenceService:
                 volatility=volatility,
                 data_points=data_points,
                 risk_level=risk_level,
-                recommendations=recommendations
+                recommendations=recommendations,
             )
 
         except Exception as e:
@@ -443,8 +445,7 @@ class ConversationIntelligenceService:
             return self._fallback_sentiment()
 
     async def generate_conversation_quality_metrics(
-        self,
-        conversation_history: List[Dict[str, Any]]
+        self, conversation_history: List[Dict[str, Any]]
     ) -> ConversationQualityMetrics:
         """Generate comprehensive conversation quality assessment."""
         try:
@@ -461,29 +462,27 @@ class ConversationIntelligenceService:
 
             # Overall score (weighted average)
             overall_score = (
-                engagement_score * 0.25 +
-                rapport_score * 0.20 +
-                professionalism_score * 0.15 +
-                response_effectiveness * 0.20 +
-                message_depth_score * 0.20
+                engagement_score * 0.25
+                + rapport_score * 0.20
+                + professionalism_score * 0.15
+                + response_effectiveness * 0.20
+                + message_depth_score * 0.20
             )
 
             # Identify strengths and improvement areas
             scores_dict = {
-                'engagement': engagement_score,
-                'rapport': rapport_score,
-                'professionalism': professionalism_score,
-                'response_effectiveness': response_effectiveness,
-                'message_depth': message_depth_score
+                "engagement": engagement_score,
+                "rapport": rapport_score,
+                "professionalism": professionalism_score,
+                "response_effectiveness": response_effectiveness,
+                "message_depth": message_depth_score,
             }
 
             strengths = [name for name, score in scores_dict.items() if score >= 75]
             improvement_areas = [name for name, score in scores_dict.items() if score < 60]
 
             # Generate coaching opportunities
-            coaching_opportunities = self._identify_coaching_opportunities(
-                scores_dict, conversation_history
-            )
+            coaching_opportunities = self._identify_coaching_opportunities(scores_dict, conversation_history)
 
             return ConversationQualityMetrics(
                 overall_score=overall_score,
@@ -496,18 +495,14 @@ class ConversationIntelligenceService:
                 active_listening_indicators=listening_indicators,
                 strengths=strengths,
                 improvement_areas=improvement_areas,
-                coaching_opportunities=coaching_opportunities
+                coaching_opportunities=coaching_opportunities,
             )
 
         except Exception as e:
             logger.error(f"Quality metrics calculation failed: {e}")
             return self._fallback_quality()
 
-    async def get_insight_history(
-        self,
-        lead_id: str,
-        limit: int = 10
-    ) -> List[Dict[str, Any]]:
+    async def get_insight_history(self, lead_id: str, limit: int = 10) -> List[Dict[str, Any]]:
         """Get historical insights for a lead."""
         try:
             if lead_id in self.insight_history:
@@ -522,131 +517,160 @@ class ConversationIntelligenceService:
     def _compile_objection_patterns(self) -> Dict[str, List[Dict[str, Any]]]:
         """Compile objection detection patterns for performance."""
         return {
-            'pricing': [
+            "pricing": [
                 {
-                    'regex': r'(too expensive|too pricey|cost too much|can\'t afford|overpriced|budget)',
-                    'confidence': 0.85,
-                    'responses': [
+                    "regex": r"(too expensive|too pricey|cost too much|can\'t afford|overpriced|budget)",
+                    "confidence": 0.85,
+                    "responses": [
                         "I understand budget is important. Let's discuss the value this property offers.",
                         "Let's explore financing options that might work for your situation.",
                         "What specific price range would you feel comfortable with?",
-                        "The market data shows this property is competitively priced for the area."
-                    ]
+                        "The market data shows this property is competitively priced for the area.",
+                    ],
                 }
             ],
-            'timing': [
+            "timing": [
                 {
-                    'regex': r'(not ready|need time|too soon|wait|maybe later|in a few months)',
-                    'confidence': 0.80,
-                    'responses': [
+                    "regex": r"(not ready|need time|too soon|wait|maybe later|in a few months)",
+                    "confidence": 0.80,
+                    "responses": [
                         "I understand timing is crucial. What would need to happen for the timing to be right?",
                         "While you're considering, would you like me to keep you updated on similar properties?",
                         "What timeframe are you thinking would work better for you?",
-                        "Sometimes the right property helps clarify timing. Would you like to explore this one?"
-                    ]
+                        "Sometimes the right property helps clarify timing. Would you like to explore this one?",
+                    ],
                 }
             ],
-            'financial': [
+            "financial": [
                 {
-                    'regex': r'(credit|loan|mortgage|down payment|financing|pre.?approved)',
-                    'confidence': 0.75,
-                    'responses': [
+                    "regex": r"(credit|loan|mortgage|down payment|financing|pre.?approved)",
+                    "confidence": 0.75,
+                    "responses": [
                         "Let me connect you with our preferred lenders who can help with financing.",
                         "Have you had a chance to speak with a mortgage specialist yet?",
                         "There are several financing programs available that might help.",
-                        "Understanding your financing options is a great first step."
-                    ]
+                        "Understanding your financing options is a great first step.",
+                    ],
                 }
             ],
-            'property_condition': [
+            "property_condition": [
                 {
-                    'regex': r'(needs work|repairs|condition|old|outdated|fix|renovate)',
-                    'confidence': 0.85,
-                    'responses': [
+                    "regex": r"(needs work|repairs|condition|old|outdated|fix|renovate)",
+                    "confidence": 0.85,
+                    "responses": [
                         "Properties that need some work can offer great value opportunities.",
                         "We can get estimates from reliable contractors to help you budget.",
                         "What specific concerns do you have about the property condition?",
-                        "Sometimes cosmetic updates can transform a property's potential."
-                    ]
+                        "Sometimes cosmetic updates can transform a property's potential.",
+                    ],
                 }
             ],
-            'competition': [
+            "competition": [
                 {
-                    'regex': r'(other agent|another realtor|already working|someone else)',
-                    'confidence': 0.90,
-                    'responses': [
+                    "regex": r"(other agent|another realtor|already working|someone else)",
+                    "confidence": 0.90,
+                    "responses": [
                         "I respect that you're working with someone else. I'm here if you need a second opinion.",
                         "Multiple perspectives can be valuable in real estate decisions.",
                         "I understand you have other options. What brought you to consider this property?",
-                        "My goal is to provide the best service, regardless of who you choose to work with."
-                    ]
+                        "My goal is to provide the best service, regardless of who you choose to work with.",
+                    ],
                 }
             ],
-            'process': [
+            "process": [
                 {
-                    'regex': r'(complicated|paperwork|process|don\'t understand|confused|overwhelming)',
-                    'confidence': 0.80,
-                    'responses': [
+                    "regex": r"(complicated|paperwork|process|don\'t understand|confused|overwhelming)",
+                    "confidence": 0.80,
+                    "responses": [
                         "I'll walk you through every step to make this as simple as possible.",
                         "The process can seem complex, but I'll handle the details for you.",
                         "What part of the process would you like me to explain first?",
-                        "I've helped many clients through this - you're in experienced hands."
-                    ]
+                        "I've helped many clients through this - you're in experienced hands.",
+                    ],
                 }
             ],
-            'commitment': [
+            "commitment": [
                 {
-                    'regex': r'(big decision|think about it|need to discuss|talk to spouse|family)',
-                    'confidence': 0.75,
-                    'responses': [
+                    "regex": r"(big decision|think about it|need to discuss|talk to spouse|family)",
+                    "confidence": 0.75,
+                    "responses": [
                         "Absolutely, this is a major decision. What questions can I answer to help?",
                         "I encourage you to discuss this with your family. What concerns might they have?",
                         "Take your time. I'm here to provide any information you need.",
-                        "What additional information would help you feel more confident about this decision?"
-                    ]
+                        "What additional information would help you feel more confident about this decision?",
+                    ],
                 }
             ],
-            'trust': [
+            "trust": [
                 {
-                    'regex': r'(don\'t trust|suspicious|scam|not sure about you|prove)',
-                    'confidence': 0.85,
-                    'responses': [
+                    "regex": r"(don\'t trust|suspicious|scam|not sure about you|prove)",
+                    "confidence": 0.85,
+                    "responses": [
                         "I completely understand the need to feel confident in your agent. Here are my credentials...",
                         "Trust is earned. Would you like to speak with some of my recent clients?",
                         "I'm licensed and insured. I can provide references and proof of my track record.",
-                        "Your caution is smart. What would help you feel more comfortable working together?"
-                    ]
+                        "Your caution is smart. What would help you feel more comfortable working together?",
+                    ],
                 }
-            ]
+            ],
         }
 
     def _build_sentiment_lexicon(self) -> Dict[str, float]:
         """Build sentiment lexicon for real estate conversations."""
         return {
             # Very Positive
-            'love': 0.8, 'perfect': 0.9, 'amazing': 0.8, 'excited': 0.8,
-            'beautiful': 0.7, 'excellent': 0.8, 'fantastic': 0.8,
-
+            "love": 0.8,
+            "perfect": 0.9,
+            "amazing": 0.8,
+            "excited": 0.8,
+            "beautiful": 0.7,
+            "excellent": 0.8,
+            "fantastic": 0.8,
             # Positive
-            'good': 0.5, 'nice': 0.4, 'like': 0.4, 'interested': 0.6,
-            'comfortable': 0.5, 'satisfied': 0.6, 'happy': 0.7,
-
+            "good": 0.5,
+            "nice": 0.4,
+            "like": 0.4,
+            "interested": 0.6,
+            "comfortable": 0.5,
+            "satisfied": 0.6,
+            "happy": 0.7,
             # Neutral to Slightly Positive
-            'okay': 0.1, 'fine': 0.1, 'alright': 0.1, 'consider': 0.2,
-
+            "okay": 0.1,
+            "fine": 0.1,
+            "alright": 0.1,
+            "consider": 0.2,
             # Negative
-            'concern': -0.4, 'worried': -0.5, 'problem': -0.6, 'issue': -0.5,
-            'difficult': -0.5, 'hard': -0.4, 'challenging': -0.4,
-
+            "concern": -0.4,
+            "worried": -0.5,
+            "problem": -0.6,
+            "issue": -0.5,
+            "difficult": -0.5,
+            "hard": -0.4,
+            "challenging": -0.4,
             # Very Negative
-            'hate': -0.8, 'terrible': -0.9, 'awful': -0.8, 'horrible': -0.8,
-            'disgusted': -0.8, 'furious': -0.9, 'disappointed': -0.7,
-
+            "hate": -0.8,
+            "terrible": -0.9,
+            "awful": -0.8,
+            "horrible": -0.8,
+            "disgusted": -0.8,
+            "furious": -0.9,
+            "disappointed": -0.7,
             # Real Estate Specific Sentiment
-            'motivated': 0.6, 'urgent': 0.3, 'flexible': 0.4, 'negotiable': 0.3,
-            'overpriced': -0.6, 'expensive': -0.4, 'cheap': -0.3,
-            'spacious': 0.5, 'cozy': 0.4, 'cramped': -0.6, 'tiny': -0.5,
-            'modern': 0.4, 'updated': 0.5, 'outdated': -0.5, 'old': -0.3
+            "motivated": 0.6,
+            "urgent": 0.3,
+            "flexible": 0.4,
+            "negotiable": 0.3,
+            "overpriced": -0.6,
+            "expensive": -0.4,
+            "cheap": -0.3,
+            "spacious": 0.5,
+            "cozy": 0.4,
+            "cramped": -0.6,
+            "tiny": -0.5,
+            "modern": 0.4,
+            "updated": 0.5,
+            "outdated": -0.5,
+            "old": -0.3,
         }
 
     def _calculate_sentiment_score(self, text: str) -> float:
@@ -682,8 +706,8 @@ class ConversationIntelligenceService:
             return "stable"
 
         # Compare first third to last third
-        first_third = scores[:len(scores)//3]
-        last_third = scores[-len(scores)//3:]
+        first_third = scores[: len(scores) // 3]
+        last_third = scores[-len(scores) // 3 :]
 
         first_avg = sum(first_third) / len(first_third)
         last_avg = sum(last_third) / len(last_third)
@@ -705,7 +729,7 @@ class ConversationIntelligenceService:
         # Calculate standard deviation
         mean_score = sum(scores) / len(scores)
         variance = sum((score - mean_score) ** 2 for score in scores) / len(scores)
-        std_dev = variance ** 0.5
+        std_dev = variance**0.5
 
         # Normalize to 0-1 scale (assuming max reasonable std dev is 1.0)
         return min(std_dev, 1.0)
@@ -719,9 +743,7 @@ class ConversationIntelligenceService:
         else:
             return "low"
 
-    def _generate_sentiment_recommendations(
-        self, overall: float, trend: str, risk: str
-    ) -> List[str]:
+    def _generate_sentiment_recommendations(self, overall: float, trend: str, risk: str) -> List[str]:
         """Generate recommendations based on sentiment analysis."""
         recommendations = []
 
@@ -797,7 +819,7 @@ class ConversationIntelligenceService:
                         difficulty="beginner" if score > 40 else "intermediate",
                         estimated_time_minutes=30,
                         learning_objectives=[f"Enhance {area.replace('_', ' ')} techniques"],
-                        suggested_practice=f"Practice {area.replace('_', ' ')} scenarios"
+                        suggested_practice=f"Practice {area.replace('_', ' ')} scenarios",
                     )
                     opportunities.append(opportunity)
 
@@ -806,11 +828,11 @@ class ConversationIntelligenceService:
     def _map_to_coaching_area(self, metric: str) -> Optional[CoachingArea]:
         """Map quality metric to coaching area."""
         mapping = {
-            'engagement': CoachingArea.RAPPORT_BUILDING,
-            'rapport': CoachingArea.RAPPORT_BUILDING,
-            'response_effectiveness': CoachingArea.ACTIVE_LISTENING,
-            'professionalism': CoachingArea.VALUE_PROPOSITION,
-            'message_depth': CoachingArea.ACTIVE_LISTENING
+            "engagement": CoachingArea.RAPPORT_BUILDING,
+            "rapport": CoachingArea.RAPPORT_BUILDING,
+            "response_effectiveness": CoachingArea.ACTIVE_LISTENING,
+            "professionalism": CoachingArea.VALUE_PROPOSITION,
+            "message_depth": CoachingArea.ACTIVE_LISTENING,
         }
         return mapping.get(metric)
 
@@ -822,38 +844,29 @@ class ConversationIntelligenceService:
         # Placeholder - would integrate with Claude Assistant for recommendations
         return []
 
-    async def _get_behavioral_correlation(
-        self, lead_id: str, location_id: str
-    ) -> Optional[Dict[str, Any]]:
+    async def _get_behavioral_correlation(self, lead_id: str, location_id: str) -> Optional[Dict[str, Any]]:
         """Get behavioral prediction correlation."""
         try:
             if self.behavior_service:
-                prediction = await self.behavior_service.predict_behavior(
-                    lead_id=lead_id, location_id=location_id
-                )
+                prediction = await self.behavior_service.predict_behavior(lead_id=lead_id, location_id=location_id)
                 if prediction:
                     return {
-                        'behavior_category': prediction.behavior_category,
-                        'engagement_score': prediction.engagement_score_7d,
-                        'churn_risk': prediction.churn_risk_score
+                        "behavior_category": prediction.behavior_category,
+                        "engagement_score": prediction.engagement_score_7d,
+                        "churn_risk": prediction.churn_risk_score,
                     }
         except Exception as e:
             logger.error(f"Behavioral correlation failed: {e}")
 
         return None
 
-    async def _analyze_intent_correlation(
-        self, conversation: List[Dict], lead_id: str
-    ) -> Optional[Dict[str, Any]]:
+    async def _analyze_intent_correlation(self, conversation: List[Dict], lead_id: str) -> Optional[Dict[str, Any]]:
         """Analyze intent correlation with conversation."""
         try:
             if self.intent_decoder:
                 # Get recent messages for intent analysis
                 recent_messages = conversation[-5:] if len(conversation) > 5 else conversation
-                intent_data = await self.intent_decoder.decode_intent(
-                    messages=recent_messages,
-                    lead_id=lead_id
-                )
+                intent_data = await self.intent_decoder.decode_intent(messages=recent_messages, lead_id=lead_id)
                 return intent_data
         except Exception as e:
             logger.error(f"Intent correlation failed: {e}")
@@ -861,9 +874,7 @@ class ConversationIntelligenceService:
         return None
 
     # Caching and utility methods
-    async def _get_cached_insight(
-        self, conversation_id: str, location_id: str
-    ) -> Optional[ConversationInsight]:
+    async def _get_cached_insight(self, conversation_id: str, location_id: str) -> Optional[ConversationInsight]:
         """Retrieve cached conversation insight."""
         try:
             cache_key = f"conversation_insight:{conversation_id}"
@@ -878,25 +889,21 @@ class ConversationIntelligenceService:
             logger.error(f"Cache retrieval failed: {e}")
             return None
 
-    async def _cache_insight(
-        self, conversation_id: str, location_id: str, insight: ConversationInsight
-    ) -> None:
+    async def _cache_insight(self, conversation_id: str, location_id: str, insight: ConversationInsight) -> None:
         """Cache conversation insight."""
         try:
             cache_key = f"conversation_insight:{conversation_id}"
             # Would serialize insight to cacheable format
             cacheable_data = {
-                'conversation_id': insight.conversation_id,
-                'analyzed_at': insight.analyzed_at.isoformat(),
-                'processing_time_ms': insight.processing_time_ms,
-                'objection_count': len(insight.objections_detected),
-                'overall_sentiment': insight.sentiment_timeline.overall_sentiment,
-                'quality_score': insight.quality_metrics.overall_score
+                "conversation_id": insight.conversation_id,
+                "analyzed_at": insight.analyzed_at.isoformat(),
+                "processing_time_ms": insight.processing_time_ms,
+                "objection_count": len(insight.objections_detected),
+                "overall_sentiment": insight.sentiment_timeline.overall_sentiment,
+                "quality_score": insight.quality_metrics.overall_score,
             }
 
-            await self.cache.set(
-                cache_key, cacheable_data, ttl=CACHE_TTL_INSIGHTS, location_id=location_id
-            )
+            await self.cache.set(cache_key, cacheable_data, ttl=CACHE_TTL_INSIGHTS, location_id=location_id)
         except Exception as e:
             logger.error(f"Cache storage failed: {e}")
 
@@ -905,16 +912,16 @@ class ConversationIntelligenceService:
         try:
             if lead_id not in self.insight_history:
                 self.insight_history[lead_id] = deque(maxlen=INSIGHT_HISTORY_SIZE)
-                self.metrics['insight_history_leads'] += 1
+                self.metrics["insight_history_leads"] += 1
 
             # Store simplified version in history
             history_entry = {
-                'conversation_id': insight.conversation_id,
-                'analyzed_at': insight.analyzed_at.isoformat(),
-                'objection_count': len(insight.objections_detected),
-                'sentiment': insight.sentiment_timeline.overall_sentiment,
-                'quality': insight.quality_metrics.overall_score,
-                'processing_time_ms': insight.processing_time_ms
+                "conversation_id": insight.conversation_id,
+                "analyzed_at": insight.analyzed_at.isoformat(),
+                "objection_count": len(insight.objections_detected),
+                "sentiment": insight.sentiment_timeline.overall_sentiment,
+                "quality": insight.quality_metrics.overall_score,
+                "processing_time_ms": insight.processing_time_ms,
             }
 
             self.insight_history[lead_id].append(history_entry)
@@ -926,34 +933,34 @@ class ConversationIntelligenceService:
         try:
             # Publish objection alerts
             for objection in insight.objections_detected:
-                if objection.severity in ['medium', 'high']:
+                if objection.severity in ["medium", "high"]:
                     await self.event_publisher.publish_objection_detected(
                         lead_id=insight.lead_id,
                         location_id=insight.location_id,
                         objection_type=objection.objection_type.value,
                         severity=objection.severity,
-                        confidence=objection.confidence
+                        confidence=objection.confidence,
                     )
 
             # Publish sentiment warnings
-            if insight.sentiment_timeline.risk_level == 'high':
+            if insight.sentiment_timeline.risk_level == "high":
                 await self.event_publisher.publish_sentiment_warning(
                     lead_id=insight.lead_id,
                     location_id=insight.location_id,
                     current_sentiment=insight.sentiment_timeline.overall_sentiment,
                     trend=insight.sentiment_timeline.trend,
-                    risk_level=insight.sentiment_timeline.risk_level
+                    risk_level=insight.sentiment_timeline.risk_level,
                 )
 
             # Publish coaching opportunities
             for opportunity in insight.quality_metrics.coaching_opportunities:
-                if opportunity.priority == 'high':
+                if opportunity.priority == "high":
                     await self.event_publisher.publish_coaching_opportunity(
                         lead_id=insight.lead_id,
                         location_id=insight.location_id,
                         area=opportunity.area.value,
                         priority=opportunity.priority,
-                        description=opportunity.description
+                        description=opportunity.description,
                     )
 
         except Exception as e:
@@ -970,7 +977,7 @@ class ConversationIntelligenceService:
             volatility=0.0,
             data_points=[],
             risk_level="low",
-            recommendations=["Sentiment analysis unavailable"]
+            recommendations=["Sentiment analysis unavailable"],
         )
 
     def _fallback_quality(self) -> ConversationQualityMetrics:
@@ -986,15 +993,11 @@ class ConversationIntelligenceService:
             active_listening_indicators=0,
             strengths=[],
             improvement_areas=[],
-            coaching_opportunities=[]
+            coaching_opportunities=[],
         )
 
     def _create_fallback_insight(
-        self,
-        conversation_id: str,
-        lead_id: str,
-        location_id: str,
-        conversation_history: List[Dict]
+        self, conversation_id: str, lead_id: str, location_id: str, conversation_history: List[Dict]
     ) -> ConversationInsight:
         """Create fallback insight when analysis fails."""
         return ConversationInsight(
@@ -1007,7 +1010,7 @@ class ConversationIntelligenceService:
             sentiment_timeline=self._fallback_sentiment(),
             quality_metrics=self._fallback_quality(),
             response_recommendations=[],
-            message_count=len(conversation_history)
+            message_count=len(conversation_history),
         )
 
     def _extract_objection_context(self, conversation: List[Dict], message_index: int) -> str:
@@ -1016,45 +1019,46 @@ class ConversationIntelligenceService:
         end = min(len(conversation), message_index + 2)
         context_messages = conversation[start:end]
 
-        context_text = " | ".join([
-            f"{msg.get('direction', 'unknown')}: {msg.get('content', '')[:50]}..."
-            for msg in context_messages
-        ])
+        context_text = " | ".join(
+            [f"{msg.get('direction', 'unknown')}: {msg.get('content', '')[:50]}..." for msg in context_messages]
+        )
 
         return context_text
 
     def _determine_objection_severity(self, content: str) -> str:
         """Determine objection severity from message content."""
         # Simple heuristic based on intensity words
-        high_intensity = ['never', 'absolutely not', 'impossible', 'no way', 'hate']
-        medium_intensity = ['concerned', 'worried', 'problem', 'difficult', 'issue']
+        high_intensity = ["never", "absolutely not", "impossible", "no way", "hate"]
+        medium_intensity = ["concerned", "worried", "problem", "difficult", "issue"]
 
         content_lower = content.lower()
 
         if any(word in content_lower for word in high_intensity):
-            return 'high'
+            return "high"
         elif any(word in content_lower for word in medium_intensity):
-            return 'medium'
+            return "medium"
         else:
-            return 'low'
+            return "low"
 
     def _update_metrics(self, processing_time_ms: float) -> None:
         """Update performance metrics."""
-        self.metrics['total_analyses'] += 1
-        total_time = self.metrics['avg_processing_time_ms'] * (self.metrics['total_analyses'] - 1) + processing_time_ms
-        self.metrics['avg_processing_time_ms'] = total_time / self.metrics['total_analyses']
+        self.metrics["total_analyses"] += 1
+        total_time = self.metrics["avg_processing_time_ms"] * (self.metrics["total_analyses"] - 1) + processing_time_ms
+        self.metrics["avg_processing_time_ms"] = total_time / self.metrics["total_analyses"]
 
         # Update cache hit rate
-        total_requests = self.metrics['cache_hits'] + self.metrics['cache_misses']
+        total_requests = self.metrics["cache_hits"] + self.metrics["cache_misses"]
         if total_requests > 0:
-            self.metrics['cache_hit_rate'] = self.metrics['cache_hits'] / total_requests
+            self.metrics["cache_hit_rate"] = self.metrics["cache_hits"] / total_requests
 
     def get_metrics(self) -> Dict[str, Any]:
         """Get current performance metrics."""
         return {
             **self.metrics,
-            'target_processing_time_ms': TARGET_PROCESSING_TIME_MS,
-            'performance_status': 'good' if self.metrics['avg_processing_time_ms'] < TARGET_PROCESSING_TIME_MS else 'degraded'
+            "target_processing_time_ms": TARGET_PROCESSING_TIME_MS,
+            "performance_status": "good"
+            if self.metrics["avg_processing_time_ms"] < TARGET_PROCESSING_TIME_MS
+            else "degraded",
         }
 
 
@@ -1083,21 +1087,17 @@ async def health_check() -> Dict[str, Any]:
         metrics = service.get_metrics()
 
         return {
-            'service': 'ConversationIntelligenceService',
-            'status': 'healthy',
-            'version': '2.3.0',
-            'metrics': metrics,
-            'dependencies': {
-                'cache_service': 'connected',
-                'event_publisher': 'connected',
-                'claude_assistant': 'connected',
-                'intent_decoder': 'connected',
-                'predictive_behavior_service': 'lazy_loaded'
-            }
+            "service": "ConversationIntelligenceService",
+            "status": "healthy",
+            "version": "2.3.0",
+            "metrics": metrics,
+            "dependencies": {
+                "cache_service": "connected",
+                "event_publisher": "connected",
+                "claude_assistant": "connected",
+                "intent_decoder": "connected",
+                "predictive_behavior_service": "lazy_loaded",
+            },
         }
     except Exception as e:
-        return {
-            'service': 'ConversationIntelligenceService',
-            'status': 'unhealthy',
-            'error': str(e)
-        }
+        return {"service": "ConversationIntelligenceService", "status": "unhealthy", "error": str(e)}

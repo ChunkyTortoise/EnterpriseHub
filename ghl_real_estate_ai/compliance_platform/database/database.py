@@ -1,8 +1,7 @@
-
 import logging
 from typing import AsyncGenerator
 
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from ghl_real_estate_ai.ghl_utils.config import settings
@@ -35,6 +34,7 @@ AsyncSessionLocal = async_sessionmaker(
     autoflush=False,
 )
 
+
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency for FastAPI to get DB session.
@@ -49,12 +49,14 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         finally:
             await session.close()
 
+
 async def init_db():
     """
     Initialize database tables.
     Use Alembic for production migrations, but this is useful for dev/tests.
     """
     from .models import Base
+
     async with engine.begin() as conn:
         # await conn.run_sync(Base.metadata.drop_all) # Dangerous!
         await conn.run_sync(Base.metadata.create_all)

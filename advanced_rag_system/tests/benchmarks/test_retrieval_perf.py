@@ -7,23 +7,22 @@ Tests retrieval system latency and throughput according to targets:
 - Concurrent retrieval performance validation
 """
 
-import pytest
 import asyncio
-import time
-import numpy as np
-from typing import List, Dict, Any
-import sys
 import os
+import sys
+import time
+from typing import Any, Dict, List
+
+import numpy as np
+import pytest
 
 # Add the project root to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
 
 try:
-    from ghl_real_estate_ai.core.rag_engine import VectorStore, SearchResult
-    from ai_ml_showcase.rag_excellence.advanced_rag_orchestrator import (
-        ProductionRAGOrchestrator,
-        HybridSearchPipeline
-    )
+    from ai_ml_showcase.rag_excellence.advanced_rag_orchestrator import HybridSearchPipeline, ProductionRAGOrchestrator
+
+    from ghl_real_estate_ai.core.rag_engine import SearchResult, VectorStore
 except ImportError:
     # Fallback mock classes for testing environment
     class SearchResult:
@@ -47,7 +46,7 @@ except ImportError:
                     source=f"doc_{i}",
                     id=f"id_{i}",
                     distance=0.1 * i,
-                    metadata={"category": "test"}
+                    metadata={"category": "test"},
                 )
                 for i in range(min(n_results, 10))
             ]
@@ -64,10 +63,10 @@ except ImportError:
             await asyncio.sleep(0.025 if rerank else 0.015)  # 25ms with rerank, 15ms without
             return [
                 {
-                    'content': f"Hybrid result {i} for {query}",
-                    'semantic_score': 0.9 - (i * 0.1),
-                    'keyword_score': 0.8 - (i * 0.1),
-                    'hybrid_score': 0.85 - (i * 0.1)
+                    "content": f"Hybrid result {i} for {query}",
+                    "semantic_score": 0.9 - (i * 0.1),
+                    "keyword_score": 0.8 - (i * 0.1),
+                    "hybrid_score": 0.85 - (i * 0.1),
                 }
                 for i in range(k)
             ]
@@ -102,7 +101,7 @@ class TestRetrievalPerformance:
             "Best neighborhoods for families with children",
             "Commercial real estate investment strategies",
             "Home staging tips for quick sales",
-            "First-time homebuyer programs available"
+            "First-time homebuyer programs available",
         ]
 
     @pytest.mark.benchmark
@@ -126,7 +125,7 @@ class TestRetrievalPerformance:
 
             # Validate results
             assert len(results) > 0, "No results returned"
-            assert hasattr(results[0], 'text'), "Results missing required fields"
+            assert hasattr(results[0], "text"), "Results missing required fields"
 
         # Calculate percentiles
         p50 = np.percentile(latencies, 50)
@@ -145,12 +144,7 @@ class TestRetrievalPerformance:
         stretch_goal_met = p95 < 10
         print(f"  Stretch goal (<10ms p95): {'✅ MET' if stretch_goal_met else '⚠️  NOT MET'}")
 
-        return {
-            'p50': p50,
-            'p95': p95,
-            'p99': p99,
-            'stretch_goal_met': stretch_goal_met
-        }
+        return {"p50": p50, "p95": p95, "p99": p99, "stretch_goal_met": stretch_goal_met}
 
     @pytest.mark.benchmark
     @pytest.mark.asyncio
@@ -166,11 +160,7 @@ class TestRetrievalPerformance:
         # Test with re-ranking
         for query in test_queries:
             start = time.perf_counter()
-            results = await hybrid_retriever.hybrid_search(
-                query,
-                k=10,
-                rerank=True
-            )
+            results = await hybrid_retriever.hybrid_search(query, k=10, rerank=True)
             latencies_with_rerank.append((time.perf_counter() - start) * 1000)
 
             assert len(results) > 0, "No hybrid results returned"
@@ -178,11 +168,7 @@ class TestRetrievalPerformance:
         # Test without re-ranking
         for query in test_queries:
             start = time.perf_counter()
-            results = await hybrid_retriever.hybrid_search(
-                query,
-                k=10,
-                rerank=False
-            )
+            results = await hybrid_retriever.hybrid_search(query, k=10, rerank=False)
             latencies_without_rerank.append((time.perf_counter() - start) * 1000)
 
         # Calculate percentiles for both modes
@@ -207,17 +193,17 @@ class TestRetrievalPerformance:
         print(f"  Stretch goal (<35ms p95): {'✅ MET' if stretch_goal_met else '⚠️  NOT MET'}")
 
         return {
-            'with_rerank': {
-                'p50': np.percentile(latencies_with_rerank, 50),
-                'p95': p95_with_rerank,
-                'p99': np.percentile(latencies_with_rerank, 99)
+            "with_rerank": {
+                "p50": np.percentile(latencies_with_rerank, 50),
+                "p95": p95_with_rerank,
+                "p99": np.percentile(latencies_with_rerank, 99),
             },
-            'without_rerank': {
-                'p50': np.percentile(latencies_without_rerank, 50),
-                'p95': p95_without_rerank,
-                'p99': np.percentile(latencies_without_rerank, 99)
+            "without_rerank": {
+                "p50": np.percentile(latencies_without_rerank, 50),
+                "p95": p95_without_rerank,
+                "p99": np.percentile(latencies_without_rerank, 99),
             },
-            'stretch_goal_met': stretch_goal_met
+            "stretch_goal_met": stretch_goal_met,
         }
 
     @pytest.mark.benchmark
@@ -252,11 +238,11 @@ class TestRetrievalPerformance:
             throughput_per_min = throughput_per_sec * 60
 
             results[concurrency] = {
-                'avg_latency_ms': avg_latency,
-                'p95_latency_ms': p95_latency,
-                'throughput_per_sec': throughput_per_sec,
-                'throughput_per_min': throughput_per_min,
-                'total_time': total_time
+                "avg_latency_ms": avg_latency,
+                "p95_latency_ms": p95_latency,
+                "throughput_per_sec": throughput_per_sec,
+                "throughput_per_min": throughput_per_min,
+                "total_time": total_time,
             }
 
             print(f"\nConcurrency {concurrency}:")
@@ -269,8 +255,8 @@ class TestRetrievalPerformance:
                 assert throughput_per_min > 1000, f"Throughput {throughput_per_min:.0f} < 1000 req/min target"
 
         # Find optimal concurrency level
-        best_concurrency = max(results.keys(), key=lambda x: results[x]['throughput_per_min'])
-        best_throughput = results[best_concurrency]['throughput_per_min']
+        best_concurrency = max(results.keys(), key=lambda x: results[x]["throughput_per_min"])
+        best_throughput = results[best_concurrency]["throughput_per_min"]
 
         print(f"\nOptimal concurrency: {best_concurrency} ({best_throughput:.0f} requests/min)")
 
@@ -305,19 +291,19 @@ class TestRetrievalPerformance:
             p95_latency = np.percentile(latencies, 95)
 
             results[top_k] = {
-                'avg_latency_ms': avg_latency,
-                'p95_latency_ms': p95_latency,
-                'latency_per_result': avg_latency / top_k
+                "avg_latency_ms": avg_latency,
+                "p95_latency_ms": p95_latency,
+                "latency_per_result": avg_latency / top_k,
             }
 
             print(f"\nTop-K {top_k}:")
             print(f"  Avg latency: {avg_latency:.2f}ms")
             print(f"  P95 latency: {p95_latency:.2f}ms")
-            print(f"  Latency per result: {avg_latency/top_k:.3f}ms")
+            print(f"  Latency per result: {avg_latency / top_k:.3f}ms")
 
         # Analyze scaling efficiency
-        base_latency = results[1]['avg_latency_ms']
-        scaling_factors = {k: v['avg_latency_ms'] / base_latency for k, v in results.items()}
+        base_latency = results[1]["avg_latency_ms"]
+        scaling_factors = {k: v["avg_latency_ms"] / base_latency for k, v in results.items()}
 
         print(f"\nScaling Analysis:")
         for k, factor in scaling_factors.items():
@@ -372,10 +358,10 @@ class TestRetrievalPerformance:
         print(f"  Cache effectiveness: {'✅ EFFECTIVE' if cache_effective else '⚠️  LIMITED'}")
 
         return {
-            'miss_latency_ms': avg_miss_latency,
-            'hit_latency_ms': avg_hit_latency,
-            'improvement_percent': cache_improvement,
-            'cache_effective': cache_effective
+            "miss_latency_ms": avg_miss_latency,
+            "hit_latency_ms": avg_hit_latency,
+            "improvement_percent": cache_improvement,
+            "cache_effective": cache_effective,
         }
 
 

@@ -7,12 +7,13 @@ Follows SOLID principles and enables runtime strategy switching.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Any
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 
 class ConfidenceLevel(Enum):
     """Confidence level indicators for scoring results"""
+
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
@@ -25,6 +26,7 @@ class ScoringResult:
 
     Provides transparent AI decision making with explainable factors.
     """
+
     overall_score: float  # 0-100 percentage
     confidence_level: ConfidenceLevel
     budget_match: float  # 0-100 budget alignment score
@@ -46,12 +48,12 @@ class ScoringResult:
     def to_legacy_format(self) -> Dict[str, Any]:
         """Convert to legacy format for backward compatibility"""
         return {
-            'match_score': int(self.overall_score),
-            'budget_match': self.budget_match > 80,
-            'location_match': self.location_match > 80,
-            'features_match': self.feature_match > 80,
-            'match_reasons': self.reasoning,
-            'confidence_level': self.confidence_level.value
+            "match_score": int(self.overall_score),
+            "budget_match": self.budget_match > 80,
+            "location_match": self.location_match > 80,
+            "features_match": self.feature_match > 80,
+            "match_reasons": self.reasoning,
+            "confidence_level": self.confidence_level.value,
         }
 
 
@@ -64,11 +66,7 @@ class PropertyScorer(ABC):
     """
 
     @abstractmethod
-    def calculate_score(
-        self,
-        property_data: Dict[str, Any],
-        lead_preferences: Dict[str, Any]
-    ) -> ScoringResult:
+    def calculate_score(self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any]) -> ScoringResult:
         """
         Calculate property match score against lead preferences.
 
@@ -85,11 +83,7 @@ class PropertyScorer(ABC):
         pass
 
     @abstractmethod
-    def validate_inputs(
-        self,
-        property_data: Dict[str, Any],
-        lead_preferences: Dict[str, Any]
-    ) -> bool:
+    def validate_inputs(self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any]) -> bool:
         """
         Validate that inputs are sufficient for scoring.
 
@@ -108,12 +102,7 @@ class PropertyScorer(ABC):
 
     def get_performance_characteristics(self) -> Dict[str, str]:
         """Get performance metadata for strategy selection"""
-        return {
-            'speed': 'unknown',
-            'accuracy': 'unknown',
-            'complexity': 'unknown',
-            'use_case': 'general'
-        }
+        return {"speed": "unknown", "accuracy": "unknown", "complexity": "unknown", "use_case": "general"}
 
 
 class TrainableScorer(PropertyScorer):
@@ -148,11 +137,7 @@ class AdaptiveScorer(PropertyScorer):
 
     @abstractmethod
     def update_preferences(
-        self,
-        lead_id: str,
-        property_id: str,
-        interaction_type: str,
-        feedback: Dict[str, Any]
+        self, lead_id: str, property_id: str, interaction_type: str, feedback: Dict[str, Any]
     ) -> None:
         """
         Update scoring based on user interaction feedback.
@@ -186,6 +171,7 @@ class ScoringContext:
 
     Provides context for strategy selection and execution.
     """
+
     lead_id: Optional[str] = None
     agent_id: Optional[str] = None
     market_area: Optional[str] = None

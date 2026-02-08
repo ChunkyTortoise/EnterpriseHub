@@ -222,34 +222,144 @@ class RelevanceScorer:
             return paragraphs
 
         # Fall back to sentence splitting
-        sentences = re.split(r'(?<=[.!?])\s+', content)
+        sentences = re.split(r"(?<=[.!?])\s+", content)
         return [s.strip() for s in sentences if s.strip()]
 
-    def _keyword_score(
-        self, segments: List[str], query: str
-    ) -> List[RelevanceScore]:
+    def _keyword_score(self, segments: List[str], query: str) -> List[RelevanceScore]:
         """Score segments based on keyword overlap."""
         query_words = set(query.lower().split())
         # Remove common stop words
-        stop_words = {"the", "a", "an", "is", "are", "was", "were", "be", "been",
-                      "being", "have", "has", "had", "do", "does", "did", "will",
-                      "would", "could", "should", "may", "might", "must", "shall",
-                      "can", "need", "dare", "ought", "used", "to", "of", "in",
-                      "for", "on", "with", "at", "by", "from", "as", "into",
-                      "through", "during", "before", "after", "above", "below",
-                      "between", "under", "and", "but", "or", "yet", "so",
-                      "if", "because", "although", "though", "while", "where",
-                      "when", "that", "which", "who", "whom", "whose", "what",
-                      "this", "these", "those", "i", "you", "he", "she", "it",
-                      "we", "they", "me", "him", "her", "us", "them", "my",
-                      "your", "his", "her", "its", "our", "their", "mine",
-                      "yours", "hers", "ours", "theirs", "myself", "yourself",
-                      "himself", "herself", "itself", "ourselves", "yourselves",
-                      "themselves", "what", "which", "who", "when", "where",
-                      "why", "how", "all", "any", "both", "each", "few",
-                      "more", "most", "other", "some", "such", "no", "nor",
-                      "not", "only", "own", "same", "than", "too", "very",
-                      "just", "now"}
+        stop_words = {
+            "the",
+            "a",
+            "an",
+            "is",
+            "are",
+            "was",
+            "were",
+            "be",
+            "been",
+            "being",
+            "have",
+            "has",
+            "had",
+            "do",
+            "does",
+            "did",
+            "will",
+            "would",
+            "could",
+            "should",
+            "may",
+            "might",
+            "must",
+            "shall",
+            "can",
+            "need",
+            "dare",
+            "ought",
+            "used",
+            "to",
+            "of",
+            "in",
+            "for",
+            "on",
+            "with",
+            "at",
+            "by",
+            "from",
+            "as",
+            "into",
+            "through",
+            "during",
+            "before",
+            "after",
+            "above",
+            "below",
+            "between",
+            "under",
+            "and",
+            "but",
+            "or",
+            "yet",
+            "so",
+            "if",
+            "because",
+            "although",
+            "though",
+            "while",
+            "where",
+            "when",
+            "that",
+            "which",
+            "who",
+            "whom",
+            "whose",
+            "what",
+            "this",
+            "these",
+            "those",
+            "i",
+            "you",
+            "he",
+            "she",
+            "it",
+            "we",
+            "they",
+            "me",
+            "him",
+            "her",
+            "us",
+            "them",
+            "my",
+            "your",
+            "his",
+            "her",
+            "its",
+            "our",
+            "their",
+            "mine",
+            "yours",
+            "hers",
+            "ours",
+            "theirs",
+            "myself",
+            "yourself",
+            "himself",
+            "herself",
+            "itself",
+            "ourselves",
+            "yourselves",
+            "themselves",
+            "what",
+            "which",
+            "who",
+            "when",
+            "where",
+            "why",
+            "how",
+            "all",
+            "any",
+            "both",
+            "each",
+            "few",
+            "more",
+            "most",
+            "other",
+            "some",
+            "such",
+            "no",
+            "nor",
+            "not",
+            "only",
+            "own",
+            "same",
+            "than",
+            "too",
+            "very",
+            "just",
+            "now",
+        }
         query_words = query_words - stop_words
 
         scores = []
@@ -286,7 +396,7 @@ class RelevanceScorer:
 
         for i, segment in enumerate(segments):
             # Exponential decay based on position
-            position_score = 1.0 * (0.9 ** i)
+            position_score = 1.0 * (0.9**i)
 
             scores.append(
                 RelevanceScore(
@@ -343,9 +453,7 @@ class ExtractiveCompressor:
         original_tokens = self.token_counter.count(document.content)
 
         # Score segments
-        scores = self.scorer.score_segments(
-            document.content, query, ScoringMethod.KEYWORD
-        )
+        scores = self.scorer.score_segments(document.content, query, ScoringMethod.KEYWORD)
 
         # Sort by score descending
         scores.sort(key=lambda s: s.score, reverse=True)
@@ -389,9 +497,7 @@ class ExtractiveCompressor:
         compressed_content = self._build_content(all_segments, sorted_indices)
 
         compressed_tokens = self.token_counter.count(compressed_content)
-        compression_ratio = (
-            compressed_tokens / original_tokens if original_tokens > 0 else 1.0
-        )
+        compression_ratio = compressed_tokens / original_tokens if original_tokens > 0 else 1.0
 
         return CompressedDocument(
             original_id=document.id,
@@ -467,14 +573,10 @@ class AbstractiveCompressor:
             return self._truncate(document, target_tokens)
 
         try:
-            summary = await self._generate_summary(
-                document.content, query, target_tokens
-            )
+            summary = await self._generate_summary(document.content, query, target_tokens)
 
             compressed_tokens = self.token_counter.count(summary)
-            compression_ratio = (
-                compressed_tokens / original_tokens if original_tokens > 0 else 1.0
-            )
+            compression_ratio = compressed_tokens / original_tokens if original_tokens > 0 else 1.0
 
             return CompressedDocument(
                 original_id=document.id,
@@ -489,9 +591,7 @@ class AbstractiveCompressor:
             logger.error(f"Abstractive compression failed: {e}")
             return self._truncate(document, target_tokens)
 
-    async def _generate_summary(
-        self, content: str, query: str, max_tokens: int
-    ) -> str:
+    async def _generate_summary(self, content: str, query: str, max_tokens: int) -> str:
         """Generate summary using LLM."""
         # Placeholder implementation
         # In production, this would call an LLM API
@@ -507,9 +607,7 @@ class AbstractiveCompressor:
         truncated = " ".join(words) + "..."
 
         compressed_tokens = self.token_counter.count(truncated)
-        compression_ratio = (
-            compressed_tokens / original_tokens if original_tokens > 0 else 1.0
-        )
+        compression_ratio = compressed_tokens / original_tokens if original_tokens > 0 else 1.0
 
         return CompressedDocument(
             original_id=document.id,
@@ -614,9 +712,7 @@ class ContextualCompressor:
         budget_per_doc = budget // len(documents)
 
         # Calculate original token count
-        original_tokens = sum(
-            self.token_counter.count(doc.content) for doc in documents
-        )
+        original_tokens = sum(self.token_counter.count(doc.content) for doc in documents)
 
         # Compress each document
         compressed_docs = []
@@ -632,15 +728,11 @@ class ContextualCompressor:
                     document_id=document.document_id,
                     content=extracted.content,
                 )
-                compressed = await self.abstractive.compress(
-                    temp_doc, query, budget_per_doc
-                )
+                compressed = await self.abstractive.compress(temp_doc, query, budget_per_doc)
                 compressed.original_content = document.content
                 # Recalculate ratio against original
                 orig_tokens = self.token_counter.count(document.content)
-                compressed.compression_ratio = (
-                    compressed.token_count / orig_tokens if orig_tokens > 0 else 1.0
-                )
+                compressed.compression_ratio = compressed.token_count / orig_tokens if orig_tokens > 0 else 1.0
             else:
                 compressed = await self.extractive.compress(document, query, budget_per_doc)
 
@@ -648,17 +740,13 @@ class ContextualCompressor:
 
         # Calculate totals
         compressed_tokens = sum(doc.token_count for doc in compressed_docs)
-        overall_ratio = (
-            compressed_tokens / original_tokens if original_tokens > 0 else 1.0
-        )
+        overall_ratio = compressed_tokens / original_tokens if original_tokens > 0 else 1.0
 
         # Update stats
         self._stats["total_compressions"] += 1
         self._stats["total_tokens_saved"] += original_tokens - compressed_tokens
         n = self._stats["total_compressions"]
-        self._stats["avg_compression_ratio"] = (
-            self._stats["avg_compression_ratio"] * (n - 1) + overall_ratio
-        ) / n
+        self._stats["avg_compression_ratio"] = (self._stats["avg_compression_ratio"] * (n - 1) + overall_ratio) / n
 
         return CompressionResult(
             compressed_documents=compressed_docs,

@@ -2,23 +2,25 @@
 Tests for Predictive Analytics API endpoints.
 """
 
-import pytest
 import asyncio
-from datetime import datetime
-from unittest.mock import AsyncMock, patch, MagicMock
-from fastapi.testclient import TestClient
-from fastapi import status
 import json
+from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+from fastapi import status
+from fastapi.testclient import TestClient
 
 from ghl_real_estate_ai.api.main import app
-from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import (
-    PredictiveScore, LeadInsights, LeadPriority
-)
-from ghl_real_estate_ai.services.action_recommendations import (
-    ActionRecommendation, ActionSequence, TimingOptimization,
-    ActionType, CommunicationChannel
-)
 from ghl_real_estate_ai.ml.closing_probability_model import ModelMetrics
+from ghl_real_estate_ai.services.action_recommendations import (
+    ActionRecommendation,
+    ActionSequence,
+    ActionType,
+    CommunicationChannel,
+    TimingOptimization,
+)
+from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import LeadInsights, LeadPriority, PredictiveScore
 
 
 class TestPredictiveAnalyticsAPI:
@@ -47,17 +49,17 @@ class TestPredictiveAnalyticsAPI:
                 {"role": "user", "text": "I'm looking for a house"},
                 {"role": "assistant", "text": "I can help you with that!"},
                 {"role": "user", "text": "My budget is $500,000 and I need 3 bedrooms"},
-                {"role": "assistant", "text": "Great! Let me find some options."}
+                {"role": "assistant", "text": "Great! Let me find some options."},
             ],
             "extracted_preferences": {
                 "budget": "$500,000",
                 "bedrooms": "3",
                 "location": "downtown",
-                "timeline": "ASAP"
+                "timeline": "ASAP",
             },
             "created_at": datetime.now().isoformat(),
             "location": "downtown",
-            "lead_id": "test_lead_123"
+            "lead_id": "test_lead_123",
         }
 
     @pytest.fixture
@@ -81,7 +83,7 @@ class TestPredictiveAnalyticsAPI:
             estimated_revenue_potential=18750.0,
             effort_efficiency_score=375.0,
             model_confidence=0.82,
-            last_updated=datetime.now()
+            last_updated=datetime.now(),
         )
 
     @pytest.fixture
@@ -100,7 +102,7 @@ class TestPredictiveAnalyticsAPI:
             pricing_strategy_recommendation="Act quickly - prices rising",
             estimated_time_to_close=32,
             recommended_effort_level="intensive",
-            probability_of_churn=0.25
+            probability_of_churn=0.25,
         )
 
     @pytest.fixture
@@ -125,29 +127,22 @@ class TestPredictiveAnalyticsAPI:
             success_metrics=["Call connection rate", "Showing scheduled"],
             estimated_time_investment=30,
             effort_level="high",
-            roi_potential=18750.0
+            roi_potential=18750.0,
         )
 
     @pytest.mark.asyncio
     async def test_get_predictive_score_success(
-        self,
-        client,
-        auth_headers,
-        sample_conversation_request,
-        mock_predictive_score
+        self, client, auth_headers, sample_conversation_request, mock_predictive_score
     ):
         """Test successful predictive score retrieval."""
-        with patch('ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token') as mock_auth, \
-             patch('ghl_real_estate_ai.api.routes.predictive_analytics.predictive_scorer') as mock_scorer:
-
+        with (
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token") as mock_auth,
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.predictive_scorer") as mock_scorer,
+        ):
             mock_auth.return_value = {"role": "user", "user_id": "test"}
             mock_scorer.calculate_predictive_score.return_value = mock_predictive_score
 
-            response = client.post(
-                "/api/v1/predictive/score",
-                json=sample_conversation_request,
-                headers=auth_headers
-            )
+            response = client.post("/api/v1/predictive/score", json=sample_conversation_request, headers=auth_headers)
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
@@ -163,33 +158,24 @@ class TestPredictiveAnalyticsAPI:
     @pytest.mark.asyncio
     async def test_get_predictive_score_unauthorized(self, client, sample_conversation_request):
         """Test predictive score retrieval without authentication."""
-        response = client.post(
-            "/api/v1/predictive/score",
-            json=sample_conversation_request
-        )
+        response = client.post("/api/v1/predictive/score", json=sample_conversation_request)
 
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED or \
-               response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED or response.status_code == status.HTTP_403_FORBIDDEN
 
     @pytest.mark.asyncio
     async def test_get_lead_insights_success(
-        self,
-        client,
-        auth_headers,
-        sample_conversation_request,
-        mock_lead_insights
+        self, client, auth_headers, sample_conversation_request, mock_lead_insights
     ):
         """Test successful lead insights retrieval."""
-        with patch('ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token') as mock_auth, \
-             patch('ghl_real_estate_ai.api.routes.predictive_analytics.predictive_scorer') as mock_scorer:
-
+        with (
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token") as mock_auth,
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.predictive_scorer") as mock_scorer,
+        ):
             mock_auth.return_value = {"role": "user", "user_id": "test"}
             mock_scorer.generate_lead_insights.return_value = mock_lead_insights
 
             response = client.post(
-                "/api/v1/predictive/insights",
-                json=sample_conversation_request,
-                headers=auth_headers
+                "/api/v1/predictive/insights", json=sample_conversation_request, headers=auth_headers
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -203,24 +189,17 @@ class TestPredictiveAnalyticsAPI:
 
     @pytest.mark.asyncio
     async def test_get_action_recommendations_success(
-        self,
-        client,
-        auth_headers,
-        sample_conversation_request,
-        mock_action_recommendation
+        self, client, auth_headers, sample_conversation_request, mock_action_recommendation
     ):
         """Test successful action recommendations retrieval."""
-        with patch('ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token') as mock_auth, \
-             patch('ghl_real_estate_ai.api.routes.predictive_analytics.action_engine') as mock_engine:
-
+        with (
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token") as mock_auth,
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.action_engine") as mock_engine,
+        ):
             mock_auth.return_value = {"role": "user", "user_id": "test"}
             mock_engine.generate_action_recommendations.return_value = [mock_action_recommendation]
 
-            response = client.post(
-                "/api/v1/predictive/actions",
-                json=sample_conversation_request,
-                headers=auth_headers
-            )
+            response = client.post("/api/v1/predictive/actions", json=sample_conversation_request, headers=auth_headers)
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
@@ -237,28 +216,23 @@ class TestPredictiveAnalyticsAPI:
 
     @pytest.mark.asyncio
     async def test_get_action_recommendations_with_limit(
-        self,
-        client,
-        auth_headers,
-        sample_conversation_request,
-        mock_action_recommendation
+        self, client, auth_headers, sample_conversation_request, mock_action_recommendation
     ):
         """Test action recommendations with limit parameter."""
-        with patch('ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token') as mock_auth, \
-             patch('ghl_real_estate_ai.api.routes.predictive_analytics.action_engine') as mock_engine:
-
+        with (
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token") as mock_auth,
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.action_engine") as mock_engine,
+        ):
             mock_auth.return_value = {"role": "user", "user_id": "test"}
             # Return multiple recommendations
             mock_engine.generate_action_recommendations.return_value = [
                 mock_action_recommendation,
                 mock_action_recommendation,
-                mock_action_recommendation
+                mock_action_recommendation,
             ]
 
             response = client.post(
-                "/api/v1/predictive/actions?limit=2",
-                json=sample_conversation_request,
-                headers=auth_headers
+                "/api/v1/predictive/actions?limit=2", json=sample_conversation_request, headers=auth_headers
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -267,11 +241,7 @@ class TestPredictiveAnalyticsAPI:
 
     @pytest.mark.asyncio
     async def test_get_action_sequence_success(
-        self,
-        client,
-        auth_headers,
-        sample_conversation_request,
-        mock_action_recommendation
+        self, client, auth_headers, sample_conversation_request, mock_action_recommendation
     ):
         """Test successful action sequence retrieval."""
         mock_sequence = ActionSequence(
@@ -282,19 +252,18 @@ class TestPredictiveAnalyticsAPI:
             immediate_actions=[mock_action_recommendation],
             short_term_actions=[],
             medium_term_actions=[],
-            long_term_actions=[]
+            long_term_actions=[],
         )
 
-        with patch('ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token') as mock_auth, \
-             patch('ghl_real_estate_ai.api.routes.predictive_analytics.action_engine') as mock_engine:
-
+        with (
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token") as mock_auth,
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.action_engine") as mock_engine,
+        ):
             mock_auth.return_value = {"role": "user", "user_id": "test"}
             mock_engine.generate_action_sequence.return_value = mock_sequence
 
             response = client.post(
-                "/api/v1/predictive/action-sequence",
-                json=sample_conversation_request,
-                headers=auth_headers
+                "/api/v1/predictive/action-sequence", json=sample_conversation_request, headers=auth_headers
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -307,31 +276,27 @@ class TestPredictiveAnalyticsAPI:
             assert data["immediate_actions"][0]["action_type"] == "immediate_call"
 
     @pytest.mark.asyncio
-    async def test_optimize_timing_success(
-        self,
-        client,
-        auth_headers,
-        sample_conversation_request
-    ):
+    async def test_optimize_timing_success(self, client, auth_headers, sample_conversation_request):
         """Test successful timing optimization."""
         mock_timing = TimingOptimization(
             best_call_times=["9:00-11:00 AM", "2:00-4:00 PM"],
             best_days=["Tuesday", "Wednesday", "Thursday"],
             avoid_times=["Before 8 AM", "After 7 PM"],
             urgency_window="24-48 hours",
-            competitive_timing="Competitive market - respond within 2 hours"
+            competitive_timing="Competitive market - respond within 2 hours",
         )
 
-        with patch('ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token') as mock_auth, \
-             patch('ghl_real_estate_ai.api.routes.predictive_analytics.action_engine') as mock_engine:
-
+        with (
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token") as mock_auth,
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.action_engine") as mock_engine,
+        ):
             mock_auth.return_value = {"role": "user", "user_id": "test"}
             mock_engine.optimize_timing.return_value = mock_timing
 
             response = client.post(
                 "/api/v1/predictive/timing-optimization?action_type=immediate_call",
                 json=sample_conversation_request,
-                headers=auth_headers
+                headers=auth_headers,
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -343,20 +308,15 @@ class TestPredictiveAnalyticsAPI:
             assert data["urgency_window"] == "24-48 hours"
 
     @pytest.mark.asyncio
-    async def test_optimize_timing_invalid_action_type(
-        self,
-        client,
-        auth_headers,
-        sample_conversation_request
-    ):
+    async def test_optimize_timing_invalid_action_type(self, client, auth_headers, sample_conversation_request):
         """Test timing optimization with invalid action type."""
-        with patch('ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token') as mock_auth:
+        with patch("ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token") as mock_auth:
             mock_auth.return_value = {"role": "user", "user_id": "test"}
 
             response = client.post(
                 "/api/v1/predictive/timing-optimization?action_type=invalid_action",
                 json=sample_conversation_request,
-                headers=auth_headers
+                headers=auth_headers,
             )
 
             assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -370,26 +330,20 @@ class TestPredictiveAnalyticsAPI:
             recall=0.84,
             f1_score=0.81,
             auc_score=0.86,
-            feature_importances={
-                "qualification_completeness": 0.3,
-                "engagement_score": 0.25,
-                "urgency_score": 0.2
-            },
+            feature_importances={"qualification_completeness": 0.3, "engagement_score": 0.25, "urgency_score": 0.2},
             confusion_matrix=[[50, 5], [8, 37]],
-            validation_date=datetime.now()
+            validation_date=datetime.now(),
         )
 
-        with patch('ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token') as mock_auth, \
-             patch('ghl_real_estate_ai.api.routes.predictive_analytics.ml_model') as mock_model:
-
+        with (
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token") as mock_auth,
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.ml_model") as mock_model,
+        ):
             mock_auth.return_value = {"role": "user", "user_id": "test"}
             mock_model.get_model_performance.return_value = mock_metrics
             mock_model.needs_retraining.return_value = False
 
-            response = client.get(
-                "/api/v1/predictive/model-performance",
-                headers=auth_headers
-            )
+            response = client.get("/api/v1/predictive/model-performance", headers=auth_headers)
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
@@ -403,16 +357,14 @@ class TestPredictiveAnalyticsAPI:
     @pytest.mark.asyncio
     async def test_get_model_performance_no_model(self, client, auth_headers):
         """Test model performance when no model is trained."""
-        with patch('ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token') as mock_auth, \
-             patch('ghl_real_estate_ai.api.routes.predictive_analytics.ml_model') as mock_model:
-
+        with (
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token") as mock_auth,
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.ml_model") as mock_model,
+        ):
             mock_auth.return_value = {"role": "user", "user_id": "test"}
             mock_model.get_model_performance.return_value = None
 
-            response = client.get(
-                "/api/v1/predictive/model-performance",
-                headers=auth_headers
-            )
+            response = client.get("/api/v1/predictive/model-performance", headers=auth_headers)
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
@@ -423,13 +375,10 @@ class TestPredictiveAnalyticsAPI:
     @pytest.mark.asyncio
     async def test_train_model_admin_success(self, client, auth_headers):
         """Test successful model training with admin privileges."""
-        with patch('ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token') as mock_auth:
+        with patch("ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token") as mock_auth:
             mock_auth.return_value = {"role": "admin", "user_id": "admin"}
 
-            response = client.post(
-                "/api/v1/predictive/train-model?use_synthetic_data=true",
-                headers=auth_headers
-            )
+            response = client.post("/api/v1/predictive/train-model?use_synthetic_data=true", headers=auth_headers)
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
@@ -440,13 +389,10 @@ class TestPredictiveAnalyticsAPI:
     @pytest.mark.asyncio
     async def test_train_model_non_admin_forbidden(self, client, auth_headers):
         """Test model training without admin privileges."""
-        with patch('ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token') as mock_auth:
+        with patch("ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token") as mock_auth:
             mock_auth.return_value = {"role": "user", "user_id": "test"}
 
-            response = client.post(
-                "/api/v1/predictive/train-model",
-                headers=auth_headers
-            )
+            response = client.post("/api/v1/predictive/train-model", headers=auth_headers)
 
             assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -461,21 +407,19 @@ class TestPredictiveAnalyticsAPI:
             auc_score=0.86,
             feature_importances={},
             confusion_matrix=[[50, 5], [8, 37]],
-            validation_date=datetime.now()
+            validation_date=datetime.now(),
         )
 
-        with patch('ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token') as mock_auth, \
-             patch('ghl_real_estate_ai.api.routes.predictive_analytics.ml_model') as mock_model:
-
+        with (
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token") as mock_auth,
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.ml_model") as mock_model,
+        ):
             mock_auth.return_value = {"role": "user", "user_id": "test"}
             mock_model.get_model_performance.return_value = mock_metrics
             mock_model.needs_retraining.return_value = False
             mock_model.last_training_date = datetime.now()
 
-            response = client.get(
-                "/api/v1/predictive/pipeline-status",
-                headers=auth_headers
-            )
+            response = client.get("/api/v1/predictive/pipeline-status", headers=auth_headers)
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
@@ -487,37 +431,29 @@ class TestPredictiveAnalyticsAPI:
             assert data["cache"]["enabled"] is True
 
     @pytest.mark.asyncio
-    async def test_batch_score_leads_success(
-        self,
-        client,
-        auth_headers,
-        mock_predictive_score
-    ):
+    async def test_batch_score_leads_success(self, client, auth_headers, mock_predictive_score):
         """Test successful batch lead scoring."""
         batch_request = [
             {
                 "conversation_history": [{"role": "user", "text": "Hello"}],
                 "extracted_preferences": {"budget": "500k"},
-                "lead_id": "lead_1"
+                "lead_id": "lead_1",
             },
             {
                 "conversation_history": [{"role": "user", "text": "Hi there"}],
                 "extracted_preferences": {"budget": "600k"},
-                "lead_id": "lead_2"
-            }
+                "lead_id": "lead_2",
+            },
         ]
 
-        with patch('ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token') as mock_auth, \
-             patch('ghl_real_estate_ai.api.routes.predictive_analytics.predictive_scorer') as mock_scorer:
-
+        with (
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token") as mock_auth,
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.predictive_scorer") as mock_scorer,
+        ):
             mock_auth.return_value = {"role": "user", "user_id": "test"}
             mock_scorer.calculate_predictive_score.return_value = mock_predictive_score
 
-            response = client.post(
-                "/api/v1/predictive/batch-score",
-                json=batch_request,
-                headers=auth_headers
-            )
+            response = client.post("/api/v1/predictive/batch-score", json=batch_request, headers=auth_headers)
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
@@ -536,37 +472,30 @@ class TestPredictiveAnalyticsAPI:
             {
                 "conversation_history": [{"role": "user", "text": f"Hello {i}"}],
                 "extracted_preferences": {},
-                "lead_id": f"lead_{i}"
+                "lead_id": f"lead_{i}",
             }
             for i in range(51)
         ]
 
-        with patch('ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token') as mock_auth:
+        with patch("ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token") as mock_auth:
             mock_auth.return_value = {"role": "user", "user_id": "test"}
 
-            response = client.post(
-                "/api/v1/predictive/batch-score",
-                json=large_batch,
-                headers=auth_headers
-            )
+            response = client.post("/api/v1/predictive/batch-score", json=large_batch, headers=auth_headers)
 
             assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     @pytest.mark.asyncio
     async def test_error_handling_in_endpoints(self, client, auth_headers, sample_conversation_request):
         """Test error handling in API endpoints."""
-        with patch('ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token') as mock_auth, \
-             patch('ghl_real_estate_ai.api.routes.predictive_analytics.predictive_scorer') as mock_scorer:
-
+        with (
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token") as mock_auth,
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.predictive_scorer") as mock_scorer,
+        ):
             mock_auth.return_value = {"role": "user", "user_id": "test"}
             # Simulate an error in the scoring service
             mock_scorer.calculate_predictive_score.side_effect = Exception("Service error")
 
-            response = client.post(
-                "/api/v1/predictive/score",
-                json=sample_conversation_request,
-                headers=auth_headers
-            )
+            response = client.post("/api/v1/predictive/score", json=sample_conversation_request, headers=auth_headers)
 
             assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
             assert "error" in response.json()["detail"].lower()
@@ -574,18 +503,12 @@ class TestPredictiveAnalyticsAPI:
     @pytest.mark.asyncio
     async def test_invalid_request_data(self, client, auth_headers):
         """Test endpoints with invalid request data."""
-        invalid_request = {
-            "invalid_field": "invalid_data"
-        }
+        invalid_request = {"invalid_field": "invalid_data"}
 
-        with patch('ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token') as mock_auth:
+        with patch("ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token") as mock_auth:
             mock_auth.return_value = {"role": "user", "user_id": "test"}
 
-            response = client.post(
-                "/api/v1/predictive/score",
-                json=invalid_request,
-                headers=auth_headers
-            )
+            response = client.post("/api/v1/predictive/score", json=invalid_request, headers=auth_headers)
 
             # Should handle gracefully or return validation error
             assert response.status_code in [400, 422, 500]  # Various possible error codes
@@ -594,18 +517,12 @@ class TestPredictiveAnalyticsAPI:
     async def test_request_validation(self, client, auth_headers):
         """Test request validation with missing required fields."""
         # Missing conversation_history
-        incomplete_request = {
-            "extracted_preferences": {"budget": "500k"}
-        }
+        incomplete_request = {"extracted_preferences": {"budget": "500k"}}
 
-        with patch('ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token') as mock_auth:
+        with patch("ghl_real_estate_ai.api.routes.predictive_analytics.verify_jwt_token") as mock_auth:
             mock_auth.return_value = {"role": "user", "user_id": "test"}
 
-            response = client.post(
-                "/api/v1/predictive/score",
-                json=incomplete_request,
-                headers=auth_headers
-            )
+            response = client.post("/api/v1/predictive/score", json=incomplete_request, headers=auth_headers)
 
             # Pydantic should validate and possibly set defaults
             # The exact behavior depends on how the model is configured

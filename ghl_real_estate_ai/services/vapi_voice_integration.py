@@ -40,6 +40,7 @@ logger = logging.getLogger(__name__)
 # Enums & Data Models
 # ---------------------------------------------------------------------------
 
+
 class CallStatus(str, Enum):
     STARTED = "started"
     RINGING = "ringing"
@@ -64,6 +65,7 @@ class SpeakerRole(str, Enum):
 @dataclass
 class TranscriptSegment:
     """A single segment from a Vapi transcript."""
+
     role: str  # SpeakerRole value
     text: str
     timestamp_ms: float = 0.0
@@ -73,6 +75,7 @@ class TranscriptSegment:
 @dataclass
 class CallEvent:
     """Normalized Vapi call event."""
+
     event_type: str  # "call.started", "call.ended", "transcript", etc.
     call_id: str
     contact_id: Optional[str] = None
@@ -87,6 +90,7 @@ class CallEvent:
 @dataclass
 class TranscriptAnalysis:
     """Result of analyzing a voice call transcript."""
+
     contact_id: str
     call_id: str
     # Behavioral analysis
@@ -111,6 +115,7 @@ class TranscriptAnalysis:
 @dataclass
 class CallEventResult:
     """Result returned after processing a Vapi webhook event."""
+
     success: bool
     event_type: str
     call_id: str
@@ -122,6 +127,7 @@ class CallEventResult:
 # ---------------------------------------------------------------------------
 # Voice Intelligence Service
 # ---------------------------------------------------------------------------
+
 
 class VapiVoiceIntelligence:
     """
@@ -262,7 +268,9 @@ class VapiVoiceIntelligence:
         self._active_calls[event.call_id] = event
         logger.info(
             "Voice call started: %s (contact=%s, direction=%s)",
-            event.call_id, event.contact_id, event.direction,
+            event.call_id,
+            event.contact_id,
+            event.direction,
         )
         return CallEventResult(
             success=True,
@@ -301,8 +309,10 @@ class VapiVoiceIntelligence:
 
             logger.info(
                 "Voice call analysis complete: %s → %s (composite=%.2f, qualified=%s, latency=%.0fms)",
-                event.call_id, analysis.lead_temperature,
-                analysis.composite_score, analysis.is_qualified,
+                event.call_id,
+                analysis.lead_temperature,
+                analysis.composite_score,
+                analysis.is_qualified,
                 analysis.processing_latency_ms,
             )
 
@@ -354,10 +364,7 @@ class VapiVoiceIntelligence:
 
         customer = call_data.get("customer", {})
         contact_phone = customer.get("number", "")
-        contact_id = (
-            call_data.get("metadata", {}).get("contact_id")
-            or data.get("contact_id", "")
-        )
+        contact_id = call_data.get("metadata", {}).get("contact_id") or data.get("contact_id", "")
 
         # Parse transcript if present
         transcript_segments: List[TranscriptSegment] = []
@@ -365,28 +372,28 @@ class VapiVoiceIntelligence:
         if isinstance(raw_transcript, list):
             for seg in raw_transcript:
                 if isinstance(seg, dict):
-                    transcript_segments.append(TranscriptSegment(
-                        role=seg.get("role", "customer"),
-                        text=seg.get("text", seg.get("content", "")),
-                        timestamp_ms=seg.get("timestamp", 0),
-                        confidence=seg.get("confidence", 1.0),
-                    ))
+                    transcript_segments.append(
+                        TranscriptSegment(
+                            role=seg.get("role", "customer"),
+                            text=seg.get("text", seg.get("content", "")),
+                            timestamp_ms=seg.get("timestamp", 0),
+                            confidence=seg.get("confidence", 1.0),
+                        )
+                    )
 
         # End-of-call report includes full artifact
         artifact = message.get("artifact", data.get("artifact", {}))
         if artifact and not transcript_segments:
             for seg in artifact.get("messages", []):
-                transcript_segments.append(TranscriptSegment(
-                    role=seg.get("role", "customer"),
-                    text=seg.get("message", seg.get("content", "")),
-                    timestamp_ms=seg.get("secondsFromStart", 0) * 1000,
-                ))
+                transcript_segments.append(
+                    TranscriptSegment(
+                        role=seg.get("role", "customer"),
+                        text=seg.get("message", seg.get("content", "")),
+                        timestamp_ms=seg.get("secondsFromStart", 0) * 1000,
+                    )
+                )
 
-        duration = (
-            call_data.get("duration", 0)
-            or artifact.get("duration", 0)
-            or data.get("duration_seconds", 0)
-        )
+        duration = call_data.get("duration", 0) or artifact.get("duration", 0) or data.get("duration_seconds", 0)
 
         return CallEvent(
             event_type=event_type,
@@ -412,8 +419,12 @@ class VapiVoiceIntelligence:
 
         # Budget detection
         budget_patterns = [
-            r"\$[\d,]+k?", r"\b\d{3,}k\b", r"\bbudget\b",
-            r"\bafford\b", r"\bpre[\s-]?approved\b", r"\bmortgage\b",
+            r"\$[\d,]+k?",
+            r"\b\d{3,}k\b",
+            r"\bbudget\b",
+            r"\bafford\b",
+            r"\bpre[\s-]?approved\b",
+            r"\bmortgage\b",
         ]
         signals["has_budget"] = any(re.search(p, text_lower) for p in budget_patterns)
 

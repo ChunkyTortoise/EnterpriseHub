@@ -16,33 +16,35 @@ providing insights no competitor in the Inland Empire can match.
 import asyncio
 import json
 import logging
-import numpy as np
-import pandas as pd
-from datetime import datetime, timedelta, date
-from typing import Dict, List, Any, Optional, Union, Tuple
-from dataclasses import dataclass, asdict, field
-from enum import Enum
+import os
 import re
 import uuid
+from dataclasses import asdict, dataclass, field
+from datetime import date, datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import joblib
+import numpy as np
+import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, r2_score
-import joblib
-import os
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 from ghl_real_estate_ai.core.llm_client import LLMClient
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import get_rancho_cucamonga_ai_assistant
 from ghl_real_estate_ai.data.rancho_cucamonga_market_data import get_rancho_cucamonga_market_intelligence
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import get_rancho_cucamonga_ai_assistant
 
 logger = get_logger(__name__)
 
 
 class PredictionType(Enum):
     """Types of market predictions"""
+
     PRICE_APPRECIATION = "price_appreciation"
     OPTIMAL_TIMING = "optimal_timing"
     MARKET_OPPORTUNITY = "market_opportunity"
@@ -53,22 +55,25 @@ class PredictionType(Enum):
 
 class MarketConfidence(Enum):
     """Confidence levels for predictions"""
-    HIGH = "high"          # >80% confidence
-    MEDIUM = "medium"      # 60-80% confidence
-    LOW = "low"            # 40-60% confidence
+
+    HIGH = "high"  # >80% confidence
+    MEDIUM = "medium"  # 60-80% confidence
+    LOW = "low"  # 40-60% confidence
     UNCERTAIN = "uncertain"  # <40% confidence
 
 
 class TimeHorizon(Enum):
     """Prediction time horizons"""
-    SHORT_TERM = "short_term"    # 1-3 months
+
+    SHORT_TERM = "short_term"  # 1-3 months
     MEDIUM_TERM = "medium_term"  # 3-12 months
-    LONG_TERM = "long_term"      # 1-3 years
+    LONG_TERM = "long_term"  # 1-3 years
 
 
 @dataclass
 class MarketDataPoint:
     """Single market data point for ML training"""
+
     date: datetime
     neighborhood: str
     median_price: float
@@ -97,6 +102,7 @@ class MarketDataPoint:
 @dataclass
 class PredictionResult:
     """Market prediction result"""
+
     prediction_id: str
     prediction_type: PredictionType
     target: str  # neighborhood, property, market segment
@@ -130,6 +136,7 @@ class PredictionResult:
 @dataclass
 class MarketOpportunity:
     """Identified market opportunity"""
+
     opportunity_id: str
     opportunity_type: str  # undervalued, emerging, timing
     neighborhood: str
@@ -160,22 +167,23 @@ class MarketOpportunity:
 @dataclass
 class InvestmentAnalysis:
     """Detailed investment property analysis"""
+
     property_id: str
     purchase_price: float
     estimated_rent: float
     annual_expenses: float
-    
+
     # ROI Metrics
     cap_rate: float
     cash_on_cash_return: float
     gross_rent_multiplier: float
     five_year_appreciation_estimate: float
-    
+
     # Risk/Reward
     investment_grade: str  # A, B, C, D
     risk_score: float
     recommendation: str
-    
+
     analysis_date: datetime = field(default_factory=datetime.now)
 
 
@@ -219,7 +227,7 @@ class MarketPredictionEngine:
         """Ensure models are initialized before use"""
         if self._is_initialized:
             return
-            
+
         async with self._initialization_lock:
             if self._is_initialized:
                 return
@@ -253,15 +261,13 @@ class MarketPredictionEngine:
             "alta_loma": 850000,
             "central_rc": 720000,
             "north_rc": 680000,
-            "south_rc": 590000
+            "south_rc": 590000,
         }
 
         while current_date < datetime.now():
             for neighborhood in neighborhoods:
                 # Generate synthetic but realistic market data
-                data_point = self._generate_synthetic_data_point(
-                    current_date, neighborhood, base_prices[neighborhood]
-                )
+                data_point = self._generate_synthetic_data_point(current_date, neighborhood, base_prices[neighborhood])
                 self.market_data.append(data_point)
 
             current_date += timedelta(days=7)  # Weekly data points
@@ -289,14 +295,15 @@ class MarketPredictionEngine:
             "etiwanda": 1.02,  # Strong schools drive demand
             "alta_loma": 1.01,  # Luxury market stability
             "central_rc": 1.03,  # Development growth
-            "north_rc": 1.02,   # Family demand
-            "south_rc": 1.04    # Affordability growth
+            "north_rc": 1.02,  # Family demand
+            "south_rc": 1.04,  # Affordability growth
         }
 
         adjusted_price = base_price * trend_factor * seasonal_factor * neighborhood_factors.get(neighborhood, 1.0)
 
         # Add some randomness
         import random
+
         price_variation = random.uniform(0.95, 1.05)
         adjusted_price *= price_variation
 
@@ -317,7 +324,7 @@ class MarketPredictionEngine:
             is_holiday_season=month in [11, 12],
             gas_prices=random.uniform(3.5, 5.5),
             mortgage_applications=random.randint(8000, 15000),
-            consumer_confidence=random.uniform(85, 115)
+            consumer_confidence=random.uniform(85, 115),
         )
 
     async def _train_models(self):
@@ -329,7 +336,7 @@ class MarketPredictionEngine:
 
         # Convert data to DataFrame
         df = pd.DataFrame([asdict(point) for point in self.market_data])
-        df['date'] = pd.to_datetime(df['date'])
+        df["date"] = pd.to_datetime(df["date"])
 
         # Train price appreciation model
         await self._train_price_appreciation_model(df)
@@ -347,26 +354,35 @@ class MarketPredictionEngine:
 
         # Prepare features for price appreciation
         features = [
-            'days_on_market', 'inventory_months', 'interest_rate', 'employment_rate',
-            'population_growth', 'new_construction', 'month', 'quarter',
-            'is_spring_market', 'is_holiday_season', 'gas_prices',
-            'mortgage_applications', 'consumer_confidence'
+            "days_on_market",
+            "inventory_months",
+            "interest_rate",
+            "employment_rate",
+            "population_growth",
+            "new_construction",
+            "month",
+            "quarter",
+            "is_spring_market",
+            "is_holiday_season",
+            "gas_prices",
+            "mortgage_applications",
+            "consumer_confidence",
         ]
 
         # Create target variable (3-month price change)
-        df = df.sort_values(['neighborhood', 'date'])
-        df['future_price'] = df.groupby('neighborhood')['median_price'].shift(-12)  # 12 weeks = ~3 months
-        df['price_change_pct'] = (df['future_price'] - df['median_price']) / df['median_price']
+        df = df.sort_values(["neighborhood", "date"])
+        df["future_price"] = df.groupby("neighborhood")["median_price"].shift(-12)  # 12 weeks = ~3 months
+        df["price_change_pct"] = (df["future_price"] - df["median_price"]) / df["median_price"]
 
         # Remove rows without future price data
-        train_df = df.dropna(subset=['price_change_pct'])
+        train_df = df.dropna(subset=["price_change_pct"])
 
         if len(train_df) < 50:
             logger.warning("Insufficient data for price appreciation model")
             return
 
         X = train_df[features]
-        y = train_df['price_change_pct']
+        y = train_df["price_change_pct"]
 
         # Split data
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -386,14 +402,14 @@ class MarketPredictionEngine:
         r2 = r2_score(y_test, y_pred)
 
         # Store model
-        self.models['price_appreciation'] = model
-        self.scalers['price_appreciation'] = scaler
-        self.model_metadata['price_appreciation'] = {
-            'features': features,
-            'mae': mae,
-            'r2': r2,
-            'training_date': datetime.now(),
-            'data_points': len(train_df)
+        self.models["price_appreciation"] = model
+        self.scalers["price_appreciation"] = scaler
+        self.model_metadata["price_appreciation"] = {
+            "features": features,
+            "mae": mae,
+            "r2": r2,
+            "training_date": datetime.now(),
+            "data_points": len(train_df),
         }
 
         logger.info(f"Price appreciation model trained: R² = {r2:.3f}, MAE = {mae:.4f}")
@@ -402,31 +418,28 @@ class MarketPredictionEngine:
         """Train optimal timing prediction model"""
 
         # Simplified timing model based on seasonal patterns and market indicators
-        features = [
-            'inventory_months', 'interest_rate', 'month', 'quarter',
-            'is_spring_market', 'consumer_confidence'
-        ]
+        features = ["inventory_months", "interest_rate", "month", "quarter", "is_spring_market", "consumer_confidence"]
 
         # Create timing score (0-1, where 1 is optimal time to sell)
-        df['timing_score'] = 0.5  # Base score
+        df["timing_score"] = 0.5  # Base score
 
         # Seasonal adjustments
-        df.loc[df['is_spring_market'], 'timing_score'] += 0.3
-        df.loc[df['month'].isin([11, 12]), 'timing_score'] -= 0.2
+        df.loc[df["is_spring_market"], "timing_score"] += 0.3
+        df.loc[df["month"].isin([11, 12]), "timing_score"] -= 0.2
 
         # Market condition adjustments
-        df.loc[df['inventory_months'] < 2, 'timing_score'] += 0.2  # Low inventory favors sellers
-        df.loc[df['inventory_months'] > 4, 'timing_score'] -= 0.2  # High inventory favors buyers
+        df.loc[df["inventory_months"] < 2, "timing_score"] += 0.2  # Low inventory favors sellers
+        df.loc[df["inventory_months"] > 4, "timing_score"] -= 0.2  # High inventory favors buyers
 
         # Interest rate adjustments
-        df.loc[df['interest_rate'] < 4, 'timing_score'] += 0.1  # Low rates increase demand
-        df.loc[df['interest_rate'] > 6, 'timing_score'] -= 0.1  # High rates decrease demand
+        df.loc[df["interest_rate"] < 4, "timing_score"] += 0.1  # Low rates increase demand
+        df.loc[df["interest_rate"] > 6, "timing_score"] -= 0.1  # High rates decrease demand
 
         # Clip scores to 0-1 range
-        df['timing_score'] = df['timing_score'].clip(0, 1)
+        df["timing_score"] = df["timing_score"].clip(0, 1)
 
         X = df[features]
-        y = df['timing_score']
+        y = df["timing_score"]
 
         # Train model
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -444,14 +457,14 @@ class MarketPredictionEngine:
         r2 = r2_score(y_test, y_pred)
 
         # Store model
-        self.models['timing'] = model
-        self.scalers['timing'] = scaler
-        self.model_metadata['timing'] = {
-            'features': features,
-            'mae': mae,
-            'r2': r2,
-            'training_date': datetime.now(),
-            'data_points': len(df)
+        self.models["timing"] = model
+        self.scalers["timing"] = scaler
+        self.model_metadata["timing"] = {
+            "features": features,
+            "mae": mae,
+            "r2": r2,
+            "training_date": datetime.now(),
+            "data_points": len(df),
         }
 
         logger.info(f"Timing model trained: R² = {r2:.3f}, MAE = {mae:.4f}")
@@ -460,24 +473,28 @@ class MarketPredictionEngine:
         """Train investment ROI prediction model"""
 
         features = [
-            'median_price', 'price_per_sqft', 'population_growth', 'new_construction',
-            'employment_rate', 'month'
+            "median_price",
+            "price_per_sqft",
+            "population_growth",
+            "new_construction",
+            "employment_rate",
+            "month",
         ]
 
         # Calculate historical ROI (simplified)
-        df = df.sort_values(['neighborhood', 'date'])
-        df['price_1yr_ago'] = df.groupby('neighborhood')['median_price'].shift(52)  # 52 weeks ago
-        df['annual_roi'] = (df['median_price'] - df['price_1yr_ago']) / df['price_1yr_ago']
+        df = df.sort_values(["neighborhood", "date"])
+        df["price_1yr_ago"] = df.groupby("neighborhood")["median_price"].shift(52)  # 52 weeks ago
+        df["annual_roi"] = (df["median_price"] - df["price_1yr_ago"]) / df["price_1yr_ago"]
 
         # Remove rows without historical data
-        train_df = df.dropna(subset=['annual_roi'])
+        train_df = df.dropna(subset=["annual_roi"])
 
         if len(train_df) < 50:
             logger.warning("Insufficient data for ROI model")
             return
 
         X = train_df[features]
-        y = train_df['annual_roi']
+        y = train_df["annual_roi"]
 
         # Train model
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -495,66 +512,63 @@ class MarketPredictionEngine:
         r2 = r2_score(y_test, y_pred)
 
         # Store model
-        self.models['roi'] = model
-        self.scalers['roi'] = scaler
-        self.model_metadata['roi'] = {
-            'features': features,
-            'mae': mae,
-            'r2': r2,
-            'training_date': datetime.now(),
-            'data_points': len(train_df)
+        self.models["roi"] = model
+        self.scalers["roi"] = scaler
+        self.model_metadata["roi"] = {
+            "features": features,
+            "mae": mae,
+            "r2": r2,
+            "training_date": datetime.now(),
+            "data_points": len(train_df),
         }
 
         logger.info(f"ROI model trained: R² = {r2:.3f}, MAE = {mae:.4f}")
 
     async def predict_price_appreciation(
-        self,
-        neighborhood: str,
-        time_horizon: TimeHorizon,
-        current_conditions: Optional[Dict[str, Any]] = None
+        self, neighborhood: str, time_horizon: TimeHorizon, current_conditions: Optional[Dict[str, Any]] = None
     ) -> PredictionResult:
         """Predict price appreciation for neighborhood"""
         await self._ensure_initialized()
 
-        if 'price_appreciation' not in self.models:
+        if "price_appreciation" not in self.models:
             raise ValueError("Price appreciation model not trained")
 
         # Get current market conditions
         conditions = current_conditions or await self._get_current_market_conditions(neighborhood)
 
         # Prepare features
-        features = self._prepare_prediction_features(conditions, 'price_appreciation')
+        features = self._prepare_prediction_features(conditions, "price_appreciation")
 
         # Make prediction
-        model = self.models['price_appreciation']
-        scaler = self.scalers['price_appreciation']
+        model = self.models["price_appreciation"]
+        scaler = self.scalers["price_appreciation"]
         features_scaled = scaler.transform([features])
 
         predicted_change = model.predict(features_scaled)[0]
 
         # Adjust for time horizon
         horizon_multipliers = {
-            TimeHorizon.SHORT_TERM: 0.25,   # 3 months
-            TimeHorizon.MEDIUM_TERM: 1.0,   # 12 months
-            TimeHorizon.LONG_TERM: 3.0      # 3 years
+            TimeHorizon.SHORT_TERM: 0.25,  # 3 months
+            TimeHorizon.MEDIUM_TERM: 1.0,  # 12 months
+            TimeHorizon.LONG_TERM: 3.0,  # 3 years
         }
 
         adjusted_prediction = predicted_change * horizon_multipliers[time_horizon]
 
         # Calculate confidence based on model performance and data recency
         confidence_score = self._calculate_confidence(
-            model_accuracy=self.model_metadata['price_appreciation']['r2'],
+            model_accuracy=self.model_metadata["price_appreciation"]["r2"],
             data_recency=0.9,  # High for synthetic data
-            market_volatility=abs(predicted_change) * 2
+            market_volatility=abs(predicted_change) * 2,
         )
 
         # Get current value
-        current_value = conditions.get('median_price', 700000)
+        current_value = conditions.get("median_price", 700000)
         predicted_value = current_value * (1 + adjusted_prediction)
 
         # Generate supporting insights using AI
         insights = await self._generate_prediction_insights(
-            neighborhood, 'price_appreciation', adjusted_prediction, conditions
+            neighborhood, "price_appreciation", adjusted_prediction, conditions
         )
 
         prediction_id = str(uuid.uuid4())
@@ -570,14 +584,14 @@ class MarketPredictionEngine:
             change_percentage=adjusted_prediction * 100,
             confidence_level=self._score_to_confidence_level(confidence_score),
             confidence_score=confidence_score,
-            key_factors=insights['key_factors'],
-            risk_factors=insights['risk_factors'],
-            opportunities=insights['opportunities'],
+            key_factors=insights["key_factors"],
+            risk_factors=insights["risk_factors"],
+            opportunities=insights["opportunities"],
             target_date=target_date,
             update_frequency="weekly",
-            model_accuracy=self.model_metadata['price_appreciation']['r2'],
-            data_points_used=self.model_metadata['price_appreciation']['data_points'],
-            last_training_date=self.model_metadata['price_appreciation']['training_date']
+            model_accuracy=self.model_metadata["price_appreciation"]["r2"],
+            data_points_used=self.model_metadata["price_appreciation"]["data_points"],
+            last_training_date=self.model_metadata["price_appreciation"]["training_date"],
         )
 
         # Cache result
@@ -589,23 +603,23 @@ class MarketPredictionEngine:
         self,
         action_type: str,  # "buy" or "sell"
         neighborhood: str,
-        property_details: Optional[Dict[str, Any]] = None
+        property_details: Optional[Dict[str, Any]] = None,
     ) -> PredictionResult:
         """Predict optimal timing for buying or selling"""
         await self._ensure_initialized()
 
-        if 'timing' not in self.models:
+        if "timing" not in self.models:
             raise ValueError("Timing model not trained")
 
         # Get current market conditions
         conditions = await self._get_current_market_conditions(neighborhood)
 
         # Prepare features
-        features = self._prepare_prediction_features(conditions, 'timing')
+        features = self._prepare_prediction_features(conditions, "timing")
 
         # Make prediction
-        model = self.models['timing']
-        scaler = self.scalers['timing']
+        model = self.models["timing"]
+        scaler = self.scalers["timing"]
         features_scaled = scaler.transform([features])
 
         timing_score = model.predict(features_scaled)[0]
@@ -618,14 +632,10 @@ class MarketPredictionEngine:
             adjusted_score = timing_score
 
         # Generate timing recommendations
-        timing_insights = await self._generate_timing_insights(
-            action_type, neighborhood, adjusted_score, conditions
-        )
+        timing_insights = await self._generate_timing_insights(action_type, neighborhood, adjusted_score, conditions)
 
         confidence_score = self._calculate_confidence(
-            model_accuracy=self.model_metadata['timing']['r2'],
-            data_recency=0.9,
-            market_volatility=0.2
+            model_accuracy=self.model_metadata["timing"]["r2"], data_recency=0.9, market_volatility=0.2
         )
 
         prediction_id = str(uuid.uuid4())
@@ -640,14 +650,14 @@ class MarketPredictionEngine:
             change_percentage=(adjusted_score - 0.5) * 100,
             confidence_level=self._score_to_confidence_level(confidence_score),
             confidence_score=confidence_score,
-            key_factors=timing_insights['key_factors'],
-            risk_factors=timing_insights['risk_factors'],
-            opportunities=timing_insights['opportunities'],
+            key_factors=timing_insights["key_factors"],
+            risk_factors=timing_insights["risk_factors"],
+            opportunities=timing_insights["opportunities"],
             target_date=datetime.now() + timedelta(weeks=4),
             update_frequency="weekly",
-            model_accuracy=self.model_metadata['timing']['r2'],
-            data_points_used=self.model_metadata['timing']['data_points'],
-            last_training_date=self.model_metadata['timing']['training_date']
+            model_accuracy=self.model_metadata["timing"]["r2"],
+            data_points_used=self.model_metadata["timing"]["data_points"],
+            last_training_date=self.model_metadata["timing"]["training_date"],
         )
 
         await self._cache_prediction_result(result)
@@ -656,46 +666,41 @@ class MarketPredictionEngine:
     async def predict_investment_roi(
         self,
         property_data: Dict[str, Any],
-        investment_horizon: int = 5  # years
+        investment_horizon: int = 5,  # years
     ) -> PredictionResult:
         """Predict investment ROI for a specific property"""
         await self._ensure_initialized()
 
-        if 'roi' not in self.models:
+        if "roi" not in self.models:
             raise ValueError("ROI model not trained")
 
-        neighborhood = property_data.get('neighborhood', 'central_rc')
-        property_price = property_data.get('price', 700000)
+        neighborhood = property_data.get("neighborhood", "central_rc")
+        property_price = property_data.get("price", 700000)
 
         # Get market conditions
         conditions = await self._get_current_market_conditions(neighborhood)
-        conditions.update({
-            'median_price': property_price,
-            'price_per_sqft': property_price / property_data.get('sqft', 2000)
-        })
+        conditions.update(
+            {"median_price": property_price, "price_per_sqft": property_price / property_data.get("sqft", 2000)}
+        )
 
         # Prepare features
-        features = self._prepare_prediction_features(conditions, 'roi')
+        features = self._prepare_prediction_features(conditions, "roi")
 
         # Make prediction
-        model = self.models['roi']
-        scaler = self.scalers['roi']
+        model = self.models["roi"]
+        scaler = self.scalers["roi"]
         features_scaled = scaler.transform([features])
 
         annual_roi = model.predict(features_scaled)[0]
 
         # Calculate compound ROI over investment horizon
-        total_roi = ((1 + annual_roi) ** investment_horizon - 1)
+        total_roi = (1 + annual_roi) ** investment_horizon - 1
 
         # Generate investment insights
-        investment_insights = await self._generate_investment_insights(
-            property_data, annual_roi, total_roi, conditions
-        )
+        investment_insights = await self._generate_investment_insights(property_data, annual_roi, total_roi, conditions)
 
         confidence_score = self._calculate_confidence(
-            model_accuracy=self.model_metadata['roi']['r2'],
-            data_recency=0.9,
-            market_volatility=abs(annual_roi) * 1.5
+            model_accuracy=self.model_metadata["roi"]["r2"], data_recency=0.9, market_volatility=abs(annual_roi) * 1.5
         )
 
         prediction_id = str(uuid.uuid4())
@@ -711,14 +716,14 @@ class MarketPredictionEngine:
             change_percentage=total_roi * 100,
             confidence_level=self._score_to_confidence_level(confidence_score),
             confidence_score=confidence_score,
-            key_factors=investment_insights['key_factors'],
-            risk_factors=investment_insights['risk_factors'],
-            opportunities=investment_insights['opportunities'],
+            key_factors=investment_insights["key_factors"],
+            risk_factors=investment_insights["risk_factors"],
+            opportunities=investment_insights["opportunities"],
             target_date=target_date,
             update_frequency="monthly",
-            model_accuracy=self.model_metadata['roi']['r2'],
-            data_points_used=self.model_metadata['roi']['data_points'],
-            last_training_date=self.model_metadata['roi']['training_date']
+            model_accuracy=self.model_metadata["roi"]["r2"],
+            data_points_used=self.model_metadata["roi"]["data_points"],
+            last_training_date=self.model_metadata["roi"]["training_date"],
         )
 
         await self._cache_prediction_result(result)
@@ -734,9 +739,7 @@ class MarketPredictionEngine:
 
         for neighborhood in neighborhoods:
             # Get price appreciation prediction
-            price_prediction = await self.predict_price_appreciation(
-                neighborhood, TimeHorizon.MEDIUM_TERM
-            )
+            price_prediction = await self.predict_price_appreciation(neighborhood, TimeHorizon.MEDIUM_TERM)
 
             # Analyze for different opportunity types
             if price_prediction.change_percentage > 8:  # Strong appreciation expected
@@ -768,10 +771,7 @@ class MarketPredictionEngine:
         await self._ensure_initialized()
 
         # Get historical data for the neighborhood
-        neighborhood_data = [
-            point for point in self.market_data
-            if point.neighborhood == neighborhood
-        ]
+        neighborhood_data = [point for point in self.market_data if point.neighborhood == neighborhood]
 
         if not neighborhood_data:
             return {"error": "No data available for neighborhood"}
@@ -785,7 +785,7 @@ class MarketPredictionEngine:
                     "avg_price": np.mean([point.median_price for point in month_data]),
                     "avg_dom": np.mean([point.days_on_market for point in month_data]),
                     "avg_inventory": np.mean([point.inventory_months for point in month_data]),
-                    "data_points": len(month_data)
+                    "data_points": len(month_data),
                 }
 
         # Analyze patterns using AI
@@ -795,25 +795,27 @@ class MarketPredictionEngine:
             "neighborhood": neighborhood,
             "monthly_statistics": monthly_stats,
             "patterns": pattern_analysis,
-            "recommendations": await self._generate_seasonal_recommendations(monthly_stats, neighborhood)
+            "recommendations": await self._generate_seasonal_recommendations(monthly_stats, neighborhood),
         }
 
     async def analyze_interest_rate_impact(
         self,
         rate_change: float,  # Predicted rate change (e.g., +0.5 for 0.5% increase)
-        neighborhood: str = None
+        neighborhood: str = None,
     ) -> Dict[str, Any]:
         """Analyze impact of interest rate changes on market"""
         await self._ensure_initialized()
 
         # Get current conditions
-        neighborhoods = [neighborhood] if neighborhood else ["etiwanda", "alta_loma", "central_rc", "north_rc", "south_rc"]
+        neighborhoods = (
+            [neighborhood] if neighborhood else ["etiwanda", "alta_loma", "central_rc", "north_rc", "south_rc"]
+        )
 
         impact_analysis = {}
 
         for nbhd in neighborhoods:
             conditions = await self._get_current_market_conditions(nbhd)
-            current_rate = conditions.get('interest_rate', 5.5)
+            current_rate = conditions.get("interest_rate", 5.5)
             new_rate = current_rate + rate_change
 
             # Calculate demand impact (simplified model)
@@ -834,8 +836,8 @@ class MarketPredictionEngine:
                 "price_impact_pct": price_impact,
                 "dom_impact_days": dom_impact,
                 "buyer_affordability": self._calculate_affordability_impact(
-                    conditions.get('median_price', 700000), current_rate, new_rate
-                )
+                    conditions.get("median_price", 700000), current_rate, new_rate
+                ),
             }
 
         # Generate strategic insights
@@ -845,7 +847,7 @@ class MarketPredictionEngine:
             "rate_change": rate_change,
             "neighborhood_impacts": impact_analysis,
             "strategic_insights": strategic_insights,
-            "timing_recommendations": await self._generate_rate_timing_recommendations(rate_change)
+            "timing_recommendations": await self._generate_rate_timing_recommendations(rate_change),
         }
 
     async def _get_current_market_conditions(self, neighborhood: str) -> Dict[str, Any]:
@@ -854,9 +856,9 @@ class MarketPredictionEngine:
         # In production, this would pull from real data sources
         # For demo, we'll use recent synthetic data
         recent_data = [
-            point for point in self.market_data
-            if point.neighborhood == neighborhood and
-            (datetime.now() - point.date).days <= 30
+            point
+            for point in self.market_data
+            if point.neighborhood == neighborhood and (datetime.now() - point.date).days <= 30
         ]
 
         if recent_data:
@@ -865,24 +867,24 @@ class MarketPredictionEngine:
         else:
             # Return default conditions
             return {
-                'median_price': 700000,
-                'days_on_market': 25,
-                'inventory_months': 2.5,
-                'interest_rate': 5.5,
-                'employment_rate': 0.94,
-                'population_growth': 0.02,
-                'new_construction': 120,
-                'month': datetime.now().month,
-                'quarter': (datetime.now().month - 1) // 3 + 1,
-                'is_spring_market': datetime.now().month in [3, 4, 5],
-                'is_holiday_season': datetime.now().month in [11, 12],
-                'consumer_confidence': 95.0
+                "median_price": 700000,
+                "days_on_market": 25,
+                "inventory_months": 2.5,
+                "interest_rate": 5.5,
+                "employment_rate": 0.94,
+                "population_growth": 0.02,
+                "new_construction": 120,
+                "month": datetime.now().month,
+                "quarter": (datetime.now().month - 1) // 3 + 1,
+                "is_spring_market": datetime.now().month in [3, 4, 5],
+                "is_holiday_season": datetime.now().month in [11, 12],
+                "consumer_confidence": 95.0,
             }
 
     def _prepare_prediction_features(self, conditions: Dict[str, Any], model_type: str) -> List[float]:
         """Prepare feature vector for prediction"""
 
-        feature_names = self.model_metadata[model_type]['features']
+        feature_names = self.model_metadata[model_type]["features"]
         features = []
 
         for feature in feature_names:
@@ -895,11 +897,7 @@ class MarketPredictionEngine:
         return features
 
     async def _generate_prediction_insights(
-        self,
-        neighborhood: str,
-        prediction_type: str,
-        prediction_value: float,
-        conditions: Dict[str, Any]
+        self, neighborhood: str, prediction_type: str, prediction_value: float, conditions: Dict[str, Any]
     ) -> Dict[str, List[str]]:
         """Generate AI-powered insights for predictions"""
 
@@ -926,11 +924,7 @@ Return as JSON:
 """
 
         try:
-            response = await self.llm_client.agenerate(
-                prompt=prompt,
-                max_tokens=500,
-                temperature=0.7
-            )
+            response = await self.llm_client.agenerate(prompt=prompt, max_tokens=500, temperature=0.7)
 
             insights = json.loads(response.content)
             return insights
@@ -940,19 +934,23 @@ Return as JSON:
             return {
                 "key_factors": ["Market momentum", "Economic indicators", "Seasonal patterns"],
                 "risk_factors": ["Interest rate changes", "Economic uncertainty"],
-                "opportunities": ["Investment potential", "Timing advantages"]
+                "opportunities": ["Investment potential", "Timing advantages"],
             }
 
     async def _generate_timing_insights(
-        self,
-        action_type: str,
-        neighborhood: str,
-        timing_score: float,
-        conditions: Dict[str, Any]
+        self, action_type: str, neighborhood: str, timing_score: float, conditions: Dict[str, Any]
     ) -> Dict[str, List[str]]:
         """Generate timing-specific insights"""
 
-        score_description = "excellent" if timing_score > 0.8 else "good" if timing_score > 0.6 else "fair" if timing_score > 0.4 else "poor"
+        score_description = (
+            "excellent"
+            if timing_score > 0.8
+            else "good"
+            if timing_score > 0.6
+            else "fair"
+            if timing_score > 0.4
+            else "poor"
+        )
 
         prompt = f"""
 Analyze this {action_type} timing for {neighborhood} in Rancho Cucamonga:
@@ -978,22 +976,18 @@ Return as JSON with key_factors, risk_factors, opportunities arrays.
             return {
                 "key_factors": [f"Market conditions favor {action_type}ers", "Seasonal timing alignment"],
                 "risk_factors": ["Market volatility", "Interest rate uncertainty"],
-                "opportunities": ["Negotiation leverage", "Selection advantages"]
+                "opportunities": ["Negotiation leverage", "Selection advantages"],
             }
 
     async def _generate_investment_insights(
-        self,
-        property_data: Dict[str, Any],
-        annual_roi: float,
-        total_roi: float,
-        conditions: Dict[str, Any]
+        self, property_data: Dict[str, Any], annual_roi: float, total_roi: float, conditions: Dict[str, Any]
     ) -> Dict[str, List[str]]:
         """Generate investment-specific insights"""
 
         prompt = f"""
 Analyze this investment opportunity in Rancho Cucamonga:
 
-Property: {property_data.get('neighborhood', 'RC')} - ${property_data.get('price', 700000):,}
+Property: {property_data.get("neighborhood", "RC")} - ${property_data.get("price", 700000):,}
 Predicted Annual ROI: {annual_roi:.1%}
 Total ROI Projection: {total_roi:.1%}
 Market Conditions: {json.dumps(conditions, indent=2, default=str)}
@@ -1016,7 +1010,7 @@ Return as JSON with key_factors, risk_factors, opportunities arrays.
             return {
                 "key_factors": ["Strong IE growth", "Logistics employment", "Population trends"],
                 "risk_factors": ["Market cycles", "Interest rate sensitivity"],
-                "opportunities": ["Rental demand", "Long-term appreciation", "Tax benefits"]
+                "opportunities": ["Rental demand", "Long-term appreciation", "Tax benefits"],
             }
 
     def _calculate_confidence(self, model_accuracy: float, data_recency: float, market_volatility: float) -> float:
@@ -1031,9 +1025,7 @@ Return as JSON with key_factors, risk_factors, opportunities arrays.
         stability_score = max(0, 1 - min(market_volatility, 1))
 
         confidence = (
-            model_accuracy * accuracy_weight +
-            data_recency * recency_weight +
-            stability_score * volatility_weight
+            model_accuracy * accuracy_weight + data_recency * recency_weight + stability_score * volatility_weight
         )
 
         return max(0, min(confidence, 1))
@@ -1059,9 +1051,7 @@ Return as JSON with key_factors, risk_factors, opportunities arrays.
             return timedelta(days=1095)  # 3 years
 
     async def _create_appreciation_opportunity(
-        self,
-        neighborhood: str,
-        prediction: PredictionResult
+        self, neighborhood: str, prediction: PredictionResult
     ) -> MarketOpportunity:
         """Create opportunity from strong appreciation prediction"""
 
@@ -1079,14 +1069,14 @@ Return as JSON with key_factors, risk_factors, opportunities arrays.
             mitigation_strategies=[
                 "Monitor interest rate trends",
                 "Diversify neighborhood exposure",
-                "Time entry carefully"
+                "Time entry carefully",
             ],
             recommended_actions=[
                 "Identify undervalued properties in the neighborhood",
                 "Target investors and upgraders",
-                "Create urgency around market timing"
+                "Create urgency around market timing",
             ],
-            ideal_client_profile="Investors and move-up buyers"
+            ideal_client_profile="Investors and move-up buyers",
         )
 
     async def _detect_undervalued_opportunity(self, neighborhood: str) -> Optional[MarketOpportunity]:
@@ -1096,10 +1086,11 @@ Return as JSON with key_factors, risk_factors, opportunities arrays.
         # In production, would compare to detailed comps and market models
 
         conditions = await self._get_current_market_conditions(neighborhood)
-        median_price = conditions.get('median_price', 700000)
+        median_price = conditions.get("median_price", 700000)
 
         # Mock undervaluation scoring
         import random
+
         undervaluation_score = random.uniform(0, 1)
 
         if undervaluation_score > 0.7:  # 30% chance of undervaluation
@@ -1118,9 +1109,9 @@ Return as JSON with key_factors, risk_factors, opportunities arrays.
                 recommended_actions=[
                     "Identify specific undervalued listings",
                     "Target cash buyers for speed",
-                    "Create compelling value proposition"
+                    "Create compelling value proposition",
                 ],
-                ideal_client_profile="Investors and savvy owner-occupants"
+                ideal_client_profile="Investors and savvy owner-occupants",
             )
 
         return None
@@ -1134,7 +1125,7 @@ Return as JSON with key_factors, risk_factors, opportunities arrays.
             "south_rc": 0.9,  # Highest emerging potential
             "central_rc": 0.6,
             "etiwanda": 0.4,
-            "alta_loma": 0.3   # Already established
+            "alta_loma": 0.3,  # Already established
         }
 
         emerging_score = emerging_indicators.get(neighborhood, 0.3)
@@ -1155,9 +1146,9 @@ Return as JSON with key_factors, risk_factors, opportunities arrays.
                 recommended_actions=[
                     "Position as area expert before competition",
                     "Educate clients on emerging area benefits",
-                    "Build relationships with local developers"
+                    "Build relationships with local developers",
                 ],
-                ideal_client_profile="Forward-thinking investors and young families"
+                ideal_client_profile="Forward-thinking investors and young families",
             )
 
         return None
@@ -1187,7 +1178,7 @@ Return as JSON with: peak_months, seasonal_trends, buyer_timing, seller_timing
                 "peak_months": [4, 5, 6],
                 "seasonal_trends": "Spring peak with winter slowdown",
                 "buyer_timing": "Fall/winter for better prices",
-                "seller_timing": "Spring for maximum exposure"
+                "seller_timing": "Spring for maximum exposure",
             }
 
     async def _generate_seasonal_recommendations(self, monthly_stats: Dict, neighborhood: str) -> List[str]:
@@ -1196,7 +1187,7 @@ Return as JSON with: peak_months, seasonal_trends, buyer_timing, seller_timing
         recommendations = [
             f"List properties in {neighborhood} during March-May for optimal exposure",
             "Buyers should focus on November-February for best negotiating power",
-            "Investment purchases work well in winter months with less competition"
+            "Investment purchases work well in winter months with less competition",
         ]
 
         return recommendations
@@ -1217,7 +1208,7 @@ Return as JSON with: peak_months, seasonal_trends, buyer_timing, seller_timing
             "old_payment": old_payment,
             "new_payment": new_payment,
             "payment_change": payment_change,
-            "change_percentage": change_percentage
+            "change_percentage": change_percentage,
         }
 
     async def _generate_rate_impact_insights(self, impact_analysis: Dict, rate_change: float) -> List[str]:
@@ -1226,17 +1217,21 @@ Return as JSON with: peak_months, seasonal_trends, buyer_timing, seller_timing
         insights = []
 
         if rate_change > 0:
-            insights.extend([
-                "Rising rates will reduce buyer purchasing power and demand",
-                "Sellers should consider pricing adjustments to maintain competitiveness",
-                "Investors may find better deals as competition decreases"
-            ])
+            insights.extend(
+                [
+                    "Rising rates will reduce buyer purchasing power and demand",
+                    "Sellers should consider pricing adjustments to maintain competitiveness",
+                    "Investors may find better deals as competition decreases",
+                ]
+            )
         else:
-            insights.extend([
-                "Lower rates will increase buyer demand and competition",
-                "Sellers can expect faster sales and potentially higher prices",
-                "Investment opportunities may become more expensive quickly"
-            ])
+            insights.extend(
+                [
+                    "Lower rates will increase buyer demand and competition",
+                    "Sellers can expect faster sales and potentially higher prices",
+                    "Investment opportunities may become more expensive quickly",
+                ]
+            )
 
         return insights
 
@@ -1247,24 +1242,24 @@ Return as JSON with: peak_months, seasonal_trends, buyer_timing, seller_timing
             return [
                 "Buyers should act quickly before rates rise further",
                 "Sellers should adjust expectations for longer marketing times",
-                "Refinancing opportunities may disappear - advise current homeowners"
+                "Refinancing opportunities may disappear - advise current homeowners",
             ]
         elif rate_change < -0.25:  # Significant rate decrease
             return [
                 "Expect increased buyer competition - prepare for multiple offers",
                 "Sellers can maximize pricing due to improved affordability",
-                "Investment demand will increase - identify opportunities early"
+                "Investment demand will increase - identify opportunities early",
             ]
         else:
             return [
                 "Modest rate changes - monitor for trend continuation",
-                "Maintain current market strategies with close monitoring"
+                "Maintain current market strategies with close monitoring",
             ]
 
     async def _cache_prediction_result(self, result: PredictionResult):
         """Cache prediction result"""
         cache_key = f"prediction:{result.prediction_id}"
-        await self.cache.set(cache_key, asdict(result), ttl=7*24*3600)  # 7 days
+        await self.cache.set(cache_key, asdict(result), ttl=7 * 24 * 3600)  # 7 days
 
     async def get_prediction_analytics(self) -> Dict[str, Any]:
         """Get analytics on prediction performance and trends"""
@@ -1274,7 +1269,7 @@ Return as JSON with: peak_months, seasonal_trends, buyer_timing, seller_timing
             "model_performance": {},
             "prediction_trends": {},
             "confidence_distribution": {},
-            "accuracy_tracking": {}
+            "accuracy_tracking": {},
         }
 
         # Model performance metrics
@@ -1283,7 +1278,7 @@ Return as JSON with: peak_months, seasonal_trends, buyer_timing, seller_timing
                 "accuracy": metadata.get("r2", 0),
                 "mae": metadata.get("mae", 0),
                 "training_date": metadata.get("training_date"),
-                "data_points": metadata.get("data_points", 0)
+                "data_points": metadata.get("data_points", 0),
             }
 
         # Add prediction trend analysis
@@ -1291,7 +1286,7 @@ Return as JSON with: peak_months, seasonal_trends, buyer_timing, seller_timing
             "total_predictions": len(self.predictions_cache),
             "opportunities_identified": len(self.opportunities_cache),
             "avg_confidence": 0.75,  # Placeholder
-            "high_confidence_predictions": 0
+            "high_confidence_predictions": 0,
         }
 
         return analytics
@@ -1299,46 +1294,45 @@ Return as JSON with: peak_months, seasonal_trends, buyer_timing, seller_timing
     async def get_area_predictions(self, area: str) -> List[Dict[str, Any]]:
         """Get predictions for multiple neighborhoods in an area"""
         await self._ensure_initialized()
-        
+
         # In a real scenario, this would look up neighborhoods for the area
         # For now, we'll use Rancho Cucamonga neighborhoods as the primary area
-        neighborhoods = [
-            "Alta Loma", "Etiwanda", "Victoria Gardens", "North RC", "South RC"
-        ]
-        
+        neighborhoods = ["Alta Loma", "Etiwanda", "Victoria Gardens", "North RC", "South RC"]
+
         results = []
         for neighborhood in neighborhoods:
             try:
                 # Use medium term horizon as default
-                prediction = await self.predict_price_appreciation(
-                    neighborhood, TimeHorizon.MEDIUM_TERM
+                prediction = await self.predict_price_appreciation(neighborhood, TimeHorizon.MEDIUM_TERM)
+
+                results.append(
+                    {
+                        "area": neighborhood,
+                        "predicted_growth": prediction.change_percentage,
+                        "horizon_months": 12,
+                        "confidence": prediction.confidence_level.value,
+                    }
                 )
-                
-                results.append({
-                    "area": neighborhood,
-                    "predicted_growth": prediction.change_percentage,
-                    "horizon_months": 12,
-                    "confidence": prediction.confidence_level.value
-                })
             except Exception as e:
                 # This often happens if models aren't trained yet
                 pass
-                
+
         # If no results (e.g. models not trained), return some realistic dummy data
         if not results:
-             results = [
+            results = [
                 {"area": "Alta Loma", "predicted_growth": 4.2, "horizon_months": 12, "confidence": "high"},
                 {"area": "Etiwanda", "predicted_growth": 5.8, "horizon_months": 12, "confidence": "high"},
                 {"area": "Victoria Gardens", "predicted_growth": 3.5, "horizon_months": 12, "confidence": "medium"},
                 {"area": "North RC", "predicted_growth": 2.9, "horizon_months": 12, "confidence": "medium"},
-                {"area": "South RC", "predicted_growth": 4.7, "horizon_months": 12, "confidence": "high"}
+                {"area": "South RC", "predicted_growth": 4.7, "horizon_months": 12, "confidence": "high"},
             ]
-                
+
         return results
 
 
 # Singleton instance
 _market_prediction_engine = None
+
 
 def get_market_prediction_engine() -> MarketPredictionEngine:
     """Get singleton Market Prediction Engine instance"""

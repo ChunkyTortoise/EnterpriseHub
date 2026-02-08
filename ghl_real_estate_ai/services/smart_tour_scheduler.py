@@ -46,9 +46,7 @@ class SmartTourScheduler:
         optimized_route = self._optimize_route(properties)
 
         # Calculate timing
-        tour_schedule = self._calculate_tour_timing(
-            optimized_route, available_slots[0] if available_slots else None
-        )
+        tour_schedule = self._calculate_tour_timing(optimized_route, available_slots[0] if available_slots else None)
 
         # Generate confirmations
         confirmations = self._generate_confirmations(client_info, tour_schedule)
@@ -63,9 +61,7 @@ class SmartTourScheduler:
             "created_at": datetime.utcnow().isoformat(),
         }
 
-    def _get_available_slots(
-        self, client_availability: List[str], timeframe: str
-    ) -> List[Dict[str, Any]]:
+    def _get_available_slots(self, client_availability: List[str], timeframe: str) -> List[Dict[str, Any]]:
         """Get available time slots"""
         # Sample slots
         tomorrow = datetime.utcnow() + timedelta(days=1)
@@ -91,9 +87,7 @@ class SmartTourScheduler:
             for idx, prop in enumerate(properties)
         ]
 
-    def _calculate_tour_timing(
-        self, route: List[Dict[str, Any]], start_slot: Optional[Dict] = None
-    ) -> Dict[str, Any]:
+    def _calculate_tour_timing(self, route: List[Dict[str, Any]], start_slot: Optional[Dict] = None) -> Dict[str, Any]:
         """Calculate detailed tour timing"""
         if not start_slot:
             start_slot = {
@@ -105,9 +99,7 @@ class SmartTourScheduler:
         buffer = 10  # buffer between showings
 
         stops = []
-        current_time = datetime.strptime(
-            f"{start_slot['date']} {start_slot['start_time']}", "%Y-%m-%d %I:%M %p"
-        )
+        current_time = datetime.strptime(f"{start_slot['date']} {start_slot['start_time']}", "%Y-%m-%d %I:%M %p")
 
         for stop in route:
             # Add drive time
@@ -129,10 +121,7 @@ class SmartTourScheduler:
             current_time = departure + timedelta(minutes=buffer)
 
         total_duration = (
-            current_time
-            - datetime.strptime(
-                f"{start_slot['date']} {start_slot['start_time']}", "%Y-%m-%d %I:%M %p"
-            )
+            current_time - datetime.strptime(f"{start_slot['date']} {start_slot['start_time']}", "%Y-%m-%d %I:%M %p")
         ).seconds // 60
 
         return {
@@ -144,9 +133,7 @@ class SmartTourScheduler:
             "properties_count": len(stops),
         }
 
-    def _generate_confirmations(
-        self, client_info: Dict, schedule: Dict
-    ) -> Dict[str, str]:
+    def _generate_confirmations(self, client_info: Dict, schedule: Dict) -> Dict[str, str]:
         """Generate confirmation messages"""
         name = client_info.get("name", "Client")
         date = schedule["date"]

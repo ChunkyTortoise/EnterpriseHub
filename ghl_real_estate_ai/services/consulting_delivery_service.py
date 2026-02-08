@@ -5,14 +5,14 @@ Manages structured delivery of high-ticket consulting engagements ($25K-$100K).
 Provides project management, stakeholder coordination, and success measurement.
 """
 
-import json
 import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Union
-from pathlib import Path
-from dataclasses import dataclass, asdict, field
-from enum import Enum
+import json
 import uuid
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -22,13 +22,15 @@ logger = get_logger(__name__)
 
 class EngagementTier(Enum):
     """High-ticket consulting engagement tiers."""
-    ACCELERATOR = "accelerator"      # $25K-$35K
-    PLATFORM = "platform"           # $50K-$75K
-    INNOVATION = "innovation"        # $75K-$100K
+
+    ACCELERATOR = "accelerator"  # $25K-$35K
+    PLATFORM = "platform"  # $50K-$75K
+    INNOVATION = "innovation"  # $75K-$100K
 
 
 class EngagementStatus(Enum):
     """Consulting engagement status tracking."""
+
     PROSPECT = "prospect"
     PROPOSAL = "proposal"
     CONTRACTED = "contracted"
@@ -44,6 +46,7 @@ class EngagementStatus(Enum):
 
 class DeliverableStatus(Enum):
     """Individual deliverable status."""
+
     PLANNED = "planned"
     IN_PROGRESS = "in_progress"
     REVIEW = "review"
@@ -53,6 +56,7 @@ class DeliverableStatus(Enum):
 
 class StakeholderRole(Enum):
     """Client stakeholder roles."""
+
     EXECUTIVE_SPONSOR = "executive_sponsor"
     PROJECT_MANAGER = "project_manager"
     TECHNICAL_LEAD = "technical_lead"
@@ -63,6 +67,7 @@ class StakeholderRole(Enum):
 @dataclass
 class Stakeholder:
     """Client stakeholder information."""
+
     stakeholder_id: str
     name: str
     email: str
@@ -78,6 +83,7 @@ class Stakeholder:
 @dataclass
 class Deliverable:
     """Consulting engagement deliverable."""
+
     deliverable_id: str
     name: str
     description: str
@@ -146,6 +152,7 @@ class ConsultingEngagement:
 @dataclass
 class ROIMetrics:
     """ROI tracking and measurement."""
+
     engagement_id: str
     measurement_date: str
 
@@ -211,9 +218,9 @@ class ConsultingDeliveryService:
                     "acceptance_criteria": [
                         "Current state analysis completed",
                         "AI opportunity matrix delivered",
-                        "ROI projections validated"
+                        "ROI projections validated",
                     ],
-                    "client_value": "Strategic clarity on $500K+ revenue opportunities"
+                    "client_value": "Strategic clarity on $500K+ revenue opportunities",
                 },
                 {
                     "name": "Multi-Agent Swarm Implementation",
@@ -223,9 +230,9 @@ class ConsultingDeliveryService:
                     "acceptance_criteria": [
                         "10+ agents deployed and tested",
                         "Consensus scoring above 85% accuracy",
-                        "Integration with existing CRM validated"
+                        "Integration with existing CRM validated",
                     ],
-                    "client_value": "85+ hours/month automation with 25% conversion improvement"
+                    "client_value": "85+ hours/month automation with 25% conversion improvement",
                 },
                 {
                     "name": "Team Training Program",
@@ -235,12 +242,11 @@ class ConsultingDeliveryService:
                     "acceptance_criteria": [
                         "Training materials delivered",
                         "All team members certified",
-                        "Performance benchmarks established"
+                        "Performance benchmarks established",
                     ],
-                    "client_value": "Team productivity increase of 40%+"
-                }
+                    "client_value": "Team productivity increase of 40%+",
+                },
             ],
-
             EngagementTier.PLATFORM: [
                 {
                     "name": "Enterprise AI Architecture Design",
@@ -250,9 +256,9 @@ class ConsultingDeliveryService:
                     "acceptance_criteria": [
                         "Enterprise architecture documented",
                         "Scalability roadmap delivered",
-                        "Integration strategy validated"
+                        "Integration strategy validated",
                     ],
-                    "client_value": "Foundation for $2M+ revenue scaling"
+                    "client_value": "Foundation for $2M+ revenue scaling",
                 },
                 {
                     "name": "Predictive Analytics Engine",
@@ -262,9 +268,9 @@ class ConsultingDeliveryService:
                     "acceptance_criteria": [
                         "ML models deployed with 90%+ accuracy",
                         "Real-time prediction dashboard operational",
-                        "Historical validation completed"
+                        "Historical validation completed",
                     ],
-                    "client_value": "40% churn reduction, $1M+ revenue retention"
+                    "client_value": "40% churn reduction, $1M+ revenue retention",
                 },
                 {
                     "name": "Executive Intelligence Dashboard",
@@ -274,9 +280,9 @@ class ConsultingDeliveryService:
                     "acceptance_criteria": [
                         "Executive dashboard deployed",
                         "Real-time KPI monitoring active",
-                        "Mobile optimization completed"
+                        "Mobile optimization completed",
                     ],
-                    "client_value": "C-suite decision making acceleration, strategic visibility"
+                    "client_value": "C-suite decision making acceleration, strategic visibility",
                 },
                 {
                     "name": "Advanced Team Certification",
@@ -286,12 +292,11 @@ class ConsultingDeliveryService:
                     "acceptance_criteria": [
                         "Advanced certification program completed",
                         "Internal champions identified and trained",
-                        "Optimization playbooks delivered"
+                        "Optimization playbooks delivered",
                     ],
-                    "client_value": "Internal capability building, reduced dependency"
-                }
+                    "client_value": "Internal capability building, reduced dependency",
+                },
             ],
-
             EngagementTier.INNOVATION: [
                 {
                     "name": "Custom AI Model Development",
@@ -301,9 +306,9 @@ class ConsultingDeliveryService:
                     "acceptance_criteria": [
                         "Custom models trained and validated",
                         "Proprietary algorithm documentation delivered",
-                        "Competitive differentiation verified"
+                        "Competitive differentiation verified",
                     ],
-                    "client_value": "Unique competitive advantage, proprietary IP creation"
+                    "client_value": "Unique competitive advantage, proprietary IP creation",
                 },
                 {
                     "name": "Innovation Lab Setup",
@@ -313,9 +318,9 @@ class ConsultingDeliveryService:
                     "acceptance_criteria": [
                         "Innovation lab infrastructure deployed",
                         "Experimentation frameworks established",
-                        "Success measurement criteria defined"
+                        "Success measurement criteria defined",
                     ],
-                    "client_value": "Ongoing innovation capability, future-ready organization"
+                    "client_value": "Ongoing innovation capability, future-ready organization",
                 },
                 {
                     "name": "Market Launch Strategy",
@@ -325,9 +330,9 @@ class ConsultingDeliveryService:
                     "acceptance_criteria": [
                         "Market positioning strategy delivered",
                         "Launch plan with success metrics",
-                        "Competitive analysis and differentiation strategy"
+                        "Competitive analysis and differentiation strategy",
                     ],
-                    "client_value": "Strategic market positioning, revenue growth acceleration"
+                    "client_value": "Strategic market positioning, revenue growth acceleration",
                 },
                 {
                     "name": "Executive Advisory Program",
@@ -337,17 +342,17 @@ class ConsultingDeliveryService:
                     "acceptance_criteria": [
                         "Advisory framework established",
                         "Monthly strategic reviews scheduled",
-                        "Continuous optimization process active"
+                        "Continuous optimization process active",
                     ],
-                    "client_value": "Ongoing strategic guidance, performance optimization"
-                }
-            ]
+                    "client_value": "Ongoing strategic guidance, performance optimization",
+                },
+            ],
         }
 
         # Save templates
         for tier, deliverables in tier_templates.items():
             template_file = self.templates_dir / f"{tier.value}_deliverables.json"
-            with open(template_file, 'w') as f:
+            with open(template_file, "w") as f:
                 json.dump(deliverables, f, indent=2)
 
     async def create_engagement(
@@ -357,7 +362,7 @@ class ConsultingDeliveryService:
         tier: EngagementTier,
         contract_value: float,
         start_date: str,
-        lead_consultant: str
+        lead_consultant: str,
     ) -> str:
         """Create new consulting engagement."""
 
@@ -368,8 +373,8 @@ class ConsultingDeliveryService:
             start_dt = datetime.fromisoformat(start_date)
             duration_weeks = {
                 EngagementTier.ACCELERATOR: 7,  # 6-8 weeks
-                EngagementTier.PLATFORM: 11,   # 10-12 weeks
-                EngagementTier.INNOVATION: 14  # 12-16 weeks
+                EngagementTier.PLATFORM: 11,  # 10-12 weeks
+                EngagementTier.INNOVATION: 14,  # 12-16 weeks
             }
 
             end_date = start_dt + timedelta(weeks=duration_weeks[tier])
@@ -392,7 +397,7 @@ class ConsultingDeliveryService:
                 deliverables=deliverables,
                 success_metrics=self._get_tier_success_metrics(tier),
                 created_at=datetime.utcnow().isoformat(),
-                last_updated=datetime.utcnow().isoformat()
+                last_updated=datetime.utcnow().isoformat(),
             )
 
             # Save engagement
@@ -413,30 +418,24 @@ class ConsultingDeliveryService:
             return None
 
         try:
-            with open(engagement_file, 'r') as f:
+            with open(engagement_file, "r") as f:
                 data = json.load(f)
 
             # Convert enums and nested objects
-            data['tier'] = EngagementTier(data['tier'])
-            data['status'] = EngagementStatus(data['status'])
+            data["tier"] = EngagementTier(data["tier"])
+            data["status"] = EngagementStatus(data["status"])
 
             # Convert stakeholders
-            if 'stakeholders' in data:
-                data['stakeholders'] = [
-                    Stakeholder(**s) if isinstance(s, dict) else s
-                    for s in data['stakeholders']
-                ]
+            if "stakeholders" in data:
+                data["stakeholders"] = [Stakeholder(**s) if isinstance(s, dict) else s for s in data["stakeholders"]]
 
             # Convert deliverables
-            if 'deliverables' in data:
-                for deliverable_data in data['deliverables']:
-                    if isinstance(deliverable_data, dict) and 'status' in deliverable_data:
-                        deliverable_data['status'] = DeliverableStatus(deliverable_data['status'])
+            if "deliverables" in data:
+                for deliverable_data in data["deliverables"]:
+                    if isinstance(deliverable_data, dict) and "status" in deliverable_data:
+                        deliverable_data["status"] = DeliverableStatus(deliverable_data["status"])
 
-                data['deliverables'] = [
-                    Deliverable(**d) if isinstance(d, dict) else d
-                    for d in data['deliverables']
-                ]
+                data["deliverables"] = [Deliverable(**d) if isinstance(d, dict) else d for d in data["deliverables"]]
 
             return ConsultingEngagement(**data)
 
@@ -444,12 +443,7 @@ class ConsultingDeliveryService:
             logger.error(f"Failed to load engagement {engagement_id}: {e}")
             return None
 
-    async def update_engagement_status(
-        self,
-        engagement_id: str,
-        status: EngagementStatus,
-        notes: str = ""
-    ) -> bool:
+    async def update_engagement_status(self, engagement_id: str, status: EngagementStatus, notes: str = "") -> bool:
         """Update engagement status with optional notes."""
 
         engagement = await self.get_engagement(engagement_id)
@@ -462,12 +456,14 @@ class ConsultingDeliveryService:
 
             # Add communication log entry
             if notes:
-                engagement.communication_log.append({
-                    "timestamp": datetime.utcnow().isoformat(),
-                    "type": "status_update",
-                    "message": f"Status updated to {status.value}: {notes}",
-                    "author": "system"
-                })
+                engagement.communication_log.append(
+                    {
+                        "timestamp": datetime.utcnow().isoformat(),
+                        "type": "status_update",
+                        "message": f"Status updated to {status.value}: {notes}",
+                        "author": "system",
+                    }
+                )
 
             await self._save_engagement(engagement)
             logger.info(f"Updated engagement {engagement_id} status to {status.value}")
@@ -477,11 +473,7 @@ class ConsultingDeliveryService:
             logger.error(f"Failed to update engagement status: {e}")
             return False
 
-    async def add_stakeholder(
-        self,
-        engagement_id: str,
-        stakeholder: Stakeholder
-    ) -> bool:
+    async def add_stakeholder(self, engagement_id: str, stakeholder: Stakeholder) -> bool:
         """Add stakeholder to engagement."""
 
         engagement = await self.get_engagement(engagement_id)
@@ -511,7 +503,7 @@ class ConsultingDeliveryService:
         deliverable_id: str,
         status: DeliverableStatus,
         actual_hours: Optional[int] = None,
-        notes: str = ""
+        notes: str = "",
     ) -> bool:
         """Update deliverable status and progress."""
 
@@ -543,12 +535,14 @@ class ConsultingDeliveryService:
             engagement.last_updated = datetime.utcnow().isoformat()
 
             # Add communication log entry
-            engagement.communication_log.append({
-                "timestamp": datetime.utcnow().isoformat(),
-                "type": "deliverable_update",
-                "message": f"Deliverable {deliverable_id} updated to {status.value}: {notes}",
-                "author": "system"
-            })
+            engagement.communication_log.append(
+                {
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "type": "deliverable_update",
+                    "message": f"Deliverable {deliverable_id} updated to {status.value}: {notes}",
+                    "author": "system",
+                }
+            )
 
             await self._save_engagement(engagement)
             logger.info(f"Updated deliverable {deliverable_id} status to {status.value}")
@@ -558,11 +552,7 @@ class ConsultingDeliveryService:
             logger.error(f"Failed to update deliverable: {e}")
             return False
 
-    async def track_roi_metrics(
-        self,
-        engagement_id: str,
-        metrics: ROIMetrics
-    ) -> bool:
+    async def track_roi_metrics(self, engagement_id: str, metrics: ROIMetrics) -> bool:
         """Track ROI metrics for engagement."""
 
         try:
@@ -571,14 +561,14 @@ class ConsultingDeliveryService:
             # Load existing metrics
             metrics_history = []
             if metrics_file.exists():
-                with open(metrics_file, 'r') as f:
+                with open(metrics_file, "r") as f:
                     metrics_history = json.load(f)
 
             # Add new measurement
             metrics_history.append(asdict(metrics))
 
             # Save updated metrics
-            with open(metrics_file, 'w') as f:
+            with open(metrics_file, "w") as f:
                 json.dump(metrics_history, f, indent=2)
 
             # Update engagement with latest metrics
@@ -588,7 +578,7 @@ class ConsultingDeliveryService:
                     "monthly_revenue_increase": metrics.monthly_revenue_increase,
                     "hours_saved_per_week": metrics.hours_saved_per_week,
                     "conversion_improvement": metrics.conversion_rate_improvement,
-                    "customer_satisfaction": metrics.customer_satisfaction_score
+                    "customer_satisfaction": metrics.customer_satisfaction_score,
                 }
                 engagement.projected_roi = metrics.total_roi_percentage
                 await self._save_engagement(engagement)
@@ -610,21 +600,20 @@ class ConsultingDeliveryService:
         try:
             # Calculate key metrics
             total_deliverables = len(engagement.deliverables)
-            completed_deliverables = len([
-                d for d in engagement.deliverables
-                if d.status in [DeliverableStatus.APPROVED, DeliverableStatus.DEPLOYED]
-            ])
+            completed_deliverables = len(
+                [
+                    d
+                    for d in engagement.deliverables
+                    if d.status in [DeliverableStatus.APPROVED, DeliverableStatus.DEPLOYED]
+                ]
+            )
 
-            in_progress_deliverables = len([
-                d for d in engagement.deliverables
-                if d.status == DeliverableStatus.IN_PROGRESS
-            ])
+            in_progress_deliverables = len(
+                [d for d in engagement.deliverables if d.status == DeliverableStatus.IN_PROGRESS]
+            )
 
             # Financial progress
-            paid_milestones = len([
-                p for p in engagement.payment_schedule
-                if p.get('status') == 'paid'
-            ])
+            paid_milestones = len([p for p in engagement.payment_schedule if p.get("status") == "paid"])
             total_milestones = len(engagement.payment_schedule)
 
             # Risk assessment
@@ -644,37 +633,36 @@ class ConsultingDeliveryService:
                     "tier": engagement.tier.value,
                     "status": engagement.status.value,
                     "contract_value": engagement.contract_value,
-                    "completion_percentage": engagement.completion_percentage
+                    "completion_percentage": engagement.completion_percentage,
                 },
                 "progress": {
                     "total_deliverables": total_deliverables,
                     "completed_deliverables": completed_deliverables,
                     "in_progress_deliverables": in_progress_deliverables,
-                    "completion_rate": (completed_deliverables / total_deliverables * 100) if total_deliverables > 0 else 0
+                    "completion_rate": (completed_deliverables / total_deliverables * 100)
+                    if total_deliverables > 0
+                    else 0,
                 },
                 "financial": {
                     "contract_value": engagement.contract_value,
                     "paid_milestones": paid_milestones,
                     "total_milestones": total_milestones,
-                    "payment_progress": (paid_milestones / total_milestones * 100) if total_milestones > 0 else 0
+                    "payment_progress": (paid_milestones / total_milestones * 100) if total_milestones > 0 else 0,
                 },
                 "timeline": {
                     "start_date": engagement.start_date,
                     "planned_end_date": engagement.planned_end_date,
                     "actual_end_date": engagement.actual_end_date,
-                    "days_remaining": self._calculate_days_remaining(engagement.planned_end_date)
+                    "days_remaining": self._calculate_days_remaining(engagement.planned_end_date),
                 },
                 "team": {
                     "lead_consultant": engagement.lead_consultant,
                     "team_size": len(engagement.consulting_team) + 1,
-                    "stakeholders": len(engagement.stakeholders)
+                    "stakeholders": len(engagement.stakeholders),
                 },
-                "risk": {
-                    "level": risk_level,
-                    "issues": engagement.risk_assessment
-                },
+                "risk": {"level": risk_level, "issues": engagement.risk_assessment},
                 "roi": roi_data,
-                "recent_activity": engagement.communication_log[-5:] if engagement.communication_log else []
+                "recent_activity": engagement.communication_log[-5:] if engagement.communication_log else [],
             }
 
         except Exception as e:
@@ -714,11 +702,11 @@ class ConsultingDeliveryService:
                 "financial_status": {
                     "budget_utilization": dashboard["financial"]["payment_progress"],
                     "projected_roi": engagement.projected_roi,
-                    "value_delivered": self._calculate_value_delivered(engagement)
+                    "value_delivered": self._calculate_value_delivered(engagement),
                 },
                 "risk_assessment": risk_mitigation,
                 "next_steps": self._identify_next_steps(engagement),
-                "stakeholder_engagement": self._assess_stakeholder_engagement(engagement)
+                "stakeholder_engagement": self._assess_stakeholder_engagement(engagement),
             }
 
         except Exception as e:
@@ -732,7 +720,8 @@ class ConsultingDeliveryService:
 
         total_hours = sum(d.estimated_hours for d in engagement.deliverables)
         completed_hours = sum(
-            d.estimated_hours for d in engagement.deliverables
+            d.estimated_hours
+            for d in engagement.deliverables
             if d.status in [DeliverableStatus.APPROVED, DeliverableStatus.DEPLOYED]
         )
 
@@ -746,7 +735,7 @@ class ConsultingDeliveryService:
             return []
 
         try:
-            with open(template_file, 'r') as f:
+            with open(template_file, "r") as f:
                 templates = json.load(f)
 
             deliverables = []
@@ -758,7 +747,7 @@ class ConsultingDeliveryService:
                     category=template["category"],
                     estimated_hours=template["estimated_hours"],
                     acceptance_criteria=template["acceptance_criteria"],
-                    client_value=template["client_value"]
+                    client_value=template["client_value"],
                 )
                 deliverables.append(deliverable)
 
@@ -775,14 +764,14 @@ class ConsultingDeliveryService:
             return [
                 {"milestone": "Contract Signing", "amount": contract_value * 0.30, "status": "pending"},
                 {"milestone": "Discovery Complete", "amount": contract_value * 0.30, "status": "pending"},
-                {"milestone": "Implementation Complete", "amount": contract_value * 0.40, "status": "pending"}
+                {"milestone": "Implementation Complete", "amount": contract_value * 0.40, "status": "pending"},
             ]
         elif tier == EngagementTier.PLATFORM:
             return [
                 {"milestone": "Contract Signing", "amount": contract_value * 0.25, "status": "pending"},
                 {"milestone": "Architecture Approved", "amount": contract_value * 0.25, "status": "pending"},
                 {"milestone": "Platform Deployed", "amount": contract_value * 0.30, "status": "pending"},
-                {"milestone": "Training Complete", "amount": contract_value * 0.20, "status": "pending"}
+                {"milestone": "Training Complete", "amount": contract_value * 0.20, "status": "pending"},
             ]
         else:  # INNOVATION
             return [
@@ -790,7 +779,7 @@ class ConsultingDeliveryService:
                 {"milestone": "Custom Models Delivered", "amount": contract_value * 0.25, "status": "pending"},
                 {"milestone": "Innovation Lab Operational", "amount": contract_value * 0.25, "status": "pending"},
                 {"milestone": "Market Launch Support", "amount": contract_value * 0.20, "status": "pending"},
-                {"milestone": "Advisory Program Active", "amount": contract_value * 0.10, "status": "pending"}
+                {"milestone": "Advisory Program Active", "amount": contract_value * 0.10, "status": "pending"},
             ]
 
     def _get_tier_success_metrics(self, tier: EngagementTier) -> List[str]:
@@ -799,29 +788,31 @@ class ConsultingDeliveryService:
         base_metrics = [
             "Client satisfaction score > 9.0",
             "All deliverables approved on time",
-            "ROI target achieved within 6 months"
+            "ROI target achieved within 6 months",
         ]
 
         if tier == EngagementTier.ACCELERATOR:
-            base_metrics.extend([
-                "25% conversion rate improvement",
-                "85+ hours/month automation achieved",
-                "Team adoption rate > 90%"
-            ])
+            base_metrics.extend(
+                ["25% conversion rate improvement", "85+ hours/month automation achieved", "Team adoption rate > 90%"]
+            )
         elif tier == EngagementTier.PLATFORM:
-            base_metrics.extend([
-                "40% churn reduction achieved",
-                "$1M+ revenue retention demonstrated",
-                "Executive dashboard adoption > 95%",
-                "Platform scalability validated"
-            ])
+            base_metrics.extend(
+                [
+                    "40% churn reduction achieved",
+                    "$1M+ revenue retention demonstrated",
+                    "Executive dashboard adoption > 95%",
+                    "Platform scalability validated",
+                ]
+            )
         else:  # INNOVATION
-            base_metrics.extend([
-                "Proprietary competitive advantage established",
-                "Innovation lab delivering measurable results",
-                "Market leadership position achieved",
-                "Ongoing innovation capability established"
-            ])
+            base_metrics.extend(
+                [
+                    "Proprietary competitive advantage established",
+                    "Innovation lab delivering measurable results",
+                    "Market leadership position achieved",
+                    "Ongoing innovation capability established",
+                ]
+            )
 
         return base_metrics
 
@@ -831,19 +822,23 @@ class ConsultingDeliveryService:
 
         # Convert to dict and handle enums
         data = asdict(engagement)
-        data['tier'] = engagement.tier.value
-        data['status'] = engagement.status.value
+        data["tier"] = engagement.tier.value
+        data["status"] = engagement.status.value
 
         # Convert nested objects
-        for stakeholder in data['stakeholders']:
-            if isinstance(stakeholder, dict) and 'role' in stakeholder:
-                stakeholder['role'] = stakeholder['role'].value if hasattr(stakeholder['role'], 'value') else stakeholder['role']
+        for stakeholder in data["stakeholders"]:
+            if isinstance(stakeholder, dict) and "role" in stakeholder:
+                stakeholder["role"] = (
+                    stakeholder["role"].value if hasattr(stakeholder["role"], "value") else stakeholder["role"]
+                )
 
-        for deliverable in data['deliverables']:
-            if isinstance(deliverable, dict) and 'status' in deliverable:
-                deliverable['status'] = deliverable['status'].value if hasattr(deliverable['status'], 'value') else deliverable['status']
+        for deliverable in data["deliverables"]:
+            if isinstance(deliverable, dict) and "status" in deliverable:
+                deliverable["status"] = (
+                    deliverable["status"].value if hasattr(deliverable["status"], "value") else deliverable["status"]
+                )
 
-        with open(engagement_file, 'w') as f:
+        with open(engagement_file, "w") as f:
             json.dump(data, f, indent=2)
 
     async def _get_latest_roi_metrics(self, engagement_id: str) -> Dict[str, Any]:
@@ -854,7 +849,7 @@ class ConsultingDeliveryService:
             return {}
 
         try:
-            with open(metrics_file, 'r') as f:
+            with open(metrics_file, "r") as f:
                 metrics_history = json.load(f)
 
             if not metrics_history:
@@ -866,7 +861,7 @@ class ConsultingDeliveryService:
                 "total_roi": latest.get("total_roi_percentage", 0),
                 "payback_months": latest.get("payback_period_months", 0),
                 "revenue_increase": latest.get("monthly_revenue_increase", 0),
-                "hours_saved": latest.get("hours_saved_per_week", 0)
+                "hours_saved": latest.get("hours_saved_per_week", 0),
             }
 
         except Exception as e:
@@ -876,7 +871,7 @@ class ConsultingDeliveryService:
     def _calculate_days_remaining(self, planned_end_date: str) -> int:
         """Calculate days remaining until planned end date."""
         try:
-            end_date = datetime.fromisoformat(planned_end_date.replace('Z', '+00:00'))
+            end_date = datetime.fromisoformat(planned_end_date.replace("Z", "+00:00"))
             now = datetime.utcnow()
             return (end_date - now).days
         except:
@@ -931,28 +926,27 @@ class ConsultingDeliveryService:
         risks = []
 
         for risk in engagement.risk_assessment:
-            risks.append({
-                "risk": risk,
-                "mitigation": "Proactive monitoring and stakeholder communication",
-                "status": "Managed"
-            })
+            risks.append(
+                {"risk": risk, "mitigation": "Proactive monitoring and stakeholder communication", "status": "Managed"}
+            )
 
         # Add standard risk assessment based on progress
         completion = self._calculate_completion_percentage(engagement)
         if completion < 30:
-            risks.append({
-                "risk": "Early stage execution risk",
-                "mitigation": "Weekly stakeholder check-ins and milestone validation",
-                "status": "Monitoring"
-            })
+            risks.append(
+                {
+                    "risk": "Early stage execution risk",
+                    "mitigation": "Weekly stakeholder check-ins and milestone validation",
+                    "status": "Monitoring",
+                }
+            )
 
         return risks
 
     def _calculate_value_delivered(self, engagement: ConsultingEngagement) -> str:
         """Calculate business value delivered to date."""
         completed_deliverables = [
-            d for d in engagement.deliverables
-            if d.status in [DeliverableStatus.APPROVED, DeliverableStatus.DEPLOYED]
+            d for d in engagement.deliverables if d.status in [DeliverableStatus.APPROVED, DeliverableStatus.DEPLOYED]
         ]
 
         if not completed_deliverables:
@@ -992,7 +986,7 @@ class ConsultingDeliveryService:
         return {
             "total_stakeholders": total_stakeholders,
             "high_influence_engaged": high_influence,
-            "engagement_health": "Strong" if high_influence >= 2 else "Needs Attention"
+            "engagement_health": "Strong" if high_influence >= 2 else "Needs Attention",
         }
 
     def _calculate_project_week(self, engagement: ConsultingEngagement) -> int:

@@ -16,17 +16,12 @@ Key Features:
 - Medical practice valuation models
 """
 
-from .medical_property_analyzer import MedicalPropertyAnalyzer
+from .healthcare_analytics import HealthcareAnalytics
 from .healthcare_compliance import HealthcareCompliance
 from .medical_facility_matcher import MedicalFacilityMatcher
-from .healthcare_analytics import HealthcareAnalytics
+from .medical_property_analyzer import MedicalPropertyAnalyzer
 
-__all__ = [
-    "MedicalPropertyAnalyzer",
-    "HealthcareCompliance", 
-    "MedicalFacilityMatcher",
-    "HealthcareAnalytics"
-]
+__all__ = ["MedicalPropertyAnalyzer", "HealthcareCompliance", "MedicalFacilityMatcher", "HealthcareAnalytics"]
 
 # Healthcare vertical configuration
 HEALTHCARE_CONFIG = {
@@ -41,14 +36,14 @@ HEALTHCARE_CONFIG = {
         "dental_practice",
         "specialty_clinic",
         "rehabilitation_center",
-        "diagnostic_center"
+        "diagnostic_center",
     ],
     "key_metrics": [
         "beds_per_1000_population",
-        "physician_density", 
+        "physician_density",
         "aging_population_index",
         "medicare_reimbursement_rates",
         "medical_facility_occupancy",
-        "healthcare_market_growth"
-    ]
+        "healthcare_market_growth",
+    ],
 }

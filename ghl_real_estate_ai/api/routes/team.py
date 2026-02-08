@@ -63,9 +63,7 @@ async def assign_lead(location_id: str, contact_id: str):
     manager = TeamManager(location_id)
     agent_id = manager.assign_lead(contact_id)
     if not agent_id:
-        raise HTTPException(
-            status_code=404, detail="No agents available for assignment"
-        )
+        raise HTTPException(status_code=404, detail="No agents available for assignment")
     return {"contact_id": contact_id, "assigned_to": agent_id}
 
 

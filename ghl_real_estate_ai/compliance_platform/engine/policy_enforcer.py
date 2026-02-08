@@ -32,25 +32,28 @@ if TYPE_CHECKING:
 
 class PolicyType(str, Enum):
     """Types of compliance policies"""
-    MANDATORY = "mandatory"          # Must comply
-    RECOMMENDED = "recommended"      # Should comply
-    CONDITIONAL = "conditional"      # Depends on context
-    EXEMPTABLE = "exemptable"        # Can be exempted with approval
+
+    MANDATORY = "mandatory"  # Must comply
+    RECOMMENDED = "recommended"  # Should comply
+    CONDITIONAL = "conditional"  # Depends on context
+    EXEMPTABLE = "exemptable"  # Can be exempted with approval
 
 
 class PolicyScope(str, Enum):
     """Scope of policy application"""
-    GLOBAL = "global"                # Applies to all models
-    HIGH_RISK = "high_risk"          # Only high-risk models
+
+    GLOBAL = "global"  # Applies to all models
+    HIGH_RISK = "high_risk"  # Only high-risk models
     PERSONAL_DATA = "personal_data"  # Models processing personal data
-    HEALTHCARE = "healthcare"        # Healthcare domain
-    FINANCE = "finance"              # Financial services
-    SPECIFIC_MODEL = "specific"      # Specific model types
+    HEALTHCARE = "healthcare"  # Healthcare domain
+    FINANCE = "finance"  # Financial services
+    SPECIFIC_MODEL = "specific"  # Specific model types
 
 
 @dataclass
 class CompliancePolicy:
     """Definition of a compliance policy/rule"""
+
     policy_id: str
     name: str
     description: str
@@ -163,15 +166,11 @@ class PolicyEnforcer:
                 policy_id="FHA-001",
                 name="Protected Class Discrimination",
                 description="Prohibits discrimination based on race, color, religion, sex, handicap, familial status, or national origin.",
-                regulation=RegulationType.EU_AI_ACT, # Using as placeholder if FHA not in Enum
+                regulation=RegulationType.EU_AI_ACT,  # Using as placeholder if FHA not in Enum
                 policy_type=PolicyType.MANDATORY,
                 scope=PolicyScope.GLOBAL,
                 severity_if_violated=ViolationSeverity.CRITICAL,
-                prohibited_conditions=[
-                    "discriminatory_steering", 
-                    "protected_class_reference",
-                    "exclusionary_language"
-                ],
+                prohibited_conditions=["discriminatory_steering", "protected_class_reference", "exclusionary_language"],
                 remediation_guidance="Remove any references to protected classes or steering language. Use neutral, property-focused descriptions.",
                 remediation_deadline_days=0,
             ),
@@ -186,7 +185,7 @@ class PolicyEnforcer:
                 required_conditions=["equal_housing_opportunity_disclosure"],
                 remediation_guidance="Include Equal Housing Opportunity disclaimer in all advertising materials.",
                 remediation_deadline_days=1,
-            )
+            ),
         ]
 
         for policy in policies:
@@ -195,40 +194,38 @@ class PolicyEnforcer:
     async def intercept_message(self, message_text: str, context: Dict[str, Any] = None) -> Dict[str, Any]:
         """
         Intercepts and analyzes a message for real-time compliance.
-        
+
         Returns:
             Dict containing 'allowed' (bool), 'violations' (list), and 'suggestion' (str).
         """
         violations = []
-        
+
         # Simple pattern-based detection for FHA (in production, use LLM-based analysis)
         fha_keywords = [
             r"\b(Union[white, black]|Union[asian, hispanic])\s+(Union[neighborhood, area]|people)\b",
             r"\b(Union[christian, jewish]|Union[muslim, catholic])\b",
             r"\b(no\s+Union[kids, adults]\s+Union[only, no]\s+families)\b",
             r"\b(perfect\s+for\s+Union[singles, man]\s+Union[cave, bachelor]\s+pad)\b",
-            r"\b(Union[restricted, exclusive]|private)\s+community\b"
+            r"\b(Union[restricted, exclusive]|private)\s+community\b",
         ]
-        
+
         for pattern in fha_keywords:
             if re.search(pattern, message_text, re.IGNORECASE):
-                violations.append({
-                    "policy_id": "FHA-001",
-                    "severity": "CRITICAL",
-                    "message": f"Potential FHA violation detected: {pattern}"
-                })
-        
+                violations.append(
+                    {
+                        "policy_id": "FHA-001",
+                        "severity": "CRITICAL",
+                        "message": f"Potential FHA violation detected: {pattern}",
+                    }
+                )
+
         if not violations:
             return {"allowed": True, "violations": [], "suggestion": None}
-            
+
         # If violations found, provide a suggestion (placeholder)
         suggestion = "This property is open to everyone. It features [Property Features] and is located in [Location]."
-        
-        return {
-            "allowed": False,
-            "violations": violations,
-            "suggestion": suggestion
-        }
+
+        return {"allowed": False, "violations": violations, "suggestion": suggestion}
 
     def _register_eu_ai_act_policies(self):
         """Register EU AI Act compliance policies"""
@@ -651,7 +648,7 @@ class PolicyEnforcer:
                     severity=policy.severity_if_violated,
                     title=f"Prohibited Condition: {prohibited}",
                     description=f"Model {model.name} violates policy {policy.name}. "
-                               f"Prohibited condition detected: {prohibited}",
+                    f"Prohibited condition detected: {prohibited}",
                     evidence=[f"Context contains prohibited condition: {prohibited}"],
                     affected_systems=[model.model_id],
                     detected_by="policy_enforcer",
@@ -674,7 +671,7 @@ class PolicyEnforcer:
                 severity=policy.severity_if_violated,
                 title=f"Missing Requirements: {policy.name}",
                 description=f"Model {model.name} is missing required conditions for {policy.name}: "
-                           f"{', '.join(missing_conditions)}",
+                f"{', '.join(missing_conditions)}",
                 evidence=[f"Missing: {cond}" for cond in missing_conditions],
                 affected_systems=[model.model_id],
                 detected_by="policy_enforcer",
@@ -699,13 +696,13 @@ class PolicyEnforcer:
         fine_estimates = {
             RegulationType.EU_AI_ACT: {
                 ViolationSeverity.CRITICAL: 35_000_000,  # €35M or 7% turnover
-                ViolationSeverity.HIGH: 15_000_000,     # €15M or 3% turnover
-                ViolationSeverity.MEDIUM: 7_500_000,    # €7.5M or 1.5% turnover
+                ViolationSeverity.HIGH: 15_000_000,  # €15M or 3% turnover
+                ViolationSeverity.MEDIUM: 7_500_000,  # €7.5M or 1.5% turnover
                 ViolationSeverity.LOW: 1_000_000,
             },
             RegulationType.GDPR: {
                 ViolationSeverity.CRITICAL: 20_000_000,  # €20M or 4% turnover
-                ViolationSeverity.HIGH: 10_000_000,     # €10M or 2% turnover
+                ViolationSeverity.HIGH: 10_000_000,  # €10M or 2% turnover
                 ViolationSeverity.MEDIUM: 5_000_000,
                 ViolationSeverity.LOW: 1_000_000,
             },
@@ -904,10 +901,7 @@ class PolicyEnforcer:
                 "medium": len([v for v in violations if v.severity == ViolationSeverity.MEDIUM]),
                 "low": len([v for v in violations if v.severity == ViolationSeverity.LOW]),
             },
-            "by_regulation": {
-                reg.value: len([v for v in violations if v.regulation == reg])
-                for reg in RegulationType
-            },
+            "by_regulation": {reg.value: len([v for v in violations if v.regulation == reg]) for reg in RegulationType},
             "by_status": {
                 "open": len([v for v in violations if v.status == "open"]),
                 "acknowledged": len([v for v in violations if v.status == "acknowledged"]),
@@ -968,8 +962,7 @@ class PolicyEnforcer:
 
         if not self.enable_ai_analysis:
             raise ValueError(
-                "AI analysis is disabled. Set enable_ai_analysis=True to use "
-                "AI-enhanced violation analysis."
+                "AI analysis is disabled. Set enable_ai_analysis=True to use AI-enhanced violation analysis."
             )
 
         # Get AI explanation for the violation
@@ -1034,8 +1027,7 @@ class PolicyEnforcer:
 
         if not self.enable_ai_analysis:
             raise ValueError(
-                "AI analysis is disabled. Set enable_ai_analysis=True to use "
-                "AI-generated remediation roadmaps."
+                "AI analysis is disabled. Set enable_ai_analysis=True to use AI-generated remediation roadmaps."
             )
 
         if not violations:

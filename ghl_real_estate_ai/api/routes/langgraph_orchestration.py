@@ -9,14 +9,15 @@ Exposes the LangGraph-based lead qualification pipeline via REST endpoints:
 
 import logging
 from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from ghl_real_estate_ai.services.langgraph_orchestrator import (
-    get_orchestrator,
-    QualificationResult,
-)
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.langgraph_orchestrator import (
+    QualificationResult,
+    get_orchestrator,
+)
 
 logger = get_logger(__name__)
 
@@ -30,15 +31,14 @@ router = APIRouter(
 # Request / Response Models
 # ---------------------------------------------------------------------------
 
+
 class QualifyLeadRequest(BaseModel):
     contact_id: str = Field(..., description="GHL contact ID")
     location_id: str = Field(..., description="GHL location ID")
     message: str = Field(..., description="Latest inbound message")
     contact_tags: List[str] = Field(default_factory=list, description="Current GHL tags")
     contact_info: Dict[str, Any] = Field(default_factory=dict, description="Contact metadata")
-    conversation_history: Optional[List[Dict[str, Any]]] = Field(
-        None, description="Prior conversation turns"
-    )
+    conversation_history: Optional[List[Dict[str, Any]]] = Field(None, description="Prior conversation turns")
 
 
 class QualificationResponse(BaseModel):
@@ -61,6 +61,7 @@ class BatchQualifyRequest(BaseModel):
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
 
 @router.post("/qualify", response_model=QualificationResponse)
 async def qualify_lead(request: QualifyLeadRequest):
@@ -107,15 +108,17 @@ async def qualify_leads_batch(request: BatchQualifyRequest):
                 contact_info=lead.contact_info,
                 conversation_history=lead.conversation_history,
             )
-            results.append({
-                "contact_id": lead.contact_id,
-                "success": result.success,
-                "temperature": result.temperature,
-                "lead_type": result.lead_type,
-                "is_qualified": result.is_qualified,
-                "scores": result.scores,
-                "error": result.error,
-            })
+            results.append(
+                {
+                    "contact_id": lead.contact_id,
+                    "success": result.success,
+                    "temperature": result.temperature,
+                    "lead_type": result.lead_type,
+                    "is_qualified": result.is_qualified,
+                    "scores": result.scores,
+                    "error": result.error,
+                }
+            )
         return {"results": results, "total": len(results)}
     except Exception as e:
         logger.error("Batch qualification failed: %s", e)

@@ -42,30 +42,66 @@ class ExpansionConfig:
         """Initialize default stopwords if not provided."""
         if self.stopwords is None:
             self.stopwords = {
-                'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to',
-                'for', 'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are',
-                'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does',
-                'did', 'will', 'would', 'could', 'should', 'may', 'might',
-                'must', 'shall', 'can', 'this', 'that', 'these', 'those'
+                "the",
+                "a",
+                "an",
+                "and",
+                "or",
+                "but",
+                "in",
+                "on",
+                "at",
+                "to",
+                "for",
+                "of",
+                "with",
+                "by",
+                "from",
+                "as",
+                "is",
+                "was",
+                "are",
+                "be",
+                "been",
+                "being",
+                "have",
+                "has",
+                "had",
+                "do",
+                "does",
+                "did",
+                "will",
+                "would",
+                "could",
+                "should",
+                "may",
+                "might",
+                "must",
+                "shall",
+                "can",
+                "this",
+                "that",
+                "these",
+                "those",
             }
 
 
 class QueryExpander:
     """Query expander using synonym-based techniques.
 
-    This class expands queries by replacing terms with their synonyms
-to improve recall in retrieval systems. It supports WordNet-based
-    expansion and can be extended with LLM-based expansion.
+        This class expands queries by replacing terms with their synonyms
+    to improve recall in retrieval systems. It supports WordNet-based
+        expansion and can be extended with LLM-based expansion.
 
-    Example:
-        ```python
-        config = ExpansionConfig(max_expansions=3)
-        expander = QueryExpander(config)
+        Example:
+            ```python
+            config = ExpansionConfig(max_expansions=3)
+            expander = QueryExpander(config)
 
-        # Simple expansion
-        expansions = expander.expand("machine learning algorithms")
-        # Returns: ['machine learning algorithms', 'device learning algorithms', ...]
-        ```
+            # Simple expansion
+            expansions = expander.expand("machine learning algorithms")
+            # Returns: ['machine learning algorithms', 'device learning algorithms', ...]
+            ```
     """
 
     def __init__(self, config: Optional[ExpansionConfig] = None):
@@ -86,8 +122,9 @@ to improve recall in retrieval systems. It supports WordNet-based
         """
         try:
             from nltk.corpus import wordnet
+
             # Try to access wordnet to verify it's downloaded
-            wordnet.synsets('test')
+            wordnet.synsets("test")
             return True
         except (ImportError, LookupError):
             return False
@@ -101,32 +138,33 @@ to improve recall in retrieval systems. It supports WordNet-based
         if not self._wordnet_available:
             try:
                 import nltk
-                nltk.download('wordnet', quiet=True)
-                nltk.download('omw-1.4', quiet=True)
+
+                nltk.download("wordnet", quiet=True)
+                nltk.download("omw-1.4", quiet=True)
                 from nltk.corpus import wordnet
-                wordnet.synsets('test')  # Verify it works
+
+                wordnet.synsets("test")  # Verify it works
                 self._wordnet_available = True
             except Exception as e:
                 raise QueryEnhancementError(
-                    message=f"Failed to load WordNet: {str(e)}",
-                    error_code="WORDNET_LOAD_ERROR"
+                    message=f"Failed to load WordNet: {str(e)}", error_code="WORDNET_LOAD_ERROR"
                 ) from e
 
     def expand(self, query: str) -> List[str]:
         """Expand a query using synonyms.
 
-        Generates multiple query variations by replacing terms with
-their synonyms to improve retrieval recall.
+                Generates multiple query variations by replacing terms with
+        their synonyms to improve retrieval recall.
 
-        Args:
-            query: Original search query
+                Args:
+                    query: Original search query
 
-        Returns:
-            List of expanded query strings including the original
+                Returns:
+                    List of expanded query strings including the original
 
-        Raises:
-            ValueError: If query is empty or invalid
-            QueryEnhancementError: If expansion fails
+                Raises:
+                    ValueError: If query is empty or invalid
+                    QueryEnhancementError: If expansion fails
         """
         if not query or not query.strip():
             raise ValueError("Query cannot be empty")
@@ -145,7 +183,7 @@ their synonyms to improve retrieval recall.
             if self._should_expand_token(token):
                 synonyms = self._get_synonyms(token)
                 if synonyms:
-                    token_expansions[token] = synonyms[:self.config.synonym_limit]
+                    token_expansions[token] = synonyms[: self.config.synonym_limit]
 
         # Generate expanded queries
         expanded_queries = self._generate_expansions(query, tokens, token_expansions)
@@ -155,7 +193,7 @@ their synonyms to improve retrieval recall.
             expanded_queries.insert(0, query)
 
         # Limit results
-        return expanded_queries[:self.config.max_expansions]
+        return expanded_queries[: self.config.max_expansions]
 
     def _tokenize(self, text: str) -> List[str]:
         """Tokenize text into words.
@@ -167,7 +205,7 @@ their synonyms to improve retrieval recall.
             List of tokens
         """
         # Simple tokenization - split on non-alphanumeric
-        tokens = re.findall(r'\b[a-zA-Z]+\b', text.lower())
+        tokens = re.findall(r"\b[a-zA-Z]+\b", text.lower())
         return tokens
 
     def _should_expand_token(self, token: str) -> bool:
@@ -216,13 +254,10 @@ their synonyms to improve retrieval recall.
                 pass  # Continue with other methods
 
         # Filter out the original word and multi-word synonyms
-        filtered_synonyms = [
-            s for s in synonyms
-            if s.lower() != word.lower() and ' ' not in s and '-' not in s
-        ]
+        filtered_synonyms = [s for s in synonyms if s.lower() != word.lower() and " " not in s and "-" not in s]
 
         # Cache and return
-        result = filtered_synonyms[:self.config.synonym_limit]
+        result = filtered_synonyms[: self.config.synonym_limit]
         self._synonym_cache[word] = result
         return result
 
@@ -246,17 +281,14 @@ their synonyms to improve retrieval recall.
 
         for synset in synsets[:3]:  # Limit to top 3 synsets
             for lemma in synset.lemmas():
-                synonym = lemma.name().replace('_', ' ')
+                synonym = lemma.name().replace("_", " ")
                 if synonym.lower() != word.lower():
                     synonyms.add(synonym)
 
         return synonyms
 
     def _generate_expansions(
-        self,
-        original_query: str,
-        tokens: List[str],
-        token_expansions: Dict[str, List[str]]
+        self, original_query: str, tokens: List[str], token_expansions: Dict[str, List[str]]
     ) -> List[str]:
         """Generate expanded queries.
 
@@ -285,11 +317,7 @@ their synonyms to improve retrieval recall.
 
         return expansions
 
-    def _generate_all_combinations(
-        self,
-        tokens: List[str],
-        token_expansions: Dict[str, List[str]]
-    ) -> List[str]:
+    def _generate_all_combinations(self, tokens: List[str], token_expansions: Dict[str, List[str]]) -> List[str]:
         """Generate all possible expansion combinations.
 
         Args:
@@ -314,14 +342,10 @@ their synonyms to improve retrieval recall.
         combinations = list(product(*options))
 
         # Convert to query strings
-        queries = [' '.join(combo) for combo in combinations[1:]]  # Skip original
-        return queries[:self.config.max_expansions]
+        queries = [" ".join(combo) for combo in combinations[1:]]  # Skip original
+        return queries[: self.config.max_expansions]
 
-    def _generate_best_combinations(
-        self,
-        tokens: List[str],
-        token_expansions: Dict[str, List[str]]
-    ) -> List[str]:
+    def _generate_best_combinations(self, tokens: List[str], token_expansions: Dict[str, List[str]]) -> List[str]:
         """Generate expansions using best synonym only.
 
         Args:
@@ -338,16 +362,13 @@ their synonyms to improve retrieval recall.
                 best_synonym = token_expansions[token][0]  # Use first (best) synonym
                 expanded_tokens = tokens.copy()
                 expanded_tokens[expanded_tokens.index(token)] = best_synonym
-                expanded_query = ' '.join(expanded_tokens)
+                expanded_query = " ".join(expanded_tokens)
                 best_expansions.append(expanded_query)
 
-        return best_expansions[:self.config.max_expansions]
+        return best_expansions[: self.config.max_expansions]
 
     def _generate_selective_expansions(
-        self,
-        original_query: str,
-        tokens: List[str],
-        token_expansions: Dict[str, List[str]]
+        self, original_query: str, tokens: List[str], token_expansions: Dict[str, List[str]]
     ) -> List[str]:
         """Generate selective expansions (one token at a time).
 
@@ -370,7 +391,7 @@ their synonyms to improve retrieval recall.
                     if expanded_query != original_query:
                         expansions.append(expanded_query)
 
-        return list(dict.fromkeys(expansions))[:self.config.max_expansions]  # Remove duplicates
+        return list(dict.fromkeys(expansions))[: self.config.max_expansions]  # Remove duplicates
 
     def clear_cache(self) -> None:
         """Clear the synonym cache."""
@@ -383,8 +404,8 @@ their synonyms to improve retrieval recall.
             Dictionary with statistics
         """
         return {
-            'cache_size': len(self._synonym_cache),
-            'wordnet_available': self._wordnet_available,
-            'max_expansions': self.config.max_expansions,
-            'synonym_limit': self.config.synonym_limit
+            "cache_size": len(self._synonym_cache),
+            "wordnet_available": self._wordnet_available,
+            "max_expansions": self.config.max_expansions,
+            "synonym_limit": self.config.synonym_limit,
         }

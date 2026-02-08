@@ -4,24 +4,25 @@ Property Matcher Service for GHL Real Estate AI.
 Matches lead preferences to available property listings.
 """
 
-import json
 import asyncio
-import aiofiles
+import json
 import os
+import time
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Type
-from datetime import datetime, timedelta
-import time
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
+import aiofiles
+
 from ghl_real_estate_ai.core.llm_client import LLMClient
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.jorge_config import CURRENT_MARKET
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.property_matching_strategy import (
-    PropertyMatchingStrategy,
+    AISemanticSearchStrategy,
     BasicFilteringStrategy,
-    AISemanticSearchStrategy
+    PropertyMatchingStrategy,
 )
 from ghl_real_estate_ai.services.weaviate_client import get_weaviate_client
 
@@ -51,16 +52,11 @@ class PropertyMatcher:
         Initialize the Property Matcher.
         """
         self.listings_path = self._resolve_listings_path(listings_path)
-        self._sample_data_path = (
-            Path(__file__).parent.parent / "data" / "sample_properties.json"
-        )
-        self.llm_client = LLMClient(
-            provider="claude",
-            model=settings.claude_model
-        )
+        self._sample_data_path = Path(__file__).parent.parent / "data" / "sample_properties.json"
+        self.llm_client = LLMClient(provider="claude", model=settings.claude_model)
         self.analytics = AnalyticsService()
         self.strategy: PropertyMatchingStrategy = BasicFilteringStrategy()
-        
+
         # Initialize Shared Resource Pool
         self._init_shared_resources()
 
@@ -74,19 +70,9 @@ class PropertyMatcher:
             return Path(env_path)
 
         if CURRENT_MARKET == "rancho_cucamonga":
-            return (
-                Path(__file__).parent.parent
-                / "data"
-                / "knowledge_base"
-                / "property_listings_rancho.json"
-            )
+            return Path(__file__).parent.parent / "data" / "knowledge_base" / "property_listings_rancho.json"
 
-        return (
-            Path(__file__).parent.parent
-            / "data"
-            / "knowledge_base"
-            / "property_listings.json"
-        )
+        return Path(__file__).parent.parent / "data" / "knowledge_base" / "property_listings.json"
 
     def _init_shared_resources(self):
         """
@@ -99,12 +85,13 @@ class PropertyMatcher:
         try:
             # 2026 Pattern: Discover services via MCP Registry
             from ghl_real_estate_ai.core.mcp_servers.context_compressor import discover_services
+
             # Simulate service discovery
             # In a real 2026 environment, this would call the MCP tool
-            # registry = asyncio.run(discover_services()) 
-            
+            # registry = asyncio.run(discover_services())
             # For now, we perform dynamic discovery/import
             from ghl_real_estate_ai.services.dynamic_valuation_engine import get_dynamic_valuation_engine
+
             PropertyMatcher._shared_valuation_engine = get_dynamic_valuation_engine()
             PropertyMatcher._weaviate_client = get_weaviate_client()
             logger.info("PropertyMatcher: Centralized AVM and Weaviate Services Linked to Shared Pool")
@@ -125,7 +112,7 @@ class PropertyMatcher:
                 "estimated_value": result.estimated_value,
                 "confidence": result.confidence_level.value,
                 "valuation_date": result.valuation_date.isoformat(),
-                "audit_trail_id": f"AVM-{result.property_id}"
+                "audit_trail_id": f"AVM-{result.property_id}",
             }
         return {"error": "Valuation service unavailable"}
 
@@ -212,9 +199,7 @@ class PropertyMatcher:
                     logger.info(f"Sync loaded {len(fallback_listings)} properties")
                     return fallback_listings
             else:
-                logger.warning(
-                    f"Property listings file not found at {self.listings_path}"
-                )
+                logger.warning(f"Property listings file not found at {self.listings_path}")
                 return self._load_sample_data()
         except Exception as e:
             logger.error(f"Failed to load property listings: {e}")
@@ -236,21 +221,17 @@ class PropertyMatcher:
             logger.error(f"Failed to load sample properties: {e}")
         return []
 
-    def find_matches(
-        self, preferences: Dict[str, Any], limit: int = 3, min_score: float = 0.5
-    ) -> List[Dict[str, Any]]:
+    def find_matches(self, preferences: Dict[str, Any], limit: int = 3, min_score: float = 0.5) -> List[Dict[str, Any]]:
         """
         Find property listings that match lead preferences using the active strategy.
         """
         # Delegate to the strategy
         matches = self.strategy.find_matches(self.listings, preferences, limit)
-        
-        # Filter by min_score if the strategy didn't (strategies return sorted list)
-        return [m for m in matches if m.get('match_score', 0) >= min_score]
 
-    def _calculate_match_score(
-        self, property: Dict[str, Any], preferences: Dict[str, Any]
-    ) -> float:
+        # Filter by min_score if the strategy didn't (strategies return sorted list)
+        return [m for m in matches if m.get("match_score", 0) >= min_score]
+
+    def _calculate_match_score(self, property: Dict[str, Any], preferences: Dict[str, Any]) -> float:
         """Deprecated: Logic moved to BasicFilteringStrategy."""
         return 0.0
 
@@ -259,30 +240,30 @@ class PropertyMatcher:
         Generate the 'Why' - a human-readable reason for the match.
         """
         reasons = []
-        
+
         # Budget
         budget = preferences.get("budget", 0)
         price = property.get("price", 0)
         if budget and price <= budget:
             savings = budget - price
             if savings > 50000:
-                reasons.append(f"it's ${savings/1000:.0f}k under your budget")
+                reasons.append(f"it's ${savings / 1000:.0f}k under your budget")
             else:
                 reasons.append("it fits your price range")
-                
+
         # Location
         loc = preferences.get("location")
         if loc and isinstance(loc, str) and loc.lower() in str(property.get("address")).lower():
             reasons.append(f"it's in {loc}")
-            
+
         # Features/Bedrooms
         beds = preferences.get("bedrooms")
         if beds and property.get("bedrooms", 0) >= beds:
             reasons.append(f"has the {beds}+ bedrooms you needed")
-            
+
         if not reasons:
             return "it's a strong overall match for your criteria"
-            
+
         return f"I picked this because {', and '.join(reasons)}."
 
     async def agentic_explain_match(self, property: Dict[str, Any], preferences: Dict[str, Any]) -> str:
@@ -311,18 +292,18 @@ Example: "This South Lamar home is a strategic capture; it sits 5% below your bu
                 prompt=prompt,
                 system_prompt="You are an expert Real Estate Strategist. Speak with authority and precision.",
                 temperature=0.7,
-                max_tokens=200
+                max_tokens=200,
             )
-            
+
             # Record usage
-            location_id = preferences.get('location_id', 'unknown')
+            location_id = preferences.get("location_id", "unknown")
             await self.analytics.track_llm_usage(
                 location_id=location_id,
                 model=response.model,
                 provider=response.provider.value,
                 input_tokens=response.input_tokens or 0,
                 output_tokens=response.output_tokens or 0,
-                cached=False
+                cached=False,
             )
 
             return response.content.strip()
@@ -331,8 +312,7 @@ Example: "This South Lamar home is a strategic capture; it sits 5% below your bu
             return self.generate_match_reasoning(property, preferences)
 
     def find_buyer_matches(
-        self, budget: int, beds: Optional[int] = None,
-        neighborhood: Optional[str] = None, limit: int = 3
+        self, budget: int, beds: Optional[int] = None, neighborhood: Optional[str] = None, limit: int = 3
     ) -> List[Dict[str, Any]]:
         """
         Find properties matching buyer criteria from sample data.

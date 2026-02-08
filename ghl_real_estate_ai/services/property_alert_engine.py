@@ -20,39 +20,45 @@ Features:
 import asyncio
 import hashlib
 import json
-import time
-from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Set
-from dataclasses import dataclass, asdict
-from enum import Enum
 import logging
+import time
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta, timezone
+from enum import Enum
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.enhanced_property_matcher import EnhancedPropertyMatcher
-from ghl_real_estate_ai.services.event_publisher import get_event_publisher, RealTimeEvent, EventType
+from ghl_real_estate_ai.models.matching_models import MatchingContext, PropertyMatch
 from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.models.matching_models import PropertyMatch, MatchingContext
+from ghl_real_estate_ai.services.enhanced_property_matcher import EnhancedPropertyMatcher
+from ghl_real_estate_ai.services.event_publisher import EventType, RealTimeEvent, get_event_publisher
 
 logger = get_logger(__name__)
 
+
 class AlertType(Enum):
     """Types of property alerts that can be generated."""
+
     NEW_MATCH = "new_match"
     PRICE_DROP = "price_drop"
     BACK_ON_MARKET = "back_on_market"
     MARKET_OPPORTUNITY = "market_opportunity"
     STATUS_CHANGE = "status_change"
 
+
 class AlertPriority(Enum):
     """Priority levels for property alerts."""
+
     LOW = "low"
     NORMAL = "normal"
     HIGH = "high"
     URGENT = "urgent"
 
+
 @dataclass
 class AlertPreferences:
     """Lead's property alert preferences and criteria."""
+
     lead_id: str
     tenant_id: str
     min_price: Optional[float] = None
@@ -87,9 +93,11 @@ class AlertPreferences:
         if self.exclude_features is None:
             self.exclude_features = []
 
+
 @dataclass
 class PropertyAlert:
     """Generated property alert ready for delivery."""
+
     id: str
     lead_id: str
     tenant_id: str
@@ -113,8 +121,9 @@ class PropertyAlert:
             "alert_type": self.alert_type.value,
             "alert_priority": self.alert_priority.value,
             "created_at": self.created_at.isoformat(),
-            "scheduled_for": self.scheduled_for.isoformat() if self.scheduled_for else None
+            "scheduled_for": self.scheduled_for.isoformat() if self.scheduled_for else None,
         }
+
 
 class PropertyAlertEngine:
     """
@@ -146,7 +155,7 @@ class PropertyAlertEngine:
             "alerts_rate_limited": 0,
             "alerts_sent": 0,
             "processing_errors": 0,
-            "average_processing_time_ms": 0.0
+            "average_processing_time_ms": 0.0,
         }
 
         # Alert queue for batching and scheduling
@@ -169,9 +178,7 @@ class PropertyAlertEngine:
             logger.info("PropertyAlertEngine queue processing stopped")
 
     async def evaluate_property_for_alerts(
-        self,
-        property_data: Dict[str, Any],
-        alert_type: AlertType = AlertType.NEW_MATCH
+        self, property_data: Dict[str, Any], alert_type: AlertType = AlertType.NEW_MATCH
     ) -> List[PropertyAlert]:
         """
         Evaluate a property against all active alert preferences.
@@ -190,7 +197,9 @@ class PropertyAlertEngine:
             # Get all active alert preferences (would normally be from database)
             active_preferences = await self._get_active_alert_preferences()
 
-            logger.info(f"Evaluating property {property_data.get('id')} against {len(active_preferences)} alert preferences")
+            logger.info(
+                f"Evaluating property {property_data.get('id')} against {len(active_preferences)} alert preferences"
+            )
 
             for preferences in active_preferences:
                 # Check rate limiting first
@@ -203,9 +212,7 @@ class PropertyAlertEngine:
 
                 # Score property using enhanced matcher
                 property_matches = self.property_matcher.find_enhanced_matches(
-                    matching_context.to_dict(),
-                    min_score=preferences.alert_threshold_score / 100.0,
-                    limit=1
+                    matching_context.to_dict(), min_score=preferences.alert_threshold_score / 100.0, limit=1
                 )
 
                 # Check if property meets threshold
@@ -214,21 +221,19 @@ class PropertyAlertEngine:
 
                     if match.overall_score * 100 >= preferences.alert_threshold_score:
                         # Check for duplicates
-                        if not await self._is_duplicate_alert(preferences.lead_id, property_data['id'], alert_type):
-
+                        if not await self._is_duplicate_alert(preferences.lead_id, property_data["id"], alert_type):
                             # Generate alert
                             alert = await self._create_property_alert(
-                                preferences=preferences,
-                                property_data=property_data,
-                                match=match,
-                                alert_type=alert_type
+                                preferences=preferences, property_data=property_data, match=match, alert_type=alert_type
                             )
 
                             generated_alerts.append(alert)
                             self.metrics["alerts_generated"] += 1
                         else:
                             self.metrics["alerts_deduplicated"] += 1
-                            logger.debug(f"Duplicate alert detected for lead {preferences.lead_id}, property {property_data.get('id')}")
+                            logger.debug(
+                                f"Duplicate alert detected for lead {preferences.lead_id}, property {property_data.get('id')}"
+                            )
 
             # Add alerts to processing queue
             for alert in generated_alerts:
@@ -239,7 +244,9 @@ class PropertyAlertEngine:
                 self.metrics["average_processing_time_ms"] * 0.9 + processing_time * 0.1
             )
 
-            logger.info(f"Generated {len(generated_alerts)} alerts for property {property_data.get('id')} in {processing_time:.2f}ms")
+            logger.info(
+                f"Generated {len(generated_alerts)} alerts for property {property_data.get('id')} in {processing_time:.2f}ms"
+            )
             return generated_alerts
 
         except Exception as e:
@@ -247,7 +254,9 @@ class PropertyAlertEngine:
             self.metrics["processing_errors"] += 1
             return []
 
-    async def create_alert_preferences(self, lead_id: str, tenant_id: str, preferences: Dict[str, Any]) -> AlertPreferences:
+    async def create_alert_preferences(
+        self, lead_id: str, tenant_id: str, preferences: Dict[str, Any]
+    ) -> AlertPreferences:
         """
         Create or update alert preferences for a lead.
 
@@ -259,11 +268,7 @@ class PropertyAlertEngine:
         Returns:
             Created AlertPreferences object
         """
-        alert_prefs = AlertPreferences(
-            lead_id=lead_id,
-            tenant_id=tenant_id,
-            **preferences
-        )
+        alert_prefs = AlertPreferences(lead_id=lead_id, tenant_id=tenant_id, **preferences)
 
         # Cache preferences for quick access
         cache_key = f"alert_prefs:{tenant_id}:{lead_id}"
@@ -326,7 +331,7 @@ class PropertyAlertEngine:
             "queue_size": queue_size,
             "queue_processing_active": self.processing_queue_task is not None,
             "dedup_threshold_hours": self.dedup_threshold_hours,
-            "similarity_threshold": self.similarity_threshold
+            "similarity_threshold": self.similarity_threshold,
         }
 
     # Private helper methods
@@ -345,7 +350,7 @@ class PropertyAlertEngine:
                 max_bedrooms=4,
                 preferred_neighborhoods=["Downtown", "Midtown"],
                 alert_threshold_score=75.0,
-                max_alerts_per_day=5
+                max_alerts_per_day=5,
             )
         ]
 
@@ -363,16 +368,13 @@ class PropertyAlertEngine:
     def _preferences_to_matching_context(self, preferences: AlertPreferences) -> MatchingContext:
         """Convert AlertPreferences to MatchingContext for property matching."""
         context_dict = {
-            "budget": {
-                "min": preferences.min_price,
-                "max": preferences.max_price
-            },
+            "budget": {"min": preferences.min_price, "max": preferences.max_price},
             "bedrooms": preferences.min_bedrooms,
             "bathrooms": preferences.min_bathrooms,
             "location": preferences.preferred_neighborhoods[0] if preferences.preferred_neighborhoods else None,
             "property_type": preferences.property_types[0] if preferences.property_types else None,
             "min_sqft": preferences.min_sqft,
-            "max_sqft": preferences.max_sqft
+            "max_sqft": preferences.max_sqft,
         }
 
         return MatchingContext(**{k: v for k, v in context_dict.items() if v is not None})
@@ -385,11 +387,7 @@ class PropertyAlertEngine:
         return recent_alert is not None
 
     async def _create_property_alert(
-        self,
-        preferences: AlertPreferences,
-        property_data: Dict[str, Any],
-        match: PropertyMatch,
-        alert_type: AlertType
+        self, preferences: AlertPreferences, property_data: Dict[str, Any], match: PropertyMatch, alert_type: AlertType
     ) -> PropertyAlert:
         """Create a PropertyAlert from matching results."""
 
@@ -406,33 +404,35 @@ class PropertyAlertEngine:
         # Generate alert content
         alert_title = self._generate_alert_title(property_data, match, alert_type)
         alert_message = self._generate_alert_message(property_data, match, alert_type)
-        alert_summary = f"New {property_data.get('property_type', 'property')} match: {match.overall_score:.0%} compatibility"
+        alert_summary = (
+            f"New {property_data.get('property_type', 'property')} match: {match.overall_score:.0%} compatibility"
+        )
 
         alert = PropertyAlert(
             id=f"alert_{int(time.time() * 1000)}_{preferences.lead_id}",
             lead_id=preferences.lead_id,
             tenant_id=preferences.tenant_id,
-            property_id=property_data['id'],
+            property_id=property_data["id"],
             alert_type=alert_type,
             alert_priority=priority,
             alert_title=alert_title,
             alert_message=alert_message,
             alert_summary=alert_summary,
             match_score=match.overall_score * 100,
-            match_reasoning=match.reasoning.to_dict() if hasattr(match, 'reasoning') and match.reasoning else {},
+            match_reasoning=match.reasoning.to_dict() if hasattr(match, "reasoning") and match.reasoning else {},
             property_data=property_data,
             processing_time_ms=0,  # Will be updated
-            created_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc),
         )
 
         return alert
 
     def _generate_alert_title(self, property_data: Dict[str, Any], match: PropertyMatch, alert_type: AlertType) -> str:
         """Generate human-readable alert title."""
-        property_type = property_data.get('property_type', 'Property')
-        bedrooms = property_data.get('bedrooms', 'N/A')
-        price = property_data.get('price', 0)
-        location = property_data.get('city', 'Unknown')
+        property_type = property_data.get("property_type", "Property")
+        bedrooms = property_data.get("bedrooms", "N/A")
+        price = property_data.get("price", 0)
+        location = property_data.get("city", "Unknown")
 
         price_str = f"${price:,.0f}" if isinstance(price, (int, float)) else str(price)
 
@@ -443,7 +443,9 @@ class PropertyAlertEngine:
         else:
             return f"Property Alert: {property_type} in {location} - {price_str}"
 
-    def _generate_alert_message(self, property_data: Dict[str, Any], match: PropertyMatch, alert_type: AlertType) -> str:
+    def _generate_alert_message(
+        self, property_data: Dict[str, Any], match: PropertyMatch, alert_type: AlertType
+    ) -> str:
         """Generate detailed alert message."""
         score_pct = match.overall_score * 100
 
@@ -528,21 +530,23 @@ class PropertyAlertEngine:
             match_score=alert.match_score,
             alert_type=alert.alert_type.value,
             property_data={
-                'address': alert.property_data.get('address', 'Unknown Address'),
-                'price': alert.property_data.get('price', 0),
-                'beds': alert.property_data.get('bedrooms', 0),
-                'baths': alert.property_data.get('bathrooms', 0),
-                'sqft': alert.property_data.get('sqft', 0),
-                'listing_date': alert.property_data.get('listing_date'),
-                'match_reasons': alert.match_reasoning.get('primary_factors', []) if alert.match_reasoning else []
+                "address": alert.property_data.get("address", "Unknown Address"),
+                "price": alert.property_data.get("price", 0),
+                "beds": alert.property_data.get("bedrooms", 0),
+                "baths": alert.property_data.get("bathrooms", 0),
+                "sqft": alert.property_data.get("sqft", 0),
+                "listing_date": alert.property_data.get("listing_date"),
+                "match_reasons": alert.match_reasoning.get("primary_factors", []) if alert.match_reasoning else [],
             },
-            match_reasoning=alert.match_reasoning
+            match_reasoning=alert.match_reasoning,
         )
 
         logger.debug(f"Published Jorge property alert event for alert {alert.id} (contact: {alert.lead_id})")
 
+
 # Global singleton instance
 _property_alert_engine = None
+
 
 def get_property_alert_engine() -> PropertyAlertEngine:
     """Get singleton PropertyAlertEngine instance."""
@@ -551,17 +555,24 @@ def get_property_alert_engine() -> PropertyAlertEngine:
         _property_alert_engine = PropertyAlertEngine()
     return _property_alert_engine
 
+
 # Convenience functions for common operations
-async def create_property_alert_preferences(lead_id: str, tenant_id: str, preferences: Dict[str, Any]) -> AlertPreferences:
+async def create_property_alert_preferences(
+    lead_id: str, tenant_id: str, preferences: Dict[str, Any]
+) -> AlertPreferences:
     """Convenience function to create alert preferences."""
     engine = get_property_alert_engine()
     return await engine.create_alert_preferences(lead_id, tenant_id, preferences)
 
-async def evaluate_property_for_alerts(property_data: Dict[str, Any], alert_type: str = "new_match") -> List[PropertyAlert]:
+
+async def evaluate_property_for_alerts(
+    property_data: Dict[str, Any], alert_type: str = "new_match"
+) -> List[PropertyAlert]:
     """Convenience function to evaluate property for alerts."""
     engine = get_property_alert_engine()
     alert_type_enum = AlertType(alert_type) if isinstance(alert_type, str) else alert_type
     return await engine.evaluate_property_for_alerts(property_data, alert_type_enum)
+
 
 async def get_property_alert_metrics() -> Dict[str, Any]:
     """Convenience function to get alert engine metrics."""

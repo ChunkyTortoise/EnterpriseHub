@@ -113,9 +113,7 @@ class WinLossAnalysis:
             "outcome": outcome.value,
             "reason": reason,
             "reason_category": (
-                reason_category.value
-                if reason_category
-                else self._auto_categorize_reason(reason, outcome)
+                reason_category.value if reason_category else self._auto_categorize_reason(reason, outcome)
             ),
             "competitor_name": competitor_name,
             "deal_duration_days": deal_duration_days,
@@ -136,80 +134,41 @@ class WinLossAnalysis:
         reason_lower = reason.lower()
 
         if outcome == DealOutcome.LOST:
-            if any(
-                word in reason_lower
-                for word in ["price", "expensive", "cost", "afford"]
-            ):
+            if any(word in reason_lower for word in ["price", "expensive", "cost", "afford"]):
                 return LossReason.PRICE.value
-            elif any(
-                word in reason_lower
-                for word in ["competitor", "agent", "another", "other"]
-            ):
+            elif any(word in reason_lower for word in ["competitor", "agent", "another", "other"]):
                 return LossReason.COMPETITION.value
-            elif any(
-                word in reason_lower
-                for word in ["timing", "wait", "not ready", "later"]
-            ):
+            elif any(word in reason_lower for word in ["timing", "wait", "not ready", "later"]):
                 return LossReason.TIMING.value
-            elif any(
-                word in reason_lower
-                for word in ["financing", "loan", "mortgage", "credit"]
-            ):
+            elif any(word in reason_lower for word in ["financing", "loan", "mortgage", "credit"]):
                 return LossReason.FINANCING.value
-            elif any(
-                word in reason_lower
-                for word in ["property", "condition", "repair", "inspection"]
-            ):
+            elif any(word in reason_lower for word in ["property", "condition", "repair", "inspection"]):
                 return LossReason.PROPERTY.value
-            elif any(
-                word in reason_lower
-                for word in ["communication", "response", "follow", "contact"]
-            ):
+            elif any(word in reason_lower for word in ["communication", "response", "follow", "contact"]):
                 return LossReason.COMMUNICATION.value
-            elif any(
-                word in reason_lower
-                for word in ["trust", "concern", "worry", "hesitant"]
-            ):
+            elif any(word in reason_lower for word in ["trust", "concern", "worry", "hesitant"]):
                 return LossReason.TRUST.value
-            elif any(
-                word in reason_lower for word in ["location", "neighborhood", "area"]
-            ):
+            elif any(word in reason_lower for word in ["location", "neighborhood", "area"]):
                 return LossReason.LOCATION.value
             else:
                 return LossReason.OTHER.value
 
         else:  # WON
-            if any(
-                word in reason_lower
-                for word in ["relationship", "rapport", "connection"]
-            ):
+            if any(word in reason_lower for word in ["relationship", "rapport", "connection"]):
                 return WinReason.RELATIONSHIP.value
-            elif any(
-                word in reason_lower
-                for word in ["expertise", "knowledge", "experienced"]
-            ):
+            elif any(word in reason_lower for word in ["expertise", "knowledge", "experienced"]):
                 return WinReason.EXPERTISE.value
-            elif any(
-                word in reason_lower
-                for word in ["responsive", "quick", "fast", "available"]
-            ):
+            elif any(word in reason_lower for word in ["responsive", "quick", "fast", "available"]):
                 return WinReason.RESPONSIVENESS.value
             elif any(word in reason_lower for word in ["price", "pricing", "value"]):
                 return WinReason.PRICING.value
-            elif any(
-                word in reason_lower for word in ["marketing", "listing", "photos"]
-            ):
+            elif any(word in reason_lower for word in ["marketing", "listing", "photos"]):
                 return WinReason.MARKETING.value
             elif any(word in reason_lower for word in ["negotiation", "deal", "terms"]):
                 return WinReason.NEGOTIATION.value
-            elif any(
-                word in reason_lower for word in ["referral", "recommended", "referred"]
-            ):
+            elif any(word in reason_lower for word in ["referral", "recommended", "referred"]):
                 return WinReason.REFERRAL.value
-            elif any(
-                word in reason_lower
-                for word in ["technology", "tech", "automation", "system"]
-            ):
+            elif any(word in reason_lower for word in ["technology", "tech", "automation", "system"]):
                 return WinReason.TECHNOLOGY.value
             else:
                 return WinReason.OTHER.value
@@ -242,11 +201,7 @@ class WinLossAnalysis:
         concluded = won + lost
         win_rate = (won / concluded * 100) if concluded > 0 else 0
 
-        total_commission = sum(
-            d["commission_value"]
-            for d in deals
-            if d["outcome"] == DealOutcome.WON.value
-        )
+        total_commission = sum(d["commission_value"] for d in deals if d["outcome"] == DealOutcome.WON.value)
 
         return {
             "total_deals": len(deals),
@@ -256,9 +211,7 @@ class WinLossAnalysis:
             "concluded": concluded,
             "win_rate": round(win_rate, 1),
             "total_commission_won": round(total_commission, 2),
-            "avg_commission_per_win": (
-                round(total_commission / won, 2) if won > 0 else 0
-            ),
+            "avg_commission_per_win": (round(total_commission / won, 2) if won > 0 else 0),
             "period": f"Last {days} days" if days else "All time",
         }
 
@@ -273,17 +226,13 @@ class WinLossAnalysis:
             Loss pattern analysis
         """
         lost_deals = [d for d in self.deals if d["outcome"] == DealOutcome.LOST.value]
-        recent_losses = sorted(lost_deals, key=lambda x: x["date"], reverse=True)[
-            :limit
-        ]
+        recent_losses = sorted(lost_deals, key=lambda x: x["date"], reverse=True)[:limit]
 
         if not recent_losses:
             return {
                 "total_losses": 0,
                 "top_reasons": [],
-                "recommendations": [
-                    "No losses to analyze yet - keep up the good work!"
-                ],
+                "recommendations": ["No losses to analyze yet - keep up the good work!"],
             }
 
         # Count reasons
@@ -291,15 +240,11 @@ class WinLossAnalysis:
         top_reasons = reason_counts.most_common(5)
 
         # Analyze competitors
-        competitors = [
-            d["competitor_name"] for d in recent_losses if d["competitor_name"]
-        ]
+        competitors = [d["competitor_name"] for d in recent_losses if d["competitor_name"]]
         competitor_counts = Counter(competitors).most_common(3)
 
         # Calculate average deal value lost
-        avg_lost_value = sum(d["property_price"] for d in recent_losses) / len(
-            recent_losses
-        )
+        avg_lost_value = sum(d["property_price"] for d in recent_losses) / len(recent_losses)
 
         # Estimate lost commission
         estimated_lost_commission = avg_lost_value * 0.025 * 0.80 * len(recent_losses)
@@ -318,9 +263,7 @@ class WinLossAnalysis:
                 }
                 for reason, count in top_reasons
             ],
-            "top_competitors": [
-                {"name": comp, "losses_to": count} for comp, count in competitor_counts
-            ],
+            "top_competitors": [{"name": comp, "losses_to": count} for comp, count in competitor_counts],
             "avg_lost_deal_value": round(avg_lost_value, 2),
             "estimated_lost_commission": round(estimated_lost_commission, 2),
             "recommendations": recommendations,
@@ -359,9 +302,7 @@ class WinLossAnalysis:
         automation_counts = Counter(automation_usage).most_common(5)
 
         # Calculate metrics
-        avg_deal_duration = sum(d["deal_duration_days"] for d in recent_wins) / len(
-            recent_wins
-        )
+        avg_deal_duration = sum(d["deal_duration_days"] for d in recent_wins) / len(recent_wins)
         total_commission = sum(d["commission_value"] for d in recent_wins)
 
         return {
@@ -510,9 +451,7 @@ class WinLossAnalysis:
             "win_analysis": win_patterns,
             "trends": trends,
             "competitive_intelligence": competitive_intel,
-            "key_insights": self._generate_key_insights(
-                win_rate, loss_patterns, win_patterns
-            ),
+            "key_insights": self._generate_key_insights(win_rate, loss_patterns, win_patterns),
             "action_items": self._generate_action_items(loss_patterns, win_patterns),
             "generated_at": datetime.now().isoformat(),
         }
@@ -530,47 +469,28 @@ class WinLossAnalysis:
         # Compare recent period vs previous period
         recent = self._filter_deals(days)
         previous = self._filter_deals(days * 2)
-        previous = [
-            d
-            for d in previous
-            if datetime.fromisoformat(d["date"])
-            <= datetime.now() - timedelta(days=days)
-        ]
+        previous = [d for d in previous if datetime.fromisoformat(d["date"]) <= datetime.now() - timedelta(days=days)]
 
         recent_wr = self.get_win_rate(days)["win_rate"]
 
         if previous:
-            prev_won = len(
-                [d for d in previous if d["outcome"] == DealOutcome.WON.value]
-            )
-            prev_lost = len(
-                [d for d in previous if d["outcome"] == DealOutcome.LOST.value]
-            )
-            prev_wr = (
-                (prev_won / (prev_won + prev_lost) * 100)
-                if (prev_won + prev_lost) > 0
-                else 0
-            )
+            prev_won = len([d for d in previous if d["outcome"] == DealOutcome.WON.value])
+            prev_lost = len([d for d in previous if d["outcome"] == DealOutcome.LOST.value])
+            prev_wr = (prev_won / (prev_won + prev_lost) * 100) if (prev_won + prev_lost) > 0 else 0
             trend = recent_wr - prev_wr
         else:
             trend = 0
 
         return {
             "win_rate_trend": round(trend, 1),
-            "trend_direction": (
-                "improving" if trend > 0 else "declining" if trend < 0 else "stable"
-            ),
+            "trend_direction": ("improving" if trend > 0 else "declining" if trend < 0 else "stable"),
             "recent_win_rate": recent_wr,
             "comparison_period": f"{days} days vs previous {days} days",
         }
 
     def _analyze_competitive_landscape(self) -> Dict:
         """Analyze competitive landscape from lost deals."""
-        lost_deals = [
-            d
-            for d in self.deals
-            if d["outcome"] == DealOutcome.LOST.value and d["competitor_name"]
-        ]
+        lost_deals = [d for d in self.deals if d["outcome"] == DealOutcome.LOST.value and d["competitor_name"]]
 
         if not lost_deals:
             return {"competitors_identified": 0, "top_competitors": []}
@@ -579,52 +499,35 @@ class WinLossAnalysis:
 
         return {
             "competitors_identified": len(competitor_counts),
-            "top_competitors": [
-                {"name": comp, "losses_to": count}
-                for comp, count in competitor_counts.most_common(5)
-            ],
+            "top_competitors": [{"name": comp, "losses_to": count} for comp, count in competitor_counts.most_common(5)],
             "note": "Track these competitors to understand their strategies",
         }
 
-    def _generate_key_insights(
-        self, win_rate: Dict, loss_patterns: Dict, win_patterns: Dict
-    ) -> List[str]:
+    def _generate_key_insights(self, win_rate: Dict, loss_patterns: Dict, win_patterns: Dict) -> List[str]:
         """Generate key insights from analysis."""
         insights = []
 
         # Win rate insights
         if win_rate["win_rate"] >= 70:
-            insights.append(
-                f"🎉 Excellent {win_rate['win_rate']}% win rate - well above industry average"
-            )
+            insights.append(f"🎉 Excellent {win_rate['win_rate']}% win rate - well above industry average")
         elif win_rate["win_rate"] >= 50:
-            insights.append(
-                f"✅ Solid {win_rate['win_rate']}% win rate - room for improvement"
-            )
+            insights.append(f"✅ Solid {win_rate['win_rate']}% win rate - room for improvement")
         else:
-            insights.append(
-                f"⚠️ {win_rate['win_rate']}% win rate needs attention - focus on loss prevention"
-            )
+            insights.append(f"⚠️ {win_rate['win_rate']}% win rate needs attention - focus on loss prevention")
 
         # Loss insights
         if loss_patterns["top_reasons"]:
             top_loss = loss_patterns["top_reasons"][0]
-            insights.append(
-                f"📉 Main loss reason: {top_loss['reason']} ({top_loss['percentage']}% of losses)"
-            )
+            insights.append(f"📉 Main loss reason: {top_loss['reason']} ({top_loss['percentage']}% of losses)")
 
         # Win insights
         if win_patterns["top_win_factors"]:
             top_win = win_patterns["top_win_factors"][0]
-            insights.append(
-                f"📈 Primary win factor: {top_win['factor']} ({top_win['percentage']}% of wins)"
-            )
+            insights.append(f"📈 Primary win factor: {top_win['factor']} ({top_win['percentage']}% of wins)")
 
         return insights
 
-    def _generate_action_items(
-        self, loss_patterns: Dict, win_patterns: Dict
-    ) -> List[str]:
+    def _generate_action_items(self, loss_patterns: Dict, win_patterns: Dict) -> List[str]:
         """Generate prioritized action items."""
         actions = []
 

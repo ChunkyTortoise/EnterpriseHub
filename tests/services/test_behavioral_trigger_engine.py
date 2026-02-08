@@ -5,19 +5,20 @@ Tests the behavioral trigger engine that analyzes lead behavior patterns,
 detects selling signals, and provides predictive insights for optimal engagement.
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pytest
 
 from ghl_real_estate_ai.services.behavioral_trigger_engine import (
-    BehavioralTriggerEngine,
-    get_behavioral_trigger_engine,
-    BehavioralSignal,
-    IntentLevel,
     BehavioralPattern,
-    PredictiveSellScore
+    BehavioralSignal,
+    BehavioralTriggerEngine,
+    IntentLevel,
+    PredictiveSellScore,
+    get_behavioral_trigger_engine,
 )
 
 
@@ -37,63 +38,36 @@ class TestBehavioralTriggerEngine:
             "property_searchs": [
                 {
                     "timestamp": (now - timedelta(hours=4)).isoformat(),
-                    "criteria": {"bedrooms": 3, "bathrooms": 2, "max_price": 500000}
+                    "criteria": {"bedrooms": 3, "bathrooms": 2, "max_price": 500000},
                 },
                 {
                     "timestamp": (now - timedelta(hours=1)).isoformat(),
-                    "criteria": {"bedrooms": 3, "bathrooms": 2, "max_price": 480000}
-                }
+                    "criteria": {"bedrooms": 3, "bathrooms": 2, "max_price": 480000},
+                },
             ],
             "listing_viewss": [
                 {
                     "timestamp": (now - timedelta(hours=1)).isoformat(),
                     "property_id": "prop_456",
-                    "view_duration_seconds": 180
+                    "view_duration_seconds": 180,
                 },
                 {
                     "timestamp": (now - timedelta(minutes=30)).isoformat(),
                     "property_id": "prop_789",
-                    "view_duration_seconds": 240
-                }
-            ],
-            "pricing_tool_usages": [
-                {
-                    "timestamp": (now - timedelta(hours=2)).isoformat(),
-                    "tool": "home_valuation"
-                }
-            ],
-            "email_interactions": [
-                {
-                    "timestamp": (now - timedelta(hours=3)).isoformat(),
-                    "opened": True
+                    "view_duration_seconds": 240,
                 },
-                {
-                    "timestamp": (now - timedelta(hours=1)).isoformat(),
-                    "opened": True
-                }
+            ],
+            "pricing_tool_usages": [{"timestamp": (now - timedelta(hours=2)).isoformat(), "tool": "home_valuation"}],
+            "email_interactions": [
+                {"timestamp": (now - timedelta(hours=3)).isoformat(), "opened": True},
+                {"timestamp": (now - timedelta(hours=1)).isoformat(), "opened": True},
             ],
             "website_visits": [
-                {
-                    "timestamp": (now - timedelta(hours=5)).isoformat(),
-                    "duration": 420
-                },
-                {
-                    "timestamp": (now - timedelta(hours=2)).isoformat(),
-                    "duration": 300
-                }
+                {"timestamp": (now - timedelta(hours=5)).isoformat(), "duration": 420},
+                {"timestamp": (now - timedelta(hours=2)).isoformat(), "duration": 300},
             ],
-            "sms_responses": [
-                {
-                    "timestamp": (now - timedelta(hours=2)).isoformat(),
-                    "message": "Yes interested"
-                }
-            ],
-            "agent_inquirys": [
-                {
-                    "timestamp": (now - timedelta(hours=1)).isoformat(),
-                    "type": "call"
-                }
-            ]
+            "sms_responses": [{"timestamp": (now - timedelta(hours=2)).isoformat(), "message": "Yes interested"}],
+            "agent_inquirys": [{"timestamp": (now - timedelta(hours=1)).isoformat(), "type": "call"}],
         }
 
     @pytest.fixture
@@ -106,7 +80,7 @@ class TestBehavioralTriggerEngine:
                 frequency=3,
                 recency_hours=2.0,
                 trend="increasing",
-                score_impact=0.8
+                score_impact=0.8,
             ),
             BehavioralPattern(
                 lead_id="lead_123",
@@ -114,7 +88,7 @@ class TestBehavioralTriggerEngine:
                 frequency=5,
                 recency_hours=1.0,
                 trend="increasing",
-                score_impact=0.7
+                score_impact=0.7,
             ),
             BehavioralPattern(
                 lead_id="lead_123",
@@ -122,16 +96,16 @@ class TestBehavioralTriggerEngine:
                 frequency=2,
                 recency_hours=2.0,
                 trend="stable",
-                score_impact=0.9
-            )
+                score_impact=0.9,
+            ),
         ]
 
     def test_engine_initialization(self, engine):
         """Test that the behavioral trigger engine initializes correctly."""
         assert isinstance(engine, BehavioralTriggerEngine)
-        assert hasattr(engine, 'cache')
-        assert hasattr(engine, 'signal_weights')
-        assert hasattr(engine, 'recency_decay_hours')
+        assert hasattr(engine, "cache")
+        assert hasattr(engine, "signal_weights")
+        assert hasattr(engine, "recency_decay_hours")
         assert isinstance(engine.signal_weights, dict)
 
     def test_get_behavioral_trigger_engine_singleton(self):
@@ -144,9 +118,10 @@ class TestBehavioralTriggerEngine:
     @pytest.mark.asyncio
     async def test_analyze_lead_behavior_comprehensive(self, engine, sample_activity_data):
         """Test comprehensive lead behavior analysis."""
-        with patch.object(engine.cache, 'get', new_callable=AsyncMock, return_value=None), \
-             patch.object(engine.cache, 'set', new_callable=AsyncMock):
-
+        with (
+            patch.object(engine.cache, "get", new_callable=AsyncMock, return_value=None),
+            patch.object(engine.cache, "set", new_callable=AsyncMock),
+        ):
             result = await engine.analyze_lead_behavior("lead_123", sample_activity_data)
 
             # Verify result is a PredictiveSellScore
@@ -173,7 +148,7 @@ class TestBehavioralTriggerEngine:
             confidence=0.9,
         )
 
-        with patch.object(engine.cache, 'get', new_callable=AsyncMock, return_value=cached_result):
+        with patch.object(engine.cache, "get", new_callable=AsyncMock, return_value=cached_result):
             result = await engine.analyze_lead_behavior("lead_123", {})
 
             # Should return cached result
@@ -183,9 +158,10 @@ class TestBehavioralTriggerEngine:
     @pytest.mark.asyncio
     async def test_detect_selling_signals(self, engine, sample_activity_data):
         """Test detection of selling signals from lead behavior."""
-        with patch.object(engine.cache, 'get', new_callable=AsyncMock, return_value=None), \
-             patch.object(engine.cache, 'set', new_callable=AsyncMock):
-
+        with (
+            patch.object(engine.cache, "get", new_callable=AsyncMock, return_value=None),
+            patch.object(engine.cache, "set", new_callable=AsyncMock),
+        ):
             result = await engine.detect_selling_signals("contact_123", sample_activity_data)
 
             assert isinstance(result, dict)
@@ -204,9 +180,10 @@ class TestBehavioralTriggerEngine:
     @pytest.mark.asyncio
     async def test_detect_selling_signals_specific_patterns(self, engine, sample_activity_data):
         """Test detection of specific selling signal patterns."""
-        with patch.object(engine.cache, 'get', new_callable=AsyncMock, return_value=None), \
-             patch.object(engine.cache, 'set', new_callable=AsyncMock):
-
+        with (
+            patch.object(engine.cache, "get", new_callable=AsyncMock, return_value=None),
+            patch.object(engine.cache, "set", new_callable=AsyncMock),
+        ):
             result = await engine.detect_selling_signals("contact_123", sample_activity_data)
 
             # Should have key signals detected
@@ -225,7 +202,11 @@ class TestBehavioralTriggerEngine:
         mock_db = AsyncMock()
         mock_db.get_high_intent_leads = AsyncMock(return_value=["lead_1", "lead_2", "lead_3"])
 
-        with patch('ghl_real_estate_ai.services.behavioral_trigger_engine.get_database', new_callable=AsyncMock, return_value=mock_db):
+        with patch(
+            "ghl_real_estate_ai.services.behavioral_trigger_engine.get_database",
+            new_callable=AsyncMock,
+            return_value=mock_db,
+        ):
             result = await engine.get_high_intent_leads(min_likelihood=50.0, limit=10)
 
             assert isinstance(result, list)
@@ -243,12 +224,12 @@ class TestBehavioralTriggerEngine:
         assert isinstance(patterns, list)
         for pattern in patterns:
             assert isinstance(pattern, BehavioralPattern)
-            assert hasattr(pattern, 'lead_id')
-            assert hasattr(pattern, 'signal_type')
-            assert hasattr(pattern, 'frequency')
-            assert hasattr(pattern, 'recency_hours')
-            assert hasattr(pattern, 'trend')
-            assert hasattr(pattern, 'score_impact')
+            assert hasattr(pattern, "lead_id")
+            assert hasattr(pattern, "signal_type")
+            assert hasattr(pattern, "frequency")
+            assert hasattr(pattern, "recency_hours")
+            assert hasattr(pattern, "trend")
+            assert hasattr(pattern, "score_impact")
             assert pattern.frequency > 0
             assert pattern.lead_id == "lead_123"
 
@@ -292,9 +273,7 @@ class TestBehavioralTriggerEngine:
         assert 0 <= impact <= 1
 
         # Test with high-frequency recent signal
-        high_impact = engine._calculate_signal_impact(
-            BehavioralSignal.PROPERTY_SEARCH, 10, 0.5, "increasing"
-        )
+        high_impact = engine._calculate_signal_impact(BehavioralSignal.PROPERTY_SEARCH, 10, 0.5, "increasing")
         assert high_impact > 0
 
     @pytest.mark.asyncio
@@ -318,7 +297,7 @@ class TestBehavioralTriggerEngine:
                 frequency=10,
                 recency_hours=0.5,
                 trend="increasing",
-                score_impact=0.95
+                score_impact=0.95,
             )
         ]
         high_score = await engine._calculate_likelihood_score(high_impact_patterns)
@@ -371,14 +350,9 @@ class TestBehavioralTriggerEngine:
         now = datetime.now()
         # Test lead with morning activity
         morning_data = {
-            "email_interactions": [
-                {
-                    "timestamp": now.replace(hour=9, minute=0).isoformat(),
-                    "opened": True
-                }
-            ],
+            "email_interactions": [{"timestamp": now.replace(hour=9, minute=0).isoformat(), "opened": True}],
             "sms_responses": [],
-            "website_visits": []
+            "website_visits": [],
         }
 
         result = await engine._predict_optimal_contact_time("morning_lead", morning_data)
@@ -410,7 +384,7 @@ class TestBehavioralTriggerEngine:
                 {"timestamp": "2026-01-01T14:00:00", "opened": True},
             ],
             "sms_responses": [],
-            "agent_inquiries": []
+            "agent_inquiries": [],
         }
 
         result = await engine._predict_best_channel(email_data)
@@ -424,7 +398,7 @@ class TestBehavioralTriggerEngine:
                 {"timestamp": "2026-01-01T10:00:00", "type": "call"},
                 {"timestamp": "2026-01-01T11:00:00", "type": "call"},
                 {"timestamp": "2026-01-01T12:00:00", "type": "call"},
-            ]
+            ],
         }
 
         result = await engine._predict_best_channel(call_data)
@@ -435,9 +409,7 @@ class TestBehavioralTriggerEngine:
         """Test generation of personalized messages."""
         intent_level = IntentLevel.HOT
 
-        message = await engine._generate_personalized_message(
-            "lead_123", sample_behavioral_signals, intent_level
-        )
+        message = await engine._generate_personalized_message("lead_123", sample_behavioral_signals, intent_level)
 
         assert isinstance(message, str)
         assert len(message) > 0
@@ -448,9 +420,7 @@ class TestBehavioralTriggerEngine:
         intent_levels = [IntentLevel.COLD, IntentLevel.WARM, IntentLevel.HOT, IntentLevel.URGENT]
 
         for intent_level in intent_levels:
-            message = await engine._generate_personalized_message(
-                "lead_123", sample_behavioral_signals, intent_level
-            )
+            message = await engine._generate_personalized_message("lead_123", sample_behavioral_signals, intent_level)
 
             assert isinstance(message, str)
             assert len(message) > 0
@@ -520,7 +490,7 @@ class TestBehavioralPattern:
             frequency=7,
             recency_hours=2.0,
             trend="increasing",
-            score_impact=0.75
+            score_impact=0.75,
         )
 
         assert pattern.lead_id == "lead_123"
@@ -571,20 +541,12 @@ class TestBehavioralTriggerEngineIntegration:
             "property_searchs": [
                 {
                     "timestamp": (now - timedelta(hours=5)).isoformat(),
-                    "criteria": {"property_type": "home_valuation", "location": "Cedar Park, TX"}
+                    "criteria": {"property_type": "home_valuation", "location": "Cedar Park, TX"},
                 }
             ],
-            "pricing_tool_usages": [
-                {
-                    "timestamp": (now - timedelta(hours=2)).isoformat(),
-                    "tool": "home_valuation"
-                }
-            ],
+            "pricing_tool_usages": [{"timestamp": (now - timedelta(hours=2)).isoformat(), "tool": "home_valuation"}],
             "home_valuation_requestss": [
-                {
-                    "timestamp": (now - timedelta(hours=1)).isoformat(),
-                    "address": "123 Main St"
-                }
+                {"timestamp": (now - timedelta(hours=1)).isoformat(), "address": "123 Main St"}
             ],
             "email_interactions": [
                 {"timestamp": (now - timedelta(hours=3)).isoformat(), "opened": True},
@@ -594,17 +556,14 @@ class TestBehavioralTriggerEngineIntegration:
                 {"timestamp": (now - timedelta(hours=5)).isoformat(), "duration": 480},
                 {"timestamp": (now - timedelta(hours=2)).isoformat(), "duration": 300},
             ],
-            "sms_responses": [
-                {"timestamp": (now - timedelta(hours=1)).isoformat(), "message": "Yes, very interested"}
-            ],
-            "agent_inquirys": [
-                {"timestamp": (now - timedelta(hours=1)).isoformat(), "type": "call"}
-            ]
+            "sms_responses": [{"timestamp": (now - timedelta(hours=1)).isoformat(), "message": "Yes, very interested"}],
+            "agent_inquirys": [{"timestamp": (now - timedelta(hours=1)).isoformat(), "type": "call"}],
         }
 
-        with patch.object(engine.cache, 'get', new_callable=AsyncMock, return_value=None), \
-             patch.object(engine.cache, 'set', new_callable=AsyncMock):
-
+        with (
+            patch.object(engine.cache, "get", new_callable=AsyncMock, return_value=None),
+            patch.object(engine.cache, "set", new_callable=AsyncMock),
+        ):
             # Step 1: Analyze behavior
             analysis = await engine.analyze_lead_behavior("integration_test_lead", activity_data)
 
@@ -632,9 +591,10 @@ class TestBehavioralTriggerEngineIntegration:
         # Minimal/empty activity data
         low_engagement_data = {}
 
-        with patch.object(engine.cache, 'get', new_callable=AsyncMock, return_value=None), \
-             patch.object(engine.cache, 'set', new_callable=AsyncMock):
-
+        with (
+            patch.object(engine.cache, "get", new_callable=AsyncMock, return_value=None),
+            patch.object(engine.cache, "set", new_callable=AsyncMock),
+        ):
             analysis = await engine.analyze_lead_behavior("low_engagement_lead", low_engagement_data)
 
             # Low engagement should result in lower scores
@@ -648,9 +608,10 @@ class TestBehavioralTriggerEngineIntegration:
         engine = BehavioralTriggerEngine()
 
         # Test with empty activity data
-        with patch.object(engine.cache, 'get', new_callable=AsyncMock, return_value=None), \
-             patch.object(engine.cache, 'set', new_callable=AsyncMock):
-
+        with (
+            patch.object(engine.cache, "get", new_callable=AsyncMock, return_value=None),
+            patch.object(engine.cache, "set", new_callable=AsyncMock),
+        ):
             # Should handle gracefully
             analysis = await engine.analyze_lead_behavior("minimal_lead", {})
             assert analysis.lead_id == "minimal_lead"
@@ -658,9 +619,10 @@ class TestBehavioralTriggerEngineIntegration:
             assert analysis.confidence >= 0
 
         # Test with activity data that has no matching signal keys
-        with patch.object(engine.cache, 'get', new_callable=AsyncMock, return_value=None), \
-             patch.object(engine.cache, 'set', new_callable=AsyncMock):
-
+        with (
+            patch.object(engine.cache, "get", new_callable=AsyncMock, return_value=None),
+            patch.object(engine.cache, "set", new_callable=AsyncMock),
+        ):
             analysis = await engine.analyze_lead_behavior("edge_lead", {"unknown_key": []})
             assert isinstance(analysis, PredictiveSellScore)
 
@@ -675,7 +637,7 @@ class TestBehavioralTriggerEngineIntegration:
             "property_searchs": [
                 {
                     "timestamp": (now - timedelta(hours=i)).isoformat(),
-                    "criteria": {"bedrooms": 3, "max_price": 400000 + (i * 1000)}
+                    "criteria": {"bedrooms": 3, "max_price": 400000 + (i * 1000)},
                 }
                 for i in range(50)
             ],
@@ -683,36 +645,25 @@ class TestBehavioralTriggerEngineIntegration:
                 {
                     "timestamp": (now - timedelta(hours=i)).isoformat(),
                     "property_id": f"prop_{i}",
-                    "view_duration_seconds": 120
+                    "view_duration_seconds": 120,
                 }
                 for i in range(50)
             ],
             "email_interactions": [
-                {
-                    "timestamp": (now - timedelta(hours=i)).isoformat(),
-                    "opened": True
-                }
-                for i in range(50)
+                {"timestamp": (now - timedelta(hours=i)).isoformat(), "opened": True} for i in range(50)
             ],
             "website_visits": [
-                {
-                    "timestamp": (now - timedelta(hours=i)).isoformat(),
-                    "duration": 300
-                }
-                for i in range(75)
+                {"timestamp": (now - timedelta(hours=i)).isoformat(), "duration": 300} for i in range(75)
             ],
             "sms_responses": [
-                {
-                    "timestamp": (now - timedelta(hours=i)).isoformat(),
-                    "message": f"Response {i}"
-                }
-                for i in range(20)
-            ]
+                {"timestamp": (now - timedelta(hours=i)).isoformat(), "message": f"Response {i}"} for i in range(20)
+            ],
         }
 
-        with patch.object(engine.cache, 'get', new_callable=AsyncMock, return_value=None), \
-             patch.object(engine.cache, 'set', new_callable=AsyncMock):
-
+        with (
+            patch.object(engine.cache, "get", new_callable=AsyncMock, return_value=None),
+            patch.object(engine.cache, "set", new_callable=AsyncMock),
+        ):
             # Should handle large datasets efficiently
             start_time = datetime.now()
             analysis = await engine.analyze_lead_behavior("large_history_lead", large_activity_data)

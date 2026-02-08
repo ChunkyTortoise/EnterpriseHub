@@ -20,10 +20,10 @@ Performance Considerations:
 """
 
 import uuid
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
-from dataclasses import dataclass, field
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
 
@@ -31,72 +31,73 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validat
 class InsightType(str, Enum):
     """Types of proactive insights the AI Concierge can generate."""
 
-    COACHING = "coaching"                           # Real-time coaching opportunities
-    STRATEGY_PIVOT = "strategy_pivot"               # Suggest conversation direction changes
+    COACHING = "coaching"  # Real-time coaching opportunities
+    STRATEGY_PIVOT = "strategy_pivot"  # Suggest conversation direction changes
     OBJECTION_PREDICTION = "objection_prediction"  # Anticipate and prepare for objections
-    OPPORTUNITY_DETECTION = "opportunity_detection" # Identify closing or upselling opportunities
-    CONVERSATION_QUALITY = "conversation_quality"   # Assess and improve conversation effectiveness
-    RELATIONSHIP_BUILDING = "relationship_building" # Enhance rapport and connection
-    VALUE_ARTICULATION = "value_articulation"      # Improve value proposition communication
+    OPPORTUNITY_DETECTION = "opportunity_detection"  # Identify closing or upselling opportunities
+    CONVERSATION_QUALITY = "conversation_quality"  # Assess and improve conversation effectiveness
+    RELATIONSHIP_BUILDING = "relationship_building"  # Enhance rapport and connection
+    VALUE_ARTICULATION = "value_articulation"  # Improve value proposition communication
 
 
 class InsightPriority(str, Enum):
     """Priority levels for proactive insights to guide attention and response timing."""
 
-    CRITICAL = "critical"    # Immediate attention required (conversation stalling, major objection)
-    HIGH = "high"           # Important guidance (closing opportunity, strategic pivot needed)
-    MEDIUM = "medium"       # Helpful suggestion (coaching improvement, relationship building)
-    LOW = "low"             # Nice-to-have insight (general quality improvement)
+    CRITICAL = "critical"  # Immediate attention required (conversation stalling, major objection)
+    HIGH = "high"  # Important guidance (closing opportunity, strategic pivot needed)
+    MEDIUM = "medium"  # Helpful suggestion (coaching improvement, relationship building)
+    LOW = "low"  # Nice-to-have insight (general quality improvement)
 
 
 class CoachingCategory(str, Enum):
     """Categories of coaching opportunities for targeted skill development."""
 
-    OBJECTION_HANDLING = "objection_handling"      # How to address specific objections
-    VALUE_PROPOSITION = "value_proposition"        # Articulating Jorge's unique value
-    CLOSING_TECHNIQUES = "closing_techniques"      # Moving prospects toward decisions
-    RAPPORT_BUILDING = "rapport_building"          # Enhancing personal connection
-    NEEDS_DISCOVERY = "needs_discovery"           # Uncovering deeper motivations
-    URGENCY_CREATION = "urgency_creation"         # Building appropriate time pressure
-    FOLLOW_UP_STRATEGY = "follow_up_strategy"     # Optimizing next steps and timing
+    OBJECTION_HANDLING = "objection_handling"  # How to address specific objections
+    VALUE_PROPOSITION = "value_proposition"  # Articulating Jorge's unique value
+    CLOSING_TECHNIQUES = "closing_techniques"  # Moving prospects toward decisions
+    RAPPORT_BUILDING = "rapport_building"  # Enhancing personal connection
+    NEEDS_DISCOVERY = "needs_discovery"  # Uncovering deeper motivations
+    URGENCY_CREATION = "urgency_creation"  # Building appropriate time pressure
+    FOLLOW_UP_STRATEGY = "follow_up_strategy"  # Optimizing next steps and timing
 
 
 class StrategyType(str, Enum):
     """Types of strategic recommendations for conversation direction."""
 
-    PIVOT_TO_BUYER = "pivot_to_buyer"             # Switch to buyer-focused conversation
-    ESCALATE_URGENCY = "escalate_urgency"         # Increase timeline pressure appropriately
-    DEMONSTRATE_VALUE = "demonstrate_value"        # Showcase Jorge's track record
-    BUILD_RAPPORT = "build_rapport"               # Focus on relationship development
-    QUALIFY_DEEPER = "qualify_deeper"             # Dig deeper into financial readiness
-    SCHEDULE_MEETING = "schedule_meeting"         # Move to in-person or video meeting
-    REQUEST_REFERRAL = "request_referral"        # Ask for additional leads
+    PIVOT_TO_BUYER = "pivot_to_buyer"  # Switch to buyer-focused conversation
+    ESCALATE_URGENCY = "escalate_urgency"  # Increase timeline pressure appropriately
+    DEMONSTRATE_VALUE = "demonstrate_value"  # Showcase Jorge's track record
+    BUILD_RAPPORT = "build_rapport"  # Focus on relationship development
+    QUALIFY_DEEPER = "qualify_deeper"  # Dig deeper into financial readiness
+    SCHEDULE_MEETING = "schedule_meeting"  # Move to in-person or video meeting
+    REQUEST_REFERRAL = "request_referral"  # Ask for additional leads
 
 
 class ConversationTone(str, Enum):
     """Conversation tone classifications for appropriate response strategy."""
 
-    CONFRONTATIONAL = "confrontational"    # Jorge's direct, no-BS approach
-    CONSULTATIVE = "consultative"         # Educational and advisory tone
-    RELATIONSHIP = "relationship"         # Rapport-building and personal
-    TRANSACTIONAL = "transactional"      # Direct business-focused interaction
+    CONFRONTATIONAL = "confrontational"  # Jorge's direct, no-BS approach
+    CONSULTATIVE = "consultative"  # Educational and advisory tone
+    RELATIONSHIP = "relationship"  # Rapport-building and personal
+    TRANSACTIONAL = "transactional"  # Direct business-focused interaction
 
 
 class ConversationStage(str, Enum):
     """Conversation progression stages for context-aware guidance."""
 
-    INITIAL_CONTACT = "initial_contact"       # First interaction
-    QUALIFICATION = "qualification"          # Assessing fit and readiness
-    NEEDS_DISCOVERY = "needs_discovery"      # Understanding requirements
-    VALUE_PRESENTATION = "value_presentation" # Showcasing Jorge's services
-    OBJECTION_HANDLING = "objection_handling" # Addressing concerns
-    CLOSING = "closing"                      # Moving toward commitment
-    FOLLOW_UP = "follow_up"                  # Post-conversation nurturing
+    INITIAL_CONTACT = "initial_contact"  # First interaction
+    QUALIFICATION = "qualification"  # Assessing fit and readiness
+    NEEDS_DISCOVERY = "needs_discovery"  # Understanding requirements
+    VALUE_PRESENTATION = "value_presentation"  # Showcasing Jorge's services
+    OBJECTION_HANDLING = "objection_handling"  # Addressing concerns
+    CLOSING = "closing"  # Moving toward commitment
+    FOLLOW_UP = "follow_up"  # Post-conversation nurturing
 
 
 # ============================================================================
 # Core Proactive Intelligence Models
 # ============================================================================
+
 
 class ProactiveInsight(BaseModel):
     """
@@ -117,39 +118,24 @@ class ProactiveInsight(BaseModel):
 
     # Actionable recommendations
     recommended_actions: List[str] = Field(
-        ...,
-        min_items=1,
-        max_items=5,
-        description="Specific actions to take based on this insight"
+        ..., min_items=1, max_items=5, description="Specific actions to take based on this insight"
     )
     suggested_responses: List[str] = Field(
-        default_factory=list,
-        max_items=3,
-        description="Suggested conversation responses or talking points"
+        default_factory=list, max_items=3, description="Suggested conversation responses or talking points"
     )
 
     # Confidence and impact assessment
-    confidence_score: float = Field(
-        ...,
-        ge=0.0,
-        le=1.0,
-        description="AI confidence in this insight (0.0-1.0)"
-    )
+    confidence_score: float = Field(..., ge=0.0, le=1.0, description="AI confidence in this insight (0.0-1.0)")
     expected_impact: float = Field(
-        ...,
-        ge=0.0,
-        le=1.0,
-        description="Expected positive impact if action is taken (0.0-1.0)"
+        ..., ge=0.0, le=1.0, description="Expected positive impact if action is taken (0.0-1.0)"
     )
 
     # Context and targeting
     conversation_context: Dict[str, Any] = Field(
-        default_factory=dict,
-        description="Relevant conversation context that triggered this insight"
+        default_factory=dict, description="Relevant conversation context that triggered this insight"
     )
     applicable_stage: ConversationStage = Field(
-        ...,
-        description="Conversation stage where this insight is most relevant"
+        ..., description="Conversation stage where this insight is most relevant"
     )
 
     # Lifecycle management
@@ -158,32 +144,29 @@ class ProactiveInsight(BaseModel):
     dismissed: bool = Field(default=False, description="Whether user dismissed this insight")
     acted_upon: bool = Field(default=False, description="Whether user took action on this insight")
     effectiveness_score: Optional[float] = Field(
-        None,
-        ge=0.0,
-        le=1.0,
-        description="Measured effectiveness if action was taken (for learning)"
+        None, ge=0.0, le=1.0, description="Measured effectiveness if action was taken (for learning)"
     )
 
-    @field_validator('expires_at')
+    @field_validator("expires_at")
     @classmethod
     def expires_at_must_be_future(cls, v, info: ValidationInfo):
-        created_at = info.data.get('created_at', datetime.utcnow())
+        created_at = info.data.get("created_at", datetime.utcnow())
         if v <= created_at:
-            raise ValueError('expires_at must be after created_at')
+            raise ValueError("expires_at must be after created_at")
         return v
 
     @model_validator(mode="before")
     @classmethod
     def validate_insight_content(cls, values):
-        insight_type = values.get('insight_type')
-        priority = values.get('priority')
-        confidence = values.get('confidence_score', 0)
+        insight_type = values.get("insight_type")
+        priority = values.get("priority")
+        confidence = values.get("confidence_score", 0)
 
         # High-priority insights require higher confidence
         if priority == InsightPriority.CRITICAL and confidence < 0.8:
-            raise ValueError('Critical priority insights require confidence >= 0.8')
+            raise ValueError("Critical priority insights require confidence >= 0.8")
         elif priority == InsightPriority.HIGH and confidence < 0.7:
-            raise ValueError('High priority insights require confidence >= 0.7')
+            raise ValueError("High priority insights require confidence >= 0.7")
 
         return values
 
@@ -195,7 +178,8 @@ class ProactiveInsight(BaseModel):
         """Check if this insight is still actionable (not dismissed/expired)."""
         return not self.dismissed and not self.is_expired()
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "insight_id": "insight_12345",
                 "insight_type": "objection_prediction",
@@ -206,11 +190,11 @@ class ProactiveInsight(BaseModel):
                 "recommended_actions": [
                     "Proactively address value vs. cost",
                     "Share recent success story with similar client",
-                    "Emphasize ROI and market timing"
+                    "Emphasize ROI and market timing",
                 ],
                 "suggested_responses": [
                     "I understand budget is important. Let me show you exactly how we maximize your return...",
-                    "Similar clients initially had the same concern, but here's what happened..."
+                    "Similar clients initially had the same concern, but here's what happened...",
                 ],
                 "confidence_score": 0.85,
                 "expected_impact": 0.75,
@@ -218,13 +202,14 @@ class ProactiveInsight(BaseModel):
                     "recent_messages": 5,
                     "budget_mentions": 3,
                     "hesitation_markers": ["um", "well", "I need to think"],
-                    "current_ml_score": 72.5
+                    "current_ml_score": 72.5,
                 },
                 "applicable_stage": "value_presentation",
                 "created_at": "2024-01-01T12:00:00Z",
-                "expires_at": "2024-01-01T14:00:00Z"
+                "expires_at": "2024-01-01T14:00:00Z",
             }
-        })
+        }
+    )
 
 
 class CoachingOpportunity(BaseModel):
@@ -239,42 +224,38 @@ class CoachingOpportunity(BaseModel):
     coaching_category: CoachingCategory = Field(..., description="Type of coaching needed")
 
     # Opportunity detection
-    detected_pattern: str = Field(..., min_length=10, max_length=200, description="Pattern that triggered this opportunity")
-    missed_opportunity: str = Field(..., min_length=10, max_length=200, description="What was missed or could be improved")
+    detected_pattern: str = Field(
+        ..., min_length=10, max_length=200, description="Pattern that triggered this opportunity"
+    )
+    missed_opportunity: str = Field(
+        ..., min_length=10, max_length=200, description="What was missed or could be improved"
+    )
 
     # Coaching content
-    coaching_insight: str = Field(..., min_length=20, max_length=400, description="Educational insight for skill development")
+    coaching_insight: str = Field(
+        ..., min_length=20, max_length=400, description="Educational insight for skill development"
+    )
     recommended_technique: str = Field(..., min_length=10, max_length=200, description="Specific technique to apply")
     example_response: str = Field(..., min_length=20, max_length=300, description="Example of better response")
 
     # Success prediction
     success_probability: float = Field(
-        ...,
-        ge=0.0,
-        le=1.0,
-        description="Probability of improved outcome with coaching (0.0-1.0)"
+        ..., ge=0.0, le=1.0, description="Probability of improved outcome with coaching (0.0-1.0)"
     )
     skill_level_required: str = Field(
-        ...,
-        pattern="^(beginner|intermediate|advanced)$",
-        description="Skill level needed to implement this coaching"
+        ..., pattern="^(beginner|intermediate|advanced)$", description="Skill level needed to implement this coaching"
     )
 
     # Context and timing
     conversation_context: Dict[str, Any] = Field(
-        default_factory=dict,
-        description="Relevant conversation context for this coaching"
+        default_factory=dict, description="Relevant conversation context for this coaching"
     )
-    immediate_application: bool = Field(
-        ...,
-        description="Whether this coaching can be applied in current conversation"
-    )
+    immediate_application: bool = Field(..., description="Whether this coaching can be applied in current conversation")
 
     # Learning and improvement tracking
     learning_objective: str = Field(..., min_length=10, max_length=150, description="What skill will be developed")
     related_insights: List[str] = Field(
-        default_factory=list,
-        description="IDs of related insights or previous coaching"
+        default_factory=list, description="IDs of related insights or previous coaching"
     )
 
     created_at: datetime = Field(default_factory=datetime.utcnow, description="Detection timestamp")
@@ -289,7 +270,8 @@ class CoachingOpportunity(BaseModel):
         else:
             return InsightPriority.LOW
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "opportunity_id": "coaching_67890",
                 "coaching_category": "objection_handling",
@@ -301,9 +283,10 @@ class CoachingOpportunity(BaseModel):
                 "success_probability": 0.82,
                 "skill_level_required": "intermediate",
                 "immediate_application": True,
-                "learning_objective": "Master empathetic objection handling for price concerns"
+                "learning_objective": "Master empathetic objection handling for price concerns",
             }
-        })
+        }
+    )
 
 
 class StrategyRecommendation(BaseModel):
@@ -314,7 +297,9 @@ class StrategyRecommendation(BaseModel):
     real-time analysis of conversation trajectory and lead characteristics.
     """
 
-    recommendation_id: str = Field(default_factory=lambda: str(uuid.uuid4()), description="Unique recommendation identifier")
+    recommendation_id: str = Field(
+        default_factory=lambda: str(uuid.uuid4()), description="Unique recommendation identifier"
+    )
     strategy_type: StrategyType = Field(..., description="Type of strategic recommendation")
 
     # Strategy content
@@ -324,60 +309,37 @@ class StrategyRecommendation(BaseModel):
 
     # Implementation guidance
     implementation_steps: List[str] = Field(
-        ...,
-        min_items=2,
-        max_items=6,
-        description="Step-by-step implementation guide"
+        ..., min_items=2, max_items=6, description="Step-by-step implementation guide"
     )
     conversation_pivot: str = Field(
-        ...,
-        min_length=20,
-        max_length=200,
-        description="How to transition conversation to this strategy"
+        ..., min_length=20, max_length=200, description="How to transition conversation to this strategy"
     )
 
     # Impact and timing
     expected_outcome: str = Field(..., min_length=10, max_length=200, description="Expected positive outcome")
     impact_score: float = Field(..., ge=0.0, le=1.0, description="Expected impact on conversion (0.0-1.0)")
     urgency_level: str = Field(
-        ...,
-        pattern="^(immediate|soon|when_appropriate)$",
-        description="When to implement this strategy"
+        ..., pattern="^(immediate|soon|when_appropriate)$", description="When to implement this strategy"
     )
 
     # Context and conditions
     trigger_conditions: List[str] = Field(
-        ...,
-        min_items=1,
-        max_items=5,
-        description="Conditions that triggered this recommendation"
+        ..., min_items=1, max_items=5, description="Conditions that triggered this recommendation"
     )
     success_indicators: List[str] = Field(
-        ...,
-        min_items=1,
-        max_items=4,
-        description="How to know if strategy is working"
+        ..., min_items=1, max_items=4, description="How to know if strategy is working"
     )
 
     # Risk and alternatives
-    risk_level: str = Field(
-        ...,
-        pattern="^(low|medium|high)$",
-        description="Risk level of implementing this strategy"
-    )
+    risk_level: str = Field(..., pattern="^(low|medium|high)$", description="Risk level of implementing this strategy")
     fallback_strategy: Optional[str] = Field(
-        None,
-        max_length=200,
-        description="Alternative approach if this strategy doesn't work"
+        None, max_length=200, description="Alternative approach if this strategy doesn't work"
     )
 
     created_at: datetime = Field(default_factory=datetime.utcnow, description="Recommendation timestamp")
     implemented: bool = Field(default=False, description="Whether strategy was implemented")
     effectiveness_rating: Optional[float] = Field(
-        None,
-        ge=0.0,
-        le=1.0,
-        description="Measured effectiveness after implementation"
+        None, ge=0.0, le=1.0, description="Measured effectiveness after implementation"
     )
 
     def get_priority(self) -> InsightPriority:
@@ -389,7 +351,8 @@ class StrategyRecommendation(BaseModel):
         else:
             return InsightPriority.MEDIUM
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "recommendation_id": "strategy_98765",
                 "strategy_type": "pivot_to_buyer",
@@ -400,7 +363,7 @@ class StrategyRecommendation(BaseModel):
                     "Acknowledge seller interest completion",
                     "Ask about their next home purchase plans",
                     "Transition to buyer consultation mode",
-                    "Uncover buyer timeline and preferences"
+                    "Uncover buyer timeline and preferences",
                 ],
                 "conversation_pivot": "Since we've covered your selling timeline, I'm curious about your next move - have you started looking at what you'd like to purchase?",
                 "expected_outcome": "Dual-side client with both listing and buyer representation",
@@ -409,21 +372,23 @@ class StrategyRecommendation(BaseModel):
                 "trigger_conditions": [
                     "Buyer questions asked (2x)",
                     "Moving timeline mentioned",
-                    "Property search behavior detected"
+                    "Property search behavior detected",
                 ],
                 "success_indicators": [
                     "Lead engages with buyer questions",
                     "Shares property preferences",
-                    "Agrees to buyer consultation"
+                    "Agrees to buyer consultation",
                 ],
-                "risk_level": "low"
+                "risk_level": "low",
             }
-        })
+        }
+    )
 
 
 # ============================================================================
 # Conversation Quality and Assessment Models
 # ============================================================================
+
 
 class ConversationQualityScore(BaseModel):
     """
@@ -438,11 +403,7 @@ class ConversationQualityScore(BaseModel):
 
     # Overall quality metrics
     overall_score: float = Field(..., ge=0.0, le=100.0, description="Overall conversation quality (0-100)")
-    quality_grade: str = Field(
-        ...,
-        pattern="^(A|B|C|D|F)$",
-        description="Letter grade for conversation quality"
-    )
+    quality_grade: str = Field(..., pattern="^(A|B|C|D|F)$", description="Letter grade for conversation quality")
 
     # Dimensional scores
     engagement_score: float = Field(..., ge=0.0, le=100.0, description="Lead engagement and participation")
@@ -464,11 +425,11 @@ class ConversationQualityScore(BaseModel):
 
     # Trend and context
     quality_trend: str = Field(
-        ...,
-        pattern="^(improving|declining|stable)$",
-        description="Quality trend compared to recent conversations"
+        ..., pattern="^(improving|declining|stable)$", description="Quality trend compared to recent conversations"
     )
-    stage_appropriateness: float = Field(..., ge=0.0, le=1.0, description="How well approach matches conversation stage")
+    stage_appropriateness: float = Field(
+        ..., ge=0.0, le=1.0, description="How well approach matches conversation stage"
+    )
 
     assessed_at: datetime = Field(default_factory=datetime.utcnow, description="Assessment timestamp")
     next_assessment_due: datetime = Field(..., description="When next quality check should occur")
@@ -478,12 +439,12 @@ class ConversationQualityScore(BaseModel):
     def calculate_overall_score(cls, values):
         """Calculate overall score from dimensional scores."""
         dimensional_scores = [
-            values.get('engagement_score', 0),
-            values.get('rapport_score', 0),
-            values.get('needs_discovery_score', 0),
-            values.get('value_articulation_score', 0),
-            values.get('objection_handling_score', 0),
-            values.get('closing_effectiveness_score', 0)
+            values.get("engagement_score", 0),
+            values.get("rapport_score", 0),
+            values.get("needs_discovery_score", 0),
+            values.get("value_articulation_score", 0),
+            values.get("objection_handling_score", 0),
+            values.get("closing_effectiveness_score", 0),
         ]
 
         # Weighted average (closing and value articulation weighted higher)
@@ -491,21 +452,21 @@ class ConversationQualityScore(BaseModel):
         weighted_score = sum(score * weight for score, weight in zip(dimensional_scores, weights)) / sum(weights)
 
         # Update overall score if not provided
-        if 'overall_score' not in values:
-            values['overall_score'] = round(weighted_score, 1)
+        if "overall_score" not in values:
+            values["overall_score"] = round(weighted_score, 1)
 
         # Determine grade
-        overall_score = values.get('overall_score', 0)
+        overall_score = values.get("overall_score", 0)
         if overall_score >= 90:
-            values['quality_grade'] = 'A'
+            values["quality_grade"] = "A"
         elif overall_score >= 80:
-            values['quality_grade'] = 'B'
+            values["quality_grade"] = "B"
         elif overall_score >= 70:
-            values['quality_grade'] = 'C'
+            values["quality_grade"] = "C"
         elif overall_score >= 60:
-            values['quality_grade'] = 'D'
+            values["quality_grade"] = "D"
         else:
-            values['quality_grade'] = 'F'
+            values["quality_grade"] = "F"
 
         return values
 
@@ -518,7 +479,8 @@ class ConversationQualityScore(BaseModel):
         else:
             return InsightPriority.LOW
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "assessment_id": "quality_54321",
                 "conversation_id": "conv_12345",
@@ -533,25 +495,22 @@ class ConversationQualityScore(BaseModel):
                 "conversation_length": 24,
                 "response_time_avg": 1.2,
                 "lead_participation_rate": 0.65,
-                "strengths": [
-                    "Excellent rapport building",
-                    "Strong value articulation",
-                    "Good response timing"
-                ],
+                "strengths": ["Excellent rapport building", "Strong value articulation", "Good response timing"],
                 "improvement_areas": [
                     "Objection handling technique",
                     "Stronger closing attempts",
-                    "Deeper needs discovery"
+                    "Deeper needs discovery",
                 ],
                 "specific_recommendations": [
                     "Use feel-felt-found method for objections",
                     "Ask for commitment more directly",
-                    "Ask more 'why' questions about motivations"
+                    "Ask more 'why' questions about motivations",
                 ],
                 "quality_trend": "improving",
-                "stage_appropriateness": 0.85
+                "stage_appropriateness": 0.85,
             }
-        })
+        }
+    )
 
 
 class ConversationTrajectory(BaseModel):
@@ -569,29 +528,24 @@ class ConversationTrajectory(BaseModel):
     predicted_outcome: str = Field(
         ...,
         pattern="^(conversion|nurture|disqualify|schedule_meeting|request_callback)$",
-        description="Most likely conversation outcome"
+        description="Most likely conversation outcome",
     )
     outcome_confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence in predicted outcome")
     outcome_probabilities: Dict[str, float] = Field(
-        ...,
-        description="Probability distribution across all possible outcomes"
+        ..., description="Probability distribution across all possible outcomes"
     )
 
     # Timing predictions
     estimated_time_to_decision: int = Field(..., ge=0, description="Hours until decision point")
     estimated_messages_remaining: int = Field(..., ge=0, description="Messages likely remaining in conversation")
-    optimal_follow_up_timing: str = Field(
-        ...,
-        description="When to follow up if conversation pauses"
-    )
+    optimal_follow_up_timing: str = Field(..., description="When to follow up if conversation pauses")
 
     # Trajectory analysis
     current_stage: ConversationStage = Field(..., description="Current conversation stage")
     stage_progression: List[str] = Field(..., description="Expected stage progression")
     stall_probability: float = Field(..., ge=0.0, le=1.0, description="Probability conversation will stall")
     acceleration_opportunities: List[str] = Field(
-        default_factory=list,
-        description="Ways to accelerate toward positive outcome"
+        default_factory=list, description="Ways to accelerate toward positive outcome"
     )
 
     # Risk factors
@@ -601,42 +555,41 @@ class ConversationTrajectory(BaseModel):
     # Conversation momentum
     momentum_score: float = Field(..., ge=0.0, le=1.0, description="Current conversation momentum (0-1)")
     momentum_trend: str = Field(
-        ...,
-        pattern="^(accelerating|stable|decelerating|stalled)$",
-        description="Momentum trend"
+        ..., pattern="^(accelerating|stable|decelerating|stalled)$", description="Momentum trend"
     )
 
     # Recommendations
     recommended_next_steps: List[str] = Field(..., max_items=4, description="Specific next step recommendations")
     conversation_adjustments: List[str] = Field(
-        default_factory=list,
-        description="Suggested adjustments to improve trajectory"
+        default_factory=list, description="Suggested adjustments to improve trajectory"
     )
 
     analyzed_at: datetime = Field(default_factory=datetime.utcnow, description="Analysis timestamp")
     next_analysis_due: datetime = Field(..., description="When to reassess trajectory")
 
-    @field_validator('outcome_probabilities')
+    @field_validator("outcome_probabilities")
     @classmethod
     def probabilities_sum_to_one(cls, v):
         total = sum(v.values())
         if not (0.95 <= total <= 1.05):  # Allow small floating point error
-            raise ValueError('Outcome probabilities must sum to approximately 1.0')
+            raise ValueError("Outcome probabilities must sum to approximately 1.0")
         return v
 
     def get_urgency_level(self) -> InsightPriority:
         """Determine urgency based on trajectory analysis."""
-        if (self.stall_probability > 0.7 or
-            self.momentum_trend in ["decelerating", "stalled"] or
-            len(self.risk_factors) >= 3):
+        if (
+            self.stall_probability > 0.7
+            or self.momentum_trend in ["decelerating", "stalled"]
+            or len(self.risk_factors) >= 3
+        ):
             return InsightPriority.CRITICAL
-        elif (self.stall_probability > 0.4 or
-              self.momentum_score < 0.6):
+        elif self.stall_probability > 0.4 or self.momentum_score < 0.6:
             return InsightPriority.HIGH
         else:
             return InsightPriority.MEDIUM
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "trajectory_id": "traj_11111",
                 "conversation_id": "conv_12345",
@@ -646,7 +599,7 @@ class ConversationTrajectory(BaseModel):
                     "schedule_meeting": 0.45,
                     "nurture": 0.30,
                     "conversion": 0.15,
-                    "disqualify": 0.10
+                    "disqualify": 0.10,
                 },
                 "estimated_time_to_decision": 48,
                 "estimated_messages_remaining": 8,
@@ -657,22 +610,24 @@ class ConversationTrajectory(BaseModel):
                 "acceleration_opportunities": [
                     "Direct meeting request",
                     "Share success story",
-                    "Create urgency with market conditions"
+                    "Create urgency with market conditions",
                 ],
                 "momentum_score": 0.75,
                 "momentum_trend": "stable",
                 "recommended_next_steps": [
                     "Request specific meeting time",
                     "Send calendar link",
-                    "Prepare property analysis"
-                ]
+                    "Prepare property analysis",
+                ],
             }
-        })
+        }
+    )
 
 
 # ============================================================================
 # Event and Communication Models
 # ============================================================================
+
 
 class ProactiveEvent(BaseModel):
     """Base model for proactive intelligence events published via WebSocket."""
@@ -690,7 +645,8 @@ class ProactiveEvent(BaseModel):
     delivered: bool = Field(default=False, description="Whether event was delivered to client")
     acknowledged: bool = Field(default=False, description="Whether client acknowledged event")
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "event_id": "evt_12345",
                 "event_type": "proactive_insight",
@@ -699,10 +655,11 @@ class ProactiveEvent(BaseModel):
                 "data": {
                     "insight_type": "coaching",
                     "title": "Opportunity for rapport building",
-                    "description": "Lead mentioned personal interest in gardening - connection opportunity"
-                }
+                    "description": "Lead mentioned personal interest in gardening - connection opportunity",
+                },
             }
-        })
+        }
+    )
 
 
 class InsightAcceptance(BaseModel):
@@ -717,21 +674,24 @@ class InsightAcceptance(BaseModel):
     accepted_at: datetime = Field(default_factory=datetime.utcnow, description="Acceptance timestamp")
     outcome_measured_at: Optional[datetime] = Field(None, description="When outcome was measured")
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "acceptance_id": "accept_98765",
                 "insight_id": "insight_12345",
                 "action_taken": "Used suggested response about gardening connection",
                 "outcome_observed": "Lead became more engaged, shared more personal details",
                 "effectiveness_rating": 0.9,
-                "accepted_at": "2024-01-01T12:00:00Z"
+                "accepted_at": "2024-01-01T12:00:00Z",
             }
-        })
+        }
+    )
 
 
 # ============================================================================
 # Aggregation and Summary Models
 # ============================================================================
+
 
 class ConversationIntelligenceSummary(BaseModel):
     """Comprehensive summary of conversation intelligence and insights."""
@@ -746,7 +706,9 @@ class ConversationIntelligenceSummary(BaseModel):
 
     # Action and effectiveness
     insights_acted_upon: int = Field(..., ge=0, description="Number of insights acted upon")
-    average_effectiveness: float = Field(..., ge=0.0, le=1.0, description="Average effectiveness of acted-upon insights")
+    average_effectiveness: float = Field(
+        ..., ge=0.0, le=1.0, description="Average effectiveness of acted-upon insights"
+    )
     most_valuable_insight_type: str = Field(..., description="Most valuable insight category")
 
     # Quality trends
@@ -764,7 +726,8 @@ class ConversationIntelligenceSummary(BaseModel):
     generated_at: datetime = Field(default_factory=datetime.utcnow, description="Summary generation timestamp")
     covers_period: Dict[str, datetime] = Field(..., description="Time period covered by summary")
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "summary_id": "summary_12345",
                 "conversation_id": "conv_67890",
@@ -773,27 +736,20 @@ class ConversationIntelligenceSummary(BaseModel):
                     "coaching": 4,
                     "strategy_pivot": 3,
                     "objection_prediction": 2,
-                    "opportunity_detection": 3
+                    "opportunity_detection": 3,
                 },
-                "insights_by_priority": {
-                    "critical": 1,
-                    "high": 4,
-                    "medium": 5,
-                    "low": 2
-                },
+                "insights_by_priority": {"critical": 1, "high": 4, "medium": 5, "low": 2},
                 "insights_acted_upon": 8,
                 "average_effectiveness": 0.82,
                 "most_valuable_insight_type": "objection_prediction",
                 "breakthroughs": [
                     "Successfully pivoted to buyer conversation",
-                    "Built strong rapport through shared interests"
+                    "Built strong rapport through shared interests",
                 ],
-                "successful_strategies": [
-                    "Proactive objection handling",
-                    "Personal connection building"
-                ]
+                "successful_strategies": ["Proactive objection handling", "Personal connection building"],
             }
-        })
+        }
+    )
 
 
 # Export all models for use throughout the application
@@ -805,16 +761,14 @@ __all__ = [
     "StrategyType",
     "ConversationTone",
     "ConversationStage",
-
     # Core models
     "ProactiveInsight",
     "CoachingOpportunity",
     "StrategyRecommendation",
     "ConversationQualityScore",
     "ConversationTrajectory",
-
     # Event and tracking models
     "ProactiveEvent",
     "InsightAcceptance",
-    "ConversationIntelligenceSummary"
+    "ConversationIntelligenceSummary",
 ]

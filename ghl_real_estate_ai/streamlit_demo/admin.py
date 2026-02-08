@@ -2,12 +2,14 @@
 GHL Real Estate AI - Admin Dashboard
 Manage tenants and knowledge base.
 """
-import streamlit as st
-import sys
-import os
+
 import asyncio
 import json
+import os
+import sys
 from pathlib import Path
+
+import streamlit as st
 
 # Add project root to sys.path
 # enterprisehub/ghl_real_estate_ai/streamlit_demo/admin.py
@@ -15,21 +17,17 @@ project_root = Path(__file__).parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from ghl_real_estate_ai.services.tenant_service import TenantService
-from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.core.rag_engine import RAGEngine
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
+from ghl_real_estate_ai.services.tenant_service import TenantService
 
 # Initialize Claude Assistant
 claude = ClaudeAssistant()
 
 # Page config
-st.set_page_config(
-    page_title="GHL AI Admin",
-    page_icon="⚙️",
-    layout="wide"
-)
+st.set_page_config(page_title="GHL AI Admin", page_icon="⚙️", layout="wide")
 
 st.title("⚙️ GHL Real Estate AI Admin Dashboard")
 st.markdown("Manage multi-tenant configurations, knowledge bases, and view performance analytics.")
@@ -38,9 +36,11 @@ st.markdown("Manage multi-tenant configurations, knowledge bases, and view perfo
 tenant_service = TenantService()
 analytics_service = AnalyticsService()
 
+
 # Helper for async calls
 def run_async(coro):
     return run_async(coro)
+
 
 # Sidebar navigation
 page = st.sidebar.selectbox("Navigation", ["Tenant Management", "Knowledge Base", "Analytics"])
@@ -51,16 +51,18 @@ claude.render_sidebar_panel(f"Admin: {page}", "Global", {})
 
 if page == "Tenant Management":
     st.header("🏢 Tenant Management")
-    
+
     # 0. Agency Master Key (Jorge's Requirement)
     with st.expander("🔑 Agency-Wide Master Key", expanded=True):
-        st.info("Setting an Agency Master Key allows the AI to automatically work across ALL sub-accounts without adding them one-by-one.")
+        st.info(
+            "Setting an Agency Master Key allows the AI to automatically work across ALL sub-accounts without adding them one-by-one."
+        )
         col_a1, col_a2 = st.columns(2)
         with col_a1:
             agency_id = st.text_input("Agency ID", value=settings.ghl_agency_id or "")
         with col_a2:
             agency_key = st.text_input("Agency API Key", type="password", value=settings.ghl_agency_api_key or "")
-        
+
         if st.button("Save Agency Master Key"):
             if agency_id and agency_key:
                 run_async(tenant_service.save_agency_config(agency_id, agency_key))
@@ -70,7 +72,9 @@ if page == "Tenant Management":
 
     # 1. Register New Tenant (Override)
     with st.expander("📍 Individual Sub-Account Override", expanded=False):
-        st.write("Use this ONLY if a specific sub-account needs a different API key or Anthropic key than the master settings.")
+        st.write(
+            "Use this ONLY if a specific sub-account needs a different API key or Anthropic key than the master settings."
+        )
         with st.form("register_tenant_form"):
             col1, col2 = st.columns(2)
             with col1:
@@ -78,7 +82,7 @@ if page == "Tenant Management":
                 anthropic_key = st.text_input("Anthropic API Key", type="password")
             with col2:
                 ghl_key = st.text_input("GHL API Key / OAuth Token", type="password")
-                
+
             submitted = st.form_submit_button("Save Tenant Configuration")
             if submitted:
                 if loc_id and anthropic_key and ghl_key:
@@ -96,7 +100,7 @@ if page == "Tenant Management":
             for t_file in tenant_files:
                 with open(t_file, "r") as f:
                     config = json.load(f)
-                
+
                 with st.container():
                     c1, c2, c3 = st.columns([1, 2, 1])
                     c1.markdown(f"**{config.get('location_id')}**")
@@ -112,19 +116,19 @@ if page == "Tenant Management":
 
 elif page == "Knowledge Base":
     st.header("📚 Knowledge Base Management")
-    
+
     # Select Tenant
     tenants_dir = project_root / "data" / "tenants"
     available_locations = ["global"]
     if tenants_dir.exists():
         available_locations.extend([f.stem for f in tenants_dir.glob("*.json")])
-    
+
     selected_loc = st.selectbox("Select Location Context", available_locations)
-    
+
     st.info(f"Managing knowledge for: **{selected_loc}**")
-    
+
     col1, col2 = st.columns(2)
-    
+
     with col1:
         st.subheader("Load Default Data")
         st.write("Load the standard property listings and FAQs into this location's context.")
@@ -132,6 +136,7 @@ elif page == "Knowledge Base":
             with st.spinner(f"Loading knowledge for {selected_loc}..."):
                 # Use the script logic here (simplified for demo)
                 import subprocess
+
                 cmd = [sys.executable, "scripts/load_knowledge_base.py", "--location_id", selected_loc]
                 result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(project_root))
                 if result.returncode == 0:
@@ -144,15 +149,14 @@ elif page == "Knowledge Base":
     with col2:
         st.subheader("RAG Engine Status")
         rag_engine = RAGEngine(
-            collection_name=settings.chroma_collection_name,
-            persist_directory=settings.chroma_persist_directory
+            collection_name=settings.chroma_collection_name, persist_directory=settings.chroma_persist_directory
         )
-        
+
         # This is a bit of a hack to count documents for a location
         # Since our search implementation filters by location, we can try to search for something common
         res = rag_engine.search("", n_results=100, location_id=selected_loc)
         st.metric("Documents in Context", len(res))
-        
+
         if st.button("Clear Vector Store (ALL DATA)", type="primary"):
             rag_engine.clear()
             st.warning("All vector data has been cleared.")
@@ -173,24 +177,24 @@ elif page == "Knowledge Base":
 
 elif page == "Analytics":
     st.header("📊 Performance Analytics")
-    
+
     # Select Tenant
     tenants_dir = project_root / "data" / "tenants"
     available_locations = ["global"]
     if tenants_dir.exists():
         available_locations.extend([f.stem for f in tenants_dir.glob("*.json")])
-    
+
     selected_loc = st.selectbox("Select Location for Analytics", available_locations)
-    
+
     # Date selection
     selected_date = st.date_input("Select Date", datetime.utcnow())
     date_str = selected_date.strftime("%Y-%m-%d")
-    
+
     st.divider()
-    
+
     # Fetch summary
     summary = run_async(analytics_service.get_daily_summary(selected_loc, date_str))
-    
+
     if summary["total_messages"] > 0 or summary["leads_scored"] > 0:
         # Metrics Row
         col1, col2, col3, col4 = st.columns(4)
@@ -198,7 +202,7 @@ elif page == "Analytics":
         col2.metric("Active Contacts", summary["active_contacts_count"])
         col3.metric("Hot Leads", summary["hot_leads"])
         col4.metric("Avg Lead Score", f"{summary['avg_lead_score']:.1f}")
-        
+
         # Detail Row
         st.subheader("Conversation Volume")
         col_m1, col_m2 = st.columns(2)
@@ -206,13 +210,13 @@ elif page == "Analytics":
             st.write("**Inbound vs Outbound**")
             chart_data = {
                 "Type": ["Incoming", "Outgoing"],
-                "Count": [summary["incoming_messages"], summary["outgoing_messages"]]
+                "Count": [summary["incoming_messages"], summary["outgoing_messages"]],
             }
             st.bar_chart(chart_data, x="Type", y="Count")
-            
+
         with col_m2:
             st.write("**Lead Quality Distribution**")
-            # We'd need to fetch all events to get the distribution, 
+            # We'd need to fetch all events to get the distribution,
             # but for now let's show the summary counts if we had them.
             st.info("Lead quality distribution will appear here as more data is collected.")
 
@@ -222,29 +226,44 @@ elif page == "Analytics":
         if events:
             # Sort by timestamp desc
             events.sort(key=lambda x: x["timestamp"], reverse=True)
-            
+
             display_events = []
             for e in events:
-                display_events.append({
-                    "Time": e["timestamp"].split("T")[1][:8],
-                    "Event": e["event_type"],
-                    "Contact": e["contact_id"],
-                    "Details": str(e["data"])
-                })
-            st.table(display_events[:20]) # Show last 20 events
+                display_events.append(
+                    {
+                        "Time": e["timestamp"].split("T")[1][:8],
+                        "Event": e["event_type"],
+                        "Contact": e["contact_id"],
+                        "Details": str(e["data"]),
+                    }
+                )
+            st.table(display_events[:20])  # Show last 20 events
     else:
         st.info(f"No analytics data found for {selected_loc} on {date_str}.")
-        
+
         # Add some demo data button
         if st.button("Generate Demo Analytics Data"):
+
             async def generate_demo():
-                await analytics_service.track_event("message_received", selected_loc, "demo_contact_1", {"message_type": "sms"})
-                await analytics_service.track_event("message_sent", selected_loc, "demo_contact_1", {"message_length": 45})
-                await analytics_service.track_event("lead_scored", selected_loc, "demo_contact_1", {"score": 85, "classification": "hot"})
-                await analytics_service.track_event("message_received", selected_loc, "demo_contact_2", {"message_type": "sms"})
-                await analytics_service.track_event("message_sent", selected_loc, "demo_contact_2", {"message_length": 30})
-                await analytics_service.track_event("lead_scored", selected_loc, "demo_contact_2", {"score": 45, "classification": "warm"})
-            
+                await analytics_service.track_event(
+                    "message_received", selected_loc, "demo_contact_1", {"message_type": "sms"}
+                )
+                await analytics_service.track_event(
+                    "message_sent", selected_loc, "demo_contact_1", {"message_length": 45}
+                )
+                await analytics_service.track_event(
+                    "lead_scored", selected_loc, "demo_contact_1", {"score": 85, "classification": "hot"}
+                )
+                await analytics_service.track_event(
+                    "message_received", selected_loc, "demo_contact_2", {"message_type": "sms"}
+                )
+                await analytics_service.track_event(
+                    "message_sent", selected_loc, "demo_contact_2", {"message_length": 30}
+                )
+                await analytics_service.track_event(
+                    "lead_scored", selected_loc, "demo_contact_2", {"score": 45, "classification": "warm"}
+                )
+
             run_async(generate_demo())
             st.success("Demo data generated! Refreshing...")
             st.rerun()

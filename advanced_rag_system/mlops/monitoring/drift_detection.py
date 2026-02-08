@@ -2,26 +2,29 @@
 Enterprise Model Drift Detection for RAG Systems
 Demonstrates advanced MLOps monitoring and alerting capabilities
 """
+
+import hashlib
 import json
 import logging
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple, Any, Union
-from dataclasses import dataclass, asdict
-from enum import Enum
-import hashlib
-from pathlib import Path
 import scipy.stats as stats
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.decomposition import PCA
 from sklearn.cluster import DBSCAN
+from sklearn.decomposition import PCA
+from sklearn.metrics.pairwise import cosine_similarity
 
 logger = logging.getLogger(__name__)
 
 
 class DriftType(Enum):
     """Types of drift detection"""
+
     DATA_DRIFT = "data_drift"
     CONCEPT_DRIFT = "concept_drift"
     PERFORMANCE_DRIFT = "performance_drift"
@@ -30,6 +33,7 @@ class DriftType(Enum):
 
 class DriftSeverity(Enum):
     """Drift severity levels"""
+
     LOW = "low"
     MODERATE = "moderate"
     HIGH = "high"
@@ -39,6 +43,7 @@ class DriftSeverity(Enum):
 @dataclass
 class DriftAlert:
     """Drift detection alert"""
+
     timestamp: datetime
     drift_type: DriftType
     severity: DriftSeverity
@@ -55,9 +60,9 @@ class DriftAlert:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization"""
         data = asdict(self)
-        data['timestamp'] = self.timestamp.isoformat()
-        data['drift_type'] = self.drift_type.value
-        data['severity'] = self.severity.value
+        data["timestamp"] = self.timestamp.isoformat()
+        data["drift_type"] = self.drift_type.value
+        data["severity"] = self.severity.value
         return data
 
 
@@ -84,10 +89,7 @@ class StatisticalDriftDetector:
         self.detection_window = detection_window
 
     def kolmogorov_smirnov_test(
-        self,
-        baseline: np.ndarray,
-        current: np.ndarray,
-        alpha: float = 0.05
+        self, baseline: np.ndarray, current: np.ndarray, alpha: float = 0.05
     ) -> Tuple[float, bool]:
         """
         Kolmogorov-Smirnov test for distribution drift
@@ -108,12 +110,7 @@ class StatisticalDriftDetector:
             logger.error(f"KS test failed: {e}")
             return 0.0, False
 
-    def population_stability_index(
-        self,
-        baseline: np.ndarray,
-        current: np.ndarray,
-        bins: int = 10
-    ) -> float:
+    def population_stability_index(self, baseline: np.ndarray, current: np.ndarray, bins: int = 10) -> float:
         """
         Calculate Population Stability Index (PSI)
 
@@ -155,11 +152,7 @@ class StatisticalDriftDetector:
             logger.error(f"PSI calculation failed: {e}")
             return 0.0
 
-    def wasserstein_distance(
-        self,
-        baseline: np.ndarray,
-        current: np.ndarray
-    ) -> float:
+    def wasserstein_distance(self, baseline: np.ndarray, current: np.ndarray) -> float:
         """
         Calculate Wasserstein (Earth Mover's) distance
 
@@ -177,12 +170,7 @@ class StatisticalDriftDetector:
             logger.error(f"Wasserstein distance calculation failed: {e}")
             return 0.0
 
-    def chi_square_test(
-        self,
-        baseline: np.ndarray,
-        current: np.ndarray,
-        alpha: float = 0.05
-    ) -> Tuple[float, bool]:
+    def chi_square_test(self, baseline: np.ndarray, current: np.ndarray, alpha: float = 0.05) -> Tuple[float, bool]:
         """
         Chi-square test for categorical drift
 
@@ -234,9 +222,7 @@ class EmbeddingDriftDetector:
         self.baseline_clusters = None
 
     def cosine_similarity_drift(
-        self,
-        baseline_embeddings: np.ndarray,
-        current_embeddings: np.ndarray
+        self, baseline_embeddings: np.ndarray, current_embeddings: np.ndarray
     ) -> Dict[str, float]:
         """
         Detect drift in cosine similarity patterns
@@ -271,7 +257,7 @@ class EmbeddingDriftDetector:
                 "baseline_mean_similarity": float(np.mean(baseline_sims)),
                 "current_mean_similarity": float(np.mean(current_sims)),
                 "baseline_std_similarity": float(np.std(baseline_sims)),
-                "current_std_similarity": float(np.std(current_sims))
+                "current_std_similarity": float(np.std(current_sims)),
             }
 
         except Exception as e:
@@ -279,10 +265,7 @@ class EmbeddingDriftDetector:
             return {}
 
     def pca_drift_detection(
-        self,
-        baseline_embeddings: np.ndarray,
-        current_embeddings: np.ndarray,
-        n_components: int = 50
+        self, baseline_embeddings: np.ndarray, current_embeddings: np.ndarray, n_components: int = 50
     ) -> Dict[str, float]:
         """
         PCA-based drift detection for high-dimensional embeddings
@@ -308,16 +291,14 @@ class EmbeddingDriftDetector:
             drift_scores = []
 
             for i in range(n_components):
-                psi = detector.population_stability_index(
-                    baseline_pca[:, i], current_pca[:, i]
-                )
+                psi = detector.population_stability_index(baseline_pca[:, i], current_pca[:, i])
                 drift_scores.append(psi)
 
             return {
                 "mean_pca_drift": float(np.mean(drift_scores)),
                 "max_pca_drift": float(np.max(drift_scores)),
                 "explained_variance_ratio": self.pca.explained_variance_ratio_.tolist()[:10],
-                "drift_by_component": drift_scores[:10]  # Top 10 components
+                "drift_by_component": drift_scores[:10],  # Top 10 components
             }
 
         except Exception as e:
@@ -325,11 +306,7 @@ class EmbeddingDriftDetector:
             return {}
 
     def clustering_drift_detection(
-        self,
-        baseline_embeddings: np.ndarray,
-        current_embeddings: np.ndarray,
-        eps: float = 0.5,
-        min_samples: int = 5
+        self, baseline_embeddings: np.ndarray, current_embeddings: np.ndarray, eps: float = 0.5, min_samples: int = 5
     ) -> Dict[str, Any]:
         """
         Clustering-based drift detection
@@ -360,12 +337,8 @@ class EmbeddingDriftDetector:
             current_noise_ratio = np.sum(current_labels == -1) / len(current_labels)
 
             # Calculate cluster size distributions
-            baseline_cluster_sizes = [
-                np.sum(baseline_labels == i) for i in set(baseline_labels) if i != -1
-            ]
-            current_cluster_sizes = [
-                np.sum(current_labels == i) for i in set(current_labels) if i != -1
-            ]
+            baseline_cluster_sizes = [np.sum(baseline_labels == i) for i in set(baseline_labels) if i != -1]
+            current_cluster_sizes = [np.sum(current_labels == i) for i in set(current_labels) if i != -1]
 
             return {
                 "baseline_n_clusters": baseline_n_clusters,
@@ -375,7 +348,7 @@ class EmbeddingDriftDetector:
                 "current_noise_ratio": float(current_noise_ratio),
                 "noise_ratio_drift": float(abs(current_noise_ratio - baseline_noise_ratio)),
                 "baseline_avg_cluster_size": float(np.mean(baseline_cluster_sizes)) if baseline_cluster_sizes else 0,
-                "current_avg_cluster_size": float(np.mean(current_cluster_sizes)) if current_cluster_sizes else 0
+                "current_avg_cluster_size": float(np.mean(current_cluster_sizes)) if current_cluster_sizes else 0,
             }
 
         except Exception as e:
@@ -395,11 +368,7 @@ class PerformanceDriftDetector:
         self.baseline_window = baseline_window
 
     def detect_metric_drift(
-        self,
-        baseline_metrics: List[float],
-        current_metrics: List[float],
-        metric_name: str,
-        threshold: float = 0.05
+        self, baseline_metrics: List[float], current_metrics: List[float], metric_name: str, threshold: float = 0.05
     ) -> Dict[str, Any]:
         """
         Detect drift in performance metrics
@@ -423,9 +392,7 @@ class PerformanceDriftDetector:
 
             # Statistical tests
             detector = StatisticalDriftDetector()
-            ks_stat, ks_drift = detector.kolmogorov_smirnov_test(
-                np.array(baseline_metrics), np.array(current_metrics)
-            )
+            ks_stat, ks_drift = detector.kolmogorov_smirnov_test(np.array(baseline_metrics), np.array(current_metrics))
 
             return {
                 "metric_name": metric_name,
@@ -437,7 +404,7 @@ class PerformanceDriftDetector:
                 "ks_statistic": ks_stat,
                 "ks_drift_detected": ks_drift,
                 "baseline_std": float(np.std(baseline_metrics)),
-                "current_std": float(np.std(current_metrics))
+                "current_std": float(np.std(current_metrics)),
             }
 
         except Exception as e:
@@ -475,7 +442,7 @@ class DriftMonitor:
         if baseline_path.exists():
             for baseline_file in baseline_path.glob("*.json"):
                 try:
-                    with open(baseline_file, 'r') as f:
+                    with open(baseline_file, "r") as f:
                         baseline_name = baseline_file.stem
                         self.baseline_data[baseline_name] = json.load(f)
                 except Exception as e:
@@ -483,12 +450,9 @@ class DriftMonitor:
 
     def _determine_severity(self, drift_score: float, metric_name: str) -> DriftSeverity:
         """Determine drift severity based on score and thresholds"""
-        thresholds = self.config.get("thresholds", {}).get(metric_name, {
-            "low": 0.1,
-            "moderate": 0.2,
-            "high": 0.3,
-            "critical": 0.5
-        })
+        thresholds = self.config.get("thresholds", {}).get(
+            metric_name, {"low": 0.1, "moderate": 0.2, "high": 0.3, "critical": 0.5}
+        )
 
         if drift_score >= thresholds.get("critical", 0.5):
             return DriftSeverity.CRITICAL
@@ -500,11 +464,7 @@ class DriftMonitor:
             return DriftSeverity.LOW
 
     def monitor_embedding_drift(
-        self,
-        embeddings: np.ndarray,
-        model_name: str,
-        model_version: str,
-        baseline_key: str = "embedding_baseline"
+        self, embeddings: np.ndarray, model_name: str, model_version: str, baseline_key: str = "embedding_baseline"
     ) -> List[DriftAlert]:
         """Monitor embedding drift and generate alerts"""
         alerts = []
@@ -517,9 +477,7 @@ class DriftMonitor:
             baseline_embeddings = np.array(self.baseline_data[baseline_key]["embeddings"])
 
             # Cosine similarity drift
-            cos_results = self.embedding_detector.cosine_similarity_drift(
-                baseline_embeddings, embeddings
-            )
+            cos_results = self.embedding_detector.cosine_similarity_drift(baseline_embeddings, embeddings)
 
             if cos_results.get("psi_score", 0) > 0.1:
                 severity = self._determine_severity(cos_results["psi_score"], "psi_score")
@@ -535,14 +493,12 @@ class DriftMonitor:
                     description=f"Cosine similarity drift detected (PSI: {cos_results['psi_score']:.3f})",
                     model_name=model_name,
                     model_version=model_version,
-                    metadata=cos_results
+                    metadata=cos_results,
                 )
                 alerts.append(alert)
 
             # PCA drift
-            pca_results = self.embedding_detector.pca_drift_detection(
-                baseline_embeddings, embeddings
-            )
+            pca_results = self.embedding_detector.pca_drift_detection(baseline_embeddings, embeddings)
 
             if pca_results.get("mean_pca_drift", 0) > 0.2:
                 severity = self._determine_severity(pca_results["mean_pca_drift"], "pca_drift")
@@ -558,7 +514,7 @@ class DriftMonitor:
                     description=f"PCA drift detected (mean: {pca_results['mean_pca_drift']:.3f})",
                     model_name=model_name,
                     model_version=model_version,
-                    metadata=pca_results
+                    metadata=pca_results,
                 )
                 alerts.append(alert)
 
@@ -573,7 +529,7 @@ class DriftMonitor:
         current_metrics: Dict[str, float],
         model_name: str,
         model_version: str,
-        baseline_key: str = "performance_baseline"
+        baseline_key: str = "performance_baseline",
     ) -> List[DriftAlert]:
         """Monitor performance drift and generate alerts"""
         alerts = []
@@ -616,8 +572,8 @@ class DriftMonitor:
                         metadata={
                             "baseline_mean": baseline_mean,
                             "current_value": current_value,
-                            "relative_change": relative_change
-                        }
+                            "relative_change": relative_change,
+                        },
                     )
                     alerts.append(alert)
 
@@ -627,10 +583,7 @@ class DriftMonitor:
         self.alerts.extend(alerts)
         return alerts
 
-    def get_drift_report(
-        self,
-        time_window: Optional[timedelta] = None
-    ) -> Dict[str, Any]:
+    def get_drift_report(self, time_window: Optional[timedelta] = None) -> Dict[str, Any]:
         """Generate comprehensive drift report"""
         if time_window:
             cutoff_time = datetime.utcnow() - time_window
@@ -654,16 +607,15 @@ class DriftMonitor:
             "alerts_by_type": type_counts,
             "recent_alerts": [alert.to_dict() for alert in relevant_alerts[-10:]],  # Last 10 alerts
             "critical_alerts": [
-                alert.to_dict() for alert in relevant_alerts
-                if alert.severity == DriftSeverity.CRITICAL
-            ]
+                alert.to_dict() for alert in relevant_alerts if alert.severity == DriftSeverity.CRITICAL
+            ],
         }
 
     def save_baselines(
         self,
         embeddings: Optional[np.ndarray] = None,
         performance_metrics: Optional[Dict[str, Any]] = None,
-        output_path: str = "baselines"
+        output_path: str = "baselines",
     ) -> None:
         """Save current data as baselines for future drift detection"""
         baseline_dir = Path(output_path)
@@ -673,17 +625,14 @@ class DriftMonitor:
             baseline_data = {
                 "embeddings": embeddings.tolist(),
                 "timestamp": datetime.utcnow().isoformat(),
-                "embedding_shape": embeddings.shape
+                "embedding_shape": embeddings.shape,
             }
-            with open(baseline_dir / "embedding_baseline.json", 'w') as f:
+            with open(baseline_dir / "embedding_baseline.json", "w") as f:
                 json.dump(baseline_data, f)
 
         if performance_metrics is not None:
-            baseline_data = {
-                **performance_metrics,
-                "timestamp": datetime.utcnow().isoformat()
-            }
-            with open(baseline_dir / "performance_baseline.json", 'w') as f:
+            baseline_data = {**performance_metrics, "timestamp": datetime.utcnow().isoformat()}
+            with open(baseline_dir / "performance_baseline.json", "w") as f:
                 json.dump(baseline_data, f)
 
         logger.info(f"Baselines saved to {output_path}")
@@ -699,7 +648,7 @@ def create_rag_drift_monitor() -> DriftMonitor:
             "pca_drift": {"low": 0.15, "moderate": 0.25, "high": 0.35, "critical": 0.6},
             "recall_at_5": {"low": 0.02, "moderate": 0.05, "high": 0.1, "critical": 0.15},
             "ndcg_at_10": {"low": 0.02, "moderate": 0.05, "high": 0.1, "critical": 0.15},
-            "response_latency": {"low": 0.1, "moderate": 0.2, "high": 0.3, "critical": 0.5}
-        }
+            "response_latency": {"low": 0.1, "moderate": 0.2, "high": 0.3, "critical": 0.5},
+        },
     }
     return DriftMonitor(config)

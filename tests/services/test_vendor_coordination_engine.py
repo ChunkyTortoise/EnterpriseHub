@@ -3,22 +3,23 @@ Comprehensive tests for Vendor Coordination Engine.
 Tests cover vendor management, scheduling, performance tracking, and automation.
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timedelta
+from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, List, Any
+
+import pytest
 
 from ghl_real_estate_ai.services.vendor_coordination_engine import (
-    VendorCoordinationEngine,
-    VendorType,
-    ServiceType,
     AppointmentStatus,
-    VendorStatus,
-    VendorProfile,
-    VendorAppointment,
     ServiceRequest,
+    ServiceType,
+    VendorAppointment,
+    VendorCoordinationEngine,
+    VendorProfile,
     VendorRecommendation,
+    VendorStatus,
+    VendorType,
 )
 
 
@@ -153,24 +154,35 @@ class TestVendorCoordinationEngine:
     def mock_dependencies(self):
         """Create mock dependencies for vendor engine."""
         return {
-            'cache_service': MagicMock(),
-            'ghl_client': MagicMock(),
-            'claude_assistant': MagicMock(),
+            "cache_service": MagicMock(),
+            "ghl_client": MagicMock(),
+            "claude_assistant": MagicMock(),
         }
 
     @pytest.fixture
     def engine(self, mock_dependencies):
         """Create vendor engine instance with mocked dependencies."""
-        with patch('ghl_real_estate_ai.services.vendor_coordination_engine.ClaudeAssistant', return_value=mock_dependencies['claude_assistant']), \
-             patch('ghl_real_estate_ai.services.vendor_coordination_engine.GHLClient', return_value=mock_dependencies['ghl_client']), \
-             patch('ghl_real_estate_ai.services.vendor_coordination_engine.get_cache_service', return_value=mock_dependencies['cache_service']), \
-             patch('ghl_real_estate_ai.services.vendor_coordination_engine.get_llm_client') as mock_llm:
+        with (
+            patch(
+                "ghl_real_estate_ai.services.vendor_coordination_engine.ClaudeAssistant",
+                return_value=mock_dependencies["claude_assistant"],
+            ),
+            patch(
+                "ghl_real_estate_ai.services.vendor_coordination_engine.GHLClient",
+                return_value=mock_dependencies["ghl_client"],
+            ),
+            patch(
+                "ghl_real_estate_ai.services.vendor_coordination_engine.get_cache_service",
+                return_value=mock_dependencies["cache_service"],
+            ),
+            patch("ghl_real_estate_ai.services.vendor_coordination_engine.get_llm_client") as mock_llm,
+        ):
             mock_llm_instance = MagicMock()
             mock_llm.return_value = mock_llm_instance
             engine = VendorCoordinationEngine(
-                cache_service=mock_dependencies['cache_service'],
-                ghl_client=mock_dependencies['ghl_client'],
-                claude_assistant=mock_dependencies['claude_assistant'],
+                cache_service=mock_dependencies["cache_service"],
+                ghl_client=mock_dependencies["ghl_client"],
+                claude_assistant=mock_dependencies["claude_assistant"],
             )
             return engine
 
@@ -222,12 +234,12 @@ class TestVendorCoordinationEngine:
         engine.llm_client.generate = AsyncMock(return_value=mock_response)
 
         preferences = {
-            'preferred_dates': [datetime.now() + timedelta(days=3)],
-            'urgency': 5,
-            'budget_range': (300.0, 800.0),
-            'instructions': 'Check HVAC thoroughly',
-            'contact_person': 'Jane Smith',
-            'contact_phone': '(555) 999-0000',
+            "preferred_dates": [datetime.now() + timedelta(days=3)],
+            "urgency": 5,
+            "budget_range": (300.0, 800.0),
+            "instructions": "Check HVAC thoroughly",
+            "contact_person": "Jane Smith",
+            "contact_phone": "(555) 999-0000",
         }
 
         request_id = await engine.request_vendor_service(
@@ -412,9 +424,7 @@ class TestVendorCoordinationEngine:
         engine.appointments["appt_comp"] = appointment
         initial_completed = engine.metrics["appointments_completed"]
 
-        result = await engine.update_appointment_status(
-            "appt_comp", AppointmentStatus.COMPLETED
-        )
+        result = await engine.update_appointment_status("appt_comp", AppointmentStatus.COMPLETED)
 
         assert result is True
         assert engine.appointments["appt_comp"].status == AppointmentStatus.COMPLETED
@@ -423,9 +433,7 @@ class TestVendorCoordinationEngine:
     @pytest.mark.asyncio
     async def test_update_appointment_status_not_found(self, engine):
         """Test updating non-existent appointment."""
-        result = await engine.update_appointment_status(
-            "nonexistent_appt", AppointmentStatus.COMPLETED
-        )
+        result = await engine.update_appointment_status("nonexistent_appt", AppointmentStatus.COMPLETED)
         assert result is False
 
     @pytest.mark.asyncio

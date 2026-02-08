@@ -8,7 +8,7 @@ import math
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from ..interfaces.property_scorer import PropertyScorer, ScoringResult, ConfidenceLevel
+from ..interfaces.property_scorer import ConfidenceLevel, PropertyScorer, ScoringResult
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +38,7 @@ class EnhancedPropertyScorer(PropertyScorer):
         super().__init__(name="Enhanced Property Scorer", version="1.1.0")
         self.market_data = market_data or self._get_default_market_data()
 
-    def calculate_score(self, property_data: Dict[str, Any],
-                       lead_preferences: Dict[str, Any]) -> ScoringResult:
+    def calculate_score(self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any]) -> ScoringResult:
         """
         Calculate enhanced property score with sophisticated analysis
 
@@ -61,10 +60,10 @@ class EnhancedPropertyScorer(PropertyScorer):
         # Dynamic weighting based on preferences
         weights = self._calculate_dynamic_weights(lead_preferences)
         overall_score = (
-            budget_score * weights['budget'] +
-            location_score * weights['location'] +
-            feature_score * weights['features'] +
-            market_score * weights['market']
+            budget_score * weights["budget"]
+            + location_score * weights["location"]
+            + feature_score * weights["features"]
+            + market_score * weights["market"]
         )
 
         # Risk and opportunity analysis
@@ -73,8 +72,7 @@ class EnhancedPropertyScorer(PropertyScorer):
 
         # Generate enhanced reasoning
         reasoning = self._generate_enhanced_reasoning(
-            property_data, lead_preferences,
-            budget_score, location_score, feature_score, market_score
+            property_data, lead_preferences, budget_score, location_score, feature_score, market_score
         )
 
         # Determine confidence level with enhanced criteria
@@ -92,23 +90,20 @@ class EnhancedPropertyScorer(PropertyScorer):
             reasoning=reasoning,
             risk_factors=risk_factors,
             opportunities=opportunities,
-            match_insights=self._generate_match_insights(
-                property_data, lead_preferences, overall_score
-            ),
+            match_insights=self._generate_match_insights(property_data, lead_preferences, overall_score),
             scorer_type=self.name,
             scoring_timestamp=datetime.now().isoformat(),
-            model_version=self.version
+            model_version=self.version,
         )
 
-    def validate_inputs(self, property_data: Dict[str, Any],
-                       lead_preferences: Dict[str, Any]) -> bool:
+    def validate_inputs(self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any]) -> bool:
         """Enhanced validation with detailed checks"""
         # Basic validation from parent
         super().validate_inputs(property_data, lead_preferences)
 
         # Enhanced validation
-        price = property_data.get('price', 0)
-        budget = lead_preferences.get('budget', 0)
+        price = property_data.get("price", 0)
+        budget = lead_preferences.get("budget", 0)
 
         # Price reasonableness check
         if price > 10_000_000:  # $10M seems excessive for most residential
@@ -119,11 +114,12 @@ class EnhancedPropertyScorer(PropertyScorer):
 
         return True
 
-    def _calculate_enhanced_budget_score(self, property_data: Dict[str, Any],
-                                        lead_preferences: Dict[str, Any]) -> float:
+    def _calculate_enhanced_budget_score(
+        self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any]
+    ) -> float:
         """Enhanced budget scoring with flexibility zones"""
-        price = property_data.get('price', 0)
-        budget = lead_preferences.get('budget', 0)
+        price = property_data.get("price", 0)
+        budget = lead_preferences.get("budget", 0)
 
         if budget == 0:
             return 60.0  # Neutral score if no budget
@@ -154,14 +150,15 @@ class EnhancedPropertyScorer(PropertyScorer):
         else:  # Unrealistic stretch
             return max(5.0, 50.0 - (price_ratio - 1.2) * 100.0)
 
-    def _calculate_enhanced_location_score(self, property_data: Dict[str, Any],
-                                          lead_preferences: Dict[str, Any]) -> float:
+    def _calculate_enhanced_location_score(
+        self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any]
+    ) -> float:
         """Enhanced location scoring with geographic analysis"""
-        pref_location = lead_preferences.get('location')
+        pref_location = lead_preferences.get("location")
         if not pref_location:
             return 75.0  # Neutral score
 
-        address = property_data.get('address', {})
+        address = property_data.get("address", {})
         if isinstance(address, str):
             # Handle legacy string format
             prop_location = address.lower()
@@ -169,8 +166,8 @@ class EnhancedPropertyScorer(PropertyScorer):
             city = ""
         else:
             # Handle structured address
-            neighborhood = address.get('neighborhood', '').lower()
-            city = address.get('city', '').lower()
+            neighborhood = address.get("neighborhood", "").lower()
+            city = address.get("city", "").lower()
             prop_location = f"{neighborhood} {city}".lower()
 
         pref_location_lower = pref_location.lower()
@@ -218,46 +215,47 @@ class EnhancedPropertyScorer(PropertyScorer):
         """Calculate score for adjacent/similar areas"""
         # Enhanced neighborhood clusters with real estate knowledge
         area_clusters = {
-            'downtown': {
-                'core': ['downtown', 'central', 'urban core'],
-                'adjacent': ['east austin', 'south congress', 'rainey district'],
-                'similar': ['deep ellum', 'uptown']
+            "downtown": {
+                "core": ["downtown", "central", "urban core"],
+                "adjacent": ["east austin", "south congress", "rainey district"],
+                "similar": ["deep ellum", "uptown"],
             },
-            'westlake': {
-                'core': ['westlake', 'west lake'],
-                'adjacent': ['rollingwood', 'bee cave', 'lakeway'],
-                'similar': ['tarrytown', 'pemberton heights']
+            "westlake": {
+                "core": ["westlake", "west lake"],
+                "adjacent": ["rollingwood", "bee cave", "lakeway"],
+                "similar": ["tarrytown", "pemberton heights"],
             },
-            'domain': {
-                'core': ['domain', 'north austin'],
-                'adjacent': ['round rock', 'cedar park', 'pflugerville'],
-                'similar': ['arboretum', 'great hills']
-            }
+            "domain": {
+                "core": ["domain", "north austin"],
+                "adjacent": ["round rock", "cedar park", "pflugerville"],
+                "similar": ["arboretum", "great hills"],
+            },
         }
 
         for cluster_name, cluster_data in area_clusters.items():
             # Check if preferred location is in this cluster
-            if any(area in pref_location for area in cluster_data['core']):
+            if any(area in pref_location for area in cluster_data["core"]):
                 # Check neighborhood against cluster areas
-                if any(area in neighborhood for area in cluster_data['core']):
+                if any(area in neighborhood for area in cluster_data["core"]):
                     return 100.0
-                elif any(area in neighborhood for area in cluster_data['adjacent']):
+                elif any(area in neighborhood for area in cluster_data["adjacent"]):
                     return 75.0
-                elif any(area in neighborhood for area in cluster_data['similar']):
+                elif any(area in neighborhood for area in cluster_data["similar"]):
                     return 65.0
 
         return 0.0
 
-    def _calculate_enhanced_feature_score(self, property_data: Dict[str, Any],
-                                         lead_preferences: Dict[str, Any]) -> float:
+    def _calculate_enhanced_feature_score(
+        self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any]
+    ) -> float:
         """Enhanced feature scoring with weighted priorities"""
         score = 0.0
         max_possible_score = 0.0
 
         # Bedroom matching with flexibility
-        pref_bedrooms = lead_preferences.get('bedrooms')
+        pref_bedrooms = lead_preferences.get("bedrooms")
         if pref_bedrooms:
-            prop_bedrooms = property_data.get('bedrooms', 0)
+            prop_bedrooms = property_data.get("bedrooms", 0)
             bedroom_weight = 25.0
             max_possible_score += bedroom_weight
 
@@ -273,7 +271,7 @@ class EnhancedPropertyScorer(PropertyScorer):
                 score += bedroom_weight * 0.3  # Significantly fewer bedrooms
 
         # Must-have features (critical)
-        must_haves = lead_preferences.get('must_haves', [])
+        must_haves = lead_preferences.get("must_haves", [])
         if must_haves:
             must_have_weight = 40.0
             max_possible_score += must_have_weight
@@ -293,7 +291,7 @@ class EnhancedPropertyScorer(PropertyScorer):
                 score += must_have_weight * satisfaction_ratio * 0.6
 
         # Nice-to-have features (bonus)
-        nice_to_haves = lead_preferences.get('nice_to_haves', [])
+        nice_to_haves = lead_preferences.get("nice_to_haves", [])
         if nice_to_haves:
             nice_to_have_weight = 20.0
             max_possible_score += nice_to_have_weight
@@ -309,11 +307,11 @@ class EnhancedPropertyScorer(PropertyScorer):
             score += nice_to_have_weight * bonus_ratio
 
         # Property type matching
-        pref_type = lead_preferences.get('property_type')
+        pref_type = lead_preferences.get("property_type")
         if pref_type:
             type_weight = 15.0
             max_possible_score += type_weight
-            prop_type = property_data.get('property_type', '').lower()
+            prop_type = property_data.get("property_type", "").lower()
 
             if pref_type.lower() == prop_type:
                 score += type_weight  # Exact match
@@ -331,25 +329,25 @@ class EnhancedPropertyScorer(PropertyScorer):
         features = []
 
         # Explicit amenities
-        amenities = property_data.get('amenities', [])
+        amenities = property_data.get("amenities", [])
         features.extend([a.lower() for a in amenities])
 
         # Derived features from other fields
-        if property_data.get('garage', False) or 'garage' in str(property_data).lower():
-            features.append('garage')
+        if property_data.get("garage", False) or "garage" in str(property_data).lower():
+            features.append("garage")
 
-        if property_data.get('pool', False) or 'pool' in str(property_data).lower():
-            features.append('pool')
+        if property_data.get("pool", False) or "pool" in str(property_data).lower():
+            features.append("pool")
 
         # School rating as feature
-        school_rating = property_data.get('school_rating', 0)
+        school_rating = property_data.get("school_rating", 0)
         if school_rating >= 8:
-            features.append('good_schools')
+            features.append("good_schools")
 
         # Walkability score as feature
-        walkability = property_data.get('walkability_score', 0)
+        walkability = property_data.get("walkability_score", 0)
         if walkability >= 70:
-            features.append('walkable')
+            features.append("walkable")
 
         return features
 
@@ -363,26 +361,26 @@ class EnhancedPropertyScorer(PropertyScorer):
 
         # Keyword matching for complex features
         feature_keywords = {
-            'garage': ['garage', 'covered parking', 'carport'],
-            'pool': ['pool', 'swimming', 'spa'],
-            'garden': ['garden', 'landscaped', 'yard'],
-            'good_schools': ['school', 'rating', 'education', 'excellent schools'],
-            'walkable': ['walkable', 'walk score', 'transit'],
-            'modern': ['modern', 'updated', 'renovated', 'contemporary'],
-            'quiet': ['quiet', 'peaceful', 'cul-de-sac'],
-            'view': ['view', 'scenic', 'overlook', 'vista']
+            "garage": ["garage", "covered parking", "carport"],
+            "pool": ["pool", "swimming", "spa"],
+            "garden": ["garden", "landscaped", "yard"],
+            "good_schools": ["school", "rating", "education", "excellent schools"],
+            "walkable": ["walkable", "walk score", "transit"],
+            "modern": ["modern", "updated", "renovated", "contemporary"],
+            "quiet": ["quiet", "peaceful", "cul-de-sac"],
+            "view": ["view", "scenic", "overlook", "vista"],
         }
 
         keywords = feature_keywords.get(feature_lower, [feature_lower])
-        return any(keyword in ' '.join(prop_features) for keyword in keywords)
+        return any(keyword in " ".join(prop_features) for keyword in keywords)
 
     def _calculate_enhanced_market_score(self, property_data: Dict[str, Any]) -> float:
         """Enhanced market scoring with comprehensive analysis"""
         base_score = 70.0
 
         # Days on market analysis
-        days_on_market = property_data.get('days_on_market', 30)
-        market_median_dom = self.market_data.get('median_days_on_market', 25)
+        days_on_market = property_data.get("days_on_market", 30)
+        market_median_dom = self.market_data.get("median_days_on_market", 25)
 
         if days_on_market <= market_median_dom * 0.3:  # Hot property
             base_score += 25.0
@@ -398,9 +396,9 @@ class EnhancedPropertyScorer(PropertyScorer):
             base_score -= 25.0
 
         # Price positioning analysis
-        price_per_sqft = property_data.get('price_per_sqft')
+        price_per_sqft = property_data.get("price_per_sqft")
         if price_per_sqft:
-            market_median_psf = self.market_data.get('median_price_per_sqft', 280)
+            market_median_psf = self.market_data.get("median_price_per_sqft", 280)
             psf_ratio = price_per_sqft / market_median_psf
 
             if 0.9 <= psf_ratio <= 1.1:  # Well-priced
@@ -415,7 +413,7 @@ class EnhancedPropertyScorer(PropertyScorer):
                 base_score -= 15.0
 
         # Property age and condition
-        year_built = property_data.get('year_built')
+        year_built = property_data.get("year_built")
         if year_built:
             current_year = datetime.now().year
             property_age = current_year - year_built
@@ -432,7 +430,7 @@ class EnhancedPropertyScorer(PropertyScorer):
                 base_score -= 8.0
 
         # Market trend consideration
-        market_trend = self.market_data.get('price_trend', 0)
+        market_trend = self.market_data.get("price_trend", 0)
         if market_trend > 0.05:  # Strong appreciation
             base_score += 8.0
         elif market_trend > 0.02:  # Moderate appreciation
@@ -445,119 +443,121 @@ class EnhancedPropertyScorer(PropertyScorer):
     def _calculate_dynamic_weights(self, lead_preferences: Dict[str, Any]) -> Dict[str, float]:
         """Calculate dynamic weights based on lead preferences"""
         # Default weights
-        weights = {'budget': 0.35, 'location': 0.30, 'features': 0.25, 'market': 0.10}
+        weights = {"budget": 0.35, "location": 0.30, "features": 0.25, "market": 0.10}
 
         # Adjust based on must-haves
-        must_haves = lead_preferences.get('must_haves', [])
+        must_haves = lead_preferences.get("must_haves", [])
         if len(must_haves) >= 3:  # Feature-focused lead
-            weights['features'] += 0.05
-            weights['budget'] -= 0.03
-            weights['market'] -= 0.02
+            weights["features"] += 0.05
+            weights["budget"] -= 0.03
+            weights["market"] -= 0.02
 
         # Adjust based on budget constraints
-        budget = lead_preferences.get('budget', 0)
+        budget = lead_preferences.get("budget", 0)
         if budget > 1_000_000:  # High-budget lead may be less price-sensitive
-            weights['budget'] -= 0.05
-            weights['features'] += 0.03
-            weights['location'] += 0.02
+            weights["budget"] -= 0.05
+            weights["features"] += 0.03
+            weights["location"] += 0.02
 
         # Adjust based on location specificity
-        location = lead_preferences.get('location', '')
+        location = lead_preferences.get("location", "")
         if len(location.split()) > 2:  # Very specific location
-            weights['location'] += 0.05
-            weights['budget'] -= 0.03
-            weights['market'] -= 0.02
+            weights["location"] += 0.05
+            weights["budget"] -= 0.03
+            weights["market"] -= 0.02
 
         return weights
 
-    def _identify_risk_factors(self, property_data: Dict[str, Any],
-                              lead_preferences: Dict[str, Any]) -> List[str]:
+    def _identify_risk_factors(self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any]) -> List[str]:
         """Identify potential risk factors"""
         risks = []
 
         # Budget risks
-        price = property_data.get('price', 0)
-        budget = lead_preferences.get('budget', 0)
+        price = property_data.get("price", 0)
+        budget = lead_preferences.get("budget", 0)
         if budget > 0 and price > budget * 1.1:
             overage = price - budget
-            risks.append(f"${overage/1000:.0f}k over budget - financing may be challenging")
+            risks.append(f"${overage / 1000:.0f}k over budget - financing may be challenging")
 
         # Market risks
-        days_on_market = property_data.get('days_on_market', 30)
+        days_on_market = property_data.get("days_on_market", 30)
         if days_on_market > 90:
             risks.append("Property has been on market for extended period")
 
         # Price risks
-        price_per_sqft = property_data.get('price_per_sqft')
+        price_per_sqft = property_data.get("price_per_sqft")
         if price_per_sqft:
-            market_median_psf = self.market_data.get('median_price_per_sqft', 280)
+            market_median_psf = self.market_data.get("median_price_per_sqft", 280)
             if price_per_sqft > market_median_psf * 1.3:
                 risks.append("Price per sq ft significantly above market median")
 
         # Feature risks
-        must_haves = lead_preferences.get('must_haves', [])
+        must_haves = lead_preferences.get("must_haves", [])
         prop_features = self._extract_all_features(property_data)
-        missing_must_haves = [mh for mh in must_haves
-                             if not self._feature_exists(mh, prop_features)]
+        missing_must_haves = [mh for mh in must_haves if not self._feature_exists(mh, prop_features)]
         if missing_must_haves:
             risks.append(f"Missing required features: {', '.join(missing_must_haves)}")
 
         return risks
 
-    def _identify_opportunities(self, property_data: Dict[str, Any],
-                               lead_preferences: Dict[str, Any]) -> List[str]:
+    def _identify_opportunities(self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any]) -> List[str]:
         """Identify potential opportunities"""
         opportunities = []
 
         # Budget opportunities
-        price = property_data.get('price', 0)
-        budget = lead_preferences.get('budget', 0)
+        price = property_data.get("price", 0)
+        budget = lead_preferences.get("budget", 0)
         if budget > 0 and price <= budget * 0.85:
             savings = budget - price
-            opportunities.append(f"${savings/1000:.0f}k under budget for upgrades or savings")
+            opportunities.append(f"${savings / 1000:.0f}k under budget for upgrades or savings")
 
         # Market opportunities
-        days_on_market = property_data.get('days_on_market', 30)
+        days_on_market = property_data.get("days_on_market", 30)
         if days_on_market > 60:
             opportunities.append("Potential for price negotiation due to extended listing time")
 
         # Feature opportunities
-        bedrooms = property_data.get('bedrooms', 0)
-        pref_bedrooms = lead_preferences.get('bedrooms', 0)
+        bedrooms = property_data.get("bedrooms", 0)
+        pref_bedrooms = lead_preferences.get("bedrooms", 0)
         if pref_bedrooms > 0 and bedrooms > pref_bedrooms:
             extra_rooms = bedrooms - pref_bedrooms
             opportunities.append(f"{extra_rooms} extra bedroom(s) for office, guest room, or storage")
 
         # Market timing
-        market_trend = self.market_data.get('price_trend', 0)
+        market_trend = self.market_data.get("price_trend", 0)
         if market_trend > 0.05:
             opportunities.append("Strong market appreciation expected")
 
         return opportunities
 
-    def _generate_enhanced_reasoning(self, property_data: Dict[str, Any],
-                                    lead_preferences: Dict[str, Any],
-                                    budget_score: float, location_score: float,
-                                    feature_score: float, market_score: float) -> List[str]:
+    def _generate_enhanced_reasoning(
+        self,
+        property_data: Dict[str, Any],
+        lead_preferences: Dict[str, Any],
+        budget_score: float,
+        location_score: float,
+        feature_score: float,
+        market_score: float,
+    ) -> List[str]:
         """Generate comprehensive reasoning"""
         reasoning = []
 
         # Budget reasoning with specifics
-        price = property_data.get('price', 0)
-        budget = lead_preferences.get('budget', 0)
+        price = property_data.get("price", 0)
+        budget = lead_preferences.get("budget", 0)
         if budget > 0:
             price_ratio = price / budget
             if price_ratio <= 0.85:
                 savings = budget - price
-                reasoning.append(f"Excellent value at ${savings/1000:.0f}k under budget - room for improvements")
+                reasoning.append(f"Excellent value at ${savings / 1000:.0f}k under budget - room for improvements")
             elif price_ratio <= 0.95:
                 savings = budget - price
-                reasoning.append(f"Well-priced at ${savings/1000:.0f}k under budget")
+                reasoning.append(f"Well-priced at ${savings / 1000:.0f}k under budget")
             elif price_ratio <= 1.0:
                 reasoning.append("Priced perfectly within your budget")
             elif price_ratio <= 1.05:
                 overage = price - budget
-                reasoning.append(f"Slight stretch at ${overage/1000:.0f}k over budget but strong value")
+                reasoning.append(f"Slight stretch at ${overage / 1000:.0f}k over budget but strong value")
 
         # Location reasoning with context
         if location_score >= 95:
@@ -568,7 +568,7 @@ class EnhancedPropertyScorer(PropertyScorer):
             reasoning.append("Good location with convenient access to preferred areas")
 
         # Feature reasoning with details
-        must_haves = lead_preferences.get('must_haves', [])
+        must_haves = lead_preferences.get("must_haves", [])
         if must_haves:
             prop_features = self._extract_all_features(property_data)
             satisfied = [mh for mh in must_haves if self._feature_exists(mh, prop_features)]
@@ -578,8 +578,8 @@ class EnhancedPropertyScorer(PropertyScorer):
                 reasoning.append(f"Includes {len(satisfied)} of {len(must_haves)} must-have features")
 
         # Bedroom-specific reasoning
-        bedrooms = property_data.get('bedrooms', 0)
-        pref_bedrooms = lead_preferences.get('bedrooms')
+        bedrooms = property_data.get("bedrooms", 0)
+        pref_bedrooms = lead_preferences.get("bedrooms")
         if pref_bedrooms and bedrooms >= pref_bedrooms:
             if bedrooms == pref_bedrooms:
                 reasoning.append(f"Perfect {bedrooms}-bedroom layout as requested")
@@ -588,24 +588,26 @@ class EnhancedPropertyScorer(PropertyScorer):
                 reasoning.append(f"{bedrooms} bedrooms with {extra} bonus room(s) for flexibility")
 
         # Market timing reasoning
-        days_on_market = property_data.get('days_on_market', 30)
+        days_on_market = property_data.get("days_on_market", 30)
         if days_on_market <= 15:
             reasoning.append("Recently listed - act quickly in this competitive market")
         elif days_on_market > 60:
             reasoning.append("Extended listing time may provide negotiation opportunities")
 
         # Value proposition
-        price_per_sqft = property_data.get('price_per_sqft')
+        price_per_sqft = property_data.get("price_per_sqft")
         if price_per_sqft:
-            market_median_psf = self.market_data.get('median_price_per_sqft', 280)
+            market_median_psf = self.market_data.get("median_price_per_sqft", 280)
             if price_per_sqft <= market_median_psf * 0.9:
-                reasoning.append(f"Excellent price per sq ft at ${price_per_sqft:.0f} vs ${market_median_psf:.0f} market median")
+                reasoning.append(
+                    f"Excellent price per sq ft at ${price_per_sqft:.0f} vs ${market_median_psf:.0f} market median"
+                )
 
         return reasoning[:7]  # Limit to top 7 reasons
 
-    def _determine_enhanced_confidence_level(self, overall_score: float,
-                                            budget_score: float, feature_score: float,
-                                            risk_factors: List[str]) -> ConfidenceLevel:
+    def _determine_enhanced_confidence_level(
+        self, overall_score: float, budget_score: float, feature_score: float, risk_factors: List[str]
+    ) -> ConfidenceLevel:
         """Enhanced confidence level determination"""
         # Base confidence from score
         if overall_score >= 92:
@@ -634,16 +636,16 @@ class EnhancedPropertyScorer(PropertyScorer):
 
         return base_confidence
 
-    def _generate_match_insights(self, property_data: Dict[str, Any],
-                                lead_preferences: Dict[str, Any],
-                                overall_score: float) -> Dict[str, Any]:
+    def _generate_match_insights(
+        self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any], overall_score: float
+    ) -> Dict[str, Any]:
         """Generate detailed match insights"""
         return {
-            'property_id': property_data.get('id', 'unknown'),
-            'score_band': self._get_score_band(overall_score),
-            'key_strengths': self._identify_key_strengths(property_data, lead_preferences),
-            'improvement_areas': self._identify_improvement_areas(property_data, lead_preferences),
-            'recommendation': self._generate_recommendation(overall_score)
+            "property_id": property_data.get("id", "unknown"),
+            "score_band": self._get_score_band(overall_score),
+            "key_strengths": self._identify_key_strengths(property_data, lead_preferences),
+            "improvement_areas": self._identify_improvement_areas(property_data, lead_preferences),
+            "recommendation": self._generate_recommendation(overall_score),
         }
 
     def _get_score_band(self, score: float) -> str:
@@ -659,19 +661,18 @@ class EnhancedPropertyScorer(PropertyScorer):
         else:
             return "poor_match"
 
-    def _identify_key_strengths(self, property_data: Dict[str, Any],
-                               lead_preferences: Dict[str, Any]) -> List[str]:
+    def _identify_key_strengths(self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any]) -> List[str]:
         """Identify the property's key strengths for this lead"""
         strengths = []
 
         # Check budget advantage
-        price = property_data.get('price', 0)
-        budget = lead_preferences.get('budget', 0)
+        price = property_data.get("price", 0)
+        budget = lead_preferences.get("budget", 0)
         if budget > 0 and price <= budget * 0.9:
             strengths.append("excellent_value")
 
         # Check feature completeness
-        must_haves = lead_preferences.get('must_haves', [])
+        must_haves = lead_preferences.get("must_haves", [])
         if must_haves:
             prop_features = self._extract_all_features(property_data)
             if all(self._feature_exists(mh, prop_features) for mh in must_haves):
@@ -679,13 +680,12 @@ class EnhancedPropertyScorer(PropertyScorer):
 
         return strengths
 
-    def _identify_improvement_areas(self, property_data: Dict[str, Any],
-                                   lead_preferences: Dict[str, Any]) -> List[str]:
+    def _identify_improvement_areas(self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any]) -> List[str]:
         """Identify areas where the property could be improved"""
         improvements = []
 
         # Check for missing features
-        must_haves = lead_preferences.get('must_haves', [])
+        must_haves = lead_preferences.get("must_haves", [])
         prop_features = self._extract_all_features(property_data)
         missing = [mh for mh in must_haves if not self._feature_exists(mh, prop_features)]
         if missing:
@@ -707,24 +707,24 @@ class EnhancedPropertyScorer(PropertyScorer):
     def _get_default_market_data(self) -> Dict[str, Any]:
         """Get default market data when not provided"""
         return {
-            'median_price': 525000,
-            'median_price_per_sqft': 280,
-            'median_days_on_market': 25,
-            'price_trend': 0.06,  # 6% annual appreciation
-            'inventory_level': 'low'
+            "median_price": 525000,
+            "median_price_per_sqft": 280,
+            "median_days_on_market": 25,
+            "price_trend": 0.06,  # 6% annual appreciation
+            "inventory_level": "low",
         }
 
     def get_supported_features(self) -> List[str]:
         """Get list of features supported by enhanced scorer"""
         return [
-            'advanced_budget_analysis',
-            'geographic_scoring',
-            'weighted_feature_matching',
-            'market_timing_analysis',
-            'risk_assessment',
-            'opportunity_identification',
-            'dynamic_weighting',
-            'comprehensive_reasoning',
-            'confidence_adjustment',
-            'match_insights'
+            "advanced_budget_analysis",
+            "geographic_scoring",
+            "weighted_feature_matching",
+            "market_timing_analysis",
+            "risk_assessment",
+            "opportunity_identification",
+            "dynamic_weighting",
+            "comprehensive_reasoning",
+            "confidence_adjustment",
+            "match_insights",
         ]

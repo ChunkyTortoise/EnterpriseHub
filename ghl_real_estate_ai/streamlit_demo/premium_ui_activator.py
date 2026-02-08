@@ -18,10 +18,11 @@ Agent Analysis Results:
 Date: 2026-01-09
 """
 
-import sys
 import re
+import sys
 from pathlib import Path
 from typing import List, Tuple, Union
+
 
 def analyze_component_integration() -> List[Tuple[str, str, bool]]:
     """Analyze which premium components are already integrated."""
@@ -31,7 +32,7 @@ def analyze_component_integration() -> List[Tuple[str, str, bool]]:
         print("❌ app.py not found. Run from streamlit_demo directory.")
         return []
 
-    with open(app_path, 'r') as f:
+    with open(app_path, "r") as f:
         content = f.read()
 
     components_status = []
@@ -47,7 +48,7 @@ def analyze_component_integration() -> List[Tuple[str, str, bool]]:
         "render_dynamic_timeline",
         "render_feature_gap",
         "render_elite_segmentation_tab",
-        "render_actionable_heatmap"
+        "render_actionable_heatmap",
     ]
 
     elite_integrated = all(comp in content for comp in elite_imports)
@@ -64,15 +65,16 @@ def analyze_component_integration() -> List[Tuple[str, str, bool]]:
 
     return components_status
 
+
 def check_import_safety() -> bool:
     """Check if component imports are wrapped in try/except blocks."""
 
     app_path = Path("app.py")
-    with open(app_path, 'r') as f:
+    with open(app_path, "r") as f:
         content = f.read()
 
     # Look for premium component imports in try/except blocks
-    try_except_pattern = r'try:\s*\n\s*from components\.[^import]*import[^)]*'
+    try_except_pattern = r"try:\s*\n\s*from components\.[^import]*import[^)]*"
     matches = re.findall(try_except_pattern, content, re.Union[MULTILINE, re].DOTALL)
 
     if matches:
@@ -82,6 +84,7 @@ def check_import_safety() -> bool:
         print("⚠️ Some premium component imports may not be safely wrapped")
         return False
 
+
 def verify_component_files() -> List[Tuple[str, bool]]:
     """Verify that all premium component files exist."""
 
@@ -90,12 +93,7 @@ def verify_component_files() -> List[Tuple[str, bool]]:
         print("❌ Components directory not found")
         return []
 
-    required_files = [
-        "property_cards.py",
-        "elite_refinements.py",
-        "enhanced_services.py",
-        "property_matcher_ai.py"
-    ]
+    required_files = ["property_cards.py", "elite_refinements.py", "enhanced_services.py", "property_matcher_ai.py"]
 
     file_status = []
     for file_name in required_files:
@@ -109,6 +107,7 @@ def verify_component_files() -> List[Tuple[str, bool]]:
             print(f"❌ {file_name} missing")
 
     return file_status
+
 
 def create_activation_enhancement():
     """Create enhancement to ensure premium components are always activated."""
@@ -182,17 +181,18 @@ def enhance_property_matcher_premium_display():
 
     # Write enhancement file
     enhancement_path = Path("premium_activation_enhancement.py")
-    with open(enhancement_path, 'w') as f:
+    with open(enhancement_path, "w") as f:
         f.write(enhancement_code)
 
     print(f"✅ Created activation enhancement: {enhancement_path}")
 
+
 def generate_activation_report():
     """Generate comprehensive activation status report."""
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("🎨 PREMIUM UI ACTIVATION ANALYSIS")
-    print("="*60)
+    print("=" * 60)
 
     print("\n📁 Component File Status:")
     file_status = verify_component_files()
@@ -237,6 +237,7 @@ def generate_activation_report():
 
     return all_files_exist and imports_safe
 
+
 def main():
     """Main activation analysis and enhancement."""
 
@@ -248,6 +249,7 @@ def main():
         print("📂 Looking for app.py...")
         if Path("streamlit_demo/app.py").exists():
             import os
+
             os.chdir("streamlit_demo")
             print("✅ Changed to streamlit_demo directory")
         else:
@@ -262,7 +264,7 @@ def main():
     create_activation_enhancement()
 
     # Final status
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     if activation_ready:
         print("🎉 PREMIUM UI ACTIVATION COMPLETE!")
         print("🚀 Ready for Jorge demo deployment")
@@ -270,8 +272,9 @@ def main():
         print("⚠️ PREMIUM UI ACTIVATION NEEDS REVIEW")
         print("📋 Address issues above before demo")
 
-    print("="*60)
+    print("=" * 60)
     return activation_ready
+
 
 if __name__ == "__main__":
     success = main()

@@ -5,28 +5,29 @@ Tests seller psychology analysis, market leverage calculation, strategy generati
 win probability prediction, and real-time coaching functionality.
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timedelta
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from ghl_real_estate_ai.services.ai_negotiation_partner import AINegotiationPartner
+import pytest
+
 from ghl_real_estate_ai.api.schemas.negotiation import (
-    NegotiationAnalysisRequest,
-    RealTimeCoachingRequest,
-    StrategyUpdateRequest,
-    ListingHistory,
-    SellerMotivationType,
-    UrgencyLevel,
-    MarketCondition,
-    NegotiationTactic,
-    SellerPsychologyProfile,
-    MarketLeverage,
-    NegotiationStrategy,
-    WinProbabilityAnalysis,
     ListingBehaviorPattern,
+    ListingHistory,
+    MarketCondition,
+    MarketLeverage,
+    NegotiationAnalysisRequest,
+    NegotiationStrategy,
+    NegotiationTactic,
+    RealTimeCoachingRequest,
+    SellerMotivationType,
+    SellerPsychologyProfile,
+    StrategyUpdateRequest,
+    UrgencyLevel,
+    WinProbabilityAnalysis,
 )
+from ghl_real_estate_ai.services.ai_negotiation_partner import AINegotiationPartner
 
 
 @pytest.fixture
@@ -42,11 +43,7 @@ def mock_analysis_request():
         tenant_id="tenant_test",
         property_id="PROP_12345",
         lead_id="LEAD_67890",
-        buyer_preferences={
-            "cash_offer": False,
-            "flexible_timeline": True,
-            "pre_approved": True
-        }
+        buyer_preferences={"cash_offer": False, "flexible_timeline": True, "pre_approved": True},
     )
 
 
@@ -56,14 +53,12 @@ def mock_listing_history():
     return ListingHistory(
         original_list_price=Decimal("800000"),
         current_price=Decimal("750000"),
-        price_drops=[
-            {"date": "2024-10-15", "old_price": 800000, "new_price": 750000, "percentage": 6.25}
-        ],
+        price_drops=[{"date": "2024-10-15", "old_price": 800000, "new_price": 750000, "percentage": 6.25}],
         days_on_market=45,
         listing_views=350,
         showing_requests=22,
         offers_received=1,
-        previous_listing_attempts=0
+        previous_listing_attempts=0,
     )
 
 
@@ -80,7 +75,7 @@ def mock_property_data():
         "zip_code": "78701",
         "days_on_market": 45,
         "year_built": 2015,
-        "price_drops": 1
+        "price_drops": 1,
     }
 
 
@@ -96,10 +91,7 @@ def mock_buyer_data():
         "cash_offer": False,
         "flexible_timeline": True,
         "first_time_buyer": False,
-        "communication_data": {
-            "avg_response_time_hours": 3.5,
-            "communication_tone": "professional"
-        }
+        "communication_data": {"avg_response_time_hours": 3.5, "communication_tone": "professional"},
     }
 
 
@@ -179,6 +171,7 @@ def _make_mock_win_probability(**overrides):
 
 class TestAINegotiationPartner:
     """Test suite for AI Negotiation Partner"""
+
     pass
 
 
@@ -189,7 +182,7 @@ class TestSellerPsychologyAnalyzer:
     async def test_analyze_seller_psychology_basic(self, negotiation_partner, mock_listing_history):
         """Test basic seller psychology analysis"""
 
-        with patch.object(negotiation_partner.psychology_analyzer, 'analyze_seller_psychology') as mock_analyze:
+        with patch.object(negotiation_partner.psychology_analyzer, "analyze_seller_psychology") as mock_analyze:
             mock_analyze.return_value = MagicMock(
                 motivation_type=SellerMotivationType.FINANCIAL,
                 urgency_level=UrgencyLevel.HIGH,
@@ -197,7 +190,7 @@ class TestSellerPsychologyAnalyzer:
                 flexibility_score=65.2,
                 emotional_attachment_score=35.0,
                 financial_pressure_score=82.0,
-                relationship_importance=45.0
+                relationship_importance=45.0,
             )
 
             # Test analysis
@@ -217,19 +210,17 @@ class TestSellerPsychologyAnalyzer:
             current_price=Decimal("700000"),
             price_drops=[
                 {"date": "2024-08-15", "old_price": 750000, "new_price": 725000, "percentage": 3.3},
-                {"date": "2024-09-20", "old_price": 725000, "new_price": 700000, "percentage": 3.4}
+                {"date": "2024-09-20", "old_price": 725000, "new_price": 700000, "percentage": 3.4},
             ],
             days_on_market=125,  # High DOM
             listing_views=800,
             showing_requests=35,
-            offers_received=2
+            offers_received=2,
         )
 
-        with patch.object(negotiation_partner.psychology_analyzer, 'analyze_seller_psychology') as mock_analyze:
+        with patch.object(negotiation_partner.psychology_analyzer, "analyze_seller_psychology") as mock_analyze:
             mock_analyze.return_value = MagicMock(
-                urgency_level=UrgencyLevel.CRITICAL,
-                urgency_score=88.0,
-                motivation_type=SellerMotivationType.DISTRESSED
+                urgency_level=UrgencyLevel.CRITICAL, urgency_score=88.0, motivation_type=SellerMotivationType.DISTRESSED
             )
 
             result = await mock_analyze("PROP_12345", listing_history, {})
@@ -255,17 +246,19 @@ class TestMarketLeverageCalculator:
     """Test market leverage calculation functionality"""
 
     @pytest.mark.asyncio
-    async def test_calculate_market_leverage_buyers_market(self, negotiation_partner, mock_property_data, mock_buyer_data, mock_listing_history):
+    async def test_calculate_market_leverage_buyers_market(
+        self, negotiation_partner, mock_property_data, mock_buyer_data, mock_listing_history
+    ):
         """Test market leverage calculation in buyers market"""
 
-        with patch.object(negotiation_partner.leverage_calculator, 'calculate_market_leverage') as mock_calculate:
+        with patch.object(negotiation_partner.leverage_calculator, "calculate_market_leverage") as mock_calculate:
             mock_calculate.return_value = MagicMock(
                 overall_leverage_score=78.5,
                 market_condition=MarketCondition.BUYERS_MARKET,
                 competitive_pressure=65.0,
                 price_positioning="overpriced",
                 seasonal_advantage=12.0,
-                financing_strength=85.0
+                financing_strength=85.0,
             )
 
             result = await mock_calculate("PROP_12345", mock_property_data, mock_buyer_data, mock_listing_history)
@@ -279,17 +272,11 @@ class TestMarketLeverageCalculator:
     async def test_cash_offer_leverage_boost(self, negotiation_partner):
         """Test leverage boost from cash offer"""
 
-        cash_buyer_data = {
-            "cash_offer": True,
-            "credit_score": 800,
-            "quick_close": True
-        }
+        cash_buyer_data = {"cash_offer": True, "credit_score": 800, "quick_close": True}
 
-        with patch.object(negotiation_partner.leverage_calculator, 'calculate_market_leverage') as mock_calculate:
+        with patch.object(negotiation_partner.leverage_calculator, "calculate_market_leverage") as mock_calculate:
             mock_calculate.return_value = MagicMock(
-                cash_offer_boost=25.0,
-                quick_close_advantage=15.0,
-                financing_strength=95.0
+                cash_offer_boost=25.0, quick_close_advantage=15.0, financing_strength=95.0
             )
 
             result = await mock_calculate("PROP_12345", {}, cash_buyer_data, None)
@@ -303,7 +290,7 @@ class TestMarketLeverageCalculator:
 
         # Test different months for seasonal advantage
         winter_months = [11, 12, 1]  # Should favor buyers
-        spring_months = [4, 5, 6]    # Should favor sellers
+        spring_months = [4, 5, 6]  # Should favor sellers
 
         # These would test internal seasonal calculation methods
         # For now, verify the concept through integration tests
@@ -318,23 +305,19 @@ class TestNegotiationStrategyEngine:
         """Test price-focused strategy generation"""
 
         mock_psychology = MagicMock(
-            motivation_type=SellerMotivationType.FINANCIAL,
-            urgency_level=UrgencyLevel.HIGH,
-            flexibility_score=75.0
+            motivation_type=SellerMotivationType.FINANCIAL, urgency_level=UrgencyLevel.HIGH, flexibility_score=75.0
         )
 
         mock_leverage = MagicMock(
-            overall_leverage_score=82.0,
-            market_condition=MarketCondition.BUYERS_MARKET,
-            price_positioning="overpriced"
+            overall_leverage_score=82.0, market_condition=MarketCondition.BUYERS_MARKET, price_positioning="overpriced"
         )
 
-        with patch.object(negotiation_partner.strategy_engine, 'generate_negotiation_strategy') as mock_generate:
+        with patch.object(negotiation_partner.strategy_engine, "generate_negotiation_strategy") as mock_generate:
             mock_generate.return_value = MagicMock(
                 primary_tactic=NegotiationTactic.PRICE_FOCUSED,
                 confidence_score=85.0,
                 recommended_offer_price=Decimal("712500"),
-                opening_strategy="Present 95.0% offer with strong market analysis"
+                opening_strategy="Present 95.0% offer with strong market analysis",
             )
 
             result = await mock_generate("PROP_12345", mock_psychology, mock_leverage, {}, {})
@@ -350,19 +333,19 @@ class TestNegotiationStrategyEngine:
         mock_psychology = MagicMock(
             motivation_type=SellerMotivationType.EMOTIONAL,
             relationship_importance=85.0,
-            emotional_attachment_score=78.0
+            emotional_attachment_score=78.0,
         )
 
         mock_leverage = MagicMock(
             overall_leverage_score=45.0,  # Lower leverage
-            market_condition=MarketCondition.BALANCED
+            market_condition=MarketCondition.BALANCED,
         )
 
-        with patch.object(negotiation_partner.strategy_engine, 'generate_negotiation_strategy') as mock_generate:
+        with patch.object(negotiation_partner.strategy_engine, "generate_negotiation_strategy") as mock_generate:
             mock_generate.return_value = MagicMock(
                 primary_tactic=NegotiationTactic.RELATIONSHIP_BUILDING,
                 relationship_building_approach="personal_empathetic",
-                key_terms_to_emphasize=["personal_connection", "home_appreciation"]
+                key_terms_to_emphasize=["personal_connection", "home_appreciation"],
             )
 
             result = await mock_generate("PROP_12345", mock_psychology, mock_leverage, {}, {})
@@ -389,26 +372,21 @@ class TestWinProbabilityPredictor:
         """Test high win probability prediction"""
 
         mock_psychology = MagicMock(
-            urgency_score=85.0,
-            flexibility_score=80.0,
-            motivation_type=SellerMotivationType.DISTRESSED
+            urgency_score=85.0, flexibility_score=80.0, motivation_type=SellerMotivationType.DISTRESSED
         )
 
-        mock_leverage = MagicMock(
-            overall_leverage_score=88.0,
-            market_condition=MarketCondition.BUYERS_MARKET
-        )
+        mock_leverage = MagicMock(overall_leverage_score=88.0, market_condition=MarketCondition.BUYERS_MARKET)
 
         mock_strategy = MagicMock(
             recommended_offer_price=Decimal("720000"),  # 96% of 750k list
-            confidence_score=82.0
+            confidence_score=82.0,
         )
 
-        with patch.object(negotiation_partner.win_predictor, 'predict_win_probability') as mock_predict:
+        with patch.object(negotiation_partner.win_predictor, "predict_win_probability") as mock_predict:
             mock_predict.return_value = MagicMock(
                 win_probability=87.3,
                 confidence_interval={"lower": 81.5, "upper": 93.1},
-                success_drivers=["High seller urgency", "Strong market leverage", "Competitive offer"]
+                success_drivers=["High seller urgency", "Strong market leverage", "Competitive offer"],
             )
 
             result = await mock_predict("PROP_12345", mock_psychology, mock_leverage, mock_strategy, {}, {})
@@ -422,25 +400,19 @@ class TestWinProbabilityPredictor:
         """Test low win probability prediction"""
 
         mock_psychology = MagicMock(
-            urgency_score=25.0,
-            flexibility_score=35.0,
-            motivation_type=SellerMotivationType.EMOTIONAL
+            urgency_score=25.0, flexibility_score=35.0, motivation_type=SellerMotivationType.EMOTIONAL
         )
 
-        mock_leverage = MagicMock(
-            overall_leverage_score=22.0,
-            market_condition=MarketCondition.SELLERS_MARKET
-        )
+        mock_leverage = MagicMock(overall_leverage_score=22.0, market_condition=MarketCondition.SELLERS_MARKET)
 
         mock_strategy = MagicMock(
             recommended_offer_price=Decimal("650000"),  # Low ball offer
-            confidence_score=45.0
+            confidence_score=45.0,
         )
 
-        with patch.object(negotiation_partner.win_predictor, 'predict_win_probability') as mock_predict:
+        with patch.object(negotiation_partner.win_predictor, "predict_win_probability") as mock_predict:
             mock_predict.return_value = MagicMock(
-                win_probability=28.5,
-                risk_factors=["Low offer price", "Sellers market", "Low seller urgency"]
+                win_probability=28.5, risk_factors=["Low offer price", "Sellers market", "Low seller urgency"]
             )
 
             result = await mock_predict("PROP_12345", mock_psychology, mock_leverage, mock_strategy, {}, {})
@@ -471,15 +443,16 @@ class TestNegotiationIntelligence:
         mock_strategy = _make_mock_strategy(primary_tactic=NegotiationTactic.PRICE_FOCUSED)
         mock_win = _make_mock_win_probability(win_probability=82.5)
 
-        with patch.object(negotiation_partner, '_gather_analysis_data') as mock_gather, \
-             patch.object(negotiation_partner.psychology_analyzer, 'analyze_seller_psychology') as mock_psych_call, \
-             patch.object(negotiation_partner.leverage_calculator, 'calculate_market_leverage') as mock_leverage_call, \
-             patch.object(negotiation_partner.strategy_engine, 'generate_negotiation_strategy') as mock_strategy_call, \
-             patch.object(negotiation_partner.win_predictor, 'predict_win_probability') as mock_win_call, \
-             patch.object(negotiation_partner, '_generate_strategic_summary') as mock_summary, \
-             patch.object(negotiation_partner.attom_client, 'get_property_dna', new_callable=AsyncMock) as mock_dna, \
-             patch.object(negotiation_partner.voss_agent, 'run_negotiation', new_callable=AsyncMock) as mock_voss:
-
+        with (
+            patch.object(negotiation_partner, "_gather_analysis_data") as mock_gather,
+            patch.object(negotiation_partner.psychology_analyzer, "analyze_seller_psychology") as mock_psych_call,
+            patch.object(negotiation_partner.leverage_calculator, "calculate_market_leverage") as mock_leverage_call,
+            patch.object(negotiation_partner.strategy_engine, "generate_negotiation_strategy") as mock_strategy_call,
+            patch.object(negotiation_partner.win_predictor, "predict_win_probability") as mock_win_call,
+            patch.object(negotiation_partner, "_generate_strategic_summary") as mock_summary,
+            patch.object(negotiation_partner.attom_client, "get_property_dna", new_callable=AsyncMock) as mock_dna,
+            patch.object(negotiation_partner.voss_agent, "run_negotiation", new_callable=AsyncMock) as mock_voss,
+        ):
             mock_gather.return_value = (
                 {"property_id": "PROP_12345", "list_price": 750000},  # property_data
                 {"lead_id": "LEAD_67890", "credit_score": 780, "name": "Test Buyer"},  # buyer_data
@@ -487,8 +460,8 @@ class TestNegotiationIntelligence:
                     original_list_price=Decimal("750000"),
                     current_price=Decimal("750000"),
                     price_drops=[],
-                    days_on_market=30
-                )
+                    days_on_market=30,
+                ),
             )
             mock_psych_call.return_value = mock_psych
             mock_leverage_call.return_value = mock_leverage
@@ -497,7 +470,7 @@ class TestNegotiationIntelligence:
             mock_summary.return_value = (
                 "Executive summary",
                 ["Key insight 1", "Key insight 2"],
-                ["Action item 1", "Action item 2"]
+                ["Action item 1", "Action item 2"],
             )
             mock_dna.return_value = None
             mock_voss.return_value = {"voss_level": "tactical_empathy", "generated_response": None}
@@ -524,15 +497,16 @@ class TestNegotiationIntelligence:
         mock_strategy = _make_mock_strategy()
         mock_win = _make_mock_win_probability()
 
-        with patch.object(negotiation_partner, '_gather_analysis_data') as mock_gather, \
-             patch.object(negotiation_partner.psychology_analyzer, 'analyze_seller_psychology') as mock_psych_call, \
-             patch.object(negotiation_partner.leverage_calculator, 'calculate_market_leverage') as mock_leverage_call, \
-             patch.object(negotiation_partner.strategy_engine, 'generate_negotiation_strategy') as mock_strategy_call, \
-             patch.object(negotiation_partner.win_predictor, 'predict_win_probability') as mock_win_call, \
-             patch.object(negotiation_partner, '_generate_strategic_summary') as mock_summary, \
-             patch.object(negotiation_partner.attom_client, 'get_property_dna', new_callable=AsyncMock) as mock_dna, \
-             patch.object(negotiation_partner.voss_agent, 'run_negotiation', new_callable=AsyncMock) as mock_voss:
-
+        with (
+            patch.object(negotiation_partner, "_gather_analysis_data") as mock_gather,
+            patch.object(negotiation_partner.psychology_analyzer, "analyze_seller_psychology") as mock_psych_call,
+            patch.object(negotiation_partner.leverage_calculator, "calculate_market_leverage") as mock_leverage_call,
+            patch.object(negotiation_partner.strategy_engine, "generate_negotiation_strategy") as mock_strategy_call,
+            patch.object(negotiation_partner.win_predictor, "predict_win_probability") as mock_win_call,
+            patch.object(negotiation_partner, "_generate_strategic_summary") as mock_summary,
+            patch.object(negotiation_partner.attom_client, "get_property_dna", new_callable=AsyncMock) as mock_dna,
+            patch.object(negotiation_partner.voss_agent, "run_negotiation", new_callable=AsyncMock) as mock_voss,
+        ):
             mock_gather.return_value = (
                 {"property_id": "PROP_12345", "list_price": 750000},
                 {"lead_id": "LEAD_67890", "name": "Test"},
@@ -540,8 +514,8 @@ class TestNegotiationIntelligence:
                     original_list_price=Decimal("750000"),
                     current_price=Decimal("750000"),
                     price_drops=[],
-                    days_on_market=30
-                )
+                    days_on_market=30,
+                ),
             )
             mock_psych_call.return_value = mock_psych
             mock_leverage_call.return_value = mock_leverage
@@ -579,7 +553,7 @@ class TestRealTimeCoaching:
             "intelligence": mock_intelligence,
             "buyer_profile": {},
             "property_data": {},
-            "created_at": datetime.now()
+            "created_at": datetime.now(),
         }
 
         coaching_request = RealTimeCoachingRequest(
@@ -587,20 +561,17 @@ class TestRealTimeCoaching:
             conversation_context="Seller is considering our offer",
             current_situation="Initial offer presentation",
             buyer_feedback="Client is confident",
-            seller_response="Seller wants to think about it"
+            seller_response="Seller wants to think about it",
         )
 
-        with patch.object(negotiation_partner, '_analyze_conversation_context') as mock_analyze, \
-             patch.object(negotiation_partner, '_generate_immediate_guidance') as mock_guidance, \
-             patch.object(negotiation_partner.drift_detector, 'analyze_drift') as mock_drift:
-
+        with (
+            patch.object(negotiation_partner, "_analyze_conversation_context") as mock_analyze,
+            patch.object(negotiation_partner, "_generate_immediate_guidance") as mock_guidance,
+            patch.object(negotiation_partner.drift_detector, "analyze_drift") as mock_drift,
+        ):
             mock_analyze.return_value = {"seller_emotional_state": "neutral"}
             mock_guidance.return_value = "Continue with current strategy"
-            mock_drift.return_value = {
-                "is_drifting": False,
-                "drift_score": 0.1,
-                "recommendation": ""
-            }
+            mock_drift.return_value = {"is_drifting": False, "drift_score": 0.1, "recommendation": ""}
 
             result = await negotiation_partner.provide_realtime_coaching(coaching_request)
 
@@ -624,25 +595,22 @@ class TestRealTimeCoaching:
             "intelligence": mock_intelligence,
             "buyer_profile": {},
             "property_data": {},
-            "created_at": datetime.now()
+            "created_at": datetime.now(),
         }
 
         coaching_request = RealTimeCoachingRequest(
             negotiation_id="PROP_12345",
             conversation_context="Seller countered at $740,000",
             current_situation="Seller counter-offer",
-            seller_response="Counter at $740k"
+            seller_response="Counter at $740k",
         )
 
-        with patch.object(negotiation_partner, '_analyze_conversation_context') as mock_analyze, \
-             patch.object(negotiation_partner.drift_detector, 'analyze_drift') as mock_drift:
-
+        with (
+            patch.object(negotiation_partner, "_analyze_conversation_context") as mock_analyze,
+            patch.object(negotiation_partner.drift_detector, "analyze_drift") as mock_drift,
+        ):
             mock_analyze.return_value = {"seller_emotional_state": "neutral", "strategy_effectiveness": "moderate"}
-            mock_drift.return_value = {
-                "is_drifting": False,
-                "drift_score": 0.15,
-                "recommendation": ""
-            }
+            mock_drift.return_value = {"is_drifting": False, "drift_score": 0.15, "recommendation": ""}
 
             result = await negotiation_partner.provide_realtime_coaching(coaching_request)
 
@@ -677,7 +645,7 @@ class TestStrategyUpdates:
             "intelligence": mock_intelligence,
             "buyer_profile": {},
             "property_data": {"list_price": 750000},
-            "created_at": datetime.now()
+            "created_at": datetime.now(),
         }
 
         update_request = StrategyUpdateRequest(
@@ -685,8 +653,8 @@ class TestStrategyUpdates:
             new_information={
                 "seller_response": "Seller mentioned divorce timeline",
                 "urgency_update": "increased",
-                "communication_data": {"tone": "urgent"}
-            }
+                "communication_data": {"tone": "urgent"},
+            },
         )
 
         updated_psych = _make_mock_seller_psychology(
@@ -697,11 +665,12 @@ class TestStrategyUpdates:
         updated_strategy = _make_mock_strategy(primary_tactic=NegotiationTactic.TIMELINE_FOCUSED)
         updated_win = _make_mock_win_probability(win_probability=88.5)
 
-        with patch.object(negotiation_partner.psychology_analyzer, 'analyze_seller_psychology') as mock_psych, \
-             patch.object(negotiation_partner.strategy_engine, 'generate_negotiation_strategy') as mock_strategy, \
-             patch.object(negotiation_partner.win_predictor, 'predict_win_probability') as mock_win, \
-             patch.object(negotiation_partner, '_generate_strategic_summary') as mock_summary:
-
+        with (
+            patch.object(negotiation_partner.psychology_analyzer, "analyze_seller_psychology") as mock_psych,
+            patch.object(negotiation_partner.strategy_engine, "generate_negotiation_strategy") as mock_strategy,
+            patch.object(negotiation_partner.win_predictor, "predict_win_probability") as mock_win,
+            patch.object(negotiation_partner, "_generate_strategic_summary") as mock_summary,
+        ):
             mock_psych.return_value = updated_psych
             mock_strategy.return_value = updated_strategy
             mock_win.return_value = updated_win
@@ -729,34 +698,32 @@ class TestStrategyUpdates:
             "intelligence": mock_intelligence,
             "buyer_profile": {},
             "property_data": {"list_price": 750000},
-            "created_at": datetime.now()
+            "created_at": datetime.now(),
         }
 
         # Update with market information only
         update_request = StrategyUpdateRequest(
             negotiation_id="PROP_12345",
-            new_information={
-                "market_change": "New comparable sales",
-                "inventory_update": "Decreased inventory"
-            }
+            new_information={"market_change": "New comparable sales", "inventory_update": "Decreased inventory"},
         )
 
         updated_leverage = _make_mock_market_leverage(overall_leverage_score=80.0)
         updated_strategy = _make_mock_strategy()
         updated_win = _make_mock_win_probability()
 
-        with patch.object(negotiation_partner.leverage_calculator, 'calculate_market_leverage') as mock_leverage, \
-             patch.object(negotiation_partner.strategy_engine, 'generate_negotiation_strategy') as mock_strategy, \
-             patch.object(negotiation_partner.win_predictor, 'predict_win_probability') as mock_win, \
-             patch.object(negotiation_partner, '_generate_strategic_summary') as mock_summary:
-
+        with (
+            patch.object(negotiation_partner.leverage_calculator, "calculate_market_leverage") as mock_leverage,
+            patch.object(negotiation_partner.strategy_engine, "generate_negotiation_strategy") as mock_strategy,
+            patch.object(negotiation_partner.win_predictor, "predict_win_probability") as mock_win,
+            patch.object(negotiation_partner, "_generate_strategic_summary") as mock_summary,
+        ):
             mock_leverage.return_value = updated_leverage
             mock_strategy.return_value = updated_strategy
             mock_win.return_value = updated_win
             mock_summary.return_value = ("Summary", [], [])
 
             # Psychology analyzer should NOT be called
-            with patch.object(negotiation_partner.psychology_analyzer, 'analyze_seller_psychology') as mock_psych:
+            with patch.object(negotiation_partner.psychology_analyzer, "analyze_seller_psychology") as mock_psych:
                 await negotiation_partner.update_negotiation_strategy(update_request)
 
                 # Market leverage should be recalculated
@@ -776,7 +743,7 @@ class TestPerformanceMetrics:
         negotiation_partner.performance_metrics["avg_processing_time_ms"] = 2500
         negotiation_partner.performance_metrics["strategy_effectiveness"] = {
             "price_focused": {"count": 5, "total_probability": 420},
-            "relationship_building": {"count": 3, "total_probability": 240}
+            "relationship_building": {"count": 3, "total_probability": 240},
         }
 
         metrics = negotiation_partner.get_performance_metrics()
@@ -793,14 +760,8 @@ class TestPerformanceMetrics:
         old_time = datetime.now() - timedelta(hours=25)
         new_time = datetime.now() - timedelta(hours=1)
 
-        negotiation_partner.active_negotiations["OLD_PROP"] = {
-            "created_at": old_time,
-            "intelligence": MagicMock()
-        }
-        negotiation_partner.active_negotiations["NEW_PROP"] = {
-            "created_at": new_time,
-            "intelligence": MagicMock()
-        }
+        negotiation_partner.active_negotiations["OLD_PROP"] = {"created_at": old_time, "intelligence": MagicMock()}
+        negotiation_partner.active_negotiations["NEW_PROP"] = {"created_at": new_time, "intelligence": MagicMock()}
 
         # Cleanup with 24-hour threshold
         negotiation_partner.cleanup_inactive_negotiations(hours_threshold=24)
@@ -819,13 +780,13 @@ class TestErrorHandling:
         """Test analysis behavior with missing data"""
 
         request = NegotiationAnalysisRequest(
-            tenant_id="tenant_test",
-            property_id="MISSING_PROP",
-            lead_id="MISSING_LEAD"
+            tenant_id="tenant_test", property_id="MISSING_PROP", lead_id="MISSING_LEAD"
         )
 
-        with patch.object(negotiation_partner, '_gather_analysis_data') as mock_gather, \
-             patch.object(negotiation_partner.attom_client, 'get_property_dna', new_callable=AsyncMock) as mock_dna:
+        with (
+            patch.object(negotiation_partner, "_gather_analysis_data") as mock_gather,
+            patch.object(negotiation_partner.attom_client, "get_property_dna", new_callable=AsyncMock) as mock_dna,
+        ):
             mock_gather.return_value = (None, {}, MagicMock())  # Missing property data
             mock_dna.return_value = None
 
@@ -837,9 +798,7 @@ class TestErrorHandling:
         """Test coaching request without active negotiation"""
 
         coaching_request = RealTimeCoachingRequest(
-            negotiation_id="NON_EXISTENT",
-            conversation_context="Test context",
-            current_situation="Test situation"
+            negotiation_id="NON_EXISTENT", conversation_context="Test context", current_situation="Test situation"
         )
 
         with pytest.raises(ValueError, match="Active negotiation not found"):
@@ -849,18 +808,22 @@ class TestErrorHandling:
     async def test_engine_failure_handling(self, negotiation_partner, mock_analysis_request):
         """Test handling of individual engine failures"""
 
-        with patch.object(negotiation_partner, '_gather_analysis_data') as mock_gather, \
-             patch.object(negotiation_partner.attom_client, 'get_property_dna', new_callable=AsyncMock) as mock_dna:
+        with (
+            patch.object(negotiation_partner, "_gather_analysis_data") as mock_gather,
+            patch.object(negotiation_partner.attom_client, "get_property_dna", new_callable=AsyncMock) as mock_dna,
+        ):
             mock_gather.return_value = (
                 {"property_id": "PROP_12345", "list_price": 750000},
                 {"lead_id": "LEAD_67890", "name": "Test"},
-                MagicMock()
+                MagicMock(),
             )
             mock_dna.return_value = None
 
             # Make psychology analyzer fail
-            with patch.object(negotiation_partner.psychology_analyzer, 'analyze_seller_psychology') as mock_psych, \
-                 patch.object(negotiation_partner.leverage_calculator, 'calculate_market_leverage') as mock_leverage:
+            with (
+                patch.object(negotiation_partner.psychology_analyzer, "analyze_seller_psychology") as mock_psych,
+                patch.object(negotiation_partner.leverage_calculator, "calculate_market_leverage") as mock_leverage,
+            ):
                 mock_psych.side_effect = Exception("Psychology analysis failed")
                 mock_leverage.return_value = _make_mock_market_leverage()
 
@@ -880,7 +843,7 @@ class TestIntegrationScenarios:
             tenant_id="tenant_test",
             property_id="DISTRESSED_PROP",
             lead_id="INVESTOR_LEAD",
-            buyer_preferences={"cash_offer": True, "quick_close": True}
+            buyer_preferences={"cash_offer": True, "quick_close": True},
         )
 
         mock_psych = _make_mock_seller_psychology(
@@ -900,15 +863,16 @@ class TestIntegrationScenarios:
         )
         mock_win = _make_mock_win_probability(win_probability=91.5)
 
-        with patch.object(negotiation_partner, '_gather_analysis_data') as mock_gather, \
-             patch.object(negotiation_partner.psychology_analyzer, 'analyze_seller_psychology') as mock_psych_call, \
-             patch.object(negotiation_partner.leverage_calculator, 'calculate_market_leverage') as mock_leverage_call, \
-             patch.object(negotiation_partner.strategy_engine, 'generate_negotiation_strategy') as mock_strategy_call, \
-             patch.object(negotiation_partner.win_predictor, 'predict_win_probability') as mock_win_call, \
-             patch.object(negotiation_partner, '_generate_strategic_summary') as mock_summary, \
-             patch.object(negotiation_partner.attom_client, 'get_property_dna', new_callable=AsyncMock) as mock_dna, \
-             patch.object(negotiation_partner.voss_agent, 'run_negotiation', new_callable=AsyncMock) as mock_voss:
-
+        with (
+            patch.object(negotiation_partner, "_gather_analysis_data") as mock_gather,
+            patch.object(negotiation_partner.psychology_analyzer, "analyze_seller_psychology") as mock_psych_call,
+            patch.object(negotiation_partner.leverage_calculator, "calculate_market_leverage") as mock_leverage_call,
+            patch.object(negotiation_partner.strategy_engine, "generate_negotiation_strategy") as mock_strategy_call,
+            patch.object(negotiation_partner.win_predictor, "predict_win_probability") as mock_win_call,
+            patch.object(negotiation_partner, "_generate_strategic_summary") as mock_summary,
+            patch.object(negotiation_partner.attom_client, "get_property_dna", new_callable=AsyncMock) as mock_dna,
+            patch.object(negotiation_partner.voss_agent, "run_negotiation", new_callable=AsyncMock) as mock_voss,
+        ):
             mock_gather.return_value = (
                 {"property_id": "DISTRESSED_PROP", "list_price": 700000},
                 {"cash_offer": True, "name": "Investor"},
@@ -916,8 +880,8 @@ class TestIntegrationScenarios:
                     original_list_price=Decimal("750000"),
                     current_price=Decimal("700000"),
                     price_drops=[{"date": "2024-10-01", "old_price": 750000, "new_price": 700000, "percentage": 6.7}],
-                    days_on_market=120
-                )
+                    days_on_market=120,
+                ),
             )
             mock_psych_call.return_value = mock_psych
             mock_leverage_call.return_value = mock_leverage
@@ -942,7 +906,7 @@ class TestIntegrationScenarios:
             tenant_id="tenant_test",
             property_id="EMOTIONAL_PROP",
             lead_id="FAMILY_LEAD",
-            buyer_preferences={"first_time_buyer": True, "family_home": True}
+            buyer_preferences={"first_time_buyer": True, "family_home": True},
         )
 
         mock_psych = _make_mock_seller_psychology(
@@ -959,15 +923,16 @@ class TestIntegrationScenarios:
         )
         mock_win = _make_mock_win_probability(win_probability=72.5)
 
-        with patch.object(negotiation_partner, '_gather_analysis_data') as mock_gather, \
-             patch.object(negotiation_partner.psychology_analyzer, 'analyze_seller_psychology') as mock_psych_call, \
-             patch.object(negotiation_partner.leverage_calculator, 'calculate_market_leverage') as mock_leverage_call, \
-             patch.object(negotiation_partner.strategy_engine, 'generate_negotiation_strategy') as mock_strategy_call, \
-             patch.object(negotiation_partner.win_predictor, 'predict_win_probability') as mock_win_call, \
-             patch.object(negotiation_partner, '_generate_strategic_summary') as mock_summary, \
-             patch.object(negotiation_partner.attom_client, 'get_property_dna', new_callable=AsyncMock) as mock_dna, \
-             patch.object(negotiation_partner.voss_agent, 'run_negotiation', new_callable=AsyncMock) as mock_voss:
-
+        with (
+            patch.object(negotiation_partner, "_gather_analysis_data") as mock_gather,
+            patch.object(negotiation_partner.psychology_analyzer, "analyze_seller_psychology") as mock_psych_call,
+            patch.object(negotiation_partner.leverage_calculator, "calculate_market_leverage") as mock_leverage_call,
+            patch.object(negotiation_partner.strategy_engine, "generate_negotiation_strategy") as mock_strategy_call,
+            patch.object(negotiation_partner.win_predictor, "predict_win_probability") as mock_win_call,
+            patch.object(negotiation_partner, "_generate_strategic_summary") as mock_summary,
+            patch.object(negotiation_partner.attom_client, "get_property_dna", new_callable=AsyncMock) as mock_dna,
+            patch.object(negotiation_partner.voss_agent, "run_negotiation", new_callable=AsyncMock) as mock_voss,
+        ):
             mock_gather.return_value = (
                 {"property_id": "EMOTIONAL_PROP", "list_price": 800000},
                 {"first_time_buyer": True, "name": "Family Buyer"},
@@ -975,8 +940,8 @@ class TestIntegrationScenarios:
                     original_list_price=Decimal("800000"),
                     current_price=Decimal("800000"),
                     price_drops=[],
-                    days_on_market=20
-                )
+                    days_on_market=20,
+                ),
             )
             mock_psych_call.return_value = mock_psych
             mock_leverage_call.return_value = mock_leverage
@@ -995,9 +960,11 @@ class TestIntegrationScenarios:
 
 if __name__ == "__main__":
     # Run specific test categories
-    pytest.main([
-        "tests/services/test_ai_negotiation_partner.py",
-        "-v",
-        "--cov=ghl_real_estate_ai.services.ai_negotiation_partner",
-        "--cov-report=html"
-    ])
+    pytest.main(
+        [
+            "tests/services/test_ai_negotiation_partner.py",
+            "-v",
+            "--cov=ghl_real_estate_ai.services.ai_negotiation_partner",
+            "--cov-report=html",
+        ]
+    )

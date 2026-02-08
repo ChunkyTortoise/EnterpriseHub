@@ -5,22 +5,32 @@ Handles property data stored in JSON files. Supports multiple JSON sources
 and provides efficient filtering and querying capabilities.
 """
 
-import json
 import asyncio
-from pathlib import Path
-from typing import Dict, List, Optional, Any, Union
-from datetime import datetime, timedelta
+import json
 import math
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
 try:
     from .interfaces import (
-        IPropertyRepository, PropertyQuery, RepositoryResult, RepositoryMetadata,
-        RepositoryError, QueryOperator, SortOrder
+        IPropertyRepository,
+        PropertyQuery,
+        QueryOperator,
+        RepositoryError,
+        RepositoryMetadata,
+        RepositoryResult,
+        SortOrder,
     )
 except ImportError:
     from interfaces import (
-        IPropertyRepository, PropertyQuery, RepositoryResult, RepositoryMetadata,
-        RepositoryError, QueryOperator, SortOrder
+        IPropertyRepository,
+        PropertyQuery,
+        QueryOperator,
+        RepositoryError,
+        RepositoryMetadata,
+        RepositoryResult,
+        SortOrder,
     )
 
 
@@ -66,9 +76,7 @@ class JsonPropertyRepository(IPropertyRepository):
             return True
         except Exception as e:
             raise RepositoryError(
-                f"Failed to connect to JSON data sources: {e}",
-                repository_type="json",
-                original_error=e
+                f"Failed to connect to JSON data sources: {e}", repository_type="json", original_error=e
             )
 
     async def disconnect(self):
@@ -85,7 +93,7 @@ class JsonPropertyRepository(IPropertyRepository):
             "properties_count": len(self._properties_cache),
             "last_loaded": self._last_loaded.isoformat() if self._last_loaded else None,
             "data_sources": len(self.data_paths),
-            "issues": []
+            "issues": [],
         }
 
         # Check file accessibility
@@ -130,7 +138,7 @@ class JsonPropertyRepository(IPropertyRepository):
                 source=self.name,
                 query_time_ms=execution_time,
                 cache_hit=True,  # JSON is always cached
-                total_scanned=len(self._properties_cache)
+                total_scanned=len(self._properties_cache),
             )
 
             return RepositoryResult(
@@ -138,14 +146,11 @@ class JsonPropertyRepository(IPropertyRepository):
                 total_count=total_count,
                 pagination=query.pagination,
                 metadata=metadata,
-                execution_time_ms=execution_time
+                execution_time_ms=execution_time,
             )
 
         except Exception as e:
-            return RepositoryResult(
-                success=False,
-                errors=[f"Query failed: {str(e)}"]
-            )
+            return RepositoryResult(success=False, errors=[f"Query failed: {str(e)}"])
 
     async def get_property_by_id(self, property_id: str) -> Optional[Dict[str, Any]]:
         """Get specific property by ID"""
@@ -168,9 +173,21 @@ class JsonPropertyRepository(IPropertyRepository):
     def get_supported_filters(self) -> List[str]:
         """Get supported filter fields"""
         return [
-            "id", "address", "price", "bedrooms", "bathrooms", "sqft", "square_feet",
-            "neighborhood", "property_type", "year_built", "recently_renovated",
-            "amenities", "days_on_market", "latitude", "longitude"
+            "id",
+            "address",
+            "price",
+            "bedrooms",
+            "bathrooms",
+            "sqft",
+            "square_feet",
+            "neighborhood",
+            "property_type",
+            "year_built",
+            "recently_renovated",
+            "amenities",
+            "days_on_market",
+            "latitude",
+            "longitude",
         ]
 
     def get_performance_metrics(self) -> Dict[str, Any]:
@@ -181,7 +198,7 @@ class JsonPropertyRepository(IPropertyRepository):
             "last_loaded": self._last_loaded.isoformat() if self._last_loaded else None,
             "data_sources": len(self.data_paths),
             "cache_ttl_seconds": self.cache_ttl,
-            "auto_refresh": self.auto_refresh
+            "auto_refresh": self.auto_refresh,
         }
 
     # Private methods
@@ -201,13 +218,15 @@ class JsonPropertyRepository(IPropertyRepository):
             current_mtimes[data_path] = current_mtime
 
             # Skip if file hasn't changed
-            if (data_path in self._file_mtimes and
-                self._file_mtimes[data_path] == current_mtime and
-                not self._should_refresh()):
+            if (
+                data_path in self._file_mtimes
+                and self._file_mtimes[data_path] == current_mtime
+                and not self._should_refresh()
+            ):
                 continue
 
             try:
-                with open(path_obj, 'r', encoding='utf-8') as f:
+                with open(path_obj, "r", encoding="utf-8") as f:
                     data = json.load(f)
 
                 # Handle different JSON structures
@@ -215,11 +234,7 @@ class JsonPropertyRepository(IPropertyRepository):
                 all_properties.extend(properties)
 
             except json.JSONDecodeError as e:
-                raise RepositoryError(
-                    f"Invalid JSON in {data_path}: {e}",
-                    repository_type="json",
-                    original_error=e
-                )
+                raise RepositoryError(f"Invalid JSON in {data_path}: {e}", repository_type="json", original_error=e)
 
         # Update cache and timestamps
         if all_properties or not self._properties_cache:
@@ -268,7 +283,7 @@ class JsonPropertyRepository(IPropertyRepository):
             "square_feet": "sqft",
             "property_type": "type",
             "listing_price": "price",
-            "list_price": "price"
+            "list_price": "price",
         }
 
         for old_key, new_key in field_mappings.items():
@@ -282,7 +297,7 @@ class JsonPropertyRepository(IPropertyRepository):
             "bathrooms": 0,
             "sqft": 0,
             "price": 0,
-            "amenities": []
+            "amenities": [],
         }
 
         for key, default_value in defaults.items():
@@ -333,19 +348,21 @@ class JsonPropertyRepository(IPropertyRepository):
 
         # Property type filter
         if query.property_types:
-            filtered = [p for p in filtered if p.get("property_type", "").lower() in
-                       [pt.lower() for pt in query.property_types]]
+            filtered = [
+                p for p in filtered if p.get("property_type", "").lower() in [pt.lower() for pt in query.property_types]
+            ]
 
         # Location filters
         if query.neighborhoods:
-            filtered = [p for p in filtered if p.get("neighborhood", "").lower() in
-                       [n.lower() for n in query.neighborhoods]]
+            filtered = [
+                p for p in filtered if p.get("neighborhood", "").lower() in [n.lower() for n in query.neighborhoods]
+            ]
 
         # Geographic proximity filter
         if query.latitude and query.longitude and query.radius_miles:
-            filtered = [p for p in filtered if self._is_within_radius(
-                p, query.latitude, query.longitude, query.radius_miles
-            )]
+            filtered = [
+                p for p in filtered if self._is_within_radius(p, query.latitude, query.longitude, query.radius_miles)
+            ]
 
         # Amenity filters
         if query.required_amenities:
@@ -385,7 +402,7 @@ class JsonPropertyRepository(IPropertyRepository):
         dlat = lat2_rad - lat1_rad
         dlon = lon2_rad - lon1_rad
 
-        a = math.sin(dlat/2)**2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlon/2)**2
+        a = math.sin(dlat / 2) ** 2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlon / 2) ** 2
         c = 2 * math.asin(math.sqrt(a))
 
         return R * c
@@ -400,10 +417,7 @@ class JsonPropertyRepository(IPropertyRepository):
 
         required_lower = [r.lower() for r in required]
 
-        return all(
-            any(req in amenity for amenity in prop_amenities)
-            for req in required_lower
-        )
+        return all(any(req in amenity for amenity in prop_amenities) for req in required_lower)
 
     def _apply_custom_filter(self, properties: List[Dict[str, Any]], filter_obj) -> List[Dict[str, Any]]:
         """Apply custom filter to property list"""
@@ -459,7 +473,7 @@ class JsonPropertyRepository(IPropertyRepository):
         if not query.sort_by:
             return properties
 
-        reverse = (query.sort_order == SortOrder.DESC)
+        reverse = query.sort_order == SortOrder.DESC
 
         def sort_key(prop: Dict[str, Any]):
             value = prop.get(query.sort_by, 0)

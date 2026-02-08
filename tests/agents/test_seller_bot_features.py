@@ -6,15 +6,15 @@ initialize correctly when enabled/disabled, degrade gracefully when
 dependencies are unavailable, and track usage statistics properly.
 """
 
-import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
 import logging
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from ghl_real_estate_ai.agents.jorge_seller_bot import (
-    JorgeSellerBot,
     JorgeFeatureConfig,
+    JorgeSellerBot,
 )
-
 
 # ─── Fixtures ────────────────────────────────────────────────────────
 
@@ -46,13 +46,11 @@ def all_features_enabled():
 @pytest.fixture
 def mock_dependencies():
     """Patch all external service constructors to return mocks."""
-    with patch(
-        "ghl_real_estate_ai.agents.jorge_seller_bot.LeadIntentDecoder"
-    ) as mock_intent, patch(
-        "ghl_real_estate_ai.agents.jorge_seller_bot.ClaudeAssistant"
-    ) as mock_claude, patch(
-        "ghl_real_estate_ai.agents.jorge_seller_bot.get_event_publisher"
-    ) as mock_events:
+    with (
+        patch("ghl_real_estate_ai.agents.jorge_seller_bot.LeadIntentDecoder") as mock_intent,
+        patch("ghl_real_estate_ai.agents.jorge_seller_bot.ClaudeAssistant") as mock_claude,
+        patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_event_publisher") as mock_events,
+    ):
         mock_intent.return_value = MagicMock()
         mock_claude.return_value = MagicMock()
         mock_events.return_value = MagicMock()
@@ -76,9 +74,7 @@ class TestDefaultInitialization:
         assert bot.config.enable_agent_mesh is False
         assert bot.config.enable_mcp_integration is False
 
-    def test_optional_services_none_when_disabled(
-        self, mock_dependencies, all_features_disabled
-    ):
+    def test_optional_services_none_when_disabled(self, mock_dependencies, all_features_disabled):
         bot = JorgeSellerBot(config=all_features_disabled)
         assert bot.skills_manager is None
         assert bot.token_tracker is None
@@ -105,13 +101,9 @@ class TestProgressiveSkillsFlag:
         "ghl_real_estate_ai.agents.jorge_seller_bot.PROGRESSIVE_SKILLS_AVAILABLE",
         True,
     )
-    @patch(
-        "ghl_real_estate_ai.agents.jorge_seller_bot.ProgressiveSkillsManager"
-    )
+    @patch("ghl_real_estate_ai.agents.jorge_seller_bot.ProgressiveSkillsManager")
     @patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_token_tracker")
-    def test_initializes_when_enabled_and_available(
-        self, mock_tracker, mock_skills, mock_dependencies
-    ):
+    def test_initializes_when_enabled_and_available(self, mock_tracker, mock_skills, mock_dependencies):
         mock_skills.return_value = MagicMock()
         mock_tracker.return_value = MagicMock()
 
@@ -171,9 +163,7 @@ class TestAgentMeshFlag:
         True,
     )
     @patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_mesh_coordinator")
-    def test_initializes_when_enabled_and_available(
-        self, mock_coordinator, mock_dependencies
-    ):
+    def test_initializes_when_enabled_and_available(self, mock_coordinator, mock_dependencies):
         mock_coordinator.return_value = MagicMock()
 
         config = JorgeFeatureConfig(
@@ -228,9 +218,7 @@ class TestMCPIntegrationFlag:
         True,
     )
     @patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_mcp_client")
-    def test_initializes_when_enabled_and_available(
-        self, mock_mcp, mock_dependencies
-    ):
+    def test_initializes_when_enabled_and_available(self, mock_mcp, mock_dependencies):
         mock_mcp.return_value = MagicMock()
 
         config = JorgeFeatureConfig(
@@ -319,9 +307,7 @@ class TestCombinedFeatureFlags:
         "ghl_real_estate_ai.agents.jorge_seller_bot.MCP_INTEGRATION_AVAILABLE",
         True,
     )
-    @patch(
-        "ghl_real_estate_ai.agents.jorge_seller_bot.ProgressiveSkillsManager"
-    )
+    @patch("ghl_real_estate_ai.agents.jorge_seller_bot.ProgressiveSkillsManager")
     @patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_token_tracker")
     @patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_mesh_coordinator")
     @patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_mcp_client")
@@ -353,14 +339,14 @@ class TestCombinedFeatureFlags:
 
     def test_selective_enabling(self, mock_dependencies):
         """Only progressive skills enabled, others stay off."""
-        with patch(
-            "ghl_real_estate_ai.agents.jorge_seller_bot.PROGRESSIVE_SKILLS_AVAILABLE",
-            True,
-        ), patch(
-            "ghl_real_estate_ai.agents.jorge_seller_bot.ProgressiveSkillsManager"
-        ) as mock_skills, patch(
-            "ghl_real_estate_ai.agents.jorge_seller_bot.get_token_tracker"
-        ) as mock_tracker:
+        with (
+            patch(
+                "ghl_real_estate_ai.agents.jorge_seller_bot.PROGRESSIVE_SKILLS_AVAILABLE",
+                True,
+            ),
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.ProgressiveSkillsManager") as mock_skills,
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_token_tracker") as mock_tracker,
+        ):
             mock_skills.return_value = MagicMock()
             mock_tracker.return_value = MagicMock()
 
@@ -444,17 +430,13 @@ class TestEnvToBotIntegration:
         "ghl_real_estate_ai.agents.jorge_seller_bot.PROGRESSIVE_SKILLS_AVAILABLE",
         True,
     )
-    @patch(
-        "ghl_real_estate_ai.agents.jorge_seller_bot.ProgressiveSkillsManager"
-    )
+    @patch("ghl_real_estate_ai.agents.jorge_seller_bot.ProgressiveSkillsManager")
     @patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_token_tracker")
-    def test_env_enables_progressive_skills_in_bot(
-        self, mock_tracker, mock_skills, mock_dependencies
-    ):
+    def test_env_enables_progressive_skills_in_bot(self, mock_tracker, mock_skills, mock_dependencies):
         """Simulate the production flow: env -> config -> bot init."""
         from ghl_real_estate_ai.config.feature_config import (
-            load_feature_config_from_env,
             feature_config_to_jorge_kwargs,
+            load_feature_config_from_env,
         )
 
         mock_skills.return_value = MagicMock()

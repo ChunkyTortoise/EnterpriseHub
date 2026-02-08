@@ -14,14 +14,16 @@ Author: EnterpriseHub AI
 Created: 2026-01-19
 """
 
-from typing import Dict, List, Optional, Any, Tuple
-from pydantic import BaseModel, Field, field_validator
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
+
+from pydantic import BaseModel, Field, field_validator
 
 
 class PropertyType(Enum):
     """Property types - market agnostic"""
+
     SINGLE_FAMILY = "single_family"
     CONDO = "condo"
     TOWNHOME = "townhome"
@@ -31,6 +33,7 @@ class PropertyType(Enum):
 
 class MarketCondition(Enum):
     """Market conditions - market agnostic"""
+
     STRONG_SELLERS = "strong_sellers"
     BALANCED = "balanced"
     STRONG_BUYERS = "strong_buyers"
@@ -39,6 +42,7 @@ class MarketCondition(Enum):
 
 class MarketType(Enum):
     """Market type classification"""
+
     TECH_HUB = "tech_hub"  # Austin, Seattle, SF
     ENERGY_HUB = "energy_hub"  # Houston, Dallas
     LOGISTICS_HUB = "logistics_hub"  # Inland Empire
@@ -48,6 +52,7 @@ class MarketType(Enum):
 
 class NeighborhoodConfig(BaseModel):
     """Configuration for neighborhood data"""
+
     name: str = Field(..., description="Neighborhood name")
     zone: str = Field(..., description="Zone/region within market (e.g., Central, North)")
     median_price: float = Field(..., gt=0, description="Median home price")
@@ -57,8 +62,7 @@ class NeighborhoodConfig(BaseModel):
 
     # Market-specific appeal scores (configurable per market type)
     appeal_scores: Dict[str, float] = Field(
-        default_factory=dict,
-        description="Market-specific appeal metrics (e.g., tech_appeal, logistics_appeal)"
+        default_factory=dict, description="Market-specific appeal metrics (e.g., tech_appeal, logistics_appeal)"
     )
 
     # Geographic and amenity data
@@ -67,12 +71,9 @@ class NeighborhoodConfig(BaseModel):
     demographics: Dict[str, Any] = Field(default_factory=dict, description="Demographic data")
 
     # Corporate proximity (employer_id -> commute_minutes)
-    corporate_proximity: Dict[str, float] = Field(
-        default_factory=dict,
-        description="Commute times to major employers"
-    )
+    corporate_proximity: Dict[str, float] = Field(default_factory=dict, description="Commute times to major employers")
 
-    @field_validator('appeal_scores')
+    @field_validator("appeal_scores")
     @classmethod
     def validate_appeal_scores(cls, v):
         """Ensure all appeal scores are 0-100"""
@@ -84,6 +85,7 @@ class NeighborhoodConfig(BaseModel):
 
 class EmployerConfig(BaseModel):
     """Configuration for major employers and corporate headquarters"""
+
     employer_id: str = Field(..., description="Unique employer identifier")
     name: str = Field(..., description="Company name")
     industry: str = Field(..., description="Industry category")
@@ -92,57 +94,32 @@ class EmployerConfig(BaseModel):
     employee_count: int = Field(..., gt=0, description="Approximate employee count")
 
     # Relocation patterns
-    preferred_neighborhoods: List[str] = Field(
-        default_factory=list,
-        description="Neighborhoods preferred by employees"
-    )
-    average_salary_range: Tuple[float, float] = Field(
-        default=(50000, 150000),
-        description="(min, max) salary range"
-    )
-    relocation_frequency: str = Field(
-        default="medium",
-        description="Relocation frequency: low, medium, high"
-    )
+    preferred_neighborhoods: List[str] = Field(default_factory=list, description="Neighborhoods preferred by employees")
+    average_salary_range: Tuple[float, float] = Field(default=(50000, 150000), description="(min, max) salary range")
+    relocation_frequency: str = Field(default="medium", description="Relocation frequency: low, medium, high")
 
     # Seasonal patterns
-    hiring_seasons: List[str] = Field(
-        default_factory=list,
-        description="Peak hiring seasons (Q1, Q2, Q3, Q4)"
-    )
+    hiring_seasons: List[str] = Field(default_factory=list, description="Peak hiring seasons (Q1, Q2, Q3, Q4)")
 
 
 class MarketSpecializationConfig(BaseModel):
     """Market-specific specializations and competitive advantages"""
+
     primary_specialization: str = Field(..., description="Primary market focus")
-    secondary_specializations: List[str] = Field(
-        default_factory=list,
-        description="Secondary market focuses"
-    )
+    secondary_specializations: List[str] = Field(default_factory=list, description="Secondary market focuses")
 
     # Competitive positioning
-    unique_advantages: List[str] = Field(
-        default_factory=list,
-        description="Unique competitive advantages"
-    )
-    target_client_types: List[str] = Field(
-        default_factory=list,
-        description="Target client demographics"
-    )
+    unique_advantages: List[str] = Field(default_factory=list, description="Unique competitive advantages")
+    target_client_types: List[str] = Field(default_factory=list, description="Target client demographics")
 
     # Expertise areas
-    expertise_tags: List[str] = Field(
-        default_factory=list,
-        description="Expertise tags for AI assistant"
-    )
-    knowledge_base_path: Optional[str] = Field(
-        default=None,
-        description="Path to market-specific knowledge base"
-    )
+    expertise_tags: List[str] = Field(default_factory=list, description="Expertise tags for AI assistant")
+    knowledge_base_path: Optional[str] = Field(default=None, description="Path to market-specific knowledge base")
 
 
 class MarketConfig(BaseModel):
     """Core market configuration"""
+
     # Basic identification
     market_id: str = Field(..., description="Unique market identifier")
     market_name: str = Field(..., description="Human-readable market name")
@@ -157,18 +134,9 @@ class MarketConfig(BaseModel):
     mls_provider: str = Field(..., description="MLS data provider")
 
     # Market data
-    neighborhoods: List[NeighborhoodConfig] = Field(
-        default_factory=list,
-        description="Neighborhood configurations"
-    )
-    employers: List[EmployerConfig] = Field(
-        default_factory=list,
-        description="Major employer configurations"
-    )
-    specializations: MarketSpecializationConfig = Field(
-        ...,
-        description="Market specialization configuration"
-    )
+    neighborhoods: List[NeighborhoodConfig] = Field(default_factory=list, description="Neighborhood configurations")
+    employers: List[EmployerConfig] = Field(default_factory=list, description="Major employer configurations")
+    specializations: MarketSpecializationConfig = Field(..., description="Market specialization configuration")
 
     # Economic indicators
     median_home_price: float = Field(..., gt=0, description="Market median home price")
@@ -180,11 +148,11 @@ class MarketConfig(BaseModel):
     last_updated: datetime = Field(default_factory=datetime.now, description="Last update timestamp")
     active: bool = Field(default=True, description="Whether market is active")
 
-    @field_validator('market_id')
+    @field_validator("market_id")
     @classmethod
     def validate_market_id(cls, v):
         """Ensure market_id is lowercase and underscore-separated"""
-        if not v.islower() or ' ' in v:
+        if not v.islower() or " " in v:
             raise ValueError("market_id must be lowercase with underscores")
         return v
 
@@ -212,6 +180,7 @@ class MarketConfig(BaseModel):
 
 class MarketValidationError(Exception):
     """Raised when market configuration validation fails"""
+
     pass
 
 
@@ -229,7 +198,9 @@ def validate_market_config(config: MarketConfig) -> List[str]:
 
     # Check required neighborhoods
     if len(config.neighborhoods) < 3:
-        warnings.append(f"Market {config.market_id} has only {len(config.neighborhoods)} neighborhoods, recommend at least 3")
+        warnings.append(
+            f"Market {config.market_id} has only {len(config.neighborhoods)} neighborhoods, recommend at least 3"
+        )
 
     # Check required employers
     if len(config.employers) < 2:

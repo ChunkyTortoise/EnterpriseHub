@@ -58,9 +58,7 @@ class LeadLifecycleTracker:
             location_id: GHL Location ID for multi-tenant support
         """
         self.location_id = location_id
-        self.lifecycle_dir = (
-            Path(__file__).parent.parent / "data" / "lifecycle" / location_id
-        )
+        self.lifecycle_dir = Path(__file__).parent.parent / "data" / "lifecycle" / location_id
         self.lifecycle_dir.mkdir(parents=True, exist_ok=True)
         self.journeys_file = self.lifecycle_dir / "journeys.json"
         self.journeys = self._load_journeys()
@@ -464,9 +462,7 @@ class LeadLifecycleTracker:
         # Business Rule: Bottleneck = stage with <30% conversion or >7 days avg duration
 
         stage_times = defaultdict(list)
-        stage_exits = defaultdict(
-            lambda: {"progression": 0, "regression": 0, "stall": 0}
-        )
+        stage_exits = defaultdict(lambda: {"progression": 0, "regression": 0, "stall": 0})
 
         for journey_id, journey in self.journeys.items():
             # Collect stage durations
@@ -498,9 +494,7 @@ class LeadLifecycleTracker:
                 }
 
         # Identify slowest stages (potential bottlenecks)
-        slowest_stages = sorted(
-            avg_times.items(), key=lambda x: x[1]["avg_minutes"], reverse=True
-        )[:3]
+        slowest_stages = sorted(avg_times.items(), key=lambda x: x[1]["avg_minutes"], reverse=True)[:3]
 
         # Identify common drop-off points
         drop_off_points = []
@@ -517,9 +511,7 @@ class LeadLifecycleTracker:
                         }
                     )
 
-        drop_off_points = sorted(
-            drop_off_points, key=lambda x: x["regression_rate"], reverse=True
-        )
+        drop_off_points = sorted(drop_off_points, key=lambda x: x["regression_rate"], reverse=True)
 
         # Generate recommendations
         recommendations = []
@@ -549,10 +541,7 @@ class LeadLifecycleTracker:
             )
 
         return {
-            "slowest_stages": [
-                {"stage": stage, "metrics": metrics}
-                for stage, metrics in slowest_stages
-            ],
+            "slowest_stages": [{"stage": stage, "metrics": metrics} for stage, metrics in slowest_stages],
             "common_drop_off_points": drop_off_points,
             "avg_time_per_stage": avg_times,
             "recommendations": recommendations,
@@ -622,14 +611,10 @@ class LeadLifecycleTracker:
                         stage_data["total_entries"] += 1
 
                         if stage_entry.get("duration_minutes"):
-                            stage_data["durations"].append(
-                                stage_entry["duration_minutes"]
-                            )
+                            stage_data["durations"].append(stage_entry["duration_minutes"])
 
                         if stage_entry.get("lead_score"):
-                            stage_data["average_score"].append(
-                                stage_entry["lead_score"]
-                            )
+                            stage_data["average_score"].append(stage_entry["lead_score"])
 
                         if stage_entry["exited_at"]:
                             stage_data["total_exits"] += 1
@@ -649,27 +634,17 @@ class LeadLifecycleTracker:
                 "total_exits": stage_data["total_exits"],
                 "currently_in_stage": stage_data["exit_directions"]["current"],
                 "avg_duration_minutes": (
-                    round(statistics.mean(stage_data["durations"]), 2)
-                    if stage_data["durations"]
-                    else 0
+                    round(statistics.mean(stage_data["durations"]), 2) if stage_data["durations"] else 0
                 ),
                 "median_duration_minutes": (
-                    round(statistics.median(stage_data["durations"]), 2)
-                    if stage_data["durations"]
-                    else 0
+                    round(statistics.median(stage_data["durations"]), 2) if stage_data["durations"] else 0
                 ),
                 "avg_lead_score": (
-                    round(statistics.mean(stage_data["average_score"]), 1)
-                    if stage_data["average_score"]
-                    else 0
+                    round(statistics.mean(stage_data["average_score"]), 1) if stage_data["average_score"] else 0
                 ),
                 "progression_rate": round(
                     (
-                        (
-                            stage_data["exit_directions"]["progression"]
-                            / stage_data["total_exits"]
-                            * 100
-                        )
+                        (stage_data["exit_directions"]["progression"] / stage_data["total_exits"] * 100)
                         if stage_data["total_exits"] > 0
                         else 0
                     ),
@@ -677,11 +652,7 @@ class LeadLifecycleTracker:
                 ),
                 "regression_rate": round(
                     (
-                        (
-                            stage_data["exit_directions"]["regression"]
-                            / stage_data["total_exits"]
-                            * 100
-                        )
+                        (stage_data["exit_directions"]["regression"] / stage_data["total_exits"] * 100)
                         if stage_data["total_exits"] > 0
                         else 0
                     ),
@@ -700,39 +671,25 @@ if __name__ == "__main__":
     tracker = LeadLifecycleTracker("demo_location")
 
     # Create a sample journey
-    journey_id = tracker.start_journey(
-        contact_id="contact_123", contact_name="Sarah Johnson", source="website"
-    )
+    journey_id = tracker.start_journey(contact_id="contact_123", contact_name="Sarah Johnson", source="website")
 
     print(f"Started journey: {journey_id}")
 
     # Simulate journey events
-    tracker.record_event(
-        journey_id, "message", "First contact: 'Looking for 3br in Austin'"
-    )
-    tracker.transition_stage(
-        journey_id, "contacted", "Initial response sent", lead_score=35
-    )
+    tracker.record_event(journey_id, "message", "First contact: 'Looking for 3br in Austin'")
+    tracker.transition_stage(journey_id, "contacted", "Initial response sent", lead_score=35)
 
     tracker.record_event(journey_id, "message", "Budget discussed")
-    tracker.transition_stage(
-        journey_id, "qualified", "Budget and timeline confirmed", lead_score=58
-    )
+    tracker.transition_stage(journey_id, "qualified", "Budget and timeline confirmed", lead_score=58)
 
     tracker.record_event(journey_id, "message", "Property recommendations sent")
-    tracker.transition_stage(
-        journey_id, "engaged", "Active conversation ongoing", lead_score=72
-    )
+    tracker.transition_stage(journey_id, "engaged", "Active conversation ongoing", lead_score=72)
 
     tracker.record_event(journey_id, "message", "Expressed urgency")
-    tracker.transition_stage(
-        journey_id, "hot", "High intent signals detected", lead_score=85
-    )
+    tracker.transition_stage(journey_id, "hot", "High intent signals detected", lead_score=85)
 
     tracker.record_event(journey_id, "appointment", "Viewing scheduled for Friday 2 PM")
-    tracker.transition_stage(
-        journey_id, "appointment", "Appointment booked", lead_score=92
-    )
+    tracker.transition_stage(journey_id, "appointment", "Appointment booked", lead_score=92)
 
     # Get journey summary
     summary = tracker.get_journey_summary(journey_id)

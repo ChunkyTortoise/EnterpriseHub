@@ -1,15 +1,18 @@
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
 import asyncio
 import json
 import time
+
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import streamlit as st
+
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 
 # Import enhanced services
 try:
     from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
+
     CLAUDE_AVAILABLE = True
 except ImportError:
     CLAUDE_AVAILABLE = False
@@ -19,6 +22,7 @@ try:
     from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
     from ghl_real_estate_ai.models.buyer_bot_state import BuyerBotState
     from ghl_real_estate_ai.services.event_publisher import get_event_publisher
+
     JORGE_BUYER_BOT_AVAILABLE = True
 except ImportError:
     JORGE_BUYER_BOT_AVAILABLE = False
@@ -26,6 +30,7 @@ except ImportError:
 # Import analytics for live buyer data
 try:
     from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+
     BUYER_ANALYTICS_AVAILABLE = True
 except ImportError:
     BUYER_ANALYTICS_AVAILABLE = False
@@ -34,20 +39,21 @@ except ImportError:
 try:
     from ghl_real_estate_ai.streamlit_demo.components.websocket_integration import (
         get_buyer_qualification_updates,
-        get_property_alerts
+        get_property_alerts,
     )
+
     WEBSOCKET_AVAILABLE = True
 except ImportError:
     WEBSOCKET_AVAILABLE = False
 
 # Omnipresent Claude integration
 try:
-    from ghl_real_estate_ai.streamlit_demo.components.omnipresent_claude import (
-        setup_omnipresent_claude
-    )
+    from ghl_real_estate_ai.streamlit_demo.components.omnipresent_claude import setup_omnipresent_claude
+
     OMNIPRESENT_CLAUDE_AVAILABLE = True
 except ImportError:
     OMNIPRESENT_CLAUDE_AVAILABLE = False
+
 
 def render_buyer_dashboard():
     """Buyer's personal dashboard with saved properties and activity"""
@@ -65,9 +71,9 @@ def render_buyer_dashboard():
         st.metric("🔍 Searches Saved", "2")
 
     # Main dashboard tabs
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "❤️ Saved Properties", "📅 Scheduled Tours", "🔔 Alerts & Updates", "📊 Search History"
-    ])
+    tab1, tab2, tab3, tab4 = st.tabs(
+        ["❤️ Saved Properties", "📅 Scheduled Tours", "🔔 Alerts & Updates", "📊 Search History"]
+    )
 
     with tab1:
         st.markdown("#### Saved Properties")
@@ -80,7 +86,7 @@ def render_buyer_dashboard():
                 "beds": 3,
                 "baths": 2,
                 "saved_date": "2 days ago",
-                "status": "Active"
+                "status": "Active",
             },
             {
                 "address": "5678 Pine Avenue, Austin, TX 78745",
@@ -88,7 +94,7 @@ def render_buyer_dashboard():
                 "beds": 3,
                 "baths": 2.5,
                 "saved_date": "1 week ago",
-                "status": "Under Contract"
+                "status": "Under Contract",
             },
             {
                 "address": "9012 Elm Drive, Austin, TX 78758",
@@ -96,8 +102,8 @@ def render_buyer_dashboard():
                 "beds": 4,
                 "baths": 2,
                 "saved_date": "3 days ago",
-                "status": "Active"
-            }
+                "status": "Active",
+            },
         ]
 
         for i, prop in enumerate(saved_properties):
@@ -108,7 +114,10 @@ def render_buyer_dashboard():
                     status_color = "green" if prop["status"] == "Active" else "red"
                     st.markdown(f"**{prop['address']}**")
                     st.markdown(f"{prop['price']} • {prop['beds']} bed • {prop['baths']} bath")
-                    st.markdown(f"<span style='color: {status_color};'>●</span> {prop['status']} • Saved {prop['saved_date']}", unsafe_allow_html=True)
+                    st.markdown(
+                        f"<span style='color: {status_color};'>●</span> {prop['status']} • Saved {prop['saved_date']}",
+                        unsafe_allow_html=True,
+                    )
 
                 with col2:
                     if st.button("📱 Contact Agent", key=f"contact_{i}"):
@@ -128,18 +137,8 @@ def render_buyer_dashboard():
         st.markdown("#### Upcoming Tours")
 
         tours = [
-            {
-                "address": "1234 Oak Street",
-                "date": "Tomorrow",
-                "time": "2:00 PM",
-                "agent": "Sarah Johnson"
-            },
-            {
-                "address": "9012 Elm Drive",
-                "date": "Saturday",
-                "time": "10:00 AM",
-                "agent": "Mike Chen"
-            }
+            {"address": "1234 Oak Street", "date": "Tomorrow", "time": "2:00 PM", "agent": "Sarah Johnson"},
+            {"address": "9012 Elm Drive", "date": "Saturday", "time": "10:00 AM", "agent": "Mike Chen"},
         ]
 
         for tour in tours:
@@ -169,20 +168,20 @@ def render_buyer_dashboard():
                 "type": "Price Drop",
                 "message": "1234 Oak Street reduced by $10,000",
                 "time": "2 hours ago",
-                "action": "View Property"
+                "action": "View Property",
             },
             {
                 "type": "New Listing",
                 "message": "New property matches your criteria in West Lake Hills",
                 "time": "1 day ago",
-                "action": "View Listing"
+                "action": "View Listing",
             },
             {
                 "type": "Market Update",
                 "message": "Austin market report: Inventory up 5% this month",
                 "time": "3 days ago",
-                "action": "Read Report"
-            }
+                "action": "Read Report",
+            },
         ]
 
         for alert in alerts:
@@ -190,7 +189,9 @@ def render_buyer_dashboard():
                 col1, col2 = st.columns([3, 1])
 
                 with col1:
-                    alert_emoji = "💰" if alert["type"] == "Price Drop" else "🏠" if alert["type"] == "New Listing" else "📊"
+                    alert_emoji = (
+                        "💰" if alert["type"] == "Price Drop" else "🏠" if alert["type"] == "New Listing" else "📊"
+                    )
                     st.markdown(f"**{alert_emoji} {alert['type']}**")
                     st.markdown(alert["message"])
                     st.markdown(f"🕒 {alert['time']}")
@@ -208,7 +209,7 @@ def render_buyer_dashboard():
         searches = [
             "3+ bed homes under $500K in West Lake Hills",
             "New construction in Austin ISD",
-            "Condos near downtown with parking"
+            "Condos near downtown with parking",
         ]
 
         for i, search in enumerate(searches):
@@ -218,6 +219,7 @@ def render_buyer_dashboard():
             with col2:
                 if st.button("🔄 Repeat", key=f"repeat_{i}"):
                     st.success("Search repeated!")
+
 
 def render_buyer_analytics(SERVICES_LOADED=False, get_services=None):
     """Enhanced analytics and insights for buyer journey with churn prediction"""
@@ -229,7 +231,7 @@ def render_buyer_analytics(SERVICES_LOADED=False, get_services=None):
         try:
             services = get_services()
             churn_predictor = services.get("churn_prediction")
-            
+
             if churn_predictor:
                 # Simulated churn prediction analysis
                 churn_risk_data = {
@@ -238,7 +240,7 @@ def render_buyer_analytics(SERVICES_LOADED=False, get_services=None):
                     "engagement_trend": "Stable",
                     "days_since_last_activity": 3,
                     "activity_level": "High",
-                    "conversion_probability": 0.78
+                    "conversion_probability": 0.78,
                 }
                 st.info("🧠 AI Churn Prediction & Retention Analytics Active")
         except Exception as e:
@@ -253,27 +255,32 @@ def render_buyer_analytics(SERVICES_LOADED=False, get_services=None):
     with col3:
         st.metric("📅 Tour Intent", "High", delta="17% conv")
     with col4:
-        st.metric("📉 Churn Risk", f"{churn_risk_data['churn_risk_score']*100:.0f}%" if churn_risk_data else "Low", 
-                  delta="Stable", delta_color="inverse")
+        st.metric(
+            "📉 Churn Risk",
+            f"{churn_risk_data['churn_risk_score'] * 100:.0f}%" if churn_risk_data else "Low",
+            delta="Stable",
+            delta_color="inverse",
+        )
     with col5:
-        st.metric("🎯 Conversion Prob", f"{churn_risk_data['conversion_probability']*100:.0f}%" if churn_risk_data else "75%", 
-                  delta="+5%")
+        st.metric(
+            "🎯 Conversion Prob",
+            f"{churn_risk_data['conversion_probability'] * 100:.0f}%" if churn_risk_data else "75%",
+            delta="+5%",
+        )
 
     # Analytics tabs
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "📈 Engagement", "💰 Price Patterns", "🎯 Preferences", "🚨 Retention"
-    ])
+    tab1, tab2, tab3, tab4 = st.tabs(["📈 Engagement", "💰 Price Patterns", "🎯 Preferences", "🚨 Retention"])
 
     with tab1:
         st.markdown("#### Real-time Engagement Velocity")
         from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
-        
+
         # Mock engagement data
-        engagement_dates = pd.date_range(end=pd.Timestamp.now(), periods=10, freq='D')
+        engagement_dates = pd.date_range(end=pd.Timestamp.now(), periods=10, freq="D")
         engagement_values = [5, 8, 12, 7, 15, 22, 18, 25, 30, 28]
-        
+
         fig = px.area(x=engagement_dates, y=engagement_values, title="Activity Intensity (Last 10 Days)")
-        fig.update_traces(line_color='#6366F1', fillcolor='rgba(99, 102, 241, 0.1)')
+        fig.update_traces(line_color="#6366F1", fillcolor="rgba(99, 102, 241, 0.1)")
         st.plotly_chart(style_obsidian_chart(fig), use_container_width=True)
 
         # Engagement insights
@@ -338,30 +345,33 @@ def render_buyer_analytics(SERVICES_LOADED=False, get_services=None):
 
             # Create risk factor visualization
             risk_factors = [
-                "Activity Level", "Response Rate", "Tour Engagement",
-                "Budget Alignment", "Timeline Pressure", "Agent Relationship"
+                "Activity Level",
+                "Response Rate",
+                "Tour Engagement",
+                "Budget Alignment",
+                "Timeline Pressure",
+                "Agent Relationship",
             ]
             risk_scores = [0.1, 0.15, 0.2, 0.25, 0.45, 0.1]  # Mock risk scores
 
-            fig = go.Figure(data=[go.Bar(
-                x=risk_factors,
-                y=risk_scores,
-                marker_color=['#10b981', '#10b981', '#6366f1', '#f59e0b', '#ef4444', '#10b981']
-            )])
+            fig = go.Figure(
+                data=[
+                    go.Bar(
+                        x=risk_factors,
+                        y=risk_scores,
+                        marker_color=["#10b981", "#10b981", "#6366f1", "#f59e0b", "#ef4444", "#10b981"],
+                    )
+                ]
+            )
             fig.update_layout(title="Individual Risk Factors Contributing to Churn")
             st.plotly_chart(style_obsidian_chart(fig), use_container_width=True)
-            
+
             # New Behavioral DNA for Retention
             st.markdown("##### 🧬 Behavioral DNA Radar")
-            dna_cats = ['Urgency', 'Stability', 'Rapport', 'Tech-Savvy', 'Price Sens.', 'Authority']
+            dna_cats = ["Urgency", "Stability", "Rapport", "Tech-Savvy", "Price Sens.", "Authority"]
             dna_vals = [0.9, 0.4, 0.85, 0.7, 0.3, 0.6]
-            
-            fig_radar = go.Figure(data=go.Scatterpolar(
-                r=dna_vals,
-                theta=dna_cats,
-                fill='toself',
-                line_color='#8B5CF6'
-            ))
+
+            fig_radar = go.Figure(data=go.Scatterpolar(r=dna_vals, theta=dna_cats, fill="toself", line_color="#8B5CF6"))
             fig_radar.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 1])))
             st.plotly_chart(style_obsidian_chart(fig_radar), use_container_width=True)
 
@@ -370,7 +380,9 @@ def render_buyer_analytics(SERVICES_LOADED=False, get_services=None):
 
             risk_score = churn_risk_data["churn_risk_score"]
             if risk_score < 0.3:
-                st.success("✅ **Continue Current Strategy**: Buyer is well-engaged. Maintain weekly check-ins and property alerts.")
+                st.success(
+                    "✅ **Continue Current Strategy**: Buyer is well-engaged. Maintain weekly check-ins and property alerts."
+                )
             elif risk_score < 0.7:
                 st.warning("⚠️ **Enhance Engagement**: Consider:")
                 st.markdown("• Increase communication frequency to bi-weekly")
@@ -386,9 +398,11 @@ def render_buyer_analytics(SERVICES_LOADED=False, get_services=None):
 
             # Predictive insights
             st.markdown("##### 🔮 AI Conversion Predictions")
-            st.markdown(f"• **7-Day Conversion Probability**: {churn_risk_data['conversion_probability']*0.3:.1%}")
+            st.markdown(f"• **7-Day Conversion Probability**: {churn_risk_data['conversion_probability'] * 0.3:.1%}")
             st.markdown(f"• **30-Day Conversion Probability**: {churn_risk_data['conversion_probability']:.1%}")
-            st.markdown(f"• **90-Day Conversion Probability**: {min(churn_risk_data['conversion_probability']*1.2, 0.95):.1%}")
+            st.markdown(
+                f"• **90-Day Conversion Probability**: {min(churn_risk_data['conversion_probability'] * 1.2, 0.95):.1%}"
+            )
 
         else:
             st.info("🧠 Enhanced retention analytics available when AI services are loaded")
@@ -400,6 +414,7 @@ def render_buyer_analytics(SERVICES_LOADED=False, get_services=None):
             st.markdown("• Schedule property tours within 48 hours of interest")
             st.markdown("• Send personalized neighborhood and school reports")
             st.markdown("• Monitor response times and engagement levels")
+
 
 async def qualify_buyer_with_jorge_bot(buyer_id: str, buyer_name: str, conversation_history: list) -> dict:
     """Qualify a buyer using the Jorge Buyer Bot workflow."""
@@ -421,7 +436,7 @@ async def qualify_buyer_with_jorge_bot(buyer_id: str, buyer_name: str, conversat
             "matched_properties": [],
             "qualification_complete": False,
             "next_action": "analyze",
-            "buyer_temperature": "unqualified"
+            "buyer_temperature": "unqualified",
         }
 
         # Run the buyer bot workflow
@@ -432,12 +447,12 @@ async def qualify_buyer_with_jorge_bot(buyer_id: str, buyer_name: str, conversat
             event_publisher = get_event_publisher()
             await event_publisher.publish_buyer_qualification_complete(
                 buyer_id=buyer_id,
-                frs_score=result.get('financial_readiness_score', 0),
-                ms_score=result.get('motivation_score', 0),
-                pfs_score=result.get('property_fit_score', 0),
-                buyer_temperature=result.get('buyer_temperature', 'unqualified'),
-                matched_properties=result.get('matched_properties', []),
-                next_actions=result.get('recommended_actions', [])
+                frs_score=result.get("financial_readiness_score", 0),
+                ms_score=result.get("motivation_score", 0),
+                pfs_score=result.get("property_fit_score", 0),
+                buyer_temperature=result.get("buyer_temperature", "unqualified"),
+                matched_properties=result.get("matched_properties", []),
+                next_actions=result.get("recommended_actions", []),
             )
         except Exception:
             pass  # Event publishing is optional
@@ -445,18 +460,19 @@ async def qualify_buyer_with_jorge_bot(buyer_id: str, buyer_name: str, conversat
         return {
             "success": True,
             "buyer_qualification": result,
-            "frs_score": result.get('financial_readiness_score', 0),
-            "ms_score": result.get('motivation_score', 0),
-            "pfs_score": result.get('property_fit_score', 0),
-            "buyer_temperature": result.get('buyer_temperature', 'unqualified'),
-            "matched_properties": result.get('matched_properties', []),
-            "next_actions": result.get('recommended_actions', []),
-            "bot_response": result.get('response_content', 'Qualification complete'),
-            "qualification_complete": result.get('qualification_complete', False)
+            "frs_score": result.get("financial_readiness_score", 0),
+            "ms_score": result.get("motivation_score", 0),
+            "pfs_score": result.get("property_fit_score", 0),
+            "buyer_temperature": result.get("buyer_temperature", "unqualified"),
+            "matched_properties": result.get("matched_properties", []),
+            "next_actions": result.get("recommended_actions", []),
+            "bot_response": result.get("response_content", "Qualification complete"),
+            "qualification_complete": result.get("qualification_complete", False),
         }
 
     except Exception as e:
         return {"error": f"Buyer qualification failed: {str(e)}", "fallback": True}
+
 
 def render_buyer_qualification_section(selected_lead_name: str):
     """Render Jorge Buyer Bot qualification section."""
@@ -483,22 +499,22 @@ def render_buyer_qualification_section(selected_lead_name: str):
             buyer_updates = get_buyer_qualification_updates()
             if buyer_updates:
                 recent_update = buyer_updates[0]  # Most recent
-                buyer_id = recent_update.get('buyer_id', '')
+                buyer_id = recent_update.get("buyer_id", "")
                 if selected_lead_name.lower() in buyer_id.lower():
                     st.success("📡 Live Update!", help=f"New qualification data received")
                     if st.button("🆕 Apply Update", help="Apply real-time qualification update"):
                         # Apply the real-time update to session state
                         st.session_state[qualification_key] = {
-                            'success': True,
-                            'frs_score': recent_update.get('frs_score', 0),
-                            'ms_score': recent_update.get('ms_score', 0),
-                            'pfs_score': recent_update.get('pfs_score', 0),
-                            'buyer_temperature': recent_update.get('buyer_temperature', 'unqualified'),
-                            'matched_properties': recent_update.get('matched_properties', []),
-                            'next_actions': recent_update.get('next_actions', []),
-                            'bot_response': f"Real-time qualification update: {recent_update.get('buyer_temperature', 'unqualified')} buyer",
-                            'qualification_complete': True,
-                            'realtime_update': True
+                            "success": True,
+                            "frs_score": recent_update.get("frs_score", 0),
+                            "ms_score": recent_update.get("ms_score", 0),
+                            "pfs_score": recent_update.get("pfs_score", 0),
+                            "buyer_temperature": recent_update.get("buyer_temperature", "unqualified"),
+                            "matched_properties": recent_update.get("matched_properties", []),
+                            "next_actions": recent_update.get("next_actions", []),
+                            "bot_response": f"Real-time qualification update: {recent_update.get('buyer_temperature', 'unqualified')} buyer",
+                            "qualification_complete": True,
+                            "realtime_update": True,
                         }
                         st.rerun()
 
@@ -512,66 +528,71 @@ def render_buyer_qualification_section(selected_lead_name: str):
         # Show existing qualification results
         qualification = st.session_state[qualification_key]
 
-        if qualification.get('success'):
+        if qualification.get("success"):
             st.success(f"✅ {selected_lead_name} has been qualified by Jorge!")
 
             # Display scores
             col1, col2, col3, col4 = st.columns(4)
 
             with col1:
-                frs_score = qualification.get('frs_score', 0)
-                st.metric("💰 Financial Readiness", f"{frs_score:.1f}%",
-                         help="Pre-approval status, budget clarity, down payment readiness")
+                frs_score = qualification.get("frs_score", 0)
+                st.metric(
+                    "💰 Financial Readiness",
+                    f"{frs_score:.1f}%",
+                    help="Pre-approval status, budget clarity, down payment readiness",
+                )
 
             with col2:
-                ms_score = qualification.get('ms_score', 0)
-                st.metric("🎯 Motivation Score", f"{ms_score:.1f}%",
-                         help="Timeline urgency, decision authority, buying intent")
+                ms_score = qualification.get("ms_score", 0)
+                st.metric(
+                    "🎯 Motivation Score",
+                    f"{ms_score:.1f}%",
+                    help="Timeline urgency, decision authority, buying intent",
+                )
 
             with col3:
-                pfs_score = qualification.get('pfs_score', 0)
-                st.metric("🏠 Property Fit", f"{pfs_score:.1f}%",
-                         help="Property preferences, location, price alignment")
+                pfs_score = qualification.get("pfs_score", 0)
+                st.metric(
+                    "🏠 Property Fit", f"{pfs_score:.1f}%", help="Property preferences, location, price alignment"
+                )
 
             with col4:
-                temperature = qualification.get('buyer_temperature', 'unqualified')
-                temp_colors = {
-                    "hot": "🔴",
-                    "warm": "🟠",
-                    "lukewarm": "🟡",
-                    "cold": "🔵",
-                    "ice_cold": "⚫"
-                }
+                temperature = qualification.get("buyer_temperature", "unqualified")
+                temp_colors = {"hot": "🔴", "warm": "🟠", "lukewarm": "🟡", "cold": "🔵", "ice_cold": "⚫"}
                 temp_color = temp_colors.get(temperature, "⚪")
                 st.metric("🌡️ Buyer Temperature", f"{temp_color} {temperature.title()}")
 
             # Show matched properties
-            matched_properties = qualification.get('matched_properties', [])
+            matched_properties = qualification.get("matched_properties", [])
             if matched_properties:
                 st.markdown("#### 🏠 Matched Properties")
                 for i, prop in enumerate(matched_properties[:3]):  # Show top 3 matches
-                    with st.expander(f"Property Match {i+1}: {prop.get('address', 'Property')} - {prop.get('match_score', 0):.1f}% match"):
+                    with st.expander(
+                        f"Property Match {i + 1}: {prop.get('address', 'Property')} - {prop.get('match_score', 0):.1f}% match"
+                    ):
                         st.write(f"**Price:** {prop.get('price', 'N/A')}")
                         st.write(f"**Bedrooms:** {prop.get('beds', 'N/A')}")
                         st.write(f"**Bathrooms:** {prop.get('baths', 'N/A')}")
                         st.write(f"**Match Reason:** {prop.get('match_reason', 'Good fit for buyer criteria')}")
 
             # Show next recommended actions
-            next_actions = qualification.get('next_actions', [])
+            next_actions = qualification.get("next_actions", [])
             if next_actions:
                 st.markdown("#### 🎯 Jorge's Recommendations")
                 for action in next_actions[:3]:  # Show top 3 actions
                     st.markdown(f"• {action}")
 
             # Show Jorge's response
-            bot_response = qualification.get('bot_response', '')
+            bot_response = qualification.get("bot_response", "")
             if bot_response:
                 st.markdown("#### 🗣️ Jorge's Analysis")
                 st.info(bot_response)
 
-        elif qualification.get('fallback'):
+        elif qualification.get("fallback"):
             st.warning("⚠️ Using fallback mode - Jorge Bot service unavailable")
-            st.info("Sample qualification: This buyer shows moderate interest. Recommend property tour and financing pre-approval.")
+            st.info(
+                "Sample qualification: This buyer shows moderate interest. Recommend property tour and financing pre-approval."
+            )
 
         else:
             st.error(f"❌ Qualification failed: {qualification.get('error', 'Unknown error')}")
@@ -593,20 +614,30 @@ def render_buyer_qualification_section(selected_lead_name: str):
                 with st.spinner(f"Jorge is qualifying {selected_lead_name}..."):
                     # Create sample conversation history for buyer qualification
                     sample_history = [
-                        {"role": "user", "content": f"Hi, I'm looking to buy a home in Austin", "sender_name": selected_lead_name},
-                        {"role": "assistant", "content": "Great! I'd love to help you find the perfect home. What's your timeline for buying?"},
+                        {
+                            "role": "user",
+                            "content": f"Hi, I'm looking to buy a home in Austin",
+                            "sender_name": selected_lead_name,
+                        },
+                        {
+                            "role": "assistant",
+                            "content": "Great! I'd love to help you find the perfect home. What's your timeline for buying?",
+                        },
                         {"role": "user", "content": "We're hoping to buy within the next 3 months"},
-                        {"role": "assistant", "content": "Perfect timing! Have you been pre-approved for a mortgage yet?"},
-                        {"role": "user", "content": "We're working on that. Our budget is around $450k"}
+                        {
+                            "role": "assistant",
+                            "content": "Perfect timing! Have you been pre-approved for a mortgage yet?",
+                        },
+                        {"role": "user", "content": "We're working on that. Our budget is around $450k"},
                     ]
 
                     # Run qualification
                     buyer_id = f"buyer_{selected_lead_name.replace(' ', '_').lower()}"
-                    qualification_result = run_async(qualify_buyer_with_jorge_bot(
-                        buyer_id=buyer_id,
-                        buyer_name=selected_lead_name,
-                        conversation_history=sample_history
-                    ))
+                    qualification_result = run_async(
+                        qualify_buyer_with_jorge_bot(
+                            buyer_id=buyer_id, buyer_name=selected_lead_name, conversation_history=sample_history
+                        )
+                    )
 
                     # Store result and rerun
                     st.session_state[qualification_key] = qualification_result
@@ -614,15 +645,24 @@ def render_buyer_qualification_section(selected_lead_name: str):
             else:
                 st.error("Jorge Buyer Bot service is unavailable")
 
-def render_buyer_journey_hub(services, selected_lead_name, render_enhanced_property_search, render_buyer_profile_builder, render_financing_calculator, render_neighborhood_explorer):
+
+def render_buyer_journey_hub(
+    services,
+    selected_lead_name,
+    render_enhanced_property_search,
+    render_buyer_profile_builder,
+    render_financing_calculator,
+    render_neighborhood_explorer,
+):
     """Render the complete buyer journey experience - Obsidian Command Edition"""
-    from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart, render_dossier_block
+    from ghl_real_estate_ai.streamlit_demo.obsidian_theme import render_dossier_block, style_obsidian_chart
 
     # Setup Omnipresent Claude for buyer coaching
     if OMNIPRESENT_CLAUDE_AVAILABLE:
         setup_omnipresent_claude()
-    
-    st.markdown("""
+
+    st.markdown(
+        """
         <div style="background: rgba(22, 27, 34, 0.85); backdrop-filter: blur(20px); padding: 1.5rem 2.5rem; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);">
             <div>
                 <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 2.5rem; font-weight: 700; margin: 0; color: #FFFFFF; letter-spacing: -0.04em; text-transform: uppercase;">🏠 BUYER JOURNEY HUB</h1>
@@ -634,10 +674,13 @@ def render_buyer_journey_hub(services, selected_lead_name, render_enhanced_prope
                 </div>
             </div>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     # Claude's Journey Counsel - Obsidian Glassmorphism
-    st.markdown("""
+    st.markdown(
+        """
         <div style='background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%); 
                     border: 1px solid rgba(99, 102, 241, 0.2); 
                     border-radius: 20px; 
@@ -649,27 +692,31 @@ def render_buyer_journey_hub(services, selected_lead_name, render_enhanced_prope
                 <div style='flex-grow: 1;'>
                     <h3 style='margin: 0 0 1rem 0; color: white !important; font-family: "Space Grotesk", sans-serif; font-size: 1.75rem;'>Claude's Journey Counsel</h3>
                     <div style='color: #f8fafc; font-size: 1.1rem; line-height: 1.6; font-weight: 500;'>
-    """, unsafe_allow_html=True)
-    
+    """,
+        unsafe_allow_html=True,
+    )
+
     if CLAUDE_AVAILABLE and selected_lead_name != "-- Select a Lead --":
         orchestrator = get_claude_orchestrator()
-        
+
         with st.spinner("Claude is mapping the buyer journey..."):
             try:
                 # Get lead context
-                lead_options = st.session_state.get('lead_options', {})
+                lead_options = st.session_state.get("lead_options", {})
                 lead_data = lead_options.get(selected_lead_name, {})
-                
+
                 # Use chat_query for journey advice
                 journey_result = run_async(
                     orchestrator.chat_query(
                         query="Provide strategic buyer journey counsel for this lead. Map their current stage and suggest 2 immediate next steps.",
-                        context={"lead_name": selected_lead_name, "lead_data": lead_data, "task": "journey_counsel"}
+                        context={"lead_name": selected_lead_name, "lead_data": lead_data, "task": "journey_counsel"},
                     )
                 )
                 st.markdown(journey_result.content)
             except Exception as e:
-                st.markdown(f"Monitoring **{selected_lead_name}**. High probability of conversion if we maintain momentum.")
+                st.markdown(
+                    f"Monitoring **{selected_lead_name}**. High probability of conversion if we maintain momentum."
+                )
     else:
         # Dynamic journey insights (Legacy/Fallback)
         if selected_lead_name == "Sarah Chen (Apple Engineer)":
@@ -694,9 +741,9 @@ def render_buyer_journey_hub(services, selected_lead_name, render_enhanced_prope
             </ul>
             """
         st.markdown(journey_text, unsafe_allow_html=True)
-    
+
     st.markdown("</div></div></div>", unsafe_allow_html=True)
-    
+
     if st.button("🚀 Execute Strategic Engagement", use_container_width=True, type="primary"):
         st.toast("Syncing alerts to GHL workflows...", icon="🔔")
 
@@ -705,15 +752,17 @@ def render_buyer_journey_hub(services, selected_lead_name, render_enhanced_prope
     render_buyer_qualification_section(selected_lead_name)
 
     # Buyer navigation tabs
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-        "🔍 Property Search",
-        "🔥 Smart Swipe",
-        "👤 Buyer Profile",
-        "💰 Financing",
-        "🌍 Neighborhoods",
-        "📅 Saved & Scheduled",
-        "📊 Buyer Analytics"
-    ])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
+        [
+            "🔍 Property Search",
+            "🔥 Smart Swipe",
+            "👤 Buyer Profile",
+            "💰 Financing",
+            "🌍 Neighborhoods",
+            "📅 Saved & Scheduled",
+            "📊 Buyer Analytics",
+        ]
+    )
 
     with tab1:
         render_enhanced_property_search()
@@ -721,6 +770,7 @@ def render_buyer_journey_hub(services, selected_lead_name, render_enhanced_prope
     with tab2:
         try:
             from ghl_real_estate_ai.streamlit_demo.components.property_swipe import render_property_swipe
+
             render_property_swipe(services, selected_lead_name)
         except ImportError:
             st.info("🔥 Smart Swipe component coming soon")
@@ -732,7 +782,7 @@ def render_buyer_journey_hub(services, selected_lead_name, render_enhanced_prope
         render_financing_calculator()
 
     with tab5:
-        lead_options = st.session_state.get('lead_options', {})
+        lead_options = st.session_state.get("lead_options", {})
         lead_data = lead_options.get(selected_lead_name)
         render_neighborhood_explorer(lead_data)
 

@@ -7,29 +7,29 @@ This module tests all re-ranking components including:
 - Integration tests for the complete re-ranking pipeline
 """
 
-import pytest
 import asyncio
 import time
 from typing import List, Optional
-from unittest.mock import Mock, patch, MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from uuid import uuid4
 
-from src.core.types import SearchResult, DocumentChunk, Metadata
-from src.core.exceptions import RetrievalError, RateLimitError
+import pytest
+from src.core.exceptions import RateLimitError, RetrievalError
+from src.core.types import DocumentChunk, Metadata, SearchResult
 from src.reranking.base import (
     BaseReRanker,
+    MockReRanker,
     ReRankingConfig,
     ReRankingResult,
     ReRankingStrategy,
-    MockReRanker,
 )
+from src.reranking.cohere_reranker import CohereConfig, CohereReRanker
 from src.reranking.cross_encoder import CrossEncoderReRanker
-from src.reranking.cohere_reranker import CohereReRanker, CohereConfig
-
 
 # ============================================================================
 # Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def sample_document_chunks() -> List[DocumentChunk]:
@@ -39,31 +39,31 @@ def sample_document_chunks() -> List[DocumentChunk]:
             document_id=uuid4(),
             content="Machine learning is a subset of artificial intelligence",
             index=0,
-            metadata=Metadata(title="ML Basics")
+            metadata=Metadata(title="ML Basics"),
         ),
         DocumentChunk(
             document_id=uuid4(),
             content="Deep learning uses neural networks with multiple layers",
             index=1,
-            metadata=Metadata(title="Deep Learning")
+            metadata=Metadata(title="Deep Learning"),
         ),
         DocumentChunk(
             document_id=uuid4(),
             content="Natural language processing enables computers to understand text",
             index=2,
-            metadata=Metadata(title="NLP")
+            metadata=Metadata(title="NLP"),
         ),
         DocumentChunk(
             document_id=uuid4(),
             content="Computer vision allows machines to interpret visual information",
             index=3,
-            metadata=Metadata(title="Computer Vision")
+            metadata=Metadata(title="Computer Vision"),
         ),
         DocumentChunk(
             document_id=uuid4(),
             content="Reinforcement learning trains agents through rewards and penalties",
             index=4,
-            metadata=Metadata(title="RL")
+            metadata=Metadata(title="RL"),
         ),
     ]
 
@@ -76,7 +76,7 @@ def sample_search_results(sample_document_chunks) -> List[SearchResult]:
             chunk=chunk,
             score=0.9 - (i * 0.1),  # Descending scores: 0.9, 0.8, 0.7, 0.6, 0.5
             rank=i + 1,
-            distance=0.1 + (i * 0.1)
+            distance=0.1 + (i * 0.1),
         )
         for i, chunk in enumerate(sample_document_chunks)
     ]
@@ -93,7 +93,7 @@ def reranking_config() -> ReRankingConfig:
         score_threshold=0.0,
         normalize_scores=True,
         batch_size=32,
-        timeout_seconds=30
+        timeout_seconds=30,
     )
 
 
@@ -114,13 +114,14 @@ def cohere_config() -> CohereConfig:
         top_n=None,
         timeout_seconds=30,
         max_retries=3,
-        retry_delay=1.0
+        retry_delay=1.0,
     )
 
 
 # ============================================================================
 # BaseReRanker Strategy Tests
 # ============================================================================
+
 
 class TestReRankingStrategies:
     """Test suite for all re-ranking strategies."""
@@ -145,11 +146,7 @@ class TestReRankingStrategies:
     @pytest.mark.asyncio
     async def test_weighted_strategy(self, sample_search_results):
         """Test WEIGHTED strategy combines scores with configured weights."""
-        config = ReRankingConfig(
-            strategy=ReRankingStrategy.WEIGHTED,
-            original_weight=0.3,
-            reranker_weight=0.7
-        )
+        config = ReRankingConfig(strategy=ReRankingStrategy.WEIGHTED, original_weight=0.3, reranker_weight=0.7)
         reranker = MockReRanker(config)
         await reranker.initialize()
 
@@ -180,10 +177,7 @@ class TestReRankingStrategies:
     @pytest.mark.asyncio
     async def test_normalized_strategy(self, sample_search_results):
         """Test NORMALIZED strategy normalizes and combines scores."""
-        config = ReRankingConfig(
-            strategy=ReRankingStrategy.NORMALIZED,
-            normalize_scores=True
-        )
+        config = ReRankingConfig(strategy=ReRankingStrategy.NORMALIZED, normalize_scores=True)
         reranker = MockReRanker(config)
         await reranker.initialize()
 
@@ -237,14 +231,7 @@ class TestBaseReRankerEdgeCases:
     @pytest.mark.asyncio
     async def test_single_result(self, sample_document_chunks):
         """Test handling of single result."""
-        single_result = [
-            SearchResult(
-                chunk=sample_document_chunks[0],
-                score=0.9,
-                rank=1,
-                distance=0.1
-            )
-        ]
+        single_result = [SearchResult(chunk=sample_document_chunks[0], score=0.9, rank=1, distance=0.1)]
 
         reranker = MockReRanker()
         await reranker.initialize()
@@ -264,7 +251,7 @@ class TestBaseReRankerEdgeCases:
                 chunk=chunk,
                 score=0.8,  # All same score
                 rank=i + 1,
-                distance=0.2
+                distance=0.2,
             )
             for i, chunk in enumerate(sample_document_chunks[:3])
         ]
@@ -319,7 +306,7 @@ class TestBaseReRankerEdgeCases:
                 chunk=r.chunk,
                 score=0.5 + i * 0.1,  # 0.5, 0.6, 0.7, 0.8, 0.9
                 rank=r.rank,
-                distance=r.distance
+                distance=r.distance,
             )
             for i, r in enumerate(sample_search_results)
         ]
@@ -342,12 +329,7 @@ class TestBaseReRankerEdgeCases:
         reranker = MockReRanker()
 
         same_score_results = [
-            SearchResult(
-                chunk=chunk,
-                score=0.5,
-                rank=i + 1,
-                distance=0.5
-            )
+            SearchResult(chunk=chunk, score=0.5, rank=i + 1, distance=0.5)
             for i, chunk in enumerate(sample_document_chunks[:3])
         ]
 
@@ -385,7 +367,7 @@ class TestReRankingConfig:
             score_threshold=0.5,
             normalize_scores=False,
             batch_size=16,
-            timeout_seconds=60
+            timeout_seconds=60,
         )
 
         assert config.strategy == ReRankingStrategy.REPLACE
@@ -402,6 +384,7 @@ class TestReRankingConfig:
 # CrossEncoderReRanker Tests
 # ============================================================================
 
+
 class TestCrossEncoderReRankerInitialization:
     """Test CrossEncoderReRanker initialization."""
 
@@ -409,25 +392,20 @@ class TestCrossEncoderReRankerInitialization:
         """Test initialization with default parameters."""
         reranker = CrossEncoderReRanker()
 
-        assert reranker.model_name == 'cross-encoder/ms-marco-MiniLM-L-6-v2'
+        assert reranker.model_name == "cross-encoder/ms-marco-MiniLM-L-6-v2"
         assert reranker.max_length == 512
-        assert reranker.device in ['cpu', 'cuda', 'mps']
+        assert reranker.device in ["cpu", "cuda", "mps"]
         assert reranker.model is None
         assert reranker._initialized is False
 
     def test_initialization_custom_params(self):
         """Test initialization with custom parameters."""
         config = ReRankingConfig(top_k=50)
-        reranker = CrossEncoderReRanker(
-            model_name='custom-model',
-            config=config,
-            device='cpu',
-            max_length=256
-        )
+        reranker = CrossEncoderReRanker(model_name="custom-model", config=config, device="cpu", max_length=256)
 
-        assert reranker.model_name == 'custom-model'
+        assert reranker.model_name == "custom-model"
         assert reranker.max_length == 256
-        assert reranker.device == 'cpu'
+        assert reranker.device == "cpu"
         assert reranker.config.top_k == 50
 
     def test_get_device(self):
@@ -436,17 +414,17 @@ class TestCrossEncoderReRankerInitialization:
         device = reranker._get_device()
 
         # Should return a valid device string
-        assert device in ['cpu', 'cuda', 'mps']
+        assert device in ["cpu", "cuda", "mps"]
 
     def test_get_model_info_uninitialized(self):
         """Test getting model info before initialization."""
         reranker = CrossEncoderReRanker()
         info = reranker.get_model_info()
 
-        assert info['name'] == 'cross-encoder/ms-marco-MiniLM-L-6-v2'
-        assert info['type'] == 'cross-encoder'
-        assert info['initialized'] is False
-        assert 'sentence_transformers_available' in info
+        assert info["name"] == "cross-encoder/ms-marco-MiniLM-L-6-v2"
+        assert info["type"] == "cross-encoder"
+        assert info["initialized"] is False
+        assert "sentence_transformers_available" in info
 
 
 class TestCrossEncoderReRankerFunctionality:
@@ -457,7 +435,7 @@ class TestCrossEncoderReRankerFunctionality:
         """Test successful initialization."""
         reranker = CrossEncoderReRanker()
 
-        with patch('src.reranking.cross_encoder.SENTENCE_TRANSFORMERS_AVAILABLE', False):
+        with patch("src.reranking.cross_encoder.SENTENCE_TRANSFORMERS_AVAILABLE", False):
             await reranker.initialize()
             assert reranker._initialized is True
 
@@ -517,7 +495,7 @@ class TestCrossEncoderReRankerFunctionality:
         assert len(result.results) == len(sample_search_results)
         assert result.original_count == len(sample_search_results)
         assert result.processing_time_ms >= 0
-        assert result.model_info['type'] == 'cross-encoder'
+        assert result.model_info["type"] == "cross-encoder"
 
     @pytest.mark.asyncio
     async def test_fallback_scoring(self, sample_search_results):
@@ -535,9 +513,9 @@ class TestCrossEncoderReRankerFunctionality:
 
     def test_batch_size_recommendation(self):
         """Test batch size recommendations."""
-        reranker_cpu = CrossEncoderReRanker(device='cpu')
-        reranker_cuda = CrossEncoderReRanker(device='cuda')
-        reranker_other = CrossEncoderReRanker(device='mps')
+        reranker_cpu = CrossEncoderReRanker(device="cpu")
+        reranker_cuda = CrossEncoderReRanker(device="cuda")
+        reranker_other = CrossEncoderReRanker(device="mps")
 
         assert reranker_cpu.batch_size_recommendation(100) <= 16
         assert reranker_cuda.batch_size_recommendation(100) <= 32
@@ -562,15 +540,16 @@ class TestCrossEncoderReRankerFunctionality:
 # CohereReRanker Tests
 # ============================================================================
 
+
 class TestCohereReRankerInitialization:
     """Test CohereReRanker initialization."""
 
     def test_initialization_defaults(self):
         """Test initialization with default parameters."""
-        with patch.dict('os.environ', {'COHERE_API_KEY': 'test-key'}):
+        with patch.dict("os.environ", {"COHERE_API_KEY": "test-key"}):
             reranker = CohereReRanker()
 
-            assert reranker.cohere_config.model == 'rerank-english-v2.0'
+            assert reranker.cohere_config.model == "rerank-english-v2.0"
             assert reranker.cohere_config.max_chunks_per_doc == 10
             assert reranker.cohere_config.max_retries == 3
             assert reranker.client is None
@@ -593,7 +572,7 @@ class TestCohereReRankerInitialization:
 
     def test_get_api_key_from_environment(self):
         """Test getting API key from environment variable."""
-        with patch.dict('os.environ', {'COHERE_API_KEY': 'env-api-key'}):
+        with patch.dict("os.environ", {"COHERE_API_KEY": "env-api-key"}):
             reranker = CohereReRanker()
             api_key = reranker._get_api_key()
 
@@ -601,7 +580,7 @@ class TestCohereReRankerInitialization:
 
     def test_get_api_key_missing(self):
         """Test error when API key is missing."""
-        with patch.dict('os.environ', {}, clear=True):
+        with patch.dict("os.environ", {}, clear=True):
             reranker = CohereReRanker()
 
             with pytest.raises(RetrievalError) as exc_info:
@@ -614,9 +593,9 @@ class TestCohereReRankerInitialization:
         reranker = CohereReRanker()
         info = reranker.get_model_info()
 
-        assert info['type'] == 'cohere-api'
-        assert info['provider'] == 'Cohere'
-        assert 'max_chunks_per_doc' in info
+        assert info["type"] == "cohere-api"
+        assert info["provider"] == "Cohere"
+        assert "max_chunks_per_doc" in info
 
 
 class TestCohereReRankerFunctionality:
@@ -625,7 +604,7 @@ class TestCohereReRankerFunctionality:
     @pytest.mark.asyncio
     async def test_initialize_success(self, cohere_config):
         """Test successful initialization."""
-        with patch('src.reranking.cohere_reranker.COHERE_AVAILABLE', False):
+        with patch("src.reranking.cohere_reranker.COHERE_AVAILABLE", False):
             reranker = CohereReRanker(cohere_config=cohere_config)
             await reranker.initialize()
             assert reranker._initialized is True
@@ -665,7 +644,7 @@ class TestCohereReRankerFunctionality:
     @pytest.mark.asyncio
     async def test_rerank_empty_results(self, cohere_config):
         """Test reranking with empty results."""
-        with patch('src.reranking.cohere_reranker.COHERE_AVAILABLE', False):
+        with patch("src.reranking.cohere_reranker.COHERE_AVAILABLE", False):
             reranker = CohereReRanker(cohere_config=cohere_config)
             await reranker.initialize()
 
@@ -679,7 +658,7 @@ class TestCohereReRankerFunctionality:
     @pytest.mark.asyncio
     async def test_rerank_with_results(self, sample_search_results, cohere_config):
         """Test reranking with valid results."""
-        with patch('src.reranking.cohere_reranker.COHERE_AVAILABLE', False):
+        with patch("src.reranking.cohere_reranker.COHERE_AVAILABLE", False):
             reranker = CohereReRanker(cohere_config=cohere_config)
             await reranker.initialize()
 
@@ -689,12 +668,12 @@ class TestCohereReRankerFunctionality:
             assert len(result.results) == len(sample_search_results)
             assert result.original_count == len(sample_search_results)
             assert result.processing_time_ms >= 0
-            assert result.model_info['type'] == 'cohere-api'
+            assert result.model_info["type"] == "cohere-api"
 
     @pytest.mark.asyncio
     async def test_fallback_scoring(self, sample_search_results, cohere_config):
         """Test fallback scoring when API is unavailable."""
-        with patch('src.reranking.cohere_reranker.COHERE_AVAILABLE', False):
+        with patch("src.reranking.cohere_reranker.COHERE_AVAILABLE", False):
             reranker = CohereReRanker(cohere_config=cohere_config)
             await reranker.initialize()
 
@@ -823,15 +802,16 @@ class TestCohereAPIInteraction:
 
         cost_estimate = reranker.estimate_cost(1000)
 
-        assert 'search_units' in cost_estimate
-        assert 'estimated_cost_usd' in cost_estimate
-        assert cost_estimate['search_units'] == 1000
-        assert cost_estimate['estimated_cost_usd'] > 0
+        assert "search_units" in cost_estimate
+        assert "estimated_cost_usd" in cost_estimate
+        assert cost_estimate["search_units"] == 1000
+        assert cost_estimate["estimated_cost_usd"] > 0
 
 
 # ============================================================================
 # Integration Tests
 # ============================================================================
+
 
 class TestReRankingPipeline:
     """Integration tests for the complete re-ranking pipeline."""
@@ -878,7 +858,7 @@ class TestReRankingPipeline:
     @pytest.mark.asyncio
     async def test_cohere_full_pipeline(self, sample_search_results, cohere_config):
         """Test complete pipeline with CohereReRanker."""
-        with patch('src.reranking.cohere_reranker.COHERE_AVAILABLE', False):
+        with patch("src.reranking.cohere_reranker.COHERE_AVAILABLE", False):
             reranker = CohereReRanker(cohere_config=cohere_config)
             await reranker.initialize()
 
@@ -895,18 +875,14 @@ class TestReRankingPipeline:
     async def test_multiple_rerankers_sequence(self, sample_search_results):
         """Test using multiple re-rankers in sequence."""
         # First re-ranker
-        mock_reranker = MockReRanker(
-            config=ReRankingConfig(strategy=ReRankingStrategy.WEIGHTED)
-        )
+        mock_reranker = MockReRanker(config=ReRankingConfig(strategy=ReRankingStrategy.WEIGHTED))
         await mock_reranker.initialize()
 
         query = "machine learning algorithms"
         result1 = await mock_reranker.rerank(query, sample_search_results)
 
         # Second re-ranker processes first's output
-        cross_encoder = CrossEncoderReRanker(
-            config=ReRankingConfig(strategy=ReRankingStrategy.REPLACE)
-        )
+        cross_encoder = CrossEncoderReRanker(config=ReRankingConfig(strategy=ReRankingStrategy.REPLACE))
         await cross_encoder.initialize()
 
         result2 = await cross_encoder.rerank(query, result1.results)
@@ -926,10 +902,10 @@ class TestReRankingPipeline:
 
         stats = reranker.get_stats()
 
-        assert 'config' in stats
-        assert 'model_info' in stats
-        assert stats['config']['strategy'] == ReRankingStrategy.WEIGHTED.value
-        assert 'original_weight' in stats['config']
+        assert "config" in stats
+        assert "model_info" in stats
+        assert stats["config"]["strategy"] == ReRankingStrategy.WEIGHTED.value
+        assert "original_weight" in stats["config"]
 
         await reranker.close()
 
@@ -965,14 +941,11 @@ class TestReRankingPerformance:
                 document_id=uuid4(),
                 content=f"Document content number {i} about machine learning",
                 index=i,
-                metadata=Metadata()
+                metadata=Metadata(),
             )
-            many_results.append(SearchResult(
-                chunk=chunk,
-                score=0.9 - (i * 0.01),
-                rank=i + 1,
-                distance=0.1 + (i * 0.01)
-            ))
+            many_results.append(
+                SearchResult(chunk=chunk, score=0.9 - (i * 0.01), rank=i + 1, distance=0.1 + (i * 0.01))
+            )
 
         reranker = MockReRanker(config=ReRankingConfig(top_k=100))
         await reranker.initialize()
@@ -990,18 +963,8 @@ class TestReRankingPerformance:
         # Create results that would require batching
         batch_results = []
         for i in range(64):  # More than default batch size
-            chunk = DocumentChunk(
-                document_id=uuid4(),
-                content=f"Content {i}",
-                index=i,
-                metadata=Metadata()
-            )
-            batch_results.append(SearchResult(
-                chunk=chunk,
-                score=0.8,
-                rank=i + 1,
-                distance=0.2
-            ))
+            chunk = DocumentChunk(document_id=uuid4(), content=f"Content {i}", index=i, metadata=Metadata())
+            batch_results.append(SearchResult(chunk=chunk, score=0.8, rank=i + 1, distance=0.2))
 
         reranker = CrossEncoderReRanker(config=ReRankingConfig(batch_size=32))
         await reranker.initialize()
@@ -1017,13 +980,14 @@ class TestReRankingPerformance:
 # Error Handling Tests
 # ============================================================================
 
+
 class TestErrorHandling:
     """Test error handling across re-rankers."""
 
     @pytest.mark.asyncio
     async def test_cross_encoder_load_failure(self):
         """Test handling of cross-encoder model loading failure."""
-        with patch('src.reranking.cross_encoder.SENTENCE_TRANSFORMERS_AVAILABLE', False):
+        with patch("src.reranking.cross_encoder.SENTENCE_TRANSFORMERS_AVAILABLE", False):
             reranker = CrossEncoderReRanker()
 
             # Should not raise during initialize when ST not available
@@ -1034,10 +998,10 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_cohere_connection_test_failure(self, cohere_config):
         """Test handling of Cohere connection test failure."""
-        with patch('src.reranking.cohere_reranker.COHERE_AVAILABLE', True):
+        with patch("src.reranking.cohere_reranker.COHERE_AVAILABLE", True):
             reranker = CohereReRanker(cohere_config=cohere_config)
 
-            with patch.object(reranker, '_test_connection', side_effect=Exception("Connection failed")):
+            with patch.object(reranker, "_test_connection", side_effect=Exception("Connection failed")):
                 with pytest.raises(RetrievalError):
                     await reranker.initialize()
 
@@ -1062,12 +1026,12 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_cohere_rerank_exception_handling(self, sample_search_results, cohere_config):
         """Test exception handling in Cohere rerank."""
-        with patch('src.reranking.cohere_reranker.COHERE_AVAILABLE', False):
+        with patch("src.reranking.cohere_reranker.COHERE_AVAILABLE", False):
             reranker = CohereReRanker(cohere_config=cohere_config)
             await reranker.initialize()
 
             # Should handle exceptions gracefully
-            with patch.object(reranker, '_cohere_rerank', side_effect=Exception("API failed")):
+            with patch.object(reranker, "_cohere_rerank", side_effect=Exception("API failed")):
                 with pytest.raises(RetrievalError):
                     await reranker.rerank("query", sample_search_results)
 
@@ -1075,6 +1039,7 @@ class TestErrorHandling:
 # ============================================================================
 # CohereConfig Tests
 # ============================================================================
+
 
 class TestCohereConfig:
     """Test suite for CohereConfig."""
@@ -1084,7 +1049,7 @@ class TestCohereConfig:
         config = CohereConfig()
 
         assert config.api_key is None
-        assert config.model == 'rerank-english-v2.0'
+        assert config.model == "rerank-english-v2.0"
         assert config.max_chunks_per_doc == 10
         assert config.return_documents is False
         assert config.top_n is None
@@ -1102,7 +1067,7 @@ class TestCohereConfig:
             top_n=10,
             timeout_seconds=60,
             max_retries=5,
-            retry_delay=2.0
+            retry_delay=2.0,
         )
 
         assert config.api_key == "custom-key"
@@ -1118,6 +1083,7 @@ class TestCohereConfig:
 # ============================================================================
 # MockReRanker Tests
 # ============================================================================
+
 
 class TestMockReRanker:
     """Test suite for MockReRanker."""
@@ -1137,9 +1103,9 @@ class TestMockReRanker:
         reranker = MockReRanker()
         info = reranker.get_model_info()
 
-        assert info['name'] == 'MockReRanker'
-        assert info['type'] == 'rule-based'
-        assert 'version' in info
+        assert info["name"] == "MockReRanker"
+        assert info["type"] == "rule-based"
+        assert "version" in info
 
     @pytest.mark.asyncio
     async def test_mock_reranker_text_matching(self, sample_search_results):

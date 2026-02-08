@@ -16,16 +16,17 @@ Key Features:
 - Performance monitoring for integration test health
 """
 
-import pytest
 import asyncio
+import logging
 import os
 import sys
-import logging
-from typing import Dict, Any, Optional, AsyncGenerator
-from unittest.mock import AsyncMock, MagicMock
-import psycopg2
-import redis.asyncio as redis
 from contextlib import asynccontextmanager
+from typing import Any, AsyncGenerator, Dict, Optional
+from unittest.mock import AsyncMock, MagicMock
+
+import psycopg2
+import pytest
+import redis.asyncio as redis
 
 # Add project root to path
 project_root = os.path.dirname(os.path.abspath(__file__))
@@ -33,18 +34,12 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 # Configure logging for integration tests
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - [INTEGRATION] %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - [INTEGRATION] %(message)s")
 logger = logging.getLogger(__name__)
 
 # Test configuration
-TEST_DATABASE_URL = os.getenv(
-    'TEST_DATABASE_URL',
-    'postgresql://postgres:password@localhost:5432/test_ghl_real_estate'
-)
-TEST_REDIS_URL = os.getenv('TEST_REDIS_URL', 'redis://localhost:6379/1')
+TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "postgresql://postgres:password@localhost:5432/test_ghl_real_estate")
+TEST_REDIS_URL = os.getenv("TEST_REDIS_URL", "redis://localhost:6379/1")
 
 
 @pytest.fixture(scope="session")
@@ -79,7 +74,7 @@ async def database_connection_pool():
             max_connections=10,  # Limited pool size
             connection_timeout=10.0,
             command_timeout=30.0,
-            server_settings={"application_name": "jorge_integration_tests"}
+            server_settings={"application_name": "jorge_integration_tests"},
         )
 
         # Create connection pool
@@ -88,7 +83,7 @@ async def database_connection_pool():
             min_size=db_config.min_connections,
             max_size=db_config.max_connections,
             command_timeout=db_config.command_timeout,
-            server_settings=db_config.server_settings
+            server_settings=db_config.server_settings,
         )
 
         logger.info(f"Database connection pool created: {pool.get_size()} connections")
@@ -106,7 +101,7 @@ async def database_connection_pool():
 
     finally:
         # Cleanup: Close all connections
-        if 'pool' in locals() and pool:
+        if "pool" in locals() and pool:
             await pool.close()
             logger.info("Database connection pool closed")
 
@@ -125,10 +120,7 @@ async def redis_connection_pool():
     try:
         # Create Redis connection pool
         redis_pool = redis.ConnectionPool.from_url(
-            TEST_REDIS_URL,
-            max_connections=20,
-            retry_on_timeout=True,
-            decode_responses=True
+            TEST_REDIS_URL, max_connections=20, retry_on_timeout=True, decode_responses=True
         )
 
         # Create Redis client
@@ -148,7 +140,7 @@ async def redis_connection_pool():
 
     finally:
         # Cleanup: Close Redis connections
-        if 'redis_client' in locals() and redis_client:
+        if "redis_client" in locals() and redis_client:
             await redis_client.close()
             logger.info("Redis connection pool closed")
 
@@ -167,6 +159,7 @@ async def async_database_session(database_connection_pool):
     if database_connection_pool is None:
         # Fallback to mock for tests without database
         from tests.mocks.external_services import MockDatabaseService
+
         yield MockDatabaseService()
         return
 
@@ -198,11 +191,13 @@ async def async_redis_session(redis_connection_pool):
     if redis_connection_pool is None:
         # Fallback to mock for tests without Redis
         from tests.mocks.external_services import MockRedisClient
+
         yield MockRedisClient()
         return
 
     # Generate unique test namespace
     import uuid
+
     test_namespace = f"test:{uuid.uuid4().hex[:8]}"
 
     try:
@@ -269,14 +264,14 @@ async def enhanced_lead_intelligence_service(async_database_session, async_redis
     await service.initialize()
 
     # Inject test dependencies if using real connections
-    if hasattr(async_database_session, 'execute'):
+    if hasattr(async_database_session, "execute"):
         # Real database connection
         logger.info("Integration test using real database connection")
     else:
         # Mock database
         logger.info("Integration test using mock database connection")
 
-    if hasattr(async_redis_session, '_client'):
+    if hasattr(async_redis_session, "_client"):
         # Real Redis connection
         logger.info("Integration test using real Redis connection")
     else:
@@ -288,7 +283,7 @@ async def enhanced_lead_intelligence_service(async_database_session, async_redis
     # Cleanup service resources
     try:
         # Allow service to cleanup any async resources
-        if hasattr(service, 'cleanup'):
+        if hasattr(service, "cleanup"):
             await service.cleanup()
     except Exception as e:
         logger.warning(f"Service cleanup error: {e}")
@@ -308,7 +303,7 @@ async def claude_orchestrator_service():
         orchestrator = get_claude_orchestrator()
 
         # Initialize if needed
-        if hasattr(orchestrator, 'initialize'):
+        if hasattr(orchestrator, "initialize"):
             await orchestrator.initialize()
 
         yield orchestrator
@@ -329,15 +324,15 @@ def integration_test_config():
     Provides test-appropriate timeouts, limits, and settings.
     """
     return {
-        'test_mode': True,
-        'async_timeout': 30.0,  # 30 second timeout for async operations
-        'database_timeout': 10.0,  # 10 second database timeout
-        'redis_timeout': 5.0,  # 5 second Redis timeout
-        'claude_timeout': 20.0,  # 20 second Claude timeout
-        'max_retry_attempts': 3,
-        'enable_performance_monitoring': True,
-        'enable_connection_pooling': True,
-        'test_data_isolation': True
+        "test_mode": True,
+        "async_timeout": 30.0,  # 30 second timeout for async operations
+        "database_timeout": 10.0,  # 10 second database timeout
+        "redis_timeout": 5.0,  # 5 second Redis timeout
+        "claude_timeout": 20.0,  # 20 second Claude timeout
+        "max_retry_attempts": 3,
+        "enable_performance_monitoring": True,
+        "enable_connection_pooling": True,
+        "test_data_isolation": True,
     }
 
 
@@ -352,8 +347,8 @@ def integration_test_lifecycle():
     - Performance monitoring
     - Error tracking
     """
-    import time
     import asyncio
+    import time
 
     start_time = time.time()
 
@@ -389,26 +384,26 @@ def integration_test_lifecycle():
 def sample_lead_data():
     """Sample lead data for integration tests."""
     return {
-        'lead_id': 'INTEGRATION_TEST_LEAD_001',
-        'first_name': 'John',
-        'last_name': 'Smith',
-        'email': 'john.smith.test@example.com',
-        'phone': '+1-555-0123',
-        'created_at': '2026-01-19T10:00:00Z',
-        'preferences': {
-            'location': 'Austin, TX',
-            'budget_max': 500000,
-            'property_type': 'Single Family',
-            'bedrooms': 3,
-            'bathrooms': 2
+        "lead_id": "INTEGRATION_TEST_LEAD_001",
+        "first_name": "John",
+        "last_name": "Smith",
+        "email": "john.smith.test@example.com",
+        "phone": "+1-555-0123",
+        "created_at": "2026-01-19T10:00:00Z",
+        "preferences": {
+            "location": "Austin, TX",
+            "budget_max": 500000,
+            "property_type": "Single Family",
+            "bedrooms": 3,
+            "bathrooms": 2,
         },
-        'conversation_history': [
+        "conversation_history": [
             {
-                'timestamp': '2026-01-19T10:00:00Z',
-                'type': 'initial_contact',
-                'content': 'Looking for a 3-bedroom house in Austin'
+                "timestamp": "2026-01-19T10:00:00Z",
+                "type": "initial_contact",
+                "content": "Looking for a 3-bedroom house in Austin",
             }
-        ]
+        ],
     }
 
 
@@ -425,12 +420,12 @@ def handle_missing_dependencies():
     try:
         import asyncpg
     except ImportError:
-        missing_deps.append('asyncpg')
+        missing_deps.append("asyncpg")
 
     try:
         import redis.asyncio
     except ImportError:
-        missing_deps.append('redis')
+        missing_deps.append("redis")
 
     if missing_deps:
         logger.warning(f"Missing dependencies for full integration testing: {missing_deps}")

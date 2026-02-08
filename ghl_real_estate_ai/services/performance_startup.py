@@ -17,16 +17,16 @@ Expected Performance Gains:
 
 import asyncio
 import time
-from typing import Dict, Any, List, Optional
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from ghl_real_estate_ai.services.cache_warming_service import get_cache_warming_service
-from ghl_real_estate_ai.services.optimized_query_service import get_optimized_query_service
-from ghl_real_estate_ai.services.ghl_batch_client import get_ghl_batch_client
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.cache_warming_service import get_cache_warming_service
+from ghl_real_estate_ai.services.ghl_batch_client import get_ghl_batch_client
+from ghl_real_estate_ai.services.optimized_query_service import get_optimized_query_service
 
 logger = get_logger(__name__)
 
@@ -107,35 +107,35 @@ class PerformanceStartupService:
             # 1.1: Cache service initialization
             cache_start = time.time()
             cache_health = await self.cache_service.health_check()
-            self.initialization_times['cache_service'] = (time.time() - cache_start) * 1000
+            self.initialization_times["cache_service"] = (time.time() - cache_start) * 1000
 
-            if cache_health['status'] != 'healthy':
+            if cache_health["status"] != "healthy":
                 logger.warning(f"Cache service health check: {cache_health}")
 
-            initialization_results['cache_service'] = {
-                'status': cache_health['status'],
-                'init_time_ms': self.initialization_times['cache_service']
+            initialization_results["cache_service"] = {
+                "status": cache_health["status"],
+                "init_time_ms": self.initialization_times["cache_service"],
             }
 
             # 1.2: Database query service initialization
             query_start = time.time()
             await self.query_service.initialize()
-            self.initialization_times['query_service'] = (time.time() - query_start) * 1000
+            self.initialization_times["query_service"] = (time.time() - query_start) * 1000
 
-            initialization_results['query_service'] = {
-                'status': 'initialized',
-                'init_time_ms': self.initialization_times['query_service']
+            initialization_results["query_service"] = {
+                "status": "initialized",
+                "init_time_ms": self.initialization_times["query_service"],
             }
 
             # 1.3: GHL batch client initialization
             if self.config.enable_ghl_batching:
                 ghl_start = time.time()
                 await self.ghl_batch_client.initialize()
-                self.initialization_times['ghl_batch_client'] = (time.time() - ghl_start) * 1000
+                self.initialization_times["ghl_batch_client"] = (time.time() - ghl_start) * 1000
 
-                initialization_results['ghl_batch_client'] = {
-                    'status': 'initialized',
-                    'init_time_ms': self.initialization_times['ghl_batch_client']
+                initialization_results["ghl_batch_client"] = {
+                    "status": "initialized",
+                    "init_time_ms": self.initialization_times["ghl_batch_client"],
                 }
 
             # Phase 2: Cache Warming (Performance Boost)
@@ -144,11 +144,11 @@ class PerformanceStartupService:
 
                 warming_start = time.time()
                 warming_results = await self._execute_cache_warming()
-                self.initialization_times['cache_warming'] = (time.time() - warming_start) * 1000
+                self.initialization_times["cache_warming"] = (time.time() - warming_start) * 1000
 
-                initialization_results['cache_warming'] = {
+                initialization_results["cache_warming"] = {
                     **warming_results,
-                    'init_time_ms': self.initialization_times['cache_warming']
+                    "init_time_ms": self.initialization_times["cache_warming"],
                 }
 
             # Phase 3: Performance Monitoring
@@ -157,11 +157,11 @@ class PerformanceStartupService:
 
                 monitoring_start = time.time()
                 await self._start_performance_monitoring()
-                self.initialization_times['monitoring'] = (time.time() - monitoring_start) * 1000
+                self.initialization_times["monitoring"] = (time.time() - monitoring_start) * 1000
 
-                initialization_results['monitoring'] = {
-                    'status': 'active',
-                    'init_time_ms': self.initialization_times['monitoring']
+                initialization_results["monitoring"] = {
+                    "status": "active",
+                    "init_time_ms": self.initialization_times["monitoring"],
                 }
 
             # Calculate total startup time
@@ -170,25 +170,27 @@ class PerformanceStartupService:
 
             # Generate startup summary
             startup_summary = {
-                'startup_completed': True,
-                'total_startup_time_ms': total_startup_time,
-                'initialization_breakdown': self.initialization_times,
-                'services_initialized': initialization_results,
-                'performance_targets': {
-                    'target_response_time_ms': self.config.target_response_time_ms,
-                    'target_cache_hit_rate': self.config.target_cache_hit_rate,
-                    'target_concurrent_users': self.config.target_concurrent_users
+                "startup_completed": True,
+                "total_startup_time_ms": total_startup_time,
+                "initialization_breakdown": self.initialization_times,
+                "services_initialized": initialization_results,
+                "performance_targets": {
+                    "target_response_time_ms": self.config.target_response_time_ms,
+                    "target_cache_hit_rate": self.config.target_cache_hit_rate,
+                    "target_concurrent_users": self.config.target_concurrent_users,
                 },
-                'expected_improvements': {
-                    'latency_improvement': '2x faster (500ms → 250ms)',
-                    'concurrency_improvement': '4x capacity (50 → 200+ users)',
-                    'cost_reduction': '60% savings',
-                    'cache_performance': '>90% hit rate expected'
-                }
+                "expected_improvements": {
+                    "latency_improvement": "2x faster (500ms → 250ms)",
+                    "concurrency_improvement": "4x capacity (50 → 200+ users)",
+                    "cost_reduction": "60% savings",
+                    "cache_performance": ">90% hit rate expected",
+                },
             }
 
             logger.info(f"✅ Performance optimization startup completed in {total_startup_time:.2f}ms")
-            logger.info(f"🎯 Performance targets: {self.config.target_response_time_ms}ms response, {self.config.target_cache_hit_rate}% cache hit rate")
+            logger.info(
+                f"🎯 Performance targets: {self.config.target_response_time_ms}ms response, {self.config.target_cache_hit_rate}% cache hit rate"
+            )
 
             return startup_summary
 
@@ -203,7 +205,7 @@ class PerformanceStartupService:
             tenant_ids = self.config.cache_warming_tenant_ids
         else:
             # Use default tenant if none specified
-            tenant_ids = [settings.ghl_location_id] if settings.ghl_location_id else ['default']
+            tenant_ids = [settings.ghl_location_id] if settings.ghl_location_id else ["default"]
 
         warming_results = {}
 
@@ -220,31 +222,26 @@ class PerformanceStartupService:
 
         # Aggregate results
         total_items_warmed = sum(
-            sum(tenant_result.values()) if isinstance(tenant_result, dict)
-            else tenant_result.get('total_items', 0)
+            sum(tenant_result.values()) if isinstance(tenant_result, dict) else tenant_result.get("total_items", 0)
             for tenant_result in warming_results.values()
         )
 
         return {
-            'status': 'completed',
-            'tenants_warmed': len(tenant_ids),
-            'total_items_warmed': total_items_warmed,
-            'tenant_results': warming_results
+            "status": "completed",
+            "tenants_warmed": len(tenant_ids),
+            "total_items_warmed": total_items_warmed,
+            "tenant_results": warming_results,
         }
 
     async def _start_performance_monitoring(self):
         """Start background performance monitoring tasks."""
 
         # Health check monitoring
-        health_check_task = asyncio.create_task(
-            self._periodic_health_checks()
-        )
+        health_check_task = asyncio.create_task(self._periodic_health_checks())
         self.monitoring_tasks.append(health_check_task)
 
         # Performance metrics collection
-        metrics_task = asyncio.create_task(
-            self._periodic_performance_metrics()
-        )
+        metrics_task = asyncio.create_task(self._periodic_performance_metrics())
         self.monitoring_tasks.append(metrics_task)
 
         logger.info("Performance monitoring tasks started")
@@ -255,18 +252,18 @@ class PerformanceStartupService:
             try:
                 # Cache health check
                 cache_health = await self.cache_service.health_check()
-                if cache_health['status'] != 'healthy':
+                if cache_health["status"] != "healthy":
                     logger.warning(f"Cache health degraded: {cache_health}")
 
                 # Query service performance check
                 query_stats = await self.query_service.get_performance_stats()
-                if query_stats['avg_query_time_ms'] > self.config.slow_query_threshold_ms:
+                if query_stats["avg_query_time_ms"] > self.config.slow_query_threshold_ms:
                     logger.warning(f"Query performance degraded: {query_stats['avg_query_time_ms']:.2f}ms average")
 
                 # GHL batch client metrics
-                if hasattr(self.ghl_batch_client, 'get_batch_metrics'):
+                if hasattr(self.ghl_batch_client, "get_batch_metrics"):
                     batch_metrics = await self.ghl_batch_client.get_batch_metrics()
-                    success_rate = batch_metrics['batch_metrics']['success_rate_percent']
+                    success_rate = batch_metrics["batch_metrics"]["success_rate_percent"]
                     if success_rate < 95.0:
                         logger.warning(f"GHL batch success rate low: {success_rate:.1f}%")
 
@@ -287,17 +284,23 @@ class PerformanceStartupService:
                 logger.info("📊 Performance Metrics Summary:")
                 logger.info(f"   Cache Hit Rate: {metrics['cache_performance']['hit_rate_percent']:.1f}%")
                 logger.info(f"   Query Avg Time: {metrics['query_performance']['avg_query_time_ms']:.2f}ms")
-                logger.info(f"   GHL Success Rate: {metrics.get('ghl_performance', {}).get('success_rate_percent', 'N/A')}")
+                logger.info(
+                    f"   GHL Success Rate: {metrics.get('ghl_performance', {}).get('success_rate_percent', 'N/A')}"
+                )
 
                 # Check if we're meeting performance targets
-                cache_hit_rate = metrics['cache_performance']['hit_rate_percent']
-                avg_query_time = metrics['query_performance']['avg_query_time_ms']
+                cache_hit_rate = metrics["cache_performance"]["hit_rate_percent"]
+                avg_query_time = metrics["query_performance"]["avg_query_time_ms"]
 
                 if cache_hit_rate < self.config.target_cache_hit_rate:
-                    logger.warning(f"⚠️  Cache hit rate below target: {cache_hit_rate:.1f}% < {self.config.target_cache_hit_rate}%")
+                    logger.warning(
+                        f"⚠️  Cache hit rate below target: {cache_hit_rate:.1f}% < {self.config.target_cache_hit_rate}%"
+                    )
 
                 if avg_query_time > self.config.target_response_time_ms:
-                    logger.warning(f"⚠️  Query time above target: {avg_query_time:.2f}ms > {self.config.target_response_time_ms}ms")
+                    logger.warning(
+                        f"⚠️  Query time above target: {avg_query_time:.2f}ms > {self.config.target_response_time_ms}ms"
+                    )
 
             except Exception as e:
                 logger.error(f"Performance metrics collection failed: {e}", exc_info=True)
@@ -308,39 +311,41 @@ class PerformanceStartupService:
         """Get comprehensive performance metrics from all services."""
 
         metrics = {
-            'startup_info': {
-                'startup_complete': self.startup_complete,
-                'total_startup_time_ms': (time.time() - self.startup_start_time) * 1000 if self.startup_start_time else 0,
-                'initialization_times': self.initialization_times
+            "startup_info": {
+                "startup_complete": self.startup_complete,
+                "total_startup_time_ms": (time.time() - self.startup_start_time) * 1000
+                if self.startup_start_time
+                else 0,
+                "initialization_times": self.initialization_times,
             },
-            'performance_targets': {
-                'target_response_time_ms': self.config.target_response_time_ms,
-                'target_cache_hit_rate': self.config.target_cache_hit_rate,
-                'target_concurrent_users': self.config.target_concurrent_users
-            }
+            "performance_targets": {
+                "target_response_time_ms": self.config.target_response_time_ms,
+                "target_cache_hit_rate": self.config.target_cache_hit_rate,
+                "target_concurrent_users": self.config.target_concurrent_users,
+            },
         }
 
         try:
             # Cache performance metrics
             cache_stats = await self.cache_service.get_cache_stats()
-            metrics['cache_performance'] = cache_stats.get('performance_metrics', {})
+            metrics["cache_performance"] = cache_stats.get("performance_metrics", {})
 
             # Query performance metrics
             query_stats = await self.query_service.get_performance_stats()
-            metrics['query_performance'] = query_stats
+            metrics["query_performance"] = query_stats
 
             # GHL batch metrics (if available)
-            if hasattr(self.ghl_batch_client, 'get_batch_metrics'):
+            if hasattr(self.ghl_batch_client, "get_batch_metrics"):
                 ghl_metrics = await self.ghl_batch_client.get_batch_metrics()
-                metrics['ghl_performance'] = ghl_metrics['batch_metrics']
+                metrics["ghl_performance"] = ghl_metrics["batch_metrics"]
 
             # Cache warming metrics
             warming_stats = await self.cache_warming_service.get_warming_stats()
-            metrics['cache_warming'] = warming_stats
+            metrics["cache_warming"] = warming_stats
 
         except Exception as e:
             logger.error(f"Error collecting performance metrics: {e}", exc_info=True)
-            metrics['error'] = str(e)
+            metrics["error"] = str(e)
 
         return metrics
 
@@ -374,36 +379,35 @@ class PerformanceStartupService:
     async def get_health_status(self) -> Dict[str, Any]:
         """Get overall health status of all performance services."""
 
-        health_status = {
-            'overall_status': 'healthy',
-            'timestamp': datetime.utcnow().isoformat(),
-            'services': {}
-        }
+        health_status = {"overall_status": "healthy", "timestamp": datetime.utcnow().isoformat(), "services": {}}
 
         # Cache service health
         try:
             cache_health = await self.cache_service.health_check()
-            health_status['services']['cache'] = cache_health
+            health_status["services"]["cache"] = cache_health
         except Exception as e:
-            health_status['services']['cache'] = {'status': 'error', 'error': str(e)}
-            health_status['overall_status'] = 'degraded'
+            health_status["services"]["cache"] = {"status": "error", "error": str(e)}
+            health_status["overall_status"] = "degraded"
 
         # Query service health (basic check)
         try:
             query_stats = await self.query_service.get_performance_stats()
-            health_status['services']['query'] = {
-                'status': 'healthy' if query_stats['avg_query_time_ms'] < self.config.slow_query_threshold_ms else 'degraded',
-                'avg_query_time_ms': query_stats['avg_query_time_ms']
+            health_status["services"]["query"] = {
+                "status": "healthy"
+                if query_stats["avg_query_time_ms"] < self.config.slow_query_threshold_ms
+                else "degraded",
+                "avg_query_time_ms": query_stats["avg_query_time_ms"],
             }
         except Exception as e:
-            health_status['services']['query'] = {'status': 'error', 'error': str(e)}
-            health_status['overall_status'] = 'degraded'
+            health_status["services"]["query"] = {"status": "error", "error": str(e)}
+            health_status["overall_status"] = "degraded"
 
         return health_status
 
 
 # Global service instance
 _performance_startup = None
+
 
 def get_performance_startup_service(config: Optional[PerformanceConfig] = None) -> PerformanceStartupService:
     """Get singleton performance startup service."""
@@ -415,8 +419,7 @@ def get_performance_startup_service(config: Optional[PerformanceConfig] = None) 
 
 # Convenience function for FastAPI startup
 async def initialize_performance_optimizations(
-    tenant_ids: Optional[List[str]] = None,
-    enable_all_features: bool = True
+    tenant_ids: Optional[List[str]] = None, enable_all_features: bool = True
 ) -> Dict[str, Any]:
     """
     Convenience function to initialize all performance optimizations.
@@ -433,7 +436,7 @@ async def initialize_performance_optimizations(
         enable_query_optimization=enable_all_features,
         enable_ghl_batching=enable_all_features,
         enable_health_monitoring=enable_all_features,
-        cache_warming_tenant_ids=tenant_ids
+        cache_warming_tenant_ids=tenant_ids,
     )
 
     service = get_performance_startup_service(config)

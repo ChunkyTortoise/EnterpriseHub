@@ -7,13 +7,14 @@ and neighborhood comparisons for the five core RC neighborhoods.
 
 import logging
 from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.real_time_market_intelligence import (
     get_market_intelligence,
 )
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -26,6 +27,7 @@ router = APIRouter(
 # ---------------------------------------------------------------------------
 # Response Models
 # ---------------------------------------------------------------------------
+
 
 class MarketSnapshotResponse(BaseModel):
     neighborhood: str
@@ -80,6 +82,7 @@ class PriceUpdateRequest(BaseModel):
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
 
 @router.get("/snapshot/{neighborhood}", response_model=MarketSnapshotResponse)
 async def get_market_snapshot(neighborhood: str):

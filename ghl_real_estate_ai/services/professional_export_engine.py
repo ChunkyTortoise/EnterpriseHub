@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 # Data structures
 # ---------------------------------------------------------------------------
 
+
 class ReportFormat(Enum):
     HTML = "html"
     CSV = "csv"
@@ -52,6 +53,7 @@ class ReportType(Enum):
 @dataclass
 class ExportResult:
     """Result of an export/report generation."""
+
     report_id: str
     report_type: ReportType
     format: ReportFormat
@@ -65,6 +67,7 @@ class ExportResult:
 @dataclass
 class CMAComparable:
     """Comparable property for CMA report."""
+
     address: str
     sale_price: int
     sale_date: str
@@ -79,6 +82,7 @@ class CMAComparable:
 @dataclass
 class BrandingConfig:
     """Branding configuration for reports."""
+
     agent_name: str = "Jorge"
     brokerage: str = "Rancho Cucamonga Real Estate"
     phone: str = "(909) 555-0100"
@@ -153,6 +157,7 @@ CMA_REPORT_HTML = """<div class="section">
 # ---------------------------------------------------------------------------
 # Engine
 # ---------------------------------------------------------------------------
+
 
 class ProfessionalExportEngine:
     """
@@ -243,9 +248,7 @@ class ProfessionalExportEngine:
     # Lead export
     # ------------------------------------------------------------------
 
-    async def export_leads_csv(
-        self, leads: List[Dict[str, Any]]
-    ) -> ExportResult:
+    async def export_leads_csv(self, leads: List[Dict[str, Any]]) -> ExportResult:
         """Export leads data as CSV."""
         self._report_counter += 1
         report_id = f"leads_{self._report_counter}_{int(time.time())}"
@@ -315,9 +318,7 @@ class ProfessionalExportEngine:
     # Rendering helpers
     # ------------------------------------------------------------------
 
-    def _render_market_html(
-        self, neighborhood: str, data: Dict[str, Any], rtype: ReportType
-    ) -> str:
+    def _render_market_html(self, neighborhood: str, data: Dict[str, Any], rtype: ReportType) -> str:
         pretty_name = neighborhood.replace("_", " ").title()
         period = "Monthly" if rtype == ReportType.MARKET_MONTHLY else "Weekly"
 
@@ -331,12 +332,14 @@ class ProfessionalExportEngine:
         ]:
             val = data.get(key, 0)
             if key == "appreciation_1yr":
-                display = f"{val*100:.1f}%"
+                display = f"{val * 100:.1f}%"
             elif isinstance(val, int) and val > 1000:
                 display = f"{prefix}{val:,}{suffix}"
             else:
                 display = f"{prefix}{val}{suffix}"
-            metrics_html += f'<div class="metric"><div class="value">{display}</div><div class="label">{label}</div></div>\n'
+            metrics_html += (
+                f'<div class="metric"><div class="value">{display}</div><div class="label">{label}</div></div>\n'
+            )
 
         body = f'<div class="section"><h2>Market Overview — {pretty_name}</h2>\n{metrics_html}</div>'
 
@@ -368,7 +371,7 @@ class ProfessionalExportEngine:
         for key, val in data.items():
             label = key.replace("_", " ").title()
             if key == "appreciation_1yr":
-                lines.append(f"{label}: {val*100:.1f}%")
+                lines.append(f"{label}: {val * 100:.1f}%")
             elif isinstance(val, int) and val > 1000:
                 lines.append(f"{label}: ${val:,}")
             else:
@@ -392,9 +395,7 @@ class ProfessionalExportEngine:
                 f"<td>${adjusted_price:,}</td></tr>\n"
             )
 
-        adjusted_prices = [
-            c.sale_price + sum(c.adjustments.values()) for c in comps
-        ]
+        adjusted_prices = [c.sale_price + sum(c.adjustments.values()) for c in comps]
         if adjusted_prices:
             mid = int(sum(adjusted_prices) / len(adjusted_prices))
             low = min(adjusted_prices)
@@ -467,8 +468,10 @@ class ProfessionalExportEngine:
     @staticmethod
     def _default_market_data(neighborhood: str) -> Dict[str, Any]:
         from ghl_real_estate_ai.services.real_time_market_intelligence import (
-            NEIGHBORHOOD_BASELINES, Neighborhood,
+            NEIGHBORHOOD_BASELINES,
+            Neighborhood,
         )
+
         clean = neighborhood.lower().replace(" ", "_")
         for nb in Neighborhood:
             if nb.value == clean:

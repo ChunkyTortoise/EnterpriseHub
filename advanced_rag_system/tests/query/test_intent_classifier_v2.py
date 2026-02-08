@@ -1,18 +1,18 @@
 """Tests for Intent Classification V2 module."""
 
-import pytest
-import numpy as np
 from datetime import datetime
 
+import numpy as np
+import pytest
+from src.core.exceptions import RetrievalError
 from src.query.intent_classifier_v2 import (
+    ClassifierConfig,
+    ConfidenceCalibrator,
+    IntentClassificationResult,
     IntentClassifierV2,
     IntentType,
-    IntentClassificationResult,
     MultiLabelResult,
-    ConfidenceCalibrator,
-    ClassifierConfig,
 )
-from src.core.exceptions import RetrievalError
 
 
 class TestConfidenceCalibrator:
@@ -125,9 +125,7 @@ class TestIntentClassifierV2:
 
     def test_multi_label_classification(self, classifier):
         """Test multi-label classification."""
-        result = classifier.classify_multi_label(
-            "I'm looking to buy a 3-bedroom house in Etiwanda school district"
-        )
+        result = classifier.classify_multi_label("I'm looking to buy a 3-bedroom house in Etiwanda school district")
 
         assert isinstance(result, MultiLabelResult)
         assert len(result.intents) >= 1
@@ -136,9 +134,7 @@ class TestIntentClassifierV2:
 
     def test_multi_label_with_correlation(self, classifier):
         """Test multi-label classification includes correlations."""
-        result = classifier.classify_multi_label(
-            "Schedule a tour for a house I'm interested in buying"
-        )
+        result = classifier.classify_multi_label("Schedule a tour for a house I'm interested in buying")
 
         assert result.primary_intent in result.intents
         # Check for correlations between related intents
@@ -148,17 +144,13 @@ class TestIntentClassifierV2:
     def test_multi_label_max_labels(self, classifier):
         """Test multi-label respects max labels limit."""
         classifier.config.max_labels = 2
-        result = classifier.classify_multi_label(
-            "I want to buy a house in Rancho Cucamonga with a pool"
-        )
+        result = classifier.classify_multi_label("I want to buy a house in Rancho Cucamonga with a pool")
 
         assert len(result.intents) <= 2
 
     def test_feature_extraction(self, classifier):
         """Test feature extraction."""
-        features = classifier._extract_features(
-            "Show me 3-bedroom homes under $800k in Rancho Cucamonga"
-        )
+        features = classifier._extract_features("Show me 3-bedroom homes under $800k in Rancho Cucamonga")
 
         assert "length" in features
         assert "word_count" in features
@@ -170,14 +162,10 @@ class TestIntentClassifierV2:
 
     def test_intent_correlation(self, classifier):
         """Test intent correlation calculation."""
-        corr = classifier._calculate_intent_correlation(
-            IntentType.BUYING_INTENT, IntentType.PROPERTY_SEARCH
-        )
+        corr = classifier._calculate_intent_correlation(IntentType.BUYING_INTENT, IntentType.PROPERTY_SEARCH)
         assert corr > 0.5  # These intents should be highly correlated
 
-        corr_unrelated = classifier._calculate_intent_correlation(
-            IntentType.BUYING_INTENT, IntentType.SELLING_INTENT
-        )
+        corr_unrelated = classifier._calculate_intent_correlation(IntentType.BUYING_INTENT, IntentType.SELLING_INTENT)
         assert corr_unrelated < corr  # Less correlated
 
     def test_calibrate_confidence(self, classifier):

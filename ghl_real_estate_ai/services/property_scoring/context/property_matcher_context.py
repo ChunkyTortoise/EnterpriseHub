@@ -4,11 +4,11 @@ Orchestrates property scoring using different strategies
 """
 
 import logging
-from typing import Any, Dict, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from ..interfaces.property_scorer import PropertyScorer, ScoringResult
-from ..interfaces.scoring_context import ScoringContext, LeadPreferences
+from ..interfaces.scoring_context import LeadPreferences, ScoringContext
 
 logger = logging.getLogger(__name__)
 
@@ -70,9 +70,9 @@ class PropertyMatcherContext:
         """Get the current scoring strategy"""
         return self._strategy
 
-    def score_property(self, property_data: Dict[str, Any],
-                      lead_preferences: Dict[str, Any],
-                      context: Optional[ScoringContext] = None) -> ScoringResult:
+    def score_property(
+        self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any], context: Optional[ScoringContext] = None
+    ) -> ScoringResult:
         """
         Score a single property using the current strategy
 
@@ -141,10 +141,13 @@ class PropertyMatcherContext:
             logger.error(f"Scoring failed with {self._strategy.name}: {e}")
             raise
 
-    def score_multiple_properties(self, properties: List[Dict[str, Any]],
-                                 lead_preferences: Dict[str, Any],
-                                 context: Optional[ScoringContext] = None,
-                                 limit: Optional[int] = None) -> List[Dict[str, Any]]:
+    def score_multiple_properties(
+        self,
+        properties: List[Dict[str, Any]],
+        lead_preferences: Dict[str, Any],
+        context: Optional[ScoringContext] = None,
+        limit: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
         """
         Score multiple properties and return ranked results
 
@@ -168,12 +171,14 @@ class PropertyMatcherContext:
 
                 # Create enriched property data
                 enriched_property = prop_data.copy()
-                enriched_property.update({
-                    'scoring_result': scoring_result,
-                    'confidence_score': scoring_result,  # Legacy compatibility
-                    'match_score': int(scoring_result.overall_score),  # Legacy compatibility
-                    'match_reasons': scoring_result.reasoning,  # Legacy compatibility
-                })
+                enriched_property.update(
+                    {
+                        "scoring_result": scoring_result,
+                        "confidence_score": scoring_result,  # Legacy compatibility
+                        "match_score": int(scoring_result.overall_score),  # Legacy compatibility
+                        "match_reasons": scoring_result.reasoning,  # Legacy compatibility
+                    }
+                )
 
                 # Apply quality threshold if specified
                 if context and scoring_result.overall_score >= context.quality_threshold * 100:
@@ -186,10 +191,7 @@ class PropertyMatcherContext:
                 continue
 
         # Sort by score (descending)
-        scored_properties.sort(
-            key=lambda x: x['scoring_result'].overall_score,
-            reverse=True
-        )
+        scored_properties.sort(key=lambda x: x["scoring_result"].overall_score, reverse=True)
 
         # Apply limit if specified
         if limit:
@@ -197,10 +199,13 @@ class PropertyMatcherContext:
 
         return scored_properties
 
-    def compare_strategies(self, property_data: Dict[str, Any],
-                          lead_preferences: Dict[str, Any],
-                          strategies: List[PropertyScorer],
-                          context: Optional[ScoringContext] = None) -> Dict[str, ScoringResult]:
+    def compare_strategies(
+        self,
+        property_data: Dict[str, Any],
+        lead_preferences: Dict[str, Any],
+        strategies: List[PropertyScorer],
+        context: Optional[ScoringContext] = None,
+    ) -> Dict[str, ScoringResult]:
         """
         Compare multiple strategies on the same property
 
@@ -234,8 +239,9 @@ class PropertyMatcherContext:
 
         return results
 
-    def get_strategy_recommendations(self, lead_preferences: Dict[str, Any],
-                                   available_strategies: List[PropertyScorer]) -> List[PropertyScorer]:
+    def get_strategy_recommendations(
+        self, lead_preferences: Dict[str, Any], available_strategies: List[PropertyScorer]
+    ) -> List[PropertyScorer]:
         """
         Recommend optimal strategies based on lead preferences
 
@@ -249,24 +255,24 @@ class PropertyMatcherContext:
         recommendations = []
 
         # Analyze lead preferences to determine optimal strategy
-        budget = lead_preferences.get('budget', 0)
-        must_haves = lead_preferences.get('must_haves', [])
-        location_specificity = len(lead_preferences.get('location', '').split())
+        budget = lead_preferences.get("budget", 0)
+        must_haves = lead_preferences.get("must_haves", [])
+        location_specificity = len(lead_preferences.get("location", "").split())
 
         for strategy in available_strategies:
             score = 0
 
             # Score based on strategy capabilities
-            if 'advanced_budget_analysis' in strategy.get_supported_features() and budget > 500_000:
+            if "advanced_budget_analysis" in strategy.get_supported_features() and budget > 500_000:
                 score += 3
 
-            if 'weighted_feature_matching' in strategy.get_supported_features() and len(must_haves) > 2:
+            if "weighted_feature_matching" in strategy.get_supported_features() and len(must_haves) > 2:
                 score += 3
 
-            if 'geographic_scoring' in strategy.get_supported_features() and location_specificity > 1:
+            if "geographic_scoring" in strategy.get_supported_features() and location_specificity > 1:
                 score += 2
 
-            if hasattr(strategy, 'is_trained') and strategy.is_trained:
+            if hasattr(strategy, "is_trained") and strategy.is_trained:
                 score += 2
 
             recommendations.append((strategy, score))
@@ -275,8 +281,7 @@ class PropertyMatcherContext:
         recommendations.sort(key=lambda x: x[1], reverse=True)
         return [strategy for strategy, _ in recommendations]
 
-    def _apply_context_adjustments(self, result: ScoringResult,
-                                  context: ScoringContext) -> ScoringResult:
+    def _apply_context_adjustments(self, result: ScoringResult, context: ScoringContext) -> ScoringResult:
         """Apply context-specific adjustments to scoring result"""
         if not context:
             return result
@@ -284,14 +289,14 @@ class PropertyMatcherContext:
         # Apply weight adjustments if provided
         if context.score_weights:
             # Recalculate overall score with custom weights
-            default_weights = {'budget': 0.35, 'location': 0.30, 'features': 0.25, 'market': 0.10}
+            default_weights = {"budget": 0.35, "location": 0.30, "features": 0.25, "market": 0.10}
             effective_weights = context.get_effective_weights(default_weights)
 
             new_overall_score = (
-                result.budget_score * effective_weights.get('budget', 0.35) / 100 +
-                result.location_score * effective_weights.get('location', 0.30) / 100 +
-                result.feature_score * effective_weights.get('features', 0.25) / 100 +
-                result.market_score * effective_weights.get('market', 0.10) / 100
+                result.budget_score * effective_weights.get("budget", 0.35) / 100
+                + result.location_score * effective_weights.get("location", 0.30) / 100
+                + result.feature_score * effective_weights.get("features", 0.25) / 100
+                + result.market_score * effective_weights.get("market", 0.10) / 100
             ) * 100
 
             result.overall_score = round(new_overall_score, 1)
@@ -299,17 +304,16 @@ class PropertyMatcherContext:
         # Apply feature boosts if provided
         if context.feature_boosts:
             for boost_feature, boost_amount in context.feature_boosts.items():
-                if boost_feature in ' '.join(result.reasoning).lower():
+                if boost_feature in " ".join(result.reasoning).lower():
                     result.overall_score = min(100.0, result.overall_score + boost_amount)
 
         return result
 
-    def _generate_cache_key(self, property_data: Dict[str, Any],
-                           lead_preferences: Dict[str, Any]) -> str:
+    def _generate_cache_key(self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any]) -> str:
         """Generate cache key for scoring result"""
-        prop_id = property_data.get('id', str(hash(str(property_data))))
+        prop_id = property_data.get("id", str(hash(str(property_data))))
         pref_hash = str(hash(str(sorted(lead_preferences.items()))))
-        strategy_name = self._strategy.name if self._strategy else 'unknown'
+        strategy_name = self._strategy.name if self._strategy else "unknown"
         return f"{strategy_name}:{prop_id}:{pref_hash}"
 
     def _is_cache_valid(self, cached_result: ScoringResult, cache_ttl: int) -> bool:
@@ -324,37 +328,35 @@ class PropertyMatcherContext:
         except Exception:
             return False
 
-    def _update_performance_metrics(self, strategy_name: str,
-                                   scoring_time: float, success: bool) -> None:
+    def _update_performance_metrics(self, strategy_name: str, scoring_time: float, success: bool) -> None:
         """Update performance metrics for strategy"""
         if strategy_name not in self._performance_metrics:
             self._performance_metrics[strategy_name] = {
-                'total_calls': 0,
-                'successful_calls': 0,
-                'total_time': 0.0,
-                'avg_time': 0.0,
-                'success_rate': 0.0
+                "total_calls": 0,
+                "successful_calls": 0,
+                "total_time": 0.0,
+                "avg_time": 0.0,
+                "success_rate": 0.0,
             }
 
         metrics = self._performance_metrics[strategy_name]
-        metrics['total_calls'] += 1
-        metrics['total_time'] += scoring_time
+        metrics["total_calls"] += 1
+        metrics["total_time"] += scoring_time
 
         if success:
-            metrics['successful_calls'] += 1
+            metrics["successful_calls"] += 1
 
-        metrics['avg_time'] = metrics['total_time'] / metrics['total_calls']
-        metrics['success_rate'] = metrics['successful_calls'] / metrics['total_calls']
+        metrics["avg_time"] = metrics["total_time"] / metrics["total_calls"]
+        metrics["success_rate"] = metrics["successful_calls"] / metrics["total_calls"]
 
-    def _record_strategy_usage(self, property_data: Dict[str, Any],
-                              result: ScoringResult) -> None:
+    def _record_strategy_usage(self, property_data: Dict[str, Any], result: ScoringResult) -> None:
         """Record strategy usage for analytics"""
         usage_record = {
-            'timestamp': datetime.now().isoformat(),
-            'strategy_name': self._strategy.name,
-            'property_id': property_data.get('id', 'unknown'),
-            'overall_score': result.overall_score,
-            'confidence_level': result.confidence_level.value
+            "timestamp": datetime.now().isoformat(),
+            "strategy_name": self._strategy.name,
+            "property_id": property_data.get("id", "unknown"),
+            "overall_score": result.overall_score,
+            "confidence_level": result.confidence_level.value,
         }
 
         self._strategy_history.append(usage_record)
@@ -375,15 +377,15 @@ class PropertyMatcherContext:
         # Aggregate statistics
         strategy_counts = {}
         for record in self._strategy_history:
-            strategy_name = record['strategy_name']
+            strategy_name = record["strategy_name"]
             if strategy_name not in strategy_counts:
                 strategy_counts[strategy_name] = 0
             strategy_counts[strategy_name] += 1
 
         return {
-            'total_scorings': len(self._strategy_history),
-            'strategy_distribution': strategy_counts,
-            'recent_activity': self._strategy_history[-10:] if self._strategy_history else []
+            "total_scorings": len(self._strategy_history),
+            "strategy_distribution": strategy_counts,
+            "recent_activity": self._strategy_history[-10:] if self._strategy_history else [],
         }
 
     def clear_cache(self) -> None:
@@ -401,28 +403,23 @@ class PropertyMatcherContext:
         Returns:
             Validation results
         """
-        validation_result = {
-            'is_valid': True,
-            'errors': [],
-            'warnings': [],
-            'metadata': strategy.get_metadata()
-        }
+        validation_result = {"is_valid": True, "errors": [], "warnings": [], "metadata": strategy.get_metadata()}
 
         try:
             # Check if strategy supports required methods
-            required_methods = ['calculate_score', 'validate_inputs']
+            required_methods = ["calculate_score", "validate_inputs"]
             for method in required_methods:
                 if not hasattr(strategy, method):
-                    validation_result['errors'].append(f"Missing required method: {method}")
+                    validation_result["errors"].append(f"Missing required method: {method}")
 
             # Check if strategy can handle basic inputs
-            test_property = {'price': 500000, 'bedrooms': 3}
-            test_preferences = {'budget': 600000}
+            test_property = {"price": 500000, "bedrooms": 3}
+            test_preferences = {"budget": 600000}
 
             try:
                 strategy.validate_inputs(test_property, test_preferences)
             except Exception as e:
-                validation_result['errors'].append(f"Input validation failed: {e}")
+                validation_result["errors"].append(f"Input validation failed: {e}")
 
             # Performance check - warm up should complete quickly
             start_time = datetime.now()
@@ -430,11 +427,11 @@ class PropertyMatcherContext:
             warm_up_time = (datetime.now() - start_time).total_seconds()
 
             if warm_up_time > 5.0:  # More than 5 seconds
-                validation_result['warnings'].append(f"Slow warm-up time: {warm_up_time:.2f}s")
+                validation_result["warnings"].append(f"Slow warm-up time: {warm_up_time:.2f}s")
 
         except Exception as e:
-            validation_result['errors'].append(f"Validation error: {e}")
+            validation_result["errors"].append(f"Validation error: {e}")
 
-        validation_result['is_valid'] = len(validation_result['errors']) == 0
+        validation_result["is_valid"] = len(validation_result["errors"]) == 0
 
         return validation_result

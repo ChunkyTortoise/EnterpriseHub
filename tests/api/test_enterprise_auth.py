@@ -5,18 +5,14 @@ Comprehensive tests for SSO authentication, multi-tenant access control,
 and corporate user provisioning for Fortune 500 partnerships.
 """
 
-import pytest
-import jwt
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import jwt
+import pytest
 from fastapi import HTTPException
 
-from ghl_real_estate_ai.api.enterprise.auth import (
-    EnterpriseAuthService,
-    TenantRole,
-    SSOProvider,
-    EnterpriseAuthError
-)
+from ghl_real_estate_ai.api.enterprise.auth import EnterpriseAuthError, EnterpriseAuthService, SSOProvider, TenantRole
 
 
 @pytest.fixture
@@ -42,14 +38,11 @@ def valid_tenant_data():
         "company_name": "TechCorp Industries",
         "domain": "techcorp.com",
         "sso_provider": SSOProvider.AZURE_AD,
-        "sso_config": {
-            "tenant_id": "azure-tenant-123",
-            "client_id": "azure-client-456"
-        },
+        "sso_config": {"tenant_id": "azure-tenant-123", "client_id": "azure-client-456"},
         "partnership_id": "partnership_123",
         "admin_email": "admin@techcorp.com",
         "max_users": 500,
-        "require_mfa": True
+        "require_mfa": True,
     }
 
 
@@ -61,7 +54,7 @@ def valid_user_info():
         "email": "john.doe@techcorp.com",
         "name": "John Doe",
         "given_name": "John",
-        "family_name": "Doe"
+        "family_name": "Doe",
     }
 
 
@@ -96,21 +89,19 @@ class TestEnterpriseAuthService:
     @pytest.mark.asyncio
     async def test_create_enterprise_tenant_success(self, auth_service, mock_cache_service, valid_tenant_data):
         """Test successful enterprise tenant creation."""
-        with patch.object(auth_service, 'cache_service', mock_cache_service):
+        with patch.object(auth_service, "cache_service", mock_cache_service):
             # Mock domain check
             auth_service._is_domain_already_registered = AsyncMock(return_value=False)
 
             # Mock secret generation
-            auth_service._generate_tenant_secrets = AsyncMock(return_value={
-                "client_secret": "secret_123",
-                "api_key": "api_key_123"
-            })
+            auth_service._generate_tenant_secrets = AsyncMock(
+                return_value={"client_secret": "secret_123", "api_key": "api_key_123"}
+            )
 
             # Mock SSO setup
-            auth_service._setup_sso_configuration = AsyncMock(return_value={
-                "provider": SSOProvider.AZURE_AD,
-                "setup_status": "pending"
-            })
+            auth_service._setup_sso_configuration = AsyncMock(
+                return_value={"provider": SSOProvider.AZURE_AD, "setup_status": "pending"}
+            )
 
             result = await auth_service.create_enterprise_tenant(valid_tenant_data)
 
@@ -141,7 +132,7 @@ class TestEnterpriseAuthService:
     @pytest.mark.asyncio
     async def test_create_tenant_domain_already_exists(self, auth_service, valid_tenant_data):
         """Test tenant creation with already registered domain."""
-        with patch.object(auth_service, '_is_domain_already_registered', AsyncMock(return_value=True)):
+        with patch.object(auth_service, "_is_domain_already_registered", AsyncMock(return_value=True)):
             with pytest.raises(EnterpriseAuthError) as exc_info:
                 await auth_service.create_enterprise_tenant(valid_tenant_data)
 
@@ -162,13 +153,9 @@ class TestEnterpriseAuthService:
         """Test retrieving tenant by domain when found."""
         domain = "techcorp.com"
         tenant_id = "tenant_123"
-        tenant_config = {
-            "tenant_id": tenant_id,
-            "company_name": "TechCorp",
-            "domain": domain
-        }
+        tenant_config = {"tenant_id": tenant_id, "company_name": "TechCorp", "domain": domain}
 
-        with patch.object(auth_service, 'cache_service', mock_cache_service):
+        with patch.object(auth_service, "cache_service", mock_cache_service):
             mock_cache_service.get.side_effect = [tenant_id, tenant_config]
 
             result = await auth_service.get_tenant_by_domain(domain)
@@ -180,7 +167,7 @@ class TestEnterpriseAuthService:
     @pytest.mark.asyncio
     async def test_get_tenant_by_domain_not_found(self, auth_service, mock_cache_service):
         """Test retrieving tenant by domain when not found."""
-        with patch.object(auth_service, 'cache_service', mock_cache_service):
+        with patch.object(auth_service, "cache_service", mock_cache_service):
             mock_cache_service.get.return_value = None
 
             result = await auth_service.get_tenant_by_domain("nonexistent.com")
@@ -195,17 +182,16 @@ class TestEnterpriseAuthService:
         tenant_config = {
             "tenant_id": "tenant_123",
             "sso_provider": SSOProvider.AZURE_AD,
-            "sso_config": {
-                "tenant_id": "azure-tenant-123",
-                "client_id": "azure-client-456"
-            }
+            "sso_config": {"tenant_id": "azure-tenant-123", "client_id": "azure-client-456"},
         }
 
-        with patch.object(auth_service, 'cache_service', mock_cache_service):
+        with patch.object(auth_service, "cache_service", mock_cache_service):
             auth_service.get_tenant_by_domain = AsyncMock(return_value=tenant_config)
 
             # Mock URL building
-            auth_service._build_authorization_url = AsyncMock(return_value="https://login.microsoftonline.com/authorize?...")
+            auth_service._build_authorization_url = AsyncMock(
+                return_value="https://login.microsoftonline.com/authorize?..."
+            )
 
             result = await auth_service.initiate_sso_login(domain, redirect_uri)
 
@@ -223,7 +209,7 @@ class TestEnterpriseAuthService:
         domain = "nonexistent.com"
         redirect_uri = "https://app.example.com/callback"
 
-        with patch.object(auth_service, 'get_tenant_by_domain', AsyncMock(return_value=None)):
+        with patch.object(auth_service, "get_tenant_by_domain", AsyncMock(return_value=None)):
             with pytest.raises(EnterpriseAuthError) as exc_info:
                 await auth_service.initiate_sso_login(domain, redirect_uri)
 
@@ -239,24 +225,22 @@ class TestEnterpriseAuthService:
             "tenant_id": "tenant_123",
             "domain": "techcorp.com",
             "redirect_uri": "https://app.example.com/callback",
-            "provider": SSOProvider.AZURE_AD
+            "provider": SSOProvider.AZURE_AD,
         }
 
         tenant_config = {
             "tenant_id": "tenant_123",
             "sso_provider": SSOProvider.AZURE_AD,
             "sso_config": {"client_id": "azure-client-456"},
-            "allowed_domains": ["techcorp.com"]
+            "allowed_domains": ["techcorp.com"],
         }
 
-        with patch.object(auth_service, 'cache_service', mock_cache_service):
+        with patch.object(auth_service, "cache_service", mock_cache_service):
             # Mock SSO session retrieval
             mock_cache_service.get.side_effect = [sso_session, tenant_config]
 
             # Mock token exchange
-            auth_service._exchange_code_for_tokens = AsyncMock(return_value={
-                "access_token": "access_token_123"
-            })
+            auth_service._exchange_code_for_tokens = AsyncMock(return_value={"access_token": "access_token_123"})
 
             # Mock user info retrieval
             auth_service._get_user_info_from_sso = AsyncMock(return_value=valid_user_info)
@@ -265,11 +249,9 @@ class TestEnterpriseAuthService:
             auth_service._validate_user_domain = MagicMock(return_value=True)
 
             # Mock user provisioning
-            auth_service._provision_enterprise_user = AsyncMock(return_value={
-                "user_id": "user_123",
-                "email": "john.doe@techcorp.com",
-                "roles": [TenantRole.EMPLOYEE]
-            })
+            auth_service._provision_enterprise_user = AsyncMock(
+                return_value={"user_id": "user_123", "email": "john.doe@techcorp.com", "roles": [TenantRole.EMPLOYEE]}
+            )
 
             # Mock token generation
             auth_service._generate_enterprise_token = AsyncMock(return_value="jwt_token_123")
@@ -284,7 +266,7 @@ class TestEnterpriseAuthService:
     @pytest.mark.asyncio
     async def test_handle_sso_callback_invalid_state(self, auth_service, mock_cache_service):
         """Test SSO callback with invalid state token."""
-        with patch.object(auth_service, 'cache_service', mock_cache_service):
+        with patch.object(auth_service, "cache_service", mock_cache_service):
             mock_cache_service.get.return_value = None
 
             with pytest.raises(EnterpriseAuthError) as exc_info:
@@ -295,20 +277,14 @@ class TestEnterpriseAuthService:
     @pytest.mark.asyncio
     async def test_handle_sso_callback_unauthorized_domain(self, auth_service, mock_cache_service, valid_user_info):
         """Test SSO callback with unauthorized user domain."""
-        sso_session = {
-            "tenant_id": "tenant_123",
-            "provider": SSOProvider.AZURE_AD
-        }
+        sso_session = {"tenant_id": "tenant_123", "provider": SSOProvider.AZURE_AD}
 
-        tenant_config = {
-            "tenant_id": "tenant_123",
-            "allowed_domains": ["techcorp.com"]
-        }
+        tenant_config = {"tenant_id": "tenant_123", "allowed_domains": ["techcorp.com"]}
 
         # User from unauthorized domain
         valid_user_info["email"] = "attacker@evil.com"
 
-        with patch.object(auth_service, 'cache_service', mock_cache_service):
+        with patch.object(auth_service, "cache_service", mock_cache_service):
             mock_cache_service.get.side_effect = [sso_session, tenant_config]
 
             # Mock token exchange and user info
@@ -326,28 +302,22 @@ class TestEnterpriseAuthService:
         """Test successful enterprise token validation."""
         user_session = {
             "session_id": "session_123",
-            "user": {
-                "user_id": "user_123",
-                "email": "john.doe@techcorp.com"
-            },
+            "user": {"user_id": "user_123", "email": "john.doe@techcorp.com"},
             "tenant_id": "tenant_123",
-            "permissions": ["view_analytics"]
+            "permissions": ["view_analytics"],
         }
 
-        tenant_config = {
-            "tenant_id": "tenant_123",
-            "status": "active"
-        }
+        tenant_config = {"tenant_id": "tenant_123", "status": "active"}
 
         # Create a valid JWT token
         payload = {
             "sub": "user_123",
             "session_id": "session_123",
-            "exp": datetime.now(timezone.utc) + timedelta(hours=8)
+            "exp": datetime.now(timezone.utc) + timedelta(hours=8),
         }
         token = jwt.encode(payload, auth_service.jwt_secret, algorithm=auth_service.jwt_algorithm)
 
-        with patch.object(auth_service, 'cache_service', mock_cache_service):
+        with patch.object(auth_service, "cache_service", mock_cache_service):
             mock_cache_service.get.side_effect = [user_session, tenant_config]
 
             result = await auth_service.validate_enterprise_token(token)
@@ -363,7 +333,7 @@ class TestEnterpriseAuthService:
         payload = {
             "sub": "user_123",
             "session_id": "session_123",
-            "exp": datetime.now(timezone.utc) - timedelta(hours=1)  # Expired
+            "exp": datetime.now(timezone.utc) - timedelta(hours=1),  # Expired
         }
         expired_token = jwt.encode(payload, auth_service.jwt_secret, algorithm=auth_service.jwt_algorithm)
 
@@ -378,11 +348,11 @@ class TestEnterpriseAuthService:
         payload = {
             "sub": "user_123",
             "session_id": "nonexistent_session",
-            "exp": datetime.now(timezone.utc) + timedelta(hours=8)
+            "exp": datetime.now(timezone.utc) + timedelta(hours=8),
         }
         token = jwt.encode(payload, auth_service.jwt_secret, algorithm=auth_service.jwt_algorithm)
 
-        with patch.object(auth_service, 'cache_service', mock_cache_service):
+        with patch.object(auth_service, "cache_service", mock_cache_service):
             mock_cache_service.get.return_value = None
 
             with pytest.raises(EnterpriseAuthError) as exc_info:
@@ -399,11 +369,11 @@ class TestEnterpriseAuthService:
         payload = {
             "sub": "user_123",
             "session_id": "session_123",
-            "exp": datetime.now(timezone.utc) + timedelta(hours=8)
+            "exp": datetime.now(timezone.utc) + timedelta(hours=8),
         }
         token = jwt.encode(payload, auth_service.jwt_secret, algorithm=auth_service.jwt_algorithm)
 
-        with patch.object(auth_service, 'cache_service', mock_cache_service):
+        with patch.object(auth_service, "cache_service", mock_cache_service):
             mock_cache_service.get.side_effect = [user_session, inactive_tenant]
 
             with pytest.raises(EnterpriseAuthError) as exc_info:
@@ -430,16 +400,12 @@ class TestEnterpriseAuthService:
             "first_name": "John",
             "last_name": "Doe",
             "department": "Engineering",
-            "roles": [TenantRole.EMPLOYEE]
+            "roles": [TenantRole.EMPLOYEE],
         }
 
-        tenant_config = {
-            "tenant_id": tenant_id,
-            "allowed_domains": ["techcorp.com"],
-            "require_mfa": True
-        }
+        tenant_config = {"tenant_id": tenant_id, "allowed_domains": ["techcorp.com"], "require_mfa": True}
 
-        with patch.object(auth_service, 'cache_service', mock_cache_service):
+        with patch.object(auth_service, "cache_service", mock_cache_service):
             mock_cache_service.get.side_effect = [tenant_config, None]  # Tenant found, user not found
 
             # Mock domain validation
@@ -460,32 +426,25 @@ class TestEnterpriseAuthService:
     @pytest.mark.asyncio
     async def test_provision_user_tenant_not_found(self, auth_service, mock_cache_service):
         """Test user provisioning with non-existent tenant."""
-        with patch.object(auth_service, 'cache_service', mock_cache_service):
+        with patch.object(auth_service, "cache_service", mock_cache_service):
             mock_cache_service.get.return_value = None
 
             with pytest.raises(EnterpriseAuthError) as exc_info:
-                await auth_service.provision_enterprise_user(
-                    "nonexistent_tenant", "user@company.com", {}
-                )
+                await auth_service.provision_enterprise_user("nonexistent_tenant", "user@company.com", {})
 
             assert exc_info.value.error_code == "TENANT_NOT_FOUND"
 
     @pytest.mark.asyncio
     async def test_provision_user_unauthorized_domain(self, auth_service, mock_cache_service):
         """Test user provisioning with unauthorized domain."""
-        tenant_config = {
-            "tenant_id": "tenant_123",
-            "allowed_domains": ["techcorp.com"]
-        }
+        tenant_config = {"tenant_id": "tenant_123", "allowed_domains": ["techcorp.com"]}
 
-        with patch.object(auth_service, 'cache_service', mock_cache_service):
+        with patch.object(auth_service, "cache_service", mock_cache_service):
             mock_cache_service.get.return_value = tenant_config
             auth_service._validate_user_domain = MagicMock(return_value=False)
 
             with pytest.raises(EnterpriseAuthError) as exc_info:
-                await auth_service.provision_enterprise_user(
-                    "tenant_123", "user@unauthorized.com", {}
-                )
+                await auth_service.provision_enterprise_user("tenant_123", "user@unauthorized.com", {})
 
             assert exc_info.value.error_code == "USER_DOMAIN_NOT_AUTHORIZED"
 
@@ -496,19 +455,15 @@ class TestEnterpriseAuthService:
         user_email = "john.doe@techcorp.com"
         new_roles = [TenantRole.RELOCATION_MANAGER]
 
-        existing_user = {
-            "user_id": "user_123",
-            "email": user_email,
-            "roles": [TenantRole.EMPLOYEE]
-        }
+        existing_user = {"user_id": "user_123", "email": user_email, "roles": [TenantRole.EMPLOYEE]}
 
-        with patch.object(auth_service, 'cache_service', mock_cache_service):
+        with patch.object(auth_service, "cache_service", mock_cache_service):
             mock_cache_service.get.return_value = existing_user
 
             # Mock permission calculation
-            auth_service._calculate_user_permissions = MagicMock(return_value=[
-                "manage_relocations", "view_employee_data"
-            ])
+            auth_service._calculate_user_permissions = MagicMock(
+                return_value=["manage_relocations", "view_employee_data"]
+            )
 
             # Mock session invalidation
             auth_service._invalidate_user_sessions = AsyncMock()
@@ -521,13 +476,11 @@ class TestEnterpriseAuthService:
     @pytest.mark.asyncio
     async def test_update_user_roles_user_not_found(self, auth_service, mock_cache_service):
         """Test user role update with non-existent user."""
-        with patch.object(auth_service, 'cache_service', mock_cache_service):
+        with patch.object(auth_service, "cache_service", mock_cache_service):
             mock_cache_service.get.return_value = None
 
             with pytest.raises(EnterpriseAuthError) as exc_info:
-                await auth_service.update_user_roles(
-                    "tenant_123", "nonexistent@company.com", [TenantRole.EMPLOYEE]
-                )
+                await auth_service.update_user_roles("tenant_123", "nonexistent@company.com", [TenantRole.EMPLOYEE])
 
             assert exc_info.value.error_code == "USER_NOT_FOUND"
 
@@ -550,14 +503,11 @@ class TestEnterpriseAuthService:
 
     def test_calculate_user_permissions_multiple_roles(self, auth_service):
         """Test permission calculation for multiple roles."""
-        permissions = auth_service._calculate_user_permissions([
-            TenantRole.EMPLOYEE,
-            TenantRole.RELOCATION_MANAGER
-        ])
+        permissions = auth_service._calculate_user_permissions([TenantRole.EMPLOYEE, TenantRole.RELOCATION_MANAGER])
 
         # Should have permissions from both roles
         assert "view_own_relocation" in permissions  # From employee
-        assert "manage_relocations" in permissions   # From relocation manager
+        assert "manage_relocations" in permissions  # From relocation manager
 
     def test_validate_user_domain_valid(self, auth_service):
         """Test user domain validation with valid domain."""
@@ -573,17 +523,11 @@ class TestEnterpriseAuthService:
     @pytest.mark.asyncio
     async def test_generate_enterprise_token(self, auth_service, mock_cache_service):
         """Test enterprise JWT token generation."""
-        user = {
-            "user_id": "user_123",
-            "email": "john.doe@techcorp.com",
-            "tenant_id": "tenant_123"
-        }
+        user = {"user_id": "user_123", "email": "john.doe@techcorp.com", "tenant_id": "tenant_123"}
 
-        tenant_config = {
-            "session_timeout_hours": 8
-        }
+        tenant_config = {"session_timeout_hours": 8}
 
-        with patch.object(auth_service, 'cache_service', mock_cache_service):
+        with patch.object(auth_service, "cache_service", mock_cache_service):
             token = await auth_service._generate_enterprise_token(user, tenant_config)
 
             # Decode and verify token
@@ -597,17 +541,12 @@ class TestEnterpriseAuthService:
     def test_build_authorization_url_azure_ad(self, auth_service):
         """Test building authorization URL for Azure AD."""
         provider = SSOProvider.AZURE_AD
-        sso_config = {
-            "tenant_id": "azure-tenant-123",
-            "client_id": "azure-client-456"
-        }
+        sso_config = {"tenant_id": "azure-tenant-123", "client_id": "azure-client-456"}
         state = "state_token"
         nonce = "nonce_value"
         redirect_uri = "https://app.example.com/callback"
 
-        url = asyncio.run(auth_service._build_authorization_url(
-            provider, sso_config, state, nonce, redirect_uri
-        ))
+        url = asyncio.run(auth_service._build_authorization_url(provider, sso_config, state, nonce, redirect_uri))
 
         assert "login.microsoftonline.com" in url
         assert "azure-tenant-123" in url
@@ -618,17 +557,12 @@ class TestEnterpriseAuthService:
     def test_build_authorization_url_okta(self, auth_service):
         """Test building authorization URL for Okta."""
         provider = SSOProvider.OKTA
-        sso_config = {
-            "domain": "company",
-            "client_id": "okta-client-789"
-        }
+        sso_config = {"domain": "company", "client_id": "okta-client-789"}
         state = "state_token"
         nonce = "nonce_value"
         redirect_uri = "https://app.example.com/callback"
 
-        url = asyncio.run(auth_service._build_authorization_url(
-            provider, sso_config, state, nonce, redirect_uri
-        ))
+        url = asyncio.run(auth_service._build_authorization_url(provider, sso_config, state, nonce, redirect_uri))
 
         assert "company.okta.com" in url
         assert f"client_id={sso_config['client_id']}" in url
@@ -645,11 +579,13 @@ class TestFastAPIDependencies:
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="valid_token")
 
         # Mock token validation
-        auth_service.validate_enterprise_token = AsyncMock(return_value={
-            "user": {"user_id": "user_123"},
-            "tenant": {"tenant_id": "tenant_123"},
-            "permissions": ["view_analytics"]
-        })
+        auth_service.validate_enterprise_token = AsyncMock(
+            return_value={
+                "user": {"user_id": "user_123"},
+                "tenant": {"tenant_id": "tenant_123"},
+                "permissions": ["view_analytics"],
+            }
+        )
 
         result = await auth_service.get_current_enterprise_user(credentials)
 

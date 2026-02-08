@@ -7,28 +7,39 @@ Covers:
 - SendGrid email with PDF attachment
 - Fallback scenarios (no email, PDF failure, SendGrid failure, no client)
 """
-import base64
-import pytest
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, patch, MagicMock
 
+import base64
+from datetime import datetime, timezone
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
+from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
 from ghl_real_estate_ai.models.cma import (
-    CMAReport, CMAProperty, Comparable, MarketContext,
+    CMAProperty,
+    CMAReport,
+    Comparable,
+    MarketContext,
 )
 from ghl_real_estate_ai.models.lead_scoring import (
-    LeadIntentProfile, FinancialReadinessScore, PsychologicalCommitmentScore,
-    MotivationSignals, TimelineCommitment, ConditionRealism, PriceResponsiveness,
+    ConditionRealism,
+    FinancialReadinessScore,
+    LeadIntentProfile,
+    MotivationSignals,
+    PriceResponsiveness,
+    PsychologicalCommitmentScore,
+    TimelineCommitment,
 )
 from ghl_real_estate_ai.utils.pdf_renderer import (
-    PDFRenderer, PDFGenerationError,
+    PDFGenerationError,
+    PDFRenderer,
 )
-from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
 from tests.mocks.external_services import MockSendGridClient
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def sample_cma_report() -> CMAReport:
@@ -36,29 +47,42 @@ def sample_cma_report() -> CMAReport:
     return CMAReport(
         subject_property=CMAProperty(
             address="1234 Haven Ave, Rancho Cucamonga, CA 91730",
-            beds=4, baths=2.5, sqft=2200, year_built=2005,
+            beds=4,
+            baths=2.5,
+            sqft=2200,
+            year_built=2005,
             condition="Good",
         ),
         comparables=[
             Comparable(
                 address="1240 Haven Ave",
                 sale_date="2025-12-01",
-                sale_price=750000, sqft=2100, beds=4, baths=2.0,
-                price_per_sqft=357.14, adjustment_percent=2.0,
+                sale_price=750000,
+                sqft=2100,
+                beds=4,
+                baths=2.0,
+                price_per_sqft=357.14,
+                adjustment_percent=2.0,
                 adjusted_value=765000,
             ),
             Comparable(
                 address="1250 Haven Ave",
                 sale_date="2025-11-15",
-                sale_price=780000, sqft=2300, beds=4, baths=3.0,
-                price_per_sqft=339.13, adjustment_percent=-1.5,
+                sale_price=780000,
+                sqft=2300,
+                beds=4,
+                baths=3.0,
+                price_per_sqft=339.13,
+                adjustment_percent=-1.5,
                 adjusted_value=768300,
             ),
         ],
         market_context=MarketContext(
             market_name="Rancho Cucamonga, CA",
-            price_trend=3.2, dom_average=28,
-            inventory_level=145, zillow_zestimate=740000,
+            price_trend=3.2,
+            dom_average=28,
+            inventory_level=145,
+            zillow_zestimate=740000,
         ),
         estimated_value=760000,
         value_range_low=740000,
@@ -92,13 +116,15 @@ def mock_intent_profile() -> LeadIntentProfile:
     )
     return LeadIntentProfile(
         lead_id="lead_d14_test",
-        frs=frs, pcs=pcs,
+        frs=frs,
+        pcs=pcs,
         next_best_action="Send CMA",
     )
 
 
-def _build_day14_state(intent_profile, contact_email="buyer@example.com",
-                       property_address="1234 Haven Ave, Rancho Cucamonga, CA 91730"):
+def _build_day14_state(
+    intent_profile, contact_email="buyer@example.com", property_address="1234 Haven Ave, Rancho Cucamonga, CA 91730"
+):
     """Construct a minimal LeadFollowUpState dict for Day 14."""
     return {
         "lead_id": "lead_d14_test",
@@ -133,6 +159,7 @@ def _build_day14_state(intent_profile, contact_email="buyer@example.com",
 # PDF Renderer Tests
 # ---------------------------------------------------------------------------
 
+
 class TestPDFRenderer:
     """Unit tests for the new PDFRenderer methods."""
 
@@ -164,6 +191,7 @@ class TestPDFRenderer:
 # Day 14 Email Integration Tests
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 class TestDay14EmailWithAttachment:
     """Integration tests for the Day 14 CMA email attachment flow."""
@@ -187,8 +215,10 @@ class TestDay14EmailWithAttachment:
             patch("ghl_real_estate_ai.agents.lead_bot.get_lead_scheduler"),
             patch("ghl_real_estate_ai.agents.lead_bot.get_event_publisher"),
             patch("ghl_real_estate_ai.agents.lead_bot.RetellClient"),
-            patch("ghl_real_estate_ai.services.national_market_intelligence.get_national_market_intelligence",
-                  return_value=MagicMock()),
+            patch(
+                "ghl_real_estate_ai.services.national_market_intelligence.get_national_market_intelligence",
+                return_value=MagicMock(),
+            ),
         )
 
     def _build_bot(self, ghl_client, sendgrid_client, patches):
@@ -197,10 +227,12 @@ class TestDay14EmailWithAttachment:
 
         # Configure ghost engine to return a valid action dict
         ghost_engine = AsyncMock()
-        ghost_engine.process_lead_step = AsyncMock(return_value={
-            "content": "Here's your complimentary CMA report!",
-            "action_type": "email",
-        })
+        ghost_engine.process_lead_step = AsyncMock(
+            return_value={
+                "content": "Here's your complimentary CMA report!",
+                "action_type": "email",
+            }
+        )
         p_ghost.return_value = ghost_engine
 
         # Sequence service
@@ -223,7 +255,11 @@ class TestDay14EmailWithAttachment:
         return bot, seq_svc, p_sync
 
     async def test_day14_email_with_attachment(
-        self, mock_ghl, mock_sendgrid, mock_intent_profile, sample_cma_report,
+        self,
+        mock_ghl,
+        mock_sendgrid,
+        mock_intent_profile,
+        sample_cma_report,
     ):
         """Happy path: CMA PDF generated and emailed via SendGrid."""
         patches = self._patch_services()
@@ -261,7 +297,10 @@ class TestDay14EmailWithAttachment:
                 p.stop()
 
     async def test_day14_fallback_no_email(
-        self, mock_ghl, mock_sendgrid, mock_intent_profile,
+        self,
+        mock_ghl,
+        mock_sendgrid,
+        mock_intent_profile,
     ):
         """When contact_email is None, PDF step is skipped."""
         patches = self._patch_services()
@@ -281,16 +320,17 @@ class TestDay14EmailWithAttachment:
                 p.stop()
 
     async def test_day14_fallback_pdf_failure(
-        self, mock_ghl, mock_sendgrid, mock_intent_profile,
+        self,
+        mock_ghl,
+        mock_sendgrid,
+        mock_intent_profile,
     ):
         """When PDF generation fails, GHL email still sends, cma_attached=False."""
         patches = self._patch_services()
         ctxs = [p.start() for p in patches]
         try:
             bot, seq_svc, _ = self._build_bot(mock_ghl, mock_sendgrid, ctxs)
-            bot.cma_generator.generate_report = AsyncMock(
-                side_effect=PDFGenerationError("render failed")
-            )
+            bot.cma_generator.generate_report = AsyncMock(side_effect=PDFGenerationError("render failed"))
 
             state = _build_day14_state(mock_intent_profile)
             result = await bot.send_day_14_email(state)
@@ -305,7 +345,10 @@ class TestDay14EmailWithAttachment:
                 p.stop()
 
     async def test_day14_fallback_sendgrid_failure(
-        self, mock_ghl, mock_intent_profile, sample_cma_report,
+        self,
+        mock_ghl,
+        mock_intent_profile,
+        sample_cma_report,
     ):
         """When SendGrid raises, GHL email still sends, cma_attached=False."""
         failing_sg = AsyncMock()
@@ -327,7 +370,9 @@ class TestDay14EmailWithAttachment:
                 p.stop()
 
     async def test_day14_no_sendgrid_client(
-        self, mock_ghl, mock_intent_profile,
+        self,
+        mock_ghl,
+        mock_intent_profile,
     ):
         """Bot works without SendGrid configured (sendgrid_client=None)."""
         patches = self._patch_services()
@@ -356,7 +401,10 @@ class TestDay14EmailWithAttachment:
         assert "EnterpriseHub" in html
 
     async def test_day14_fallback_no_property_address(
-        self, mock_ghl, mock_sendgrid, mock_intent_profile,
+        self,
+        mock_ghl,
+        mock_sendgrid,
+        mock_intent_profile,
     ):
         """When property_address is None, PDF step is skipped."""
         patches = self._patch_services()

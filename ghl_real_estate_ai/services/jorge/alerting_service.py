@@ -38,9 +38,9 @@ import smtplib
 import time
 import uuid
 from dataclasses import dataclass, field
+from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import aiohttp
@@ -133,7 +133,8 @@ class AlertChannelConfig:
             smtp_port=int(os.getenv("ALERT_EMAIL_SMTP_PORT", os.getenv("ALERT_SMTP_PORT", "587"))),
             smtp_user=os.getenv("ALERT_EMAIL_SMTP_USER", os.getenv("ALERT_SMTP_USER", "")),
             smtp_password=os.getenv(
-                "ALERT_EMAIL_SMTP_PASSWORD", os.getenv("ALERT_SMTP_PASSWORD", ""),
+                "ALERT_EMAIL_SMTP_PASSWORD",
+                os.getenv("ALERT_SMTP_PASSWORD", ""),
             ),
             email_from=os.getenv("ALERT_EMAIL_FROM", "alerts@enterprisehub.com"),
             email_to=[e.strip() for e in to_emails.split(",") if e.strip()],
@@ -210,7 +211,8 @@ class EscalationPolicy:
         return current
 
     def get_pending_escalations(
-        self, alerts: List[Alert],
+        self,
+        alerts: List[Alert],
     ) -> List[Tuple[Alert, EscalationLevel]]:
         """Return unacknowledged critical alerts that need escalation (level >= 2)."""
         results: List[Tuple[Alert, EscalationLevel]] = []
@@ -278,9 +280,9 @@ class AlertingService:
         self._rules["sla_violation"] = AlertRule(
             name="sla_violation",
             condition=lambda stats: (
-                stats.get("lead_bot", {}).get("p95_latency_ms", 0) > 2000 or
-                stats.get("buyer_bot", {}).get("p95_latency_ms", 0) > 2500 or
-                stats.get("seller_bot", {}).get("p95_latency_ms", 0) > 2500
+                stats.get("lead_bot", {}).get("p95_latency_ms", 0) > 2000
+                or stats.get("buyer_bot", {}).get("p95_latency_ms", 0) > 2500
+                or stats.get("seller_bot", {}).get("p95_latency_ms", 0) > 2500
             ),
             severity="critical",
             cooldown_seconds=300,
@@ -321,9 +323,7 @@ class AlertingService:
         # Rule 5: Bot Unresponsive - No responses for 5 minutes
         self._rules["bot_unresponsive"] = AlertRule(
             name="bot_unresponsive",
-            condition=lambda stats: (
-                time.time() - stats.get("last_response_time", time.time()) > 300
-            ),
+            condition=lambda stats: time.time() - stats.get("last_response_time", time.time()) > 300,
             severity="critical",
             cooldown_seconds=600,
             channels=["email", "slack", "webhook"],
@@ -386,23 +386,20 @@ class AlertingService:
             ValueError: On invalid severity or channels.
         """
         if rule.severity not in VALID_SEVERITIES:
-            raise ValueError(
-                f"Invalid severity '{rule.severity}'. "
-                f"Must be one of: {sorted(VALID_SEVERITIES)}"
-            )
+            raise ValueError(f"Invalid severity '{rule.severity}'. Must be one of: {sorted(VALID_SEVERITIES)}")
 
         invalid_channels = set(rule.channels) - VALID_CHANNELS
         if invalid_channels:
-            raise ValueError(
-                f"Invalid channels: {invalid_channels}. "
-                f"Must be one of: {sorted(VALID_CHANNELS)}"
-            )
+            raise ValueError(f"Invalid channels: {invalid_channels}. Must be one of: {sorted(VALID_CHANNELS)}")
 
         self._rules[rule.name] = rule
 
         logger.info(
             "Added alert rule '%s' (severity=%s, cooldown=%ds, channels=%s)",
-            rule.name, rule.severity, rule.cooldown_seconds, rule.channels,
+            rule.name,
+            rule.severity,
+            rule.cooldown_seconds,
+            rule.channels,
         )
 
     async def remove_rule(self, name: str) -> None:
@@ -455,10 +452,7 @@ class AlertingService:
                 if not rule.condition(performance_stats):
                     continue
             except Exception as e:
-                logger.error(
-                    "Error evaluating rule '%s': %s",
-                    rule.name, e, exc_info=True
-                )
+                logger.error("Error evaluating rule '%s': %s", rule.name, e, exc_info=True)
                 continue
 
             # Create alert
@@ -478,7 +472,9 @@ class AlertingService:
 
             logger.warning(
                 "Alert triggered: '%s' (severity=%s) - %s",
-                rule.name, rule.severity, alert.message,
+                rule.name,
+                rule.severity,
+                alert.message,
             )
 
         # Prune to last MAX_STORED_ALERTS
@@ -487,9 +483,7 @@ class AlertingService:
 
         return triggered
 
-    def _format_alert_message(
-        self, rule: AlertRule, stats: Dict[str, Any]
-    ) -> str:
+    def _format_alert_message(self, rule: AlertRule, stats: Dict[str, Any]) -> str:
         """Format a human-readable alert message.
 
         Args:
@@ -557,10 +551,7 @@ class AlertingService:
                 logger.info("Alert '%s' sent via %s", alert.id, channel)
 
             except Exception as e:
-                logger.error(
-                    "Failed to send alert '%s' via %s: %s",
-                    alert.id, channel, e, exc_info=True
-                )
+                logger.error("Failed to send alert '%s' via %s: %s", alert.id, channel, e, exc_info=True)
 
     async def _send_email_alert(self, alert: Alert) -> None:
         """Send alert via email (SMTP).
@@ -687,7 +678,9 @@ class AlertingService:
                 response.raise_for_status()
 
         logger.info(
-            "PagerDuty alert sent for %s (dedup_key=%s)", alert.rule_name, payload["dedup_key"],
+            "PagerDuty alert sent for %s (dedup_key=%s)",
+            alert.rule_name,
+            payload["dedup_key"],
         )
 
     async def _send_opsgenie_alert(self, alert: Alert) -> None:
@@ -758,9 +751,7 @@ class AlertingService:
 
     # ── Convenience Methods ────────────────────────────────────────────
 
-    async def check_and_send_alerts(
-        self, performance_stats: Dict[str, Any]
-    ) -> List[Alert]:
+    async def check_and_send_alerts(self, performance_stats: Dict[str, Any]) -> List[Alert]:
         """Check for alerts and send them through configured channels.
 
         This is a convenience method that combines check_alerts and send_alert.
@@ -806,9 +797,8 @@ class AlertingService:
 
 # ── Convenience Functions ───────────────────────────────────────────────
 
-async def check_and_send_alerts(
-    performance_stats: Dict[str, Any]
-) -> List[Alert]:
+
+async def check_and_send_alerts(performance_stats: Dict[str, Any]) -> List[Alert]:
     """Convenience function to check and send alerts.
 
     This is the main entry point for periodic alert checking.

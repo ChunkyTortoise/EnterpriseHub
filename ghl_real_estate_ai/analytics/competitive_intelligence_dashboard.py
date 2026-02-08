@@ -38,62 +38,69 @@ Created: January 2026
 
 import asyncio
 import json
-import numpy as np
-import pandas as pd
-from datetime import datetime, timedelta, date
-from dataclasses import dataclass, asdict
-from typing import Dict, List, Optional, Tuple, Any, Union
-from enum import Enum
-from collections import defaultdict
 import logging
 import re
 from abc import ABC, abstractmethod
+from collections import defaultdict
+from dataclasses import asdict, dataclass
+from datetime import date, datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import numpy as np
+import pandas as pd
+
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 # Service integrations
 from ghl_real_estate_ai.services.cache_service import CacheService
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 
 class CompetitorTier(str, Enum):
     """Competitor tier classifications."""
-    TIER_1_DIRECT = "tier_1_direct"        # Direct competitors with similar features/pricing
-    TIER_2_ADJACENT = "tier_2_adjacent"    # Adjacent competitors with some overlap
-    TIER_3_EMERGING = "tier_3_emerging"    # Emerging competitors to watch
-    TIER_4_NICHE = "tier_4_niche"          # Niche players in specific segments
+
+    TIER_1_DIRECT = "tier_1_direct"  # Direct competitors with similar features/pricing
+    TIER_2_ADJACENT = "tier_2_adjacent"  # Adjacent competitors with some overlap
+    TIER_3_EMERGING = "tier_3_emerging"  # Emerging competitors to watch
+    TIER_4_NICHE = "tier_4_niche"  # Niche players in specific segments
 
 
 class ThreatLevel(str, Enum):
     """Competitive threat assessment levels."""
-    CRITICAL = "critical"      # Immediate threat requiring urgent response
-    HIGH = "high"              # Significant threat requiring strategic response
-    MEDIUM = "medium"          # Moderate threat requiring monitoring
-    LOW = "low"                # Minor threat, continue monitoring
+
+    CRITICAL = "critical"  # Immediate threat requiring urgent response
+    HIGH = "high"  # Significant threat requiring strategic response
+    MEDIUM = "medium"  # Moderate threat requiring monitoring
+    LOW = "low"  # Minor threat, continue monitoring
     NEGLIGIBLE = "negligible"  # No significant threat
 
 
 class MarketSegment(str, Enum):
     """Market segment classifications."""
-    ENTERPRISE = "enterprise"              # Large enterprise customers
-    MID_MARKET = "mid_market"              # Mid-size companies
-    SMALL_BUSINESS = "small_business"      # Small businesses and startups
+
+    ENTERPRISE = "enterprise"  # Large enterprise customers
+    MID_MARKET = "mid_market"  # Mid-size companies
+    SMALL_BUSINESS = "small_business"  # Small businesses and startups
     REAL_ESTATE_AGENCIES = "real_estate_agencies"  # Real estate specific
-    WHITE_LABEL = "white_label"            # White-label partners
+    WHITE_LABEL = "white_label"  # White-label partners
 
 
 class SentimentScore(str, Enum):
     """Customer sentiment classifications."""
-    VERY_POSITIVE = "very_positive"    # 4.5-5.0 stars
-    POSITIVE = "positive"              # 3.5-4.4 stars
-    NEUTRAL = "neutral"                # 2.5-3.4 stars
-    NEGATIVE = "negative"              # 1.5-2.4 stars
-    VERY_NEGATIVE = "very_negative"    # 0-1.4 stars
+
+    VERY_POSITIVE = "very_positive"  # 4.5-5.0 stars
+    POSITIVE = "positive"  # 3.5-4.4 stars
+    NEUTRAL = "neutral"  # 2.5-3.4 stars
+    NEGATIVE = "negative"  # 1.5-2.4 stars
+    VERY_NEGATIVE = "very_negative"  # 0-1.4 stars
 
 
 @dataclass
 class CompetitorProfile:
     """Comprehensive competitor profile and analysis."""
+
     competitor_id: str
     company_name: str
     website_url: str
@@ -147,6 +154,7 @@ class CompetitorProfile:
 @dataclass
 class PricingIntelligence:
     """Competitor pricing analysis and intelligence."""
+
     competitor_id: str
     pricing_model: str
     pricing_tiers: Dict[str, Dict[str, Any]]  # tier_name -> {price, features, limits}
@@ -172,6 +180,7 @@ class PricingIntelligence:
 @dataclass
 class FeatureComparison:
     """Feature-by-feature competitive comparison."""
+
     feature_category: str
     our_implementation: Dict[str, Any]
     competitor_implementations: Dict[str, Dict[str, Any]]  # competitor_id -> implementation details
@@ -191,6 +200,7 @@ class FeatureComparison:
 @dataclass
 class MarketSentiment:
     """Market sentiment analysis for competitors."""
+
     competitor_id: str
 
     # Sentiment scores
@@ -200,7 +210,7 @@ class MarketSentiment:
 
     # Sentiment sources
     review_platforms: Dict[str, float]  # platform -> average rating
-    social_mentions: Dict[str, int]     # platform -> mention count
+    social_mentions: Dict[str, int]  # platform -> mention count
     news_sentiment: float  # -1.0 to 1.0
 
     # Trend analysis
@@ -219,6 +229,7 @@ class MarketSentiment:
 @dataclass
 class MarketOpportunity:
     """Strategic market opportunity identification."""
+
     opportunity_id: str
     title: str
     description: str
@@ -249,6 +260,7 @@ class MarketOpportunity:
 @dataclass
 class CompetitiveThreat:
     """Competitive threat assessment and early warning."""
+
     threat_id: str
     competitor_id: str
     threat_type: str  # "pricing", "feature", "acquisition", "market_entry", etc.
@@ -292,9 +304,21 @@ class CompetitorDataCollector:
                 competitor_id=competitor_id,
                 pricing_model="subscription",
                 pricing_tiers={
-                    "starter": {"price": 49, "features": ["Basic CRM", "Email integration"], "limits": {"contacts": 1000}},
-                    "professional": {"price": 149, "features": ["Advanced CRM", "Automation", "Analytics"], "limits": {"contacts": 5000}},
-                    "enterprise": {"price": 299, "features": ["Full platform", "Custom integrations", "Priority support"], "limits": {"contacts": "unlimited"}}
+                    "starter": {
+                        "price": 49,
+                        "features": ["Basic CRM", "Email integration"],
+                        "limits": {"contacts": 1000},
+                    },
+                    "professional": {
+                        "price": 149,
+                        "features": ["Advanced CRM", "Automation", "Analytics"],
+                        "limits": {"contacts": 5000},
+                    },
+                    "enterprise": {
+                        "price": 299,
+                        "features": ["Full platform", "Custom integrations", "Priority support"],
+                        "limits": {"contacts": "unlimited"},
+                    },
                 },
                 price_positioning="value",
                 discount_strategies=["Annual discount: 20%", "Multi-year contracts: 30%"],
@@ -302,13 +326,17 @@ class CompetitorDataCollector:
                 price_vs_market_avg=-0.12,  # 12% below market average
                 price_change_history=[
                     {"date": "2025-11-01", "change_type": "increase", "amount": 10, "tier": "professional"},
-                    {"date": "2025-08-15", "change_type": "new_tier", "tier": "enterprise"}
+                    {"date": "2025-08-15", "change_type": "new_tier", "tier": "enterprise"},
                 ],
                 pricing_strengths=["Competitive pricing", "Flexible terms", "Good value proposition"],
                 pricing_vulnerabilities=["Limited enterprise features at lower tiers", "No freemium option"],
-                recommended_response=["Maintain price advantage", "Enhance value at mid-tier", "Consider freemium entry"],
+                recommended_response=[
+                    "Maintain price advantage",
+                    "Enhance value at mid-tier",
+                    "Consider freemium entry",
+                ],
                 collected_at=datetime.utcnow(),
-                confidence_score=0.8
+                confidence_score=0.8,
             )
 
             return pricing_data
@@ -318,9 +346,7 @@ class CompetitorDataCollector:
             return None
 
     async def analyze_feature_gap(
-        self,
-        our_features: Dict[str, Any],
-        competitor_features: Dict[str, Dict[str, Any]]
+        self, our_features: Dict[str, Any], competitor_features: Dict[str, Dict[str, Any]]
     ) -> List[FeatureComparison]:
         """Analyze feature gaps against competitors."""
         try:
@@ -361,7 +387,7 @@ class CompetitorDataCollector:
                     gaps_to_address=gaps[:5],  # Top 5
                     customer_importance_score=np.random.uniform(0.6, 0.9),  # Mock customer importance
                     market_trend_direction="growing" if category in ["ai_features", "automation"] else "stable",
-                    last_analyzed=datetime.utcnow()
+                    last_analyzed=datetime.utcnow(),
                 )
 
                 comparisons.append(comparison)
@@ -391,13 +417,13 @@ class CompetitorDataCollector:
                     "g2": base_rating + np.random.uniform(-0.3, 0.3),
                     "capterra": base_rating + np.random.uniform(-0.4, 0.4),
                     "trustpilot": base_rating + np.random.uniform(-0.2, 0.2),
-                    "software_advice": base_rating + np.random.uniform(-0.3, 0.3)
+                    "software_advice": base_rating + np.random.uniform(-0.3, 0.3),
                 },
                 social_mentions={
                     "twitter": np.random.randint(50, 300),
                     "linkedin": np.random.randint(20, 150),
                     "reddit": np.random.randint(10, 80),
-                    "facebook": np.random.randint(5, 50)
+                    "facebook": np.random.randint(5, 50),
                 },
                 news_sentiment=sentiment_variation,
                 sentiment_trend_30d=np.random.uniform(-0.2, 0.3),
@@ -406,7 +432,7 @@ class CompetitorDataCollector:
                 negative_themes=["Pricing concerns", "Limited integrations", "Setup complexity"],
                 sentiment_drivers=["Recent feature updates", "Customer service quality", "Market competition"],
                 analyzed_at=datetime.utcnow(),
-                data_confidence=0.75
+                data_confidence=0.75,
             )
 
             return sentiment
@@ -418,8 +444,8 @@ class CompetitorDataCollector:
     def _extract_competitor_id(self, url: str) -> str:
         """Extract competitor ID from URL."""
         # Simple domain extraction
-        domain = re.sub(r'https?://', '', url).split('/')[0]
-        return domain.replace('.', '_').replace('-', '_').lower()
+        domain = re.sub(r"https?://", "", url).split("/")[0]
+        return domain.replace(".", "_").replace("-", "_").lower()
 
     def _rating_to_sentiment(self, rating: float) -> SentimentScore:
         """Convert numerical rating to sentiment score."""
@@ -443,22 +469,20 @@ class ThreatDetector:
         self.threat_patterns = {
             "pricing_aggression": {
                 "indicators": ["significant_price_drop", "new_freemium", "aggressive_discounting"],
-                "severity_thresholds": {"critical": 0.8, "high": 0.6, "medium": 0.4}
+                "severity_thresholds": {"critical": 0.8, "high": 0.6, "medium": 0.4},
             },
             "feature_leapfrog": {
                 "indicators": ["new_ai_features", "automation_advancement", "integration_expansion"],
-                "severity_thresholds": {"critical": 0.9, "high": 0.7, "medium": 0.5}
+                "severity_thresholds": {"critical": 0.9, "high": 0.7, "medium": 0.5},
             },
             "market_expansion": {
                 "indicators": ["new_geographic_market", "vertical_expansion", "customer_segment_expansion"],
-                "severity_thresholds": {"critical": 0.7, "high": 0.5, "medium": 0.3}
-            }
+                "severity_thresholds": {"critical": 0.7, "high": 0.5, "medium": 0.3},
+            },
         }
 
     async def detect_threats(
-        self,
-        competitors: List[CompetitorProfile],
-        historical_data: Dict[str, Any]
+        self, competitors: List[CompetitorProfile], historical_data: Dict[str, Any]
     ) -> List[CompetitiveThreat]:
         """Detect emerging competitive threats using pattern analysis."""
         try:
@@ -478,10 +502,13 @@ class ThreatDetector:
                 detected_threats.extend(expansion_threats)
 
             # Sort by severity and urgency
-            detected_threats.sort(key=lambda t: (
-                {"critical": 4, "high": 3, "medium": 2, "low": 1, "negligible": 0}[t.severity.value],
-                {"immediate": 4, "short_term": 3, "medium_term": 2, "long_term": 1}[t.urgency]
-            ), reverse=True)
+            detected_threats.sort(
+                key=lambda t: (
+                    {"critical": 4, "high": 3, "medium": 2, "low": 1, "negligible": 0}[t.severity.value],
+                    {"immediate": 4, "short_term": 3, "medium_term": 2, "long_term": 1}[t.urgency],
+                ),
+                reverse=True,
+            )
 
             return detected_threats
 
@@ -490,9 +517,7 @@ class ThreatDetector:
             return []
 
     async def _analyze_pricing_threats(
-        self,
-        competitor: CompetitorProfile,
-        historical_data: Dict[str, Any]
+        self, competitor: CompetitorProfile, historical_data: Dict[str, Any]
     ) -> List[CompetitiveThreat]:
         """Analyze pricing-related competitive threats."""
         threats = []
@@ -512,14 +537,18 @@ class ThreatDetector:
                     recommended_responses=[
                         "Review pricing strategy",
                         "Enhance value proposition",
-                        "Consider promotional pricing"
+                        "Consider promotional pricing",
                     ],
                     response_timeline="30-60 days",
                     required_resources=["Product marketing", "Pricing analysis", "Competitive response team"],
-                    monitoring_indicators=["Price change announcements", "Customer acquisition metrics", "Win/loss analysis"],
+                    monitoring_indicators=[
+                        "Price change announcements",
+                        "Customer acquisition metrics",
+                        "Win/loss analysis",
+                    ],
                     escalation_triggers=["10% customer acquisition drop", "Significant quote losses"],
                     detected_at=datetime.utcnow(),
-                    last_updated=datetime.utcnow()
+                    last_updated=datetime.utcnow(),
                 )
                 threats.append(threat)
 
@@ -529,16 +558,18 @@ class ThreatDetector:
         return threats
 
     async def _analyze_feature_threats(
-        self,
-        competitor: CompetitorProfile,
-        historical_data: Dict[str, Any]
+        self, competitor: CompetitorProfile, historical_data: Dict[str, Any]
     ) -> List[CompetitiveThreat]:
         """Analyze feature and product-related threats."""
         threats = []
 
         try:
             # Check for advanced AI features
-            ai_features = [f for f in competitor.primary_features if any(keyword in f.lower() for keyword in ["ai", "ml", "automation", "smart"])]
+            ai_features = [
+                f
+                for f in competitor.primary_features
+                if any(keyword in f.lower() for keyword in ["ai", "ml", "automation", "smart"])
+            ]
 
             if len(ai_features) >= 3:  # Significant AI advancement
                 threat = CompetitiveThreat(
@@ -553,14 +584,21 @@ class ThreatDetector:
                     recommended_responses=[
                         "Accelerate AI development roadmap",
                         "Evaluate AI partnerships or acquisitions",
-                        "Enhance existing AI features"
+                        "Enhance existing AI features",
                     ],
                     response_timeline="90-180 days",
                     required_resources=["AI/ML team", "Product development", "Technology partnerships"],
-                    monitoring_indicators=["Feature release announcements", "Customer feedback on AI features", "Market positioning"],
-                    escalation_triggers=["Customer requests for similar features", "Competitive feature demonstrations"],
+                    monitoring_indicators=[
+                        "Feature release announcements",
+                        "Customer feedback on AI features",
+                        "Market positioning",
+                    ],
+                    escalation_triggers=[
+                        "Customer requests for similar features",
+                        "Competitive feature demonstrations",
+                    ],
                     detected_at=datetime.utcnow(),
-                    last_updated=datetime.utcnow()
+                    last_updated=datetime.utcnow(),
                 )
                 threats.append(threat)
 
@@ -570,16 +608,17 @@ class ThreatDetector:
         return threats
 
     async def _analyze_expansion_threats(
-        self,
-        competitor: CompetitorProfile,
-        historical_data: Dict[str, Any]
+        self, competitor: CompetitorProfile, historical_data: Dict[str, Any]
     ) -> List[CompetitiveThreat]:
         """Analyze market expansion threats."""
         threats = []
 
         try:
             # Check for enterprise market entry
-            if MarketSegment.ENTERPRISE in competitor.market_segments and competitor.tier == CompetitorTier.TIER_2_ADJACENT:
+            if (
+                MarketSegment.ENTERPRISE in competitor.market_segments
+                and competitor.tier == CompetitorTier.TIER_2_ADJACENT
+            ):
                 threat = CompetitiveThreat(
                     threat_id=f"enterprise_expansion_{competitor.competitor_id}_{int(datetime.utcnow().timestamp())}",
                     competitor_id=competitor.competitor_id,
@@ -592,14 +631,18 @@ class ThreatDetector:
                     recommended_responses=[
                         "Strengthen enterprise value proposition",
                         "Enhance enterprise features",
-                        "Improve enterprise sales process"
+                        "Improve enterprise sales process",
                     ],
                     response_timeline="180-365 days",
                     required_resources=["Enterprise sales", "Product development", "Customer success"],
-                    monitoring_indicators=["Enterprise customer acquisitions", "Feature announcements", "Sales team hiring"],
+                    monitoring_indicators=[
+                        "Enterprise customer acquisitions",
+                        "Feature announcements",
+                        "Sales team hiring",
+                    ],
                     escalation_triggers=["Major enterprise wins", "Enterprise-focused marketing campaigns"],
                     detected_at=datetime.utcnow(),
-                    last_updated=datetime.utcnow()
+                    last_updated=datetime.utcnow(),
                 )
                 threats.append(threat)
 
@@ -619,7 +662,7 @@ class OpportunityIdentifier:
         self,
         competitor_analysis: List[FeatureComparison],
         market_data: Dict[str, Any],
-        sentiment_data: List[MarketSentiment]
+        sentiment_data: List[MarketSentiment],
     ) -> List[MarketOpportunity]:
         """Identify strategic market opportunities based on competitive analysis."""
         try:
@@ -650,20 +693,18 @@ class OpportunityIdentifier:
             logger.error(f"Error identifying opportunities: {e}", exc_info=True)
             return []
 
-    def _analyze_feature_opportunities(
-        self,
-        feature_comparisons: List[FeatureComparison]
-    ) -> List[MarketOpportunity]:
+    def _analyze_feature_opportunities(self, feature_comparisons: List[FeatureComparison]) -> List[MarketOpportunity]:
         """Identify opportunities based on feature analysis."""
         opportunities = []
 
         try:
             for comparison in feature_comparisons:
                 # Look for areas where we're behind but market trend is growing
-                if (comparison.our_advantage_score < -0.3 and
-                    comparison.market_trend_direction == "growing" and
-                    comparison.customer_importance_score > 0.7):
-
+                if (
+                    comparison.our_advantage_score < -0.3
+                    and comparison.market_trend_direction == "growing"
+                    and comparison.customer_importance_score > 0.7
+                ):
                     opportunity = MarketOpportunity(
                         opportunity_id=f"feature_{comparison.feature_category}_{int(datetime.utcnow().timestamp())}",
                         title=f"Enhance {comparison.feature_category.replace('_', ' ').title()} Capabilities",
@@ -673,14 +714,18 @@ class OpportunityIdentifier:
                         competitive_intensity="medium",
                         effort_required="medium" if len(comparison.gaps_to_address) <= 3 else "high",
                         time_to_market_months=6 if comparison.feature_category in ["automation", "analytics"] else 9,
-                        required_capabilities=[f"{comparison.feature_category} development", "Product design", "Engineering"],
+                        required_capabilities=[
+                            f"{comparison.feature_category} development",
+                            "Product design",
+                            "Engineering",
+                        ],
                         strategic_importance="high" if comparison.customer_importance_score > 0.8 else "medium",
                         revenue_potential_12m=1500000.0,  # Mock revenue potential
                         customer_segments=[MarketSegment.ENTERPRISE, MarketSegment.MID_MARKET],
                         risks=["Development complexity", "Resource requirements", "Competitive response"],
                         mitigation_strategies=["Phased rollout", "Customer co-development", "Partnership approach"],
                         identified_at=datetime.utcnow(),
-                        priority_score=0.0  # Will be calculated
+                        priority_score=0.0,  # Will be calculated
                     )
 
                     opportunities.append(opportunity)
@@ -690,19 +735,17 @@ class OpportunityIdentifier:
 
         return opportunities
 
-    def _analyze_sentiment_opportunities(
-        self,
-        sentiment_data: List[MarketSentiment]
-    ) -> List[MarketOpportunity]:
+    def _analyze_sentiment_opportunities(self, sentiment_data: List[MarketSentiment]) -> List[MarketOpportunity]:
         """Identify opportunities based on market sentiment analysis."""
         opportunities = []
 
         try:
             for sentiment in sentiment_data:
                 # Look for competitors with declining sentiment
-                if (sentiment.sentiment_trend_30d < -0.2 and
-                    len([theme for theme in sentiment.negative_themes if "pricing" in theme.lower()]) > 0):
-
+                if (
+                    sentiment.sentiment_trend_30d < -0.2
+                    and len([theme for theme in sentiment.negative_themes if "pricing" in theme.lower()]) > 0
+                ):
                     opportunity = MarketOpportunity(
                         opportunity_id=f"sentiment_{sentiment.competitor_id}_{int(datetime.utcnow().timestamp())}",
                         title=f"Capitalize on {sentiment.competitor_id} Customer Dissatisfaction",
@@ -712,14 +755,18 @@ class OpportunityIdentifier:
                         competitive_intensity="low",
                         effort_required="low",
                         time_to_market_months=3,
-                        required_capabilities=["Competitive sales enablement", "Marketing campaigns", "Customer acquisition"],
+                        required_capabilities=[
+                            "Competitive sales enablement",
+                            "Marketing campaigns",
+                            "Customer acquisition",
+                        ],
                         strategic_importance="medium",
                         revenue_potential_12m=800000.0,
                         customer_segments=[MarketSegment.MID_MARKET, MarketSegment.SMALL_BUSINESS],
                         risks=["Competitor response", "Market saturation", "Customer switching costs"],
                         mitigation_strategies=["Targeted messaging", "Migration incentives", "Competitive positioning"],
                         identified_at=datetime.utcnow(),
-                        priority_score=0.0
+                        priority_score=0.0,
                     )
 
                     opportunities.append(opportunity)
@@ -752,7 +799,7 @@ class OpportunityIdentifier:
                     risks=["Customer price sensitivity", "Competitive response"],
                     mitigation_strategies=["Value demonstration", "Granular pricing", "Feature bundling"],
                     identified_at=datetime.utcnow(),
-                    priority_score=0.0
+                    priority_score=0.0,
                 )
 
                 opportunities.append(opportunity)
@@ -819,10 +866,7 @@ class CompetitiveIntelligenceDashboard:
         logger.info("CompetitiveIntelligenceDashboard initialized")
 
     async def generate_intelligence_report(
-        self,
-        include_threats: bool = True,
-        include_opportunities: bool = True,
-        include_sentiment: bool = True
+        self, include_threats: bool = True, include_opportunities: bool = True, include_sentiment: bool = True
     ) -> Dict[str, Any]:
         """Generate comprehensive competitive intelligence report."""
         try:
@@ -830,7 +874,7 @@ class CompetitiveIntelligenceDashboard:
                 "generated_at": datetime.utcnow().isoformat(),
                 "report_period": "current",
                 "market_overview": await self._generate_market_overview(),
-                "competitor_profiles": [asdict(comp) for comp in self.competitors]
+                "competitor_profiles": [asdict(comp) for comp in self.competitors],
             }
 
             # Collect pricing intelligence
@@ -865,23 +909,26 @@ class CompetitiveIntelligenceDashboard:
             # Opportunity identification
             if include_opportunities:
                 opportunities = await self.opportunity_identifier.identify_opportunities(
-                    feature_comparisons, report["market_overview"],
-                    [MarketSentiment(
-                        competitor_id="mock",
-                        overall_sentiment=SentimentScore.POSITIVE,
-                        review_sentiment_avg=4.0,
-                        social_sentiment_score=0.2,
-                        review_platforms={},
-                        social_mentions={},
-                        news_sentiment=0.1,
-                        sentiment_trend_30d=0.1,
-                        review_volume_trend=0.15,
-                        positive_themes=[],
-                        negative_themes=[],
-                        sentiment_drivers=[],
-                        analyzed_at=datetime.utcnow(),
-                        data_confidence=0.8
-                    )]
+                    feature_comparisons,
+                    report["market_overview"],
+                    [
+                        MarketSentiment(
+                            competitor_id="mock",
+                            overall_sentiment=SentimentScore.POSITIVE,
+                            review_sentiment_avg=4.0,
+                            social_sentiment_score=0.2,
+                            review_platforms={},
+                            social_mentions={},
+                            news_sentiment=0.1,
+                            sentiment_trend_30d=0.1,
+                            review_volume_trend=0.15,
+                            positive_themes=[],
+                            negative_themes=[],
+                            sentiment_drivers=[],
+                            analyzed_at=datetime.utcnow(),
+                            data_confidence=0.8,
+                        )
+                    ],
                 )
                 report["market_opportunities"] = [asdict(opp) for opp in opportunities]
 
@@ -892,7 +939,9 @@ class CompetitiveIntelligenceDashboard:
             cache_key = f"competitive_intelligence_report:{datetime.utcnow().strftime('%Y%m%d%H')}"
             await self.cache.set(cache_key, report, ttl=3600)
 
-            logger.info(f"Competitive intelligence report generated with {len(report.get('competitive_threats', []))} threats and {len(report.get('market_opportunities', []))} opportunities")
+            logger.info(
+                f"Competitive intelligence report generated with {len(report.get('competitive_threats', []))} threats and {len(report.get('market_opportunities', []))} opportunities"
+            )
 
             return report
 
@@ -909,37 +958,43 @@ class CompetitiveIntelligenceDashboard:
             recent_threats = await self.threat_detector.detect_threats(self.competitors, {})
             for threat in recent_threats[:5]:  # Top 5 most critical
                 if threat.severity in [ThreatLevel.CRITICAL, ThreatLevel.HIGH]:
-                    alerts.append({
-                        "type": "threat",
-                        "severity": threat.severity.value,
-                        "title": f"Competitive Threat: {threat.threat_type}",
-                        "message": threat.description,
-                        "competitor": threat.competitor_id,
-                        "urgency": threat.urgency,
-                        "detected_at": threat.detected_at.isoformat()
-                    })
+                    alerts.append(
+                        {
+                            "type": "threat",
+                            "severity": threat.severity.value,
+                            "title": f"Competitive Threat: {threat.threat_type}",
+                            "message": threat.description,
+                            "competitor": threat.competitor_id,
+                            "urgency": threat.urgency,
+                            "detected_at": threat.detected_at.isoformat(),
+                        }
+                    )
 
             # Check for pricing changes (mock data)
-            alerts.append({
-                "type": "pricing",
-                "severity": "medium",
-                "title": "Competitor Pricing Update",
-                "message": "Competitor reduced enterprise pricing by 15%",
-                "competitor": "competitor_a",
-                "urgency": "short_term",
-                "detected_at": datetime.utcnow().isoformat()
-            })
+            alerts.append(
+                {
+                    "type": "pricing",
+                    "severity": "medium",
+                    "title": "Competitor Pricing Update",
+                    "message": "Competitor reduced enterprise pricing by 15%",
+                    "competitor": "competitor_a",
+                    "urgency": "short_term",
+                    "detected_at": datetime.utcnow().isoformat(),
+                }
+            )
 
             # Check for feature announcements (mock data)
-            alerts.append({
-                "type": "feature",
-                "severity": "medium",
-                "title": "New AI Feature Launch",
-                "message": "Major competitor launched advanced AI automation features",
-                "competitor": "competitor_b",
-                "urgency": "medium_term",
-                "detected_at": (datetime.utcnow() - timedelta(hours=2)).isoformat()
-            })
+            alerts.append(
+                {
+                    "type": "feature",
+                    "severity": "medium",
+                    "title": "New AI Feature Launch",
+                    "message": "Major competitor launched advanced AI automation features",
+                    "competitor": "competitor_b",
+                    "urgency": "medium_term",
+                    "detected_at": (datetime.utcnow() - timedelta(hours=2)).isoformat(),
+                }
+            )
 
             return alerts
 
@@ -970,7 +1025,7 @@ class CompetitiveIntelligenceDashboard:
                 target_industries=["Technology", "Financial Services", "Healthcare", "Manufacturing"],
                 threat_level=ThreatLevel.HIGH,
                 strength_areas=["Market leader", "Comprehensive platform", "Strong ecosystem"],
-                weakness_areas=["Complex pricing", "Over-engineered for SMB", "High learning curve"]
+                weakness_areas=["Complex pricing", "Over-engineered for SMB", "High learning curve"],
             ),
             CompetitorProfile(
                 competitor_id="hubspot_com",
@@ -992,7 +1047,7 @@ class CompetitiveIntelligenceDashboard:
                 target_industries=["Technology", "Professional Services", "E-commerce"],
                 threat_level=ThreatLevel.HIGH,
                 strength_areas=["Freemium model", "Inbound methodology", "User-friendly"],
-                weakness_areas=["Limited customization", "Pricing at scale", "Enterprise features"]
+                weakness_areas=["Limited customization", "Pricing at scale", "Enterprise features"],
             ),
             CompetitorProfile(
                 competitor_id="zoho_com",
@@ -1014,8 +1069,8 @@ class CompetitiveIntelligenceDashboard:
                 target_industries=["Small Business", "Professional Services"],
                 threat_level=ThreatLevel.MEDIUM,
                 strength_areas=["Comprehensive suite", "Affordable pricing", "Privacy focus"],
-                weakness_areas=["Less integration", "Limited AI features", "Brand recognition"]
-            )
+                weakness_areas=["Less integration", "Limited AI features", "Brand recognition"],
+            ),
         ]
 
         return competitors
@@ -1031,7 +1086,7 @@ class CompetitiveIntelligenceDashboard:
                 "Industry-specific solutions",
                 "Integration ecosystems",
                 "Mobile-first approach",
-                "Privacy and security focus"
+                "Privacy and security focus",
             ],
             "market_leaders": ["Salesforce", "Microsoft", "HubSpot", "Zoho"],
             "emerging_players": ["Pipedrive", "Freshworks", "Close"],
@@ -1041,8 +1096,8 @@ class CompetitiveIntelligenceDashboard:
                 "Integration capabilities",
                 "Pricing value",
                 "AI and automation",
-                "Mobile experience"
-            ]
+                "Mobile experience",
+            ],
         }
 
     def _get_our_features(self) -> Dict[str, Any]:
@@ -1051,54 +1106,84 @@ class CompetitiveIntelligenceDashboard:
             "core_crm": {
                 "features": ["Contact management", "Lead tracking", "Deal pipeline", "Task management"],
                 "maturity": "advanced",
-                "differentiators": ["Real estate specific", "AI-powered insights"]
+                "differentiators": ["Real estate specific", "AI-powered insights"],
             },
             "automation": {
                 "features": ["Email automation", "Lead nurturing", "Follow-up sequences", "Smart routing"],
                 "maturity": "intermediate",
-                "differentiators": ["Behavioral triggers", "Predictive automation"]
+                "differentiators": ["Behavioral triggers", "Predictive automation"],
             },
             "analytics": {
                 "features": ["Performance dashboards", "ROI tracking", "Conversion analytics", "Custom reports"],
                 "maturity": "advanced",
-                "differentiators": ["Real-time attribution", "Predictive analytics"]
+                "differentiators": ["Real-time attribution", "Predictive analytics"],
             },
             "integrations": {
                 "features": ["GHL native", "Zapier", "Email platforms", "Calendar sync"],
                 "maturity": "intermediate",
-                "differentiators": ["Real estate MLS", "Industry-specific tools"]
+                "differentiators": ["Real estate MLS", "Industry-specific tools"],
             },
             "mobile": {
                 "features": ["Mobile app", "Responsive design", "Offline sync"],
                 "maturity": "basic",
-                "differentiators": ["Location-based features"]
+                "differentiators": ["Location-based features"],
             },
             "ai_features": {
                 "features": ["Lead scoring", "Predictive analytics", "Smart recommendations", "Chatbot"],
                 "maturity": "advanced",
-                "differentiators": ["Industry-trained models", "Behavioral prediction"]
-            }
+                "differentiators": ["Industry-trained models", "Behavioral prediction"],
+            },
         }
 
     def _get_competitor_features(self) -> Dict[str, Dict[str, Any]]:
         """Get competitor feature sets for comparison."""
         return {
             "salesforce_com": {
-                "core_crm": {"features": ["Contact management", "Lead tracking", "Opportunity management", "Account management", "Territory management"], "maturity": "advanced"},
-                "automation": {"features": ["Workflow rules", "Process builder", "Flow", "Einstein automation"], "maturity": "advanced"},
-                "analytics": {"features": ["Reports", "Dashboards", "Einstein analytics", "Tableau"], "maturity": "advanced"},
+                "core_crm": {
+                    "features": [
+                        "Contact management",
+                        "Lead tracking",
+                        "Opportunity management",
+                        "Account management",
+                        "Territory management",
+                    ],
+                    "maturity": "advanced",
+                },
+                "automation": {
+                    "features": ["Workflow rules", "Process builder", "Flow", "Einstein automation"],
+                    "maturity": "advanced",
+                },
+                "analytics": {
+                    "features": ["Reports", "Dashboards", "Einstein analytics", "Tableau"],
+                    "maturity": "advanced",
+                },
                 "integrations": {"features": ["AppExchange", "API", "Third-party connectors"], "maturity": "advanced"},
                 "mobile": {"features": ["Mobile app", "Offline sync", "Mobile admin"], "maturity": "advanced"},
-                "ai_features": {"features": ["Einstein AI", "Predictive lead scoring", "Opportunity insights"], "maturity": "advanced"}
+                "ai_features": {
+                    "features": ["Einstein AI", "Predictive lead scoring", "Opportunity insights"],
+                    "maturity": "advanced",
+                },
             },
             "hubspot_com": {
-                "core_crm": {"features": ["Contact management", "Deal tracking", "Company records", "Email tracking"], "maturity": "advanced"},
-                "automation": {"features": ["Workflows", "Email automation", "Lead nurturing", "Chatbots"], "maturity": "advanced"},
-                "analytics": {"features": ["Reports", "Custom dashboards", "Attribution", "Revenue analytics"], "maturity": "intermediate"},
+                "core_crm": {
+                    "features": ["Contact management", "Deal tracking", "Company records", "Email tracking"],
+                    "maturity": "advanced",
+                },
+                "automation": {
+                    "features": ["Workflows", "Email automation", "Lead nurturing", "Chatbots"],
+                    "maturity": "advanced",
+                },
+                "analytics": {
+                    "features": ["Reports", "Custom dashboards", "Attribution", "Revenue analytics"],
+                    "maturity": "intermediate",
+                },
                 "integrations": {"features": ["App marketplace", "API", "Native integrations"], "maturity": "advanced"},
                 "mobile": {"features": ["Mobile app", "Responsive design"], "maturity": "intermediate"},
-                "ai_features": {"features": ["Predictive lead scoring", "Content optimization", "Conversation intelligence"], "maturity": "intermediate"}
-            }
+                "ai_features": {
+                    "features": ["Predictive lead scoring", "Content optimization", "Conversation intelligence"],
+                    "maturity": "intermediate",
+                },
+            },
         }
 
     def _generate_executive_summary(self, report: Dict[str, Any]) -> Dict[str, str]:
@@ -1113,5 +1198,5 @@ class CompetitiveIntelligenceDashboard:
             "key_opportunities": "Significant opportunities identified in feature enhancement, market sentiment exploitation, and pricing optimization",
             "market_position": "Strong competitive position with differentiated AI capabilities, but facing pressure in enterprise market",
             "recommended_actions": "Immediate focus on churn prevention, AI feature acceleration, and competitive pricing response",
-            "strategic_priority": "Maintain technology leadership while expanding market share through targeted competitive responses"
+            "strategic_priority": "Maintain technology leadership while expanding market share through targeted competitive responses",
         }

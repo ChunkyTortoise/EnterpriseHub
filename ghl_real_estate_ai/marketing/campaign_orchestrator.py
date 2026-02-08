@@ -13,25 +13,27 @@ This module provides:
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Set
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any, Dict, List, Optional, Set
 
 import aiohttp
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..services.claude_assistant import ClaudeAssistant
-from ..services.cache_service import CacheService
 from ..ghl_utils.jorge_config import JorgeConfig
-from .content_generator import MarketingContentGenerator
+from ..services.cache_service import CacheService
+from ..services.claude_assistant import ClaudeAssistant
 from .audience_segmentation import AudienceSegmentationEngine
+from .content_generator import MarketingContentGenerator
 from .performance_optimizer import CampaignPerformanceOptimizer
 
 logger = logging.getLogger(__name__)
 
+
 class CampaignType(Enum):
     """Types of marketing campaigns"""
+
     LISTING_LAUNCH = "listing_launch"
     BUYER_NURTURE = "buyer_nurture"
     SELLER_NURTURE = "seller_nurture"
@@ -43,8 +45,10 @@ class CampaignType(Enum):
     REFERRAL_REQUEST = "referral_request"
     SEASONAL_MARKET = "seasonal_market"
 
+
 class CampaignChannel(Enum):
     """Marketing channels"""
+
     EMAIL = "email"
     SMS = "sms"
     SOCIAL_MEDIA = "social_media"
@@ -56,9 +60,11 @@ class CampaignChannel(Enum):
     LINKEDIN = "linkedin"
     WEBSITE_POPUP = "website_popup"
 
+
 @dataclass
 class CampaignTarget:
     """Campaign targeting criteria"""
+
     audience_segments: List[str]
     geographic_areas: List[str]
     property_types: List[str]
@@ -68,9 +74,11 @@ class CampaignTarget:
     exclude_recent_contacts: bool = True
     max_audience_size: Optional[int] = None
 
+
 @dataclass
 class CampaignContent:
     """Campaign content for different channels"""
+
     subject_line: Optional[str] = None
     email_body: Optional[str] = None
     sms_message: Optional[str] = None
@@ -81,9 +89,11 @@ class CampaignContent:
     videos: List[str] = field(default_factory=list)
     landing_page_url: Optional[str] = None
 
+
 @dataclass
 class CampaignSchedule:
     """Campaign scheduling configuration"""
+
     start_date: datetime
     end_date: Optional[datetime] = None
     send_times: List[str] = field(default_factory=list)  # ['09:00', '14:00', '18:00']
@@ -92,9 +102,11 @@ class CampaignSchedule:
     drip_sequence: Optional[List[int]] = None  # [0, 3, 7, 14] days
     max_sends_per_contact: int = 1
 
+
 @dataclass
 class Campaign:
     """Marketing campaign definition"""
+
     campaign_id: str
     campaign_type: CampaignType
     name: str
@@ -109,9 +121,11 @@ class Campaign:
     budget: Optional[float] = None
     expected_roi: Optional[float] = None
 
+
 @dataclass
 class CampaignResult:
     """Campaign execution results"""
+
     success: bool
     campaign_id: str
     contacts_targeted: int
@@ -124,6 +138,7 @@ class CampaignResult:
     revenue: Optional[float] = None
     roi: Optional[float] = None
     errors: List[str] = field(default_factory=list)
+
 
 class MarketingOrchestrator:
     """
@@ -146,14 +161,14 @@ class MarketingOrchestrator:
 
         # Jorge-specific marketing configuration
         self.jorge_brand = {
-            'agent_name': 'Jorge',
-            'brokerage': 'Jorge Real Estate Group',
-            'phone': self.config.get_jorge_phone(),
-            'email': self.config.get_jorge_email(),
-            'website': self.config.get_jorge_website(),
-            'signature_style': 'professional_confident',
-            'value_proposition': '6% commission, maximum results',
-            'specialties': ['seller_qualification', 'market_analysis', 'negotiation']
+            "agent_name": "Jorge",
+            "brokerage": "Jorge Real Estate Group",
+            "phone": self.config.get_jorge_phone(),
+            "email": self.config.get_jorge_email(),
+            "website": self.config.get_jorge_website(),
+            "signature_style": "professional_confident",
+            "value_proposition": "6% commission, maximum results",
+            "specialties": ["seller_qualification", "market_analysis", "negotiation"],
         }
 
     async def initialize(self):
@@ -181,10 +196,12 @@ class MarketingOrchestrator:
             logger.error(f"Failed to initialize Marketing Orchestrator: {str(e)}")
             raise
 
-    async def create_targeted_campaigns(self,
-                                      campaign_type: CampaignType,
-                                      property_context: Optional[Dict[str, Any]] = None,
-                                      custom_audience: Optional[List[str]] = None) -> List[Campaign]:
+    async def create_targeted_campaigns(
+        self,
+        campaign_type: CampaignType,
+        property_context: Optional[Dict[str, Any]] = None,
+        custom_audience: Optional[List[str]] = None,
+    ) -> List[Campaign]:
         """
         Create intelligent targeted campaigns based on Jorge's methodology
 
@@ -201,9 +218,7 @@ class MarketingOrchestrator:
 
             # Analyze audience and create segments
             audience_segments = await self.segmentation_engine.create_intelligent_segments(
-                campaign_type=campaign_type,
-                property_context=property_context,
-                custom_audience=custom_audience
+                campaign_type=campaign_type, property_context=property_context, custom_audience=custom_audience
             )
 
             created_campaigns = []
@@ -211,9 +226,7 @@ class MarketingOrchestrator:
             # Create optimized campaign for each segment
             for segment in audience_segments:
                 campaign = await self._create_segment_campaign(
-                    campaign_type=campaign_type,
-                    segment=segment,
-                    property_context=property_context
+                    campaign_type=campaign_type, segment=segment, property_context=property_context
                 )
 
                 created_campaigns.append(campaign)
@@ -226,9 +239,9 @@ class MarketingOrchestrator:
             logger.error(f"Failed to create targeted campaigns: {str(e)}")
             raise
 
-    async def automate_listing_marketing(self,
-                                       listing: Dict[str, Any],
-                                       marketing_budget: Optional[float] = None) -> Dict[str, Any]:
+    async def automate_listing_marketing(
+        self, listing: Dict[str, Any], marketing_budget: Optional[float] = None
+    ) -> Dict[str, Any]:
         """
         Comprehensive automated marketing for new listing
 
@@ -247,20 +260,17 @@ class MarketingOrchestrator:
 
             # Create listing launch campaign
             listing_campaign = await self.create_targeted_campaigns(
-                campaign_type=CampaignType.LISTING_LAUNCH,
-                property_context=listing
+                campaign_type=CampaignType.LISTING_LAUNCH, property_context=listing
             )
 
             # Create open house promotion campaign
             open_house_campaign = await self.create_targeted_campaigns(
-                campaign_type=CampaignType.OPEN_HOUSE_PROMOTION,
-                property_context=listing
+                campaign_type=CampaignType.OPEN_HOUSE_PROMOTION, property_context=listing
             )
 
             # Create neighborhood farming campaign
             neighborhood_campaign = await self.create_targeted_campaigns(
-                campaign_type=CampaignType.NEIGHBORHOOD_FARMING,
-                property_context=listing
+                campaign_type=CampaignType.NEIGHBORHOOD_FARMING, property_context=listing
             )
 
             # Generate social media content calendar
@@ -273,22 +283,19 @@ class MarketingOrchestrator:
             facebook_ads = await self._create_facebook_ads_campaign(listing, marketing_budget)
 
             marketing_plan = {
-                'listing_id': listing.get('id'),
-                'strategy': marketing_strategy,
-                'campaigns': {
-                    'listing_launch': [c.campaign_id for c in listing_campaign],
-                    'open_house': [c.campaign_id for c in open_house_campaign],
-                    'neighborhood_farming': [c.campaign_id for c in neighborhood_campaign]
+                "listing_id": listing.get("id"),
+                "strategy": marketing_strategy,
+                "campaigns": {
+                    "listing_launch": [c.campaign_id for c in listing_campaign],
+                    "open_house": [c.campaign_id for c in open_house_campaign],
+                    "neighborhood_farming": [c.campaign_id for c in neighborhood_campaign],
                 },
-                'social_calendar': social_calendar,
-                'paid_advertising': {
-                    'google_ads': google_ads,
-                    'facebook_ads': facebook_ads
-                },
-                'budget_allocation': marketing_budget,
-                'expected_roi': marketing_strategy.get('expected_roi'),
-                'timeline': marketing_strategy.get('recommended_timeline'),
-                'created_timestamp': datetime.now().isoformat()
+                "social_calendar": social_calendar,
+                "paid_advertising": {"google_ads": google_ads, "facebook_ads": facebook_ads},
+                "budget_allocation": marketing_budget,
+                "expected_roi": marketing_strategy.get("expected_roi"),
+                "timeline": marketing_strategy.get("recommended_timeline"),
+                "created_timestamp": datetime.now().isoformat(),
             }
 
             # Cache marketing plan
@@ -321,7 +328,7 @@ class MarketingOrchestrator:
 
             # Pre-launch validation
             validation_result = await self._validate_campaign(campaign)
-            if not validation_result['valid']:
+            if not validation_result["valid"]:
                 raise ValueError(f"Campaign validation failed: {validation_result['errors']}")
 
             # Initialize result tracking
@@ -334,7 +341,7 @@ class MarketingOrchestrator:
                 opens=0,
                 clicks=0,
                 conversions=0,
-                cost=0.0
+                cost=0.0,
             )
 
             # Launch on each channel
@@ -361,8 +368,9 @@ class MarketingOrchestrator:
             # Start performance monitoring
             asyncio.create_task(self._monitor_campaign_performance(campaign_id))
 
-            logger.info(f"Campaign {campaign_id} launched - Targeted: {result.contacts_targeted}, "
-                       f"Sent: {result.messages_sent}")
+            logger.info(
+                f"Campaign {campaign_id} launched - Targeted: {result.contacts_targeted}, Sent: {result.messages_sent}"
+            )
 
             return result
 
@@ -381,10 +389,10 @@ class MarketingOrchestrator:
             logger.info("Starting campaign optimization process")
 
             optimization_results = {
-                'optimized_campaigns': [],
-                'performance_improvements': {},
-                'recommendations': [],
-                'total_roi_improvement': 0.0
+                "optimized_campaigns": [],
+                "performance_improvements": {},
+                "recommendations": [],
+                "total_roi_improvement": 0.0,
             }
 
             # Optimize each active campaign
@@ -393,9 +401,9 @@ class MarketingOrchestrator:
                     try:
                         optimization = await self.performance_optimizer.optimize_campaign(campaign_id)
 
-                        if optimization['success']:
-                            optimization_results['optimized_campaigns'].append(campaign_id)
-                            optimization_results['performance_improvements'][campaign_id] = optimization
+                        if optimization["success"]:
+                            optimization_results["optimized_campaigns"].append(campaign_id)
+                            optimization_results["performance_improvements"][campaign_id] = optimization
 
                             # Apply optimization recommendations
                             await self._apply_campaign_optimizations(campaign_id, optimization)
@@ -404,26 +412,26 @@ class MarketingOrchestrator:
                         logger.error(f"Optimization failed for campaign {campaign_id}: {str(e)}")
 
             # Generate Jorge-specific recommendations
-            jorge_recommendations = await self._generate_jorge_optimization_insights(
-                optimization_results
-            )
-            optimization_results['jorge_recommendations'] = jorge_recommendations
+            jorge_recommendations = await self._generate_jorge_optimization_insights(optimization_results)
+            optimization_results["jorge_recommendations"] = jorge_recommendations
 
-            logger.info(f"Campaign optimization completed for {len(optimization_results['optimized_campaigns'])} campaigns")
+            logger.info(
+                f"Campaign optimization completed for {len(optimization_results['optimized_campaigns'])} campaigns"
+            )
             return optimization_results
 
         except Exception as e:
             logger.error(f"Campaign optimization failed: {str(e)}")
             raise
 
-    async def _create_segment_campaign(self,
-                                     campaign_type: CampaignType,
-                                     segment: Dict[str, Any],
-                                     property_context: Optional[Dict[str, Any]]) -> Campaign:
+    async def _create_segment_campaign(
+        self, campaign_type: CampaignType, segment: Dict[str, Any], property_context: Optional[Dict[str, Any]]
+    ) -> Campaign:
         """Create campaign optimized for specific audience segment"""
         try:
             # Generate unique campaign ID
             import uuid
+
             campaign_id = f"{campaign_type.value}_{segment['segment_id']}_{uuid.uuid4().hex[:8]}"
 
             # Determine optimal channels for segment
@@ -431,12 +439,12 @@ class MarketingOrchestrator:
 
             # Create campaign targeting
             target = CampaignTarget(
-                audience_segments=[segment['segment_id']],
-                geographic_areas=segment.get('geographic_areas', []),
-                property_types=segment.get('property_types', []),
-                price_ranges=segment.get('price_ranges', []),
-                buyer_seller_intent=segment.get('intent', 'both'),
-                temperature_range=segment.get('temperature_range', (0, 100))
+                audience_segments=[segment["segment_id"]],
+                geographic_areas=segment.get("geographic_areas", []),
+                property_types=segment.get("property_types", []),
+                price_ranges=segment.get("price_ranges", []),
+                buyer_seller_intent=segment.get("intent", "both"),
+                temperature_range=segment.get("temperature_range", (0, 100)),
             )
 
             # Generate personalized content for each channel
@@ -447,7 +455,7 @@ class MarketingOrchestrator:
                     channel=channel,
                     audience_segment=segment,
                     property_context=property_context,
-                    jorge_brand=self.jorge_brand
+                    jorge_brand=self.jorge_brand,
                 )
                 campaign_content[channel] = content
 
@@ -455,9 +463,7 @@ class MarketingOrchestrator:
             schedule = await self._create_intelligent_schedule(segment, campaign_type)
 
             # Generate Jorge-specific strategy
-            jorge_strategy = await self._generate_jorge_campaign_strategy(
-                campaign_type, segment, property_context
-            )
+            jorge_strategy = await self._generate_jorge_campaign_strategy(campaign_type, segment, property_context)
 
             campaign = Campaign(
                 campaign_id=campaign_id,
@@ -469,7 +475,7 @@ class MarketingOrchestrator:
                 content=campaign_content,
                 schedule=schedule,
                 jorge_strategy=jorge_strategy,
-                expected_roi=segment.get('expected_roi', 0.0)
+                expected_roi=segment.get("expected_roi", 0.0),
             )
 
             return campaign
@@ -478,8 +484,7 @@ class MarketingOrchestrator:
             logger.error(f"Failed to create segment campaign: {str(e)}")
             raise
 
-    async def _analyze_listing_marketing_potential(self,
-                                                 listing: Dict[str, Any]) -> Dict[str, Any]:
+    async def _analyze_listing_marketing_potential(self, listing: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze listing for optimal marketing strategy"""
         try:
             # Use Claude to analyze listing marketing potential
@@ -504,25 +509,23 @@ class MarketingOrchestrator:
             analysis = await self.claude.generate_response(analysis_prompt)
 
             return {
-                'marketing_strategy': analysis,
-                'property_highlights': listing.get('highlights', []),
-                'target_demographics': [],  # Would be determined from analysis
-                'recommended_channels': ['email', 'social_media', 'google_ads'],
-                'expected_roi': 3.5,  # Would be calculated
-                'recommended_timeline': '30_days',
-                'commission_potential': listing.get('price', 0) * 0.06
+                "marketing_strategy": analysis,
+                "property_highlights": listing.get("highlights", []),
+                "target_demographics": [],  # Would be determined from analysis
+                "recommended_channels": ["email", "social_media", "google_ads"],
+                "expected_roi": 3.5,  # Would be calculated
+                "recommended_timeline": "30_days",
+                "commission_potential": listing.get("price", 0) * 0.06,
             }
 
         except Exception as e:
             logger.error(f"Listing marketing analysis failed: {str(e)}")
             return {
-                'marketing_strategy': 'Standard listing promotion',
-                'commission_potential': listing.get('price', 0) * 0.06
+                "marketing_strategy": "Standard listing promotion",
+                "commission_potential": listing.get("price", 0) * 0.06,
             }
 
-    async def _launch_channel_campaign(self,
-                                     campaign: Campaign,
-                                     channel: CampaignChannel) -> CampaignResult:
+    async def _launch_channel_campaign(self, campaign: Campaign, channel: CampaignChannel) -> CampaignResult:
         """Launch campaign on specific marketing channel"""
         try:
             logger.info(f"Launching {campaign.campaign_id} on {channel.value}")
@@ -552,10 +555,9 @@ class MarketingOrchestrator:
             logger.error(f"Channel campaign launch failed: {str(e)}")
             raise
 
-    async def _launch_email_campaign(self,
-                                   campaign: Campaign,
-                                   content: CampaignContent,
-                                   audience: List[Dict[str, Any]]) -> CampaignResult:
+    async def _launch_email_campaign(
+        self, campaign: Campaign, content: CampaignContent, audience: List[Dict[str, Any]]
+    ) -> CampaignResult:
         """Launch email campaign"""
         try:
             # This would integrate with email service provider (Mailchimp, Constant Contact, etc.)
@@ -574,7 +576,7 @@ class MarketingOrchestrator:
                 opens=int(messages_sent * estimated_open_rate),
                 clicks=int(messages_sent * estimated_click_rate),
                 conversions=int(messages_sent * estimated_click_rate * 0.10),  # 10% of clicks convert
-                cost=messages_sent * 0.10  # $0.10 per email
+                cost=messages_sent * 0.10,  # $0.10 per email
             )
 
         except Exception as e:

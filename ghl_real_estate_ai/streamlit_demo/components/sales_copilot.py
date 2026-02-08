@@ -1,25 +1,27 @@
-import streamlit as st
-from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
+import asyncio
+import time
+from dataclasses import asdict
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import time
-import asyncio
-from datetime import datetime
-from typing import Dict, List, Any, Optional
-from dataclasses import asdict
+import streamlit as st
+
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 
 analytics_service = AnalyticsService()
 
 # Absolute imports
 try:
-    from ghl_real_estate_ai.services.deal_closer_ai import DealCloserAI
-    from ghl_real_estate_ai.services.meeting_prep_assistant import MeetingPrepAssistant, MeetingType
     from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
-    from ghl_real_estate_ai.services.claude_automation_engine import ClaudeAutomationEngine, ScriptType, ReportType
-    from ghl_real_estate_ai.services.enhanced_lead_intelligence import get_enhanced_lead_intelligence
+    from ghl_real_estate_ai.services.claude_automation_engine import ClaudeAutomationEngine, ReportType, ScriptType
     from ghl_real_estate_ai.services.claude_enhanced_lead_scorer import ClaudeEnhancedLeadScorer
+    from ghl_real_estate_ai.services.deal_closer_ai import DealCloserAI
+    from ghl_real_estate_ai.services.enhanced_lead_intelligence import get_enhanced_lead_intelligence
+    from ghl_real_estate_ai.services.meeting_prep_assistant import MeetingPrepAssistant, MeetingType
 except ImportError:
     pass
 
@@ -42,7 +44,7 @@ class SalesCopilotHub:
 
     def render_hub(self):
         """Render the overhauled complete Sales Copilot interface - Obsidian Command Edition"""
-        from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart, render_dossier_block
+        from ghl_real_estate_ai.streamlit_demo.obsidian_theme import render_dossier_block, style_obsidian_chart
         
         # 1. TACTICAL TOP BAR - Obsidian Edition
         st.markdown("""
@@ -130,7 +132,11 @@ class SalesCopilotHub:
             
             if st.button("✨ Generate Tactical Counter", use_container_width=True, type="primary"):
                 with st.spinner("Analyzing objection through lead psychology lens..."):
-                    from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator, ClaudeTaskType, ClaudeRequest
+                    from ghl_real_estate_ai.services.claude_orchestrator import (
+                        ClaudeRequest,
+                        ClaudeTaskType,
+                        get_claude_orchestrator,
+                    )
                     orchestrator = get_claude_orchestrator()
                     
                     # Use lead intelligence to refine the counter-strategy
@@ -238,7 +244,11 @@ class SalesCopilotHub:
             
             if st.button("📄 Synthesize Dossier", use_container_width=True, type="primary"):
                 with st.spinner("Claude is synthesizing behavioral history & market datasets..."):
-                    from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator, ClaudeTaskType, ClaudeRequest
+                    from ghl_real_estate_ai.services.claude_orchestrator import (
+                        ClaudeRequest,
+                        ClaudeTaskType,
+                        get_claude_orchestrator,
+                    )
                     orchestrator = get_claude_orchestrator()
                     
                     # Get lead context

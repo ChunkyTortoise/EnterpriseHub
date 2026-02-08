@@ -12,8 +12,8 @@ from .fusion import (
     normalize_scores,
 )
 from .hybrid_searcher import (
-    HybridSearcher,
     HybridSearchConfig,
+    HybridSearcher,
 )
 
 __all__ = [

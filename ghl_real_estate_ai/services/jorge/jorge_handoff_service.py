@@ -25,10 +25,10 @@ logger = logging.getLogger(__name__)
 class HandoffDecision:
     """Encapsulates a bot-to-bot handoff decision."""
 
-    source_bot: str          # "lead", "buyer", "seller"
-    target_bot: str          # "lead", "buyer", "seller"
-    reason: str              # "buyer_intent_detected", "seller_intent_detected", etc.
-    confidence: float        # 0.0-1.0
+    source_bot: str  # "lead", "buyer", "seller"
+    target_bot: str  # "lead", "buyer", "seller"
+    reason: str  # "buyer_intent_detected", "seller_intent_detected", etc.
+    confidence: float  # 0.0-1.0
     context: Dict[str, Any] = field(default_factory=dict)
 
 
@@ -105,27 +105,19 @@ class JorgeHandoffService:
         cutoff = now - max_age
         contacts_to_remove = []
         for contact_id, entries in cls._handoff_history.items():
-            cls._handoff_history[contact_id] = [
-                e for e in entries if e["timestamp"] > cutoff
-            ]
+            cls._handoff_history[contact_id] = [e for e in entries if e["timestamp"] > cutoff]
             if not cls._handoff_history[contact_id]:
                 contacts_to_remove.append(contact_id)
         for contact_id in contacts_to_remove:
             del cls._handoff_history[contact_id]
 
     @classmethod
-    def _check_circular_handoff(
-        cls, contact_id: str, source_bot: str, target_bot: str
-    ) -> Optional[str]:
+    def _check_circular_handoff(cls, contact_id: str, source_bot: str, target_bot: str) -> Optional[str]:
         """Check for direct circular handoff (same source->target within 30 min)."""
         now = time.time()
         cutoff = now - cls.CIRCULAR_WINDOW_SECONDS
         for entry in cls._handoff_history.get(contact_id, []):
-            if (
-                entry["from"] == source_bot
-                and entry["to"] == target_bot
-                and entry["timestamp"] > cutoff
-            ):
+            if entry["from"] == source_bot and entry["to"] == target_bot and entry["timestamp"] > cutoff:
                 return (
                     f"Circular handoff blocked: {source_bot}->{target_bot} "
                     f"for contact {contact_id} occurred within last 30 minutes"
@@ -133,35 +125,29 @@ class JorgeHandoffService:
         return None
 
     @classmethod
-    def _check_circular_prevention(
-        cls, contact_id: str, source_bot: str, target_bot: str
-    ) -> Tuple[bool, str]:
+    def _check_circular_prevention(cls, contact_id: str, source_bot: str, target_bot: str) -> Tuple[bool, str]:
         """Check if handoff would create a cycle.
-        
+
         Performs two checks:
         1. Same source->target handoff within 30-minute window
         2. Full handoff chain detection for circular patterns (e.g., Lead->Buyer->Lead)
-        
+
         Returns:
             Tuple of (is_blocked: bool, reason: str)
         """
         now = time.time()
         cutoff = now - cls.CIRCULAR_WINDOW_SECONDS
         history = cls._handoff_history.get(contact_id, [])
-        
+
         # Check 1: Same source->target within 30-minute window
         for entry in history:
-            if (
-                entry["from"] == source_bot
-                and entry["to"] == target_bot
-                and entry["timestamp"] > cutoff
-            ):
+            if entry["from"] == source_bot and entry["to"] == target_bot and entry["timestamp"] > cutoff:
                 return (
                     True,
                     f"Circular prevention: {source_bot}->{target_bot} blocked "
-                    f"within 30-min window for contact {contact_id}"
+                    f"within 30-min window for contact {contact_id}",
                 )
-        
+
         # Check 2: Detect circular patterns in handoff chain
         # Build the chain of bot transitions
         chain: List[str] = []
@@ -169,42 +155,38 @@ class JorgeHandoffService:
             if entry["timestamp"] > cutoff:
                 chain.append(entry["to"])
                 chain.append(entry["from"])
-        
+
         # If chain is empty, no circular pattern possible
         if not chain:
             return (False, "")
-        
+
         # Check if proposed handoff creates a cycle
         # A cycle exists if the target_bot appears earlier in the chain
         # and the path from that occurrence back to target_bot completes a loop
         chain = list(dict.fromkeys(chain))  # Remove duplicates while preserving order
-        
+
         # Check if target_bot is already in the chain (would create a loop)
         if target_bot in chain:
             chain_str = " -> ".join(chain[-6:]) if len(chain) > 6 else " -> ".join(chain)
             return (
                 True,
                 f"Circular prevention: handoff chain detected for contact {contact_id}. "
-                f"Current chain: {chain_str} -> {target_bot} (would create cycle)"
+                f"Current chain: {chain_str} -> {target_bot} (would create cycle)",
             )
-        
+
         return (False, "")
 
     @classmethod
     def _check_rate_limit(cls, contact_id: str) -> Optional[str]:
         now = time.time()
         entries = cls._handoff_history.get(contact_id, [])
-        hourly_count = sum(
-            1 for e in entries if e["timestamp"] > now - cls.HOUR_SECONDS
-        )
+        hourly_count = sum(1 for e in entries if e["timestamp"] > now - cls.HOUR_SECONDS)
         if hourly_count >= cls.HOURLY_HANDOFF_LIMIT:
             return (
                 f"Rate limit exceeded: {hourly_count} handoffs in the last hour "
                 f"for contact {contact_id} (max {cls.HOURLY_HANDOFF_LIMIT}/hour)"
             )
-        daily_count = sum(
-            1 for e in entries if e["timestamp"] > now - cls.DAY_SECONDS
-        )
+        daily_count = sum(1 for e in entries if e["timestamp"] > now - cls.DAY_SECONDS)
         if daily_count >= cls.DAILY_HANDOFF_LIMIT:
             return (
                 f"Rate limit exceeded: {daily_count} handoffs in the last 24 hours "
@@ -213,16 +195,16 @@ class JorgeHandoffService:
         return None
 
     @classmethod
-    def _record_handoff(
-        cls, contact_id: str, source_bot: str, target_bot: str
-    ) -> None:
+    def _record_handoff(cls, contact_id: str, source_bot: str, target_bot: str) -> None:
         if contact_id not in cls._handoff_history:
             cls._handoff_history[contact_id] = []
-        cls._handoff_history[contact_id].append({
-            "from": source_bot,
-            "to": target_bot,
-            "timestamp": time.time(),
-        })
+        cls._handoff_history[contact_id].append(
+            {
+                "from": source_bot,
+                "to": target_bot,
+                "timestamp": time.time(),
+            }
+        )
 
     @classmethod
     def _acquire_handoff_lock(cls, contact_id: str) -> bool:
@@ -343,9 +325,7 @@ class JorgeHandoffService:
         # Boost scores with signals extracted from conversation history
         history_signals: Dict[str, float] = {}
         if conversation_history:
-            history_signals = self.extract_intent_signals_from_history(
-                conversation_history
-            )
+            history_signals = self.extract_intent_signals_from_history(conversation_history)
             # Blend history signals: add half of history confidence to current
             if "buyer_intent" in history_signals:
                 buyer_score = min(1.0, buyer_score + history_signals["buyer_intent"] * 0.5)
@@ -379,13 +359,9 @@ class JorgeHandoffService:
 
         # Check circular prevention before returning decision
         self._cleanup_old_entries()
-        is_blocked, block_reason = self._check_circular_prevention(
-            contact_id, current_bot, target
-        )
+        is_blocked, block_reason = self._check_circular_prevention(contact_id, current_bot, target)
         if is_blocked:
-            logger.info(
-                f"Handoff blocked by circular prevention: {block_reason}"
-            )
+            logger.info(f"Handoff blocked by circular prevention: {block_reason}")
             return None
 
         reason = f"{target}_intent_detected"
@@ -427,22 +403,16 @@ class JorgeHandoffService:
         try:
             self._cleanup_old_entries()
 
-            circular_reason = self._check_circular_handoff(
-                contact_id, decision.source_bot, decision.target_bot
-            )
+            circular_reason = self._check_circular_handoff(contact_id, decision.source_bot, decision.target_bot)
             if circular_reason:
                 logger.warning(circular_reason)
-                self._record_analytics(
-                    route, start_time, success=False, blocked_by="circular"
-                )
+                self._record_analytics(route, start_time, success=False, blocked_by="circular")
                 return [{"handoff_executed": False, "reason": circular_reason}]
 
             rate_reason = self._check_rate_limit(contact_id)
             if rate_reason:
                 logger.warning(rate_reason)
-                self._record_analytics(
-                    route, start_time, success=False, blocked_by="rate_limit"
-                )
+                self._record_analytics(route, start_time, success=False, blocked_by="rate_limit")
                 return [{"handoff_executed": False, "reason": rate_reason}]
 
             actions: List[Dict[str, Any]] = []
@@ -459,10 +429,7 @@ class JorgeHandoffService:
                 actions.append({"type": "add_tag", "tag": target_tag})
 
             # Add tracking tag
-            tracking_tag = (
-                f"Handoff-{decision.source_bot.capitalize()}-to-"
-                f"{decision.target_bot.capitalize()}"
-            )
+            tracking_tag = f"Handoff-{decision.source_bot.capitalize()}-to-{decision.target_bot.capitalize()}"
             actions.append({"type": "add_tag", "tag": tracking_tag})
 
             # Log analytics event
@@ -477,15 +444,11 @@ class JorgeHandoffService:
                             "target_bot": decision.target_bot,
                             "reason": decision.reason,
                             "confidence": decision.confidence,
-                            "detected_phrases": decision.context.get(
-                                "detected_phrases", []
-                            ),
+                            "detected_phrases": decision.context.get("detected_phrases", []),
                         },
                     )
                 except Exception as e:
-                    logger.warning(
-                        f"Failed to log handoff analytics for {contact_id}: {e}"
-                    )
+                    logger.warning(f"Failed to log handoff analytics for {contact_id}: {e}")
 
             logger.info(
                 f"Handoff: {decision.source_bot} -> {decision.target_bot} "
@@ -493,9 +456,7 @@ class JorgeHandoffService:
                 f"reason={decision.reason})"
             )
 
-            self._record_handoff(
-                contact_id, decision.source_bot, decision.target_bot
-            )
+            self._record_handoff(contact_id, decision.source_bot, decision.target_bot)
             self._record_analytics(route, start_time, success=True)
 
             return actions
@@ -553,8 +514,7 @@ class JorgeHandoffService:
         valid_outcomes = {"successful", "failed", "reverted", "timeout"}
         if outcome not in valid_outcomes:
             logger.warning(
-                f"Invalid handoff outcome '{outcome}' for contact {contact_id}. "
-                f"Expected one of {valid_outcomes}"
+                f"Invalid handoff outcome '{outcome}' for contact {contact_id}. Expected one of {valid_outcomes}"
             )
             return
 
@@ -562,22 +522,19 @@ class JorgeHandoffService:
         if pair_key not in cls._handoff_outcomes:
             cls._handoff_outcomes[pair_key] = []
 
-        cls._handoff_outcomes[pair_key].append({
-            "contact_id": contact_id,
-            "outcome": outcome,
-            "timestamp": time.time(),
-            "metadata": metadata or {},
-        })
-
-        logger.info(
-            f"Recorded handoff outcome: {pair_key} for contact {contact_id} "
-            f"-> {outcome}"
+        cls._handoff_outcomes[pair_key].append(
+            {
+                "contact_id": contact_id,
+                "outcome": outcome,
+                "timestamp": time.time(),
+                "metadata": metadata or {},
+            }
         )
 
+        logger.info(f"Recorded handoff outcome: {pair_key} for contact {contact_id} -> {outcome}")
+
     @classmethod
-    def get_learned_adjustments(
-        cls, source_bot: str, target_bot: str
-    ) -> Dict[str, Any]:
+    def get_learned_adjustments(cls, source_bot: str, target_bot: str) -> Dict[str, Any]:
         """Calculate confidence threshold adjustments from historical outcomes.
 
         Returns a dict with:
@@ -596,9 +553,7 @@ class JorgeHandoffService:
                 "sample_size": sample_size,
             }
 
-        successful_count = sum(
-            1 for o in outcomes if o["outcome"] == "successful"
-        )
+        successful_count = sum(1 for o in outcomes if o["outcome"] == "successful")
         success_rate = successful_count / sample_size
 
         # High success rate -> lower threshold (easier handoffs)
@@ -617,9 +572,7 @@ class JorgeHandoffService:
         }
 
     @classmethod
-    def extract_intent_signals_from_history(
-        cls, conversation_history: List[Dict[str, Any]]
-    ) -> Dict[str, float]:
+    def extract_intent_signals_from_history(cls, conversation_history: List[Dict[str, Any]]) -> Dict[str, float]:
         """Scan recent conversation history for intent patterns.
 
         Examines up to the last 5 messages and aggregates buyer/seller

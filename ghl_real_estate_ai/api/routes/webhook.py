@@ -14,40 +14,41 @@ Flow:
 8. Send response back to GHL
 """
 
-from datetime import datetime, timezone
 import random
 import re
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 from pydantic import BaseModel
 
+from ghl_real_estate_ai.api.schemas.billing import UsageRecordRequest
 from ghl_real_estate_ai.api.schemas.ghl import (
     ActionType,
     GHLAction,
-    GHLWebhookEvent,
     GHLTagWebhookEvent,
+    GHLWebhookEvent,
     GHLWebhookResponse,
-    MessageType,
     MessageDirection,
+    MessageType,
 )
 from ghl_real_estate_ai.core.conversation_manager import ConversationManager
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.jorge_config import settings as jorge_settings
+from ghl_real_estate_ai.ghl_utils.jorge_rancho_config import rancho_config
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.attribution_analytics import AttributionAnalytics
 from ghl_real_estate_ai.services.calendar_scheduler import CalendarScheduler
+from ghl_real_estate_ai.services.compliance_guard import ComplianceStatus, compliance_guard
 from ghl_real_estate_ai.services.dynamic_pricing_optimizer import DynamicPricingOptimizer
 from ghl_real_estate_ai.services.ghl_client import GHLClient
-from ghl_real_estate_ai.services.lead_scorer import LeadScorer
-from ghl_real_estate_ai.services.lead_source_tracker import LeadSourceTracker, LeadSource
-from ghl_real_estate_ai.services.security_framework import verify_webhook
-from ghl_real_estate_ai.services.tenant_service import TenantService
-from ghl_real_estate_ai.services.subscription_manager import SubscriptionManager
-from ghl_real_estate_ai.services.compliance_guard import compliance_guard, ComplianceStatus
 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+from ghl_real_estate_ai.services.lead_scorer import LeadScorer
+from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, LeadSourceTracker
 from ghl_real_estate_ai.services.mls_client import MLSClient
-from ghl_real_estate_ai.api.schemas.billing import UsageRecordRequest
-from ghl_real_estate_ai.ghl_utils.jorge_rancho_config import rancho_config
+from ghl_real_estate_ai.services.security_framework import verify_webhook
+from ghl_real_estate_ai.services.subscription_manager import SubscriptionManager
+from ghl_real_estate_ai.services.tenant_service import TenantService
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/ghl", tags=["ghl"])
@@ -64,6 +65,8 @@ def _get_lead_scorer():
     if _lead_scorer is None:
         _lead_scorer = LeadScorer()
     return _lead_scorer
+
+
 tenant_service = TenantService()
 analytics_service = AnalyticsService()
 pricing_optimizer = DynamicPricingOptimizer()
@@ -127,11 +130,7 @@ async def _get_tenant_ghl_client(location_id: str) -> GHLClient:
 
 @router.post("/tag-webhook", response_model=GHLWebhookResponse)
 @verify_webhook("ghl")
-async def handle_ghl_tag_webhook(
-    request: Request,
-    event: GHLTagWebhookEvent,
-    background_tasks: BackgroundTasks
-):
+async def handle_ghl_tag_webhook(request: Request, event: GHLTagWebhookEvent, background_tasks: BackgroundTasks):
     """
     Handle tag-added webhook from GoHighLevel.
 
@@ -143,26 +142,14 @@ async def handle_ghl_tag_webhook(
     tag = event.tag
 
     if tag != "Needs Qualifying":
-        return GHLWebhookResponse(
-            success=True,
-            message="Tag ignored",
-            actions=[]
-        )
+        return GHLWebhookResponse(success=True, message="Tag ignored", actions=[])
 
     context = await conversation_manager.get_context(contact_id, location_id)
     if context.get("initial_outreach_sent"):
-        return GHLWebhookResponse(
-            success=True,
-            message="Initial outreach already sent",
-            actions=[]
-        )
+        return GHLWebhookResponse(success=True, message="Initial outreach already sent", actions=[])
 
     if context.get("conversation_history"):
-        return GHLWebhookResponse(
-            success=True,
-            message="Conversation already started",
-            actions=[]
-        )
+        return GHLWebhookResponse(success=True, message="Conversation already started", actions=[])
 
     contact_name = event.contact.first_name if event.contact and event.contact.first_name else "there"
     outreach_template = random.choice(rancho_config.INITIAL_OUTREACH_MESSAGES)
@@ -185,7 +172,7 @@ async def handle_ghl_tag_webhook(
         event_type="initial_outreach_sent",
         location_id=location_id,
         contact_id=contact_id,
-        data={"tag": tag}
+        data={"tag": tag},
     )
 
     # Persist idempotency flag
@@ -193,11 +180,7 @@ async def handle_ghl_tag_webhook(
     context["initial_outreach_sent_at"] = datetime.utcnow().isoformat()
     await conversation_manager.memory_service.save_context(contact_id, context, location_id=location_id)
 
-    return GHLWebhookResponse(
-        success=True,
-        message=outreach_message,
-        actions=[]
-    )
+    return GHLWebhookResponse(success=True, message=outreach_message, actions=[])
 
 
 @router.post("/webhook", response_model=GHLWebhookResponse)
@@ -266,9 +249,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
     # Step -1: Check AI Activation/Deactivation Tags (Jorge's Requirement)
     # AI only runs if activation tag is present AND no deactivation tag is present
     activation_tags = settings.activation_tags  # e.g., ["Needs Qualifying", "Hit List"]
-    deactivation_tags = (
-        settings.deactivation_tags
-    )  # e.g., ["AI-Off", "Qualified", "Stop-Bot"]
+    deactivation_tags = settings.deactivation_tags  # e.g., ["AI-Off", "Qualified", "Stop-Bot"]
 
     should_activate = any(tag in tags for tag in activation_tags)
     # Buyer-mode tag also counts as activation when buyer mode is enabled
@@ -280,9 +261,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
     should_deactivate = any(tag in tags for tag in deactivation_tags)
 
     if not should_activate:
-        logger.info(
-            f"AI not triggered for contact {contact_id} - activation tag not present"
-        )
+        logger.info(f"AI not triggered for contact {contact_id} - activation tag not present")
         background_tasks.add_task(
             analytics_service.track_event,
             event_type="ai_not_triggered",
@@ -297,9 +276,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
         )
 
     if should_deactivate:
-        logger.info(
-            f"AI deactivated for contact {contact_id} - deactivation tag present"
-        )
+        logger.info(f"AI deactivated for contact {contact_id} - deactivation tag present")
         background_tasks.add_task(
             analytics_service.track_event,
             event_type="ai_not_triggered",
@@ -315,9 +292,17 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
 
     # Opt-out detection (Jorge spec: "end automation immediately")
     OPT_OUT_PHRASES = [
-        "stop", "unsubscribe", "don't contact", "dont contact",
-        "remove me", "not interested", "no more", "opt out",
-        "leave me alone", "take me off", "no thanks"
+        "stop",
+        "unsubscribe",
+        "don't contact",
+        "dont contact",
+        "remove me",
+        "not interested",
+        "no more",
+        "opt out",
+        "leave me alone",
+        "take me off",
+        "no thanks",
     ]
     msg_lower = user_message.lower().strip()
     if any(phrase in msg_lower for phrase in OPT_OUT_PHRASES):
@@ -341,11 +326,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
     pending_appointment = context.get("pending_appointment")
     if pending_appointment and pending_appointment.get("status") == "awaiting_selection":
         try:
-            from ghl_real_estate_ai.services.calendar_scheduler import (
-                get_smart_scheduler,
-                TimeSlot,
-                AppointmentType
-            )
+            from ghl_real_estate_ai.services.calendar_scheduler import AppointmentType, TimeSlot, get_smart_scheduler
 
             # Initialize GHL client with tenant config if available
             current_ghl_client = await _get_tenant_ghl_client(location_id)
@@ -360,7 +341,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     start_time=start_time,
                     end_time=end_time,
                     duration_minutes=int((end_time - start_time).total_seconds() / 60),
-                    appointment_type=appointment_type
+                    appointment_type=appointment_type,
                 )
 
                 scheduler = get_smart_scheduler(current_ghl_client)
@@ -370,7 +351,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     "first_name": event.contact.first_name or "Lead",
                     "last_name": event.contact.last_name,
                     "phone": event.contact.phone,
-                    "email": event.contact.email
+                    "email": event.contact.email,
                 }
 
                 booking_result = await scheduler.book_appointment(
@@ -378,13 +359,12 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     contact_info=contact_info,
                     time_slot=time_slot,
                     lead_score=extracted_data.get("questions_answered", 0),
-                    extracted_data=extracted_data
+                    extracted_data=extracted_data,
                 )
 
                 if booking_result.success:
                     response_message = (
-                        f"Perfect, I have you down for {selected['display']}. "
-                        "You'll get a confirmation text shortly."
+                        f"Perfect, I have you down for {selected['display']}. You'll get a confirmation text shortly."
                     )
 
                     background_tasks.add_task(
@@ -411,7 +391,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                         event_type="appointment_slot_confirmed",
                         location_id=location_id,
                         contact_id=contact_id,
-                        data={"appointment_time": selected["display"]}
+                        data={"appointment_time": selected["display"]},
                     )
 
                     return GHLWebhookResponse(
@@ -447,7 +427,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     event_type="appointment_slot_escalated_manual",
                     location_id=location_id,
                     contact_id=contact_id,
-                    data={"reason": "booking_failed"}
+                    data={"reason": "booking_failed"},
                 )
 
                 return GHLWebhookResponse(
@@ -474,9 +454,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 )
                 return GHLWebhookResponse(success=True, message=response_message, actions=[])
 
-            fallback_message = (
-                "No worries, I'll manually check Jorge's calendar and follow up with options."
-            )
+            fallback_message = "No worries, I'll manually check Jorge's calendar and follow up with options."
             background_tasks.add_task(
                 safe_send_message,
                 current_ghl_client,
@@ -498,7 +476,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 event_type="appointment_slot_escalated_manual",
                 location_id=location_id,
                 contact_id=contact_id,
-                data={"reason": "no_selection"}
+                data={"reason": "no_selection"},
             )
 
             return GHLWebhookResponse(
@@ -510,11 +488,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             logger.error(f"Pending appointment handling failed for {contact_id}: {e}", exc_info=True)
 
     # Step -0.5: Check for Jorge's Seller Mode (Needs Qualifying tag + JORGE_SELLER_MODE)
-    jorge_seller_mode = (
-        "Needs Qualifying" in tags and
-        jorge_settings.JORGE_SELLER_MODE and
-        not should_deactivate
-    )
+    jorge_seller_mode = "Needs Qualifying" in tags and jorge_settings.JORGE_SELLER_MODE and not should_deactivate
 
     if jorge_seller_mode:
         logger.info(f"Jorge seller mode activated for contact {contact_id}")
@@ -528,19 +502,14 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             # Initialize GHL client
             current_ghl_client = ghl_client_default
             if tenant_config and tenant_config.get("ghl_api_key"):
-                current_ghl_client = GHLClient(
-                    api_key=tenant_config["ghl_api_key"], location_id=location_id
-                )
+                current_ghl_client = GHLClient(api_key=tenant_config["ghl_api_key"], location_id=location_id)
 
             # Initialize Jorge's seller engine
             jorge_engine = JorgeSellerEngine(conversation_manager, current_ghl_client, mls_client=mls_client)
 
             # Process seller response
             seller_result = await jorge_engine.process_seller_response(
-                contact_id=contact_id,
-                user_message=user_message,
-                location_id=location_id,
-                tenant_config=tenant_config
+                contact_id=contact_id, user_message=user_message, location_id=location_id, tenant_config=tenant_config
             )
 
             # Apply Jorge's seller actions (tags, workflows)
@@ -548,26 +517,21 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             if seller_result.get("actions"):
                 for action_data in seller_result["actions"]:
                     if action_data["type"] == "add_tag":
-                        actions.append(GHLAction(
-                            type=ActionType.ADD_TAG,
-                            tag=action_data["tag"]
-                        ))
+                        actions.append(GHLAction(type=ActionType.ADD_TAG, tag=action_data["tag"]))
                     elif action_data["type"] == "remove_tag":
-                        actions.append(GHLAction(
-                            type=ActionType.REMOVE_TAG,
-                            tag=action_data["tag"]
-                        ))
+                        actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=action_data["tag"]))
                     elif action_data["type"] == "trigger_workflow":
-                        actions.append(GHLAction(
-                            type=ActionType.TRIGGER_WORKFLOW,
-                            workflow_id=action_data["workflow_id"]
-                        ))
+                        actions.append(
+                            GHLAction(type=ActionType.TRIGGER_WORKFLOW, workflow_id=action_data["workflow_id"])
+                        )
                     elif action_data["type"] == "update_custom_field":
-                        actions.append(GHLAction(
-                            type=ActionType.UPDATE_CUSTOM_FIELD,
-                            field_id=action_data["field"],
-                            value=action_data["value"]
-                        ))
+                        actions.append(
+                            GHLAction(
+                                type=ActionType.UPDATE_CUSTOM_FIELD,
+                                field_id=action_data["field"],
+                                value=action_data["value"],
+                            )
+                        )
 
             # Track Jorge seller analytics
             background_tasks.add_task(
@@ -578,8 +542,8 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 data={
                     "temperature": seller_result["temperature"],
                     "questions_answered": seller_result.get("questions_answered", 0),
-                    "message_length": len(seller_result["message"])
-                }
+                    "message_length": len(seller_result["message"]),
+                },
             )
 
             # SMS length guard (seller mode)
@@ -596,10 +560,9 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
 
             # --- BULLETPROOF COMPLIANCE INTERCEPTOR ---
             status, reason, violations = await compliance_guard.audit_message(
-                final_seller_msg, 
-                contact_context={"contact_id": contact_id, "mode": "seller"}
+                final_seller_msg, contact_context={"contact_id": contact_id, "mode": "seller"}
             )
-            
+
             if status == ComplianceStatus.BLOCKED:
                 logger.warning(f"Compliance BLOCKED message for {contact_id}: {reason}. Violations: {violations}")
                 final_seller_msg = "Let's stick to the facts about your property. What price are you looking to get?"
@@ -614,7 +577,9 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     intent_signals=seller_result["handoff_signals"],
                 )
                 if handoff:
-                    handoff_actions = await handoff_service.execute_handoff(handoff, contact_id, location_id=location_id)
+                    handoff_actions = await handoff_service.execute_handoff(
+                        handoff, contact_id, location_id=location_id
+                    )
                     for ha in handoff_actions:
                         if ha["type"] == "add_tag":
                             actions.append(GHLAction(type=ActionType.ADD_TAG, tag=ha["tag"]))
@@ -628,8 +593,8 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     "temperature": seller_result["temperature"],
                     "questions_answered": seller_result.get("questions_answered", 0),
                     "actions_count": len(actions),
-                    "compliance_status": status.value
-                }
+                    "compliance_status": status.value,
+                },
             )
 
             # Send the seller response via GHL API (background task) - P3 FIX: Use safe wrapper
@@ -664,7 +629,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 await ghl_client_default.add_tags(contact_id, ["Bot-Fallback-Active"])
             except Exception as tag_error:
                 logger.error(f"Failed to add Bot-Fallback-Active tag: {tag_error}")
-            
+
             return GHLWebhookResponse(
                 success=True,
                 message="I'm here to help! Let me connect you with the right specialist.",
@@ -673,9 +638,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
 
     # Step -0.4: Check for Jorge's Buyer Mode (Buyer-Lead tag + JORGE_BUYER_MODE)
     jorge_buyer_mode = (
-        jorge_settings.BUYER_ACTIVATION_TAG in tags and
-        jorge_settings.JORGE_BUYER_MODE and
-        not should_deactivate
+        jorge_settings.BUYER_ACTIVATION_TAG in tags and jorge_settings.JORGE_BUYER_MODE and not should_deactivate
     )
 
     if jorge_buyer_mode:
@@ -689,15 +652,11 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             # Initialize GHL client
             current_ghl_client = ghl_client_default
             if tenant_config and tenant_config.get("ghl_api_key"):
-                current_ghl_client = GHLClient(
-                    api_key=tenant_config["ghl_api_key"], location_id=location_id
-                )
+                current_ghl_client = GHLClient(api_key=tenant_config["ghl_api_key"], location_id=location_id)
 
             # Build conversation history from manager
             history = await conversation_manager.get_conversation_history(contact_id)
-            conversation_history = history if history else [
-                {"role": "user", "content": user_message}
-            ]
+            conversation_history = history if history else [{"role": "user", "content": user_message}]
             # Ensure current message is included
             if not conversation_history or conversation_history[-1].get("content") != user_message:
                 conversation_history.append({"role": "user", "content": user_message})
@@ -730,14 +689,13 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     "buyer_temperature": buyer_temp,
                     "is_qualified": buyer_result.get("is_qualified", False),
                     "financial_readiness": buyer_result.get("financial_readiness_score", 0),
-                    "message_length": len(buyer_result.get("response_content", ""))
-                }
+                    "message_length": len(buyer_result.get("response_content", "")),
+                },
             )
 
             # SMS length guard (buyer mode)
             final_buyer_msg = buyer_result.get(
-                "response_content",
-                "I'd love to help you find the perfect property. What area are you looking in?"
+                "response_content", "I'd love to help you find the perfect property. What area are you looking in?"
             )
             SMS_MAX_CHARS = 320
             if len(final_buyer_msg) > SMS_MAX_CHARS:
@@ -751,13 +709,14 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
 
             # --- BULLETPROOF COMPLIANCE INTERCEPTOR ---
             status, reason, violations = await compliance_guard.audit_message(
-                final_buyer_msg,
-                contact_context={"contact_id": contact_id, "mode": "buyer"}
+                final_buyer_msg, contact_context={"contact_id": contact_id, "mode": "buyer"}
             )
 
             if status == ComplianceStatus.BLOCKED:
                 logger.warning(f"Compliance BLOCKED buyer message for {contact_id}: {reason}. Violations: {violations}")
-                final_buyer_msg = "I'd love to help you find your next home. What's most important to you in a property?"
+                final_buyer_msg = (
+                    "I'd love to help you find your next home. What's most important to you in a property?"
+                )
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
 
             # --- CROSS-BOT HANDOFF CHECK ---
@@ -769,7 +728,9 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     intent_signals=buyer_result["handoff_signals"],
                 )
                 if handoff:
-                    handoff_actions = await handoff_service.execute_handoff(handoff, contact_id, location_id=location_id)
+                    handoff_actions = await handoff_service.execute_handoff(
+                        handoff, contact_id, location_id=location_id
+                    )
                     for ha in handoff_actions:
                         if ha["type"] == "add_tag":
                             actions.append(GHLAction(type=ActionType.ADD_TAG, tag=ha["tag"]))
@@ -783,8 +744,8 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     "buyer_temperature": buyer_temp,
                     "is_qualified": buyer_result.get("is_qualified", False),
                     "actions_count": len(actions),
-                    "compliance_status": status.value
-                }
+                    "compliance_status": status.value,
+                },
             )
 
             # Send the buyer response via GHL API (background task) - P3 FIX: Use safe wrapper
@@ -819,7 +780,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 await ghl_client_default.add_tags(contact_id, ["Bot-Fallback-Active"])
             except Exception as tag_error:
                 logger.error(f"Failed to add Bot-Fallback-Active tag: {tag_error}")
-            
+
             return GHLWebhookResponse(
                 success=True,
                 message="I'm here to help! Let me connect you with the right specialist.",
@@ -828,9 +789,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
 
     # Step -0.3: Check for Jorge's Lead Mode (LEAD_ACTIVATION_TAG + JORGE_LEAD_MODE)
     jorge_lead_mode = (
-        jorge_settings.LEAD_ACTIVATION_TAG in tags and
-        jorge_settings.JORGE_LEAD_MODE and
-        not should_deactivate
+        jorge_settings.LEAD_ACTIVATION_TAG in tags and jorge_settings.JORGE_LEAD_MODE and not should_deactivate
     )
 
     if jorge_lead_mode:
@@ -844,15 +803,11 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             # Initialize GHL client
             current_ghl_client = ghl_client_default
             if tenant_config and tenant_config.get("ghl_api_key"):
-                current_ghl_client = GHLClient(
-                    api_key=tenant_config["ghl_api_key"], location_id=location_id
-                )
+                current_ghl_client = GHLClient(api_key=tenant_config["ghl_api_key"], location_id=location_id)
 
             # Build conversation history from manager
             history = await conversation_manager.get_conversation_history(contact_id)
-            conversation_history = history if history else [
-                {"role": "user", "content": user_message}
-            ]
+            conversation_history = history if history else [{"role": "user", "content": user_message}]
             # Ensure current message is included
             if not conversation_history or conversation_history[-1].get("content") != user_message:
                 conversation_history.append({"role": "user", "content": user_message})
@@ -898,15 +853,12 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     "lead_temperature": lead_temp,
                     "is_qualified": is_qualified,
                     "handoff_signals": handoff_signals,
-                    "message_length": len(lead_result.get("response_content", ""))
-                }
+                    "message_length": len(lead_result.get("response_content", "")),
+                },
             )
 
             # SMS length guard (lead mode)
-            final_lead_msg = lead_result.get(
-                "response_content",
-                "Thanks for reaching out! How can I help you today?"
-            )
+            final_lead_msg = lead_result.get("response_content", "Thanks for reaching out! How can I help you today?")
             SMS_MAX_CHARS = 320
             if len(final_lead_msg) > SMS_MAX_CHARS:
                 truncated = final_lead_msg[:SMS_MAX_CHARS]
@@ -919,8 +871,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
 
             # --- BULLETPROOF COMPLIANCE INTERCEPTOR ---
             status, reason, violations = await compliance_guard.audit_message(
-                final_lead_msg,
-                contact_context={"contact_id": contact_id, "mode": "lead"}
+                final_lead_msg, contact_context={"contact_id": contact_id, "mode": "lead"}
             )
 
             if status == ComplianceStatus.BLOCKED:
@@ -934,10 +885,12 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     current_bot="lead",
                     contact_id=contact_id,
                     conversation_history=conversation_history,
-                    intent_signals={"jorge_handoff_recommended": True}
+                    intent_signals={"jorge_handoff_recommended": True},
                 )
                 if handoff:
-                    handoff_actions = await handoff_service.execute_handoff(handoff, contact_id, location_id=location_id)
+                    handoff_actions = await handoff_service.execute_handoff(
+                        handoff, contact_id, location_id=location_id
+                    )
                     for ha in handoff_actions:
                         if ha["type"] == "add_tag":
                             actions.append(GHLAction(type=ActionType.ADD_TAG, tag=ha["tag"]))
@@ -954,8 +907,8 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     "handoff_triggered": handoff_triggered,
                     "actions_count": len(actions),
                     "compliance_status": status.value,
-                    "message_length": len(final_lead_msg)
-                }
+                    "message_length": len(final_lead_msg),
+                },
             )
 
             # Send the lead response via GHL API (background task) - P3 FIX: Use safe wrapper
@@ -989,7 +942,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 await ghl_client_default.add_tags(contact_id, ["Bot-Fallback-Active"])
             except Exception as tag_error:
                 logger.error(f"Failed to add Bot-Fallback-Active tag: {tag_error}")
-            
+
             return GHLWebhookResponse(
                 success=True,
                 message="Thanks for reaching out! How can I help you today?",
@@ -1011,9 +964,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
         # Step 0.1: Initialize GHL client (tenant-specific or default)
         current_ghl_client = ghl_client_default
         if tenant_config and tenant_config.get("ghl_api_key"):
-            current_ghl_client = GHLClient(
-                api_key=tenant_config["ghl_api_key"], location_id=location_id
-            )
+            current_ghl_client = GHLClient(api_key=tenant_config["ghl_api_key"], location_id=location_id)
 
         # Step 0.2: Analyze and track lead source attribution
         source_attribution = None
@@ -1025,7 +976,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 "last_name": event.contact.last_name,
                 "phone": event.contact.phone,
                 "email": event.contact.email,
-                "tags": event.contact.tags
+                "tags": event.contact.tags,
             }
 
             # Extract webhook metadata for source analysis
@@ -1033,19 +984,14 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 "location_id": location_id,
                 "contact_id": contact_id,
                 "message_type": event.message.type.value,
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
-            source_attribution = await lead_source_tracker.analyze_lead_source(
-                contact_data, webhook_metadata
-            )
+            source_attribution = await lead_source_tracker.analyze_lead_source(contact_data, webhook_metadata)
 
             # Update GHL custom fields with source attribution in background
             background_tasks.add_task(
-                lead_source_tracker.update_ghl_custom_fields,
-                contact_id,
-                source_attribution,
-                current_ghl_client
+                lead_source_tracker.update_ghl_custom_fields, contact_id, source_attribution, current_ghl_client
             )
 
             # Track source performance event
@@ -1058,8 +1004,8 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     "location_id": location_id,
                     "message_type": event.message.type.value,
                     "quality_score": source_attribution.quality_score,
-                    "confidence": source_attribution.confidence_score
-                }
+                    "confidence": source_attribution.confidence_score,
+                },
             )
 
             # Track daily attribution metrics
@@ -1068,7 +1014,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 source_attribution.source,
                 1,  # 1 lead interaction
                 0.0,  # No revenue at interaction stage
-                0.0  # Cost tracked separately by marketing spend
+                0.0,  # Cost tracked separately by marketing spend
             )
 
             logger.info(
@@ -1077,8 +1023,8 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     "contact_id": contact_id,
                     "detected_source": source_attribution.source.value,
                     "confidence": source_attribution.confidence_score,
-                    "quality_score": source_attribution.quality_score
-                }
+                    "quality_score": source_attribution.quality_score,
+                },
             )
 
         except Exception as e:
@@ -1086,9 +1032,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             # Continue processing even if attribution fails
 
         # Step 1: Get conversation context
-        context = await conversation_manager.get_context(
-            contact_id, location_id=location_id
-        )
+        context = await conversation_manager.get_context(contact_id, location_id=location_id)
 
         # Step 2: Generate AI response
         ai_response = await conversation_manager.generate_response(
@@ -1124,14 +1068,16 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
 
         # Add source attribution context if available
         if source_attribution:
-            lead_scored_data.update({
-                "source": source_attribution.source.value,
-                "source_quality": source_attribution.source_quality.value,
-                "confidence": source_attribution.confidence_score,
-                "utm_source": source_attribution.utm_source,
-                "utm_campaign": source_attribution.utm_campaign,
-                "medium": source_attribution.medium
-            })
+            lead_scored_data.update(
+                {
+                    "source": source_attribution.source.value,
+                    "source_quality": source_attribution.source_quality.value,
+                    "confidence": source_attribution.confidence_score,
+                    "utm_source": source_attribution.utm_source,
+                    "utm_campaign": source_attribution.utm_campaign,
+                    "medium": source_attribution.medium,
+                }
+            )
 
         background_tasks.add_task(
             analytics_service.track_event,
@@ -1151,10 +1097,10 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     "score": ai_response.lead_score,
                     "classification": _get_lead_scorer().classify(ai_response.lead_score),
                     "contact_id": contact_id,
-                    "location_id": location_id
-                }
+                    "location_id": location_id,
+                },
             )
-        
+
         # Calculate dynamic pricing for this lead (background task)
         background_tasks.add_task(
             _calculate_lead_pricing,
@@ -1164,8 +1110,8 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 "questions_answered": ai_response.lead_score,
                 "message_content": user_message,
                 "extracted_data": ai_response.extracted_data,
-                "classification": _get_lead_scorer().classify(ai_response.lead_score)
-            }
+                "classification": _get_lead_scorer().classify(ai_response.lead_score),
+            },
         )
 
         # Step 2.5: Handle Billing Usage Tracking (Jorge's $240K ARR Foundation)
@@ -1175,7 +1121,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             location_id=location_id,
             lead_score=ai_response.lead_score,
             extracted_data=ai_response.extracted_data,
-            classification=_get_lead_scorer().classify(ai_response.lead_score)
+            classification=_get_lead_scorer().classify(ai_response.lead_score),
         )
 
         # Step 3: Update conversation context
@@ -1195,7 +1141,11 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
         if settings.appointment_auto_booking_enabled and ai_response.lead_score >= 5:
             try:
                 # Check if we should attempt appointment booking
-                booking_attempted, booking_message, booking_actions = await calendar_scheduler.handle_appointment_request(
+                (
+                    booking_attempted,
+                    booking_message,
+                    booking_actions,
+                ) = await calendar_scheduler.handle_appointment_request(
                     contact_id=contact_id,
                     contact_info={
                         "contact_id": contact_id,
@@ -1206,7 +1156,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     },
                     lead_score=ai_response.lead_score,
                     extracted_data=ai_response.extracted_data,
-                    message_content=user_message
+                    message_content=user_message,
                 )
 
                 if booking_attempted:
@@ -1224,8 +1174,8 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                             "lead_score": ai_response.lead_score,
                             "booking_success": booking_message and "scheduled" in booking_message.lower(),
                             "appointment_actions": len(booking_actions),
-                            "40_percent_faster_target": True  # Jorge's conversion goal
-                        }
+                            "40_percent_faster_target": True,  # Jorge's conversion goal
+                        },
                     )
 
                     logger.info(
@@ -1235,8 +1185,8 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                             "lead_score": ai_response.lead_score,
                             "booking_attempted": booking_attempted,
                             "actions_count": len(booking_actions),
-                            "jorge_feature": "smart_appointment_scheduling"
-                        }
+                            "jorge_feature": "smart_appointment_scheduling",
+                        },
                     )
 
             except Exception as e:
@@ -1247,9 +1197,9 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                         "lead_score": ai_response.lead_score,
                         "error": str(e),
                         "error_type": type(e).__name__,
-                        "security_event": "appointment_scheduling_failure"
+                        "security_event": "appointment_scheduling_failure",
                     },
-                    exc_info=True
+                    exc_info=True,
                 )
                 # Don't fail the webhook - continue with normal processing
 
@@ -1285,7 +1235,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
         # --- BULLETPROOF COMPLIANCE INTERCEPTOR ---
         compliance_status, reason, violations = await compliance_guard.audit_message(
             final_message,
-            contact_context={"contact_id": contact_id, "mode": "lead", "lead_score": ai_response.lead_score}
+            contact_context={"contact_id": contact_id, "mode": "lead", "lead_score": ai_response.lead_score},
         )
 
         if compliance_status == ComplianceStatus.BLOCKED:
@@ -1295,7 +1245,10 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
 
         # --- CROSS-BOT HANDOFF CHECK ---
         lead_intent_signals = JorgeHandoffService.extract_intent_signals(user_message)
-        if lead_intent_signals.get("buyer_intent_score", 0) > 0 or lead_intent_signals.get("seller_intent_score", 0) > 0:
+        if (
+            lead_intent_signals.get("buyer_intent_score", 0) > 0
+            or lead_intent_signals.get("seller_intent_score", 0) > 0
+        ):
             handoff = await handoff_service.evaluate_handoff(
                 current_bot="lead",
                 contact_id=contact_id,
@@ -1319,12 +1272,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             event.message.type,
         )
 
-        background_tasks.add_task(
-            safe_apply_actions,
-            current_ghl_client,
-            contact_id,
-            actions
-        )
+        background_tasks.add_task(safe_apply_actions, current_ghl_client, contact_id, actions)
 
         logger.info(
             f"Successfully processed webhook for contact {contact_id}",
@@ -1337,13 +1285,12 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
         )
 
         # Return immediate response to GHL
-        return GHLWebhookResponse(
-            success=True, message=final_message, actions=actions
-        )
+        return GHLWebhookResponse(success=True, message=final_message, actions=actions)
 
     except Exception as e:
         # SECURITY FIX: Remove PII from error logs and responses
         import uuid
+
         error_id = str(uuid.uuid4())
 
         logger.error(
@@ -1353,14 +1300,16 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 "location_id": location_id,
                 "error_type": type(e).__name__,
                 "has_contact_id": bool(contact_id),
-                "error_message": str(e)
+                "error_message": str(e),
             },
             exc_info=True,
         )
 
         # Best-effort: send a human-sounding fallback so the contact isn't left on read
         if contact_id:
-            fallback_msg = "Hey, give me just a moment — I want to make sure I get you the right info. I'll circle back shortly!"
+            fallback_msg = (
+                "Hey, give me just a moment — I want to make sure I get you the right info. I'll circle back shortly!"
+            )
             try:
                 background_tasks.add_task(
                     ghl_client_default.send_message,
@@ -1378,16 +1327,13 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 "success": False,
                 "message": "Processing error — fallback message sent to contact",
                 "error_id": error_id,
-                "retry_allowed": True
-            }
+                "retry_allowed": True,
+            },
         )
 
 
 async def prepare_ghl_actions(
-    extracted_data: dict,
-    lead_score: int,
-    event: GHLWebhookEvent,
-    source_attribution=None
+    extracted_data: dict, lead_score: int, event: GHLWebhookEvent, source_attribution=None
 ) -> list[GHLAction]:
     """
     Prepare GHL actions based on extracted data and lead score.
@@ -1508,14 +1454,10 @@ async def prepare_ghl_actions(
         if isinstance(location, list):
             location_str = ", ".join(location)
             for loc in location:
-                actions.append(
-                    GHLAction(type=ActionType.ADD_TAG, tag=f"Location-{loc}")
-                )
+                actions.append(GHLAction(type=ActionType.ADD_TAG, tag=f"Location-{loc}"))
         else:
             location_str = str(location)
-            actions.append(
-                GHLAction(type=ActionType.ADD_TAG, tag=f"Location-{location}")
-            )
+            actions.append(GHLAction(type=ActionType.ADD_TAG, tag=f"Location-{location}"))
 
         # Update Location Custom Field if configured
         if settings.custom_field_location:
@@ -1564,7 +1506,7 @@ async def prepare_ghl_actions(
                 LeadSource.CLIENT_REFERRAL,
                 LeadSource.ZILLOW,
                 LeadSource.REALTOR_COM,
-                LeadSource.DIRECT
+                LeadSource.DIRECT,
             ]
 
             if source_attribution.source in premium_sources:
@@ -1595,7 +1537,7 @@ async def prepare_ghl_actions(
         extra={
             "contact_id": event.contact_id,
             "actions": [a.type.value for a in actions],
-            "source": source_attribution.source.value if source_attribution else "unknown"
+            "source": source_attribution.source.value if source_attribution else "unknown",
         },
     )
 
@@ -1609,7 +1551,9 @@ class InitiateQualificationRequest(BaseModel):
 
 @router.post("/initiate-qualification")
 @verify_webhook("ghl")
-async def initiate_qualification(request: Request, body: InitiateQualificationRequest, background_tasks: BackgroundTasks):
+async def initiate_qualification(
+    request: Request, body: InitiateQualificationRequest, background_tasks: BackgroundTasks
+):
     """
     Called by GHL workflow when 'Needs Qualifying' tag is applied.
     Sends initial outreach message to start qualification.
@@ -1632,7 +1576,7 @@ async def initiate_qualification(request: Request, body: InitiateQualificationRe
 
         logger.info(
             f"Initiate qualification sent for contact {contact_id}",
-            extra={"contact_id": contact_id, "location_id": location_id}
+            extra={"contact_id": contact_id, "location_id": location_id},
         )
 
         return GHLWebhookResponse(
@@ -1644,7 +1588,7 @@ async def initiate_qualification(request: Request, body: InitiateQualificationRe
         logger.error(f"Initiate qualification failed for contact {contact_id}: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"success": False, "message": "Failed to initiate qualification"}
+            detail={"success": False, "message": "Failed to initiate qualification"},
         )
 
 
@@ -1667,20 +1611,18 @@ async def health_check():
 async def _calculate_lead_pricing(contact_id: str, location_id: str, context: dict) -> None:
     """
     Background task to calculate dynamic pricing for a lead
-    
+
     Args:
         contact_id: GHL contact ID
-        location_id: GHL location ID  
+        location_id: GHL location ID
         context: Conversation context and lead data
     """
     try:
         # Calculate pricing using the dynamic pricing optimizer
         pricing_result = await pricing_optimizer.calculate_lead_price(
-            contact_id=contact_id,
-            location_id=location_id,
-            context=context
+            contact_id=contact_id, location_id=location_id, context=context
         )
-        
+
         logger.info(
             f"Pricing calculated for contact {contact_id}",
             extra={
@@ -1688,10 +1630,10 @@ async def _calculate_lead_pricing(contact_id: str, location_id: str, context: di
                 "location_id": location_id,
                 "tier": pricing_result.tier,
                 "final_price": pricing_result.final_price,
-                "expected_roi": pricing_result.expected_roi
-            }
+                "expected_roi": pricing_result.expected_roi,
+            },
         )
-        
+
         # Track pricing calculation event
         await analytics_service.track_event(
             event_type="pricing_calculated",
@@ -1705,24 +1647,21 @@ async def _calculate_lead_pricing(contact_id: str, location_id: str, context: di
                 "conversion_probability": pricing_result.conversion_probability,
                 "expected_roi": pricing_result.expected_roi,
                 "jorge_score": pricing_result.jorge_score,
-                "agent_recommendation": pricing_result.agent_recommendation
-            }
+                "agent_recommendation": pricing_result.agent_recommendation,
+            },
         )
 
     except Exception as e:
         logger.error(
             f"Failed to calculate pricing for contact {contact_id}",
-            extra={
-                "contact_id": contact_id,
-                "location_id": location_id,
-                "error": str(e)
-            },
-            exc_info=True
+            extra={"contact_id": contact_id, "location_id": location_id, "error": str(e)},
+            exc_info=True,
         )
 
 
-async def _handle_billing_usage(contact_id: str, location_id: str, lead_score: int,
-                              extracted_data: dict, classification: str) -> None:
+async def _handle_billing_usage(
+    contact_id: str, location_id: str, lead_score: int, extracted_data: dict, classification: str
+) -> None:
     """
     Background task to handle billing usage tracking for lead processing.
 
@@ -1747,8 +1686,8 @@ async def _handle_billing_usage(contact_id: str, location_id: str, lead_score: i
                     "contact_id": contact_id,
                     "location_id": location_id,
                     "classification": classification,
-                    "billing_status": "no_subscription"
-                }
+                    "billing_status": "no_subscription",
+                },
             )
             return
 
@@ -1759,8 +1698,8 @@ async def _handle_billing_usage(contact_id: str, location_id: str, lead_score: i
             context={
                 "questions_answered": lead_score,
                 "extracted_data": extracted_data,
-                "classification": classification
-            }
+                "classification": classification,
+            },
         )
 
         # Check if this lead exceeds the subscription allowance
@@ -1778,7 +1717,7 @@ async def _handle_billing_usage(contact_id: str, location_id: str, lead_score: i
                     tier=classification,
                     pricing_multiplier=pricing_result.multiplier,
                     billing_period_start=active_subscription.current_period_start,
-                    billing_period_end=active_subscription.current_period_end
+                    billing_period_end=active_subscription.current_period_end,
                 )
 
                 # Record overage usage with subscription manager
@@ -1787,7 +1726,7 @@ async def _handle_billing_usage(contact_id: str, location_id: str, lead_score: i
                     lead_id=usage_request.lead_id,
                     contact_id=contact_id,
                     lead_price=pricing_result.final_price,
-                    tier=classification
+                    tier=classification,
                 )
 
                 if billing_result["success"]:
@@ -1802,8 +1741,8 @@ async def _handle_billing_usage(contact_id: str, location_id: str, lead_score: i
                             "overage_lead_number": current_usage - active_subscription.usage_allowance,
                             "stripe_usage_record_id": billing_result.get("stripe_usage_record_id"),
                             "billing_period": billing_result.get("billing_period"),
-                            "jorge_feature": "usage_based_billing"
-                        }
+                            "jorge_feature": "usage_based_billing",
+                        },
                     )
 
                     # Track overage billing event
@@ -1819,8 +1758,8 @@ async def _handle_billing_usage(contact_id: str, location_id: str, lead_score: i
                             "overage_number": current_usage - active_subscription.usage_allowance,
                             "subscription_tier": active_subscription.tier.value,
                             "expected_roi": pricing_result.expected_roi,
-                            "arr_impact": float(pricing_result.final_price) * 12  # Annualized impact
-                        }
+                            "arr_impact": float(pricing_result.final_price) * 12,  # Annualized impact
+                        },
                     )
 
                 else:
@@ -1831,8 +1770,8 @@ async def _handle_billing_usage(contact_id: str, location_id: str, lead_score: i
                             "location_id": location_id,
                             "subscription_id": active_subscription.id,
                             "error": billing_result.get("error"),
-                            "recoverable": billing_result.get("recoverable", True)
-                        }
+                            "recoverable": billing_result.get("recoverable", True),
+                        },
                     )
 
             except Exception as overage_error:
@@ -1843,9 +1782,9 @@ async def _handle_billing_usage(contact_id: str, location_id: str, lead_score: i
                         "location_id": location_id,
                         "subscription_id": active_subscription.id,
                         "error": str(overage_error),
-                        "error_type": type(overage_error).__name__
+                        "error_type": type(overage_error).__name__,
                     },
-                    exc_info=True
+                    exc_info=True,
                 )
 
         else:
@@ -1861,8 +1800,8 @@ async def _handle_billing_usage(contact_id: str, location_id: str, lead_score: i
                     "usage_percentage": round((current_usage / active_subscription.usage_allowance) * 100, 2),
                     "tier": classification,
                     "estimated_value": float(pricing_result.final_price),
-                    "billing_status": "within_allowance"
-                }
+                    "billing_status": "within_allowance",
+                },
             )
 
             # Track usage within allowance for analytics
@@ -1876,15 +1815,15 @@ async def _handle_billing_usage(contact_id: str, location_id: str, lead_score: i
                     "usage_allowance": active_subscription.usage_allowance,
                     "tier": classification,
                     "lead_score": lead_score,
-                    "estimated_value": float(pricing_result.final_price)
-                }
+                    "estimated_value": float(pricing_result.final_price),
+                },
             )
 
         # Check for usage threshold notifications
         threshold_result = await subscription_manager.handle_usage_threshold(
             location_id=location_id,
             current_usage=current_usage,
-            period_usage_allowance=active_subscription.usage_allowance
+            period_usage_allowance=active_subscription.usage_allowance,
         )
 
         if threshold_result.get("actions_taken"):
@@ -1895,8 +1834,8 @@ async def _handle_billing_usage(contact_id: str, location_id: str, lead_score: i
                     "usage_percentage": threshold_result.get("usage_percentage"),
                     "threshold_level": threshold_result.get("threshold_level"),
                     "actions_taken": threshold_result.get("actions_taken"),
-                    "overage_billing_active": threshold_result.get("overage_billing_active")
-                }
+                    "overage_billing_active": threshold_result.get("overage_billing_active"),
+                },
             )
 
             # Track threshold events for customer success
@@ -1904,7 +1843,7 @@ async def _handle_billing_usage(contact_id: str, location_id: str, lead_score: i
                 event_type="usage_threshold_reached",
                 location_id=location_id,
                 contact_id=contact_id,
-                data=threshold_result
+                data=threshold_result,
             )
 
     except Exception as e:
@@ -1916,7 +1855,7 @@ async def _handle_billing_usage(contact_id: str, location_id: str, lead_score: i
                 "classification": classification,
                 "lead_score": lead_score,
                 "error": str(e),
-                "error_type": type(e).__name__
+                "error_type": type(e).__name__,
             },
-            exc_info=True
+            exc_info=True,
         )

@@ -10,29 +10,32 @@ Provides comprehensive API endpoints for:
 """
 
 import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
-from fastapi import APIRouter, HTTPException, Query, Depends
-from pydantic import BaseModel, Field
 import logging
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
-from ghl_real_estate_ai.services.rancho_cucamonga_market_service import (
-    get_rancho_cucamonga_market_service, PropertyType, MarketCondition
-)
-from ghl_real_estate_ai.services.property_alerts import (
-    get_property_alert_system, AlertType, AlertPriority
-)
-from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import get_rancho_cucamonga_ai_assistant
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.property_alerts import AlertPriority, AlertType, get_property_alert_system
+from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import get_rancho_cucamonga_ai_assistant
+from ghl_real_estate_ai.services.rancho_cucamonga_market_service import (
+    MarketCondition,
+    PropertyType,
+    get_rancho_cucamonga_market_service,
+)
 
 logger = get_logger(__name__)
 
 # Initialize router
 router = APIRouter(prefix="/api/v1/market-intelligence", tags=["Market Intelligence"])
 
+
 # Pydantic Models
 class MarketMetricsResponse(BaseModel):
     """Rancho Cucamonga/Inland Empire market metrics response model."""
+
     median_price: float
     average_days_on_market: int
     inventory_count: int
@@ -52,6 +55,7 @@ class MarketMetricsResponse(BaseModel):
 
 class PropertySearchRequest(BaseModel):
     """Property search request model."""
+
     min_price: Optional[float] = Field(None, description="Minimum price filter")
     max_price: Optional[float] = Field(None, description="Maximum price filter")
     min_beds: Optional[int] = Field(None, description="Minimum bedrooms")
@@ -67,6 +71,7 @@ class PropertySearchRequest(BaseModel):
 
 class PropertyRecommendationRequest(BaseModel):
     """Property recommendation request for lead matching."""
+
     lead_id: str = Field(..., description="Lead identifier")
     employer: Optional[str] = Field(None, description="Lead's employer")
     budget_range: Optional[List[float]] = Field(None, description="[min_price, max_price]")
@@ -78,6 +83,7 @@ class PropertyRecommendationRequest(BaseModel):
 
 class CorporateInsightsRequest(BaseModel):
     """Corporate relocation insights request."""
+
     employer: str = Field(..., description="Company name")
     position_level: Optional[str] = Field(None, description="Position level")
     salary_range: Optional[List[float]] = Field(None, description="Salary range")
@@ -85,6 +91,7 @@ class CorporateInsightsRequest(BaseModel):
 
 class MarketTimingRequest(BaseModel):
     """Market timing analysis request."""
+
     transaction_type: str = Field(..., description="'buy' or 'sell'")
     property_type: Optional[str] = Field("single_family", description="Property type")
     neighborhood: Optional[str] = Field(None, description="Specific neighborhood")
@@ -93,10 +100,11 @@ class MarketTimingRequest(BaseModel):
 
 # Market Metrics Endpoints
 
+
 @router.get("/metrics", response_model=MarketMetricsResponse)
 async def get_market_metrics(
     neighborhood: Optional[str] = Query(None, description="Filter by neighborhood"),
-    property_type: Optional[str] = Query(None, description="Filter by property type")
+    property_type: Optional[str] = Query(None, description="Filter by property type"),
 ):
     """
     Get comprehensive Austin market metrics.
@@ -133,7 +141,7 @@ async def get_market_metrics(
             market_condition=metrics.market_condition.value,
             neighborhood=neighborhood,
             property_type=property_type,
-            last_updated=datetime.now()
+            last_updated=datetime.now(),
         )
 
     except Exception as e:
@@ -155,7 +163,7 @@ async def get_neighborhood_list():
             {"name": "Mueller", "zone": "East", "appeal": "Master Planned - Tech Families"},
             {"name": "East Austin", "zone": "East", "appeal": "Hip Culture - Tesla/Startups"},
             {"name": "Cedar Park", "zone": "Northwest", "appeal": "Family Friendly - Top Schools"},
-            {"name": "Westlake", "zone": "West", "appeal": "Luxury - Executive Homes"}
+            {"name": "Westlake", "zone": "West", "appeal": "Luxury - Executive Homes"},
         ]
 
         # Enhance with current market data
@@ -164,12 +172,14 @@ async def get_neighborhood_list():
             try:
                 analysis = await market_service.get_neighborhood_analysis(neighborhood["name"])
                 if analysis:
-                    neighborhood.update({
-                        "median_price": analysis.median_price,
-                        "school_rating": analysis.school_rating,
-                        "tech_worker_appeal": analysis.tech_worker_appeal,
-                        "market_condition": analysis.market_condition.value
-                    })
+                    neighborhood.update(
+                        {
+                            "median_price": analysis.median_price,
+                            "school_rating": analysis.school_rating,
+                            "tech_worker_appeal": analysis.tech_worker_appeal,
+                            "market_condition": analysis.market_condition.value,
+                        }
+                    )
                 enhanced_neighborhoods.append(neighborhood)
             except Exception:
                 enhanced_neighborhoods.append(neighborhood)
@@ -198,8 +208,8 @@ async def get_neighborhood_analysis(neighborhood_name: str):
             "lifestyle_score": {
                 "walkability": analysis.walkability_score,
                 "school_rating": analysis.school_rating,
-                "tech_appeal": analysis.tech_worker_appeal
-            }
+                "tech_appeal": analysis.tech_worker_appeal,
+            },
         }
 
     except HTTPException:
@@ -210,6 +220,7 @@ async def get_neighborhood_analysis(neighborhood_name: str):
 
 
 # Property Search and Recommendations
+
 
 @router.post("/properties/search")
 async def search_properties(request: PropertySearchRequest):
@@ -244,37 +255,40 @@ async def search_properties(request: PropertySearchRequest):
         if request.work_location and request.max_commute_minutes:
             filtered_properties = []
             for prop in properties:
-                commute_data = await market_service.get_commute_analysis(
-                    prop.coordinates, request.work_location
-                )
+                commute_data = await market_service.get_commute_analysis(prop.coordinates, request.work_location)
                 # Parse commute time (simplified - would use actual routing API)
-                if commute_data.get("driving", {}).get("time_typical", "30 minutes") <= f"{request.max_commute_minutes} minutes":
+                if (
+                    commute_data.get("driving", {}).get("time_typical", "30 minutes")
+                    <= f"{request.max_commute_minutes} minutes"
+                ):
                     filtered_properties.append(prop)
             properties = filtered_properties
 
         # Convert to response format
         property_results = []
         for prop in properties:
-            property_results.append({
-                "mls_id": prop.mls_id,
-                "address": prop.address,
-                "price": prop.price,
-                "beds": prop.beds,
-                "baths": prop.baths,
-                "sqft": prop.sqft,
-                "neighborhood": prop.neighborhood,
-                "days_on_market": prop.days_on_market,
-                "price_per_sqft": prop.price_per_sqft,
-                "property_type": prop.property_type.value,
-                "features": prop.features,
-                "coordinates": prop.coordinates
-            })
+            property_results.append(
+                {
+                    "mls_id": prop.mls_id,
+                    "address": prop.address,
+                    "price": prop.price,
+                    "beds": prop.beds,
+                    "baths": prop.baths,
+                    "sqft": prop.sqft,
+                    "neighborhood": prop.neighborhood,
+                    "days_on_market": prop.days_on_market,
+                    "price_per_sqft": prop.price_per_sqft,
+                    "property_type": prop.property_type.value,
+                    "features": prop.features,
+                    "coordinates": prop.coordinates,
+                }
+            )
 
         return {
             "properties": property_results,
             "total_found": len(property_results),
             "search_criteria": criteria,
-            "search_timestamp": datetime.now().isoformat()
+            "search_timestamp": datetime.now().isoformat(),
         }
 
     except Exception as e:
@@ -303,25 +317,20 @@ async def get_property_recommendations(request: PropertyRecommendationRequest):
             family_situation=request.family_status,
             lifestyle_preferences=request.lifestyle_preferences or [],
             commute_requirements=request.commute_requirements,
-            relocation_timeline=request.timeline
+            relocation_timeline=request.timeline,
         )
 
         # Get neighborhood recommendations
         neighborhood_recs = []
         if request.employer:
-            corporate_insights = await market_service.get_corporate_relocation_insights(
-                request.employer
-            )
+            corporate_insights = await market_service.get_corporate_relocation_insights(request.employer)
             recommended_neighborhoods = corporate_insights.get("recommended_neighborhoods", [])
             neighborhood_recs = [n["name"] for n in recommended_neighborhoods[:3]]
 
         # Search for properties in recommended neighborhoods
         search_criteria = {"neighborhoods": neighborhood_recs}
         if request.budget_range:
-            search_criteria.update({
-                "min_price": request.budget_range[0],
-                "max_price": request.budget_range[1]
-            })
+            search_criteria.update({"min_price": request.budget_range[0], "max_price": request.budget_range[1]})
 
         properties = await market_service.search_properties(search_criteria, 20)
 
@@ -329,25 +338,26 @@ async def get_property_recommendations(request: PropertyRecommendationRequest):
         recommendations = []
         for prop in properties[:10]:  # Limit to top 10
             try:
-                explanation = await ai_assistant.get_neighborhood_match_explanation(
-                    prop.__dict__,
-                    request.__dict__
-                )
+                explanation = await ai_assistant.get_neighborhood_match_explanation(prop.__dict__, request.__dict__)
 
-                recommendations.append({
-                    "property": {
-                        "mls_id": prop.mls_id,
-                        "address": prop.address,
-                        "price": prop.price,
-                        "beds": prop.beds,
-                        "baths": prop.baths,
-                        "neighborhood": prop.neighborhood,
-                        "price_per_sqft": prop.price_per_sqft
-                    },
-                    "match_explanation": explanation,
-                    "match_score": 85,  # AI-calculated match score
-                    "why_perfect": f"Ideal for {request.employer} professionals" if request.employer else "Great Austin opportunity"
-                })
+                recommendations.append(
+                    {
+                        "property": {
+                            "mls_id": prop.mls_id,
+                            "address": prop.address,
+                            "price": prop.price,
+                            "beds": prop.beds,
+                            "baths": prop.baths,
+                            "neighborhood": prop.neighborhood,
+                            "price_per_sqft": prop.price_per_sqft,
+                        },
+                        "match_explanation": explanation,
+                        "match_score": 85,  # AI-calculated match score
+                        "why_perfect": f"Ideal for {request.employer} professionals"
+                        if request.employer
+                        else "Great Austin opportunity",
+                    }
+                )
             except Exception as prop_error:
                 logger.warning(f"Error generating explanation for property {prop.mls_id}: {prop_error}")
 
@@ -356,7 +366,7 @@ async def get_property_recommendations(request: PropertyRecommendationRequest):
             "recommendations": recommendations,
             "total_matches": len(recommendations),
             "generated_at": datetime.now().isoformat(),
-            "lead_context": lead_context.__dict__
+            "lead_context": lead_context.__dict__,
         }
 
     except Exception as e:
@@ -365,6 +375,7 @@ async def get_property_recommendations(request: PropertyRecommendationRequest):
 
 
 # Corporate Relocation Intelligence
+
 
 @router.post("/corporate-insights")
 async def get_corporate_insights(request: CorporateInsightsRequest):
@@ -376,9 +387,7 @@ async def get_corporate_insights(request: CorporateInsightsRequest):
     try:
         market_service = get_rancho_cucamonga_market_service()
 
-        insights = await market_service.get_corporate_relocation_insights(
-            request.employer, request.position_level
-        )
+        insights = await market_service.get_corporate_relocation_insights(request.employer, request.position_level)
 
         # Enhance with salary-specific recommendations
         if request.salary_range:
@@ -390,14 +399,10 @@ async def get_corporate_insights(request: CorporateInsightsRequest):
                 "recommended_max_price": recommended_budget,
                 "comfortable_range": [recommended_budget * 0.7, recommended_budget],
                 "monthly_payment_target": recommended_budget * 0.28 / 12,
-                "down_payment_20_percent": recommended_budget * 0.2
+                "down_payment_20_percent": recommended_budget * 0.2,
             }
 
-        return {
-            "employer": request.employer,
-            "insights": insights,
-            "generated_at": datetime.now().isoformat()
-        }
+        return {"employer": request.employer, "insights": insights, "generated_at": datetime.now().isoformat()}
 
     except Exception as e:
         logger.error(f"Error getting corporate insights for {request.employer}: {e}")
@@ -415,7 +420,7 @@ async def get_corporate_employers():
                 "employees": 15000,
                 "expansion_status": "Major expansion to 20,000 by 2026",
                 "avg_salary_range": [120000, 200000],
-                "preferred_neighborhoods": ["Round Rock", "Cedar Park", "Domain"]
+                "preferred_neighborhoods": ["Round Rock", "Cedar Park", "Domain"],
             },
             {
                 "name": "Google",
@@ -423,7 +428,7 @@ async def get_corporate_employers():
                 "employees": 2500,
                 "expansion_status": "Steady growth",
                 "avg_salary_range": [140000, 220000],
-                "preferred_neighborhoods": ["Downtown", "South Lamar", "Mueller"]
+                "preferred_neighborhoods": ["Downtown", "South Lamar", "Mueller"],
             },
             {
                 "name": "Meta",
@@ -431,7 +436,7 @@ async def get_corporate_employers():
                 "employees": 3000,
                 "expansion_status": "Significant expansion planned",
                 "avg_salary_range": [150000, 250000],
-                "preferred_neighborhoods": ["Domain", "Downtown", "Round Rock"]
+                "preferred_neighborhoods": ["Domain", "Downtown", "Round Rock"],
             },
             {
                 "name": "Tesla",
@@ -439,7 +444,7 @@ async def get_corporate_employers():
                 "employees": 20000,
                 "expansion_status": "Manufacturing hub",
                 "avg_salary_range": [80000, 150000],
-                "preferred_neighborhoods": ["East Austin", "Mueller", "Manor"]
+                "preferred_neighborhoods": ["East Austin", "Mueller", "Manor"],
             },
             {
                 "name": "Dell",
@@ -447,8 +452,8 @@ async def get_corporate_employers():
                 "employees": 12000,
                 "expansion_status": "Stable workforce",
                 "avg_salary_range": [110000, 180000],
-                "preferred_neighborhoods": ["Round Rock", "Cedar Park", "Georgetown"]
-            }
+                "preferred_neighborhoods": ["Round Rock", "Cedar Park", "Georgetown"],
+            },
         ]
 
         return {"employers": employers}
@@ -459,6 +464,7 @@ async def get_corporate_employers():
 
 
 # Market Timing and Analysis
+
 
 @router.post("/market-timing")
 async def get_market_timing_advice(request: MarketTimingRequest):
@@ -492,12 +498,10 @@ async def get_market_timing_advice(request: MarketTimingRequest):
                 lead_id=request.lead_context.get("lead_id", "timing_analysis"),
                 employer=request.lead_context.get("employer"),
                 relocation_timeline=request.lead_context.get("timeline"),
-                family_situation=request.lead_context.get("family_status")
+                family_situation=request.lead_context.get("family_status"),
             )
 
-            enhanced_advice = await ai_assistant.generate_market_timing_advice(
-                lead_context, request.transaction_type
-            )
+            enhanced_advice = await ai_assistant.generate_market_timing_advice(lead_context, request.transaction_type)
             timing_advice.update(enhanced_advice)
 
         return {
@@ -505,7 +509,7 @@ async def get_market_timing_advice(request: MarketTimingRequest):
             "property_type": request.property_type,
             "neighborhood": request.neighborhood,
             "timing_analysis": timing_advice,
-            "generated_at": datetime.now().isoformat()
+            "generated_at": datetime.now().isoformat(),
         }
 
     except Exception as e:
@@ -516,7 +520,7 @@ async def get_market_timing_advice(request: MarketTimingRequest):
 @router.get("/market-trends")
 async def get_market_trends(
     period: str = Query("3m", description="Time period: 1m, 3m, 6m, 1y"),
-    neighborhood: Optional[str] = Query(None, description="Specific neighborhood")
+    neighborhood: Optional[str] = Query(None, description="Specific neighborhood"),
 ):
     """Get historical market trends for Austin or specific neighborhoods."""
     try:
@@ -532,17 +536,17 @@ async def get_market_trends(
                 "1_month_change": current_metrics.price_trend_1m,
                 "3_month_change": current_metrics.price_trend_3m,
                 "1_year_change": current_metrics.price_trend_1y,
-                "trend_direction": "up" if current_metrics.price_trend_3m > 0 else "down"
+                "trend_direction": "up" if current_metrics.price_trend_3m > 0 else "down",
             },
             "inventory_trend": {
                 "current_months_supply": current_metrics.months_supply,
                 "trend": "decreasing" if current_metrics.months_supply < 2 else "stable",
-                "market_condition": current_metrics.market_condition.value
+                "market_condition": current_metrics.market_condition.value,
             },
             "velocity_trend": {
                 "average_days_on_market": current_metrics.average_days_on_market,
-                "trend": "faster" if current_metrics.average_days_on_market < 30 else "normal"
-            }
+                "trend": "faster" if current_metrics.average_days_on_market < 30 else "normal",
+            },
         }
 
         # Add neighborhood-specific insights
@@ -552,14 +556,14 @@ async def get_market_trends(
                 trends["neighborhood_insights"] = {
                     "tech_worker_appeal": neighborhood_analysis.tech_worker_appeal,
                     "school_rating": neighborhood_analysis.school_rating,
-                    "walkability": neighborhood_analysis.walkability_score
+                    "walkability": neighborhood_analysis.walkability_score,
                 }
 
         return {
             "period": period,
             "neighborhood": neighborhood,
             "trends": trends,
-            "analysis_date": datetime.now().isoformat()
+            "analysis_date": datetime.now().isoformat(),
         }
 
     except Exception as e:
@@ -569,11 +573,9 @@ async def get_market_trends(
 
 # Property Alerts Management
 
+
 @router.post("/alerts/setup")
-async def setup_property_alerts(
-    lead_id: str,
-    criteria: PropertySearchRequest
-):
+async def setup_property_alerts(lead_id: str, criteria: PropertySearchRequest):
     """Set up automated property alerts for a lead."""
     try:
         alert_system = get_property_alert_system()
@@ -587,7 +589,7 @@ async def setup_property_alerts(
             min_beds=criteria.min_beds,
             neighborhoods=criteria.neighborhoods or [],
             work_location=criteria.work_location,
-            lifestyle_preferences=criteria.lifestyle_preferences or []
+            lifestyle_preferences=criteria.lifestyle_preferences or [],
         )
 
         if criteria.max_commute_minutes:
@@ -600,7 +602,7 @@ async def setup_property_alerts(
                 "lead_id": lead_id,
                 "alert_status": "active",
                 "criteria": alert_criteria.__dict__,
-                "setup_at": datetime.now().isoformat()
+                "setup_at": datetime.now().isoformat(),
             }
         else:
             raise HTTPException(500, "Failed to set up alerts")
@@ -618,11 +620,7 @@ async def get_alert_summary(lead_id: str):
 
         summary = await alert_system.get_alert_summary(lead_id)
 
-        return {
-            "lead_id": lead_id,
-            "alert_summary": summary,
-            "retrieved_at": datetime.now().isoformat()
-        }
+        return {"lead_id": lead_id, "alert_summary": summary, "retrieved_at": datetime.now().isoformat()}
 
     except Exception as e:
         logger.error(f"Error getting alert summary for {lead_id}: {e}")
@@ -631,23 +629,16 @@ async def get_alert_summary(lead_id: str):
 
 # AI-Powered Insights
 
+
 @router.post("/ai-insights/lead-analysis")
-async def get_ai_lead_analysis(
-    lead_data: Dict[str, Any],
-    conversation_history: Optional[List[Dict[str, Any]]] = None
-):
+async def get_ai_lead_analysis(lead_data: Dict[str, Any], conversation_history: Optional[List[Dict[str, Any]]] = None):
     """Get AI-powered analysis of a lead with Austin market context."""
     try:
         ai_assistant = get_austin_ai_assistant()
 
-        analysis = await ai_assistant.analyze_lead_with_austin_context(
-            lead_data, conversation_history
-        )
+        analysis = await ai_assistant.analyze_lead_with_austin_context(lead_data, conversation_history)
 
-        return {
-            "analysis": analysis,
-            "generated_at": datetime.now().isoformat()
-        }
+        return {"analysis": analysis, "generated_at": datetime.now().isoformat()}
 
     except Exception as e:
         logger.error(f"Error analyzing lead: {e}")
@@ -656,9 +647,7 @@ async def get_ai_lead_analysis(
 
 @router.post("/ai-insights/conversation")
 async def get_ai_conversation_response(
-    query: str,
-    lead_context: Dict[str, Any],
-    conversation_history: Optional[List[Dict[str, Any]]] = None
+    query: str, lead_context: Dict[str, Any], conversation_history: Optional[List[Dict[str, Any]]] = None
 ):
     """Get AI-powered response to lead query with Austin market intelligence."""
     try:
@@ -671,18 +660,12 @@ async def get_ai_conversation_response(
             employer=lead_context.get("employer"),
             preferred_neighborhoods=lead_context.get("preferred_neighborhoods", []),
             family_situation=lead_context.get("family_situation"),
-            conversation_stage=lead_context.get("conversation_stage", "discovery")
+            conversation_stage=lead_context.get("conversation_stage", "discovery"),
         )
 
-        response = await ai_assistant.generate_austin_response(
-            query, context, conversation_history
-        )
+        response = await ai_assistant.generate_austin_response(query, context, conversation_history)
 
-        return {
-            "query": query,
-            "ai_response": response,
-            "generated_at": datetime.now().isoformat()
-        }
+        return {"query": query, "ai_response": response, "generated_at": datetime.now().isoformat()}
 
     except Exception as e:
         logger.error(f"Error generating AI response: {e}")
@@ -690,6 +673,7 @@ async def get_ai_conversation_response(
 
 
 # Health and Status
+
 
 @router.get("/health")
 async def health_check():
@@ -702,20 +686,12 @@ async def health_check():
 
         return {
             "status": "healthy",
-            "services": {
-                "market_service": "operational",
-                "ai_assistant": "operational",
-                "alert_system": "operational"
-            },
+            "services": {"market_service": "operational", "ai_assistant": "operational", "alert_system": "operational"},
             "last_market_update": datetime.now().isoformat(),
             "total_neighborhoods": 8,
-            "total_corporate_employers": 5
+            "total_corporate_employers": 5,
         }
 
     except Exception as e:
         logger.error(f"Health check failed: {e}")
-        return {
-            "status": "degraded",
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
+        return {"status": "degraded", "error": str(e), "timestamp": datetime.now().isoformat()}

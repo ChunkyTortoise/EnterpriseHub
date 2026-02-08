@@ -5,13 +5,14 @@ Tests for lead-to-buyer and lead-to-seller handoff scenarios.
 Complements the existing 16 handoff service tests.
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime, timezone
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
-    JorgeHandoffService,
     HandoffDecision,
+    JorgeHandoffService,
 )
 
 
@@ -27,13 +28,15 @@ class MockAnalyticsService:
         self.handoff_durations = []
 
     async def track_event(self, event_type: str, location_id: str, contact_id: str, data: dict):
-        self.events.append({
-            "event_type": event_type,
-            "location_id": location_id,
-            "contact_id": contact_id,
-            "data": data,
-            "timestamp": datetime.now(timezone.utc),
-        })
+        self.events.append(
+            {
+                "event_type": event_type,
+                "location_id": location_id,
+                "contact_id": contact_id,
+                "data": data,
+                "timestamp": datetime.now(timezone.utc),
+            }
+        )
 
         # Track counters for specific handoff types
         if event_type == "jorge_handoff":
@@ -67,9 +70,17 @@ def sample_conversation_history():
     """Sample conversation history for handoff testing."""
     return [
         {"role": "assistant", "content": "Hello! How can I help you today?", "timestamp": "2026-02-06T10:00:00Z"},
-        {"role": "user", "content": "I'm looking to buy a home in Rancho Cucamonga.", "timestamp": "2026-02-06T10:05:00Z"},
+        {
+            "role": "user",
+            "content": "I'm looking to buy a home in Rancho Cucamonga.",
+            "timestamp": "2026-02-06T10:05:00Z",
+        },
         {"role": "assistant", "content": "Great! What's your budget?", "timestamp": "2026-02-06T10:06:00Z"},
-        {"role": "user", "content": "I have a budget of $700,000 and I'm pre-approved.", "timestamp": "2026-02-06T10:10:00Z"},
+        {
+            "role": "user",
+            "content": "I have a budget of $700,000 and I'm pre-approved.",
+            "timestamp": "2026-02-06T10:10:00Z",
+        },
     ]
 
 
@@ -352,12 +363,36 @@ async def test_lead_handoff_with_conversation_context(handoff_service):
     # Rich conversation history with buyer intent signals
     rich_conversation = [
         {"role": "assistant", "content": "Welcome! How can I assist you?", "timestamp": "2026-02-06T09:00:00Z"},
-        {"role": "user", "content": "I'm interested in buying a property in the area.", "timestamp": "2026-02-06T09:05:00Z"},
-        {"role": "assistant", "content": "That's great! What type of property are you looking for?", "timestamp": "2026-02-06T09:06:00Z"},
-        {"role": "user", "content": "I want a single-family home with a pool. My budget is $800,000.", "timestamp": "2026-02-06T09:10:00Z"},
-        {"role": "assistant", "content": "Perfect! Are you pre-approved or working with a lender?", "timestamp": "2026-02-06T09:11:00Z"},
-        {"role": "user", "content": "Yes, I've been pre-approved for $850,000 and I'm ready to move fast.", "timestamp": "2026-02-06T09:15:00Z"},
-        {"role": "assistant", "content": "Excellent! Let me connect you with a buyer specialist.", "timestamp": "2026-02-06T09:16:00Z"},
+        {
+            "role": "user",
+            "content": "I'm interested in buying a property in the area.",
+            "timestamp": "2026-02-06T09:05:00Z",
+        },
+        {
+            "role": "assistant",
+            "content": "That's great! What type of property are you looking for?",
+            "timestamp": "2026-02-06T09:06:00Z",
+        },
+        {
+            "role": "user",
+            "content": "I want a single-family home with a pool. My budget is $800,000.",
+            "timestamp": "2026-02-06T09:10:00Z",
+        },
+        {
+            "role": "assistant",
+            "content": "Perfect! Are you pre-approved or working with a lender?",
+            "timestamp": "2026-02-06T09:11:00Z",
+        },
+        {
+            "role": "user",
+            "content": "Yes, I've been pre-approved for $850,000 and I'm ready to move fast.",
+            "timestamp": "2026-02-06T09:15:00Z",
+        },
+        {
+            "role": "assistant",
+            "content": "Excellent! Let me connect you with a buyer specialist.",
+            "timestamp": "2026-02-06T09:16:00Z",
+        },
     ]
 
     # Intent signals extracted from conversation context

@@ -11,17 +11,19 @@ This integration allows the frontend to use Socket.IO while preserving
 the enterprise WebSocket manager for backend services.
 """
 
-import os
 import asyncio
+import os
+
+import socketio
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-import socketio
 
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.socketio_adapter import get_socketio_manager
 from ghl_real_estate_ai.services.websocket_server import get_websocket_manager
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
+
 
 class SocketIOIntegration:
     """
@@ -53,21 +55,13 @@ class SocketIOIntegration:
 
             # Remove localhost origins in production
             if os.getenv("ENVIRONMENT") == "production":
-                cors_origins = [
-                    origin for origin in cors_origins
-                    if not origin.startswith("http://localhost")
-                ]
+                cors_origins = [origin for origin in cors_origins if not origin.startswith("http://localhost")]
 
             # Create Socket.IO server (synchronous now)
-            self.sio = self.socketio_manager.create_server(
-                cors_allowed_origins=cors_origins
-            )
+            self.sio = self.socketio_manager.create_server(cors_allowed_origins=cors_origins)
 
             # Create ASGI app for Socket.IO
-            socketio_asgi_app = socketio.ASGIApp(
-                self.sio,
-                other_asgi_app=self.main_app
-            )
+            socketio_asgi_app = socketio.ASGIApp(self.sio, other_asgi_app=self.main_app)
 
             # Bridge WebSocket events to Socket.IO
             self._setup_event_bridging()
@@ -89,20 +83,21 @@ class SocketIOIntegration:
         """
         try:
             # Add Socket.IO bridge to WebSocket manager
-            if hasattr(self.websocket_manager, '_socketio_bridge'):
+            if hasattr(self.websocket_manager, "_socketio_bridge"):
                 self.websocket_manager._socketio_bridge = self.socketio_manager.jorge_namespace.broadcast_to_socketio
             else:
                 # Monkey patch for compatibility
                 setattr(
                     self.websocket_manager,
-                    '_socketio_bridge',
-                    self.socketio_manager.jorge_namespace.broadcast_to_socketio
+                    "_socketio_bridge",
+                    self.socketio_manager.jorge_namespace.broadcast_to_socketio,
                 )
 
             logger.info("Event bridging established between WebSocket and Socket.IO")
 
         except Exception as e:
             logger.error(f"Event bridging setup error: {e}")
+
 
 def create_socketio_app(main_app: FastAPI) -> socketio.ASGIApp:
     """
@@ -124,6 +119,7 @@ def create_socketio_app(main_app: FastAPI) -> socketio.ASGIApp:
     except Exception as e:
         logger.error(f"Socket.IO app creation failed: {e}")
         raise
+
 
 # Startup integration function for main.py
 async def integrate_socketio_with_fastapi(app: FastAPI):
@@ -153,6 +149,7 @@ async def integrate_socketio_with_fastapi(app: FastAPI):
         logger.error(f"Socket.IO integration error: {e}")
         raise
 
+
 def get_socketio_app_for_uvicorn(main_app: FastAPI):
     """
     Get Socket.IO ASGI app for uvicorn deployment
@@ -163,6 +160,7 @@ def get_socketio_app_for_uvicorn(main_app: FastAPI):
     This avoids the uvloop/nest_asyncio compatibility issue by deferring
     the async setup until uvicorn has established the event loop.
     """
+
     class SocketIOAppFactory:
         """Lazy factory for Socket.IO app that works with uvicorn lifecycle"""
 

@@ -7,13 +7,14 @@ violation scanning, and RESPA disclosure checks.
 
 import logging
 from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.compliance_middleware import (
     get_compliance_middleware,
 )
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -26,6 +27,7 @@ router = APIRouter(
 # ---------------------------------------------------------------------------
 # Request / Response Models
 # ---------------------------------------------------------------------------
+
 
 class EnforceRequest(BaseModel):
     message: str = Field(..., description="Outbound message to audit")
@@ -57,6 +59,7 @@ class BatchEnforceRequest(BaseModel):
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
 
 @router.post("/enforce", response_model=EnforceResponse)
 async def enforce_compliance(request: EnforceRequest):
@@ -106,13 +109,15 @@ async def enforce_compliance_batch(request: BatchEnforceRequest):
             )
             if result.status.value in ("BLOCKED", "blocked"):
                 blocked_count += 1
-            results.append({
-                "contact_id": msg.contact_id,
-                "status": result.status.value,
-                "risk_score": result.risk_score,
-                "violation_count": len(result.violations),
-                "safe_alternative": result.safe_alternative,
-            })
+            results.append(
+                {
+                    "contact_id": msg.contact_id,
+                    "status": result.status.value,
+                    "risk_score": result.risk_score,
+                    "violation_count": len(result.violations),
+                    "safe_alternative": result.safe_alternative,
+                }
+            )
         return {
             "results": results,
             "total": len(results),

@@ -10,30 +10,31 @@ to avoid requiring actual service dependencies.
 """
 
 import os
-import pytest
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from datetime import datetime, timezone
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from uuid import uuid4
 
-from ghl_real_estate_ai.config.feature_config import (
-    FeatureConfig,
-    ProgressiveSkillsConfig,
-    AgentMeshConfig,
-    MCPConfig,
-    load_feature_config_from_env,
-    feature_config_to_jorge_kwargs,
-)
+import pytest
 
+from ghl_real_estate_ai.config.feature_config import (
+    AgentMeshConfig,
+    FeatureConfig,
+    MCPConfig,
+    ProgressiveSkillsConfig,
+    feature_config_to_jorge_kwargs,
+    load_feature_config_from_env,
+)
 
 # ---------------------------------------------------------------------------
 # Shared fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def mock_jorge_deps():
     """Mock all external dependencies required by JorgeSellerBot.__init__."""
     with patch.multiple(
-        'ghl_real_estate_ai.agents.jorge_seller_bot',
+        "ghl_real_estate_ai.agents.jorge_seller_bot",
         LeadIntentDecoder=MagicMock,
         ClaudeAssistant=MagicMock,
         get_event_publisher=MagicMock,
@@ -65,8 +66,8 @@ def sample_lead_data():
 # 1. Config loads from environment variables
 # ===========================================================================
 
-class TestFeatureConfig:
 
+class TestFeatureConfig:
     def test_feature_config_loads_from_env(self):
         """Env vars produce a FeatureConfig with all features enabled."""
         env = {
@@ -141,8 +142,8 @@ class TestFeatureConfig:
 # 2. Progressive Skills Integration
 # ===========================================================================
 
-class TestProgressiveSkills:
 
+class TestProgressiveSkills:
     @pytest.mark.asyncio
     async def test_progressive_skills_initialization(self, mock_jorge_deps):
         """Skills manager and token tracker initialize when feature enabled."""
@@ -150,14 +151,16 @@ class TestProgressiveSkills:
         mock_token_tracker = MagicMock()
 
         with patch.multiple(
-            'ghl_real_estate_ai.agents.jorge_seller_bot',
+            "ghl_real_estate_ai.agents.jorge_seller_bot",
             PROGRESSIVE_SKILLS_AVAILABLE=True,
             ProgressiveSkillsManager=MagicMock(return_value=mock_skills_mgr),
             get_token_tracker=MagicMock(return_value=mock_token_tracker),
         ):
             from ghl_real_estate_ai.agents.jorge_seller_bot import (
-                JorgeSellerBot, JorgeFeatureConfig,
+                JorgeFeatureConfig,
+                JorgeSellerBot,
             )
+
             config = JorgeFeatureConfig(enable_progressive_skills=True)
             bot = JorgeSellerBot(config=config)
 
@@ -165,32 +168,36 @@ class TestProgressiveSkills:
             assert bot.token_tracker is mock_token_tracker
 
     @pytest.mark.asyncio
-    async def test_progressive_skills_qualification_path(
-        self, mock_jorge_deps, sample_lead_data
-    ):
+    async def test_progressive_skills_qualification_path(self, mock_jorge_deps, sample_lead_data):
         """Discovery → execution flow works and tracks token reduction."""
         mock_skills_mgr = MagicMock()
-        mock_skills_mgr.discover_skills = AsyncMock(return_value={
-            "skills": ["seller_qualification_v2"],
-            "confidence": 0.85,
-        })
-        mock_skills_mgr.execute_skill = AsyncMock(return_value={
-            "response_content": "Qualified warm seller",
-            "tokens_estimated": 169,
-        })
+        mock_skills_mgr.discover_skills = AsyncMock(
+            return_value={
+                "skills": ["seller_qualification_v2"],
+                "confidence": 0.85,
+            }
+        )
+        mock_skills_mgr.execute_skill = AsyncMock(
+            return_value={
+                "response_content": "Qualified warm seller",
+                "tokens_estimated": 169,
+            }
+        )
 
         mock_token_tracker = MagicMock()
         mock_token_tracker.record_usage = AsyncMock()
 
         with patch.multiple(
-            'ghl_real_estate_ai.agents.jorge_seller_bot',
+            "ghl_real_estate_ai.agents.jorge_seller_bot",
             PROGRESSIVE_SKILLS_AVAILABLE=True,
             ProgressiveSkillsManager=MagicMock(return_value=mock_skills_mgr),
             get_token_tracker=MagicMock(return_value=mock_token_tracker),
         ):
             from ghl_real_estate_ai.agents.jorge_seller_bot import (
-                JorgeSellerBot, JorgeFeatureConfig,
+                JorgeFeatureConfig,
+                JorgeSellerBot,
             )
+
             config = JorgeFeatureConfig(enable_progressive_skills=True)
             bot = JorgeSellerBot(config=config)
 
@@ -206,17 +213,17 @@ class TestProgressiveSkills:
             mock_token_tracker.record_usage.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_progressive_skills_fallback(
-        self, mock_jorge_deps, sample_lead_data
-    ):
+    async def test_progressive_skills_fallback(self, mock_jorge_deps, sample_lead_data):
         """Falls back to traditional qualification when dependencies unavailable."""
         with patch.multiple(
-            'ghl_real_estate_ai.agents.jorge_seller_bot',
+            "ghl_real_estate_ai.agents.jorge_seller_bot",
             PROGRESSIVE_SKILLS_AVAILABLE=False,
         ):
             from ghl_real_estate_ai.agents.jorge_seller_bot import (
-                JorgeSellerBot, JorgeFeatureConfig,
+                JorgeFeatureConfig,
+                JorgeSellerBot,
             )
+
             config = JorgeFeatureConfig(enable_progressive_skills=True)
             bot = JorgeSellerBot(config=config)
 
@@ -224,9 +231,7 @@ class TestProgressiveSkills:
             assert bot.skills_manager is None
 
             # _execute_progressive_qualification should fall back to traditional
-            bot.claude.analyze_with_context = AsyncMock(
-                return_value={"content": "Traditional qualification"}
-            )
+            bot.claude.analyze_with_context = AsyncMock(return_value={"content": "Traditional qualification"})
             result = await bot._execute_progressive_qualification(sample_lead_data)
 
             assert result["qualification_method"] == "traditional"
@@ -237,12 +242,10 @@ class TestProgressiveSkills:
 # 3. Agent Mesh Integration
 # ===========================================================================
 
-class TestAgentMesh:
 
+class TestAgentMesh:
     @pytest.mark.asyncio
-    async def test_agent_mesh_task_creation(
-        self, mock_jorge_deps, sample_lead_data
-    ):
+    async def test_agent_mesh_task_creation(self, mock_jorge_deps, sample_lead_data):
         """Mesh coordinator creates and submits qualification tasks."""
         mock_coordinator = MagicMock()
         mock_coordinator.submit_task = AsyncMock(return_value="mesh-task-001")
@@ -257,7 +260,7 @@ class TestAgentMesh:
         mock_agent_capability.MARKET_INTELLIGENCE = "MARKET_INTELLIGENCE"
 
         with patch.multiple(
-            'ghl_real_estate_ai.agents.jorge_seller_bot',
+            "ghl_real_estate_ai.agents.jorge_seller_bot",
             AGENT_MESH_AVAILABLE=True,
             get_mesh_coordinator=MagicMock(return_value=mock_coordinator),
             AgentTask=mock_agent_task,
@@ -265,8 +268,10 @@ class TestAgentMesh:
             AgentCapability=mock_agent_capability,
         ):
             from ghl_real_estate_ai.agents.jorge_seller_bot import (
-                JorgeSellerBot, JorgeFeatureConfig,
+                JorgeFeatureConfig,
+                JorgeSellerBot,
             )
+
             config = JorgeFeatureConfig(enable_agent_mesh=True)
             bot = JorgeSellerBot(config=config)
 
@@ -283,35 +288,35 @@ class TestAgentMesh:
 # 4. MCP Integration
 # ===========================================================================
 
-class TestMCPIntegration:
 
+class TestMCPIntegration:
     @pytest.mark.asyncio
-    async def test_mcp_enrichment_calls_tools(
-        self, mock_jorge_deps, sample_lead_data
-    ):
+    async def test_mcp_enrichment_calls_tools(self, mock_jorge_deps, sample_lead_data):
         """MCP client calls CRM search and property data tools."""
         mock_mcp = MagicMock()
-        mock_mcp.call_tool = AsyncMock(side_effect=[
-            # First call: CRM search_contacts
-            {"contacts": [{"id": "crm-001", "name": "Jane Smith"}]},
-            # Second call: MLS search_properties
-            {"properties": [{"address": "124 Victoria Ave", "price": 750000}]},
-        ])
+        mock_mcp.call_tool = AsyncMock(
+            side_effect=[
+                # First call: CRM search_contacts
+                {"contacts": [{"id": "crm-001", "name": "Jane Smith"}]},
+                # Second call: MLS search_properties
+                {"properties": [{"address": "124 Victoria Ave", "price": 750000}]},
+            ]
+        )
 
         with patch.multiple(
-            'ghl_real_estate_ai.agents.jorge_seller_bot',
+            "ghl_real_estate_ai.agents.jorge_seller_bot",
             MCP_INTEGRATION_AVAILABLE=True,
             get_mcp_client=MagicMock(return_value=mock_mcp),
         ):
             from ghl_real_estate_ai.agents.jorge_seller_bot import (
-                JorgeSellerBot, JorgeFeatureConfig,
+                JorgeFeatureConfig,
+                JorgeSellerBot,
             )
+
             config = JorgeFeatureConfig(enable_mcp_integration=True)
             bot = JorgeSellerBot(config=config)
 
-            result = await bot._enrich_with_mcp_data(
-                sample_lead_data, {"qualification_score": 75}
-            )
+            result = await bot._enrich_with_mcp_data(sample_lead_data, {"qualification_score": 75})
 
             assert result["mcp_enrichment_applied"] is True
             assert result["mcp_calls"] == 2
@@ -324,23 +329,25 @@ class TestMCPIntegration:
 # 5. Full Enhanced Workflow
 # ===========================================================================
 
-class TestFullEnhancedWorkflow:
 
+class TestFullEnhancedWorkflow:
     @pytest.mark.asyncio
-    async def test_full_enhanced_workflow(
-        self, mock_jorge_deps, sample_lead_data
-    ):
+    async def test_full_enhanced_workflow(self, mock_jorge_deps, sample_lead_data):
         """All features orchestrated in process_seller_with_enhancements."""
         # --- Progressive Skills mocks ---
         mock_skills_mgr = MagicMock()
-        mock_skills_mgr.discover_skills = AsyncMock(return_value={
-            "skills": ["seller_qualification_v2"],
-            "confidence": 0.82,
-        })
-        mock_skills_mgr.execute_skill = AsyncMock(return_value={
-            "response_content": "Qualified warm seller via progressive",
-            "tokens_estimated": 169,
-        })
+        mock_skills_mgr.discover_skills = AsyncMock(
+            return_value={
+                "skills": ["seller_qualification_v2"],
+                "confidence": 0.82,
+            }
+        )
+        mock_skills_mgr.execute_skill = AsyncMock(
+            return_value={
+                "response_content": "Qualified warm seller via progressive",
+                "tokens_estimated": 169,
+            }
+        )
         mock_token_tracker = MagicMock()
         mock_token_tracker.record_usage = AsyncMock()
 
@@ -359,17 +366,19 @@ class TestFullEnhancedWorkflow:
 
         # --- MCP mocks ---
         mock_mcp = MagicMock()
-        mock_mcp.call_tool = AsyncMock(side_effect=[
-            # CRM search
-            {"contacts": [{"id": "crm-full-001", "name": "Jane Smith"}]},
-            # MLS search
-            {"properties": [{"address": "124 Victoria Ave", "price": 750000}]},
-            # CRM update (sync_to_crm_via_mcp)
-            {"success": True},
-        ])
+        mock_mcp.call_tool = AsyncMock(
+            side_effect=[
+                # CRM search
+                {"contacts": [{"id": "crm-full-001", "name": "Jane Smith"}]},
+                # MLS search
+                {"properties": [{"address": "124 Victoria Ave", "price": 750000}]},
+                # CRM update (sync_to_crm_via_mcp)
+                {"success": True},
+            ]
+        )
 
         with patch.multiple(
-            'ghl_real_estate_ai.agents.jorge_seller_bot',
+            "ghl_real_estate_ai.agents.jorge_seller_bot",
             PROGRESSIVE_SKILLS_AVAILABLE=True,
             ProgressiveSkillsManager=MagicMock(return_value=mock_skills_mgr),
             get_token_tracker=MagicMock(return_value=mock_token_tracker),
@@ -382,8 +391,11 @@ class TestFullEnhancedWorkflow:
             get_mcp_client=MagicMock(return_value=mock_mcp),
         ):
             from ghl_real_estate_ai.agents.jorge_seller_bot import (
-                JorgeSellerBot, JorgeFeatureConfig, QualificationResult,
+                JorgeFeatureConfig,
+                JorgeSellerBot,
+                QualificationResult,
             )
+
             config = JorgeFeatureConfig(
                 enable_progressive_skills=True,
                 enable_agent_mesh=True,

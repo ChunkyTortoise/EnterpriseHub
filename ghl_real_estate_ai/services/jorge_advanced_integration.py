@@ -10,37 +10,53 @@ This module integrates the four advanced modules with Jorge's existing Rancho Cu
 Provides unified interface and orchestration for the complete AI-powered real estate platform.
 """
 
-import logging
 import asyncio
-import numpy as np
+import logging
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Union
-from dataclasses import dataclass, asdict
 from enum import Enum
+from typing import Any, Dict, List, Optional, Union
 
-from ghl_real_estate_ai.services.voice_ai_handler import (
-    get_voice_ai_handler, VoiceCallContext, VoiceResponse, CallType, ConversationStage
-)
+import numpy as np
+
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.automated_marketing_engine import (
-    get_automated_marketing_engine, CampaignType, ContentFormat, CampaignPriority
-)
-from ghl_real_estate_ai.services.client_retention_engine import (
-    get_client_retention_engine, ClientProfile, EngagementType, LifeEventType
-)
-from ghl_real_estate_ai.services.market_prediction_engine import (
-    get_market_prediction_engine, PredictionType, TimeHorizon, MarketConfidence
-)
-from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import (
-    get_rancho_cucamonga_ai_assistant, RanchoCucamongaConversationContext
+    CampaignPriority,
+    CampaignType,
+    ContentFormat,
+    get_automated_marketing_engine,
 )
 from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.client_retention_engine import (
+    ClientProfile,
+    EngagementType,
+    LifeEventType,
+    get_client_retention_engine,
+)
+from ghl_real_estate_ai.services.market_prediction_engine import (
+    MarketConfidence,
+    PredictionType,
+    TimeHorizon,
+    get_market_prediction_engine,
+)
+from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import (
+    RanchoCucamongaConversationContext,
+    get_rancho_cucamonga_ai_assistant,
+)
+from ghl_real_estate_ai.services.voice_ai_handler import (
+    CallType,
+    ConversationStage,
+    VoiceCallContext,
+    VoiceResponse,
+    get_voice_ai_handler,
+)
 
 logger = get_logger(__name__)
 
 
 class IntegrationEventType(Enum):
     """Types of integration events that trigger cross-module actions"""
+
     NEW_LEAD_CALL = "new_lead_call"
     HIGH_QUALIFIED_CALL = "high_qualified_call"
     NEW_LISTING_ADDED = "new_listing_added"
@@ -58,6 +74,7 @@ EventType = IntegrationEventType
 @dataclass
 class IntegrationEvent:
     """Integration event that triggers cross-module actions"""
+
     event_id: str
     event_type: IntegrationEventType
     timestamp: datetime
@@ -73,6 +90,7 @@ class IntegrationEvent:
 @dataclass
 class IntegrationDashboard:
     """Unified dashboard data from all modules"""
+
     voice_ai_stats: Dict[str, Any]
     marketing_stats: Dict[str, Any]
     retention_stats: Dict[str, Any]
@@ -114,45 +132,41 @@ class JorgeAdvancedIntegration:
             IntegrationEventType.NEW_LEAD_CALL: [
                 self._handle_new_lead_call,
                 self._track_lead_source,
-                self._initialize_client_journey
+                self._initialize_client_journey,
             ],
             IntegrationEventType.HIGH_QUALIFIED_CALL: [
                 self._handle_high_qualified_call,
                 self._create_priority_follow_up,
-                self._trigger_market_analysis
+                self._trigger_market_analysis,
             ],
             IntegrationEventType.NEW_LISTING_ADDED: [
                 self._handle_new_listing,
                 self._create_listing_campaigns,
-                self._analyze_pricing_strategy
+                self._analyze_pricing_strategy,
             ],
             IntegrationEventType.SUCCESSFUL_CLOSING: [
                 self._handle_successful_closing,
                 self._create_success_campaigns,
-                self._initialize_retention_journey
+                self._initialize_retention_journey,
             ],
             IntegrationEventType.CLIENT_MILESTONE: [
                 self._handle_client_milestone,
                 self._trigger_retention_activities,
-                self._assess_referral_potential
+                self._assess_referral_potential,
             ],
             IntegrationEventType.MARKET_CHANGE_DETECTED: [
                 self._handle_market_change,
                 self._create_market_campaigns,
-                self._notify_relevant_clients
+                self._notify_relevant_clients,
             ],
             IntegrationEventType.REFERRAL_RECEIVED: [
                 self._handle_referral_received,
                 self._track_referral_source,
-                self._create_referral_campaigns
-            ]
+                self._create_referral_campaigns,
+            ],
         }
 
-    async def handle_incoming_call(
-        self,
-        phone_number: str,
-        caller_name: Optional[str] = None
-    ) -> Dict[str, Any]:
+    async def handle_incoming_call(self, phone_number: str, caller_name: Optional[str] = None) -> Dict[str, Any]:
         """
         Handle incoming call with full integration
 
@@ -173,8 +187,8 @@ class JorgeAdvancedIntegration:
                     "call_id": call_context.call_id,
                     "phone_number": phone_number,
                     "caller_name": caller_name,
-                    "call_context": asdict(call_context)
-                }
+                    "call_context": asdict(call_context),
+                },
             )
 
             # Process integration event
@@ -187,31 +201,22 @@ class JorgeAdvancedIntegration:
                 "next_steps": [
                     "Voice AI handler ready for conversation",
                     "Lead tracking initialized",
-                    "Market analysis prepared"
-                ]
+                    "Market analysis prepared",
+                ],
             }
 
         except Exception as e:
             logger.error(f"Error handling incoming call: {e}")
-            return {
-                "status": "error",
-                "message": str(e),
-                "fallback": "Transfer to Jorge immediately"
-            }
+            return {"status": "error", "message": str(e), "fallback": "Transfer to Jorge immediately"}
 
     async def process_voice_conversation(
-        self,
-        call_id: str,
-        speech_text: str,
-        audio_confidence: float = 1.0
+        self, call_id: str, speech_text: str, audio_confidence: float = 1.0
     ) -> Dict[str, Any]:
         """Process voice conversation with integrated analysis"""
 
         try:
             # Process voice input
-            voice_response = await self.voice_ai.process_voice_input(
-                call_id, speech_text, audio_confidence
-            )
+            voice_response = await self.voice_ai.process_voice_input(call_id, speech_text, audio_confidence)
 
             # Check for qualification milestones
             if call_id in self.voice_ai.active_calls:
@@ -229,7 +234,7 @@ class JorgeAdvancedIntegration:
                 "status": "success",
                 "voice_response": asdict(voice_response),
                 "integration_actions": voice_response.suggested_actions,
-                "qualification_updates": self._extract_qualification_updates(call_id)
+                "qualification_updates": self._extract_qualification_updates(call_id),
             }
 
         except Exception as e:
@@ -237,7 +242,7 @@ class JorgeAdvancedIntegration:
             return {
                 "status": "error",
                 "message": str(e),
-                "fallback_response": "I apologize for the technical difficulty. Let me connect you with Jorge."
+                "fallback_response": "I apologize for the technical difficulty. Let me connect you with Jorge.",
             }
 
     async def handle_new_listing(self, listing_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -245,9 +250,7 @@ class JorgeAdvancedIntegration:
 
         try:
             # Create listing marketing campaigns
-            campaign = await self.marketing_engine.create_campaign_from_trigger(
-                "new_listing", listing_data
-            )
+            campaign = await self.marketing_engine.create_campaign_from_trigger("new_listing", listing_data)
 
             # Analyze pricing strategy
             market_analysis = await self._analyze_listing_market_position(listing_data)
@@ -264,8 +267,8 @@ class JorgeAdvancedIntegration:
                 data={
                     "listing_data": listing_data,
                     "campaign_id": campaign.campaign_id,
-                    "market_analysis": market_analysis
-                }
+                    "market_analysis": market_analysis,
+                },
             )
 
             await self._process_integration_event(event)
@@ -279,8 +282,8 @@ class JorgeAdvancedIntegration:
                 "recommended_actions": [
                     "Review and approve marketing content",
                     "Schedule social media posts",
-                    "Set up property alerts for interested clients"
-                ]
+                    "Set up property alerts for interested clients",
+                ],
             }
 
         except Exception as e:
@@ -300,9 +303,7 @@ class JorgeAdvancedIntegration:
             )
 
             # Generate success content
-            success_content = await self.marketing_engine.generate_campaign_content(
-                success_campaign.campaign_id
-            )
+            success_content = await self.marketing_engine.generate_campaign_content(success_campaign.campaign_id)
 
             # Analyze market impact
             market_impact = await self._analyze_closing_market_impact(closing_data)
@@ -316,8 +317,8 @@ class JorgeAdvancedIntegration:
                 data={
                     "closing_data": closing_data,
                     "client_id": client_profile.client_id,
-                    "campaign_id": success_campaign.campaign_id
-                }
+                    "campaign_id": success_campaign.campaign_id,
+                },
             )
 
             await self._process_integration_event(event)
@@ -333,8 +334,8 @@ class JorgeAdvancedIntegration:
                     "1-week check-in engagement",
                     "1-month satisfaction survey",
                     "3-month referral request",
-                    "6-month anniversary message"
-                ]
+                    "6-month anniversary message",
+                ],
             }
 
         except Exception as e:
@@ -371,14 +372,15 @@ class JorgeAdvancedIntegration:
                         "neighborhood": opp.neighborhood,
                         "type": opp.opportunity_type,
                         "potential_return": opp.potential_return,
-                        "confidence": opp.confidence_score
-                    } for opp in opportunities[:5]
+                        "confidence": opp.confidence_score,
+                    }
+                    for opp in opportunities[:5]
                 ],
                 "recommended_actions": [
                     "Review opportunity campaigns before publishing",
                     "Contact high-potential clients directly",
-                    "Update market positioning strategies"
-                ]
+                    "Update market positioning strategies",
+                ],
             }
 
         except Exception as e:
@@ -386,10 +388,7 @@ class JorgeAdvancedIntegration:
             return {"status": "error", "message": str(e)}
 
     async def process_client_milestone(
-        self,
-        client_id: str,
-        milestone_type: str,
-        milestone_data: Dict[str, Any]
+        self, client_id: str, milestone_type: str, milestone_data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Process client milestone with integrated retention activities"""
 
@@ -420,8 +419,8 @@ class JorgeAdvancedIntegration:
                     "client_id": client_id,
                     "milestone_type": milestone_type,
                     "milestone_data": milestone_data,
-                    "engagement_result": engagement_result
-                }
+                    "engagement_result": engagement_result,
+                },
             )
 
             await self._process_integration_event(event)
@@ -431,7 +430,7 @@ class JorgeAdvancedIntegration:
                 "client_id": client_id,
                 "milestone_type": milestone_type,
                 "engagement_result": engagement_result,
-                "next_steps": self._determine_next_client_steps(client_id, milestone_type)
+                "next_steps": self._determine_next_client_steps(client_id, milestone_type),
             }
 
         except Exception as e:
@@ -464,7 +463,7 @@ class JorgeAdvancedIntegration:
                 retention_stats=retention_stats,
                 prediction_stats=prediction_stats,
                 cross_module_insights=cross_insights,
-                performance_summary=performance_summary
+                performance_summary=performance_summary,
             )
 
         except Exception as e:
@@ -475,7 +474,7 @@ class JorgeAdvancedIntegration:
                 retention_stats={},
                 prediction_stats={},
                 cross_module_insights={"error": str(e)},
-                performance_summary={}
+                performance_summary={},
             )
 
     async def _process_integration_event(self, event: IntegrationEvent):
@@ -516,11 +515,11 @@ class JorgeAdvancedIntegration:
         phone_number = event.data.get("phone_number")
 
         # In production, would integrate with GHL for lead source tracking
-        await self.cache.set(f"lead_source:{phone_number}", {
-            "source": "phone_call",
-            "timestamp": datetime.now().isoformat(),
-            "call_id": event.data.get("call_id")
-        }, ttl=30*24*3600)
+        await self.cache.set(
+            f"lead_source:{phone_number}",
+            {"source": "phone_call", "timestamp": datetime.now().isoformat(), "call_id": event.data.get("call_id")},
+            ttl=30 * 24 * 3600,
+        )
 
         return "lead_source_tracked"
 
@@ -532,10 +531,10 @@ class JorgeAdvancedIntegration:
         journey_data = {
             "stage": "initial_contact",
             "touchpoints": [{"type": "phone_call", "timestamp": datetime.now().isoformat()}],
-            "next_expected_action": "qualification_completion"
+            "next_expected_action": "qualification_completion",
         }
 
-        await self.cache.set(f"client_journey:{call_id}", journey_data, ttl=90*24*3600)
+        await self.cache.set(f"client_journey:{call_id}", journey_data, ttl=90 * 24 * 3600)
 
         return "journey_initialized"
 
@@ -546,9 +545,7 @@ class JorgeAdvancedIntegration:
         # Create high-priority market analysis
         if call_data.get("neighborhood_preferences"):
             for neighborhood in call_data["neighborhood_preferences"]:
-                await self.prediction_engine.predict_price_appreciation(
-                    neighborhood, TimeHorizon.MEDIUM_TERM
-                )
+                await self.prediction_engine.predict_price_appreciation(neighborhood, TimeHorizon.MEDIUM_TERM)
 
         return "priority_analysis_created"
 
@@ -556,11 +553,8 @@ class JorgeAdvancedIntegration:
         """Create priority follow-up for high qualified lead"""
         # Schedule immediate follow-up campaign
         campaign = await self.marketing_engine.create_campaign_from_trigger(
-            "lead_magnet_request", {
-                "type": "priority_follow_up",
-                "urgency": "high",
-                "personalization": event.data.get("call_context", {})
-            }
+            "lead_magnet_request",
+            {"type": "priority_follow_up", "urgency": "high", "personalization": event.data.get("call_context", {})},
         )
 
         return f"priority_campaign_created:{campaign.campaign_id}"
@@ -650,7 +644,7 @@ class JorgeAdvancedIntegration:
             {"type": "check_in", "days_offset": 7},
             {"type": "satisfaction_survey", "days_offset": 30},
             {"type": "market_update", "days_offset": 90},
-            {"type": "anniversary_greeting", "days_offset": 365}
+            {"type": "anniversary_greeting", "days_offset": 365},
         ]
 
         for touchpoint in touchpoints:
@@ -677,11 +671,7 @@ class JorgeAdvancedIntegration:
 
         # Create personalized retention campaign
         retention_campaign = await self.marketing_engine.create_campaign_from_trigger(
-            "seasonal_opportunity", {
-                "season": "current",
-                "client_focus": client_id,
-                "personalization": milestone_data
-            }
+            "seasonal_opportunity", {"season": "current", "client_focus": client_id, "personalization": milestone_data}
         )
 
         return f"retention_campaign_created:{retention_campaign.campaign_id}"
@@ -704,9 +694,7 @@ class JorgeAdvancedIntegration:
     async def _handle_market_change(self, event: IntegrationEvent) -> str:
         """Handle significant market change event"""
         # Trigger market update campaigns
-        market_campaign = await self.marketing_engine.create_campaign_from_trigger(
-            "market_milestone", event.data
-        )
+        market_campaign = await self.marketing_engine.create_campaign_from_trigger("market_milestone", event.data)
 
         return f"market_update_campaign_created:{market_campaign.campaign_id}"
 
@@ -714,11 +702,7 @@ class JorgeAdvancedIntegration:
         """Create market change response campaigns"""
         # Create educational campaign about market changes
         educational_campaign = await self.marketing_engine.create_campaign_from_trigger(
-            "market_milestone", {
-                **event.data,
-                "focus": "education",
-                "urgency": "medium"
-            }
+            "market_milestone", {**event.data, "focus": "education", "urgency": "medium"}
         )
 
         return f"educational_campaign_created:{educational_campaign.campaign_id}"
@@ -758,7 +742,7 @@ class JorgeAdvancedIntegration:
         await self.cache.set(
             f"referral_attribution:{referral_data.get('new_lead_id')}",
             referral_data,
-            ttl=365*24*3600  # 1 year
+            ttl=365 * 24 * 3600,  # 1 year
         )
 
         return "referral_attribution_tracked"
@@ -769,10 +753,7 @@ class JorgeAdvancedIntegration:
 
         # Create thank you campaign for referring client
         thank_you_campaign = await self.marketing_engine.create_campaign_from_trigger(
-            "successful_closing", {
-                **referral_data,
-                "focus": "referral_thank_you"
-            }
+            "successful_closing", {**referral_data, "focus": "referral_thank_you"}
         )
 
         return f"thank_you_campaign_created:{thank_you_campaign.campaign_id}"
@@ -785,7 +766,7 @@ class JorgeAdvancedIntegration:
             event_type=IntegrationEventType.HIGH_QUALIFIED_CALL,
             timestamp=datetime.now(),
             source_module="voice_ai",
-            data={"call_context": asdict(context)}
+            data={"call_context": asdict(context)},
         )
 
         await self._process_integration_event(event)
@@ -801,12 +782,12 @@ class JorgeAdvancedIntegration:
                     "name": context.caller_name,
                     "phone": context.phone_number,
                     "employer": context.employer,
-                    "timeline": context.timeline
+                    "timeline": context.timeline,
                 },
                 "requested_at": datetime.now().isoformat(),
-                "priority": "high" if context.qualification_score > 70 else "medium"
+                "priority": "high" if context.qualification_score > 70 else "medium",
             },
-            ttl=7*24*3600  # 7 days
+            ttl=7 * 24 * 3600,  # 7 days
         )
 
     def _extract_qualification_updates(self, call_id: str) -> Dict[str, Any]:
@@ -823,7 +804,7 @@ class JorgeAdvancedIntegration:
             "timeline": context.timeline,
             "budget_range": context.budget_range,
             "should_transfer": context.should_transfer_to_jorge,
-            "transfer_reason": context.transfer_reason
+            "transfer_reason": context.transfer_reason,
         }
 
     async def _analyze_listing_market_position(self, listing_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -832,14 +813,10 @@ class JorgeAdvancedIntegration:
         price = listing_data.get("price", 0)
 
         # Get price prediction for neighborhood
-        price_prediction = await self.prediction_engine.predict_price_appreciation(
-            neighborhood, TimeHorizon.SHORT_TERM
-        )
+        price_prediction = await self.prediction_engine.predict_price_appreciation(neighborhood, TimeHorizon.SHORT_TERM)
 
         # Analyze optimal timing
-        timing_prediction = await self.prediction_engine.predict_optimal_timing(
-            "sell", neighborhood
-        )
+        timing_prediction = await self.prediction_engine.predict_optimal_timing("sell", neighborhood)
 
         return {
             "price_prediction": asdict(price_prediction),
@@ -848,34 +825,26 @@ class JorgeAdvancedIntegration:
             "recommendations": [
                 "Price is aligned with market trends",
                 "Good timing for listing in current market",
-                "Strong marketing push recommended"
-            ]
+                "Strong marketing push recommended",
+            ],
         }
 
     def _estimate_marketing_reach(self, content_pieces: List) -> Dict[str, int]:
         """Estimate marketing reach for content pieces"""
         # Simplified reach estimation
-        reach_estimates = {
-            "facebook": 2500,
-            "instagram": 1800,
-            "linkedin": 800,
-            "email": 1200
-        }
+        reach_estimates = {"facebook": 2500, "instagram": 1800, "linkedin": 800, "email": 1200}
 
         total_reach = 0
         channel_breakdown = {}
 
         for content in content_pieces:
-            if hasattr(content, 'content_format'):
-                channel = content.content_format.value.split('_')[0]  # Extract platform
+            if hasattr(content, "content_format"):
+                channel = content.content_format.value.split("_")[0]  # Extract platform
                 estimated_reach = reach_estimates.get(channel, 500)
                 total_reach += estimated_reach
                 channel_breakdown[channel] = channel_breakdown.get(channel, 0) + estimated_reach
 
-        return {
-            "total_estimated_reach": total_reach,
-            "channel_breakdown": channel_breakdown
-        }
+        return {"total_estimated_reach": total_reach, "channel_breakdown": channel_breakdown}
 
     async def _analyze_closing_market_impact(self, closing_data: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze market impact of successful closing"""
@@ -891,17 +860,18 @@ class JorgeAdvancedIntegration:
             "neighborhood_impact": f"Positive sale in {neighborhood} market",
             "price_influence": "Supports current pricing trends",
             "market_momentum": market_prediction.confidence_level.value,
-            "competitive_advantage": "Demonstrates Jorge's market effectiveness"
+            "competitive_advantage": "Demonstrates Jorge's market effectiveness",
         }
 
     async def _create_opportunity_campaign(self, opportunity) -> Dict[str, Any]:
         """Create marketing campaign for market opportunity"""
         campaign = await self.marketing_engine.create_campaign_from_trigger(
-            "market_milestone", {
+            "market_milestone",
+            {
                 "opportunity": asdict(opportunity),
                 "urgency": "high" if opportunity.potential_return > 15 else "medium",
-                "focus": "opportunity_education"
-            }
+                "focus": "opportunity_education",
+            },
         )
 
         return {"campaign_id": campaign.campaign_id, "opportunity_id": opportunity.opportunity_id}
@@ -927,9 +897,11 @@ class JorgeAdvancedIntegration:
         # Check retention engine clients
         for client_id, profile in self.retention_engine.client_profiles.items():
             # Match by neighborhood or property type
-            if (opportunity.neighborhood == profile.neighborhood or
-                opportunity.opportunity_type in ["investment", "appreciation"] and
-                profile.referral_probability > 0.6):
+            if (
+                opportunity.neighborhood == profile.neighborhood
+                or opportunity.opportunity_type in ["investment", "appreciation"]
+                and profile.referral_probability > 0.6
+            ):
                 relevant_clients.append(client_id)
 
         return relevant_clients[:5]  # Limit to top 5
@@ -939,12 +911,8 @@ class JorgeAdvancedIntegration:
         # In production, would create and send actual notification
         await self.cache.set(
             f"opportunity_notification:{client_id}:{opportunity.opportunity_id}",
-            {
-                "opportunity": asdict(opportunity),
-                "sent_at": datetime.now().isoformat(),
-                "status": "pending_response"
-            },
-            ttl=30*24*3600
+            {"opportunity": asdict(opportunity), "sent_at": datetime.now().isoformat(), "status": "pending_response"},
+            ttl=30 * 24 * 3600,
         )
 
     async def _update_market_intelligence(self, opportunities: List):
@@ -954,10 +922,10 @@ class JorgeAdvancedIntegration:
             "opportunities_count": len(opportunities),
             "top_neighborhoods": [opp.neighborhood for opp in opportunities[:3]],
             "avg_potential_return": np.mean([opp.potential_return for opp in opportunities]) if opportunities else 0,
-            "updated_at": datetime.now().isoformat()
+            "updated_at": datetime.now().isoformat(),
         }
 
-        await self.cache.set("market_intelligence_update", intelligence_update, ttl=24*3600)
+        await self.cache.set("market_intelligence_update", intelligence_update, ttl=24 * 3600)
 
     async def _trigger_anniversary_activities(self, client_id: str, milestone_data: Dict[str, Any]) -> Dict[str, Any]:
         """Trigger comprehensive anniversary activities"""
@@ -977,21 +945,20 @@ class JorgeAdvancedIntegration:
             return [
                 "Send anniversary gift or card",
                 "Schedule property value discussion",
-                "Assess referral opportunities"
+                "Assess referral opportunities",
             ]
         elif milestone_type == "life_event":
             return [
                 "Send congratulations message",
                 "Assess real estate needs changes",
-                "Update client profile information"
+                "Update client profile information",
             ]
         else:
-            return [
-                "Continue regular engagement schedule",
-                "Monitor for next milestone opportunity"
-            ]
+            return ["Continue regular engagement schedule", "Monitor for next milestone opportunity"]
 
-    async def _generate_cross_module_insights(self, voice_stats, marketing_stats, retention_stats, prediction_stats) -> Dict[str, Any]:
+    async def _generate_cross_module_insights(
+        self, voice_stats, marketing_stats, retention_stats, prediction_stats
+    ) -> Dict[str, Any]:
         """Generate insights that span across modules"""
         insights = {}
 
@@ -1001,16 +968,22 @@ class JorgeAdvancedIntegration:
 
         # Retention to Prediction correlation
         if retention_stats.get("total_clients", 0) > 0:
-            insights["client_retention_rate"] = retention_stats["retention_trends"].get("active_clients", 0) / retention_stats["total_clients"]
+            insights["client_retention_rate"] = (
+                retention_stats["retention_trends"].get("active_clients", 0) / retention_stats["total_clients"]
+            )
 
         # Marketing to Retention pipeline
         marketing_leads = marketing_stats.get("total_leads_generated", 0)
         retention_clients = retention_stats.get("total_clients", 0)
         if marketing_leads > 0:
-            insights["lead_to_client_conversion"] = retention_clients / marketing_leads if marketing_leads > retention_clients else 1.0
+            insights["lead_to_client_conversion"] = (
+                retention_clients / marketing_leads if marketing_leads > retention_clients else 1.0
+            )
 
         # Prediction accuracy impact
-        prediction_accuracy = prediction_stats.get("model_performance", {}).get("price_appreciation", {}).get("accuracy", 0)
+        prediction_accuracy = (
+            prediction_stats.get("model_performance", {}).get("price_appreciation", {}).get("accuracy", 0)
+        )
         insights["prediction_confidence"] = prediction_accuracy
 
         # Overall system effectiveness
@@ -1020,29 +993,34 @@ class JorgeAdvancedIntegration:
 
         return insights
 
-    async def _calculate_performance_summary(self, voice_stats, marketing_stats, retention_stats, prediction_stats) -> Dict[str, Any]:
+    async def _calculate_performance_summary(
+        self, voice_stats, marketing_stats, retention_stats, prediction_stats
+    ) -> Dict[str, Any]:
         """Calculate overall performance summary"""
         return {
-            "total_interactions": voice_stats.get("total_calls", 0) + retention_stats.get("engagement_metrics", {}).get("total_engagements", 0),
+            "total_interactions": voice_stats.get("total_calls", 0)
+            + retention_stats.get("engagement_metrics", {}).get("total_engagements", 0),
             "conversion_pipeline": {
                 "calls_received": voice_stats.get("total_calls", 0),
                 "qualified_leads": voice_stats.get("qualification_distribution", {}).get("high", 0),
                 "active_campaigns": marketing_stats.get("total_campaigns", 0),
-                "retained_clients": retention_stats.get("total_clients", 0)
+                "retained_clients": retention_stats.get("total_clients", 0),
             },
             "roi_metrics": {
                 "avg_campaign_roi": marketing_stats.get("avg_roi_percentage", 0),
                 "client_lifetime_value": "estimated_from_retention",
-                "cost_per_acquisition": marketing_stats.get("avg_cost_per_lead", 0)
+                "cost_per_acquisition": marketing_stats.get("avg_cost_per_lead", 0),
             },
-            "predictive_accuracy": prediction_stats.get("model_performance", {}).get("price_appreciation", {}).get("accuracy", 0),
+            "predictive_accuracy": prediction_stats.get("model_performance", {})
+            .get("price_appreciation", {})
+            .get("accuracy", 0),
             "system_uptime": "99.9%",  # Placeholder
             "next_optimization_areas": [
                 "Improve voice AI qualification accuracy",
                 "Increase marketing campaign conversion rates",
                 "Enhance retention engagement effectiveness",
-                "Refine market prediction models"
-            ]
+                "Refine market prediction models",
+            ],
         }
 
     def _calculate_system_effectiveness(self, voice_stats, marketing_stats, retention_stats, prediction_stats) -> float:
@@ -1063,11 +1041,15 @@ class JorgeAdvancedIntegration:
 
         # Retention effectiveness
         if retention_stats.get("total_clients", 0) > 0:
-            active_rate = retention_stats["retention_trends"].get("active_clients", 0) / retention_stats["total_clients"]
+            active_rate = (
+                retention_stats["retention_trends"].get("active_clients", 0) / retention_stats["total_clients"]
+            )
             scores.append(active_rate)
 
         # Prediction effectiveness
-        prediction_accuracy = prediction_stats.get("model_performance", {}).get("price_appreciation", {}).get("accuracy", 0)
+        prediction_accuracy = (
+            prediction_stats.get("model_performance", {}).get("price_appreciation", {}).get("accuracy", 0)
+        )
         if prediction_accuracy > 0:
             scores.append(prediction_accuracy)
 
@@ -1080,16 +1062,14 @@ class JorgeAdvancedIntegration:
             neighborhood, TimeHorizon.MEDIUM_TERM
         )
 
-        timing_prediction = await self.prediction_engine.predict_optimal_timing(
-            "buy", neighborhood
-        )
+        timing_prediction = await self.prediction_engine.predict_optimal_timing("buy", neighborhood)
 
         market_context = {
             "neighborhood": neighborhood,
             "price_trend": price_prediction.change_percentage,
             "timing_score": timing_prediction.predicted_value,
             "key_insights": price_prediction.key_factors[:3],
-            "prepared_at": datetime.now().isoformat()
+            "prepared_at": datetime.now().isoformat(),
         }
 
         await self.cache.set(f"market_context:{call_id}", market_context, ttl=3600)
@@ -1102,7 +1082,9 @@ class JorgeAdvancedIntegration:
             return True
 
         # Check if client is investment-focused
-        if client_profile.employment_industry in ["logistics", "healthcare"] and market_data.get("investment_opportunity"):
+        if client_profile.employment_industry in ["logistics", "healthcare"] and market_data.get(
+            "investment_opportunity"
+        ):
             return True
 
         return False
@@ -1116,15 +1098,15 @@ class JorgeAdvancedIntegration:
             "personalization": {
                 "neighborhood": client_profile.neighborhood,
                 "property_value": client_profile.current_estimated_value,
-                "industry": client_profile.employment_industry
+                "industry": client_profile.employment_industry,
             },
-            "sent_at": datetime.now().isoformat()
+            "sent_at": datetime.now().isoformat(),
         }
 
         await self.cache.set(
             f"market_notification:{client_profile.client_id}:{datetime.now().timestamp()}",
             notification_data,
-            ttl=30*24*3600
+            ttl=30 * 24 * 3600,
         )
 
     async def _schedule_post_closing_sequence(self, client_id: str, closing_data: Dict[str, Any]):
@@ -1134,7 +1116,7 @@ class JorgeAdvancedIntegration:
             {"type": "satisfaction_survey", "days_offset": 7},
             {"type": "review_request", "days_offset": 14},
             {"type": "first_market_update", "days_offset": 30},
-            {"type": "referral_request", "days_offset": 90}
+            {"type": "referral_request", "days_offset": 90},
         ]
 
         for item in sequence_items:
@@ -1147,9 +1129,9 @@ class JorgeAdvancedIntegration:
                     "sequence_type": item["type"],
                     "scheduled_date": scheduled_date.isoformat(),
                     "closing_data": closing_data,
-                    "status": "scheduled"
+                    "status": "scheduled",
                 },
-                ttl=180*24*3600  # 6 months
+                ttl=180 * 24 * 3600,  # 6 months
             )
 
     async def _schedule_retention_touchpoint(self, client_id: str, touchpoint: Dict[str, Any]):
@@ -1162,9 +1144,9 @@ class JorgeAdvancedIntegration:
                 "client_id": client_id,
                 "touchpoint_type": touchpoint["type"],
                 "scheduled_date": scheduled_date.isoformat(),
-                "status": "scheduled"
+                "status": "scheduled",
             },
-            ttl=400*24*3600  # 400 days to cover anniversary
+            ttl=400 * 24 * 3600,  # 400 days to cover anniversary
         )
 
     async def _notify_interested_clients(self, listing_data: Dict[str, Any]):
@@ -1204,15 +1186,15 @@ class JorgeAdvancedIntegration:
                 "client_id": client_id,
                 "listing_data": listing_data,
                 "notification_type": "new_listing_match",
-                "sent_at": datetime.now().isoformat()
+                "sent_at": datetime.now().isoformat(),
             },
-            ttl=30*24*3600
+            ttl=30 * 24 * 3600,
         )
 
     async def _cache_integration_event(self, event: IntegrationEvent):
         """Cache integration event for analytics"""
         cache_key = f"integration_event:{event.event_id}"
-        await self.cache.set(cache_key, asdict(event), ttl=90*24*3600)  # 90 days
+        await self.cache.set(cache_key, asdict(event), ttl=90 * 24 * 3600)  # 90 days
 
         # Also add to daily event log
         today = datetime.now().strftime("%Y-%m-%d")
@@ -1223,11 +1205,12 @@ class JorgeAdvancedIntegration:
         daily_events.append(asdict(event))
 
         # Store updated daily events
-        await self.cache.set(daily_key, daily_events, ttl=30*24*3600)  # 30 days
+        await self.cache.set(daily_key, daily_events, ttl=30 * 24 * 3600)  # 30 days
 
 
 # Singleton instance
 _jorge_advanced_integration = None
+
 
 def get_jorge_advanced_integration() -> JorgeAdvancedIntegration:
     """Get singleton Jorge Advanced Integration instance"""

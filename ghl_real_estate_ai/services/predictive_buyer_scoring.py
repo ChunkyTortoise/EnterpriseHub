@@ -80,12 +80,8 @@ class PredictiveBuyerScoring:
                 urgency_score,
                 property_fit_score,
             ),
-            "recommendations": self._generate_recommendations(
-                total_score, classification, behavioral_data
-            ),
-            "next_best_action": self._determine_next_action(
-                total_score, classification, behavioral_data
-            ),
+            "recommendations": self._generate_recommendations(total_score, classification, behavioral_data),
+            "next_best_action": self._determine_next_action(total_score, classification, behavioral_data),
             "scored_at": datetime.utcnow().isoformat(),
         }
 
@@ -182,9 +178,7 @@ class PredictiveBuyerScoring:
 
         return min(score, 100)
 
-    def _score_urgency(
-        self, behavioral_data: Dict[str, Any], lead_data: Dict[str, Any]
-    ) -> float:
+    def _score_urgency(self, behavioral_data: Dict[str, Any], lead_data: Dict[str, Any]) -> float:
         """Score buying urgency"""
         score = 0.0
 
@@ -220,9 +214,7 @@ class PredictiveBuyerScoring:
 
         return min(score, 100)
 
-    def _score_property_match(
-        self, behavioral_data: Dict[str, Any], lead_data: Dict[str, Any]
-    ) -> float:
+    def _score_property_match(self, behavioral_data: Dict[str, Any], lead_data: Dict[str, Any]) -> float:
         """Score how well available properties match their criteria"""
         score = 50.0  # Base score
 
@@ -312,11 +304,7 @@ class PredictiveBuyerScoring:
         return {
             "30_days": round(prob_30_days * 100, 1),
             "90_days": round(prob_90_days * 100, 1),
-            "confidence": (
-                "High"
-                if total_score >= 60
-                else "Medium" if total_score >= 40 else "Low"
-            ),
+            "confidence": ("High" if total_score >= 60 else "Medium" if total_score >= 40 else "Low"),
         }
 
     def _generate_insights(
@@ -332,13 +320,9 @@ class PredictiveBuyerScoring:
 
         # Overall
         if total_score >= 80:
-            insights.append(
-                "🔥 This lead is HOT! They're showing strong buying signals across all metrics."
-            )
+            insights.append("🔥 This lead is HOT! They're showing strong buying signals across all metrics.")
         elif total_score >= 60:
-            insights.append(
-                "🎯 Strong buyer intent. This lead is actively looking and ready to engage."
-            )
+            insights.append("🎯 Strong buyer intent. This lead is actively looking and ready to engage.")
 
         # Engagement specific
         if engagement >= 70:
@@ -404,9 +388,7 @@ class PredictiveBuyerScoring:
 
         return recommendations
 
-    def _determine_next_action(
-        self, score: float, classification: str, behavioral_data: Dict[str, Any]
-    ) -> str:
+    def _determine_next_action(self, score: float, classification: str, behavioral_data: Dict[str, Any]) -> str:
         """Determine single best next action"""
         if score >= 80:
             return "📞 CALL NOW - This lead is ready to buy!"
@@ -485,9 +467,7 @@ def demo_buyer_scoring():
     ]
 
     for lead in leads:
-        score_result = service.calculate_buyer_score(
-            lead["lead_data"], lead["behavioral_data"]
-        )
+        score_result = service.calculate_buyer_score(lead["lead_data"], lead["behavioral_data"])
 
         print("=" * 70)
         print(f"LEAD: {score_result['name']}")

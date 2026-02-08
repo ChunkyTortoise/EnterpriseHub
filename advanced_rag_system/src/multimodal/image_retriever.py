@@ -235,9 +235,7 @@ class ImageRetriever:
                 self._embedding_provider = MockCLIPEmbeddingProvider(clip_config)
                 self._use_mock = True
             else:
-                raise RetrievalError(
-                    f"Failed to initialize CLIP provider and mock fallback disabled: {e}"
-                ) from e
+                raise RetrievalError(f"Failed to initialize CLIP provider and mock fallback disabled: {e}") from e
 
         # Initialize vector store
         try:
@@ -285,10 +283,7 @@ class ImageRetriever:
 
         ext = Path(path).suffix.lower()
         if ext not in self.config.supported_formats:
-            raise RetrievalError(
-                f"Unsupported image format: {ext}. "
-                f"Supported: {self.config.supported_formats}"
-            )
+            raise RetrievalError(f"Unsupported image format: {ext}. Supported: {self.config.supported_formats}")
 
     async def index_images(
         self,
@@ -459,10 +454,7 @@ class ImageRetriever:
             raise RetrievalError(f"Vector store search failed: {e}") from e
 
         # Filter out the query image itself if present
-        results = [
-            r for r in results
-            if r.metadata is None or r.metadata.custom.get("image_path") != query_image_path
-        ]
+        results = [r for r in results if r.metadata is None or r.metadata.custom.get("image_path") != query_image_path]
 
         logger.debug(f"Image-to-image search returned {len(results)} results")
         return results
@@ -519,7 +511,7 @@ class ImageRetriever:
 
         try:
             # Check embedding provider
-            if hasattr(self._embedding_provider, 'health_check'):
+            if hasattr(self._embedding_provider, "health_check"):
                 provider_healthy = await self._embedding_provider.health_check()
                 if not provider_healthy:
                     return False

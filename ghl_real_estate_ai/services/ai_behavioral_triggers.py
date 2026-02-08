@@ -133,9 +133,7 @@ class BehavioralTriggerEngine:
             },
         }
 
-    def detect_triggers(
-        self, lead_id: str, recent_events: List[BehavioralEvent]
-    ) -> List[FiredTrigger]:
+    def detect_triggers(self, lead_id: str, recent_events: List[BehavioralEvent]) -> List[FiredTrigger]:
         """
         Detect behavioral triggers from recent events
 
@@ -175,9 +173,7 @@ class BehavioralTriggerEngine:
 
         return fired_triggers
 
-    def _check_engagement_drop(
-        self, lead_id: str, events: List[BehavioralEvent]
-    ) -> Optional[FiredTrigger]:
+    def _check_engagement_drop(self, lead_id: str, events: List[BehavioralEvent]) -> Optional[FiredTrigger]:
         """Check for engagement drop pattern"""
         if not events:
             return None
@@ -201,9 +197,7 @@ class BehavioralTriggerEngine:
 
         return None
 
-    def _check_high_engagement_spike(
-        self, lead_id: str, events: List[BehavioralEvent]
-    ) -> Optional[FiredTrigger]:
+    def _check_high_engagement_spike(self, lead_id: str, events: List[BehavioralEvent]) -> Optional[FiredTrigger]:
         """Check for high engagement spike"""
         rule = self.trigger_rules[TriggerType.HIGH_ENGAGEMENT]
         time_window = timedelta(hours=rule["time_window"])
@@ -229,16 +223,12 @@ class BehavioralTriggerEngine:
 
         return None
 
-    def _check_price_sensitivity(
-        self, lead_id: str, events: List[BehavioralEvent]
-    ) -> Optional[FiredTrigger]:
+    def _check_price_sensitivity(self, lead_id: str, events: List[BehavioralEvent]) -> Optional[FiredTrigger]:
         """Check for price sensitivity signals"""
         rule = self.trigger_rules[TriggerType.PRICE_SENSITIVITY]
 
         # Get property view events
-        property_views = [
-            e for e in events if e.event_type == "property_view" and "price" in e.data
-        ]
+        property_views = [e for e in events if e.event_type == "property_view" and "price" in e.data]
 
         if len(property_views) < rule["threshold"]:
             return None
@@ -261,9 +251,7 @@ class BehavioralTriggerEngine:
                     recommended_actions=rule["actions"],
                     data={
                         "price_trend": "downward",
-                        "avg_decrease": (avg_first_half - avg_second_half)
-                        / avg_first_half
-                        * 100,
+                        "avg_decrease": (avg_first_half - avg_second_half) / avg_first_half * 100,
                         "viewed_prices": prices,
                     },
                     fired_at=datetime.now(),
@@ -271,15 +259,11 @@ class BehavioralTriggerEngine:
 
         return None
 
-    def _check_decision_signals(
-        self, lead_id: str, events: List[BehavioralEvent]
-    ) -> Optional[FiredTrigger]:
+    def _check_decision_signals(self, lead_id: str, events: List[BehavioralEvent]) -> Optional[FiredTrigger]:
         """Check for decision-making signals"""
         rule = self.trigger_rules[TriggerType.DECISION_SIGNALS]
 
-        recent_24h = [
-            e for e in events if (datetime.now() - e.timestamp) <= timedelta(hours=24)
-        ]
+        recent_24h = [e for e in events if (datetime.now() - e.timestamp) <= timedelta(hours=24)]
 
         # Check for calculator usage
         used_calculator = any(e.event_type == "calculator_use" for e in recent_24h)
@@ -308,9 +292,7 @@ class BehavioralTriggerEngine:
 
         return None
 
-    def _check_abandonment(
-        self, lead_id: str, events: List[BehavioralEvent]
-    ) -> Optional[FiredTrigger]:
+    def _check_abandonment(self, lead_id: str, events: List[BehavioralEvent]) -> Optional[FiredTrigger]:
         """Check for abandonment patterns"""
         rule = self.trigger_rules[TriggerType.ABANDONMENT]
 
@@ -318,8 +300,7 @@ class BehavioralTriggerEngine:
         incomplete_events = [
             e
             for e in events
-            if e.event_type
-            in ["form_started", "tour_request_started", "application_started"]
+            if e.event_type in ["form_started", "tour_request_started", "application_started"]
             and not e.data.get("completed", False)
         ]
 
@@ -372,18 +353,13 @@ class BehavioralTriggerEngine:
         return {
             "total_triggers": len(triggers),
             "by_type": {
-                trigger_type.value: len(
-                    [t for t in triggers if t.trigger_type == trigger_type]
-                )
+                trigger_type.value: len([t for t in triggers if t.trigger_type == trigger_type])
                 for trigger_type in TriggerType
             },
             "by_priority": {
-                priority.value: len([t for t in triggers if t.priority == priority])
-                for priority in TriggerPriority
+                priority.value: len([t for t in triggers if t.priority == priority]) for priority in TriggerPriority
             },
-            "critical_count": len(
-                [t for t in triggers if t.priority == TriggerPriority.CRITICAL]
-            ),
+            "critical_count": len([t for t in triggers if t.priority == TriggerPriority.CRITICAL]),
         }
 
 

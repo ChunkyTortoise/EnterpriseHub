@@ -28,20 +28,22 @@ Created: January 2026
 
 import asyncio
 import json
-import numpy as np
-import pandas as pd
-from datetime import datetime, timedelta, date
-from dataclasses import dataclass, asdict
-from typing import Dict, List, Optional, Tuple, Any, Union
-from enum import Enum
-from collections import defaultdict, deque
-from decimal import Decimal
 import logging
 from abc import ABC, abstractmethod
+from collections import defaultdict, deque
+from dataclasses import asdict, dataclass
+from datetime import date, datetime, timedelta
+from decimal import Decimal
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import numpy as np
+import pandas as pd
+
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 # Service integrations
 from ghl_real_estate_ai.services.cache_service import CacheService
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.utils.async_utils import safe_create_task
 
 logger = get_logger(__name__)
@@ -49,6 +51,7 @@ logger = get_logger(__name__)
 
 class AttributionModel(str, Enum):
     """Attribution model types for revenue analysis."""
+
     FIRST_TOUCH = "first_touch"
     LAST_TOUCH = "last_touch"
     LINEAR = "linear"
@@ -59,6 +62,7 @@ class AttributionModel(str, Enum):
 
 class TouchpointType(str, Enum):
     """Types of customer touchpoints in the journey."""
+
     ORGANIC_SEARCH = "organic_search"
     PAID_SEARCH = "paid_search"
     SOCIAL_MEDIA = "social_media"
@@ -75,6 +79,7 @@ class TouchpointType(str, Enum):
 
 class RevenueEventType(str, Enum):
     """Types of revenue events to track."""
+
     SUBSCRIPTION_STARTED = "subscription_started"
     SUBSCRIPTION_UPGRADED = "subscription_upgraded"
     SUBSCRIPTION_RENEWED = "subscription_renewed"
@@ -88,6 +93,7 @@ class RevenueEventType(str, Enum):
 @dataclass
 class Touchpoint:
     """Individual customer touchpoint in the journey."""
+
     touchpoint_id: str
     customer_id: str
     session_id: str
@@ -111,6 +117,7 @@ class Touchpoint:
 @dataclass
 class RevenueEvent:
     """Revenue event in the customer journey."""
+
     event_id: str
     customer_id: str
     event_type: RevenueEventType
@@ -132,6 +139,7 @@ class RevenueEvent:
 @dataclass
 class AttributionResult:
     """Result of attribution analysis for a revenue event."""
+
     revenue_event_id: str
     customer_id: str
     total_revenue: Decimal
@@ -145,6 +153,7 @@ class AttributionResult:
 @dataclass
 class ChannelPerformance:
     """Channel performance metrics with attribution analysis."""
+
     channel: str
     touchpoint_type: TouchpointType
     total_revenue: Decimal
@@ -161,6 +170,7 @@ class ChannelPerformance:
 @dataclass
 class CustomerJourney:
     """Complete customer journey with touchpoints and revenue events."""
+
     customer_id: str
     first_touchpoint: datetime
     last_touchpoint: datetime
@@ -179,14 +189,10 @@ class AttributionEngine:
         self.cache = CacheService()
         self.attribution_weights = {
             AttributionModel.POSITION_BASED: {"first": 0.4, "last": 0.4, "middle": 0.2},
-            AttributionModel.TIME_DECAY: {"decay_rate": 0.7}  # 7 days half-life
+            AttributionModel.TIME_DECAY: {"decay_rate": 0.7},  # 7 days half-life
         }
 
-    def calculate_attribution(
-        self,
-        journey: CustomerJourney,
-        model: AttributionModel
-    ) -> List[AttributionResult]:
+    def calculate_attribution(self, journey: CustomerJourney, model: AttributionModel) -> List[AttributionResult]:
         """Calculate attribution for all revenue events in a customer journey."""
         results = []
 
@@ -196,7 +202,8 @@ class AttributionEngine:
             cutoff_date = revenue_event.timestamp - attribution_window
 
             eligible_touchpoints = [
-                tp for tp in journey.touchpoints
+                tp
+                for tp in journey.touchpoints
                 if tp.timestamp >= cutoff_date and tp.timestamp <= revenue_event.timestamp
             ]
 
@@ -212,16 +219,18 @@ class AttributionEngine:
                 weight = attribution_weights[i]
                 attributed_revenue = revenue_event.revenue_amount * Decimal(str(weight))
 
-                attributed_touchpoints.append({
-                    "touchpoint_id": touchpoint.touchpoint_id,
-                    "touchpoint_type": touchpoint.touchpoint_type.value,
-                    "channel": touchpoint.channel,
-                    "source": touchpoint.source,
-                    "campaign_id": touchpoint.campaign_id,
-                    "weight": weight,
-                    "attributed_revenue": float(attributed_revenue),
-                    "timestamp": touchpoint.timestamp.isoformat()
-                })
+                attributed_touchpoints.append(
+                    {
+                        "touchpoint_id": touchpoint.touchpoint_id,
+                        "touchpoint_type": touchpoint.touchpoint_type.value,
+                        "channel": touchpoint.channel,
+                        "source": touchpoint.source,
+                        "campaign_id": touchpoint.campaign_id,
+                        "weight": weight,
+                        "attributed_revenue": float(attributed_revenue),
+                        "timestamp": touchpoint.timestamp.isoformat(),
+                    }
+                )
 
             result = AttributionResult(
                 revenue_event_id=revenue_event.event_id,
@@ -230,18 +239,14 @@ class AttributionEngine:
                 attributed_touchpoints=attributed_touchpoints,
                 attribution_model=model,
                 journey_duration_days=journey.journey_duration_days,
-                total_touchpoints=len(eligible_touchpoints)
+                total_touchpoints=len(eligible_touchpoints),
             )
 
             results.append(result)
 
         return results
 
-    def _calculate_weights(
-        self,
-        touchpoints: List[Touchpoint],
-        model: AttributionModel
-    ) -> List[float]:
+    def _calculate_weights(self, touchpoints: List[Touchpoint], model: AttributionModel) -> List[float]:
         """Calculate attribution weights based on the specified model."""
         n = len(touchpoints)
         if n == 0:
@@ -285,7 +290,7 @@ class AttributionEngine:
         raw_weights = []
         for touchpoint in touchpoints:
             days_diff = (reference_time - touchpoint.timestamp).days
-            weight = decay_rate ** days_diff
+            weight = decay_rate**days_diff
             raw_weights.append(weight)
 
         # Normalize weights
@@ -335,7 +340,7 @@ class AttributionEngine:
                 TouchpointType.SOCIAL_MEDIA: 0.3,
                 TouchpointType.DISPLAY_ADS: 0.2,
                 TouchpointType.REFERRAL: 0.6,
-                TouchpointType.DIRECT: 0.3
+                TouchpointType.DIRECT: 0.3,
             }.get(touchpoint.touchpoint_type, 0.3)
 
             # Adjust for engagement metrics
@@ -377,12 +382,7 @@ class RevenueAttributionEngine:
         logger.info("RevenueAttributionEngine initialized for enterprise analytics")
 
     async def track_revenue_event(
-        self,
-        customer_id: str,
-        event_type: RevenueEventType,
-        revenue_amount: float,
-        currency: str = "USD",
-        **kwargs
+        self, customer_id: str, event_type: RevenueEventType, revenue_amount: float, currency: str = "USD", **kwargs
     ) -> str:
         """
         Track a revenue event in real-time attribution pipeline.
@@ -411,7 +411,7 @@ class RevenueAttributionEngine:
                 plan_type=kwargs.get("plan_type"),
                 billing_cycle=kwargs.get("billing_cycle"),
                 commission_rate=kwargs.get("commission_rate"),
-                custom_attributes=kwargs.get("custom_attributes", {})
+                custom_attributes=kwargs.get("custom_attributes", {}),
             )
 
             # Store event
@@ -433,13 +433,7 @@ class RevenueAttributionEngine:
             raise
 
     async def track_touchpoint(
-        self,
-        customer_id: str,
-        touchpoint_type: TouchpointType,
-        channel: str,
-        source: str,
-        medium: str,
-        **kwargs
+        self, customer_id: str, touchpoint_type: TouchpointType, channel: str, source: str, medium: str, **kwargs
     ) -> str:
         """
         Track a customer touchpoint for attribution analysis.
@@ -472,7 +466,7 @@ class RevenueAttributionEngine:
                 page_views=kwargs.get("page_views", 1),
                 session_duration=kwargs.get("session_duration"),
                 conversion_value=kwargs.get("conversion_value"),
-                custom_attributes=kwargs.get("custom_attributes", {})
+                custom_attributes=kwargs.get("custom_attributes", {}),
             )
 
             # Store touchpoint
@@ -498,7 +492,7 @@ class RevenueAttributionEngine:
         end_date: Optional[datetime] = None,
         attribution_models: List[AttributionModel] = None,
         channels: List[str] = None,
-        include_customer_journeys: bool = False
+        include_customer_journeys: bool = False,
     ) -> Dict[str, Any]:
         """
         Generate comprehensive attribution analysis report.
@@ -538,21 +532,17 @@ class RevenueAttributionEngine:
                 attribution_results[model.value] = model_results
 
             # Calculate channel performance
-            channel_performance = await self._calculate_channel_performance(
-                attribution_results, channels
-            )
+            channel_performance = await self._calculate_channel_performance(attribution_results, channels)
 
             # Generate summary metrics
-            summary_metrics = self._calculate_summary_metrics(
-                revenue_events, attribution_results, channel_performance
-            )
+            summary_metrics = self._calculate_summary_metrics(revenue_events, attribution_results, channel_performance)
 
             # Build report
             report = {
                 "period": {
                     "start_date": start_date.isoformat(),
                     "end_date": end_date.isoformat(),
-                    "duration_days": (end_date - start_date).days
+                    "duration_days": (end_date - start_date).days,
                 },
                 "summary_metrics": summary_metrics,
                 "attribution_models": {
@@ -560,7 +550,7 @@ class RevenueAttributionEngine:
                         "total_results": len(results),
                         "total_revenue": sum(r.total_revenue for r in results),
                         "avg_journey_duration": np.mean([r.journey_duration_days for r in results]) if results else 0,
-                        "avg_touchpoints": np.mean([r.total_touchpoints for r in results]) if results else 0
+                        "avg_touchpoints": np.mean([r.total_touchpoints for r in results]) if results else 0,
                     }
                     for model, results in attribution_results.items()
                 },
@@ -569,7 +559,7 @@ class RevenueAttributionEngine:
                 "optimization_recommendations": await self._generate_recommendations(
                     channel_performance, attribution_results
                 ),
-                "generated_at": datetime.utcnow().isoformat()
+                "generated_at": datetime.utcnow().isoformat(),
             }
 
             # Include individual journeys if requested
@@ -581,7 +571,7 @@ class RevenueAttributionEngine:
                         "journey_duration_days": journey.journey_duration_days,
                         "touchpoint_count": journey.total_touchpoints,
                         "first_touchpoint": journey.first_touchpoint.isoformat(),
-                        "last_touchpoint": journey.last_touchpoint.isoformat()
+                        "last_touchpoint": journey.last_touchpoint.isoformat(),
                     }
                     for journey in customer_journeys[:100]  # Limit for performance
                 ]
@@ -621,23 +611,22 @@ class RevenueAttributionEngine:
             # Channel breakdown (last 7 days)
             week_start = today_start - timedelta(days=7)
             week_report = await self.generate_attribution_report(
-                start_date=week_start,
-                attribution_models=[AttributionModel.LAST_TOUCH]
+                start_date=week_start, attribution_models=[AttributionModel.LAST_TOUCH]
             )
 
             metrics = {
                 "today": {
                     "revenue": today_revenue,
                     "events": len(today_events),
-                    "avg_event_value": today_revenue / len(today_events) if today_events else 0
+                    "avg_event_value": today_revenue / len(today_events) if today_events else 0,
                 },
                 "month_to_date": {
                     "revenue": month_revenue,
                     "events": len(month_events),
-                    "avg_event_value": month_revenue / len(month_events) if month_events else 0
+                    "avg_event_value": month_revenue / len(month_events) if month_events else 0,
                 },
                 "top_channels_7d": week_report.get("channel_performance", {})[:5],
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
             return metrics
@@ -658,9 +647,7 @@ class RevenueAttributionEngine:
                 return
 
             # Calculate attribution using default model (last-touch)
-            attribution_results = self.attribution_engine.calculate_attribution(
-                journey, AttributionModel.LAST_TOUCH
-            )
+            attribution_results = self.attribution_engine.calculate_attribution(journey, AttributionModel.LAST_TOUCH)
 
             # Store results
             for result in attribution_results:
@@ -673,9 +660,7 @@ class RevenueAttributionEngine:
             logger.error(f"Error in real-time attribution processing: {e}", exc_info=True)
 
     async def _get_revenue_events(
-        self,
-        start_date: datetime,
-        end_date: Optional[datetime] = None
+        self, start_date: datetime, end_date: Optional[datetime] = None
     ) -> List[RevenueEvent]:
         """Get revenue events within date range."""
         if not end_date:
@@ -692,9 +677,7 @@ class RevenueAttributionEngine:
         return events
 
     async def _build_customer_journeys(
-        self,
-        revenue_events: List[RevenueEvent],
-        start_date: datetime
+        self, revenue_events: List[RevenueEvent], start_date: datetime
     ) -> List[CustomerJourney]:
         """Build customer journeys from revenue events and touchpoints."""
         journeys = []
@@ -747,7 +730,7 @@ class RevenueAttributionEngine:
                 touchpoints=touchpoints,
                 revenue_events=[],  # Will be populated by caller
                 total_revenue=Decimal("0"),
-                journey_duration_days=duration_days
+                journey_duration_days=duration_days,
             )
 
             return journey
@@ -757,20 +740,14 @@ class RevenueAttributionEngine:
             return None
 
     async def _calculate_channel_performance(
-        self,
-        attribution_results: Dict[str, List[AttributionResult]],
-        channels_filter: Optional[List[str]] = None
+        self, attribution_results: Dict[str, List[AttributionResult]], channels_filter: Optional[List[str]] = None
     ) -> List[Dict[str, Any]]:
         """Calculate channel performance metrics from attribution results."""
         # Use last-touch attribution for channel performance
         last_touch_results = attribution_results.get(AttributionModel.LAST_TOUCH.value, [])
 
         # Aggregate by channel
-        channel_data = defaultdict(lambda: {
-            "total_revenue": Decimal("0"),
-            "touchpoint_count": 0,
-            "customers": set()
-        })
+        channel_data = defaultdict(lambda: {"total_revenue": Decimal("0"), "touchpoint_count": 0, "customers": set()})
 
         for result in last_touch_results:
             for touchpoint in result.attributed_touchpoints:
@@ -787,17 +764,21 @@ class RevenueAttributionEngine:
         performance_list = []
         for channel, data in channel_data.items():
             unique_customers = len(data["customers"])
-            avg_revenue_per_customer = data["total_revenue"] / unique_customers if unique_customers > 0 else Decimal("0")
+            avg_revenue_per_customer = (
+                data["total_revenue"] / unique_customers if unique_customers > 0 else Decimal("0")
+            )
 
-            performance_list.append({
-                "channel": channel,
-                "total_revenue": float(data["total_revenue"]),
-                "touchpoint_count": data["touchpoint_count"],
-                "unique_customers": unique_customers,
-                "avg_revenue_per_customer": float(avg_revenue_per_customer),
-                "conversion_rate": 0.0,  # Would calculate from total traffic
-                "roi": 0.0  # Would calculate from cost data
-            })
+            performance_list.append(
+                {
+                    "channel": channel,
+                    "total_revenue": float(data["total_revenue"]),
+                    "touchpoint_count": data["touchpoint_count"],
+                    "unique_customers": unique_customers,
+                    "avg_revenue_per_customer": float(avg_revenue_per_customer),
+                    "conversion_rate": 0.0,  # Would calculate from total traffic
+                    "roi": 0.0,  # Would calculate from cost data
+                }
+            )
 
         # Sort by revenue
         performance_list.sort(key=lambda x: x["total_revenue"], reverse=True)
@@ -807,7 +788,7 @@ class RevenueAttributionEngine:
         self,
         revenue_events: List[RevenueEvent],
         attribution_results: Dict[str, List[AttributionResult]],
-        channel_performance: List[Dict[str, Any]]
+        channel_performance: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
         """Calculate high-level summary metrics."""
         total_revenue = sum(float(event.revenue_amount) for event in revenue_events)
@@ -830,12 +811,11 @@ class RevenueAttributionEngine:
             "avg_revenue_per_event": avg_revenue_per_event,
             "avg_revenue_per_customer": avg_revenue_per_customer,
             "top_performing_channel": top_channel,
-            "total_channels": len(channel_performance)
+            "total_channels": len(channel_performance),
         }
 
     def _compare_attribution_models(
-        self,
-        attribution_results: Dict[str, List[AttributionResult]]
+        self, attribution_results: Dict[str, List[AttributionResult]]
     ) -> Dict[str, Dict[str, float]]:
         """Compare revenue attribution across different models."""
         comparison = {}
@@ -847,15 +827,13 @@ class RevenueAttributionEngine:
             comparison[model] = {
                 "total_revenue": total_revenue,
                 "avg_touchpoints_per_conversion": avg_touchpoints,
-                "total_conversions": len(results)
+                "total_conversions": len(results),
             }
 
         return comparison
 
     async def _generate_recommendations(
-        self,
-        channel_performance: List[Dict[str, Any]],
-        attribution_results: Dict[str, List[AttributionResult]]
+        self, channel_performance: List[Dict[str, Any]], attribution_results: Dict[str, List[AttributionResult]]
     ) -> List[Dict[str, str]]:
         """Generate optimization recommendations based on attribution analysis."""
         recommendations = []
@@ -868,23 +846,27 @@ class RevenueAttributionEngine:
         if len(channel_performance) > 1:
             underperformer = channel_performance[-1]
 
-            recommendations.append({
-                "type": "budget_reallocation",
-                "priority": "high",
-                "title": f"Increase Investment in {top_performer['channel']}",
-                "description": f"Top channel generated ${top_performer['total_revenue']:,.2f} with {top_performer['unique_customers']} customers",
-                "action": f"Reallocate budget from {underperformer['channel']} to {top_performer['channel']}"
-            })
+            recommendations.append(
+                {
+                    "type": "budget_reallocation",
+                    "priority": "high",
+                    "title": f"Increase Investment in {top_performer['channel']}",
+                    "description": f"Top channel generated ${top_performer['total_revenue']:,.2f} with {top_performer['unique_customers']} customers",
+                    "action": f"Reallocate budget from {underperformer['channel']} to {top_performer['channel']}",
+                }
+            )
 
         # Attribution model insights
         if len(attribution_results) > 1:
-            recommendations.append({
-                "type": "attribution_optimization",
-                "priority": "medium",
-                "title": "Multi-Touch Attribution Insights",
-                "description": "Compare attribution models to understand true channel impact",
-                "action": "Consider position-based model for better mid-funnel optimization"
-            })
+            recommendations.append(
+                {
+                    "type": "attribution_optimization",
+                    "priority": "medium",
+                    "title": "Multi-Touch Attribution Insights",
+                    "description": "Compare attribution models to understand true channel impact",
+                    "action": "Consider position-based model for better mid-funnel optimization",
+                }
+            )
 
         return recommendations
 
@@ -898,7 +880,7 @@ class RevenueAttributionEngine:
             aggregate = await self.cache.get(aggregate_key) or {
                 "total_revenue": 0.0,
                 "event_count": 0,
-                "currency": revenue_event.currency
+                "currency": revenue_event.currency,
             }
 
             # Update aggregate

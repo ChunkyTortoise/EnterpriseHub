@@ -3,9 +3,10 @@ Obsidian-themed card primitive component.
 Replaces 132+ inline card implementations with reusable, type-safe component.
 """
 
-import streamlit as st
 from dataclasses import dataclass
 from typing import Literal, Optional
+
+import streamlit as st
 
 
 @dataclass

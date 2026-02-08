@@ -12,11 +12,12 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
 
 class SentimentTriggerType(Enum):
     """Types of sentiment triggers that indicate selling motivation."""
+
     NEIGHBORHOOD_DECLINE = "neighborhood_decline"
     PERMIT_DISRUPTION = "permit_disruption"
     ECONOMIC_STRESS = "economic_stress"
@@ -27,21 +28,23 @@ class SentimentTriggerType(Enum):
 
 class AlertPriority(Enum):
     """Priority levels for sentiment alerts."""
-    CRITICAL = "critical"    # Act within 24 hours
-    HIGH = "high"           # Act within 3 days
-    MEDIUM = "medium"       # Act within 1 week
-    LOW = "low"             # Monitor for trends
+
+    CRITICAL = "critical"  # Act within 24 hours
+    HIGH = "high"  # Act within 3 days
+    MEDIUM = "medium"  # Act within 1 week
+    LOW = "low"  # Monitor for trends
 
 
 @dataclass
 class SentimentSignal:
     """Individual sentiment signal from a data source."""
-    source: str                # "twitter", "nextdoor", "permits", "news"
+
+    source: str  # "twitter", "nextdoor", "permits", "news"
     signal_type: SentimentTriggerType
-    location: str              # ZIP code or neighborhood
-    sentiment_score: float     # -100 to +100
-    confidence: float          # 0.0 to 1.0
-    raw_content: Optional[str] # Original text/data
+    location: str  # ZIP code or neighborhood
+    sentiment_score: float  # -100 to +100
+    confidence: float  # 0.0 to 1.0
+    raw_content: Optional[str]  # Original text/data
     detected_at: datetime
     urgency_multiplier: float  # 1.0-5.0 for timing urgency
 
@@ -55,7 +58,7 @@ class SentimentSignal:
             "confidence": self.confidence,
             "raw_content": self.raw_content,
             "detected_at": self.detected_at.isoformat(),
-            "urgency_multiplier": self.urgency_multiplier
+            "urgency_multiplier": self.urgency_multiplier,
         }
 
 
@@ -71,6 +74,7 @@ class DataSourceInterface(ABC):
 @dataclass
 class MarketSentiment:
     """Aggregated market sentiment for a location."""
+
     location: str
     overall_score: float  # 0.0 to 1.0 (0=negative, 1=positive)
     confidence_level: float  # 0.0 to 1.0

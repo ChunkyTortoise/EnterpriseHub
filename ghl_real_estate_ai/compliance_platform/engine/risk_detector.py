@@ -13,9 +13,9 @@ from uuid import uuid4
 from ..models.compliance_models import (
     AIModelRegistration,
     ComplianceStatus,
+    RegulationType,
     RiskAssessment,
     RiskLevel,
-    RegulationType,
     ViolationSeverity,
 )
 from ..models.risk_models import (
@@ -117,7 +117,7 @@ class RiskDetector:
                 "high": {"min_score": 15, "color": "#EF4444", "action": "immediate"},
                 "limited": {"min_score": 8, "color": "#F59E0B", "action": "transparency"},
                 "minimal": {"min_score": 0, "color": "#10B981", "action": "monitor"},
-            }
+            },
         )
 
     async def assess_model(
@@ -162,14 +162,16 @@ class RiskDetector:
         )
 
         # Calculate overall risk score
-        overall_score = self._calculate_overall_risk_score({
-            "transparency": transparency_result["score"],
-            "fairness": fairness_result["score"],
-            "accountability": accountability_result["score"],
-            "robustness": robustness_result["score"],
-            "privacy": privacy_result["score"],
-            "security": security_result["score"],
-        })
+        overall_score = self._calculate_overall_risk_score(
+            {
+                "transparency": transparency_result["score"],
+                "fairness": fairness_result["score"],
+                "accountability": accountability_result["score"],
+                "robustness": robustness_result["score"],
+                "privacy": privacy_result["score"],
+                "security": security_result["score"],
+            }
+        )
 
         # Determine risk level
         risk_level = self._classify_risk_level(model, overall_score)
@@ -180,8 +182,12 @@ class RiskDetector:
         recommendations = []
 
         for result in [
-            transparency_result, fairness_result, accountability_result,
-            robustness_result, privacy_result, security_result
+            transparency_result,
+            fairness_result,
+            accountability_result,
+            robustness_result,
+            privacy_result,
+            security_result,
         ]:
             risk_factors.extend(result.get("risk_factors", []))
             mitigating_factors.extend(result.get("mitigating_factors", []))
@@ -215,14 +221,18 @@ class RiskDetector:
 
         # Optionally add AI-generated explanations
         if self.enable_ai_explanations and self._ai_analyzer is not None:
-            ai_insights = await self._generate_ai_insights(model, assessment, {
-                "transparency": transparency_result,
-                "fairness": fairness_result,
-                "accountability": accountability_result,
-                "robustness": robustness_result,
-                "privacy": privacy_result,
-                "security": security_result,
-            })
+            ai_insights = await self._generate_ai_insights(
+                model,
+                assessment,
+                {
+                    "transparency": transparency_result,
+                    "fairness": fairness_result,
+                    "accountability": accountability_result,
+                    "robustness": robustness_result,
+                    "privacy": privacy_result,
+                    "security": security_result,
+                },
+            )
             assessment.ai_insights = ai_insights
 
         # Cache the assessment
@@ -248,7 +258,9 @@ class RiskDetector:
         if not model.description or len(model.description) < 50:
             score += 20
             risk_factors.append("Insufficient model documentation")
-            recommendations.append("Provide comprehensive model documentation including purpose, limitations, and intended use")
+            recommendations.append(
+                "Provide comprehensive model documentation including purpose, limitations, and intended use"
+            )
 
         # Check for explainability
         if model.model_type in ["deep_learning", "neural_network", "transformer"]:
@@ -872,9 +884,7 @@ class RiskDetector:
             ValueError: If ai_analyzer is not configured
         """
         if self._ai_analyzer is None:
-            raise ValueError(
-                "AI analyzer not configured. Initialize RiskDetector with ai_analyzer parameter."
-            )
+            raise ValueError("AI analyzer not configured. Initialize RiskDetector with ai_analyzer parameter.")
 
         return await self._ai_analyzer.generate_risk_recommendations(assessment, model)
 

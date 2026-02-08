@@ -5,23 +5,24 @@ Demonstrates structured delivery methodology for high-ticket consulting engageme
 Showcases project management, stakeholder coordination, and ROI tracking capabilities.
 """
 
-import streamlit as st
+import asyncio
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
-import asyncio
+import streamlit as st
 
 from ghl_real_estate_ai.services.consulting_delivery_service import (
     ConsultingDeliveryService,
     ConsultingEngagement,
-    EngagementTier,
-    EngagementStatus,
     DeliverableStatus,
+    EngagementStatus,
+    EngagementTier,
+    ROIMetrics,
     Stakeholder,
     StakeholderRole,
-    ROIMetrics
 )
 
 
@@ -50,7 +51,7 @@ class ConsultingDeliveryShowcase:
                 "roi_achieved": 284.5,
                 "monthly_revenue_impact": 127500,
                 "hours_saved": 47.2,
-                "risk_level": "LOW"
+                "risk_level": "LOW",
             },
             "Metropolitan Realty Group - Innovation": {
                 "tier": EngagementTier.INNOVATION,
@@ -61,7 +62,7 @@ class ConsultingDeliveryShowcase:
                 "roi_achieved": 456.8,
                 "monthly_revenue_impact": 245000,
                 "hours_saved": 73.5,
-                "risk_level": "LOW"
+                "risk_level": "LOW",
             },
             "Coastal Homes Inc - Accelerator": {
                 "tier": EngagementTier.ACCELERATOR,
@@ -72,8 +73,8 @@ class ConsultingDeliveryShowcase:
                 "roi_achieved": 167.3,
                 "monthly_revenue_impact": 89200,
                 "hours_saved": 31.8,
-                "risk_level": "LOW"
-            }
+                "risk_level": "LOW",
+            },
         }
 
         # Sample deliverable progress
@@ -81,26 +82,39 @@ class ConsultingDeliveryShowcase:
             "Austin Premier Properties - Platform": [
                 {"name": "Enterprise AI Architecture", "status": "Approved", "value": "Foundation for $2M+ scaling"},
                 {"name": "Predictive Analytics Engine", "status": "In Progress", "value": "40% churn reduction"},
-                {"name": "Executive Intelligence Dashboard", "status": "Planned", "value": "C-suite decision acceleration"},
-                {"name": "Advanced Team Certification", "status": "Planned", "value": "Internal capability building"}
+                {
+                    "name": "Executive Intelligence Dashboard",
+                    "status": "Planned",
+                    "value": "C-suite decision acceleration",
+                },
+                {"name": "Advanced Team Certification", "status": "Planned", "value": "Internal capability building"},
             ],
             "Metropolitan Realty Group - Innovation": [
-                {"name": "Custom AI Model Development", "status": "Approved", "value": "Proprietary competitive advantage"},
+                {
+                    "name": "Custom AI Model Development",
+                    "status": "Approved",
+                    "value": "Proprietary competitive advantage",
+                },
                 {"name": "Innovation Lab Setup", "status": "Approved", "value": "Ongoing innovation capability"},
                 {"name": "Market Launch Strategy", "status": "In Progress", "value": "Revenue growth acceleration"},
-                {"name": "Executive Advisory Program", "status": "Planned", "value": "Strategic guidance"}
+                {"name": "Executive Advisory Program", "status": "Planned", "value": "Strategic guidance"},
             ],
             "Coastal Homes Inc - Accelerator": [
                 {"name": "AI Strategy Assessment", "status": "Approved", "value": "$500K+ revenue opportunities"},
-                {"name": "Multi-Agent Swarm Implementation", "status": "Approved", "value": "85+ hours/month automation"},
-                {"name": "Team Training Program", "status": "In Progress", "value": "40% productivity increase"}
-            ]
+                {
+                    "name": "Multi-Agent Swarm Implementation",
+                    "status": "Approved",
+                    "value": "85+ hours/month automation",
+                },
+                {"name": "Team Training Program", "status": "In Progress", "value": "40% productivity increase"},
+            ],
         }
 
     def render_showcase(self):
         """Render the complete consulting delivery showcase."""
 
-        st.markdown("""
+        st.markdown(
+            """
         <div style='background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
                     padding: 2rem; border-radius: 16px; color: white; margin-bottom: 2rem;
                     box-shadow: 0 8px 32px rgba(0,0,0,0.3);'>
@@ -112,15 +126,14 @@ class ConsultingDeliveryShowcase:
                 <strong>Proven ROI tracking and client success measurement</strong>
             </p>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
         # Main showcase tabs
-        tab1, tab2, tab3, tab4 = st.tabs([
-            "🎯 Active Engagements",
-            "📈 ROI Tracking",
-            "⚙️ Delivery Methodology",
-            "📋 Executive Reporting"
-        ])
+        tab1, tab2, tab3, tab4 = st.tabs(
+            ["🎯 Active Engagements", "📈 ROI Tracking", "⚙️ Delivery Methodology", "📋 Executive Reporting"]
+        )
 
         with tab1:
             self._render_active_engagements()
@@ -154,10 +167,7 @@ class ConsultingDeliveryShowcase:
         st.markdown("---")
         st.markdown("#### 📊 Detailed Engagement Analytics")
 
-        selected_engagement = st.selectbox(
-            "Select engagement for detailed view:",
-            list(self.demo_engagements.keys())
-        )
+        selected_engagement = st.selectbox("Select engagement for detailed view:", list(self.demo_engagements.keys()))
 
         if selected_engagement:
             self._render_detailed_engagement_view(selected_engagement)
@@ -166,11 +176,7 @@ class ConsultingDeliveryShowcase:
         """Render individual engagement card."""
 
         # Determine status color
-        status_colors = {
-            "IMPLEMENTATION": "#3B82F6",
-            "TESTING": "#F59E0B",
-            "KNOWLEDGE_TRANSFER": "#10B981"
-        }
+        status_colors = {"IMPLEMENTATION": "#3B82F6", "TESTING": "#F59E0B", "KNOWLEDGE_TRANSFER": "#10B981"}
 
         status_color = status_colors.get(details["status"].value, "#6B7280")
 
@@ -183,32 +189,32 @@ class ConsultingDeliveryShowcase:
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             margin-bottom: 1rem;
         '>
-            <h4 style='color: #1F2937; margin: 0 0 0.5rem 0; font-size: 1rem;'>{details['client']}</h4>
-            <p style='color: #6B7280; margin: 0 0 1rem 0; font-size: 0.9rem;'>{details['tier'].value.title()} Tier</p>
+            <h4 style='color: #1F2937; margin: 0 0 0.5rem 0; font-size: 1rem;'>{details["client"]}</h4>
+            <p style='color: #6B7280; margin: 0 0 1rem 0; font-size: 0.9rem;'>{details["tier"].value.title()} Tier</p>
 
             <div style='margin-bottom: 1rem;'>
                 <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;'>
                     <span style='font-size: 0.8rem; color: #6B7280;'>Progress</span>
-                    <span style='font-size: 0.8rem; font-weight: 600; color: {status_color};'>{details['completion']}%</span>
+                    <span style='font-size: 0.8rem; font-weight: 600; color: {status_color};'>{details["completion"]}%</span>
                 </div>
                 <div style='width: 100%; background: #E5E7EB; border-radius: 10px; height: 8px;'>
-                    <div style='background: {status_color}; width: {details['completion']}%; height: 8px; border-radius: 10px;'></div>
+                    <div style='background: {status_color}; width: {details["completion"]}%; height: 8px; border-radius: 10px;'></div>
                 </div>
             </div>
 
             <div style='display: flex; justify-content: space-between; margin-bottom: 0.5rem;'>
                 <span style='font-size: 0.8rem; color: #6B7280;'>Contract Value</span>
-                <span style='font-size: 0.8rem; font-weight: 600; color: #1F2937;'>${details['contract_value']:,}</span>
+                <span style='font-size: 0.8rem; font-weight: 600; color: #1F2937;'>${details["contract_value"]:,}</span>
             </div>
 
             <div style='display: flex; justify-content: space-between; margin-bottom: 0.5rem;'>
                 <span style='font-size: 0.8rem; color: #6B7280;'>ROI Achieved</span>
-                <span style='font-size: 0.8rem; font-weight: 600; color: #059669;'>{details['roi_achieved']:.1f}%</span>
+                <span style='font-size: 0.8rem; font-weight: 600; color: #059669;'>{details["roi_achieved"]:.1f}%</span>
             </div>
 
             <div style='display: flex; justify-content: space-between;'>
                 <span style='font-size: 0.8rem; color: #6B7280;'>Status</span>
-                <span style='font-size: 0.8rem; font-weight: 600; color: {status_color};'>{details['status'].value.title()}</span>
+                <span style='font-size: 0.8rem; font-weight: 600; color: {status_color};'>{details["status"].value.title()}</span>
             </div>
         </div>
         """
@@ -229,18 +235,16 @@ class ConsultingDeliveryShowcase:
             # Create deliverables dataframe
             deliverable_data = []
             for i, deliverable in enumerate(deliverables, 1):
-                status_emoji = {
-                    "Approved": "✅",
-                    "In Progress": "🔄",
-                    "Planned": "📋"
-                }
+                status_emoji = {"Approved": "✅", "In Progress": "🔄", "Planned": "📋"}
 
-                deliverable_data.append({
-                    "#": i,
-                    "Deliverable": deliverable["name"],
-                    "Status": f"{status_emoji.get(deliverable['status'], '📋')} {deliverable['status']}",
-                    "Business Value": deliverable["value"]
-                })
+                deliverable_data.append(
+                    {
+                        "#": i,
+                        "Deliverable": deliverable["name"],
+                        "Status": f"{status_emoji.get(deliverable['status'], '📋')} {deliverable['status']}",
+                        "Business Value": deliverable["value"],
+                    }
+                )
 
             df = pd.DataFrame(deliverable_data)
             st.dataframe(df, use_container_width=True, hide_index=True)
@@ -249,26 +253,24 @@ class ConsultingDeliveryShowcase:
             st.markdown("#### 📊 Key Metrics")
 
             # Progress chart
-            fig_progress = go.Figure(go.Indicator(
-                mode="gauge+number",
-                value=details["completion"],
-                domain={'x': [0, 1], 'y': [0, 1]},
-                title={'text': "Completion %"},
-                gauge={
-                    'axis': {'range': [None, 100]},
-                    'bar': {'color': "darkblue"},
-                    'steps': [
-                        {'range': [0, 50], 'color': "lightgray"},
-                        {'range': [50, 80], 'color': "yellow"},
-                        {'range': [80, 100], 'color': "lightgreen"}
-                    ],
-                    'threshold': {
-                        'line': {'color': "red", 'width': 4},
-                        'thickness': 0.75,
-                        'value': 90
-                    }
-                }
-            ))
+            fig_progress = go.Figure(
+                go.Indicator(
+                    mode="gauge+number",
+                    value=details["completion"],
+                    domain={"x": [0, 1], "y": [0, 1]},
+                    title={"text": "Completion %"},
+                    gauge={
+                        "axis": {"range": [None, 100]},
+                        "bar": {"color": "darkblue"},
+                        "steps": [
+                            {"range": [0, 50], "color": "lightgray"},
+                            {"range": [50, 80], "color": "yellow"},
+                            {"range": [80, 100], "color": "lightgreen"},
+                        ],
+                        "threshold": {"line": {"color": "red", "width": 4}, "thickness": 0.75, "value": 90},
+                    },
+                )
+            )
 
             fig_progress.update_layout(height=250, margin=dict(l=20, r=20, t=40, b=20))
             st.plotly_chart(fig_progress, use_container_width=True)
@@ -277,20 +279,12 @@ class ConsultingDeliveryShowcase:
             st.metric(
                 "Monthly Revenue Impact",
                 f"${details['monthly_revenue_impact']:,}",
-                delta=f"+{details['roi_achieved']:.1f}% ROI"
+                delta=f"+{details['roi_achieved']:.1f}% ROI",
             )
 
-            st.metric(
-                "Hours Saved/Week",
-                f"{details['hours_saved']:.1f}",
-                delta="Automation Value"
-            )
+            st.metric("Hours Saved/Week", f"{details['hours_saved']:.1f}", delta="Automation Value")
 
-            st.metric(
-                "Risk Level",
-                details['risk_level'],
-                delta="Well Managed"
-            )
+            st.metric("Risk Level", details["risk_level"], delta="Well Managed")
 
     def _render_roi_tracking(self):
         """Render comprehensive ROI tracking dashboard."""
@@ -303,35 +297,19 @@ class ConsultingDeliveryShowcase:
 
         with col1:
             total_contract_value = sum(d["contract_value"] for d in self.demo_engagements.values())
-            st.metric(
-                "Total Contract Value",
-                f"${total_contract_value:,}",
-                delta="Active Portfolio"
-            )
+            st.metric("Total Contract Value", f"${total_contract_value:,}", delta="Active Portfolio")
 
         with col2:
             avg_roi = sum(d["roi_achieved"] for d in self.demo_engagements.values()) / len(self.demo_engagements)
-            st.metric(
-                "Average ROI",
-                f"{avg_roi:.1f}%",
-                delta="Exceeds Targets"
-            )
+            st.metric("Average ROI", f"{avg_roi:.1f}%", delta="Exceeds Targets")
 
         with col3:
             total_revenue_impact = sum(d["monthly_revenue_impact"] for d in self.demo_engagements.values())
-            st.metric(
-                "Monthly Revenue Impact",
-                f"${total_revenue_impact:,}",
-                delta="Client Value Created"
-            )
+            st.metric("Monthly Revenue Impact", f"${total_revenue_impact:,}", delta="Client Value Created")
 
         with col4:
             total_hours_saved = sum(d["hours_saved"] for d in self.demo_engagements.values())
-            st.metric(
-                "Total Hours Saved/Week",
-                f"{total_hours_saved:.1f}",
-                delta="Across All Clients"
-            )
+            st.metric("Total Hours Saved/Week", f"{total_hours_saved:.1f}", delta="Across All Clients")
 
         # ROI comparison chart
         st.markdown("#### 📊 ROI Performance by Engagement")
@@ -345,17 +323,13 @@ class ConsultingDeliveryShowcase:
             y=roi_values,
             size=roi_values,
             hover_name=engagement_names,
-            labels={
-                "x": "Contract Value ($)",
-                "y": "ROI Achieved (%)",
-                "size": "ROI %"
-            },
-            title="ROI Achievement vs Contract Value"
+            labels={"x": "Contract Value ($)", "y": "ROI Achieved (%)", "size": "ROI %"},
+            title="ROI Achievement vs Contract Value",
         )
 
         fig_roi.update_traces(
             marker=dict(color="rgba(59, 130, 246, 0.8)", line=dict(width=2, color="white")),
-            selector=dict(mode="markers")
+            selector=dict(mode="markers"),
         )
 
         st.plotly_chart(fig_roi, use_container_width=True)
@@ -377,7 +351,7 @@ class ConsultingDeliveryShowcase:
             x=months,
             y=cumulative_impact,
             title="Cumulative Revenue Impact Over Time",
-            labels={"x": "Timeline", "y": "Cumulative Revenue Impact ($)"}
+            labels={"x": "Timeline", "y": "Cumulative Revenue Impact ($)"},
         )
 
         fig_timeline.update_traces(line=dict(color="green", width=4))
@@ -397,9 +371,9 @@ class ConsultingDeliveryShowcase:
                     "Stakeholder interviews and requirements gathering",
                     "Current state analysis and opportunity identification",
                     "Success metrics definition and baseline measurement",
-                    "Technical architecture assessment"
+                    "Technical architecture assessment",
                 ],
-                "deliverables": ["Discovery Report", "Success Metrics Framework", "Implementation Roadmap"]
+                "deliverables": ["Discovery Report", "Success Metrics Framework", "Implementation Roadmap"],
             },
             "Design & Planning": {
                 "duration": "Week 2-3",
@@ -407,9 +381,9 @@ class ConsultingDeliveryShowcase:
                     "Solution architecture and technical design",
                     "Stakeholder role definition and communication plan",
                     "Risk assessment and mitigation planning",
-                    "Detailed project timeline and milestone definition"
+                    "Detailed project timeline and milestone definition",
                 ],
-                "deliverables": ["Technical Architecture", "Project Plan", "Risk Management Plan"]
+                "deliverables": ["Technical Architecture", "Project Plan", "Risk Management Plan"],
             },
             "Implementation": {
                 "duration": "Week 4-8",
@@ -417,9 +391,9 @@ class ConsultingDeliveryShowcase:
                     "AI platform deployment and configuration",
                     "Custom model development and training",
                     "Integration with existing systems",
-                    "Performance optimization and testing"
+                    "Performance optimization and testing",
                 ],
-                "deliverables": ["Deployed Platform", "Custom Models", "Integration Documentation"]
+                "deliverables": ["Deployed Platform", "Custom Models", "Integration Documentation"],
             },
             "Validation & Testing": {
                 "duration": "Week 8-10",
@@ -427,9 +401,9 @@ class ConsultingDeliveryShowcase:
                     "User acceptance testing and feedback integration",
                     "Performance validation against success metrics",
                     "Security and compliance verification",
-                    "Stakeholder sign-off on deliverables"
+                    "Stakeholder sign-off on deliverables",
                 ],
-                "deliverables": ["Test Results", "Performance Report", "Security Certification"]
+                "deliverables": ["Test Results", "Performance Report", "Security Certification"],
             },
             "Knowledge Transfer": {
                 "duration": "Week 10-12",
@@ -437,10 +411,10 @@ class ConsultingDeliveryShowcase:
                     "Comprehensive team training and certification",
                     "Documentation and playbook delivery",
                     "Support transition to client team",
-                    "Success measurement and ROI validation"
+                    "Success measurement and ROI validation",
                 ],
-                "deliverables": ["Training Certification", "Operational Playbooks", "ROI Report"]
-            }
+                "deliverables": ["Training Certification", "Operational Playbooks", "ROI Report"],
+            },
         }
 
         # Phase tabs
@@ -471,23 +445,23 @@ class ConsultingDeliveryShowcase:
             {
                 "gate": "Discovery Complete",
                 "criteria": "Stakeholder alignment on success metrics and ROI targets",
-                "approval": "Executive Sponsor"
+                "approval": "Executive Sponsor",
             },
             {
                 "gate": "Design Approved",
                 "criteria": "Technical architecture validates business objectives",
-                "approval": "Technical Lead + Project Manager"
+                "approval": "Technical Lead + Project Manager",
             },
             {
                 "gate": "Implementation Ready",
                 "criteria": "All integrations tested, performance benchmarks met",
-                "approval": "Full Stakeholder Team"
+                "approval": "Full Stakeholder Team",
             },
             {
                 "gate": "Go-Live Approved",
                 "criteria": "User acceptance testing complete, success metrics tracking active",
-                "approval": "Executive Sponsor"
-            }
+                "approval": "Executive Sponsor",
+            },
         ]
 
         for gate in quality_gates:
@@ -504,7 +478,7 @@ class ConsultingDeliveryShowcase:
         # Sample executive report
         selected_client = st.selectbox(
             "Select client for executive report:",
-            ["Austin Premier Properties", "Metropolitan Realty Group", "Coastal Homes Inc"]
+            ["Austin Premier Properties", "Metropolitan Realty Group", "Coastal Homes Inc"],
         )
 
         engagement_key = None
@@ -528,7 +502,7 @@ class ConsultingDeliveryShowcase:
                     "Multi-agent AI platform deployed and operational",
                     "Predictive analytics achieving 92% accuracy",
                     "Team training completed with 100% adoption",
-                    "ROI targets exceeded by 45%"
+                    "ROI targets exceeded by 45%",
                 ]
 
                 for achievement in achievements:
@@ -545,7 +519,7 @@ class ConsultingDeliveryShowcase:
                     "Executive dashboard deployment - Week 12",
                     "Advanced analytics training - Week 13",
                     "Final ROI validation - Week 14",
-                    "Knowledge transfer completion - Week 14"
+                    "Knowledge transfer completion - Week 14",
                 ]
 
                 for milestone in milestones:
@@ -558,7 +532,7 @@ class ConsultingDeliveryShowcase:
                 st.metric(
                     "Payment Progress",
                     f"${paid_amount:,.0f} / ${total_value:,}",
-                    delta=f"{details['completion']:.1f}% Complete"
+                    delta=f"{details['completion']:.1f}% Complete",
                 )
 
         # Communication timeline
@@ -568,9 +542,19 @@ class ConsultingDeliveryShowcase:
         timeline_data = [
             {"Week": "Week 1", "Activity": "Kickoff Meeting", "Participants": "All Stakeholders", "Status": "Complete"},
             {"Week": "Week 3", "Activity": "Design Review", "Participants": "Technical Team", "Status": "Complete"},
-            {"Week": "Week 6", "Activity": "Mid-Point Review", "Participants": "Executive Sponsor", "Status": "Complete"},
+            {
+                "Week": "Week 6",
+                "Activity": "Mid-Point Review",
+                "Participants": "Executive Sponsor",
+                "Status": "Complete",
+            },
             {"Week": "Week 9", "Activity": "Testing Update", "Participants": "Project Manager", "Status": "Scheduled"},
-            {"Week": "Week 12", "Activity": "Final Presentation", "Participants": "All Stakeholders", "Status": "Scheduled"}
+            {
+                "Week": "Week 12",
+                "Activity": "Final Presentation",
+                "Participants": "All Stakeholders",
+                "Status": "Scheduled",
+            },
         ]
 
         timeline_df = pd.DataFrame(timeline_data)
@@ -591,22 +575,22 @@ class ConsultingDeliveryShowcase:
 
             <div style='display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2rem; margin-bottom: 1rem;'>
                 <div style='text-align: center;'>
-                    <div style='font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;'>{details['completion']:.1f}%</div>
+                    <div style='font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;'>{details["completion"]:.1f}%</div>
                     <div style='font-size: 0.9rem; opacity: 0.9;'>Project Completion</div>
                 </div>
                 <div style='text-align: center;'>
-                    <div style='font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;'>{details['roi_achieved']:.0f}%</div>
+                    <div style='font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;'>{details["roi_achieved"]:.0f}%</div>
                     <div style='font-size: 0.9rem; opacity: 0.9;'>ROI Achieved</div>
                 </div>
                 <div style='text-align: center;'>
-                    <div style='font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;'>${details['monthly_revenue_impact']:,}</div>
+                    <div style='font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;'>${details["monthly_revenue_impact"]:,}</div>
                     <div style='font-size: 0.9rem; opacity: 0.9;'>Monthly Revenue Impact</div>
                 </div>
             </div>
 
             <p style='margin: 0; font-size: 1rem; opacity: 0.95; line-height: 1.4;'>
-                <strong>Status:</strong> Project progressing exceptionally well with {details['completion']:.1f}% completion.
-                ROI targets exceeded by {details['roi_achieved'] - 200:.0f}% above baseline projections.
+                <strong>Status:</strong> Project progressing exceptionally well with {details["completion"]:.1f}% completion.
+                ROI targets exceeded by {details["roi_achieved"] - 200:.0f}% above baseline projections.
                 Team adoption strong and business impact measurable across all key metrics.
             </p>
         </div>
@@ -623,40 +607,52 @@ class ConsultingDeliveryShowcase:
         col1, col2, col3, col4 = st.columns(4)
 
         with col1:
-            st.markdown("""
+            st.markdown(
+                """
             <div style='text-align: center; padding: 1rem; background: #FEF3C7; border-radius: 8px;'>
                 <div style='font-size: 2rem; color: #D97706; font-weight: 700;'>100%</div>
                 <div style='color: #92400E; font-weight: 600;'>Client Satisfaction</div>
                 <div style='font-size: 0.8rem; color: #92400E;'>Score > 9.5/10</div>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
         with col2:
-            st.markdown("""
+            st.markdown(
+                """
             <div style='text-align: center; padding: 1rem; background: #D1FAE5; border-radius: 8px;'>
                 <div style='font-size: 2rem; color: #059669; font-weight: 700;'>269%</div>
                 <div style='color: #047857; font-weight: 600;'>Average ROI</div>
                 <div style='font-size: 0.8rem; color: #047857;'>Exceeds 200% target</div>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
         with col3:
-            st.markdown("""
+            st.markdown(
+                """
             <div style='text-align: center; padding: 1rem; background: #DBEAFE; border-radius: 8px;'>
                 <div style='font-size: 2rem; color: #1D4ED8; font-weight: 700;'>4.2</div>
                 <div style='color: #1E40AF; font-weight: 600;'>Avg Payback</div>
                 <div style='font-size: 0.8rem; color: #1E40AF;'>Months to break-even</div>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
         with col4:
-            st.markdown("""
+            st.markdown(
+                """
             <div style='text-align: center; padding: 1rem; background: #F3E8FF; border-radius: 8px;'>
                 <div style='font-size: 2rem; color: #7C3AED; font-weight: 700;'>152</div>
                 <div style='color: #6D28D9; font-weight: 600;'>Hours Saved</div>
                 <div style='font-size: 0.8rem; color: #6D28D9;'>Per week across clients</div>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
         # Value proposition summary
         st.markdown("---")

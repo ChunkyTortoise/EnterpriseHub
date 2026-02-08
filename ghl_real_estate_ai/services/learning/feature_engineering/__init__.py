@@ -5,18 +5,18 @@ Transforms raw behavioral events into ML-ready feature vectors
 for recommendation systems and personalization engines.
 """
 
-from .standard_feature_engineer import StandardFeatureEngineer
 from .feature_extractors import (
-    PropertyFeatureExtractor,
     BehaviorFeatureExtractor,
+    PropertyFeatureExtractor,
     SessionFeatureExtractor,
-    TimeFeatureExtractor
+    TimeFeatureExtractor,
 )
+from .standard_feature_engineer import StandardFeatureEngineer
 
 __all__ = [
     "StandardFeatureEngineer",
     "PropertyFeatureExtractor",
     "BehaviorFeatureExtractor",
     "SessionFeatureExtractor",
-    "TimeFeatureExtractor"
+    "TimeFeatureExtractor",
 ]

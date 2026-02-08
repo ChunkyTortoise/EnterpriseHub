@@ -135,9 +135,7 @@ class SmartLeadRoutingService:
         """Add an agent to the routing pool"""
         self.agents[agent.agent_id] = agent
 
-    def route_lead(
-        self, lead: LeadProfile, strategy: str = RoutingStrategy.AI_OPTIMIZED.value
-    ) -> Optional[Agent]:
+    def route_lead(self, lead: LeadProfile, strategy: str = RoutingStrategy.AI_OPTIMIZED.value) -> Optional[Agent]:
         """Route a lead to the best agent"""
 
         if strategy == RoutingStrategy.AI_OPTIMIZED.value:
@@ -156,11 +154,7 @@ class SmartLeadRoutingService:
     def _ai_optimized_routing(self, lead: LeadProfile) -> Optional[Agent]:
         """AI-optimized routing considering multiple factors"""
 
-        available_agents = [
-            agent
-            for agent in self.agents.values()
-            if agent.current_workload < agent.max_capacity
-        ]
+        available_agents = [agent for agent in self.agents.values() if agent.current_workload < agent.max_capacity]
 
         if not available_agents:
             return None
@@ -216,10 +210,7 @@ class SmartLeadRoutingService:
             return 1.0
 
         # Check if it's residential and agent has general expertise
-        if (
-            lead.property_type == "residential"
-            and "residential" in agent.specializations
-        ):
+        if lead.property_type == "residential" and "residential" in agent.specializations:
             return 0.8
 
         return 0.5
@@ -233,9 +224,7 @@ class SmartLeadRoutingService:
             "complex": {"junior": 0.3, "mid": 0.7, "senior": 1.0},
         }
 
-        return complexity_to_score.get(lead.complexity, {}).get(
-            agent.seniority_level, 0.5
-        )
+        return complexity_to_score.get(lead.complexity, {}).get(agent.seniority_level, 0.5)
 
     def _expertise_based_routing(self, lead: LeadProfile) -> Optional[Agent]:
         """Route based on expertise match only"""
@@ -243,44 +232,31 @@ class SmartLeadRoutingService:
         matching_agents = [
             agent
             for agent in self.agents.values()
-            if lead.property_type in agent.specializations
-            and agent.current_workload < agent.max_capacity
+            if lead.property_type in agent.specializations and agent.current_workload < agent.max_capacity
         ]
 
         if not matching_agents:
             return self._round_robin_routing(lead)
 
         # Return agent with best performance
-        matching_agents.sort(
-            key=lambda a: a.performance_metrics.get("close_rate", 0), reverse=True
-        )
+        matching_agents.sort(key=lambda a: a.performance_metrics.get("close_rate", 0), reverse=True)
         return matching_agents[0]
 
     def _performance_based_routing(self, lead: LeadProfile) -> Optional[Agent]:
         """Route to highest performing available agent"""
 
-        available_agents = [
-            agent
-            for agent in self.agents.values()
-            if agent.current_workload < agent.max_capacity
-        ]
+        available_agents = [agent for agent in self.agents.values() if agent.current_workload < agent.max_capacity]
 
         if not available_agents:
             return None
 
-        available_agents.sort(
-            key=lambda a: a.performance_metrics.get("close_rate", 0), reverse=True
-        )
+        available_agents.sort(key=lambda a: a.performance_metrics.get("close_rate", 0), reverse=True)
         return available_agents[0]
 
     def _workload_balanced_routing(self, lead: LeadProfile) -> Optional[Agent]:
         """Route to agent with lowest workload"""
 
-        available_agents = [
-            agent
-            for agent in self.agents.values()
-            if agent.current_workload < agent.max_capacity
-        ]
+        available_agents = [agent for agent in self.agents.values() if agent.current_workload < agent.max_capacity]
 
         if not available_agents:
             return None
@@ -291,11 +267,7 @@ class SmartLeadRoutingService:
     def _round_robin_routing(self, lead: LeadProfile) -> Optional[Agent]:
         """Simple round-robin assignment"""
 
-        available_agents = [
-            agent
-            for agent in self.agents.values()
-            if agent.current_workload < agent.max_capacity
-        ]
+        available_agents = [agent for agent in self.agents.values() if agent.current_workload < agent.max_capacity]
 
         if not available_agents:
             return None
@@ -303,11 +275,7 @@ class SmartLeadRoutingService:
         # Get agent with least recent assignment
         agent_last_assigned = {
             agent.agent_id: max(
-                [
-                    a["timestamp"]
-                    for a in self.assignment_history
-                    if a["agent_id"] == agent.agent_id
-                ],
+                [a["timestamp"] for a in self.assignment_history if a["agent_id"] == agent.agent_id],
                 default=datetime.min.isoformat(),
             )
             for agent in available_agents
@@ -340,9 +308,7 @@ class SmartLeadRoutingService:
         if not agent:
             return {}
 
-        assigned_leads = [
-            lead_id for lead_id, aid in self.assignments.items() if aid == agent_id
-        ]
+        assigned_leads = [lead_id for lead_id, aid in self.assignments.items() if aid == agent_id]
 
         return {
             "agent_id": agent_id,
@@ -393,9 +359,7 @@ class SmartLeadRoutingService:
             reasons.append(f"Specializes in {lead.property_type}")
 
         if agent.performance_metrics["close_rate"] > 0.35:
-            reasons.append(
-                f"High close rate ({agent.performance_metrics['close_rate']:.0%})"
-            )
+            reasons.append(f"High close rate ({agent.performance_metrics['close_rate']:.0%})")
 
         if lead.language in agent.languages:
             reasons.append(f"Speaks {lead.language}")

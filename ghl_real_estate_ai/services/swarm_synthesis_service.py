@@ -2,14 +2,17 @@
 Swarm Synthesis Service - Strategic Advisor Agent
 Aggregates and synthesizes specialized swarm insights into a single executive action plan.
 """
+
 import asyncio
 import json
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
+
 from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
+
 
 class StrategicAdvisorAgent:
     """The master agent that synthesizes specialized swarm findings."""
-    
+
     def __init__(self):
         self.orchestrator = get_claude_orchestrator()
 
@@ -43,12 +46,10 @@ class StrategicAdvisorAgent:
         - "confidence_index" (0.0-1.0)
         - "tactical_next_steps" (List of 3 immediate actions)
         """
-        
+
         try:
             response = await self.orchestrator.chat_query(
-                query=prompt,
-                context={"task": "swarm_synthesis"},
-                lead_id=lead_data.get("lead_id", "unknown")
+                query=prompt, context={"task": "swarm_synthesis"}, lead_id=lead_data.get("lead_id", "unknown")
             )
             return self._parse_response(response.content)
         except Exception as e:
@@ -64,8 +65,10 @@ class StrategicAdvisorAgent:
         except:
             return {"raw_synthesis": content}
 
+
 # Singleton
 _synthesis_instance = None
+
 
 def get_swarm_synthesis_service() -> StrategicAdvisorAgent:
     global _synthesis_instance

@@ -4,25 +4,23 @@ Tests for AttributionAnalytics service.
 Comprehensive test suite for attribution reporting, analytics, and optimization recommendations.
 """
 
-import pytest
 import asyncio
-from datetime import datetime, timedelta, date
-from unittest.mock import AsyncMock, patch, MagicMock
+from datetime import date, datetime, timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from ghl_real_estate_ai.services.attribution_analytics import (
-    AttributionAnalytics,
-    ReportPeriod,
     AlertType,
+    AttributionAnalytics,
     AttributionModel,
-    PerformanceAlert,
-    CohortAnalysis,
+    AttributionReport,
     ChannelForecast,
-    AttributionReport
+    CohortAnalysis,
+    PerformanceAlert,
+    ReportPeriod,
 )
-from ghl_real_estate_ai.services.lead_source_tracker import (
-    LeadSource,
-    SourcePerformance
-)
+from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, SourcePerformance
 
 
 class TestAttributionAnalytics:
@@ -48,7 +46,7 @@ class TestAttributionAnalytics:
                 qualified_leads=20,
                 total_revenue=100000.0,
                 cost_per_lead=25.0,
-                roi=3.0
+                roi=3.0,
             ),
             SourcePerformance(
                 source=LeadSource.FACEBOOK_ADS,
@@ -58,12 +56,11 @@ class TestAttributionAnalytics:
                 qualified_leads=25,
                 total_revenue=75000.0,
                 cost_per_lead=20.0,
-                roi=1.8
-            )
+                roi=1.8,
+            ),
         ]
 
-        with patch.object(self.analytics.source_tracker, 'get_all_source_performance',
-                         return_value=mock_performances):
+        with patch.object(self.analytics.source_tracker, "get_all_source_performance", return_value=mock_performances):
             report = await self.analytics.generate_attribution_report(
                 start_date, end_date, include_forecasts=False, include_cohorts=False
             )
@@ -87,7 +84,7 @@ class TestAttributionAnalytics:
                 period_end=datetime.utcnow(),
                 total_leads=20,
                 roi=-0.3,  # Negative ROI - should trigger alert
-                qualification_rate=0.15
+                qualification_rate=0.15,
             ),
             SourcePerformance(
                 source=LeadSource.ZILLOW,
@@ -95,8 +92,8 @@ class TestAttributionAnalytics:
                 period_end=datetime.utcnow(),
                 total_leads=5,  # Low volume
                 roi=2.0,
-                qualification_rate=0.8
-            )
+                qualification_rate=0.8,
+            ),
         ]
 
         # Previous performance (better)
@@ -107,7 +104,7 @@ class TestAttributionAnalytics:
                 period_end=datetime.utcnow() - timedelta(days=7),
                 total_leads=30,
                 roi=1.5,  # Was profitable
-                qualification_rate=0.25
+                qualification_rate=0.25,
             )
         ]
 
@@ -118,8 +115,9 @@ class TestAttributionAnalytics:
                     return perf
             return None
 
-        with patch.object(self.analytics, '_get_previous_period_performance',
-                         side_effect=mock_get_previous_performance):
+        with patch.object(
+            self.analytics, "_get_previous_period_performance", side_effect=mock_get_previous_performance
+        ):
             alerts = await self.analytics._generate_performance_alerts(current_performances)
 
             # Should generate alerts for ROI drop and quality drop
@@ -146,7 +144,7 @@ class TestAttributionAnalytics:
                 period_end=datetime.utcnow(),
                 total_leads=30,
                 roi=5.0,
-                qualification_rate=0.8
+                qualification_rate=0.8,
             ),
             # Low ROI, high volume - needs optimization
             SourcePerformance(
@@ -155,7 +153,7 @@ class TestAttributionAnalytics:
                 period_end=datetime.utcnow(),
                 total_leads=100,
                 roi=0.1,  # Very low ROI
-                qualification_rate=0.15
+                qualification_rate=0.15,
             ),
             # Good ROI, low volume - scale opportunity
             SourcePerformance(
@@ -164,8 +162,8 @@ class TestAttributionAnalytics:
                 period_end=datetime.utcnow(),
                 total_leads=15,  # Low volume
                 roi=2.5,
-                qualification_rate=0.6
-            )
+                qualification_rate=0.6,
+            ),
         ]
 
         # Mock alerts
@@ -181,13 +179,11 @@ class TestAttributionAnalytics:
                 threshold=-0.2,
                 change_percentage=-0.875,
                 recommendations=["Review targeting"],
-                created_at=datetime.utcnow()
+                created_at=datetime.utcnow(),
             )
         ]
 
-        recommendations = await self.analytics._generate_optimization_recommendations(
-            source_performances, mock_alerts
-        )
+        recommendations = await self.analytics._generate_optimization_recommendations(source_performances, mock_alerts)
 
         assert len(recommendations) > 0
 
@@ -206,9 +202,12 @@ class TestAttributionAnalytics:
         revenue = 10000.0
         cost = 500.0
 
-        with patch.object(self.analytics.cache, 'get', return_value={"leads": 0, "revenue": 0.0, "cost": 0.0}) as mock_get, \
-             patch.object(self.analytics.cache, 'set') as mock_set:
-
+        with (
+            patch.object(
+                self.analytics.cache, "get", return_value={"leads": 0, "revenue": 0.0, "cost": 0.0}
+            ) as mock_get,
+            patch.object(self.analytics.cache, "set") as mock_set,
+        ):
             await self.analytics.track_daily_metrics(source, leads, revenue, cost)
 
             # Verify cache operations
@@ -235,7 +234,7 @@ class TestAttributionAnalytics:
                 total_leads=25,
                 qualified_leads=10,
                 total_revenue=50000.0,
-                roi=2.0
+                roi=2.0,
             ),
             SourcePerformance(
                 source=LeadSource.FACEBOOK_ADS,
@@ -244,8 +243,8 @@ class TestAttributionAnalytics:
                 total_leads=40,
                 qualified_leads=12,
                 total_revenue=30000.0,
-                roi=1.2
-            )
+                roi=1.2,
+            ),
         ]
 
         # Mock previous week performance
@@ -257,7 +256,7 @@ class TestAttributionAnalytics:
                 total_leads=20,
                 qualified_leads=8,
                 total_revenue=40000.0,
-                roi=1.8
+                roi=1.8,
             )
         ]
 
@@ -267,10 +266,12 @@ class TestAttributionAnalytics:
             else:
                 return previous_performances
 
-        with patch.object(self.analytics.source_tracker, 'get_all_source_performance',
-                         side_effect=mock_get_all_performance), \
-             patch.object(self.analytics, '_generate_performance_alerts', return_value=[]):
-
+        with (
+            patch.object(
+                self.analytics.source_tracker, "get_all_source_performance", side_effect=mock_get_all_performance
+            ),
+            patch.object(self.analytics, "_generate_performance_alerts", return_value=[]),
+        ):
             summary = await self.analytics.get_weekly_summary()
 
             assert "totals" in summary
@@ -289,6 +290,7 @@ class TestAttributionAnalytics:
     @pytest.mark.asyncio
     async def test_get_monthly_trends(self):
         """Test monthly trend analysis."""
+
         # Mock monthly performance data
         def mock_get_performance(start_date, end_date):
             # Return different data based on the month
@@ -302,12 +304,13 @@ class TestAttributionAnalytics:
                     period_end=end_date,
                     total_leads=base_leads,
                     total_revenue=base_leads * 1000,
-                    cost_per_lead=20.0
+                    cost_per_lead=20.0,
                 )
             ]
 
-        with patch.object(self.analytics.source_tracker, 'get_all_source_performance',
-                         side_effect=mock_get_performance):
+        with patch.object(
+            self.analytics.source_tracker, "get_all_source_performance", side_effect=mock_get_performance
+        ):
             trends = await self.analytics.get_monthly_trends()
 
             assert "monthly_performance" in trends
@@ -335,18 +338,21 @@ class TestAttributionAnalytics:
             period_end=datetime.utcnow(),
             total_leads=100,
             qualification_rate=0.3,
-            total_revenue=50000.0
+            total_revenue=50000.0,
         )
 
         # Mock historical data points
         historical_data = [
-            {"date": date.today() - timedelta(days=i), "leads": 3 + i % 5,
-             "revenue": (3 + i % 5) * 500, "cost": (3 + i % 5) * 20}
+            {
+                "date": date.today() - timedelta(days=i),
+                "leads": 3 + i % 5,
+                "revenue": (3 + i % 5) * 500,
+                "cost": (3 + i % 5) * 20,
+            }
             for i in range(30)
         ]
 
-        with patch.object(self.analytics, '_get_historical_data_points',
-                         return_value=historical_data):
+        with patch.object(self.analytics, "_get_historical_data_points", return_value=historical_data):
             forecast = await self.analytics._forecast_channel_performance(performance)
 
             assert forecast is not None
@@ -366,21 +372,14 @@ class TestAttributionAnalytics:
         # Mock source performances
         mock_performances = [
             SourcePerformance(
-                source=LeadSource.AGENT_REFERRAL,
-                period_start=start_date,
-                period_end=end_date,
-                total_revenue=50000.0
+                source=LeadSource.AGENT_REFERRAL, period_start=start_date, period_end=end_date, total_revenue=50000.0
             ),
             SourcePerformance(
-                source=LeadSource.FACEBOOK_ADS,
-                period_start=start_date,
-                period_end=end_date,
-                total_revenue=30000.0
-            )
+                source=LeadSource.FACEBOOK_ADS, period_start=start_date, period_end=end_date, total_revenue=30000.0
+            ),
         ]
 
-        with patch.object(self.analytics.source_tracker, 'get_all_source_performance',
-                         return_value=mock_performances):
+        with patch.object(self.analytics.source_tracker, "get_all_source_performance", return_value=mock_performances):
             comparison = await self.analytics._compare_attribution_models(start_date, end_date)
 
             # Should have data for different models
@@ -421,13 +420,9 @@ class TestAttributionAnalytics:
         days = 30
 
         # Mock cache data
-        cache_data = {
-            "leads": 5,
-            "revenue": 10000.0,
-            "cost": 200.0
-        }
+        cache_data = {"leads": 5, "revenue": 10000.0, "cost": 200.0}
 
-        with patch.object(self.analytics.cache, 'get', return_value=cache_data):
+        with patch.object(self.analytics.cache, "get", return_value=cache_data):
             data_points = await self.analytics._get_historical_data_points(source, days)
 
             assert len(data_points) == days + 1  # Inclusive of end date
@@ -456,10 +451,10 @@ class TestAttributionAnalytics:
             "day_30_revenue": 30000.0,
             "avg_lead_score": 4.5,
             "qualification_rate": 0.25,
-            "avg_response_time": 45.0
+            "avg_response_time": 45.0,
         }
 
-        with patch.object(self.analytics.cache, 'get', return_value=cohort_data):
+        with patch.object(self.analytics.cache, "get", return_value=cohort_data):
             cohort = await self.analytics._analyze_source_cohort(source, cohort_date)
 
             assert cohort is not None
@@ -474,8 +469,9 @@ class TestAttributionAnalytics:
     async def test_error_handling(self):
         """Test error handling in analytics operations."""
         # Test with source tracker failures that propagate to analytics
-        with patch.object(self.analytics.source_tracker, 'get_all_source_performance',
-                         side_effect=Exception("Source tracker error")):
+        with patch.object(
+            self.analytics.source_tracker, "get_all_source_performance", side_effect=Exception("Source tracker error")
+        ):
             # Should handle errors gracefully
             summary = await self.analytics.get_weekly_summary()
             assert "error" in summary
@@ -488,10 +484,7 @@ class TestAttributionAnalytics:
         past_date = datetime.utcnow() - timedelta(days=30)
 
         # Should handle gracefully (future end date)
-        report = await self.analytics.generate_attribution_report(
-            start_date=past_date,
-            end_date=future_date
-        )
+        report = await self.analytics.generate_attribution_report(start_date=past_date, end_date=future_date)
         assert report.period_start == past_date
         assert report.period_end == future_date
 
@@ -522,14 +515,14 @@ class TestAttributionAnalytics:
             self.analytics.get_weekly_summary(),
             self.analytics.get_monthly_trends(),
             self.analytics.track_daily_metrics(LeadSource.ZILLOW, 1, 0.0, 0.0),
-            self.analytics.track_daily_metrics(LeadSource.FACEBOOK_ADS, 2, 0.0, 0.0)
+            self.analytics.track_daily_metrics(LeadSource.FACEBOOK_ADS, 2, 0.0, 0.0),
         ]
 
-        with patch.object(self.analytics.source_tracker, 'get_all_source_performance',
-                         return_value=[]), \
-             patch.object(self.analytics.cache, 'get', return_value={}), \
-             patch.object(self.analytics.cache, 'set', return_value=True):
-
+        with (
+            patch.object(self.analytics.source_tracker, "get_all_source_performance", return_value=[]),
+            patch.object(self.analytics.cache, "get", return_value={}),
+            patch.object(self.analytics.cache, "set", return_value=True),
+        ):
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
             # All operations should complete without exceptions

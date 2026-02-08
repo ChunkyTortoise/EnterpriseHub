@@ -1,15 +1,15 @@
 """Tests for ChromaDB vector store."""
 
-import pytest
-import tempfile
 import shutil
+import tempfile
 from pathlib import Path
 from uuid import uuid4
 
-from src.vector_store.chroma_store import ChromaVectorStore
-from src.vector_store.base import VectorStoreConfig, SearchOptions
+import pytest
+from src.core.exceptions import NotFoundError, VectorStoreError
 from src.core.types import DocumentChunk, Metadata
-from src.core.exceptions import VectorStoreError, NotFoundError
+from src.vector_store.base import SearchOptions, VectorStoreConfig
+from src.vector_store.chroma_store import ChromaVectorStore
 
 
 @pytest.fixture

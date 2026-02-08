@@ -31,26 +31,25 @@ Created: 2026-01-17
 """
 
 import asyncio
-import psutil
-import time
 import json
-import statistics
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, asdict
-from collections import defaultdict, deque
 import logging
+import statistics
+import time
+from collections import defaultdict, deque
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+import psutil
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class PerformanceSnapshot:
     """Single point-in-time performance snapshot"""
+
     timestamp: datetime
     cpu_percent: float
     memory_mb: float
@@ -67,6 +66,7 @@ class PerformanceSnapshot:
 @dataclass
 class EndpointMetrics:
     """Performance metrics for a specific API endpoint"""
+
     endpoint: str
     method: str
     request_count: int
@@ -97,6 +97,7 @@ class EndpointMetrics:
 @dataclass
 class DatabaseMetrics:
     """Database performance metrics"""
+
     query_count: int
     slow_query_count: int  # Queries >100ms
     avg_query_time_ms: float
@@ -111,6 +112,7 @@ class DatabaseMetrics:
 @dataclass
 class CacheMetrics:
     """Cache performance metrics"""
+
     hit_count: int
     miss_count: int
     eviction_count: int
@@ -138,12 +140,12 @@ class PerformanceMonitor:
 
         # Performance thresholds
         self.thresholds = {
-            'cpu_percent': 80.0,
-            'memory_percent': 80.0,
-            'response_time_p95_ms': 100.0,
-            'error_rate': 0.01,
-            'cache_hit_rate': 0.8,
-            'db_slow_query_rate': 0.05
+            "cpu_percent": 80.0,
+            "memory_percent": 80.0,
+            "response_time_p95_ms": 100.0,
+            "error_rate": 0.01,
+            "cache_hit_rate": 0.8,
+            "db_slow_query_rate": 0.05,
         }
 
         # Anomaly detection
@@ -220,7 +222,7 @@ class PerformanceMonitor:
             network_recv_mb=net_recv_mb,
             active_connections=connections,
             thread_count=threads,
-            process_count=len(psutil.pids())
+            process_count=len(psutil.pids()),
         )
 
     def _detect_anomalies(self, snapshot: PerformanceSnapshot):
@@ -237,24 +239,30 @@ class PerformanceMonitor:
         anomalies = []
 
         # CPU spike detection
-        if snapshot.cpu_percent > self.baseline_metrics.get('cpu_mean', 50) + \
-           (3 * self.baseline_metrics.get('cpu_std', 10)):
-            anomalies.append({
-                'type': 'cpu_spike',
-                'value': snapshot.cpu_percent,
-                'baseline_mean': self.baseline_metrics.get('cpu_mean'),
-                'severity': 'high' if snapshot.cpu_percent > 90 else 'medium'
-            })
+        if snapshot.cpu_percent > self.baseline_metrics.get("cpu_mean", 50) + (
+            3 * self.baseline_metrics.get("cpu_std", 10)
+        ):
+            anomalies.append(
+                {
+                    "type": "cpu_spike",
+                    "value": snapshot.cpu_percent,
+                    "baseline_mean": self.baseline_metrics.get("cpu_mean"),
+                    "severity": "high" if snapshot.cpu_percent > 90 else "medium",
+                }
+            )
 
         # Memory spike detection
-        if snapshot.memory_percent > self.baseline_metrics.get('memory_mean', 50) + \
-           (3 * self.baseline_metrics.get('memory_std', 10)):
-            anomalies.append({
-                'type': 'memory_spike',
-                'value': snapshot.memory_percent,
-                'baseline_mean': self.baseline_metrics.get('memory_mean'),
-                'severity': 'high' if snapshot.memory_percent > 90 else 'medium'
-            })
+        if snapshot.memory_percent > self.baseline_metrics.get("memory_mean", 50) + (
+            3 * self.baseline_metrics.get("memory_std", 10)
+        ):
+            anomalies.append(
+                {
+                    "type": "memory_spike",
+                    "value": snapshot.memory_percent,
+                    "baseline_mean": self.baseline_metrics.get("memory_mean"),
+                    "severity": "high" if snapshot.memory_percent > 90 else "medium",
+                }
+            )
 
         if anomalies:
             self.anomalies_detected.extend(anomalies)
@@ -266,10 +274,10 @@ class PerformanceMonitor:
         memory_values = [s.memory_percent for s in self.snapshots]
 
         self.baseline_metrics = {
-            'cpu_mean': statistics.mean(cpu_values),
-            'cpu_std': statistics.stdev(cpu_values),
-            'memory_mean': statistics.mean(memory_values),
-            'memory_std': statistics.stdev(memory_values)
+            "cpu_mean": statistics.mean(cpu_values),
+            "cpu_std": statistics.stdev(cpu_values),
+            "memory_mean": statistics.mean(memory_values),
+            "memory_std": statistics.stdev(memory_values),
         }
 
         logger.info(f"Baseline established: {self.baseline_metrics}")
@@ -278,11 +286,13 @@ class PerformanceMonitor:
         """Check if metrics exceed thresholds"""
         alerts = []
 
-        if snapshot.cpu_percent > self.thresholds['cpu_percent']:
+        if snapshot.cpu_percent > self.thresholds["cpu_percent"]:
             alerts.append(f"CPU usage {snapshot.cpu_percent:.1f}% exceeds threshold {self.thresholds['cpu_percent']}%")
 
-        if snapshot.memory_percent > self.thresholds['memory_percent']:
-            alerts.append(f"Memory usage {snapshot.memory_percent:.1f}% exceeds threshold {self.thresholds['memory_percent']}%")
+        if snapshot.memory_percent > self.thresholds["memory_percent"]:
+            alerts.append(
+                f"Memory usage {snapshot.memory_percent:.1f}% exceeds threshold {self.thresholds['memory_percent']}%"
+            )
 
         if alerts:
             for alert in alerts:
@@ -301,13 +311,7 @@ class PerformanceMonitor:
             f"Threads: {latest.thread_count}"
         )
 
-    def record_endpoint_request(
-        self,
-        endpoint: str,
-        method: str,
-        response_time_ms: float,
-        status_code: int
-    ):
+    def record_endpoint_request(self, endpoint: str, method: str, response_time_ms: float, status_code: int):
         """Record an API endpoint request"""
         key = f"{method}:{endpoint}"
 
@@ -320,7 +324,7 @@ class PerformanceMonitor:
                 error_count=0,
                 response_times_ms=[],
                 status_codes={},
-                last_updated=datetime.utcnow()
+                last_updated=datetime.utcnow(),
             )
 
         metrics = self.endpoint_metrics[key]
@@ -342,7 +346,7 @@ class PerformanceMonitor:
     def get_performance_report(self) -> Dict[str, Any]:
         """Generate comprehensive performance report"""
         if not self.snapshots:
-            return {'error': 'No data collected'}
+            return {"error": "No data collected"}
 
         # System metrics summary
         cpu_values = [s.cpu_percent for s in self.snapshots]
@@ -353,11 +357,11 @@ class PerformanceMonitor:
         endpoint_summary = {}
         for key, metrics in self.endpoint_metrics.items():
             endpoint_summary[key] = {
-                'request_count': metrics.request_count,
-                'success_rate': metrics.success_rate,
-                'avg_response_time_ms': metrics.avg_response_time,
-                'p95_response_time_ms': metrics.p95_response_time,
-                'status_codes': metrics.status_codes
+                "request_count": metrics.request_count,
+                "success_rate": metrics.success_rate,
+                "avg_response_time_ms": metrics.avg_response_time,
+                "p95_response_time_ms": metrics.p95_response_time,
+                "status_codes": metrics.status_codes,
             }
 
         # Time range
@@ -366,48 +370,45 @@ class PerformanceMonitor:
         duration = (end_time - start_time).total_seconds()
 
         report = {
-            'report_generated': datetime.utcnow().isoformat(),
-            'monitoring_period': {
-                'start': start_time.isoformat(),
-                'end': end_time.isoformat(),
-                'duration_seconds': duration,
-                'samples_collected': len(self.snapshots)
+            "report_generated": datetime.utcnow().isoformat(),
+            "monitoring_period": {
+                "start": start_time.isoformat(),
+                "end": end_time.isoformat(),
+                "duration_seconds": duration,
+                "samples_collected": len(self.snapshots),
             },
-            'system_metrics': {
-                'cpu': {
-                    'mean': statistics.mean(cpu_values),
-                    'median': statistics.median(cpu_values),
-                    'min': min(cpu_values),
-                    'max': max(cpu_values),
-                    'std_dev': statistics.stdev(cpu_values) if len(cpu_values) > 1 else 0
+            "system_metrics": {
+                "cpu": {
+                    "mean": statistics.mean(cpu_values),
+                    "median": statistics.median(cpu_values),
+                    "min": min(cpu_values),
+                    "max": max(cpu_values),
+                    "std_dev": statistics.stdev(cpu_values) if len(cpu_values) > 1 else 0,
                 },
-                'memory': {
-                    'mean_percent': statistics.mean(memory_values),
-                    'mean_mb': statistics.mean(memory_mb_values),
-                    'peak_mb': max(memory_mb_values),
-                    'min_mb': min(memory_mb_values)
-                }
+                "memory": {
+                    "mean_percent": statistics.mean(memory_values),
+                    "mean_mb": statistics.mean(memory_mb_values),
+                    "peak_mb": max(memory_mb_values),
+                    "min_mb": min(memory_mb_values),
+                },
             },
-            'endpoint_metrics': endpoint_summary,
-            'anomalies_detected': self.anomalies_detected,
-            'threshold_violations': self._count_threshold_violations(),
-            'recommendations': self._generate_recommendations()
+            "endpoint_metrics": endpoint_summary,
+            "anomalies_detected": self.anomalies_detected,
+            "threshold_violations": self._count_threshold_violations(),
+            "recommendations": self._generate_recommendations(),
         }
 
         return report
 
     def _count_threshold_violations(self) -> Dict[str, int]:
         """Count threshold violations"""
-        violations = {
-            'cpu_high': 0,
-            'memory_high': 0
-        }
+        violations = {"cpu_high": 0, "memory_high": 0}
 
         for snapshot in self.snapshots:
-            if snapshot.cpu_percent > self.thresholds['cpu_percent']:
-                violations['cpu_high'] += 1
-            if snapshot.memory_percent > self.thresholds['memory_percent']:
-                violations['memory_high'] += 1
+            if snapshot.cpu_percent > self.thresholds["cpu_percent"]:
+                violations["cpu_high"] += 1
+            if snapshot.memory_percent > self.thresholds["memory_percent"]:
+                violations["memory_high"] += 1
 
         return violations
 
@@ -468,7 +469,7 @@ class PerformanceMonitor:
 
         if high_error_endpoints:
             recommendations.append(
-                f"High error rate on: {', '.join([f'{k} ({(1-v)*100:.1f}% errors)' for k, v in high_error_endpoints[:3]])}"
+                f"High error rate on: {', '.join([f'{k} ({(1 - v) * 100:.1f}% errors)' for k, v in high_error_endpoints[:3]])}"
             )
 
         return recommendations
@@ -477,7 +478,7 @@ class PerformanceMonitor:
         """Save performance report to file"""
         report = self.get_performance_report()
 
-        with open(filename, 'w') as f:
+        with open(filename, "w") as f:
             json.dump(report, f, indent=2, default=str)
 
         logger.info(f"Performance report saved to {filename}")
@@ -508,10 +509,7 @@ class AutoScalingAnalyzer:
             return True, f"High memory usage: {avg_memory:.1f}%"
 
         # Check endpoint performance
-        slow_endpoint_count = sum(
-            1 for m in self.monitor.endpoint_metrics.values()
-            if m.p95_response_time > 200
-        )
+        slow_endpoint_count = sum(1 for m in self.monitor.endpoint_metrics.values() if m.p95_response_time > 200)
 
         if slow_endpoint_count > len(self.monitor.endpoint_metrics) * 0.5:
             return True, f"Multiple slow endpoints: {slow_endpoint_count}"
@@ -541,20 +539,18 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Jorge Platform Performance Monitoring")
-    parser.add_argument('--mode', choices=['monitor', 'analyze', 'dashboard'],
-                       default='monitor', help='Monitoring mode')
-    parser.add_argument('--duration', type=int, default=3600,
-                       help='Monitoring duration in seconds')
-    parser.add_argument('--report-file', default='performance_report.json',
-                       help='Performance report output file')
-    parser.add_argument('--interval', type=int, default=1,
-                       help='Sampling interval in seconds')
+    parser.add_argument(
+        "--mode", choices=["monitor", "analyze", "dashboard"], default="monitor", help="Monitoring mode"
+    )
+    parser.add_argument("--duration", type=int, default=3600, help="Monitoring duration in seconds")
+    parser.add_argument("--report-file", default="performance_report.json", help="Performance report output file")
+    parser.add_argument("--interval", type=int, default=1, help="Sampling interval in seconds")
 
     args = parser.parse_args()
 
     monitor = PerformanceMonitor(sampling_interval=args.interval)
 
-    if args.mode == 'monitor':
+    if args.mode == "monitor":
         print(f"Starting performance monitoring for {args.duration} seconds...")
         print(f"Report will be saved to: {args.report_file}")
         print("Press Ctrl+C to stop early\n")
@@ -565,16 +561,16 @@ if __name__ == "__main__":
             monitor.save_report(args.report_file)
             print(f"\n✅ Monitoring complete. Report saved to {args.report_file}")
 
-    elif args.mode == 'analyze':
+    elif args.mode == "analyze":
         print(f"Analyzing performance data from: {args.report_file}")
-        with open(args.report_file, 'r') as f:
+        with open(args.report_file, "r") as f:
             report = json.load(f)
 
-        print("\n" + "="*80)
+        print("\n" + "=" * 80)
         print("PERFORMANCE ANALYSIS REPORT")
-        print("="*80)
+        print("=" * 80)
         print(json.dumps(report, indent=2))
 
-    elif args.mode == 'dashboard':
+    elif args.mode == "dashboard":
         print("Real-time performance dashboard not yet implemented")
         print("Use --mode monitor for data collection")

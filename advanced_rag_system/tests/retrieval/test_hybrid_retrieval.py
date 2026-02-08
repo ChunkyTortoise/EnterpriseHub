@@ -4,10 +4,10 @@ This module tests the hybrid retrieval system including RRF fusion,
 weighted fusion, and the hybrid searcher orchestration.
 """
 
-import pytest
-from uuid import uuid4
 from typing import List
+from uuid import uuid4
 
+import pytest
 from src.core.types import DocumentChunk, Metadata, SearchResult
 from src.retrieval.hybrid.fusion import (
     FusionConfig,
@@ -17,8 +17,8 @@ from src.retrieval.hybrid.fusion import (
     normalize_scores,
 )
 from src.retrieval.hybrid.hybrid_searcher import (
-    HybridSearcher,
     HybridSearchConfig,
+    HybridSearcher,
 )
 
 
@@ -34,19 +34,19 @@ class TestFusionAlgorithms:
                 document_id=doc_id,
                 content="Python programming language tutorial",
                 index=0,
-                metadata=Metadata(title="Python Guide")
+                metadata=Metadata(title="Python Guide"),
             ),
             DocumentChunk(
                 document_id=doc_id,
                 content="Machine learning with scikit-learn",
                 index=1,
-                metadata=Metadata(title="ML Guide")
+                metadata=Metadata(title="ML Guide"),
             ),
             DocumentChunk(
                 document_id=doc_id,
                 content="Data science fundamentals and statistics",
                 index=2,
-                metadata=Metadata(title="Data Science")
+                metadata=Metadata(title="Data Science"),
             ),
         ]
 
@@ -54,40 +54,16 @@ class TestFusionAlgorithms:
     def dense_results(self, sample_chunks: List[DocumentChunk]) -> List[SearchResult]:
         """Create mock dense search results."""
         return [
-            SearchResult(
-                chunk=sample_chunks[0],
-                score=0.95,
-                rank=1,
-                distance=0.05,
-                explanation="Dense vector match"
-            ),
-            SearchResult(
-                chunk=sample_chunks[1],
-                score=0.75,
-                rank=2,
-                distance=0.25,
-                explanation="Dense vector match"
-            ),
+            SearchResult(chunk=sample_chunks[0], score=0.95, rank=1, distance=0.05, explanation="Dense vector match"),
+            SearchResult(chunk=sample_chunks[1], score=0.75, rank=2, distance=0.25, explanation="Dense vector match"),
         ]
 
     @pytest.fixture
     def sparse_results(self, sample_chunks: List[DocumentChunk]) -> List[SearchResult]:
         """Create mock sparse search results."""
         return [
-            SearchResult(
-                chunk=sample_chunks[1],
-                score=0.85,
-                rank=1,
-                distance=0.15,
-                explanation="BM25 match"
-            ),
-            SearchResult(
-                chunk=sample_chunks[2],
-                score=0.60,
-                rank=2,
-                distance=0.40,
-                explanation="BM25 match"
-            ),
+            SearchResult(chunk=sample_chunks[1], score=0.85, rank=1, distance=0.15, explanation="BM25 match"),
+            SearchResult(chunk=sample_chunks[2], score=0.60, rank=2, distance=0.40, explanation="BM25 match"),
         ]
 
     def test_fusion_config_defaults(self):
@@ -167,12 +143,8 @@ class TestFusionAlgorithms:
 
     def test_weighted_fusion_score_calculation(self, sample_chunks: List[DocumentChunk]):
         """Test weighted fusion score calculation."""
-        dense_results = [
-            SearchResult(chunk=sample_chunks[0], score=0.8, rank=1, distance=0.2)
-        ]
-        sparse_results = [
-            SearchResult(chunk=sample_chunks[0], score=0.6, rank=1, distance=0.4)
-        ]
+        dense_results = [SearchResult(chunk=sample_chunks[0], score=0.8, rank=1, distance=0.2)]
+        sparse_results = [SearchResult(chunk=sample_chunks[0], score=0.6, rank=1, distance=0.4)]
 
         config = FusionConfig(dense_weight=0.7, sparse_weight=0.3)
         fusion = WeightedScoreFusion(config)
@@ -255,19 +227,19 @@ class TestHybridSearcher:
                 document_id=doc_id,
                 content="Python programming tutorial for beginners",
                 index=0,
-                metadata=Metadata(title="Python Tutorial")
+                metadata=Metadata(title="Python Tutorial"),
             ),
             DocumentChunk(
                 document_id=doc_id,
                 content="Advanced machine learning algorithms and techniques",
                 index=1,
-                metadata=Metadata(title="ML Advanced")
+                metadata=Metadata(title="ML Advanced"),
             ),
             DocumentChunk(
                 document_id=doc_id,
                 content="Data analysis with pandas and numpy libraries",
                 index=2,
-                metadata=Metadata(title="Data Analysis")
+                metadata=Metadata(title="Data Analysis"),
             ),
         ]
 

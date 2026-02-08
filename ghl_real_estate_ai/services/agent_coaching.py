@@ -43,9 +43,7 @@ class AgentCoachingService:
     def __init__(self):
         self.jorge_style_responses = self._load_jorge_templates()
 
-    def analyze_conversation_live(
-        self, conversation_history: List[Dict], current_context: Dict
-    ) -> List[CoachingTip]:
+    def analyze_conversation_live(self, conversation_history: List[Dict], current_context: Dict) -> List[CoachingTip]:
         """
         Analyze ongoing conversation and provide real-time coaching
 
@@ -59,14 +57,8 @@ class AgentCoachingService:
         tips = []
 
         # Get last few messages for context
-        recent_messages = (
-            conversation_history[-5:]
-            if len(conversation_history) >= 5
-            else conversation_history
-        )
-        last_lead_message = next(
-            (m for m in reversed(recent_messages) if m.get("sender") == "lead"), None
-        )
+        recent_messages = conversation_history[-5:] if len(conversation_history) >= 5 else conversation_history
+        last_lead_message = next((m for m in reversed(recent_messages) if m.get("sender") == "lead"), None)
 
         if not last_lead_message:
             return tips
@@ -89,9 +81,7 @@ class AgentCoachingService:
             )
 
         # Tip 2: Price objection handler
-        if any(
-            word in lead_text for word in ["expensive", "too much", "afford", "budget"]
-        ):
+        if any(word in lead_text for word in ["expensive", "too much", "afford", "budget"]):
             tips.append(
                 CoachingTip(
                     tip_type="objection_handler",
@@ -105,10 +95,7 @@ class AgentCoachingService:
             )
 
         # Tip 3: Urgency detected - capitalize on it
-        if any(
-            word in lead_text
-            for word in ["asap", "urgent", "quickly", "soon", "deadline"]
-        ):
+        if any(word in lead_text for word in ["asap", "urgent", "quickly", "soon", "deadline"]):
             tips.append(
                 CoachingTip(
                     tip_type="closing",
@@ -122,10 +109,7 @@ class AgentCoachingService:
             )
 
         # Tip 4: Competition mentioned
-        if any(
-            phrase in lead_text
-            for phrase in ["other agent", "another", "comparing", "someone else"]
-        ):
+        if any(phrase in lead_text for phrase in ["other agent", "another", "comparing", "someone else"]):
             tips.append(
                 CoachingTip(
                     tip_type="objection_handler",
@@ -139,10 +123,7 @@ class AgentCoachingService:
             )
 
         # Tip 5: Vague response - need specifics
-        if any(
-            word in lead_text
-            for word in ["maybe", "not sure", "thinking", "idk", "dunno"]
-        ):
+        if any(word in lead_text for word in ["maybe", "not sure", "thinking", "idk", "dunno"]):
             tips.append(
                 CoachingTip(
                     tip_type="question",
@@ -171,11 +152,7 @@ class AgentCoachingService:
             )
 
         # Tip 7: Check if too many questions asked
-        agent_questions = sum(
-            1
-            for m in recent_messages
-            if m.get("sender") == "agent" and "?" in m.get("message", "")
-        )
+        agent_questions = sum(1 for m in recent_messages if m.get("sender") == "agent" and "?" in m.get("message", ""))
         if agent_questions > 3:
             tips.append(
                 CoachingTip(
@@ -319,9 +296,7 @@ class AgentCoachingService:
             )
         return ""
 
-    def analyze_agent_performance(
-        self, agent_id: str, conversations: List[Dict]
-    ) -> Dict:
+    def analyze_agent_performance(self, agent_id: str, conversations: List[Dict]) -> Dict:
         """
         Analyze agent's performance and provide coaching report
 
@@ -339,14 +314,10 @@ class AgentCoachingService:
         jorge_style_usage = 0
 
         for conv in conversations:
-            agent_messages = [
-                m for m in conv.get("messages", []) if m.get("sender") == "agent"
-            ]
+            agent_messages = [m for m in conv.get("messages", []) if m.get("sender") == "agent"]
 
             # Count questions
-            questions_asked += sum(
-                1 for m in agent_messages if "?" in m.get("message", "")
-            )
+            questions_asked += sum(1 for m in agent_messages if "?" in m.get("message", ""))
 
             # Check for appointments
             if self._has_appointment_scheduled(conv.get("messages", [])):
@@ -355,10 +326,7 @@ class AgentCoachingService:
             # Check Jorge-style language
             for msg in agent_messages:
                 text = msg.get("message", "").lower()
-                if any(
-                    phrase in text
-                    for phrase in ["hey", "quick question", "real talk", "no worries"]
-                ):
+                if any(phrase in text for phrase in ["hey", "quick question", "real talk", "no worries"]):
                     jorge_style_usage += 1
                     break
 
@@ -371,11 +339,9 @@ class AgentCoachingService:
             "period": datetime.now().isoformat(),
             "metrics": {
                 "total_conversations": total_convos,
-                "appointment_rate": f"{appointment_rate*100:.1f}%",
-                "avg_questions_per_convo": (
-                    questions_asked / total_convos if total_convos > 0 else 0
-                ),
-                "jorge_style_adoption": f"{jorge_style_rate*100:.1f}%",
+                "appointment_rate": f"{appointment_rate * 100:.1f}%",
+                "avg_questions_per_convo": (questions_asked / total_convos if total_convos > 0 else 0),
+                "jorge_style_adoption": f"{jorge_style_rate * 100:.1f}%",
             },
             "strengths": [],
             "improvements": [],
@@ -393,17 +359,11 @@ class AgentCoachingService:
             report["improvements"].append(
                 "Focus on closing for appointments - too many conversations without next steps"
             )
-            report["coaching_focus"].append(
-                "Practice Jorge's either/or closing questions"
-            )
+            report["coaching_focus"].append("Practice Jorge's either/or closing questions")
 
         if jorge_style_rate < 0.5:
-            report["improvements"].append(
-                "Use more Jorge-style language (casual, direct, friendly)"
-            )
-            report["coaching_focus"].append(
-                "Review Jorge's example scripts and templates"
-            )
+            report["improvements"].append("Use more Jorge-style language (casual, direct, friendly)")
+            report["coaching_focus"].append("Review Jorge's example scripts and templates")
 
         return report
 

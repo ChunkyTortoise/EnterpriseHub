@@ -9,46 +9,46 @@ This module tests the complete Phase 3 Advanced RAG System integration including
 - Data flow through the pipeline
 """
 
-import pytest
 import asyncio
 import time
-from typing import List, Dict, Any, Optional
-from unittest.mock import Mock, patch, MagicMock, AsyncMock
+from typing import Any, Dict, List, Optional
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from uuid import uuid4
 
-from src.core.types import SearchResult, DocumentChunk, Metadata
+import pytest
 from src.core.exceptions import RetrievalError
-
-# Query enhancement imports
-from src.retrieval.query import (
-    QueryExpander,
-    ExpansionConfig,
-    HyDEGenerator,
-    HyDEConfig,
-    MockLLMProvider,
-    QueryClassifier,
-    ClassifierConfig,
-    QueryType,
-    ClassificationResult,
-)
-
-# Retrieval imports
-from src.retrieval.hybrid import HybridSearcher, HybridSearchConfig
-from src.retrieval.advanced_hybrid_searcher import AdvancedHybridSearcher, AdvancedSearchConfig
+from src.core.types import DocumentChunk, Metadata, SearchResult
 
 # Re-ranking imports
 from src.reranking.base import (
     BaseReRanker,
+    MockReRanker,
     ReRankingConfig,
     ReRankingResult,
     ReRankingStrategy,
-    MockReRanker,
 )
+from src.retrieval.advanced_hybrid_searcher import AdvancedHybridSearcher, AdvancedSearchConfig
 
+# Retrieval imports
+from src.retrieval.hybrid import HybridSearchConfig, HybridSearcher
+
+# Query enhancement imports
+from src.retrieval.query import (
+    ClassificationResult,
+    ClassifierConfig,
+    ExpansionConfig,
+    HyDEConfig,
+    HyDEGenerator,
+    MockLLMProvider,
+    QueryClassifier,
+    QueryExpander,
+    QueryType,
+)
 
 # ============================================================================
 # Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def sample_document_chunks() -> List[DocumentChunk]:
@@ -205,9 +205,7 @@ def query_classifier() -> QueryClassifier:
 
 
 @pytest.fixture
-async def initialized_searcher(
-    default_config, sample_document_chunks
-) -> AdvancedHybridSearcher:
+async def initialized_searcher(default_config, sample_document_chunks) -> AdvancedHybridSearcher:
     """Create and initialize an AdvancedHybridSearcher with sample data."""
     searcher = AdvancedHybridSearcher(config=default_config)
     await searcher.initialize()
@@ -219,6 +217,7 @@ async def initialized_searcher(
 # ============================================================================
 # Pipeline Initialization Tests
 # ============================================================================
+
 
 class TestPipelineInitialization:
     """Test pipeline initialization and component setup."""
@@ -274,12 +273,8 @@ class TestPipelineInitialization:
     @pytest.mark.asyncio
     async def test_injected_reranker(self, default_config):
         """Test pipeline with injected custom reranker."""
-        custom_reranker = MockReRanker(
-            config=ReRankingConfig(strategy=ReRankingStrategy.REPLACE)
-        )
-        searcher = AdvancedHybridSearcher(
-            config=default_config, reranker=custom_reranker
-        )
+        custom_reranker = MockReRanker(config=ReRankingConfig(strategy=ReRankingStrategy.REPLACE))
+        searcher = AdvancedHybridSearcher(config=default_config, reranker=custom_reranker)
         await searcher.initialize()
         assert searcher.reranker is custom_reranker
         await searcher.close()
@@ -288,6 +283,7 @@ class TestPipelineInitialization:
 # ============================================================================
 # Full Pipeline Integration Tests
 # ============================================================================
+
 
 class TestFullPipelineIntegration:
     """End-to-end tests for the complete search pipeline."""
@@ -328,8 +324,8 @@ class TestFullPipelineIntegration:
         await initialized_searcher.search("deep learning")
 
         stats = await initialized_searcher.get_comprehensive_stats()
-        assert stats['performance']['total_searches'] == 2
-        assert stats['performance']['avg_time_ms'] >= 0
+        assert stats["performance"]["total_searches"] == 2
+        assert stats["performance"]["avg_time_ms"] >= 0
 
     @pytest.mark.asyncio
     async def test_multiple_sequential_searches(self, initialized_searcher):
@@ -340,9 +336,7 @@ class TestFullPipelineIntegration:
             assert isinstance(results, list)
 
     @pytest.mark.asyncio
-    async def test_complete_pipeline_with_mocked_search(
-        self, sample_document_chunks, mock_reranker
-    ):
+    async def test_complete_pipeline_with_mocked_search(self, sample_document_chunks, mock_reranker):
         """Test complete pipeline execution with mocked hybrid search."""
         config = AdvancedSearchConfig(
             enable_query_expansion=True,
@@ -352,9 +346,7 @@ class TestFullPipelineIntegration:
         )
         searcher = AdvancedHybridSearcher(config=config, reranker=mock_reranker)
 
-        with patch.object(
-            searcher.hybrid_searcher, 'search', new_callable=AsyncMock
-        ) as mock_search:
+        with patch.object(searcher.hybrid_searcher, "search", new_callable=AsyncMock) as mock_search:
             mock_search.return_value = [
                 SearchResult(chunk=sample_document_chunks[0], score=0.85, rank=1, distance=0.15),
                 SearchResult(chunk=sample_document_chunks[1], score=0.75, rank=2, distance=0.25),
@@ -366,39 +358,43 @@ class TestFullPipelineIntegration:
                 assert isinstance(results, list)
                 assert len(results) <= 5
                 assert all(isinstance(r, SearchResult) for r in results)
-                assert searcher._search_stats['total_searches'] >= 1
+                assert searcher._search_stats["total_searches"] >= 1
             finally:
                 await searcher.close()
 
     @pytest.mark.asyncio
-    async def test_pipeline_configuration_combinations(
-        self, sample_document_chunks, mock_reranker
-    ):
+    async def test_pipeline_configuration_combinations(self, sample_document_chunks, mock_reranker):
         """Test pipeline with various configuration combinations."""
         configs = [
             AdvancedSearchConfig(
-                enable_query_expansion=True, enable_hyde=True,
-                enable_query_classification=True, enable_reranking=True,
+                enable_query_expansion=True,
+                enable_hyde=True,
+                enable_query_classification=True,
+                enable_reranking=True,
             ),
             AdvancedSearchConfig(
-                enable_query_expansion=False, enable_hyde=False,
-                enable_query_classification=False, enable_reranking=False,
+                enable_query_expansion=False,
+                enable_hyde=False,
+                enable_query_classification=False,
+                enable_reranking=False,
             ),
             AdvancedSearchConfig(
-                enable_query_expansion=True, enable_hyde=False,
-                enable_query_classification=False, enable_reranking=False,
+                enable_query_expansion=True,
+                enable_hyde=False,
+                enable_query_classification=False,
+                enable_reranking=False,
             ),
             AdvancedSearchConfig(
-                enable_query_expansion=False, enable_hyde=False,
-                enable_query_classification=False, enable_reranking=True,
+                enable_query_expansion=False,
+                enable_hyde=False,
+                enable_query_classification=False,
+                enable_reranking=True,
             ),
         ]
 
         for config in configs:
             searcher = AdvancedHybridSearcher(config=config, reranker=mock_reranker)
-            with patch.object(
-                searcher.hybrid_searcher, 'search', new_callable=AsyncMock
-            ) as mock_search:
+            with patch.object(searcher.hybrid_searcher, "search", new_callable=AsyncMock) as mock_search:
                 mock_search.return_value = [
                     SearchResult(chunk=sample_document_chunks[0], score=0.9, rank=1, distance=0.1)
                 ]
@@ -413,6 +409,7 @@ class TestFullPipelineIntegration:
 # ============================================================================
 # Query Type Coverage Tests (all 6 types)
 # ============================================================================
+
 
 class TestQueryTypeCoverage:
     """Test pipeline behavior across all 6 query types."""
@@ -456,33 +453,26 @@ class TestQueryTypeCoverage:
     @pytest.mark.asyncio
     async def test_exploratory_query(self, initialized_searcher, query_classifier):
         """Test EXPLORATORY query."""
-        classification = query_classifier.classify(
-            "Explore everything about reinforcement learning"
-        )
+        classification = query_classifier.classify("Explore everything about reinforcement learning")
         assert classification.query_type == QueryType.EXPLORATORY
 
-        results = await initialized_searcher.search(
-            "Explore everything about reinforcement learning", top_k=5
-        )
+        results = await initialized_searcher.search("Explore everything about reinforcement learning", top_k=5)
         assert isinstance(results, list)
 
     @pytest.mark.asyncio
     async def test_technical_query(self, initialized_searcher, query_classifier):
         """Test TECHNICAL query."""
-        classification = query_classifier.classify(
-            "API endpoint for model inference configuration"
-        )
+        classification = query_classifier.classify("API endpoint for model inference configuration")
         assert classification.query_type == QueryType.TECHNICAL
 
-        results = await initialized_searcher.search(
-            "API endpoint for model inference configuration", top_k=5
-        )
+        results = await initialized_searcher.search("API endpoint for model inference configuration", top_k=5)
         assert isinstance(results, list)
 
 
 # ============================================================================
 # Query Enhancement Integration Tests
 # ============================================================================
+
 
 class TestQueryEnhancement:
     """Test query enhancement components in the pipeline."""
@@ -498,9 +488,7 @@ class TestQueryEnhancement:
     @pytest.mark.asyncio
     async def test_hyde_generates_hypothetical_docs(self, mock_hyde_generator):
         """Test HyDE generates hypothetical documents."""
-        docs = await mock_hyde_generator.generate_hypothetical_documents(
-            "What is machine learning?"
-        )
+        docs = await mock_hyde_generator.generate_hypothetical_documents("What is machine learning?")
         assert len(docs) >= 1
         assert all(isinstance(d, str) and len(d) > 0 for d in docs)
 
@@ -539,24 +527,23 @@ class TestQueryEnhancement:
         for expected_type, query in queries_by_type.items():
             classification = query_classifier.classify(query)
             assert classification.query_type == expected_type
-            assert 'dense_retrieval_weight' in classification.recommendations
-            assert 'sparse_retrieval_weight' in classification.recommendations
+            assert "dense_retrieval_weight" in classification.recommendations
+            assert "sparse_retrieval_weight" in classification.recommendations
 
     @pytest.mark.asyncio
     async def test_enhancement_pipeline_integration(self, initialized_searcher):
         """Test the _enhance_query method produces valid output."""
-        enhanced_query, routing_info = await initialized_searcher._enhance_query(
-            "How does machine learning work?"
-        )
+        enhanced_query, routing_info = await initialized_searcher._enhance_query("How does machine learning work?")
         assert isinstance(enhanced_query, str)
         assert len(enhanced_query) > 0
-        assert routing_info['original_query'] == "How does machine learning work?"
-        assert 'query_type' in routing_info
+        assert routing_info["original_query"] == "How does machine learning work?"
+        assert "query_type" in routing_info
 
 
 # ============================================================================
 # Re-ranking Integration Tests
 # ============================================================================
+
 
 class TestReRankingIntegration:
     """Test re-ranking within the full pipeline."""
@@ -603,14 +590,10 @@ class TestReRankingIntegration:
             await searcher.close()
 
     @pytest.mark.asyncio
-    async def test_vector_search_reranking_integration(
-        self, sample_search_results, mock_reranker
-    ):
+    async def test_vector_search_reranking_integration(self, sample_search_results, mock_reranker):
         """Test vector search results integrate correctly with re-ranking."""
         await mock_reranker.initialize()
-        reranking_result = await mock_reranker.rerank(
-            "machine learning algorithms", sample_search_results
-        )
+        reranking_result = await mock_reranker.rerank("machine learning algorithms", sample_search_results)
         assert len(reranking_result.results) == len(sample_search_results)
         for result in reranking_result.results:
             assert isinstance(result, SearchResult)
@@ -618,9 +601,7 @@ class TestReRankingIntegration:
         await mock_reranker.close()
 
     @pytest.mark.asyncio
-    async def test_fusion_reranking_integration(
-        self, sample_document_chunks, mock_reranker
-    ):
+    async def test_fusion_reranking_integration(self, sample_document_chunks, mock_reranker):
         """Test fused results from multiple retrievers can be re-ranked."""
         fused_results = [
             SearchResult(chunk=sample_document_chunks[i], score=0.92 - i * 0.04, rank=i + 1, distance=0.08 + i * 0.04)
@@ -638,6 +619,7 @@ class TestReRankingIntegration:
 # Performance Benchmark Tests
 # ============================================================================
 
+
 class TestPerformanceBenchmarks:
     """Test pipeline performance meets targets."""
 
@@ -647,8 +629,13 @@ class TestPerformanceBenchmarks:
         await initialized_searcher.search("warm up query")
 
         latencies = []
-        for query in ["machine learning", "neural networks", "python programming",
-                       "How to build a model?", "Compare deep learning frameworks"]:
+        for query in [
+            "machine learning",
+            "neural networks",
+            "python programming",
+            "How to build a model?",
+            "Compare deep learning frameworks",
+        ]:
             start = time.perf_counter()
             await initialized_searcher.search(query, top_k=5)
             latencies.append((time.perf_counter() - start) * 1000)
@@ -660,8 +647,11 @@ class TestPerformanceBenchmarks:
     @pytest.mark.asyncio
     async def test_query_enhancement_latency(self, mock_hyde_generator, query_classifier):
         """Test query enhancement latency <50ms."""
-        for query in ["What is machine learning?", "How to implement neural networks?",
-                       "Compare Python and JavaScript"]:
+        for query in [
+            "What is machine learning?",
+            "How to implement neural networks?",
+            "Compare Python and JavaScript",
+        ]:
             start = time.perf_counter()
             query_classifier.classify(query)
             QueryExpander(ExpansionConfig(max_expansions=3)).expand(query)
@@ -687,32 +677,27 @@ class TestPerformanceBenchmarks:
             await initialized_searcher.search(query)
 
         stats = await initialized_searcher.get_comprehensive_stats()
-        perf = stats['performance']
-        assert perf['total_searches'] == 3
-        assert perf['avg_time_ms'] >= 0
-        assert perf['enhancement_time_ms'] >= 0
-        assert perf['retrieval_time_ms'] >= 0
-        assert perf['reranking_time_ms'] >= 0
+        perf = stats["performance"]
+        assert perf["total_searches"] == 3
+        assert perf["avg_time_ms"] >= 0
+        assert perf["enhancement_time_ms"] >= 0
+        assert perf["retrieval_time_ms"] >= 0
+        assert perf["reranking_time_ms"] >= 0
 
     @pytest.mark.asyncio
-    async def test_concurrent_search_performance(
-        self, sample_document_chunks, mock_reranker
-    ):
+    async def test_concurrent_search_performance(self, sample_document_chunks, mock_reranker):
         """Test pipeline under concurrent load."""
         config = AdvancedSearchConfig(enable_reranking=True)
         searcher = AdvancedHybridSearcher(config=config, reranker=mock_reranker)
 
-        with patch.object(
-            searcher.hybrid_searcher, 'search', new_callable=AsyncMock
-        ) as mock_search:
-            mock_search.return_value = [
-                SearchResult(chunk=sample_document_chunks[0], score=0.9, rank=1, distance=0.1)
-            ]
+        with patch.object(searcher.hybrid_searcher, "search", new_callable=AsyncMock) as mock_search:
+            mock_search.return_value = [SearchResult(chunk=sample_document_chunks[0], score=0.9, rank=1, distance=0.1)]
             await searcher.initialize()
             try:
                 start = time.perf_counter()
-                tasks = [searcher.search(q, top_k=3) for q in
-                         ["machine learning", "deep learning", "neural networks", "AI"]]
+                tasks = [
+                    searcher.search(q, top_k=3) for q in ["machine learning", "deep learning", "neural networks", "AI"]
+                ]
                 results = await asyncio.gather(*tasks)
                 elapsed = (time.perf_counter() - start) * 1000
 
@@ -726,6 +711,7 @@ class TestPerformanceBenchmarks:
 # ============================================================================
 # Error Handling & Fallback Tests
 # ============================================================================
+
 
 class TestErrorHandlingAndFallbacks:
     """Test error handling and graceful degradation."""
@@ -741,17 +727,13 @@ class TestErrorHandlingAndFallbacks:
         await searcher.close()
 
     @pytest.mark.asyncio
-    async def test_reranking_failure_falls_back(
-        self, sample_document_chunks, default_config
-    ):
+    async def test_reranking_failure_falls_back(self, sample_document_chunks, default_config):
         """Test re-ranking failure falls back to un-reranked results."""
         searcher = AdvancedHybridSearcher(config=default_config)
         await searcher.initialize()
         await searcher.hybrid_searcher.add_documents(sample_document_chunks)
 
-        with patch.object(
-            searcher.reranker, 'rerank', side_effect=Exception("Reranker failed")
-        ):
+        with patch.object(searcher.reranker, "rerank", side_effect=Exception("Reranker failed")):
             results = await searcher.search("machine learning", top_k=5)
             assert isinstance(results, list)
         await searcher.close()
@@ -760,16 +742,16 @@ class TestErrorHandlingAndFallbacks:
     async def test_query_expansion_failure_uses_original(self, sample_document_chunks):
         """Test query expansion failure falls back to original query."""
         config = AdvancedSearchConfig(
-            enable_query_expansion=True, enable_hyde=False,
-            enable_query_classification=False, enable_reranking=False,
+            enable_query_expansion=True,
+            enable_hyde=False,
+            enable_query_classification=False,
+            enable_reranking=False,
         )
         searcher = AdvancedHybridSearcher(config=config)
         await searcher.initialize()
         await searcher.hybrid_searcher.add_documents(sample_document_chunks)
 
-        with patch.object(
-            searcher.query_expander, 'expand', side_effect=Exception("Expansion failed")
-        ):
+        with patch.object(searcher.query_expander, "expand", side_effect=Exception("Expansion failed")):
             results = await searcher.search("machine learning", top_k=5)
             assert isinstance(results, list)
         await searcher.close()
@@ -778,16 +760,16 @@ class TestErrorHandlingAndFallbacks:
     async def test_classification_failure_uses_default(self, sample_document_chunks):
         """Test classification failure uses default routing."""
         config = AdvancedSearchConfig(
-            enable_query_expansion=False, enable_hyde=False,
-            enable_query_classification=True, enable_reranking=False,
+            enable_query_expansion=False,
+            enable_hyde=False,
+            enable_query_classification=True,
+            enable_reranking=False,
         )
         searcher = AdvancedHybridSearcher(config=config)
         await searcher.initialize()
         await searcher.hybrid_searcher.add_documents(sample_document_chunks)
 
-        with patch.object(
-            searcher.query_classifier, 'classify', side_effect=Exception("Failed")
-        ):
+        with patch.object(searcher.query_classifier, "classify", side_effect=Exception("Failed")):
             results = await searcher.search("machine learning", top_k=5)
             assert isinstance(results, list)
         await searcher.close()
@@ -796,15 +778,18 @@ class TestErrorHandlingAndFallbacks:
     async def test_hyde_failure_uses_original_query(self, sample_document_chunks):
         """Test HyDE failure falls back to original query."""
         config = AdvancedSearchConfig(
-            enable_query_expansion=False, enable_hyde=True,
-            enable_query_classification=False, enable_reranking=False,
+            enable_query_expansion=False,
+            enable_hyde=True,
+            enable_query_classification=False,
+            enable_reranking=False,
         )
         searcher = AdvancedHybridSearcher(config=config)
         await searcher.initialize()
         await searcher.hybrid_searcher.add_documents(sample_document_chunks)
 
         with patch.object(
-            searcher.hyde_generator, 'generate_hypothetical_documents',
+            searcher.hyde_generator,
+            "generate_hypothetical_documents",
             side_effect=Exception("HyDE failed"),
         ):
             results = await searcher.search("machine learning", top_k=5)
@@ -812,19 +797,13 @@ class TestErrorHandlingAndFallbacks:
         await searcher.close()
 
     @pytest.mark.asyncio
-    async def test_pipeline_recovers_from_component_failure(
-        self, sample_document_chunks, mock_reranker
-    ):
+    async def test_pipeline_recovers_from_component_failure(self, sample_document_chunks, mock_reranker):
         """Test pipeline continues functioning after component failure."""
         config = AdvancedSearchConfig(enable_reranking=True)
         searcher = AdvancedHybridSearcher(config=config, reranker=mock_reranker)
 
-        with patch.object(
-            searcher.hybrid_searcher, 'search', new_callable=AsyncMock
-        ) as mock_search:
-            mock_search.return_value = [
-                SearchResult(chunk=sample_document_chunks[0], score=0.9, rank=1, distance=0.1)
-            ]
+        with patch.object(searcher.hybrid_searcher, "search", new_callable=AsyncMock) as mock_search:
+            mock_search.return_value = [SearchResult(chunk=sample_document_chunks[0], score=0.9, rank=1, distance=0.1)]
             await searcher.initialize()
             try:
                 # First search succeeds
@@ -842,6 +821,7 @@ class TestErrorHandlingAndFallbacks:
 # Comprehensive Stats Tests
 # ============================================================================
 
+
 class TestComprehensiveStats:
     """Test comprehensive statistics reporting."""
 
@@ -850,27 +830,27 @@ class TestComprehensiveStats:
         """Test stats contain all expected sections."""
         await initialized_searcher.search("test query")
         stats = await initialized_searcher.get_comprehensive_stats()
-        assert 'performance' in stats
-        assert 'config' in stats
-        assert 'components' in stats
+        assert "performance" in stats
+        assert "config" in stats
+        assert "components" in stats
 
     @pytest.mark.asyncio
     async def test_stats_config_reflects_actual(self, initialized_searcher):
         """Test stats config section reflects actual configuration."""
         stats = await initialized_searcher.get_comprehensive_stats()
-        config = stats['config']
-        assert config['enable_query_expansion'] is True
-        assert config['enable_hyde'] is True
-        assert config['enable_query_classification'] is True
-        assert config['enable_reranking'] is True
+        config = stats["config"]
+        assert config["enable_query_expansion"] is True
+        assert config["enable_hyde"] is True
+        assert config["enable_query_classification"] is True
+        assert config["enable_reranking"] is True
 
     @pytest.mark.asyncio
     async def test_stats_components_populated(self, initialized_searcher):
         """Test stats components populated after search."""
         await initialized_searcher.search("machine learning")
         stats = await initialized_searcher.get_comprehensive_stats()
-        components = stats['components']
-        assert 'query_expander' in components
-        assert 'hyde_generator' in components
-        assert 'query_classifier' in components
-        assert 'reranker' in components
+        components = stats["components"]
+        assert "query_expander" in components
+        assert "hyde_generator" in components
+        assert "query_classifier" in components
+        assert "reranker" in components

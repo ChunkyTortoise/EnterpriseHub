@@ -13,20 +13,23 @@ Features:
 - Alert analytics and performance tracking
 """
 
-import streamlit as st
-from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Any, Optional
-import time
 import json
+import time
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional
+
+import streamlit as st
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+
 @dataclass
 class PropertyAlert:
     """Property alert data structure with enhanced details."""
+
     alert_id: str
     lead_id: str
     property_id: str
@@ -40,6 +43,7 @@ class PropertyAlert:
     bookmarked: bool = False
     inquiry_sent: bool = False
     viewed: bool = False
+
 
 class PropertyAlertDashboard:
     """
@@ -64,19 +68,10 @@ class PropertyAlertDashboard:
                     "market_opportunity": True,
                     "back_on_market": True,
                     "price_increase": False,
-                    "status_change": False
+                    "status_change": False,
                 },
-                "notification_channels": {
-                    "email": False,
-                    "sms": False,
-                    "in_app": True,
-                    "websocket": True
-                },
-                "quiet_hours": {
-                    "enabled": False,
-                    "start": "22:00",
-                    "end": "08:00"
-                }
+                "notification_channels": {"email": False, "sms": False, "in_app": True, "websocket": True},
+                "quiet_hours": {"enabled": False, "start": "22:00", "end": "08:00"},
             }
 
         if "property_alert_filters" not in st.session_state:
@@ -85,7 +80,7 @@ class PropertyAlertDashboard:
                 "min_score": 0,
                 "max_score": 100,
                 "alert_types": [],
-                "date_range": 7  # days
+                "date_range": 7,  # days
             }
 
     def render_dashboard(self):
@@ -182,14 +177,15 @@ class PropertyAlertDashboard:
             "market_opportunity": "💎",
             "back_on_market": "🔄",
             "price_increase": "📈",
-            "status_change": "📋"
+            "status_change": "📋",
         }
 
         alert_icon = alert_type_icons.get(alert.alert_type, "🏠")
 
         # Render property card
         with st.container():
-            st.markdown(f"""
+            st.markdown(
+                f"""
             <div style="
                 background-color: {card_color};
                 border: 2px solid {border_color};
@@ -202,10 +198,10 @@ class PropertyAlertDashboard:
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <div>
                         <h3 style="margin: 0; color: #1f2937; font-size: 1.25rem;">
-                            {alert_icon} {property_summary.get('address', 'Unknown Property')}
+                            {alert_icon} {property_summary.get("address", "Unknown Property")}
                         </h3>
                         <p style="margin: 0.25rem 0 0 0; color: #6b7280; font-size: 0.9rem;">
-                            {alert.alert_type.replace('_', ' ').title()} • {alert.timestamp.strftime('%H:%M')} • {alert.match_score:.0f}% match
+                            {alert.alert_type.replace("_", " ").title()} • {alert.timestamp.strftime("%H:%M")} • {alert.match_score:.0f}% match
                         </p>
                     </div>
                     <div style="text-align: right;">
@@ -225,17 +221,19 @@ class PropertyAlertDashboard:
                 <div style="margin-bottom: 1rem;">
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
                         <div>
-                            <strong>Price:</strong> {property_summary.get('formatted_price', 'Price on request')}<br>
-                            <strong>Size:</strong> {property_summary.get('formatted_sqft', 'Size not listed')}
+                            <strong>Price:</strong> {property_summary.get("formatted_price", "Price on request")}<br>
+                            <strong>Size:</strong> {property_summary.get("formatted_sqft", "Size not listed")}
                         </div>
                         <div>
-                            <strong>Bedrooms:</strong> {property_summary.get('bedrooms', 'N/A')}<br>
-                            <strong>Bathrooms:</strong> {property_summary.get('bathrooms', 'N/A')}
+                            <strong>Bedrooms:</strong> {property_summary.get("bedrooms", "N/A")}<br>
+                            <strong>Bathrooms:</strong> {property_summary.get("bathrooms", "N/A")}
                         </div>
                     </div>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
             # Match reasoning (if available)
             if alert.match_reasoning:
@@ -314,39 +312,35 @@ class PropertyAlertDashboard:
 
             prefs["min_match_score"] = st.slider(
                 "Minimum Match Score",
-                0, 100, prefs["min_match_score"],
-                help="Only show alerts with match scores above this threshold"
+                0,
+                100,
+                prefs["min_match_score"],
+                help="Only show alerts with match scores above this threshold",
             )
 
             prefs["max_alerts_per_day"] = st.slider(
-                "Max Alerts Per Day",
-                1, 50, prefs["max_alerts_per_day"],
-                help="Daily limit to prevent alert fatigue"
+                "Max Alerts Per Day", 1, 50, prefs["max_alerts_per_day"], help="Daily limit to prevent alert fatigue"
             )
 
             st.write("**Alert Types:**")
             for alert_type, enabled in prefs["alert_types_enabled"].items():
                 prefs["alert_types_enabled"][alert_type] = st.checkbox(
-                    alert_type.replace("_", " ").title(),
-                    value=enabled,
-                    key=f"alert_type_{alert_type}"
+                    alert_type.replace("_", " ").title(), value=enabled, key=f"alert_type_{alert_type}"
                 )
 
         # Filters
         with st.expander("🔍 Filters", expanded=False):
             filters = st.session_state.property_alert_filters
 
-            filters["show_dismissed"] = st.checkbox(
-                "Show dismissed alerts",
-                value=filters["show_dismissed"]
-            )
+            filters["show_dismissed"] = st.checkbox("Show dismissed alerts", value=filters["show_dismissed"])
 
             # Score range filter
             score_range = st.slider(
                 "Match Score Range",
-                0, 100,
+                0,
+                100,
                 (filters["min_score"], filters["max_score"]),
-                help="Filter alerts by match score range"
+                help="Filter alerts by match score range",
             )
             filters["min_score"], filters["max_score"] = score_range
 
@@ -355,7 +349,7 @@ class PropertyAlertDashboard:
                 "Time Period",
                 [1, 3, 7, 14, 30],
                 index=2,  # Default to 7 days
-                format_func=lambda x: f"Last {x} day{'s' if x > 1 else ''}"
+                format_func=lambda x: f"Last {x} day{'s' if x > 1 else ''}",
             )
 
     def _apply_filters(self, alerts: List[PropertyAlert]) -> List[PropertyAlert]:
@@ -370,28 +364,15 @@ class PropertyAlertDashboard:
             filtered_alerts = [a for a in filtered_alerts if not a.dismissed]
 
         # Filter by match score range
-        filtered_alerts = [
-            a for a in filtered_alerts
-            if filters["min_score"] <= a.match_score <= filters["max_score"]
-        ]
+        filtered_alerts = [a for a in filtered_alerts if filters["min_score"] <= a.match_score <= filters["max_score"]]
 
         # Filter by enabled alert types
-        enabled_types = [
-            alert_type for alert_type, enabled
-            in prefs["alert_types_enabled"].items()
-            if enabled
-        ]
-        filtered_alerts = [
-            a for a in filtered_alerts
-            if a.alert_type in enabled_types
-        ]
+        enabled_types = [alert_type for alert_type, enabled in prefs["alert_types_enabled"].items() if enabled]
+        filtered_alerts = [a for a in filtered_alerts if a.alert_type in enabled_types]
 
         # Filter by date range
         cutoff_date = datetime.now() - timedelta(days=filters["date_range"])
-        filtered_alerts = [
-            a for a in filtered_alerts
-            if a.timestamp >= cutoff_date
-        ]
+        filtered_alerts = [a for a in filtered_alerts if a.timestamp >= cutoff_date]
 
         return filtered_alerts
 
@@ -413,7 +394,7 @@ class PropertyAlertDashboard:
             property_summary=data.get("property_summary", {}),
             property_data=data.get("property_data", {}),
             match_reasoning=data.get("match_reasoning", {}),
-            timestamp=datetime.now(timezone.utc)
+            timestamp=datetime.now(timezone.utc),
         )
 
         # Check if alert meets minimum score threshold
@@ -426,7 +407,9 @@ class PropertyAlertDashboard:
             if len(st.session_state.property_alerts) > 100:
                 st.session_state.property_alerts = st.session_state.property_alerts[:100]
 
-            logger.info(f"Added property alert: {alert.alert_type} for property {alert.property_id} ({alert.match_score}% match)")
+            logger.info(
+                f"Added property alert: {alert.alert_type} for property {alert.property_id} ({alert.match_score}% match)"
+            )
 
     def get_alert_analytics(self) -> Dict[str, Any]:
         """Get property alert analytics and statistics."""
@@ -450,7 +433,7 @@ class PropertyAlertDashboard:
             "excellent": len([a for a in alerts if a.match_score >= 90]),
             "good": len([a for a in alerts if 80 <= a.match_score < 90]),
             "fair": len([a for a in alerts if 70 <= a.match_score < 80]),
-            "poor": len([a for a in alerts if a.match_score < 70])
+            "poor": len([a for a in alerts if a.match_score < 70]),
         }
 
         # Engagement metrics
@@ -468,14 +451,16 @@ class PropertyAlertDashboard:
                 "viewed": viewed_count,
                 "bookmarked": bookmarked_count,
                 "inquiries": inquiry_count,
-                "dismissed": dismissed_count
-            }
+                "dismissed": dismissed_count,
+            },
         }
+
 
 def render_property_alert_dashboard():
     """Convenience function to render property alert dashboard."""
     dashboard = PropertyAlertDashboard()
     dashboard.render_dashboard()
+
 
 def add_property_alert_from_websocket(event_data: Dict[str, Any]):
     """Convenience function to add property alert from WebSocket event."""

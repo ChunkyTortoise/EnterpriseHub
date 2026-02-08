@@ -44,16 +44,13 @@ class TestABTestingWorkflow:
         for i in range(9):
             variant = await service.get_variant("greeting_style", contact_id)
             assert variant == first_variant, (
-                f"Variant changed on call {i + 2}: "
-                f"expected '{first_variant}', got '{variant}'"
+                f"Variant changed on call {i + 2}: expected '{first_variant}', got '{variant}'"
             )
 
         # Verify the contact appears exactly once in the assignments
         # (get_variant deduplicates assignment tracking)
         results = service.get_experiment_results("greeting_style")
-        assert results.total_impressions == 1, (
-            f"Expected 1 unique impression, got {results.total_impressions}"
-        )
+        assert results.total_impressions == 1, f"Expected 1 unique impression, got {results.total_impressions}"
 
     @pytest.mark.asyncio
     async def test_outcomes_recorded_correctly(self):
@@ -77,18 +74,18 @@ class TestABTestingWorkflow:
             assignments[contact_id] = variant
 
             await service.record_outcome(
-                "cta_test", contact_id, variant, "conversion", value=1.0,
+                "cta_test",
+                contact_id,
+                variant,
+                "conversion",
+                value=1.0,
             )
 
         results = service.get_experiment_results("cta_test")
 
         # 5 contacts assigned, 5 outcomes recorded
-        assert results.total_impressions == 5, (
-            f"Expected 5 impressions, got {results.total_impressions}"
-        )
-        assert results.total_conversions == 5, (
-            f"Expected 5 conversions, got {results.total_conversions}"
-        )
+        assert results.total_impressions == 5, f"Expected 5 impressions, got {results.total_impressions}"
+        assert results.total_conversions == 5, f"Expected 5 conversions, got {results.total_conversions}"
 
         # Verify per-variant data is consistent
         variant_map = {}
@@ -96,17 +93,12 @@ class TestABTestingWorkflow:
             variant_map[vs.variant] = vs
 
         for contact_id, variant in assignments.items():
-            assert variant in variant_map, (
-                f"Variant '{variant}' not found in results"
-            )
+            assert variant in variant_map, f"Variant '{variant}' not found in results"
 
         # Each variant should have at least 1 impression
         for vs in results.variants:
             if vs.impressions > 0:
-                assert vs.conversions > 0, (
-                    f"Variant '{vs.variant}' has {vs.impressions} impressions "
-                    f"but 0 conversions"
-                )
+                assert vs.conversions > 0, f"Variant '{vs.variant}' has {vs.impressions} impressions but 0 conversions"
                 assert vs.conversion_rate > 0.0
 
     @pytest.mark.asyncio
@@ -132,12 +124,8 @@ class TestABTestingWorkflow:
             contact_variants[contact_id] = variant
 
         # Count assignments per variant
-        variant_a_contacts = [
-            c for c, v in contact_variants.items() if v == "variant_a"
-        ]
-        variant_b_contacts = [
-            c for c, v in contact_variants.items() if v == "variant_b"
-        ]
+        variant_a_contacts = [c for c, v in contact_variants.items() if v == "variant_a"]
+        variant_b_contacts = [c for c, v in contact_variants.items() if v == "variant_b"]
 
         # Record conversions: ~90% for variant_a, ~10% for variant_b
         # This creates a strong signal for significance detection
@@ -145,33 +133,32 @@ class TestABTestingWorkflow:
             # 90% of variant_a contacts convert
             if hash(contact_id) % 10 != 0:
                 await service.record_outcome(
-                    "response_tone", contact_id, "variant_a",
-                    "conversion", value=1.0,
+                    "response_tone",
+                    contact_id,
+                    "variant_a",
+                    "conversion",
+                    value=1.0,
                 )
 
         for contact_id in variant_b_contacts:
             # 10% of variant_b contacts convert
             if hash(contact_id) % 10 == 0:
                 await service.record_outcome(
-                    "response_tone", contact_id, "variant_b",
-                    "conversion", value=1.0,
+                    "response_tone",
+                    contact_id,
+                    "variant_b",
+                    "conversion",
+                    value=1.0,
                 )
 
         results = service.get_experiment_results("response_tone")
 
         # With ~45 contacts per variant and 90% vs 10% conversion rates,
         # the z-test should detect significance
-        assert results.is_significant is True, (
-            f"Expected significance=True, got False "
-            f"(p_value={results.p_value})"
-        )
-        assert results.winner == "variant_a", (
-            f"Expected winner='variant_a', got '{results.winner}'"
-        )
+        assert results.is_significant is True, f"Expected significance=True, got False (p_value={results.p_value})"
+        assert results.winner == "variant_a", f"Expected winner='variant_a', got '{results.winner}'"
         assert results.p_value is not None
-        assert results.p_value < 0.05, (
-            f"Expected p_value < 0.05, got {results.p_value}"
-        )
+        assert results.p_value < 0.05, f"Expected p_value < 0.05, got {results.p_value}"
 
         # Also verify via the convenience method
         assert service.is_significant("response_tone") is True
@@ -213,16 +200,22 @@ class TestABTestingWorkflow:
         conversions_a = int(len(variant_a_ids) * 0.9)
         for contact_id in variant_a_ids[:conversions_a]:
             await service.record_outcome(
-                "handoff_style", contact_id, "aggressive",
-                "conversion", value=1.0,
+                "handoff_style",
+                contact_id,
+                "aggressive",
+                "conversion",
+                value=1.0,
             )
 
         # Record 10% conversion for "gentle" variant
         conversions_b = max(1, int(len(variant_b_ids) * 0.1))
         for contact_id in variant_b_ids[:conversions_b]:
             await service.record_outcome(
-                "handoff_style", contact_id, "gentle",
-                "conversion", value=1.0,
+                "handoff_style",
+                contact_id,
+                "gentle",
+                "conversion",
+                value=1.0,
             )
 
         results = service.get_experiment_results("handoff_style")
@@ -236,12 +229,8 @@ class TestABTestingWorkflow:
         assert agg_rate > gen_rate, f"Expected {agg_rate} > {gen_rate}"
 
         # With 50+ contacts per variant and 90% vs 10%, significance should hold
-        assert results.is_significant is True, (
-            f"Expected significance=True (p_value={results.p_value})"
-        )
-        assert results.winner == "aggressive", (
-            f"Expected winner='aggressive', got '{results.winner}'"
-        )
+        assert results.is_significant is True, f"Expected significance=True (p_value={results.p_value})"
+        assert results.winner == "aggressive", f"Expected winner='aggressive', got '{results.winner}'"
 
         # Verify total impressions match
         assert results.total_impressions == len(all_contacts)
@@ -288,9 +277,7 @@ class TestBotABIntegration:
         contact = "contact-buyer-001"
         first = await service.get_variant(ABTestingService.RESPONSE_TONE_EXPERIMENT, contact)
         for _ in range(5):
-            assert await service.get_variant(
-                ABTestingService.RESPONSE_TONE_EXPERIMENT, contact
-            ) == first
+            assert await service.get_variant(ABTestingService.RESPONSE_TONE_EXPERIMENT, contact) == first
 
     @pytest.mark.asyncio
     async def test_outcome_recording_matches_variant(self):
@@ -303,12 +290,12 @@ class TestBotABIntegration:
 
         contacts = [f"contact-{i}" for i in range(10)]
         for contact_id in contacts:
-            variant = await service.get_variant(
-                ABTestingService.RESPONSE_TONE_EXPERIMENT, contact_id
-            )
+            variant = await service.get_variant(ABTestingService.RESPONSE_TONE_EXPERIMENT, contact_id)
             await service.record_outcome(
                 ABTestingService.RESPONSE_TONE_EXPERIMENT,
-                contact_id, variant, "response",
+                contact_id,
+                variant,
+                "response",
             )
 
         results = service.get_experiment_results(ABTestingService.RESPONSE_TONE_EXPERIMENT)
@@ -331,12 +318,12 @@ class TestBotABIntegration:
         for bot in ["lead", "buyer", "seller"]:
             for i in range(5):
                 contact_id = f"{bot}-contact-{i}"
-                variant = await service.get_variant(
-                    ABTestingService.RESPONSE_TONE_EXPERIMENT, contact_id
-                )
+                variant = await service.get_variant(ABTestingService.RESPONSE_TONE_EXPERIMENT, contact_id)
                 await service.record_outcome(
                     ABTestingService.RESPONSE_TONE_EXPERIMENT,
-                    contact_id, variant, "response",
+                    contact_id,
+                    variant,
+                    "response",
                 )
 
         results = service.get_experiment_results(ABTestingService.RESPONSE_TONE_EXPERIMENT)

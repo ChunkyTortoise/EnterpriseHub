@@ -4,9 +4,10 @@ Tests for Jorge Buyer Budget Configuration.
 Validates budget validation, financial calculations, and readiness assessment.
 """
 
-import pytest
 import os
 from unittest.mock import patch
+
+import pytest
 
 from ghl_real_estate_ai.ghl_utils.jorge_config import (
     BuyerBudgetConfig,
@@ -78,7 +79,9 @@ class TestBuyerBudgetConfig:
         num_payments = loan_term_years * 12
 
         # Monthly payment formula
-        monthly_payment = principal * (monthly_rate * (1 + monthly_rate) ** num_payments) / ((1 + monthly_rate) ** num_payments - 1)
+        monthly_payment = (
+            principal * (monthly_rate * (1 + monthly_rate) ** num_payments) / ((1 + monthly_rate) ** num_payments - 1)
+        )
 
         assert monthly_payment > 0
         assert monthly_payment < principal  # Should be less than total principal
@@ -103,9 +106,9 @@ class TestBuyerBudgetConfig:
 
         # Assess readiness
         is_ready = (
-            financing_score >= budget_config.FINANCING_PRE_APPROVED_THRESHOLD and
-            budget_score >= budget_config.FINANCING_CASH_BUDGET_THRESHOLD and
-            urgency_score >= budget_config.URGENCY_IMMEDIATE_THRESHOLD
+            financing_score >= budget_config.FINANCING_PRE_APPROVED_THRESHOLD
+            and budget_score >= budget_config.FINANCING_CASH_BUDGET_THRESHOLD
+            and urgency_score >= budget_config.URGENCY_IMMEDIATE_THRESHOLD
         )
 
         assert is_ready is True

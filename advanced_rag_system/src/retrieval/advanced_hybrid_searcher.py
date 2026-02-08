@@ -11,14 +11,14 @@ from __future__ import annotations
 
 import asyncio
 import time
-from typing import List, Optional, Dict, Any, Union
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Union
 
 from src.core.exceptions import RetrievalError
 from src.core.types import SearchResult
-from src.retrieval.hybrid.hybrid_searcher import HybridSearcher, HybridSearchConfig
-from src.retrieval.query import QueryExpander, ExpansionConfig, HyDEGenerator, HyDEConfig, QueryClassifier, QueryType
 from src.reranking import BaseReRanker, MockReRanker, ReRankingConfig, ReRankingStrategy
+from src.retrieval.hybrid.hybrid_searcher import HybridSearchConfig, HybridSearcher
+from src.retrieval.query import ExpansionConfig, HyDEConfig, HyDEGenerator, QueryClassifier, QueryExpander, QueryType
 
 
 @dataclass
@@ -125,11 +125,11 @@ class AdvancedHybridSearcher:
 
         # Performance tracking
         self._search_stats = {
-            'total_searches': 0,
-            'avg_time_ms': 0.0,
-            'enhancement_time_ms': 0.0,
-            'retrieval_time_ms': 0.0,
-            'reranking_time_ms': 0.0
+            "total_searches": 0,
+            "avg_time_ms": 0.0,
+            "enhancement_time_ms": 0.0,
+            "retrieval_time_ms": 0.0,
+            "reranking_time_ms": 0.0,
         }
 
         self._initialized = False
@@ -162,8 +162,7 @@ class AdvancedHybridSearcher:
             # Initialize re-ranker
             if self.config.enable_reranking:
                 reranking_config = self.config.reranking_config or ReRankingConfig(
-                    strategy=ReRankingStrategy.WEIGHTED,
-                    top_k=50
+                    strategy=ReRankingStrategy.WEIGHTED, top_k=50
                 )
                 if self._injected_reranker is not None:
                     self.reranker = self._injected_reranker
@@ -216,7 +215,9 @@ class AdvancedHybridSearcher:
 
             # Phase 2: Intelligent Retrieval
             retrieval_start = time.time()
-            raw_results = await self._intelligent_retrieval(enhanced_query, routing_info, top_k * 2)  # Get more for re-ranking
+            raw_results = await self._intelligent_retrieval(
+                enhanced_query, routing_info, top_k * 2
+            )  # Get more for re-ranking
             retrieval_time = (time.time() - retrieval_start) * 1000
 
             # Phase 3: Re-ranking
@@ -239,7 +240,7 @@ class AdvancedHybridSearcher:
                         score=result.score,
                         rank=result.rank,
                         distance=result.distance,
-                        explanation=f"Advanced pipeline: {total_time:.1f}ms"
+                        explanation=f"Advanced pipeline: {total_time:.1f}ms",
                     )
                     # Update the list in place
                     idx = final_results.index(result)
@@ -261,20 +262,20 @@ class AdvancedHybridSearcher:
         """
         enhanced_query = query
         routing_info = {
-            'original_query': query,
-            'query_type': QueryType.CONCEPTUAL,  # Default
-            'recommendations': {},
-            'expansions': [],
-            'hypothetical_docs': []
+            "original_query": query,
+            "query_type": QueryType.CONCEPTUAL,  # Default
+            "recommendations": {},
+            "expansions": [],
+            "hypothetical_docs": [],
         }
 
         # Step 1: Query Classification for routing
         if self.query_classifier and self.config.enable_query_classification:
             try:
                 classification = self.query_classifier.classify(query)
-                routing_info['query_type'] = classification.query_type
-                routing_info['recommendations'] = classification.recommendations
-                routing_info['confidence'] = classification.confidence
+                routing_info["query_type"] = classification.query_type
+                routing_info["recommendations"] = classification.recommendations
+                routing_info["confidence"] = classification.confidence
             except Exception:
                 pass  # Use defaults
 
@@ -285,7 +286,7 @@ class AdvancedHybridSearcher:
                 if expansions and len(expansions) > 1:
                     # Use the first expansion as the enhanced query
                     enhanced_query = expansions[0]
-                    routing_info['expansions'] = expansions[1:]  # Store alternatives
+                    routing_info["expansions"] = expansions[1:]  # Store alternatives
             except Exception:
                 pass  # Use original query
 
@@ -293,7 +294,7 @@ class AdvancedHybridSearcher:
         if self.hyde_generator and self.config.enable_hyde:
             try:
                 hypothetical_docs = await self.hyde_generator.generate_hypothetical_documents(query)
-                routing_info['hypothetical_docs'] = hypothetical_docs
+                routing_info["hypothetical_docs"] = hypothetical_docs
 
                 # Optionally enhance query with HyDE content
                 if hypothetical_docs:
@@ -307,10 +308,7 @@ class AdvancedHybridSearcher:
         return enhanced_query, routing_info
 
     async def _intelligent_retrieval(
-        self,
-        enhanced_query: str,
-        routing_info: Dict[str, Any],
-        top_k: int
+        self, enhanced_query: str, routing_info: Dict[str, Any], top_k: int
     ) -> List[SearchResult]:
         """Perform intelligent retrieval based on query classification.
 
@@ -323,25 +321,26 @@ class AdvancedHybridSearcher:
             Raw retrieval results
         """
         # Adjust hybrid search config based on routing recommendations
-        if (self.config.enable_intelligent_routing and
-            'recommendations' in routing_info and
-            routing_info['recommendations']):
-
-            recommendations = routing_info['recommendations']
+        if (
+            self.config.enable_intelligent_routing
+            and "recommendations" in routing_info
+            and routing_info["recommendations"]
+        ):
+            recommendations = routing_info["recommendations"]
 
             # Temporarily adjust weights based on query type
             original_config = self.hybrid_searcher.hybrid_config
 
             # Create adaptive weights
-            dense_weight = recommendations.get('dense_retrieval_weight', 0.5)
-            sparse_weight = recommendations.get('sparse_retrieval_weight', 0.5)
+            dense_weight = recommendations.get("dense_retrieval_weight", 0.5)
+            sparse_weight = recommendations.get("sparse_retrieval_weight", 0.5)
 
             # Update fusion weights if using weighted fusion
-            if hasattr(self.hybrid_searcher.fusion_algorithm, 'config'):
+            if hasattr(self.hybrid_searcher.fusion_algorithm, "config"):
                 fusion_config = self.hybrid_searcher.fusion_algorithm.config
-                if hasattr(fusion_config, 'dense_weight'):
+                if hasattr(fusion_config, "dense_weight"):
                     fusion_config.dense_weight = dense_weight
-                if hasattr(fusion_config, 'sparse_weight'):
+                if hasattr(fusion_config, "sparse_weight"):
                     fusion_config.sparse_weight = sparse_weight
 
         # Perform hybrid search
@@ -350,12 +349,7 @@ class AdvancedHybridSearcher:
         # Limit to requested number
         return results[:top_k]
 
-    async def _rerank_results(
-        self,
-        original_query: str,
-        results: List[SearchResult],
-        top_k: int
-    ) -> List[SearchResult]:
+    async def _rerank_results(self, original_query: str, results: List[SearchResult], top_k: int) -> List[SearchResult]:
         """Re-rank results using configured re-ranker.
 
         Args:
@@ -384,7 +378,7 @@ class AdvancedHybridSearcher:
                         score=result.score,
                         rank=result.rank,
                         distance=result.distance,
-                        explanation="Reranked for relevance"
+                        explanation="Reranked for relevance",
                     )
                     # Update the list in place
                     idx = final_results.index(result)
@@ -397,29 +391,23 @@ class AdvancedHybridSearcher:
             return results[:top_k]
 
     def _update_stats(
-        self,
-        total_time: float,
-        enhancement_time: float,
-        retrieval_time: float,
-        reranking_time: float
+        self, total_time: float, enhancement_time: float, retrieval_time: float, reranking_time: float
     ) -> None:
         """Update performance statistics."""
-        self._search_stats['total_searches'] += 1
-        n = self._search_stats['total_searches']
+        self._search_stats["total_searches"] += 1
+        n = self._search_stats["total_searches"]
 
         # Rolling average
-        self._search_stats['avg_time_ms'] = (
-            (self._search_stats['avg_time_ms'] * (n - 1) + total_time) / n
-        )
-        self._search_stats['enhancement_time_ms'] = (
-            (self._search_stats['enhancement_time_ms'] * (n - 1) + enhancement_time) / n
-        )
-        self._search_stats['retrieval_time_ms'] = (
-            (self._search_stats['retrieval_time_ms'] * (n - 1) + retrieval_time) / n
-        )
-        self._search_stats['reranking_time_ms'] = (
-            (self._search_stats['reranking_time_ms'] * (n - 1) + reranking_time) / n
-        )
+        self._search_stats["avg_time_ms"] = (self._search_stats["avg_time_ms"] * (n - 1) + total_time) / n
+        self._search_stats["enhancement_time_ms"] = (
+            self._search_stats["enhancement_time_ms"] * (n - 1) + enhancement_time
+        ) / n
+        self._search_stats["retrieval_time_ms"] = (
+            self._search_stats["retrieval_time_ms"] * (n - 1) + retrieval_time
+        ) / n
+        self._search_stats["reranking_time_ms"] = (
+            self._search_stats["reranking_time_ms"] * (n - 1) + reranking_time
+        ) / n
 
     async def get_comprehensive_stats(self) -> Dict[str, Any]:
         """Get comprehensive system statistics.
@@ -428,34 +416,34 @@ class AdvancedHybridSearcher:
             Complete system statistics
         """
         stats = {
-            'performance': self._search_stats,
-            'config': {
-                'enable_query_expansion': self.config.enable_query_expansion,
-                'enable_hyde': self.config.enable_hyde,
-                'enable_query_classification': self.config.enable_query_classification,
-                'enable_reranking': self.config.enable_reranking,
-                'enable_intelligent_routing': self.config.enable_intelligent_routing,
-                'max_total_time_ms': self.config.max_total_time_ms
+            "performance": self._search_stats,
+            "config": {
+                "enable_query_expansion": self.config.enable_query_expansion,
+                "enable_hyde": self.config.enable_hyde,
+                "enable_query_classification": self.config.enable_query_classification,
+                "enable_reranking": self.config.enable_reranking,
+                "enable_intelligent_routing": self.config.enable_intelligent_routing,
+                "max_total_time_ms": self.config.max_total_time_ms,
             },
-            'components': {}
+            "components": {},
         }
 
         # Get hybrid searcher stats
         if self.hybrid_searcher:
-            stats['components']['hybrid_searcher'] = await self.hybrid_searcher.get_stats()
+            stats["components"]["hybrid_searcher"] = await self.hybrid_searcher.get_stats()
 
         # Get query enhancement stats
         if self.query_expander:
-            stats['components']['query_expander'] = self.query_expander.get_stats()
+            stats["components"]["query_expander"] = self.query_expander.get_stats()
 
         if self.hyde_generator:
-            stats['components']['hyde_generator'] = self.hyde_generator.get_stats()
+            stats["components"]["hyde_generator"] = self.hyde_generator.get_stats()
 
         if self.query_classifier:
-            stats['components']['query_classifier'] = self.query_classifier.get_stats()
+            stats["components"]["query_classifier"] = self.query_classifier.get_stats()
 
         # Get re-ranker stats
         if self.reranker:
-            stats['components']['reranker'] = self.reranker.get_stats()
+            stats["components"]["reranker"] = self.reranker.get_stats()
 
         return stats

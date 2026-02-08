@@ -24,6 +24,7 @@ import html
 import json
 import logging
 import os
+import re
 import uuid
 from abc import ABC, abstractmethod
 from collections import defaultdict
@@ -31,8 +32,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
-
-import re
 
 import aiohttp
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -420,9 +419,10 @@ class EmailNotificationProvider(NotificationProvider):
     ) -> DeliveryResult:
         """Send email via SMTP."""
         try:
-            import aiosmtplib
             from email.mime.multipart import MIMEMultipart
             from email.mime.text import MIMEText
+
+            import aiosmtplib
 
             msg = MIMEMultipart("alternative")
             msg["Subject"] = f"{notification.get_severity_emoji()} {notification.title}"
@@ -518,7 +518,7 @@ class EmailNotificationProvider(NotificationProvider):
                     <tr>
                         <td style="padding: 8px 16px;">
                             <strong style="color: #374151;">Timestamp:</strong>
-                            <span style="color: #6b7280;">{notification.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC')}</span>
+                            <span style="color: #6b7280;">{notification.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")}</span>
                         </td>
                     </tr>
                 </table>
@@ -558,7 +558,7 @@ class EmailNotificationProvider(NotificationProvider):
         text = f"""
 COMPLIANCE ALERT - {notification.priority.value.upper()}
 {notification.get_regulation_badge()}
-{'=' * 50}
+{"=" * 50}
 
 {notification.title}
 
@@ -567,9 +567,9 @@ COMPLIANCE ALERT - {notification.priority.value.upper()}
 DETAILS
 -------
 Alert Type: {notification.alert_type}
-AI Model: {notification.model_name or 'N/A'}
-Model ID: {notification.model_id or 'N/A'}
-Timestamp: {notification.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC')}
+AI Model: {notification.model_name or "N/A"}
+Model ID: {notification.model_id or "N/A"}
+Timestamp: {notification.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")}
 
 ---
 Notification ID: {notification.id}
@@ -606,10 +606,7 @@ class SlackNotificationProvider(NotificationProvider):
 
     def validate_recipient(self, recipient: NotificationRecipient) -> bool:
         """Check recipient has Slack info or we have a default channel."""
-        return (
-            recipient.active
-            and (recipient.slack_channel or recipient.slack_user_id or self.default_channel)
-        )
+        return recipient.active and (recipient.slack_channel or recipient.slack_user_id or self.default_channel)
 
     async def send(
         self,
@@ -786,7 +783,9 @@ class SlackNotificationProvider(NotificationProvider):
                 "accessory": {
                     "type": "button",
                     "text": {"type": "plain_text", "text": "View Details"},
-                    "style": "primary" if notification.priority in (NotificationPriority.CRITICAL, NotificationPriority.HIGH) else None,
+                    "style": "primary"
+                    if notification.priority in (NotificationPriority.CRITICAL, NotificationPriority.HIGH)
+                    else None,
                     "action_id": f"view_alert_{notification.id}",
                 },
             },
@@ -1242,7 +1241,7 @@ class NotificationService:
 
             # Exponential backoff
             delay = min(
-                self.retry_delay_base * (2 ** retry_count),
+                self.retry_delay_base * (2**retry_count),
                 self.retry_delay_max,
             )
             logger.info(
@@ -1268,10 +1267,7 @@ class NotificationService:
             Notification ID
         """
         # Handle low priority batching
-        if (
-            notification.priority == NotificationPriority.LOW
-            and self.config.get("batch_low_priority", True)
-        ):
+        if notification.priority == NotificationPriority.LOW and self.config.get("batch_low_priority", True):
             self._low_priority_batch.append(notification)
             if len(self._low_priority_batch) >= self._batch_size:
                 # Process batch

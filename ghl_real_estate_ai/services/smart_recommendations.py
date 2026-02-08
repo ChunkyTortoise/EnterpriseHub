@@ -109,11 +109,7 @@ class RecommendationEngine:
             data = json.load(f)
 
         cutoff = datetime.now() - timedelta(days=days)
-        conversations = [
-            c
-            for c in data.get("conversations", [])
-            if datetime.fromisoformat(c["timestamp"]) >= cutoff
-        ]
+        conversations = [c for c in data.get("conversations", []) if datetime.fromisoformat(c["timestamp"]) >= cutoff]
 
         return conversations
 
@@ -144,49 +140,37 @@ class RecommendationEngine:
             "response_times": response_times,
         }
 
-    def _analyze_response_time(
-        self, conversations: List[Dict], patterns: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
+    def _analyze_response_time(self, conversations: List[Dict], patterns: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Analyze response time impact"""
         if not conversations:
             return None
 
         # Split into fast and slow responders
-        fast_responses = [
-            c for c in conversations if c.get("response_time_minutes", 999) <= 2
-        ]
-        slow_responses = [
-            c for c in conversations if c.get("response_time_minutes", 0) > 2
-        ]
+        fast_responses = [c for c in conversations if c.get("response_time_minutes", 999) <= 2]
+        slow_responses = [c for c in conversations if c.get("response_time_minutes", 0) > 2]
 
         if not fast_responses or not slow_responses:
             return None
 
-        fast_conversion = sum(
-            1 for c in fast_responses if c.get("appointment_set", False)
-        ) / len(fast_responses)
+        fast_conversion = sum(1 for c in fast_responses if c.get("appointment_set", False)) / len(fast_responses)
 
-        slow_conversion = sum(
-            1 for c in slow_responses if c.get("appointment_set", False)
-        ) / len(slow_responses)
+        slow_conversion = sum(1 for c in slow_responses if c.get("appointment_set", False)) / len(slow_responses)
 
         improvement = fast_conversion - slow_conversion
 
         if improvement > 0.05:  # 5% difference
-            impact_value = int(
-                improvement * patterns["total_conversations"] * 12500
-            )  # Avg commission
+            impact_value = int(improvement * patterns["total_conversations"] * 12500)  # Avg commission
 
             return {
                 "id": "rec_response_time",
                 "category": "Response Time",
                 "title": "Reduce Response Time for Higher Conversions",
                 "impact_level": self._determine_impact_level(impact_value),
-                "finding": f"Leads contacted within 2 minutes convert {improvement*100:.1f}% better",
+                "finding": f"Leads contacted within 2 minutes convert {improvement * 100:.1f}% better",
                 "current_state": {
                     "avg_response_time": f"{patterns['avg_response_time']:.1f} minutes",
-                    "fast_response_conversion": f"{fast_conversion*100:.1f}%",
-                    "slow_response_conversion": f"{slow_conversion*100:.1f}%",
+                    "fast_response_conversion": f"{fast_conversion * 100:.1f}%",
+                    "slow_response_conversion": f"{slow_conversion * 100:.1f}%",
                 },
                 "recommendation": {
                     "action": "Improve response time to <2 minutes",
@@ -207,24 +191,14 @@ class RecommendationEngine:
 
         return None
 
-    def _analyze_question_order(
-        self, conversations: List[Dict], patterns: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
+    def _analyze_question_order(self, conversations: List[Dict], patterns: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Analyze question order impact"""
         # Simulate analysis of when budget is asked
         # In production, would analyze actual message sequences
 
-        early_budget = [
-            c
-            for c in conversations[: len(conversations) // 2]
-            if c.get("appointment_set", False)
-        ]
+        early_budget = [c for c in conversations[: len(conversations) // 2] if c.get("appointment_set", False)]
 
-        late_budget = [
-            c
-            for c in conversations[len(conversations) // 2 :]
-            if c.get("appointment_set", False)
-        ]
+        late_budget = [c for c in conversations[len(conversations) // 2 :] if c.get("appointment_set", False)]
 
         if len(early_budget) > len(late_budget) * 1.2:
             impact_value = 750  # Monthly impact
@@ -237,7 +211,7 @@ class RecommendationEngine:
                 "finding": "Asking budget in first 2 messages increases conversion by 23%",
                 "current_state": {
                     "avg_messages_to_budget": "4-5 messages",
-                    "current_conversion": f"{patterns['conversion_rate']*100:.1f}%",
+                    "current_conversion": f"{patterns['conversion_rate'] * 100:.1f}%",
                 },
                 "recommendation": {
                     "action": "Update conversation flow to ask budget earlier",
@@ -285,7 +259,7 @@ class RecommendationEngine:
             "estimated_impact": {
                 "value": impact_value,
                 "metric": "Recovered leads per month",
-                "description": f"+12 recovered leads/month = ${impact_value*12500:,}",
+                "description": f"+12 recovered leads/month = ${impact_value * 12500:,}",
             },
             "confidence": 87,
             "priority": 1,
@@ -328,9 +302,7 @@ class RecommendationEngine:
         """Analyze follow-up frequency"""
         return None  # Not enough data in this analysis
 
-    def _analyze_time_of_day(
-        self, conversations: List[Dict], patterns: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
+    def _analyze_time_of_day(self, conversations: List[Dict], patterns: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Analyze time of day patterns"""
         impact_value = 320
 
@@ -400,9 +372,7 @@ class RecommendationTracker:
         self.in_progress = []
         self.dismissed = []
 
-    def implement_recommendation(
-        self, recommendation_id: str, implementation_notes: str
-    ) -> Dict[str, Any]:
+    def implement_recommendation(self, recommendation_id: str, implementation_notes: str) -> Dict[str, Any]:
         """Mark recommendation as implemented"""
         implementation = {
             "recommendation_id": recommendation_id,
@@ -415,9 +385,7 @@ class RecommendationTracker:
 
         return implementation
 
-    def track_results(
-        self, recommendation_id: str, actual_impact: float, metrics: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def track_results(self, recommendation_id: str, actual_impact: float, metrics: Dict[str, Any]) -> Dict[str, Any]:
         """Track actual results vs predicted"""
         return {
             "recommendation_id": recommendation_id,

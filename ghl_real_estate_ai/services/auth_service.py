@@ -5,36 +5,40 @@ Provides secure user authentication with role-based permissions.
 Handles user creation, authentication, token management, and permissions.
 """
 
-import os
-import secrets
-import jwt
-from datetime import datetime, timedelta, timezone
-from typing import Optional, Dict, Any, List
-from enum import Enum
-from dataclasses import dataclass
+import asyncio
 import hashlib
 import hmac
-import asyncio
-import aiosqlite
+import os
+import secrets
+from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+from enum import Enum
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
+import aiosqlite
+import jwt
 from fastapi import Depends, HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+
 class UserRole(Enum):
     """User roles with hierarchical permissions."""
-    ADMIN = "admin"      # Full system access
-    AGENT = "agent"      # Lead and deal management
-    VIEWER = "viewer"    # Read-only access
+
+    ADMIN = "admin"  # Full system access
+    AGENT = "agent"  # Lead and deal management
+    VIEWER = "viewer"  # Read-only access
     SUPER_ADMIN = "super_admin"  # Reserved for enterprise ops
+
 
 @dataclass
 class User:
     """User model with authentication details."""
+
     id: int
     username: str
     email: str
@@ -42,6 +46,7 @@ class User:
     is_active: bool = True
     created_at: Optional[datetime] = None
     last_login: Optional[datetime] = None
+
 
 class AuthService:
     """JWT-based authentication service with secure password handling."""
@@ -63,7 +68,7 @@ class AuthService:
 
         if os.path.exists(key_file):
             try:
-                with open(key_file, 'r') as f:
+                with open(key_file, "r") as f:
                     return f.read().strip()
             except Exception as e:
                 logger.warning(f"Could not read JWT secret file: {e}")
@@ -72,7 +77,7 @@ class AuthService:
         secret = secrets.token_urlsafe(64)
         try:
             os.makedirs("data", exist_ok=True)
-            with open(key_file, 'w') as f:
+            with open(key_file, "w") as f:
                 f.write(secret)
             os.chmod(key_file, 0o600)  # Owner read/write only
         except Exception as e:
@@ -91,11 +96,7 @@ class AuthService:
         salt = hashlib.sha256(self.secret_key.encode()).hexdigest()[:32]
 
         # HMAC-SHA256 with salt
-        return hmac.new(
-            salt.encode(),
-            password.encode(),
-            hashlib.sha256
-        ).hexdigest()
+        return hmac.new(salt.encode(), password.encode(), hashlib.sha256).hexdigest()
 
     def _verify_password(self, password: str, hashed: str) -> bool:
         """Verify password against hash."""
@@ -144,11 +145,7 @@ class AuthService:
             await self.init_database()
 
     async def create_user(
-        self,
-        username: str,
-        email: str,
-        password: str,
-        role: UserRole = UserRole.VIEWER
+        self, username: str, email: str, password: str, role: UserRole = UserRole.VIEWER
     ) -> Optional[User]:
         """Create a new user."""
         await self._ensure_initialized()
@@ -159,8 +156,7 @@ class AuthService:
             async with aiosqlite.connect(self.db_path) as db:
                 # Check for existing user
                 async with db.execute(
-                    "SELECT id FROM users WHERE username = ? OR email = ?",
-                    (username, email)
+                    "SELECT id FROM users WHERE username = ? OR email = ?", (username, email)
                 ) as cursor:
                     if await cursor.fetchone():
                         return None
@@ -171,15 +167,12 @@ class AuthService:
                     INSERT INTO users (username, email, password_hash, role)
                     VALUES (?, ?, ?, ?)
                     """,
-                    (username, email, password_hash, role.value)
+                    (username, email, password_hash, role.value),
                 )
                 await db.commit()
 
                 # Get created user
-                async with db.execute(
-                    "SELECT * FROM users WHERE username = ?",
-                    (username,)
-                ) as cursor:
+                async with db.execute("SELECT * FROM users WHERE username = ?", (username,)) as cursor:
                     row = await cursor.fetchone()
                     if row:
                         return self._row_to_user(row)
@@ -188,19 +181,14 @@ class AuthService:
             logger.error(f"Error creating user: {e}")
             return None
 
-    async def authenticate_user(
-        self,
-        username: str,
-        password: str
-    ) -> Optional[User]:
+    async def authenticate_user(self, username: str, password: str) -> Optional[User]:
         """Authenticate user credentials."""
         await self._ensure_initialized()
 
         try:
             async with aiosqlite.connect(self.db_path) as db:
                 async with db.execute(
-                    "SELECT * FROM users WHERE username = ? AND is_active = 1",
-                    (username,)
+                    "SELECT * FROM users WHERE username = ? AND is_active = 1", (username,)
                 ) as cursor:
                     row = await cursor.fetchone()
 
@@ -208,7 +196,7 @@ class AuthService:
                         # Update last login
                         await db.execute(
                             "UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?",
-                            (row[0],)  # id is index 0
+                            (row[0],),  # id is index 0
                         )
                         await db.commit()
 
@@ -229,17 +217,17 @@ class AuthService:
             role=UserRole(row[4]),
             is_active=bool(row[5]),
             created_at=datetime.fromisoformat(row[6]) if row[6] else None,
-            last_login=datetime.fromisoformat(row[7]) if row[7] else None
+            last_login=datetime.fromisoformat(row[7]) if row[7] else None,
         )
 
     def create_token(self, user: User) -> str:
         """Create JWT token for user."""
         payload = {
-            'user_id': user.id,
-            'username': user.username,
-            'role': user.role.value,
-            'exp': datetime.now(timezone.utc) + timedelta(hours=self.token_expire_hours),
-            'iat': datetime.now(timezone.utc)
+            "user_id": user.id,
+            "username": user.username,
+            "role": user.role.value,
+            "exp": datetime.now(timezone.utc) + timedelta(hours=self.token_expire_hours),
+            "iat": datetime.now(timezone.utc),
         }
 
         return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
@@ -262,10 +250,7 @@ class AuthService:
 
         try:
             async with aiosqlite.connect(self.db_path) as db:
-                async with db.execute(
-                    "SELECT * FROM users WHERE id = ? AND is_active = 1",
-                    (user_id,)
-                ) as cursor:
+                async with db.execute("SELECT * FROM users WHERE id = ? AND is_active = 1", (user_id,)) as cursor:
                     row = await cursor.fetchone()
                     return self._row_to_user(row) if row else None
 
@@ -273,12 +258,7 @@ class AuthService:
             logger.error(f"Error getting user by ID: {e}")
             return None
 
-    def check_permission(
-        self,
-        user_role: UserRole,
-        required_permission: str,
-        action: str
-    ) -> bool:
+    def check_permission(self, user_role: UserRole, required_permission: str, action: str) -> bool:
         """
         Check if user role has required permission.
 
@@ -294,21 +274,21 @@ class AuthService:
         # Define role permissions
         permissions = {
             UserRole.AGENT: {
-                'dashboard': ['read', 'write'],
-                'leads': ['read', 'write'],
-                'properties': ['read', 'write'],
-                'conversations': ['read', 'write'],
-                'commission': ['read'],
-                'performance': ['read']
+                "dashboard": ["read", "write"],
+                "leads": ["read", "write"],
+                "properties": ["read", "write"],
+                "conversations": ["read", "write"],
+                "commission": ["read"],
+                "performance": ["read"],
             },
             UserRole.VIEWER: {
-                'dashboard': ['read'],
-                'leads': ['read'],
-                'properties': ['read'],
-                'conversations': ['read'],
-                'commission': [],
-                'performance': ['read']
-            }
+                "dashboard": ["read"],
+                "leads": ["read"],
+                "properties": ["read"],
+                "conversations": ["read"],
+                "commission": [],
+                "performance": ["read"],
+            },
         }
 
         user_perms = permissions.get(user_role, {})
@@ -323,7 +303,7 @@ class AuthService:
         default_users = [
             ("admin", "admin@jorgeai.com", "admin123", UserRole.ADMIN),
             ("jorge", "jorge@realtor.com", "jorge123", UserRole.AGENT),
-            ("viewer", "viewer@jorgeai.com", "viewer123", UserRole.VIEWER)
+            ("viewer", "viewer@jorgeai.com", "viewer123", UserRole.VIEWER),
         ]
 
         for username, email, password, role in default_users:
@@ -333,8 +313,10 @@ class AuthService:
             else:
                 logger.debug(f"User {username} already exists or creation failed")
 
+
 # Global auth service instance
 _auth_service = None
+
 
 def get_auth_service() -> AuthService:
     """Get singleton auth service instance."""

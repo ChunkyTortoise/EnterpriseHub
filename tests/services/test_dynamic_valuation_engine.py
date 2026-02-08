@@ -9,21 +9,22 @@ Comprehensive test suite covering:
 - Market adjustment calculations
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
+
+from ghl_real_estate_ai.services.austin_market_service import MarketCondition, PropertyType
 from ghl_real_estate_ai.services.dynamic_valuation_engine import (
     DynamicValuationEngine,
-    get_dynamic_valuation_engine,
-    ValuationMethod,
-    ValuationConfidence,
     MarketComparable,
+    ValuationComponents,
+    ValuationConfidence,
+    ValuationMethod,
     ValuationResult,
-    ValuationComponents
+    get_dynamic_valuation_engine,
 )
-from ghl_real_estate_ai.services.austin_market_service import MarketCondition, PropertyType
 
 
 class TestDynamicValuationEngine:
@@ -38,18 +39,18 @@ class TestDynamicValuationEngine:
     def sample_property_data(self):
         """Sample property data for testing"""
         return {
-            'property_id': 'test_prop_001',
-            'address': '123 Test Street, Austin, TX 78701',
-            'neighborhood': 'Downtown',
-            'price': 750000,
-            'sqft': 2100,
-            'bedrooms': 3,
-            'bathrooms': 2.5,
-            'year_built': 2015,
-            'property_type': 'single_family',
-            'condition': 'good',
-            'amenities': ['pool', 'garage', 'updated kitchen'],
-            'estimated_value': 750000
+            "property_id": "test_prop_001",
+            "address": "123 Test Street, Austin, TX 78701",
+            "neighborhood": "Downtown",
+            "price": 750000,
+            "sqft": 2100,
+            "bedrooms": 3,
+            "bathrooms": 2.5,
+            "year_built": 2015,
+            "property_type": "single_family",
+            "condition": "good",
+            "amenities": ["pool", "garage", "updated kitchen"],
+            "estimated_value": 750000,
         }
 
     @pytest.fixture
@@ -71,11 +72,7 @@ class TestDynamicValuationEngine:
 
     @pytest.mark.asyncio
     async def test_comprehensive_valuation_generation(
-        self,
-        valuation_engine,
-        sample_property_data,
-        mock_market_service,
-        mock_cache_service
+        self, valuation_engine, sample_property_data, mock_market_service, mock_cache_service
     ):
         """Test comprehensive valuation generation with all components"""
 
@@ -98,14 +95,12 @@ class TestDynamicValuationEngine:
 
         # Generate valuation
         result = await valuation_engine.generate_comprehensive_valuation(
-            sample_property_data,
-            include_comparables=True,
-            use_ml_enhancement=True
+            sample_property_data, include_comparables=True, use_ml_enhancement=True
         )
 
         # Verify result structure
         assert isinstance(result, ValuationResult)
-        assert result.property_id == 'test_prop_001'
+        assert result.property_id == "test_prop_001"
         assert result.estimated_value > 0
         assert result.value_range_low < result.estimated_value < result.value_range_high
         assert isinstance(result.confidence_level, ValuationConfidence)
@@ -119,12 +114,7 @@ class TestDynamicValuationEngine:
         assert result.valuation_date is not None
 
     @pytest.mark.asyncio
-    async def test_cma_valuation_generation(
-        self,
-        valuation_engine,
-        sample_property_data,
-        mock_market_service
-    ):
+    async def test_cma_valuation_generation(self, valuation_engine, sample_property_data, mock_market_service):
         """Test CMA-based valuation methodology"""
 
         valuation_engine.market_service = mock_market_service
@@ -132,8 +122,8 @@ class TestDynamicValuationEngine:
         # Mock comparable properties
         mock_properties = [
             Mock(
-                mls_id='comp_001',
-                address='124 Test Street',
+                mls_id="comp_001",
+                address="124 Test Street",
                 price=780000,
                 beds=3,
                 baths=2.5,
@@ -141,14 +131,14 @@ class TestDynamicValuationEngine:
                 lot_size=0.25,
                 year_built=2014,
                 property_type=PropertyType.SINGLE_FAMILY,
-                neighborhood='Downtown',
+                neighborhood="Downtown",
                 days_on_market=25,
                 price_per_sqft=380,
-                last_updated=datetime.now() - timedelta(days=30)
+                last_updated=datetime.now() - timedelta(days=30),
             ),
             Mock(
-                mls_id='comp_002',
-                address='125 Test Street',
+                mls_id="comp_002",
+                address="125 Test Street",
                 price=765000,
                 beds=3,
                 baths=2.0,
@@ -156,18 +146,16 @@ class TestDynamicValuationEngine:
                 lot_size=0.20,
                 year_built=2016,
                 property_type=PropertyType.SINGLE_FAMILY,
-                neighborhood='Downtown',
+                neighborhood="Downtown",
                 days_on_market=18,
                 price_per_sqft=348,
-                last_updated=datetime.now() - timedelta(days=45)
-            )
+                last_updated=datetime.now() - timedelta(days=45),
+            ),
         ]
         mock_market_service.search_properties.return_value = mock_properties
 
         # Test CMA valuation
-        cma_value = await valuation_engine._generate_cma_valuation(
-            sample_property_data, include_comparables=True
-        )
+        cma_value = await valuation_engine._generate_cma_valuation(sample_property_data, include_comparables=True)
 
         assert cma_value > 0
         assert isinstance(cma_value, float)
@@ -176,19 +164,13 @@ class TestDynamicValuationEngine:
         assert 700000 <= cma_value <= 850000
 
     @pytest.mark.asyncio
-    async def test_ml_enhancement_application(
-        self,
-        valuation_engine,
-        sample_property_data
-    ):
+    async def test_ml_enhancement_application(self, valuation_engine, sample_property_data):
         """Test ML model enhancement application"""
 
         base_valuation = 750000
 
         # Test ML enhancement
-        ml_factor = await valuation_engine._apply_ml_enhancement(
-            sample_property_data, base_valuation
-        )
+        ml_factor = await valuation_engine._apply_ml_enhancement(sample_property_data, base_valuation)
 
         assert isinstance(ml_factor, float)
         # ML factor should be bounded
@@ -198,20 +180,14 @@ class TestDynamicValuationEngine:
         enhanced_valuation = base_valuation * ml_factor
         assert enhanced_valuation > 0
 
-    def test_market_adjustment_calculations(
-        self,
-        valuation_engine,
-        sample_property_data
-    ):
+    def test_market_adjustment_calculations(self, valuation_engine, sample_property_data):
         """Test market adjustment factor calculations"""
 
         # Mock market metrics
         mock_market_metrics = Mock()
         mock_market_metrics.market_condition = MarketCondition.STRONG_SELLERS
 
-        adjustment_factor = valuation_engine._calculate_market_adjustments(
-            sample_property_data, mock_market_metrics
-        )
+        adjustment_factor = valuation_engine._calculate_market_adjustments(sample_property_data, mock_market_metrics)
 
         assert isinstance(adjustment_factor, float)
         assert adjustment_factor > 0
@@ -220,12 +196,7 @@ class TestDynamicValuationEngine:
         assert adjustment_factor >= 1.0
 
     @pytest.mark.asyncio
-    async def test_confidence_score_calculation(
-        self,
-        valuation_engine,
-        sample_property_data,
-        mock_market_service
-    ):
+    async def test_confidence_score_calculation(self, valuation_engine, sample_property_data, mock_market_service):
         """Test confidence score and level calculation"""
 
         valuation_engine.market_service = mock_market_service
@@ -242,21 +213,16 @@ class TestDynamicValuationEngine:
             sample_property_data, estimated_value, has_comparables
         )
 
-        assert 'confidence_score' in confidence_data
-        assert 'confidence_level' in confidence_data
-        assert 0 <= confidence_data['confidence_score'] <= 100
-        assert isinstance(confidence_data['confidence_level'], ValuationConfidence)
+        assert "confidence_score" in confidence_data
+        assert "confidence_level" in confidence_data
+        assert 0 <= confidence_data["confidence_score"] <= 100
+        assert isinstance(confidence_data["confidence_level"], ValuationConfidence)
 
         # Property with good data should have reasonable confidence
-        assert confidence_data['confidence_score'] >= 70
+        assert confidence_data["confidence_score"] >= 70
 
     @pytest.mark.asyncio
-    async def test_comparable_property_search(
-        self,
-        valuation_engine,
-        sample_property_data,
-        mock_market_service
-    ):
+    async def test_comparable_property_search(self, valuation_engine, sample_property_data, mock_market_service):
         """Test market comparable property search and scoring"""
 
         valuation_engine.market_service = mock_market_service
@@ -264,8 +230,8 @@ class TestDynamicValuationEngine:
         # Setup mock properties
         mock_properties = [
             Mock(
-                mls_id='comp_001',
-                address='Similar Property 1',
+                mls_id="comp_001",
+                address="Similar Property 1",
                 price=780000,
                 beds=3,
                 baths=2.5,
@@ -273,63 +239,49 @@ class TestDynamicValuationEngine:
                 lot_size=0.25,
                 year_built=2015,
                 property_type=PropertyType.SINGLE_FAMILY,
-                neighborhood='Downtown',
+                neighborhood="Downtown",
                 days_on_market=25,
                 price_per_sqft=371,
-                last_updated=datetime.now() - timedelta(days=30)
+                last_updated=datetime.now() - timedelta(days=30),
             )
         ]
         mock_market_service.search_properties.return_value = mock_properties
 
-        comparables = await valuation_engine._find_market_comparables(
-            sample_property_data
-        )
+        comparables = await valuation_engine._find_market_comparables(sample_property_data)
 
         assert isinstance(comparables, list)
 
         if comparables:
             comparable = comparables[0]
             assert isinstance(comparable, MarketComparable)
-            assert comparable.mls_id == 'comp_001'
+            assert comparable.mls_id == "comp_001"
             assert comparable.similarity_score > 0
             assert comparable.distance_miles >= 0
 
-    def test_similarity_score_calculation(
-        self,
-        valuation_engine,
-        sample_property_data
-    ):
+    def test_similarity_score_calculation(self, valuation_engine, sample_property_data):
         """Test similarity scoring between properties"""
 
         # Test identical properties
         identical_property = sample_property_data.copy()
-        similarity_score = valuation_engine._calculate_similarity_score(
-            sample_property_data, identical_property
-        )
+        similarity_score = valuation_engine._calculate_similarity_score(sample_property_data, identical_property)
         assert similarity_score == 1.0
 
         # Test different properties
         different_property = {
-            'sqft': 3000,  # Different size
-            'beds': 4,     # Different bedrooms
-            'year_built': 1990,  # Different age
-            'neighborhood': 'Different Area'  # Different neighborhood
+            "sqft": 3000,  # Different size
+            "beds": 4,  # Different bedrooms
+            "year_built": 1990,  # Different age
+            "neighborhood": "Different Area",  # Different neighborhood
         }
-        similarity_score = valuation_engine._calculate_similarity_score(
-            sample_property_data, different_property
-        )
+        similarity_score = valuation_engine._calculate_similarity_score(sample_property_data, different_property)
         assert 0 <= similarity_score < 1.0
 
-    def test_comparable_adjustments(
-        self,
-        valuation_engine,
-        sample_property_data
-    ):
+    def test_comparable_adjustments(self, valuation_engine, sample_property_data):
         """Test comparable property price adjustments"""
 
         comparable = MarketComparable(
-            mls_id='test_comp',
-            address='Test Comparable',
+            mls_id="test_comp",
+            address="Test Comparable",
             sale_price=800000,
             sale_date=datetime.now() - timedelta(days=90),
             beds=3,
@@ -338,49 +290,39 @@ class TestDynamicValuationEngine:
             lot_size=0.25,
             year_built=2010,  # Older than subject
             property_type=PropertyType.SINGLE_FAMILY,
-            neighborhood='Downtown',
+            neighborhood="Downtown",
             days_on_market=30,
             price_per_sqft=400,
             distance_miles=1.5,
-            similarity_score=0.85
+            similarity_score=0.85,
         )
 
-        adjusted_price = valuation_engine._apply_comparable_adjustments(
-            comparable, sample_property_data
-        )
+        adjusted_price = valuation_engine._apply_comparable_adjustments(comparable, sample_property_data)
 
         assert isinstance(adjusted_price, (int, float))
         assert adjusted_price > 0
         # Should adjust for size and age differences
         assert adjusted_price != comparable.sale_price
 
-    def test_property_specific_adjustments(
-        self,
-        valuation_engine,
-        sample_property_data
-    ):
+    def test_property_specific_adjustments(self, valuation_engine, sample_property_data):
         """Test property-specific valuation adjustments"""
 
         base_value = 750000
 
         # Test condition adjustments
         excellent_property = sample_property_data.copy()
-        excellent_property['condition'] = 'excellent'
+        excellent_property["condition"] = "excellent"
 
-        adjusted_value = valuation_engine._apply_property_adjustments(
-            excellent_property, base_value
-        )
+        adjusted_value = valuation_engine._apply_property_adjustments(excellent_property, base_value)
 
         # Excellent condition should increase value
         assert adjusted_value > base_value
 
         # Test amenity adjustments
         pool_property = sample_property_data.copy()
-        pool_property['amenities'] = ['pool', 'garage', 'updated kitchen']
+        pool_property["amenities"] = ["pool", "garage", "updated kitchen"]
 
-        adjusted_value = valuation_engine._apply_property_adjustments(
-            pool_property, base_value
-        )
+        adjusted_value = valuation_engine._apply_property_adjustments(pool_property, base_value)
 
         # Pool should add value
         assert adjusted_value > base_value
@@ -397,12 +339,8 @@ class TestDynamicValuationEngine:
         """Test confidence margin calculation for value ranges"""
 
         # Test different confidence levels
-        very_high_margin = valuation_engine._get_confidence_margin(
-            ValuationConfidence.VERY_HIGH
-        )
-        low_margin = valuation_engine._get_confidence_margin(
-            ValuationConfidence.LOW
-        )
+        very_high_margin = valuation_engine._get_confidence_margin(ValuationConfidence.VERY_HIGH)
+        low_margin = valuation_engine._get_confidence_margin(ValuationConfidence.LOW)
 
         assert isinstance(very_high_margin, float)
         assert isinstance(low_margin, float)
@@ -412,13 +350,9 @@ class TestDynamicValuationEngine:
 
         # Margins should be reasonable
         assert 0 < very_high_margin < 0.1  # Less than 10%
-        assert 0 < low_margin < 0.25      # Less than 25%
+        assert 0 < low_margin < 0.25  # Less than 25%
 
-    def test_valuation_components_breakdown(
-        self,
-        valuation_engine,
-        sample_property_data
-    ):
+    def test_valuation_components_breakdown(self, valuation_engine, sample_property_data):
         """Test valuation components breakdown"""
 
         final_valuation = 750000
@@ -434,19 +368,11 @@ class TestDynamicValuationEngine:
         assert components.location_premium >= 0
 
         # Components should sum to reasonable total
-        total_base_value = (
-            components.land_value +
-            components.structure_value +
-            components.location_premium
-        )
+        total_base_value = components.land_value + components.structure_value + components.location_premium
         assert 0.8 * final_valuation <= total_base_value <= 1.2 * final_valuation
 
     @pytest.mark.asyncio
-    async def test_error_handling(
-        self,
-        valuation_engine,
-        mock_market_service
-    ):
+    async def test_error_handling(self, valuation_engine, mock_market_service):
         """Test error handling and fallback mechanisms"""
 
         valuation_engine.market_service = mock_market_service
@@ -454,9 +380,7 @@ class TestDynamicValuationEngine:
         # Test with invalid property data
         invalid_property = {}
 
-        result = await valuation_engine.generate_comprehensive_valuation(
-            invalid_property
-        )
+        result = await valuation_engine.generate_comprehensive_valuation(invalid_property)
 
         # Should return error result, not raise exception
         assert isinstance(result, ValuationResult)
@@ -465,20 +389,13 @@ class TestDynamicValuationEngine:
         assert "failed" in str(result.valuation_notes).lower()
 
     @pytest.mark.asyncio
-    async def test_cache_integration(
-        self,
-        valuation_engine,
-        sample_property_data,
-        mock_cache_service
-    ):
+    async def test_cache_integration(self, valuation_engine, sample_property_data, mock_cache_service):
         """Test cache integration for performance optimization"""
 
         valuation_engine.cache = mock_cache_service
 
         # First call should generate and cache
-        await valuation_engine._generate_cma_valuation(
-            sample_property_data, include_comparables=False
-        )
+        await valuation_engine._generate_cma_valuation(sample_property_data, include_comparables=False)
 
         # Verify cache.set was called
         assert mock_cache_service.set.called
@@ -494,11 +411,7 @@ class TestDynamicValuationEngine:
 
     @pytest.mark.asyncio
     async def test_valuation_accuracy_targets(
-        self,
-        valuation_engine,
-        sample_property_data,
-        mock_market_service,
-        mock_cache_service
+        self, valuation_engine, sample_property_data, mock_market_service, mock_cache_service
     ):
         """Test valuation accuracy targeting for business requirements"""
 
@@ -520,23 +433,21 @@ class TestDynamicValuationEngine:
 
         # High-quality property data should achieve high confidence
         high_quality_property = {
-            'property_id': 'high_quality_001',
-            'address': '123 Premium Street, Austin, TX',
-            'neighborhood': 'Downtown',
-            'price': 750000,
-            'sqft': 2100,
-            'bedrooms': 3,
-            'bathrooms': 2.5,
-            'year_built': 2020,
-            'property_type': 'single_family',
-            'condition': 'excellent',
-            'amenities': ['pool', 'garage', 'updated kitchen', 'smart home']
+            "property_id": "high_quality_001",
+            "address": "123 Premium Street, Austin, TX",
+            "neighborhood": "Downtown",
+            "price": 750000,
+            "sqft": 2100,
+            "bedrooms": 3,
+            "bathrooms": 2.5,
+            "year_built": 2020,
+            "property_type": "single_family",
+            "condition": "excellent",
+            "amenities": ["pool", "garage", "updated kitchen", "smart home"],
         }
 
         result = await valuation_engine.generate_comprehensive_valuation(
-            high_quality_property,
-            include_comparables=True,
-            use_ml_enhancement=True
+            high_quality_property, include_comparables=True, use_ml_enhancement=True
         )
 
         # Business requirement: Target 95%+ accuracy
@@ -544,18 +455,10 @@ class TestDynamicValuationEngine:
         assert result.confidence_score >= 85, f"Confidence score {result.confidence_score} below target"
 
         # Confidence level should be high or very high
-        assert result.confidence_level in [
-            ValuationConfidence.HIGH,
-            ValuationConfidence.VERY_HIGH
-        ]
+        assert result.confidence_level in [ValuationConfidence.HIGH, ValuationConfidence.VERY_HIGH]
 
     @pytest.mark.asyncio
-    async def test_market_condition_impact(
-        self,
-        valuation_engine,
-        sample_property_data,
-        mock_market_service
-    ):
+    async def test_market_condition_impact(self, valuation_engine, sample_property_data, mock_market_service):
         """Test impact of different market conditions on valuation"""
 
         valuation_engine.market_service = mock_market_service
@@ -566,17 +469,13 @@ class TestDynamicValuationEngine:
         seller_market_metrics = Mock()
         seller_market_metrics.market_condition = MarketCondition.STRONG_SELLERS
 
-        seller_adjustment = valuation_engine._calculate_market_adjustments(
-            sample_property_data, seller_market_metrics
-        )
+        seller_adjustment = valuation_engine._calculate_market_adjustments(sample_property_data, seller_market_metrics)
 
         # Test strong buyer's market
         buyer_market_metrics = Mock()
         buyer_market_metrics.market_condition = MarketCondition.STRONG_BUYERS
 
-        buyer_adjustment = valuation_engine._calculate_market_adjustments(
-            sample_property_data, buyer_market_metrics
-        )
+        buyer_adjustment = valuation_engine._calculate_market_adjustments(sample_property_data, buyer_market_metrics)
 
         # Seller's market should have higher adjustment than buyer's market
         assert seller_adjustment > buyer_adjustment
@@ -597,13 +496,13 @@ class TestValuationPerformance:
         engine = get_dynamic_valuation_engine()
 
         sample_property = {
-            'property_id': 'perf_test_001',
-            'address': '123 Performance Test St',
-            'price': 500000,
-            'sqft': 1800,
-            'bedrooms': 3,
-            'bathrooms': 2,
-            'year_built': 2010
+            "property_id": "perf_test_001",
+            "address": "123 Performance Test St",
+            "price": 500000,
+            "sqft": 1800,
+            "bedrooms": 3,
+            "bathrooms": 2,
+            "year_built": 2010,
         }
 
         start_time = datetime.now()
@@ -611,7 +510,7 @@ class TestValuationPerformance:
         result = await engine.generate_comprehensive_valuation(
             sample_property,
             include_comparables=False,  # Faster for performance test
-            use_ml_enhancement=False
+            use_ml_enhancement=False,
         )
 
         end_time = datetime.now()
@@ -629,15 +528,12 @@ class TestValuationPerformance:
 
         # Create multiple property requests
         properties = [
-            {'property_id': f'concurrent_test_{i}', 'price': 500000 + i*50000, 'sqft': 2000 + i*100}
+            {"property_id": f"concurrent_test_{i}", "price": 500000 + i * 50000, "sqft": 2000 + i * 100}
             for i in range(5)
         ]
 
         # Execute concurrent valuations
-        tasks = [
-            engine.generate_comprehensive_valuation(prop, include_comparables=False)
-            for prop in properties
-        ]
+        tasks = [engine.generate_comprehensive_valuation(prop, include_comparables=False) for prop in properties]
 
         start_time = datetime.now()
         results = await asyncio.gather(*tasks, return_exceptions=True)

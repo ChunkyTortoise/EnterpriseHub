@@ -1,6 +1,8 @@
-import streamlit as st
-import plotly.graph_objects as go
 from datetime import datetime
+
+import plotly.graph_objects as go
+import streamlit as st
+
 
 def inject_elite_css():
     """
@@ -8,7 +10,8 @@ def inject_elite_css():
     Implements SaaS-Noir aesthetics, Glassmorphism, and custom typography.
     Includes Font Awesome 6.5.1 and custom SVG icon support.
     """
-    st.markdown("""
+    st.markdown(
+        """
         <!-- Font Awesome 6.5.1 -->
         <link rel="stylesheet"
               href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
@@ -531,7 +534,10 @@ def inject_elite_css():
                 }
             }
         </style>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
+
 
 def style_obsidian_chart(fig):
     """
@@ -540,58 +546,55 @@ def style_obsidian_chart(fig):
     """
     fig.update_layout(
         template="plotly_dark",
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
         font=dict(family="Inter, sans-serif", color="#E6EDF3", size=12),
         title_font=dict(family="Space Grotesk, sans-serif", size=18, color="#FFFFFF"),
         margin=dict(l=20, r=20, t=60, b=20),
         hovermode="x unified",
-        hoverlabel=dict(
-            bgcolor="rgba(13, 17, 23, 0.9)",
-            font_size=13,
-            font_family="Inter, sans-serif"
-        ),
+        hoverlabel=dict(bgcolor="rgba(13, 17, 23, 0.9)", font_size=13, font_family="Inter, sans-serif"),
         xaxis=dict(
-            gridcolor='rgba(255,255,255,0.05)',
-            zerolinecolor='rgba(255,255,255,0.1)',
+            gridcolor="rgba(255,255,255,0.05)",
+            zerolinecolor="rgba(255,255,255,0.1)",
             tickfont=dict(size=11, color="#8B949E"),
             showgrid=True,
-            linecolor='rgba(255,255,255,0.08)'
+            linecolor="rgba(255,255,255,0.08)",
         ),
         yaxis=dict(
-            gridcolor='rgba(255,255,255,0.05)',
-            zerolinecolor='rgba(255,255,255,0.1)',
+            gridcolor="rgba(255,255,255,0.05)",
+            zerolinecolor="rgba(255,255,255,0.1)",
             tickfont=dict(size=11, color="#8B949E"),
             showgrid=True,
-            linecolor='rgba(255,255,255,0.08)'
+            linecolor="rgba(255,255,255,0.08)",
         ),
         legend=dict(
-            bgcolor='rgba(13, 17, 23, 0.6)',
-            bordercolor='rgba(255,255,255,0.08)',
+            bgcolor="rgba(13, 17, 23, 0.6)",
+            bordercolor="rgba(255,255,255,0.08)",
             borderwidth=1,
-            font=dict(size=11, color="#E6EDF3")
-        )
+            font=dict(size=11, color="#E6EDF3"),
+        ),
     )
-    
+
     # Add subtle glow to lines if it's a scatter/line chart
     for trace in fig.data:
-        if hasattr(trace, 'hoverlabel'):
+        if hasattr(trace, "hoverlabel"):
             trace.update(hoverlabel=dict(namelength=-1))
-    
+
     # Custom colors for radar charts (Neural Health)
-    if any(trace.type == 'scatterpolar' for trace in fig.data):
+    if any(trace.type == "scatterpolar" for trace in fig.data):
         fig.update_traces(
-            fill='toself',
-            fillcolor='rgba(99, 102, 241, 0.2)',
-            line=dict(color='#6366F1', width=3),
-            marker=dict(size=8, color='#00E5FF')
+            fill="toself",
+            fillcolor="rgba(99, 102, 241, 0.2)",
+            line=dict(color="#6366F1", width=3),
+            marker=dict(size=8, color="#00E5FF"),
         )
         fig.update_polars(
-            radialaxis=dict(gridcolor='rgba(255,255,255,0.1)', linecolor='rgba(255,255,255,0.1)'),
-            angularaxis=dict(gridcolor='rgba(255,255,255,0.1)', linecolor='rgba(255,255,255,0.1)')
+            radialaxis=dict(gridcolor="rgba(255,255,255,0.1)", linecolor="rgba(255,255,255,0.1)"),
+            angularaxis=dict(gridcolor="rgba(255,255,255,0.1)", linecolor="rgba(255,255,255,0.1)"),
         )
 
     return fig
+
 
 def get_svg_icon(name, color="var(--elite-accent)"):
     """Returns SVG path for high-fidelity icons."""
@@ -599,15 +602,17 @@ def get_svg_icon(name, color="var(--elite-accent)"):
         "voice": '<svg class="elite-icon" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>',
         "negotiation": '<svg class="elite-icon" viewBox="0 0 24 24"><path d="M14 6l-3.75 3.75 1.5 1.5L14 9l4.5 4.5-1.5 1.5-4.5-4.5-3.75 3.75L12 18H3l9-9 3-3 6 6-1.5 1.5L14 6z"/></svg>',
         "referral": '<svg class="elite-icon" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>',
-        "intelligence": '<svg class="elite-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>'
+        "intelligence": '<svg class="elite-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>',
     }
     return icons.get(name, "")
+
 
 def render_dossier_block(content, title="SECURE DATA DOSSIER"):
     """
     Renders a content block with the 'Dossier' scanline effect and glassmorphism.
     """
-    st.markdown(f"""
+    st.markdown(
+        f"""
         <div class="dossier-container" style="position: relative; padding: 1.5rem; margin-bottom: 1.5rem;">
             <div style="font-family: 'Space Grotesk', sans-serif; font-size: 0.7rem; color: var(--elite-accent); letter-spacing: 0.2em; margin-bottom: 1rem; font-weight: 700;">
                 // {title}
@@ -616,12 +621,16 @@ def render_dossier_block(content, title="SECURE DATA DOSSIER"):
                 {content}
             </div>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
+
 
 def render_neural_progress(label, value, color_type="elite"):
     """Renders a custom progress bar with glow effect."""
     color = "var(--elite-accent)" if color_type == "elite" else "var(--negotiation-neon)"
-    st.markdown(f"""
+    st.markdown(
+        f"""
         <div style="margin-bottom: 12px;">
             <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px; font-family: 'Space Grotesk', sans-serif;">
                 <span>{label}</span>
@@ -631,16 +640,22 @@ def render_neural_progress(label, value, color_type="elite"):
                 <div class="neural-progress-fill" style="width: {value}%; background: {color}; box-shadow: 0 0 10px {color};"></div>
             </div>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
+
 
 def render_terminal_log(logs):
     """Renders the Neural Uplink Terminal with typewriter effect simulation."""
-    log_html = "".join([
-        f'<div class="terminal-line"><span class="terminal-timestamp">[{datetime.now().strftime("%H:%M:%S")}]</span> <span class="terminal-prefix">{log["prefix"]}</span> {log["message"]}</div>'
-        for log in logs
-    ])
-    
-    st.markdown(f"""
+    log_html = "".join(
+        [
+            f'<div class="terminal-line"><span class="terminal-timestamp">[{datetime.now().strftime("%H:%M:%S")}]</span> <span class="terminal-prefix">{log["prefix"]}</span> {log["message"]}</div>'
+            for log in logs
+        ]
+    )
+
+    st.markdown(
+        f"""
         <div class="terminal-window">
             <div style="position: sticky; top: 0; background: rgba(5,7,10,0.9); padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid rgba(0,229,255,0.1); font-weight: bold; letter-spacing: 0.1em; font-size: 0.7rem; color: var(--elite-accent);">
                 > NEURAL_UPLINK_TERMINAL // SESSION_ACTIVE
@@ -648,20 +663,28 @@ def render_terminal_log(logs):
             {log_html}
             <div class="terminal-line" style="border-right: 2px solid var(--negotiation-neon); width: fit-content; animation: blink 0.5s step-end infinite;">_</div>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
+
 
 def render_voice_waveform():
     """Renders the kinetic CSS-animated SVG waveform."""
-    bars = "".join([f'<div class="waveform-bar" style="animation-delay: {i*0.1}s"></div>' for i in range(20)])
-    st.markdown(f"""
+    bars = "".join([f'<div class="waveform-bar" style="animation-delay: {i * 0.1}s"></div>' for i in range(20)])
+    st.markdown(
+        f"""
         <div class="waveform-container">
             {bars}
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
+
 
 def render_tactical_dock():
     """Renders the floating tactical command dock."""
-    st.markdown("""
+    st.markdown(
+        """
         <div class="tactical-dock">
             <div class="dock-item">
                 <i class="fas fa-bolt"></i>
@@ -680,12 +703,16 @@ def render_tactical_dock():
                 <span>Swarm Sync</span>
             </div>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
+
 
 def render_journey_line(temperature="warm", progress=65):
     """Renders the kinetic journey line mapping."""
     glow_class = "glow-cold" if temperature == "cold" else "glow-hot" if temperature == "hot" else "glow-warm"
-    st.markdown(f"""
+    st.markdown(
+        f"""
         <div style="margin: 15px 0;">
             <div style="display: flex; justify-content: space-between; font-size: 0.65rem; margin-bottom: 5px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: var(--text-secondary);">
                 <span>JOURNEY_PATH</span>
@@ -695,12 +722,16 @@ def render_journey_line(temperature="warm", progress=65):
                 <div class="journey-line-glow {glow_class}" style="width: {progress}%;"></div>
             </div>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
+
 
 def render_biometric_heartbeat(urgency="normal"):
     """Renders a pulsing EKG-style biometric heartbeat."""
     speed = "1.5s" if urgency == "normal" else "0.8s" if urgency == "high" else "0.4s"
-    st.markdown(f"""
+    st.markdown(
+        f"""
         <div style="margin: 15px 0;">
             <div style="font-family: 'Space Grotesk', sans-serif; font-size: 0.65rem; color: var(--text-secondary); font-weight: 700; margin-bottom: 5px; letter-spacing: 0.1em;">
                 BIOMETRIC_NEGOTIATION_SYNC // {urgency.upper()}
@@ -712,7 +743,10 @@ def render_biometric_heartbeat(urgency="normal"):
                 </svg>
             </div>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
+
 
 def render_neural_heatmap(points=None):
     """Renders a geographic 'Lead Cluster' radar heatmap."""
@@ -721,12 +755,15 @@ def render_neural_heatmap(points=None):
             {"top": "30%", "left": "40%"},
             {"top": "60%", "left": "70%"},
             {"top": "45%", "left": "25%"},
-            {"top": "80%", "left": "50%"}
+            {"top": "80%", "left": "50%"},
         ]
-    
-    points_html = "".join([f'<div class="heatmap-point" style="top: {p["top"]}; left: {p["left"]};"></div>' for p in points])
-    
-    st.markdown(f"""
+
+    points_html = "".join(
+        [f'<div class="heatmap-point" style="top: {p["top"]}; left: {p["left"]};"></div>' for p in points]
+    )
+
+    st.markdown(
+        f"""
         <div class="radar-container">
             <div class="radar-sweep"></div>
             {points_html}
@@ -734,12 +771,16 @@ def render_neural_heatmap(points=None):
                 SCANNING...
             </div>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
+
 
 def render_moat_overlay(active=False):
     """Renders a hexagonal 'Data Moat' security overlay."""
     active_class = "moat-active" if active else ""
     st.markdown(f'<div class="moat-overlay {active_class}"></div>', unsafe_allow_html=True)
+
 
 def render_countdown_gauge(days_remaining, total_days=30):
     """
@@ -749,10 +790,11 @@ def render_countdown_gauge(days_remaining, total_days=30):
     percentage = max(0, min(100, (days_remaining / total_days) * 100))
     circumference = 2 * 3.14159 * 45
     offset = circumference * (1 - (100 - percentage) / 100)
-    
+
     color = "var(--negotiation-neon)" if days_remaining < 7 else "var(--elite-accent)"
-    
-    st.markdown(f"""
+
+    st.markdown(
+        f"""
         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem;">
             <div style="position: relative; width: 120px; height: 120px;">
                 <svg viewBox="0 0 100 100" style="transform: rotate(-90deg); width: 100%; height: 100%;">
@@ -770,27 +812,35 @@ def render_countdown_gauge(days_remaining, total_days=30):
                 PREDICTED_TIME_TO_CLOSE
             </div>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
+
 
 def render_decision_stream(decisions):
     """
     Phase 4: Global Decision Stream log.
     Logs not just what, but WHY.
     """
-    items_html = "".join([
-        f'<div class="decision-item">'
-        f'<span style="color: #4B5563;">[{d.get("time", datetime.now().strftime("%H:%M:%S"))}]</span> '
-        f'<span class="decision-action">{d["action"]}</span> '
-        f'<span class="decision-why">Reason: {d["why"]}</span>'
-        f'</div>'
-        for d in decisions
-    ])
-    
-    st.markdown(f"""
+    items_html = "".join(
+        [
+            f'<div class="decision-item">'
+            f'<span style="color: #4B5563;">[{d.get("time", datetime.now().strftime("%H:%M:%S"))}]</span> '
+            f'<span class="decision-action">{d["action"]}</span> '
+            f'<span class="decision-why">Reason: {d["why"]}</span>'
+            f"</div>"
+            for d in decisions
+        ]
+    )
+
+    st.markdown(
+        f"""
         <div class="decision-stream-container">
             <div style="font-family: 'Space Grotesk'; font-size: 0.6rem; color: var(--elite-accent); margin-bottom: 8px; font-weight: 700; letter-spacing: 0.2em;">
                 // GLOBAL_DECISION_STREAM_V4.2.0
             </div>
             {items_html}
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )

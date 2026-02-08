@@ -100,9 +100,7 @@ class ABTestingRepository:
             "status": "active",
         }
 
-    async def get_experiment(
-        self, experiment_name: str
-    ) -> Optional[Dict[str, Any]]:
+    async def get_experiment(self, experiment_name: str) -> Optional[Dict[str, Any]]:
         """Load an experiment with its variants by name.
 
         Returns:
@@ -137,9 +135,7 @@ class ABTestingRepository:
             """,
             row["id"],
         )
-        experiment["variants"] = [
-            {**dict(v), "id": str(v["id"])} for v in variant_rows
-        ]
+        experiment["variants"] = [{**dict(v), "id": str(v["id"])} for v in variant_rows]
         return experiment
 
     async def list_active_experiments(self) -> List[Dict[str, Any]]:
@@ -214,10 +210,7 @@ class ABTestingRepository:
             variant_name,
         )
         if var_row is None:
-            raise KeyError(
-                f"Variant '{variant_name}' not found in experiment "
-                f"'{experiment_name}'"
-            )
+            raise KeyError(f"Variant '{variant_name}' not found in experiment '{experiment_name}'")
 
         assignment_id = uuid.uuid4()
         await self._db.execute_command(
@@ -279,10 +272,7 @@ class ABTestingRepository:
             user_id,
         )
         if assignment_row is None:
-            raise KeyError(
-                f"No assignment found for user '{user_id}' "
-                f"in experiment '{experiment_name}'"
-            )
+            raise KeyError(f"No assignment found for user '{user_id}' in experiment '{experiment_name}'")
 
         metric_id = uuid.uuid4()
         await self._db.execute_command(
@@ -344,9 +334,7 @@ class ABTestingRepository:
             "value": value,
         }
 
-    async def get_experiment_results(
-        self, experiment_name: str
-    ) -> Optional[Dict[str, Any]]:
+    async def get_experiment_results(self, experiment_name: str) -> Optional[Dict[str, Any]]:
         """Get comprehensive results with per-variant stats from DB."""
         exp = await self.get_experiment(experiment_name)
         if exp is None:
@@ -428,8 +416,6 @@ class ABTestingRepository:
                     description=exp_def["description"],
                 )
                 created.append(exp_def["experiment_name"])
-                logger.info(
-                    "Seeded default experiment: %s", exp_def["experiment_name"]
-                )
+                logger.info("Seeded default experiment: %s", exp_def["experiment_name"])
 
         return created

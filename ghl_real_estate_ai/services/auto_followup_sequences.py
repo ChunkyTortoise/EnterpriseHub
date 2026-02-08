@@ -11,11 +11,12 @@ Features:
 - Engagement tracking and auto-adjustment
 """
 
-import logging
 import json
+import logging
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 
 logger = logging.getLogger(__name__)
@@ -60,9 +61,7 @@ class AutoFollowUpSequences:
     Automated follow-up sequences with behavioral triggers and multi-channel support.
     """
 
-    def __init__(
-        self, ghl_api_key: Optional[str] = None, ghl_location_id: Optional[str] = None
-    ):
+    def __init__(self, ghl_api_key: Optional[str] = None, ghl_location_id: Optional[str] = None):
         """Initialize the Auto Follow-Up Sequences service"""
         self.ghl_api_key = ghl_api_key
         self.ghl_location_id = ghl_location_id
@@ -143,9 +142,7 @@ class AutoFollowUpSequences:
         sequence = self._get_sequence(sequence_id)
 
         # Calculate schedule based on optimal send times
-        enrollment["schedule"] = self._calculate_schedule(
-            sequence["steps"], contact_data, custom_fields
-        )
+        enrollment["schedule"] = self._calculate_schedule(sequence["steps"], contact_data, custom_fields)
 
         # Track in GHL
         if self.ghl_api_key:
@@ -153,9 +150,7 @@ class AutoFollowUpSequences:
 
         return enrollment
 
-    def get_sequence_performance(
-        self, sequence_id: str, date_range: Optional[Dict[str, str]] = None
-    ) -> Dict[str, Any]:
+    def get_sequence_performance(self, sequence_id: str, date_range: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
         """
         Get performance metrics for a sequence.
 
@@ -218,15 +213,11 @@ class AutoFollowUpSequences:
         performance["best_performing_steps"] = self._get_top_steps(
             performance["step_performance"], key="engagement_rate"
         )
-        performance["drop_off_points"] = self._get_drop_off_steps(
-            performance["step_performance"]
-        )
+        performance["drop_off_points"] = self._get_drop_off_steps(performance["step_performance"])
 
         return performance
 
-    def optimize_sequence(
-        self, sequence_id: str, optimization_goals: List[str]
-    ) -> Dict[str, Any]:
+    def optimize_sequence(self, sequence_id: str, optimization_goals: List[str]) -> Dict[str, Any]:
         """
         AI-powered sequence optimization based on performance data.
 
@@ -274,9 +265,7 @@ class AutoFollowUpSequences:
 
         return recommendations
 
-    def pause_sequence(
-        self, sequence_id: str, contact_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+    def pause_sequence(self, sequence_id: str, contact_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Pause sequence for all contacts or specific contact.
 
@@ -291,9 +280,7 @@ class AutoFollowUpSequences:
             "sequence_id": sequence_id,
             "paused_at": datetime.now().isoformat(),
             "scope": "contact" if contact_id else "sequence",
-            "affected_contacts": (
-                1 if contact_id else self._count_active_enrollments(sequence_id)
-            ),
+            "affected_contacts": (1 if contact_id else self._count_active_enrollments(sequence_id)),
         }
 
         if contact_id:
@@ -304,9 +291,7 @@ class AutoFollowUpSequences:
 
         return result
 
-    def resume_sequence(
-        self, sequence_id: str, contact_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+    def resume_sequence(self, sequence_id: str, contact_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Resume paused sequence.
 
@@ -321,9 +306,7 @@ class AutoFollowUpSequences:
             "sequence_id": sequence_id,
             "resumed_at": datetime.now().isoformat(),
             "scope": "contact" if contact_id else "sequence",
-            "affected_contacts": (
-                1 if contact_id else self._count_paused_enrollments(sequence_id)
-            ),
+            "affected_contacts": (1 if contact_id else self._count_paused_enrollments(sequence_id)),
         }
 
         if contact_id:
@@ -428,9 +411,7 @@ class AutoFollowUpSequences:
                     "step_number": step["step_number"],
                     "channel": step["channel"],
                     "scheduled_for": optimized_time.isoformat(),
-                    "content": self._personalize_content(
-                        step["content"], contact_data, custom_fields
-                    ),
+                    "content": self._personalize_content(step["content"], contact_data, custom_fields),
                 }
             )
 
@@ -438,9 +419,7 @@ class AutoFollowUpSequences:
 
         return schedule
 
-    def _optimize_send_time(
-        self, proposed_time: datetime, contact_data: Dict[str, Any]
-    ) -> datetime:
+    def _optimize_send_time(self, proposed_time: datetime, contact_data: Dict[str, Any]) -> datetime:
         """Optimize send time based on contact's timezone and engagement patterns"""
         # Simple optimization - avoid late nights/early mornings
         hour = proposed_time.hour
@@ -450,10 +429,7 @@ class AutoFollowUpSequences:
             proposed_time = proposed_time.replace(hour=9) + timedelta(days=1)
 
         # Skip weekends for business contacts
-        if (
-            proposed_time.weekday() >= 5
-            and contact_data.get("contact_type") == "business"
-        ):
+        if proposed_time.weekday() >= 5 and contact_data.get("contact_type") == "business":
             days_to_add = 7 - proposed_time.weekday()
             proposed_time = proposed_time + timedelta(days=days_to_add)
 
@@ -466,16 +442,21 @@ class AutoFollowUpSequences:
         custom_fields: Optional[Dict[str, Any]],
     ) -> Dict[str, Any]:
         """Personalize content with Claude-driven dynamic generation"""
-        
+
         # Use Claude for true personalization if orchestrator is available
-        from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator, ClaudeTaskType, ClaudeRequest
         import asyncio
-        
+
+        from ghl_real_estate_ai.services.claude_orchestrator import (
+            ClaudeRequest,
+            ClaudeTaskType,
+            get_claude_orchestrator,
+        )
+
         orchestrator = get_claude_orchestrator()
-        
+
         first_name = contact_data.get("first_name", "Friend")
         market = custom_fields.get("market", "Austin") if custom_fields else "Austin"
-        
+
         prompt = f"""
         Generate a personalized real estate follow-up message for {first_name} in {market}.
         
@@ -495,27 +476,29 @@ class AutoFollowUpSequences:
             except RuntimeError:
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
-            
+
             request = ClaudeRequest(
                 task_type=ClaudeTaskType.SCRIPT_GENERATION,
                 context={"contact_id": contact_data.get("contact_id", "unknown")},
                 prompt=prompt,
-                temperature=0.7
+                temperature=0.7,
             )
-            
+
             response = loop.run_until_complete(orchestrator.process_request(request))
-            
+
             # Record usage
             location_id = self.ghl_location_id or "unknown"
-            loop.run_until_complete(self.analytics.track_llm_usage(
-                location_id=location_id,
-                model=response.model or "claude-3-5-sonnet",
-                provider=response.provider or "claude",
-                input_tokens=response.input_tokens or 0,
-                output_tokens=response.output_tokens or 0,
-                cached=False,
-                contact_id=contact_data.get("contact_id")
-            ))
+            loop.run_until_complete(
+                self.analytics.track_llm_usage(
+                    location_id=location_id,
+                    model=response.model or "claude-3-5-sonnet",
+                    provider=response.provider or "claude",
+                    input_tokens=response.input_tokens or 0,
+                    output_tokens=response.output_tokens or 0,
+                    cached=False,
+                    contact_id=contact_data.get("contact_id"),
+                )
+            )
 
             # If Claude returns a subject/body pair, parse it
             # For simplicity, we'll assume it returns the body or a structured response
@@ -548,9 +531,7 @@ class AutoFollowUpSequences:
             "steps": [],
         }
 
-    def _analyze_step_performance(
-        self, sequence_id: str, step_number: int
-    ) -> Dict[str, Any]:
+    def _analyze_step_performance(self, sequence_id: str, step_number: int) -> Dict[str, Any]:
         """Analyze performance of a specific step"""
         return {
             "step_number": step_number + 1,
@@ -601,41 +582,27 @@ class AutoFollowUpSequences:
         self, recommendations: List[Dict[str, Any]], current_metrics: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Calculate predicted impact of optimizations"""
-        total_improvement = sum(
-            rec.get("predicted_improvement", 0) for rec in recommendations
-        )
+        total_improvement = sum(rec.get("predicted_improvement", 0) for rec in recommendations)
 
         return {
             "current_conversion_rate": current_metrics.get("conversion_rate", 0),
-            "predicted_conversion_rate": min(
-                current_metrics.get("conversion_rate", 0) * (1 + total_improvement), 1.0
-            ),
-            "absolute_improvement": current_metrics.get("conversion_rate", 0)
-            * total_improvement,
+            "predicted_conversion_rate": min(current_metrics.get("conversion_rate", 0) * (1 + total_improvement), 1.0),
+            "absolute_improvement": current_metrics.get("conversion_rate", 0) * total_improvement,
             "confidence": (
-                sum(rec.get("confidence", 0) for rec in recommendations)
-                / len(recommendations)
+                sum(rec.get("confidence", 0) for rec in recommendations) / len(recommendations)
                 if recommendations
                 else 0
             ),
         }
 
-    def _get_top_steps(
-        self, step_performance: List[Dict[str, Any]], key: str
-    ) -> List[Dict[str, Any]]:
+    def _get_top_steps(self, step_performance: List[Dict[str, Any]], key: str) -> List[Dict[str, Any]]:
         """Get top performing steps"""
-        sorted_steps = sorted(
-            step_performance, key=lambda x: x.get(key, 0), reverse=True
-        )
+        sorted_steps = sorted(step_performance, key=lambda x: x.get(key, 0), reverse=True)
         return sorted_steps[:3]
 
-    def _get_drop_off_steps(
-        self, step_performance: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+    def _get_drop_off_steps(self, step_performance: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Identify drop-off points"""
-        return [
-            step for step in step_performance if step.get("drop_off_rate", 0) > 0.10
-        ]
+        return [step for step in step_performance if step.get("drop_off_rate", 0) > 0.10]
 
     def _count_active_enrollments(self, sequence_id: str) -> int:
         """Count active enrollments"""
@@ -649,9 +616,7 @@ class AutoFollowUpSequences:
         """Find sequences triggered by event"""
         return []
 
-    def _should_enroll(
-        self, contact_id: str, sequence: Dict[str, Any], context: Dict[str, Any]
-    ) -> bool:
+    def _should_enroll(self, contact_id: str, sequence: Dict[str, Any], context: Dict[str, Any]) -> bool:
         """Check if contact should be enrolled"""
         return True
 
@@ -737,14 +702,10 @@ if __name__ == "__main__":
             "phone": "+1234567890",
         },
     )
-    print(
-        f"✅ Contact enrolled with {len(enrollment['schedule'])} scheduled touchpoints"
-    )
+    print(f"✅ Contact enrolled with {len(enrollment['schedule'])} scheduled touchpoints")
 
     # Get performance
     print("\n📊 Checking performance...")
     performance = service.get_sequence_performance(sequence["id"])
     print(f"✅ Conversion rate: {performance['metrics']['conversion_rate']:.1%}")
-    print(
-        f"✅ Email open rate: {performance['channel_performance']['email']['open_rate']:.1%}"
-    )
+    print(f"✅ Email open rate: {performance['channel_performance']['email']['open_rate']:.1%}")

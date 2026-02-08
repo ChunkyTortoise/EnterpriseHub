@@ -1,5 +1,7 @@
+from typing import Any, Dict, List
+
 from textblob import TextBlob
-from typing import List, Dict, Any
+
 from utils.logger import get_logger
 
 # Conditional import for Claude API
@@ -89,9 +91,7 @@ def process_news_sentiment(news_items: List[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
-def analyze_sentiment_with_claude(
-    news_items: List[Dict[str, Any]], symbol: str, api_key: str
-) -> Dict[str, Any]:
+def analyze_sentiment_with_claude(news_items: List[Dict[str, Any]], symbol: str, api_key: str) -> Dict[str, Any]:
     """
     Analyze sentiment using Claude AI for richer contextual analysis.
 
@@ -179,9 +179,7 @@ Keep reasoning concise (2-3 sentences max)."""
 
         overall_sentiment = analysis_data.get("overall_sentiment", "neutral").lower()
         confidence = analysis_data.get("confidence", 50) / 100
-        avg_score = sentiment_map.get(overall_sentiment, 0.0) * (
-            confidence if confidence > 0 else 0.5
-        )
+        avg_score = sentiment_map.get(overall_sentiment, 0.0) * (confidence if confidence > 0 else 0.5)
 
         # Determine verdict
         if avg_score > 0.05:
@@ -203,8 +201,7 @@ Keep reasoning concise (2-3 sentences max)."""
                 (
                     a
                     for a in article_sentiments
-                    if a.get("title", "").lower() in title.lower()
-                    or title.lower() in a.get("title", "").lower()
+                    if a.get("title", "").lower() in title.lower() or title.lower() in a.get("title", "").lower()
                 ),
                 None,
             )
@@ -222,9 +219,7 @@ Keep reasoning concise (2-3 sentences max)."""
                 else:
                     sentiment_label = "Neutral"
 
-            processed_news.append(
-                {**item, "sentiment_score": score, "sentiment_label": sentiment_label}
-            )
+            processed_news.append({**item, "sentiment_score": score, "sentiment_label": sentiment_label})
 
         logger.info(f"Successfully analyzed sentiment with Claude for {symbol}")
 

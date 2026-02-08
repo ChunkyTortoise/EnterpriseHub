@@ -4,32 +4,35 @@ Lead Sequence Scheduler - Manages automated 3-7-30 day sequence execution.
 Uses APScheduler to trigger lead sequence actions at the correct intervals.
 Integrates with sequence state service for persistence and GHL for message delivery.
 """
+
 import asyncio
 import json
-from typing import Optional, Dict, Any, List
-from datetime import datetime, timedelta
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
-from ghl_real_estate_ai.services.lead_sequence_state_service import (
-    get_sequence_service,
-    LeadSequenceStateService,
-    SequenceDay,
-    LeadSequenceState
-)
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.agent_state_sync import sync_service
-from ghl_real_estate_ai.services.ghl_client import GHLClient
 from ghl_real_estate_ai.api.schemas.ghl import MessageType
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.agent_state_sync import sync_service
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.ghl_client import GHLClient
+from ghl_real_estate_ai.services.lead_sequence_state_service import (
+    LeadSequenceState,
+    LeadSequenceStateService,
+    SequenceDay,
+    get_sequence_service,
+)
 
 logger = get_logger(__name__)
+
 
 @dataclass
 class ScheduledAction:
     """Represents a scheduled sequence action."""
+
     lead_id: str
     sequence_day: SequenceDay
     action_type: str  # "sms", "call", "email"
@@ -38,14 +41,15 @@ class ScheduledAction:
     retry_count: int = 0
     max_retries: int = 3
 
+
 class LeadSequenceScheduler:
     """Manages scheduling and execution of lead sequence actions."""
 
     def __init__(self):
         try:
-            from apscheduler.schedulers.asyncio import AsyncIOScheduler
-            from apscheduler.jobstores.redis import RedisJobStore
             from apscheduler.executors.asyncio import AsyncIOExecutor
+            from apscheduler.jobstores.redis import RedisJobStore
+            from apscheduler.schedulers.asyncio import AsyncIOScheduler
             from pytz import utc
 
             self.sequence_service = get_sequence_service()
@@ -58,28 +62,12 @@ class LeadSequenceScheduler:
             redis_host = parsed.hostname or "localhost"
             redis_port = parsed.port or 6379
             redis_password = parsed.password
-            jobstores = {
-                'default': RedisJobStore(
-                    host=redis_host,
-                    port=redis_port,
-                    db=1,
-                    password=redis_password
-                )
-            }
-            executors = {
-                'default': AsyncIOExecutor()
-            }
-            job_defaults = {
-                'coalesce': False,
-                'max_instances': 3,
-                'misfire_grace_time': 30
-            }
+            jobstores = {"default": RedisJobStore(host=redis_host, port=redis_port, db=1, password=redis_password)}
+            executors = {"default": AsyncIOExecutor()}
+            job_defaults = {"coalesce": False, "max_instances": 3, "misfire_grace_time": 30}
 
             self.scheduler = AsyncIOScheduler(
-                jobstores=jobstores,
-                executors=executors,
-                job_defaults=job_defaults,
-                timezone=utc
+                jobstores=jobstores, executors=executors, job_defaults=job_defaults, timezone=utc
             )
 
             self.enabled = True
@@ -134,11 +122,11 @@ class LeadSequenceScheduler:
 
             self.scheduler.add_job(
                 func=self._execute_sequence_action,
-                trigger='date',
+                trigger="date",
                 run_date=run_time,
                 args=[lead_id, SequenceDay.DAY_3, "sms"],
                 id=job_id,
-                replace_existing=True
+                replace_existing=True,
             )
 
             logger.info(f"Scheduled Day 3 SMS for lead {lead_id} at {run_time}")
@@ -178,11 +166,11 @@ class LeadSequenceScheduler:
 
             self.scheduler.add_job(
                 func=self._execute_sequence_action,
-                trigger='date',
+                trigger="date",
                 run_date=next_time,
                 args=[lead_id, next_day, action_type],
                 id=job_id,
-                replace_existing=True
+                replace_existing=True,
             )
 
             logger.info(f"Scheduled {next_day.value} {action_type} for lead {lead_id} at {next_time}")
@@ -252,7 +240,7 @@ class LeadSequenceScheduler:
         try:
             # Import here to avoid circular imports
             from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
-            from ghl_real_estate_ai.services.ghost_followup_engine import get_ghost_followup_engine, GhostState
+            from ghl_real_estate_ai.services.ghost_followup_engine import GhostState, get_ghost_followup_engine
 
             # Get lead information (this would come from your lead database/GHL)
             # For now, we'll create a minimal state for the action
@@ -261,13 +249,13 @@ class LeadSequenceScheduler:
             # Create ghost state for message generation
             ghost_state = GhostState(
                 contact_id=lead_id,
-                current_day=int(sequence_day.value.split('_')[1]) if 'day_' in sequence_day.value else 3,
-                frs_score=70  # Default score, would normally come from sequence state
+                current_day=int(sequence_day.value.split("_")[1]) if "day_" in sequence_day.value else 3,
+                frs_score=70,  # Default score, would normally come from sequence state
             )
 
             # Generate message content
             action = await ghost_engine.process_lead_step(ghost_state, [])
-            message = action['content']
+            message = action["content"]
 
             # Get lead contact information
             contact_info = await self._get_lead_contact_info(lead_id)
@@ -282,9 +270,7 @@ class LeadSequenceScheduler:
                 logger.info(f"Sending SMS to contact {contact_id}: {message[:100]}...")
 
                 response = await self.ghl_client.send_message(
-                    contact_id=contact_id,
-                    message=message,
-                    channel=MessageType.SMS
+                    contact_id=contact_id, message=message, channel=MessageType.SMS
                 )
 
                 if response and response.get("messageId"):
@@ -329,7 +315,7 @@ class LeadSequenceScheduler:
                 "call_purpose": f"Day {sequence_day.value.split('_')[1]} follow-up call from Lead Bot sequence",
                 "property_address": contact_info.get("property_address", "Unknown"),
                 "lead_source": contact_info.get("source", "Web"),
-                "created_by": "lead_bot_scheduler"
+                "created_by": "lead_bot_scheduler",
             }
 
             logger.info(f"Initiating {sequence_day.value} call for lead {lead_id}, phone {phone[-4:]}...")
@@ -339,19 +325,21 @@ class LeadSequenceScheduler:
                 lead_id=lead_id,
                 phone=phone,
                 context=context,
-                max_wait_minutes=8  # Reasonable wait time for lead calls
+                max_wait_minutes=8,  # Reasonable wait time for lead calls
             )
 
             # Process call result
             if call_result.answered and call_result.duration_seconds > 30:
                 # Successful call with meaningful interaction
-                logger.info(f"Successful {sequence_day.value} call for lead {lead_id}: {call_result.duration_seconds}s, engagement: {call_result.engagement_score}")
+                logger.info(
+                    f"Successful {sequence_day.value} call for lead {lead_id}: {call_result.duration_seconds}s, engagement: {call_result.engagement_score}"
+                )
 
                 await sync_service.record_lead_event(
                     lead_id,
                     "AI",
                     f"Scheduler completed {sequence_day.value} call - {call_result.duration_seconds}s conversation",
-                    "call_completed"
+                    "call_completed",
                 )
 
                 # Update sequence state with call results
@@ -363,7 +351,7 @@ class LeadSequenceScheduler:
                         "duration_seconds": call_result.duration_seconds,
                         "engagement_score": call_result.engagement_score,
                         "summary": call_result.summary,
-                        "completed_at": call_result.completed_at.isoformat() if call_result.completed_at else None
+                        "completed_at": call_result.completed_at.isoformat() if call_result.completed_at else None,
                     }
 
                     # Update sequence state with call results
@@ -383,7 +371,7 @@ class LeadSequenceScheduler:
                     lead_id,
                     "AI",
                     f"Scheduler {sequence_day.value} call - {call_result.status.value}, will retry",
-                    "call_no_answer"
+                    "call_no_answer",
                 )
 
                 # Return False to trigger retry logic
@@ -391,13 +379,15 @@ class LeadSequenceScheduler:
 
             else:
                 # Call failed or other issue
-                logger.error(f"{sequence_day.value} call for lead {lead_id} failed: {call_result.status.value} - {call_result.error_message}")
+                logger.error(
+                    f"{sequence_day.value} call for lead {lead_id} failed: {call_result.status.value} - {call_result.error_message}"
+                )
 
                 await sync_service.record_lead_event(
                     lead_id,
                     "AI",
                     f"Scheduler {sequence_day.value} call failed: {call_result.error_message}",
-                    "call_failed"
+                    "call_failed",
                 )
 
                 return False
@@ -409,18 +399,18 @@ class LeadSequenceScheduler:
     async def _send_sequence_email(self, lead_id: str, sequence_day: SequenceDay) -> bool:
         """Send email for the specified sequence day."""
         try:
-            from ghl_real_estate_ai.services.ghost_followup_engine import get_ghost_followup_engine, GhostState
+            from ghl_real_estate_ai.services.ghost_followup_engine import GhostState, get_ghost_followup_engine
 
             ghost_engine = get_ghost_followup_engine()
 
             ghost_state = GhostState(
                 contact_id=lead_id,
-                current_day=int(sequence_day.value.split('_')[1]) if 'day_' in sequence_day.value else 14,
-                frs_score=70
+                current_day=int(sequence_day.value.split("_")[1]) if "day_" in sequence_day.value else 14,
+                frs_score=70,
             )
 
             action = await ghost_engine.process_lead_step(ghost_state, [])
-            email_content = action['content']
+            email_content = action["content"]
 
             # Get lead contact information
             contact_info = await self._get_lead_contact_info(lead_id)
@@ -435,9 +425,7 @@ class LeadSequenceScheduler:
                 logger.info(f"Sending email to contact {contact_id}: {email_content[:100]}...")
 
                 response = await self.ghl_client.send_message(
-                    contact_id=contact_id,
-                    message=email_content,
-                    channel=MessageType.EMAIL
+                    contact_id=contact_id, message=email_content, channel=MessageType.EMAIL
                 )
 
                 if response and response.get("messageId"):
@@ -460,24 +448,28 @@ class LeadSequenceScheduler:
         """Schedule a retry for a failed action."""
         if retry_count > 3:
             logger.error(f"Max retries exceeded for {sequence_day.value} {action_type} for lead {lead_id}")
-            await sync_service.record_lead_event(lead_id, "AI", f"Failed to deliver {sequence_day.value} {action_type} after 3 retries", "error")
+            await sync_service.record_lead_event(
+                lead_id, "AI", f"Failed to deliver {sequence_day.value} {action_type} after 3 retries", "error"
+            )
             return
 
         # Exponential backoff: 5 min, 15 min, 30 min
-        delay_minutes = 5 * (retry_count ** 2)
+        delay_minutes = 5 * (retry_count**2)
         retry_time = datetime.now() + timedelta(minutes=delay_minutes)
         job_id = f"lead_{lead_id}_{sequence_day.value}_{action_type}_retry_{retry_count}"
 
         self.scheduler.add_job(
             func=self._execute_sequence_action,
-            trigger='date',
+            trigger="date",
             run_date=retry_time,
             args=[lead_id, sequence_day, action_type],
             id=job_id,
-            replace_existing=True
+            replace_existing=True,
         )
 
-        logger.info(f"Scheduled retry {retry_count} for {sequence_day.value} {action_type} for lead {lead_id} in {delay_minutes} minutes")
+        logger.info(
+            f"Scheduled retry {retry_count} for {sequence_day.value} {action_type} for lead {lead_id} in {delay_minutes} minutes"
+        )
 
     async def cancel_sequence(self, lead_id: str) -> bool:
         """Cancel all scheduled actions for a lead."""
@@ -570,11 +562,11 @@ class LeadSequenceScheduler:
 
                     self.scheduler.add_job(
                         func=self._execute_sequence_action,
-                        trigger='date',
+                        trigger="date",
                         run_date=sequence.next_scheduled_at,
                         args=[sequence.lead_id, sequence.current_day, action_type],
                         id=job_id,
-                        replace_existing=True
+                        replace_existing=True,
                     )
 
                     restored_count += 1
@@ -601,18 +593,20 @@ class LeadSequenceScheduler:
                         lead_id = parts[1]
                         if lead_id not in lead_jobs:
                             lead_jobs[lead_id] = []
-                        lead_jobs[lead_id].append({
-                            "job_id": job.id,
-                            "next_run": job.next_run_time.isoformat() if job.next_run_time else None,
-                            "paused": job.coalesce if hasattr(job, 'coalesce') else False
-                        })
+                        lead_jobs[lead_id].append(
+                            {
+                                "job_id": job.id,
+                                "next_run": job.next_run_time.isoformat() if job.next_run_time else None,
+                                "paused": job.coalesce if hasattr(job, "coalesce") else False,
+                            }
+                        )
 
             return {
                 "enabled": True,
                 "running": self.scheduler.running,
                 "total_jobs": len(jobs),
                 "lead_count": len(lead_jobs),
-                "lead_jobs": lead_jobs
+                "lead_jobs": lead_jobs,
             }
 
         except Exception as e:
@@ -643,7 +637,7 @@ class LeadSequenceScheduler:
                         "email": contact_data.get("email"),
                         "first_name": contact_data.get("firstName", ""),
                         "last_name": contact_data.get("lastName", ""),
-                        "full_name": f"{contact_data.get('firstName', '')} {contact_data.get('lastName', '')}".strip()
+                        "full_name": f"{contact_data.get('firstName', '')} {contact_data.get('lastName', '')}".strip(),
                     }
 
                     # Cache for 1 hour
@@ -663,7 +657,7 @@ class LeadSequenceScheduler:
                 "email": None,
                 "first_name": "Lead",
                 "last_name": lead_id[-4:],  # Last 4 chars as identifier
-                "full_name": f"Lead {lead_id[-4:]}"
+                "full_name": f"Lead {lead_id[-4:]}",
             }
 
             # Cache fallback info for shorter time
@@ -694,8 +688,10 @@ class LeadSequenceScheduler:
             logger.error(f"Failed to get email for contact {contact_id}: {e}")
             return None
 
+
 # Global service instance
 _scheduler: Optional[LeadSequenceScheduler] = None
+
 
 def get_lead_scheduler() -> LeadSequenceScheduler:
     """Get global lead scheduler instance."""
@@ -704,10 +700,12 @@ def get_lead_scheduler() -> LeadSequenceScheduler:
         _scheduler = LeadSequenceScheduler()
     return _scheduler
 
+
 async def start_lead_scheduler() -> bool:
     """Start the global lead scheduler."""
     scheduler = get_lead_scheduler()
     return await scheduler.start()
+
 
 async def stop_lead_scheduler():
     """Stop the global lead scheduler."""

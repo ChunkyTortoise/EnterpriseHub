@@ -11,13 +11,15 @@ Defines request/response models for:
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
-from pydantic import BaseModel, Field, ConfigDict
 
+from pydantic import BaseModel, ConfigDict, Field
 
 # ================== ENUMS ==================
 
+
 class CallTypeAPI(str, Enum):
     """API version of CallType enum."""
+
     NEW_LEAD = "new_lead"
     EXISTING_CLIENT = "existing_client"
     CALLBACK = "callback"
@@ -26,6 +28,7 @@ class CallTypeAPI(str, Enum):
 
 class CallPriorityAPI(str, Enum):
     """API version of CallPriority enum."""
+
     LOW = "low"
     NORMAL = "normal"
     HIGH = "high"
@@ -34,6 +37,7 @@ class CallPriorityAPI(str, Enum):
 
 class ConversationStageAPI(str, Enum):
     """API version of ConversationStage enum."""
+
     GREETING = "greeting"
     QUALIFICATION = "qualification"
     DISCOVERY = "discovery"
@@ -44,6 +48,7 @@ class ConversationStageAPI(str, Enum):
 
 class CampaignTriggerAPI(str, Enum):
     """API version of CampaignTrigger enum."""
+
     NEW_LISTING = "new_listing"
     PRICE_CHANGE = "price_change"
     MARKET_UPDATE = "market_update"
@@ -55,6 +60,7 @@ class CampaignTriggerAPI(str, Enum):
 
 class ContentFormatAPI(str, Enum):
     """API version of ContentFormat enum."""
+
     EMAIL = "email"
     SMS = "sms"
     SOCIAL_MEDIA = "social_media"
@@ -66,6 +72,7 @@ class ContentFormatAPI(str, Enum):
 
 class LifeEventTypeAPI(str, Enum):
     """API version of LifeEventType enum."""
+
     JOB_CHANGE = "job_change"
     FAMILY_EXPANSION = "family_expansion"
     MARRIAGE = "marriage"
@@ -78,6 +85,7 @@ class LifeEventTypeAPI(str, Enum):
 
 class TimeHorizonAPI(str, Enum):
     """API version of TimeHorizon enum."""
+
     THREE_MONTHS = "3_months"
     SIX_MONTHS = "6_months"
     ONE_YEAR = "1_year"
@@ -86,6 +94,7 @@ class TimeHorizonAPI(str, Enum):
 
 class EventTypeAPI(str, Enum):
     """API version of EventType enum."""
+
     HIGH_QUALIFIED_CALL = "high_qualified_call"
     CAMPAIGN_LAUNCHED = "campaign_launched"
     CLIENT_MILESTONE = "client_milestone"
@@ -96,8 +105,10 @@ class EventTypeAPI(str, Enum):
 
 # ================== VOICE AI SCHEMAS ==================
 
+
 class VoiceCallStartRequest(BaseModel):
     """Request to start a voice AI call."""
+
     phone_number: str = Field(..., description="Caller's phone number", min_length=10, max_length=15)
     caller_name: Optional[str] = Field(None, description="Caller's name if known", max_length=100)
     call_type: Optional[CallTypeAPI] = Field(CallTypeAPI.NEW_LEAD, description="Type of call")
@@ -106,6 +117,7 @@ class VoiceCallStartRequest(BaseModel):
 
 class VoiceCallStartResponse(BaseModel):
     """Response for starting a voice call."""
+
     call_id: str = Field(..., description="Unique call identifier")
     status: str = Field(..., description="Call status")
     message: str = Field(..., description="Success message")
@@ -114,6 +126,7 @@ class VoiceCallStartResponse(BaseModel):
 
 class VoiceInputRequest(BaseModel):
     """Request to process voice input."""
+
     call_id: str = Field(..., description="Active call ID", min_length=1)
     speech_text: str = Field(..., description="Transcribed speech text", min_length=1, max_length=5000)
     audio_confidence: float = Field(..., ge=0.0, le=1.0, description="Speech recognition confidence")
@@ -122,6 +135,7 @@ class VoiceInputRequest(BaseModel):
 
 class VoiceResponseData(BaseModel):
     """Voice AI response data."""
+
     text: str = Field(..., description="Generated response text")
     emotion: str = Field(..., description="Response emotion/tone")
     pace: str = Field(default="normal", description="Speaking pace recommendation")
@@ -134,6 +148,7 @@ class VoiceResponseData(BaseModel):
 
 class VoiceCallAnalytics(BaseModel):
     """Voice call analytics response."""
+
     call_id: str
     phone_number: str
     caller_name: Optional[str]
@@ -151,6 +166,7 @@ class VoiceCallAnalytics(BaseModel):
 
 class VoiceAnalyticsResponse(BaseModel):
     """Voice AI system analytics."""
+
     period_days: int
     total_calls: int
     total_duration_minutes: int
@@ -167,8 +183,10 @@ class VoiceAnalyticsResponse(BaseModel):
 
 # ================== MARKETING AUTOMATION SCHEMAS ==================
 
+
 class CampaignCreationRequest(BaseModel):
     """Request to create automated marketing campaign."""
+
     trigger_type: CampaignTriggerAPI = Field(..., description="Campaign trigger type")
     target_audience: Dict[str, Any] = Field(..., description="Target audience criteria")
     campaign_objectives: List[str] = Field(..., min_length=1, description="Campaign objectives")
@@ -181,6 +199,7 @@ class CampaignCreationRequest(BaseModel):
 
 class CampaignBriefResponse(BaseModel):
     """Campaign creation response."""
+
     campaign_id: str
     name: str
     trigger: CampaignTriggerAPI
@@ -197,6 +216,7 @@ class CampaignBriefResponse(BaseModel):
 
 class CampaignContentResponse(BaseModel):
     """Campaign content response."""
+
     campaign_id: str
     content: Dict[str, Any]  # Format -> content mapping
     content_variations: Optional[Dict[str, List[Dict[str, Any]]]] = None
@@ -208,6 +228,7 @@ class CampaignContentResponse(BaseModel):
 
 class CampaignPerformanceMetrics(BaseModel):
     """Campaign performance metrics."""
+
     campaign_id: str
     campaign_name: str
     status: str
@@ -228,17 +249,21 @@ class CampaignPerformanceMetrics(BaseModel):
 
 class ABTestRequest(BaseModel):
     """A/B test configuration request."""
+
     test_name: str = Field(..., description="Test name", min_length=1, max_length=200)
     test_description: Optional[str] = Field(None, description="Test description", max_length=1000)
     variants: Dict[str, Dict[str, Any]] = Field(..., description="Test variants (A, B, etc.)")
     metric: str = Field(..., description="Primary metric to optimize")
     duration_days: int = Field(default=14, ge=1, le=90, description="Test duration in days")
     traffic_split: Dict[str, float] = Field(default={"A": 0.5, "B": 0.5}, description="Traffic allocation")
-    significance_threshold: float = Field(default=0.95, ge=0.8, le=0.99, description="Statistical significance threshold")
+    significance_threshold: float = Field(
+        default=0.95, ge=0.8, le=0.99, description="Statistical significance threshold"
+    )
 
 
 class ABTestResponse(BaseModel):
     """A/B test creation response."""
+
     test_id: str
     campaign_id: str
     test_name: str
@@ -252,8 +277,10 @@ class ABTestResponse(BaseModel):
 
 # ================== CLIENT RETENTION SCHEMAS ==================
 
+
 class ClientLifecycleUpdate(BaseModel):
     """Update client lifecycle information."""
+
     client_id: str = Field(..., description="Client identifier", min_length=1)
     life_event: LifeEventTypeAPI = Field(..., description="Type of life event")
     event_context: Dict[str, Any] = Field(..., description="Event context and details")
@@ -264,6 +291,7 @@ class ClientLifecycleUpdate(BaseModel):
 
 class ClientLifecycleResponse(BaseModel):
     """Client lifecycle update response."""
+
     client_id: str
     life_event: LifeEventTypeAPI
     status: str
@@ -275,6 +303,7 @@ class ClientLifecycleResponse(BaseModel):
 
 class ReferralTrackingRequest(BaseModel):
     """Track new referral opportunity."""
+
     referrer_client_id: str = Field(..., description="Referring client ID", min_length=1)
     referred_contact_info: Dict[str, str] = Field(..., description="Referred contact information")
     referral_source: str = Field(..., description="How referral came about", min_length=1)
@@ -285,6 +314,7 @@ class ReferralTrackingRequest(BaseModel):
 
 class ReferralTrackingResponse(BaseModel):
     """Referral tracking response."""
+
     referral_id: str
     referrer_id: str
     referred_contact: Dict[str, str]
@@ -298,6 +328,7 @@ class ReferralTrackingResponse(BaseModel):
 
 class ClientEngagementSummary(BaseModel):
     """Client engagement summary."""
+
     client_id: str
     client_name: str
     client_type: str = Field(description="past_client, current_client, prospect")
@@ -317,6 +348,7 @@ class ClientEngagementSummary(BaseModel):
 
 class RetentionAnalyticsResponse(BaseModel):
     """Retention system analytics."""
+
     period_days: int
     total_clients: int
     active_clients: int
@@ -335,8 +367,10 @@ class RetentionAnalyticsResponse(BaseModel):
 
 # ================== MARKET PREDICTION SCHEMAS ==================
 
+
 class MarketAnalysisRequest(BaseModel):
     """Request for market prediction analysis."""
+
     neighborhood: str = Field(..., description="Neighborhood to analyze", min_length=1, max_length=100)
     time_horizon: TimeHorizonAPI = Field(..., description="Prediction time horizon")
     property_type: Optional[str] = Field(None, description="Property type filter", max_length=50)
@@ -347,6 +381,7 @@ class MarketAnalysisRequest(BaseModel):
 
 class MarketPredictionResult(BaseModel):
     """Market prediction analysis result."""
+
     neighborhood: str
     time_horizon: TimeHorizonAPI
     predicted_appreciation: float = Field(description="Predicted price appreciation percentage")
@@ -363,6 +398,7 @@ class MarketPredictionResult(BaseModel):
 
 class InvestmentOpportunityRequest(BaseModel):
     """Request for investment opportunity analysis."""
+
     client_budget: float = Field(..., gt=0, description="Client's investment budget")
     risk_tolerance: str = Field(..., description="Risk tolerance: low, medium, high")
     investment_goals: List[str] = Field(..., min_length=1, description="Investment objectives")
@@ -375,6 +411,7 @@ class InvestmentOpportunityRequest(BaseModel):
 
 class InvestmentOpportunity(BaseModel):
     """Individual investment opportunity."""
+
     property_id: str
     address: str
     property_type: str
@@ -395,6 +432,7 @@ class InvestmentOpportunity(BaseModel):
 
 class InvestmentOpportunitiesResponse(BaseModel):
     """Investment opportunities analysis response."""
+
     opportunities: List[InvestmentOpportunity]
     search_criteria: Dict[str, Any]
     market_overview: Dict[str, Any] = Field(default_factory=dict)
@@ -405,6 +443,7 @@ class InvestmentOpportunitiesResponse(BaseModel):
 
 class MarketTrendsResponse(BaseModel):
     """Market trends data response."""
+
     neighborhood: str
     period_months: int
     historical_data: Dict[str, List[float]] = Field(default_factory=dict)
@@ -419,8 +458,10 @@ class MarketTrendsResponse(BaseModel):
 
 # ================== INTEGRATION & DASHBOARD SCHEMAS ==================
 
+
 class DashboardMetrics(BaseModel):
     """Unified dashboard metrics from all modules."""
+
     voice_ai: Dict[str, Any] = Field(default_factory=dict)
     marketing: Dict[str, Any] = Field(default_factory=dict)
     client_retention: Dict[str, Any] = Field(default_factory=dict)
@@ -434,6 +475,7 @@ class DashboardMetrics(BaseModel):
 
 class ModuleHealthStatus(BaseModel):
     """Health status of individual modules."""
+
     module_name: str
     status: str = Field(description="healthy, degraded, down, maintenance")
     last_check: datetime
@@ -447,6 +489,7 @@ class ModuleHealthStatus(BaseModel):
 
 class SystemHealthResponse(BaseModel):
     """Overall system health response."""
+
     overall_status: str = Field(description="Overall system health status")
     modules: List[ModuleHealthStatus]
     system_metrics: Dict[str, Any] = Field(default_factory=dict)
@@ -457,6 +500,7 @@ class SystemHealthResponse(BaseModel):
 
 class IntegrationEventRequest(BaseModel):
     """Request to trigger integration event."""
+
     event_type: EventTypeAPI
     event_data: Dict[str, Any] = Field(..., description="Event-specific data")
     priority: str = Field(default="normal", description="Event priority")
@@ -466,6 +510,7 @@ class IntegrationEventRequest(BaseModel):
 
 class IntegrationEventResponse(BaseModel):
     """Integration event response."""
+
     event_id: str
     event_type: EventTypeAPI
     status: str
@@ -478,8 +523,10 @@ class IntegrationEventResponse(BaseModel):
 
 # ================== CONFIGURATION SCHEMAS ==================
 
+
 class ModuleConfiguration(BaseModel):
     """Configuration for individual modules."""
+
     module_name: str
     enabled: bool = Field(default=True)
     settings: Dict[str, Any] = Field(default_factory=dict)
@@ -490,6 +537,7 @@ class ModuleConfiguration(BaseModel):
 
 class SystemConfiguration(BaseModel):
     """Overall system configuration."""
+
     voice_ai: ModuleConfiguration
     marketing: ModuleConfiguration
     retention: ModuleConfiguration
@@ -501,8 +549,10 @@ class SystemConfiguration(BaseModel):
 
 # ================== ERROR SCHEMAS ==================
 
+
 class APIError(BaseModel):
     """Standard API error response."""
+
     error: str
     message: str
     details: Optional[Dict[str, Any]] = None
@@ -513,6 +563,7 @@ class APIError(BaseModel):
 
 class ValidationError(BaseModel):
     """Validation error response."""
+
     error: str = "validation_error"
     message: str
     field_errors: List[Dict[str, str]] = Field(default_factory=list)
@@ -521,8 +572,10 @@ class ValidationError(BaseModel):
 
 # ================== UTILITY SCHEMAS ==================
 
+
 class PaginationParams(BaseModel):
     """Pagination parameters."""
+
     page: int = Field(default=1, ge=1, description="Page number")
     limit: int = Field(default=20, ge=1, le=100, description="Items per page")
     sort_by: Optional[str] = Field(None, description="Sort field")
@@ -531,6 +584,7 @@ class PaginationParams(BaseModel):
 
 class PaginatedResponse(BaseModel):
     """Paginated response wrapper."""
+
     items: List[Any]
     total_count: int = Field(ge=0)
     page: int = Field(ge=1)
@@ -542,6 +596,7 @@ class PaginatedResponse(BaseModel):
 
 class FilterParams(BaseModel):
     """Common filtering parameters."""
+
     date_from: Optional[datetime] = Field(None, description="Start date filter")
     date_to: Optional[datetime] = Field(None, description="End date filter")
     status: Optional[str] = Field(None, description="Status filter")

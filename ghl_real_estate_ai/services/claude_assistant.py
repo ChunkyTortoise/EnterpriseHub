@@ -4,36 +4,40 @@ Provides context-aware insights, action recommendations, and interactive support
 
 ENHANCED: Now includes multi-market awareness and churn recovery integration.
 """
-import streamlit as st
-import pandas as pd
+
 import asyncio
 import hashlib
 import json
 import time
 from datetime import datetime
-from typing import Dict, List, Any, Optional, Union
-from ghl_real_estate_ai.services.memory_service import MemoryService
+from typing import Any, Dict, List, Optional, Union
+
+import pandas as pd
+import streamlit as st
+
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.claude_orchestrator import ClaudeTaskType, ClaudeRequest
+from ghl_real_estate_ai.services.claude_orchestrator import ClaudeRequest, ClaudeTaskType
+from ghl_real_estate_ai.services.memory_service import MemoryService
 
 logger = get_logger(__name__)
 
 # ENHANCED: Import multi-market and churn recovery systems
-from ghl_real_estate_ai.markets.registry import get_market_service, MarketRegistry
 from ghl_real_estate_ai.markets.config_schemas import MarketConfig
+from ghl_real_estate_ai.markets.registry import MarketRegistry, get_market_service
+from ghl_real_estate_ai.services.churn_prediction_engine import (
+    ChurnEventTracker,
+    ChurnEventType,
+    ChurnReason,
+)
 from ghl_real_estate_ai.services.reengagement_engine import (
-    ReengagementEngine,
     CLVEstimate,
     CLVTier,
     RecoveryCampaignType,
+    ReengagementEngine,
 )
-from ghl_real_estate_ai.services.churn_prediction_engine import (
-    ChurnEventTracker,
-    ChurnReason,
-    ChurnEventType,
-)
+
 
 class ClaudeAssistant:
     """
@@ -51,6 +55,7 @@ class ClaudeAssistant:
         # Import here to avoid circular dependencies
         try:
             from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
+
             self.orchestrator = get_claude_orchestrator()
         except ImportError:
             self.orchestrator = None
@@ -71,7 +76,10 @@ class ClaudeAssistant:
         self.proactive_intelligence = None
         if proactive_mode:
             try:
-                from ghl_real_estate_ai.services.proactive_conversation_intelligence import ProactiveConversationIntelligence
+                from ghl_real_estate_ai.services.proactive_conversation_intelligence import (
+                    ProactiveConversationIntelligence,
+                )
+
                 self.proactive_intelligence = ProactiveConversationIntelligence(self)
                 logger.info("AI Concierge proactive intelligence enabled")
             except ImportError as e:
@@ -84,9 +92,9 @@ class ClaudeAssistant:
         self._initialize_state()
 
     def _initialize_state(self):
-        if 'assistant_greeted' not in st.session_state:
+        if "assistant_greeted" not in st.session_state:
             st.session_state.assistant_greeted = False
-        if 'claude_history' not in st.session_state:
+        if "claude_history" not in st.session_state:
             st.session_state.claude_history = []
 
     # ============================================================================
@@ -188,7 +196,8 @@ class ClaudeAssistant:
         """Renders the persistent sidebar intelligence panel."""
         with st.sidebar:
             st.markdown("---")
-            st.markdown(f"""
+            st.markdown(
+                f"""
             <div style='background: linear-gradient(135deg, #6D28D9 0%, #4C1D95 100%); 
                         padding: 1.25rem; border-radius: 12px; color: white; margin-bottom: 1rem;
                         box-shadow: 0 4px 15px rgba(109, 40, 217, 0.3); position: relative; overflow: hidden;'>
@@ -201,37 +210,39 @@ class ClaudeAssistant:
                     Context: <b>{hub_name}</b> ({market})
                 </p>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
             # Generate and show context-aware insight
             insight = self.get_insight(hub_name, leads)
             st.info(f"💡 **Claude's Note:** {insight}")
-            
+
             # Interactive Query
             self.render_chat_interface(leads, market)
 
     def get_insight(self, hub_name: str, leads: Dict[str, Any]) -> str:
         """Generates a contextual insight based on current hub and data."""
-        clean_hub = hub_name.split(' ', 1)[1] if ' ' in hub_name else hub_name
-        
+        clean_hub = hub_name.split(" ", 1)[1] if " " in hub_name else hub_name
+
         # If orchestrator is available, we could potentially do a quick async analysis
         # But for UI responsiveness, we use pre-calculated or persona-based insights here
         # or call a fast analysis method.
-        
+
         if "Executive" in clean_hub:
-            hot_leads = sum(1 for l in leads.values() if l and l.get('classification') == 'hot')
+            hot_leads = sum(1 for l in leads.values() if l and l.get("classification") == "hot")
             return f"Jorge, your pipeline has {hot_leads} leads ready for immediate closing. Most are focused on the Austin downtown cluster."
-        
+
         elif "Lead Intelligence" in clean_hub:
-            selected = st.session_state.get('selected_lead_name', '-- Select a Lead --')
+            selected = st.session_state.get("selected_lead_name", "-- Select a Lead --")
             if selected != "-- Select a Lead --":
                 # Attempt to get semantic memory from Graphiti
                 try:
                     # Resolve lead_id from session state options if available
-                    lead_options = st.session_state.get('lead_options', {})
+                    lead_options = st.session_state.get("lead_options", {})
                     lead_data = lead_options.get(selected, {})
-                    lead_id = lead_data.get('lead_id')
-                    
+                    lead_id = lead_data.get("lead_id")
+
                     extra_context = ""
                     if lead_id:
                         # Synchronous wrapper for async call
@@ -240,7 +251,7 @@ class ClaudeAssistant:
                         except RuntimeError:
                             loop = asyncio.new_event_loop()
                             asyncio.set_event_loop(loop)
-                            
+
                         context = loop.run_until_complete(self.memory_service.get_context(lead_id))
                         if context.get("relevant_knowledge"):
                             extra_context = f"\n\n**🧠 Graphiti Recall:** {context['relevant_knowledge']}"
@@ -256,10 +267,10 @@ class ClaudeAssistant:
                     return f"David is a seasoned investor focused on cash-on-cash return. Recommend sending the off-market ROI brief.{extra_context}"
                 return f"I've analyzed {selected}'s recent activity. They are showing high engagement but haven't booked a tour yet.{extra_context}"
             return "Select a lead to see my behavioral breakdown and conversion probability."
-            
+
         elif "Automation" in clean_hub:
             return "All GHL workflows are operational. I've detected a 15% increase in response rates since we switched to 'Natural' tone."
-            
+
         elif "Sales" in clean_hub:
             return "Ready to generate contracts. I've updated the buyer agreement template with the latest TX compliance rules."
 
@@ -268,7 +279,9 @@ class ClaudeAssistant:
     def render_chat_interface(self, leads: Dict[str, Any], market: str):
         """Renders the interactive 'Ask Claude' expander."""
         with st.expander("Commands & Queries", expanded=False):
-            query = st.text_input("How can I help Jorge?", placeholder="Ex: Draft text for Sarah", key="claude_sidebar_chat")
+            query = st.text_input(
+                "How can I help Jorge?", placeholder="Ex: Draft text for Sarah", key="claude_sidebar_chat"
+            )
             if query:
                 self._handle_query(query, leads, market)
 
@@ -290,29 +303,29 @@ class ClaudeAssistant:
                     context = {
                         "market": market,
                         "market_context": market_context,
-                        "current_hub": st.session_state.get('current_hub', 'Unknown'),
-                        "selected_lead": st.session_state.get('selected_lead_name', 'None'),
+                        "current_hub": st.session_state.get("current_hub", "Unknown"),
+                        "selected_lead": st.session_state.get("selected_lead_name", "None"),
                         # Add market-specific context
                         "market_specializations": market_context.get("specializations", {}),
                         "top_neighborhoods": [n["name"] for n in market_context.get("top_neighborhoods", [])[:3]],
                         "major_employers": [e["name"] for e in market_context.get("major_employers", [])[:3]],
                         "market_indicators": market_context.get("market_indicators", {}),
                     }
-                    
-                    response_obj = loop.run_until_complete(
-                        self.orchestrator.chat_query(query, context)
-                    )
-                    
+
+                    response_obj = loop.run_until_complete(self.orchestrator.chat_query(query, context))
+
                     # Record usage
-                    loop.run_until_complete(self.analytics.track_llm_usage(
-                        location_id="demo_location", # Sidebar doesn't have easy location_id access
-                        model=response_obj.model or "claude-3-5-sonnet",
-                        provider=response_obj.provider or "claude",
-                        input_tokens=response_obj.input_tokens or 0,
-                        output_tokens=response_obj.output_tokens or 0,
-                        cached=False
-                    ))
-                    
+                    loop.run_until_complete(
+                        self.analytics.track_llm_usage(
+                            location_id="demo_location",  # Sidebar doesn't have easy location_id access
+                            model=response_obj.model or "claude-3-5-sonnet",
+                            provider=response_obj.provider or "claude",
+                            input_tokens=response_obj.input_tokens or 0,
+                            output_tokens=response_obj.output_tokens or 0,
+                            cached=False,
+                        )
+                    )
+
                     response = response_obj.content
                 except Exception as e:
                     response = f"I encountered an error processing your request: {str(e)}"
@@ -324,12 +337,15 @@ class ClaudeAssistant:
                 else:
                     response = "I'm cross-referencing your GHL data. Should I run a diagnostic?"
 
-            st.markdown(f"""
+            st.markdown(
+                f"""
             <div style='background: #f3f4f6; padding: 10px; border-radius: 8px; border-left: 3px solid #6D28D9; margin-top: 10px;'>
                 <p style='font-size: 0.85rem; color: #1f2937; margin: 0;'>{response}</p>
             </div>
-            """, unsafe_allow_html=True)
-            
+            """,
+                unsafe_allow_html=True,
+            )
+
             if "Draft" in response or "script" in response.lower():
                 if st.button("🚀 Push to GHL"):
                     st.toast("Draft synced to GHL!")
@@ -337,7 +353,10 @@ class ClaudeAssistant:
     def greet_user(self, name: str = "Jorge"):
         """Shows the one-time greeting toast."""
         if not st.session_state.assistant_greeted:
-            st.toast(f"Hello {name}! 👋 I'm Claude, your AI partner. I've indexed your GHL context and I'm ready to work.", icon="🤖")
+            st.toast(
+                f"Hello {name}! 👋 I'm Claude, your AI partner. I've indexed your GHL context and I'm ready to work.",
+                icon="🤖",
+            )
             st.session_state.assistant_greeted = True
 
     async def generate_response(self, prompt: str, context: Optional[Dict[str, Any]] = None) -> str:
@@ -347,13 +366,9 @@ class ClaudeAssistant:
         """
         if not self.orchestrator:
             return "Claude service temporarily unavailable."
-            
-        request = ClaudeRequest(
-            task_type=ClaudeTaskType.LEAD_ANALYSIS,
-            context=context or {},
-            prompt=prompt
-        )
-        
+
+        request = ClaudeRequest(task_type=ClaudeTaskType.LEAD_ANALYSIS, context=context or {}, prompt=prompt)
+
         response = await self.orchestrator.process_request(request)
         return response.content
 
@@ -364,27 +379,30 @@ class ClaudeAssistant:
         """
         if not self.orchestrator:
             return {"error": "Claude service temporarily unavailable"}
-            
+
         request = ClaudeRequest(
             task_type=ClaudeTaskType.LEAD_ANALYSIS,
             context=context or {},
-            prompt=prompt + "\n\nReturn response in JSON format."
+            prompt=prompt + "\n\nReturn response in JSON format.",
         )
-        
+
         response = await self.orchestrator.process_request(request)
-        
+
         # Try to parse JSON from content
         try:
             import re
-            json_match = re.search(r'\{.*\}', response.content, re.DOTALL)
+
+            json_match = re.search(r"\{.*\}", response.content, re.DOTALL)
             if json_match:
                 return json.loads(json_match.group())
         except Exception:
             pass
-            
+
         return {"content": response.content}
 
-    async def generate_automated_report(self, data: Dict[str, Any], report_type: str = "Weekly Performance") -> Dict[str, Any]:
+    async def generate_automated_report(
+        self, data: Dict[str, Any], report_type: str = "Weekly Performance"
+    ) -> Dict[str, Any]:
         """
         🆕 Enhanced with Real Claude Intelligence
         Generates comprehensive reports using the Claude Automation Engine
@@ -410,7 +428,7 @@ class ClaudeAssistant:
                 report_type=report_type_enum,
                 data=data,
                 market_context={"location": "Austin", "market_conditions": "stable"},
-                time_period="current_period"
+                time_period="current_period",
             )
 
             # Convert to legacy format for backward compatibility
@@ -418,12 +436,14 @@ class ClaudeAssistant:
                 "title": automated_report.title,
                 "summary": automated_report.executive_summary,
                 "key_findings": automated_report.key_findings,
-                "strategic_recommendation": automated_report.opportunities[0] if automated_report.opportunities else "Continue current strategy",
+                "strategic_recommendation": automated_report.opportunities[0]
+                if automated_report.opportunities
+                else "Continue current strategy",
                 "generated_at": automated_report.generated_at.strftime("%Y-%m-%d %H:%M:%S"),
                 "confidence_score": automated_report.confidence_score,
                 "action_items": automated_report.action_items,
                 "risk_assessment": automated_report.risk_assessment,
-                "generation_time_ms": automated_report.generation_time_ms
+                "generation_time_ms": automated_report.generation_time_ms,
             }
 
         except Exception as e:
@@ -439,11 +459,11 @@ class ClaudeAssistant:
                     "key_findings": [
                         f"Average lead quality is scoring at {avg_score:.1f}/100, which is stable.",
                         "SMS engagement peaks between 6 PM and 8 PM local time.",
-                        "The 'Luxury' segment has 2x higher retention than 'Starter' leads this period."
+                        "The 'Luxury' segment has 2x higher retention than 'Starter' leads this period.",
                     ],
                     "strategic_recommendation": "Shift 15% of the automation budget toward weekend re-engagement triggers to capture high-velocity buyer intent.",
                     "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    "error": f"Claude service unavailable: {str(e)}"
+                    "error": f"Claude service unavailable: {str(e)}",
                 }
 
             return {"error": f"Report generation failed: {str(e)}"}
@@ -493,15 +513,15 @@ class ClaudeAssistant:
                     "real_time_coaching",
                     "objection_prediction",
                     "strategy_recommendations",
-                    "conversation_quality_assessment"
+                    "conversation_quality_assessment",
                 ],
                 "performance_targets": {
                     "insight_generation_latency_ms": 2000,
                     "ml_inference_time_ms": 25,
                     "cache_hit_rate_target": 0.60,
-                    "websocket_event_latency_ms": 100
+                    "websocket_event_latency_ms": 100,
                 },
-                "current_performance": performance_metrics
+                "current_performance": performance_metrics,
             }
 
         except Exception as e:
@@ -509,9 +529,7 @@ class ClaudeAssistant:
             raise RuntimeError(f"Failed to enable proactive insights: {str(e)}")
 
     async def generate_automated_report_with_insights(
-        self,
-        data: Dict[str, Any],
-        report_type: str = "Weekly Performance"
+        self, data: Dict[str, Any], report_type: str = "Weekly Performance"
     ) -> Dict[str, Any]:
         """
         Enhanced report generation with proactive intelligence insights.
@@ -537,26 +555,28 @@ class ClaudeAssistant:
                 insights_summary = await self._aggregate_proactive_insights(data)
 
                 # Enhance report with AI Concierge intelligence
-                base_report.update({
-                    "ai_concierge_insights": insights_summary,
-                    "proactive_coaching_summary": {
-                        "total_coaching_opportunities": insights_summary.get("coaching_opportunities", 0),
-                        "coaching_acceptance_rate": insights_summary.get("coaching_acceptance_rate", 0.0),
-                        "avg_coaching_effectiveness": insights_summary.get("avg_coaching_effectiveness", 0.0),
-                        "top_coaching_categories": insights_summary.get("top_coaching_categories", [])
-                    },
-                    "conversation_intelligence": {
-                        "avg_conversation_quality": insights_summary.get("avg_conversation_quality", 0.0),
-                        "quality_trend": insights_summary.get("quality_trend", "stable"),
-                        "improvement_recommendations": insights_summary.get("improvement_recommendations", []),
-                        "strategic_pivots_identified": insights_summary.get("strategic_pivots", 0)
-                    },
-                    "predictive_insights": {
-                        "objections_predicted": insights_summary.get("objections_predicted", 0),
-                        "prediction_accuracy": insights_summary.get("prediction_accuracy", 0.0),
-                        "early_intervention_opportunities": insights_summary.get("early_interventions", 0)
+                base_report.update(
+                    {
+                        "ai_concierge_insights": insights_summary,
+                        "proactive_coaching_summary": {
+                            "total_coaching_opportunities": insights_summary.get("coaching_opportunities", 0),
+                            "coaching_acceptance_rate": insights_summary.get("coaching_acceptance_rate", 0.0),
+                            "avg_coaching_effectiveness": insights_summary.get("avg_coaching_effectiveness", 0.0),
+                            "top_coaching_categories": insights_summary.get("top_coaching_categories", []),
+                        },
+                        "conversation_intelligence": {
+                            "avg_conversation_quality": insights_summary.get("avg_conversation_quality", 0.0),
+                            "quality_trend": insights_summary.get("quality_trend", "stable"),
+                            "improvement_recommendations": insights_summary.get("improvement_recommendations", []),
+                            "strategic_pivots_identified": insights_summary.get("strategic_pivots", 0),
+                        },
+                        "predictive_insights": {
+                            "objections_predicted": insights_summary.get("objections_predicted", 0),
+                            "prediction_accuracy": insights_summary.get("prediction_accuracy", 0.0),
+                            "early_intervention_opportunities": insights_summary.get("early_interventions", 0),
+                        },
                     }
-                })
+                )
 
                 logger.debug(f"Enhanced report with proactive insights for {report_type}")
 
@@ -631,12 +651,10 @@ class ClaudeAssistant:
             acceptance_rate = accepted_insights / total_insights if total_insights > 0 else 0.0
             avg_coaching_effectiveness = (
                 sum(coaching_effectiveness_scores) / len(coaching_effectiveness_scores)
-                if coaching_effectiveness_scores else 0.0
+                if coaching_effectiveness_scores
+                else 0.0
             )
-            avg_conversation_quality = (
-                sum(quality_scores) / len(quality_scores)
-                if quality_scores else 0.0
-            )
+            avg_conversation_quality = sum(quality_scores) / len(quality_scores) if quality_scores else 0.0
 
             return {
                 "total_insights": total_insights,
@@ -652,7 +670,7 @@ class ClaudeAssistant:
                 "top_coaching_categories": await self._get_top_coaching_categories(),
                 "improvement_recommendations": await self._generate_improvement_recommendations(),
                 "early_interventions": coaching_opportunities + strategy_pivots,
-                "prediction_accuracy": 0.85  # Simplified - calculate from actual outcomes
+                "prediction_accuracy": 0.85,  # Simplified - calculate from actual outcomes
             }
 
         except Exception as e:
@@ -686,7 +704,7 @@ class ClaudeAssistant:
             recommendations = [
                 "Focus on objection handling techniques for price concerns",
                 "Improve conversation quality through active listening",
-                "Increase closing attempt frequency in high-engagement conversations"
+                "Increase closing attempt frequency in high-engagement conversations",
             ]
 
             return recommendations
@@ -700,7 +718,7 @@ class ClaudeAssistant:
         lead_data: Dict[str, Any],
         risk_data: Optional[Dict[str, Any]] = None,
         market_id: Optional[str] = None,
-        churn_reason: Optional[ChurnReason] = None
+        churn_reason: Optional[ChurnReason] = None,
     ) -> Dict[str, Any]:
         """
         🆕 ENHANCED: Market-Aware Retention Script Generation
@@ -712,17 +730,17 @@ class ClaudeAssistant:
             market_narrative = self._format_market_context_for_messaging(market_context)
 
             # Calculate CLV for recovery decision making
-            estimated_transaction = lead_data.get('estimated_property_value', 500000)
+            estimated_transaction = lead_data.get("estimated_property_value", 500000)
             clv_estimate = CLVEstimate(
-                lead_id=lead_data.get('lead_id', 'demo_lead'),
+                lead_id=lead_data.get("lead_id", "demo_lead"),
                 estimated_transaction_value=estimated_transaction,
                 commission_rate=0.03,
-                probability_multiplier=lead_data.get('conversion_probability', 0.7)
+                probability_multiplier=lead_data.get("conversion_probability", 0.7),
             )
 
             # Determine churn reason if not provided
             if not churn_reason:
-                last_interaction_days = lead_data.get('last_interaction_days', 7)
+                last_interaction_days = lead_data.get("last_interaction_days", 7)
                 if last_interaction_days > 14:
                     churn_reason = ChurnReason.TIMING
                 else:
@@ -734,9 +752,9 @@ class ClaudeAssistant:
             # Import here to avoid circular imports
             from ghl_real_estate_ai.services.claude_automation_engine import ClaudeAutomationEngine, ScriptType
 
-            lead_name = lead_data.get('lead_name', 'Client')
-            lead_id = lead_data.get('lead_id', f"demo_{lead_name.lower().replace(' ', '_')}")
-            risk_score = risk_data.get('risk_score', 0) if risk_data else lead_data.get('risk_score_14d', 0)
+            lead_name = lead_data.get("lead_name", "Client")
+            lead_id = lead_data.get("lead_id", f"demo_{lead_name.lower().replace(' ', '_')}")
+            risk_score = risk_data.get("risk_score", 0) if risk_data else lead_data.get("risk_score_14d", 0)
 
             # Initialize automation engine
             automation_engine = ClaudeAutomationEngine()
@@ -751,7 +769,7 @@ class ClaudeAssistant:
                 "market_neighborhoods": [n["name"] for n in market_context.get("top_neighborhoods", [])[:3]],
                 "market_employers": [e["name"] for e in market_context.get("major_employers", [])[:3]],
                 "churn_reason": churn_reason.value if churn_reason else "timing",
-                **lead_data
+                **lead_data,
             }
 
             # Determine script type and channel based on risk and CLV
@@ -769,7 +787,7 @@ class ClaudeAssistant:
                 lead_id=lead_id,
                 channel=channel,
                 context_override=enhanced_context,
-                variants=2  # Generate A/B variants
+                variants=2,  # Generate A/B variants
             )
 
             # Build comprehensive response with market context
@@ -778,7 +796,9 @@ class ClaudeAssistant:
                 "risk_score": risk_score,
                 "market_context": market_context,
                 "script": automated_script.primary_script,
-                "strategy": f"Market-Aware {recovery_template['campaign_type'].replace('_', ' ').title()}" if recovery_template else "Market-Aware Re-engagement",
+                "strategy": f"Market-Aware {recovery_template['campaign_type'].replace('_', ' ').title()}"
+                if recovery_template
+                else "Market-Aware Re-engagement",
                 "reasoning": f"{automated_script.personalization_notes}\n\nMarket Context: {market_narrative}",
                 "channel_recommendation": automated_script.channel.upper(),
                 "alternative_scripts": automated_script.alternative_scripts,
@@ -790,7 +810,7 @@ class ClaudeAssistant:
                 "clv_estimate": clv_estimate.estimated_clv,
                 "clv_tier": clv_estimate.clv_tier.value,
                 "recovery_template_used": recovery_template["campaign_type"] if recovery_template else None,
-                "market_advantages": market_context.get("specializations", {}).get("unique_advantages", [])
+                "market_advantages": market_context.get("specializations", {}).get("unique_advantages", []),
             }
 
         except Exception as e:
@@ -798,11 +818,11 @@ class ClaudeAssistant:
             market_context = await self.get_market_context(market_id)
             market_name = market_context.get("market_name", "the local market")
 
-            lead_name = lead_data.get('lead_name', 'Client')
-            risk_score = risk_data.get('risk_score', 0) if risk_data else lead_data.get('risk_score_14d', 0)
+            lead_name = lead_data.get("lead_name", "Client")
+            risk_score = risk_data.get("risk_score", 0) if risk_data else lead_data.get("risk_score_14d", 0)
 
             # Market-aware fallback script
-            last_interaction = lead_data.get('last_interaction_days', 5)
+            last_interaction = lead_data.get("last_interaction_days", 5)
 
             reasoning = f"Lead {lead_name} has a {risk_score:.1f}% churn risk in the {market_name} market. "
             reasoning += f"After {last_interaction} days of inactivity, they need market-specific re-engagement highlighting current opportunities."
@@ -828,7 +848,7 @@ class ClaudeAssistant:
                 "strategy": strategy,
                 "reasoning": reasoning,
                 "channel_recommendation": "SMS (High Response Probability)" if risk_score > 60 else "Email",
-                "error": f"Claude service unavailable, using market-aware fallback: {str(e)}"
+                "error": f"Claude service unavailable, using market-aware fallback: {str(e)}",
             }
 
     def _get_recovery_template(self, clv_tier: CLVTier, churn_reason: ChurnReason) -> Optional[Dict[str, Any]]:
@@ -848,7 +868,9 @@ class ClaudeAssistant:
         else:
             return {"campaign_type": "market_comeback"}
 
-    async def generate_retention_script(self, lead_data: Dict[str, Any], risk_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def generate_retention_script(
+        self, lead_data: Dict[str, Any], risk_data: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """
         🆕 Enhanced with Real Claude Intelligence (Legacy Wrapper)
         ENHANCED: Now delegates to market-aware retention script generation
@@ -857,42 +879,47 @@ class ClaudeAssistant:
         return await self.generate_market_aware_retention_script(
             lead_data=lead_data,
             risk_data=risk_data,
-            market_id=self.market_id  # Use the assistant's market context
+            market_id=self.market_id,  # Use the assistant's market context
         )
 
     # ============================================================================
     # PERFORMANCE OPTIMIZATION: Semantic Caching Methods
     # ============================================================================
 
-    async def explain_match_with_claude(self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any], conversation_history: Optional[List[Dict]] = None) -> str:
+    async def explain_match_with_claude(
+        self,
+        property_data: Dict[str, Any],
+        lead_preferences: Dict[str, Any],
+        conversation_history: Optional[List[Dict]] = None,
+    ) -> str:
         """
         Generate AI-powered property match explanation with semantic caching for 40-60% latency reduction.
         """
         try:
             # Generate semantic cache key
             cache_key = self._generate_semantic_key(property_data, lead_preferences)
-            
+
             # Check semantic cache first
             cached_response = await self.semantic_cache.get_similar(cache_key, threshold=0.85)
             if cached_response:
                 logger.info(f"Semantic cache hit for property {property_data.get('id', 'unknown')}")
                 return cached_response
-            
+
             # Generate new response using Claude
             if self.orchestrator:
                 context = {
                     "property": property_data,
                     "preferences": lead_preferences,
                     "conversation_history": conversation_history or [],
-                    "market": self.market_id or "austin"
+                    "market": self.market_id or "austin",
                 }
-                
+
                 response_obj = await self.orchestrator.chat_query(
                     f"Explain why this property matches this lead's preferences: {property_data.get('address', 'Property')}",
-                    context
+                    context,
                 )
                 response = response_obj.content
-                
+
                 # Track analytics
                 await self.analytics.track_llm_usage(
                     location_id="demo_location",
@@ -900,17 +927,17 @@ class ClaudeAssistant:
                     provider=response_obj.provider or "claude",
                     input_tokens=response_obj.input_tokens or 0,
                     output_tokens=response_obj.output_tokens or 0,
-                    cached=False
+                    cached=False,
                 )
             else:
                 # Fallback response
                 response = f"This property at {property_data.get('address', 'the location')} aligns with your preferences for {', '.join(lead_preferences.keys())}. The market conditions are favorable for this type of property."
-            
+
             # Cache the response for future use
             await self.semantic_cache.set(cache_key, response, ttl=3600)
-            
+
             return response
-            
+
         except Exception as e:
             logger.error(f"Error in explain_match_with_claude: {e}")
             return f"This property matches your criteria based on location, price range, and key features you've prioritized."
@@ -918,14 +945,16 @@ class ClaudeAssistant:
     def _generate_semantic_key(self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any]) -> str:
         """Generate semantic fingerprint for caching similar property-preference combinations."""
         key_features = {
-            'price_range': self._normalize_price(property_data.get('price', 0)),
-            'bedrooms': property_data.get('bedrooms', 0),
-            'bathrooms': property_data.get('bathrooms', 0),
-            'location_zone': self._normalize_location(property_data.get('zip_code', '78701')),
-            'property_type': property_data.get('property_type', 'single_family'),
-            'preferences': sorted([str(k) for k in lead_preferences.keys()]) if isinstance(lead_preferences, dict) else []
+            "price_range": self._normalize_price(property_data.get("price", 0)),
+            "bedrooms": property_data.get("bedrooms", 0),
+            "bathrooms": property_data.get("bathrooms", 0),
+            "location_zone": self._normalize_location(property_data.get("zip_code", "78701")),
+            "property_type": property_data.get("property_type", "single_family"),
+            "preferences": sorted([str(k) for k in lead_preferences.keys()])
+            if isinstance(lead_preferences, dict)
+            else [],
         }
-        
+
         # Create deterministic hash from normalized features
         key_str = json.dumps(key_features, sort_keys=True)
         return hashlib.md5(key_str.encode()).hexdigest()
@@ -933,7 +962,7 @@ class ClaudeAssistant:
     def _normalize_price(self, price: Union[int, float, str]) -> str:
         """Normalize price to ranges for semantic similarity."""
         try:
-            price_val = float(str(price).replace('$', '').replace(',', ''))
+            price_val = float(str(price).replace("$", "").replace(",", ""))
             if price_val < 300000:
                 return "under_300k"
             elif price_val < 500000:
@@ -951,17 +980,17 @@ class ClaudeAssistant:
         """Normalize zip codes to general zones for semantic similarity."""
         zip_str = str(zip_code)
         austin_zones = {
-            '787': 'central_austin',
-            '786': 'north_austin', 
-            '785': 'south_austin',
-            '783': 'west_austin',
-            '781': 'east_austin'
+            "787": "central_austin",
+            "786": "north_austin",
+            "785": "south_austin",
+            "783": "west_austin",
+            "781": "east_austin",
         }
-        
+
         for prefix, zone in austin_zones.items():
             if zip_str.startswith(prefix):
                 return zone
-        return 'general_austin'
+        return "general_austin"
 
 
 class SemanticResponseCache:
@@ -989,20 +1018,14 @@ class SemanticResponseCache:
         self.similarity_threshold = 0.87  # High threshold for quality matches
         self.fast_similarity_threshold = 0.95  # Ultra-fast exact matches
         self.embedding_cache_ttl = 7200  # 2 hours for embeddings
-        self.response_cache_ttl = 1800   # 30 minutes for responses
+        self.response_cache_ttl = 1800  # 30 minutes for responses
 
         # Initialize embeddings model lazily
         self._embeddings_model = None
         self._embedding_dim = 384  # all-MiniLM-L6-v2 dimension
 
         # Performance tracking
-        self.cache_stats = {
-            "hits": 0,
-            "misses": 0,
-            "semantic_matches": 0,
-            "exact_matches": 0,
-            "avg_similarity": 0.0
-        }
+        self.cache_stats = {"hits": 0, "misses": 0, "semantic_matches": 0, "exact_matches": 0, "avg_similarity": 0.0}
 
         logger.info("Enhanced SemanticResponseCache initialized with multi-layer caching")
 
@@ -1011,8 +1034,9 @@ class SemanticResponseCache:
         if self._embeddings_model is None:
             try:
                 from sentence_transformers import SentenceTransformer
+
                 # Use lightweight, fast model optimized for semantic search
-                self._embeddings_model = SentenceTransformer('all-MiniLM-L6-v2')
+                self._embeddings_model = SentenceTransformer("all-MiniLM-L6-v2")
                 logger.info("Sentence transformer model loaded successfully")
             except ImportError:
                 logger.warning("sentence-transformers not available, falling back to hash-based caching")
@@ -1022,7 +1046,7 @@ class SemanticResponseCache:
     def _normalize_query(self, query: str) -> str:
         """Normalize query for better caching."""
         # Remove extra spaces, convert to lowercase, basic normalization
-        normalized = ' '.join(query.lower().strip().split())
+        normalized = " ".join(query.lower().strip().split())
 
         # Remove common variations that don't affect semantic meaning
         replacements = {
@@ -1032,7 +1056,7 @@ class SemanticResponseCache:
             "i need": "provide",
             "i want": "provide",
             "show me": "provide",
-            "tell me": "provide"
+            "tell me": "provide",
         }
 
         for old, new in replacements.items():
@@ -1086,6 +1110,7 @@ class SemanticResponseCache:
         """Optimized cosine similarity computation."""
         try:
             import numpy as np
+
             v1, v2 = np.array(vec1), np.array(vec2)
             return float(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
         except ImportError:
@@ -1126,9 +1151,9 @@ class SemanticResponseCache:
                 self.cache_stats["hits"] += 1
                 self.cache_stats["semantic_matches"] += 1
                 self.cache_stats["avg_similarity"] = (
-                    (self.cache_stats["avg_similarity"] * (self.cache_stats["semantic_matches"] - 1) +
-                     semantic_match["similarity"]) / self.cache_stats["semantic_matches"]
-                )
+                    self.cache_stats["avg_similarity"] * (self.cache_stats["semantic_matches"] - 1)
+                    + semantic_match["similarity"]
+                ) / self.cache_stats["semantic_matches"]
                 return semantic_match["response"]
 
             # Cache miss
@@ -1150,7 +1175,7 @@ class SemanticResponseCache:
             query.replace(".", ""),
             query.replace(",", ""),
             " ".join(query.split()[:5]),  # First 5 words
-            " ".join(query.split()[-5:])  # Last 5 words
+            " ".join(query.split()[-5:]),  # Last 5 words
         ]
 
         for variation in variations:
@@ -1159,10 +1184,12 @@ class SemanticResponseCache:
                 cached = await self.cache.get(f"variation_{var_hash}")
                 if cached:
                     data = json.loads(cached)
-                    matches.append({
-                        "similarity": 0.95,  # High similarity for variations
-                        "response": data
-                    })
+                    matches.append(
+                        {
+                            "similarity": 0.95,  # High similarity for variations
+                            "response": data,
+                        }
+                    )
             except Exception:
                 continue
 
@@ -1197,10 +1224,7 @@ class SemanticResponseCache:
 
                         if similarity > best_similarity and similarity >= threshold:
                             best_similarity = similarity
-                            best_match = {
-                                "similarity": similarity,
-                                "response": data.get("response")
-                            }
+                            best_match = {"similarity": similarity, "response": data.get("response")}
 
                 except Exception:
                     continue
@@ -1238,7 +1262,7 @@ class SemanticResponseCache:
                     "response": response_data,
                     "embedding": query_embedding,
                     "timestamp": datetime.now().isoformat(),
-                    "context": context
+                    "context": context,
                 }
 
                 await self.cache.set(f"semantic_query_{query_hash}", json.dumps(semantic_data), ttl=ttl)
@@ -1247,19 +1271,14 @@ class SemanticResponseCache:
                 variations = [normalized_query.replace("?", ""), normalized_query.replace(".", "")]
                 for variation in variations:
                     var_hash = hashlib.sha256(variation.encode()).hexdigest()
-                    await self.cache.set(f"variation_{var_hash}", json.dumps(response_data), ttl=ttl//2)
+                    await self.cache.set(f"variation_{var_hash}", json.dumps(response_data), ttl=ttl // 2)
 
             # Update L1 cache
-            self.memory_cache[query_hash] = {
-                "response": response_data,
-                "timestamp": time.time(),
-                "ttl": ttl
-            }
+            self.memory_cache[query_hash] = {"response": response_data, "timestamp": time.time(), "ttl": ttl}
 
             # Manage L1 cache size
             if len(self.memory_cache) > self.max_memory_entries:
-                oldest_key = min(self.memory_cache.keys(),
-                               key=lambda k: self.memory_cache[k]["timestamp"])
+                oldest_key = min(self.memory_cache.keys(), key=lambda k: self.memory_cache[k]["timestamp"])
                 del self.memory_cache[oldest_key]
 
             logger.debug(f"Cached response for query: {normalized_query[:50]}...")
@@ -1294,7 +1313,7 @@ class SemanticResponseCache:
             "hit_rate": hit_rate,
             "total_requests": total_requests,
             "memory_cache_size": len(self.memory_cache),
-            "embeddings_cache_size": len(self.embeddings_cache)
+            "embeddings_cache_size": len(self.embeddings_cache),
         }
 
     async def clear_semantic_cache(self) -> bool:
@@ -1320,7 +1339,7 @@ class SemanticResponseCache:
                 "misses": 0,
                 "semantic_matches": 0,
                 "exact_matches": 0,
-                "avg_similarity": 0.0
+                "avg_similarity": 0.0,
             }
 
             logger.info("Semantic cache cleared successfully")

@@ -23,6 +23,7 @@ if str(demo_root) not in sys.path:
 if __name__ == "__main__":
     import streamlit.web.bootstrap
     from streamlit.web import cli as stcli
+
     try:
         from streamlit.runtime import exists
     except ImportError:
@@ -44,11 +45,11 @@ if __name__ == "__main__":
         # Execute the target script in the current process to proxy it
         with open(TARGET_APP) as f:
             code = f.read()
-        
+
         # We must update __file__ so the inner script resolves relative paths correctly
         global_vars = {
             "__file__": str(TARGET_APP),
             "__name__": "__main__",
         }
-        
+
         exec(code, global_vars)

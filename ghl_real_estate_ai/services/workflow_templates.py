@@ -12,14 +12,16 @@ Templates include:
 - Post-closing follow-up
 """
 
-from typing import Dict, List, Optional, Any
+import json
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-import json
+from typing import Any, Dict, List, Optional
+
 
 class WorkflowCategory(Enum):
     """Workflow template categories"""
+
     LEAD_NURTURING = "lead_nurturing"
     BUYER_JOURNEY = "buyer_journey"
     SELLER_ENGAGEMENT = "seller_engagement"
@@ -28,8 +30,10 @@ class WorkflowCategory(Enum):
     REFERRAL_GENERATION = "referral_generation"
     MARKET_UPDATE = "market_update"
 
+
 class LeadType(Enum):
     """Lead type classifications"""
+
     FIRST_TIME_BUYER = "first_time_buyer"
     REPEAT_BUYER = "repeat_buyer"
     SELLER = "seller"
@@ -37,9 +41,11 @@ class LeadType(Enum):
     LUXURY_CLIENT = "luxury_client"
     COMMERCIAL = "commercial"
 
+
 @dataclass
 class WorkflowTemplate:
     """Workflow template definition"""
+
     template_id: str
     name: str
     description: str
@@ -52,6 +58,7 @@ class WorkflowTemplate:
     customization_options: Dict[str, Any] = field(default_factory=dict)
     is_premium: bool = False
     created_at: datetime = field(default_factory=datetime.now)
+
 
 class WorkflowTemplateLibrary:
     """Library of real estate workflow templates"""
@@ -96,17 +103,15 @@ class WorkflowTemplateLibrary:
                 "delay_config": {"type": "fixed", "seconds": 0},
                 "config": {
                     "message": "Hi {{first_name}}! Thanks for your interest in {{property_type}}. I'm {{agent_name}}, your local real estate expert. I'll help you find the perfect property! 🏡",
-                    "sender_id": "RealEstate"
+                    "sender_id": "RealEstate",
                 },
                 "branches": [
                     {
                         "name": "SMS Delivered",
-                        "conditions": [
-                            {"field": "sms_delivered", "operator": "is_true", "value": True}
-                        ],
-                        "next_step_id": "welcome_2"
+                        "conditions": [{"field": "sms_delivered", "operator": "is_true", "value": True}],
+                        "next_step_id": "welcome_2",
                     }
-                ]
+                ],
             },
             {
                 "id": "welcome_2",
@@ -136,44 +141,34 @@ I'll be in touch soon with some great options!
 Best regards,
 {{agent_name}}
 {{agent_phone}}
-                    """
+                    """,
                 },
                 "branches": [
                     {
                         "name": "Email Opened",
-                        "conditions": [
-                            {"field": "email_opened", "operator": "is_true", "value": True}
-                        ],
-                        "next_step_id": "welcome_3_engaged"
+                        "conditions": [{"field": "email_opened", "operator": "is_true", "value": True}],
+                        "next_step_id": "welcome_3_engaged",
                     },
                     {
                         "name": "Email Not Opened",
-                        "conditions": [
-                            {"field": "hours_since_last_step", "operator": "greater_than", "value": 24}
-                        ],
-                        "next_step_id": "welcome_3_followup"
-                    }
-                ]
+                        "conditions": [{"field": "hours_since_last_step", "operator": "greater_than", "value": 24}],
+                        "next_step_id": "welcome_3_followup",
+                    },
+                ],
             },
             {
                 "id": "welcome_3_engaged",
                 "name": "Engaged Lead - Property Matches",
                 "type": "property_matching",
                 "delay_config": {"type": "fixed", "seconds": 3600},  # 1 hour
-                "config": {
-                    "max_properties": 5,
-                    "include_new_listings": True,
-                    "personalization_level": "high"
-                },
+                "config": {"max_properties": 5, "include_new_listings": True, "personalization_level": "high"},
                 "branches": [
                     {
                         "name": "Properties Found",
-                        "conditions": [
-                            {"field": "property_matches.count", "operator": "greater_than", "value": 0}
-                        ],
-                        "next_step_id": "send_property_matches"
+                        "conditions": [{"field": "property_matches.count", "operator": "greater_than", "value": 0}],
+                        "next_step_id": "send_property_matches",
                     }
-                ]
+                ],
             },
             {
                 "id": "welcome_3_followup",
@@ -186,12 +181,10 @@ Best regards,
                 "branches": [
                     {
                         "name": "SMS Response",
-                        "conditions": [
-                            {"field": "sms_replied", "operator": "is_true", "value": True}
-                        ],
-                        "next_step_id": "schedule_call"
+                        "conditions": [{"field": "sms_replied", "operator": "is_true", "value": True}],
+                        "next_step_id": "schedule_call",
                     }
-                ]
+                ],
             },
             {
                 "id": "send_property_matches",
@@ -201,8 +194,8 @@ Best regards,
                 "config": {
                     "subject": "{{property_matches.count}} perfect properties for you!",
                     "template_id": "property_recommendations",
-                    "attach_property_details": True
-                }
+                    "attach_property_details": True,
+                },
             },
             {
                 "id": "schedule_call",
@@ -213,9 +206,9 @@ Best regards,
                     "title": "Schedule consultation call with {{first_name}} {{last_name}}",
                     "description": "Follow up on property search interest",
                     "priority": "high",
-                    "due_date_offset_hours": 24
-                }
-            }
+                    "due_date_offset_hours": 24,
+                },
+            },
         ]
 
         template = WorkflowTemplate(
@@ -231,15 +224,15 @@ Best regards,
                     "type": "lead_created",
                     "conditions": [
                         {"field": "source", "operator": "in", "value": ["website", "zillow", "realtor.com"]}
-                    ]
+                    ],
                 }
             ],
             success_metrics=["email_opened", "sms_response", "call_scheduled", "property_viewing_requested"],
             customization_options={
                 "timing_adjustments": True,
                 "message_personalization": True,
-                "property_matching_criteria": True
-            }
+                "property_matching_criteria": True,
+            },
         )
 
         self.templates[template.template_id] = template
@@ -273,8 +266,8 @@ I'm always here when you're ready to take the next step in your property search.
 
 Best,
 {{agent_name}}
-                    """
-                }
+                    """,
+                },
             },
             {
                 "id": "nurture_2",
@@ -284,8 +277,8 @@ Best,
                 "config": {
                     "subject": "{{property_type}} buying guide for {{location_preference}}",
                     "template_id": "buyer_education",
-                    "attach_pdf_guide": True
-                }
+                    "attach_pdf_guide": True,
+                },
             },
             {
                 "id": "nurture_3",
@@ -300,23 +293,19 @@ Best,
                         "name": "Positive Response",
                         "conditions": [
                             {"field": "sms_replied", "operator": "is_true", "value": True},
-                            {"field": "sentiment_analysis.positive", "operator": "is_true", "value": True}
+                            {"field": "sentiment_analysis.positive", "operator": "is_true", "value": True},
                         ],
-                        "next_step_id": "send_new_listings"
+                        "next_step_id": "send_new_listings",
                     }
-                ]
+                ],
             },
             {
                 "id": "send_new_listings",
                 "name": "Send New Listings",
                 "type": "property_matching",
                 "delay_config": {"type": "fixed", "seconds": 3600},  # 1 hour
-                "config": {
-                    "max_properties": 3,
-                    "only_new_listings": True,
-                    "days_back": 7
-                }
-            }
+                "config": {"max_properties": 3, "only_new_listings": True, "days_back": 7},
+            },
         ]
 
         template = WorkflowTemplate(
@@ -332,16 +321,16 @@ Best,
                     "type": "lead_score_based",
                     "conditions": [
                         {"field": "lead_score", "operator": "less_than", "value": 40},
-                        {"field": "timeline", "operator": "contains", "value": "6 months"}
-                    ]
+                        {"field": "timeline", "operator": "contains", "value": "6 months"},
+                    ],
                 }
             ],
             success_metrics=["email_engagement", "property_inquiries", "lead_score_increase"],
             customization_options={
                 "frequency_adjustment": True,
                 "content_personalization": True,
-                "market_focus_areas": True
-            }
+                "market_focus_areas": True,
+            },
         )
 
         self.templates[template.template_id] = template
@@ -360,8 +349,8 @@ Best,
                     "description": "Lead score: {{lead_score}} - High intent detected",
                     "priority": "urgent",
                     "assignee": "top_agent",
-                    "due_date_offset_hours": 1
-                }
+                    "due_date_offset_hours": 1,
+                },
             },
             {
                 "id": "hot_lead_2",
@@ -372,8 +361,8 @@ Best,
                     "subject": "Exclusive properties matching your criteria",
                     "template_id": "premium_listings",
                     "priority": "high",
-                    "include_virtual_tours": True
-                }
+                    "include_virtual_tours": True,
+                },
             },
             {
                 "id": "hot_lead_3",
@@ -383,25 +372,23 @@ Best,
                 "config": {
                     "script_template": "personal_introduction",
                     "max_attempts": 3,
-                    "attempt_interval": 1800  # 30 minutes between attempts
+                    "attempt_interval": 1800,  # 30 minutes between attempts
                 },
                 "branches": [
                     {
                         "name": "Call Connected",
-                        "conditions": [
-                            {"field": "call_connected", "operator": "is_true", "value": True}
-                        ],
-                        "next_step_id": "schedule_showing"
+                        "conditions": [{"field": "call_connected", "operator": "is_true", "value": True}],
+                        "next_step_id": "schedule_showing",
                     },
                     {
                         "name": "No Answer",
                         "conditions": [
                             {"field": "call_attempts", "operator": "equals", "value": 3},
-                            {"field": "call_connected", "operator": "is_false", "value": False}
+                            {"field": "call_connected", "operator": "is_false", "value": False},
                         ],
-                        "next_step_id": "voicemail_followup"
-                    }
-                ]
+                        "next_step_id": "voicemail_followup",
+                    },
+                ],
             },
             {
                 "id": "schedule_showing",
@@ -411,8 +398,8 @@ Best,
                 "config": {
                     "event_type": "property_showing",
                     "duration_minutes": 60,
-                    "suggested_times": ["tomorrow_morning", "tomorrow_afternoon", "weekend"]
-                }
+                    "suggested_times": ["tomorrow_morning", "tomorrow_afternoon", "weekend"],
+                },
             },
             {
                 "id": "voicemail_followup",
@@ -421,8 +408,8 @@ Best,
                 "delay_config": {"type": "fixed", "seconds": 1800},  # 30 minutes
                 "config": {
                     "message": "{{first_name}}, I left you a voicemail about some amazing {{property_type}} options. Text me back for immediate access to exclusive listings! 🏠"
-                }
-            }
+                },
+            },
         ]
 
         template = WorkflowTemplate(
@@ -436,25 +423,23 @@ Best,
             triggers=[
                 {
                     "type": "score_based",
-                    "conditions": [
-                        {"field": "lead_score", "operator": "greater_than", "value": 75}
-                    ]
+                    "conditions": [{"field": "lead_score", "operator": "greater_than", "value": 75}],
                 },
                 {
                     "type": "behavior_based",
                     "conditions": [
                         {"field": "property_views", "operator": "greater_than", "value": 5},
-                        {"field": "last_activity_hours", "operator": "less_than", "value": 2}
-                    ]
-                }
+                        {"field": "last_activity_hours", "operator": "less_than", "value": 2},
+                    ],
+                },
             ],
             success_metrics=["call_connected", "showing_scheduled", "offer_submitted"],
             customization_options={
                 "response_time_targets": True,
                 "agent_assignment_rules": True,
-                "priority_property_selection": True
+                "priority_property_selection": True,
             },
-            is_premium=True
+            is_premium=True,
         )
 
         self.templates[template.template_id] = template
@@ -471,8 +456,8 @@ Best,
                 "config": {
                     "subject": "Your First Home Buying Journey Starts Here!",
                     "template_id": "first_time_buyer_welcome",
-                    "attach_resources": ["first_time_buyer_guide.pdf", "mortgage_pre_approval_checklist.pdf"]
-                }
+                    "attach_resources": ["first_time_buyer_guide.pdf", "mortgage_pre_approval_checklist.pdf"],
+                },
             },
             {
                 "id": "ftb_2",
@@ -482,8 +467,8 @@ Best,
                 "config": {
                     "subject": "Step 1: Getting Pre-Approved for Your Mortgage",
                     "template_id": "mortgage_education",
-                    "include_lender_contacts": True
-                }
+                    "include_lender_contacts": True,
+                },
             },
             {
                 "id": "ftb_3",
@@ -493,8 +478,8 @@ Best,
                 "config": {
                     "subject": "How to Research {{location_preference}} Neighborhoods",
                     "template_id": "neighborhood_guide",
-                    "include_local_data": True
-                }
+                    "include_local_data": True,
+                },
             },
             {
                 "id": "ftb_4",
@@ -504,8 +489,8 @@ Best,
                 "config": {
                     "subject": "What to Expect During Your Home Inspection",
                     "template_id": "inspection_guide",
-                    "attach_inspection_checklist": True
-                }
+                    "attach_inspection_checklist": True,
+                },
             },
             {
                 "id": "ftb_5",
@@ -514,8 +499,8 @@ Best,
                 "delay_config": {"type": "fixed", "seconds": 604800},  # 1 week
                 "config": {
                     "message": "{{first_name}}, you've learned the basics! Ready to start looking at some {{property_type}} options in {{location_preference}}? Let me know! 🏠"
-                }
-            }
+                },
+            },
         ]
 
         template = WorkflowTemplate(
@@ -531,16 +516,12 @@ Best,
                     "type": "lead_profile",
                     "conditions": [
                         {"field": "buyer_type", "operator": "equals", "value": "first_time"},
-                        {"field": "education_level", "operator": "in", "value": ["beginner", "researching"]}
-                    ]
+                        {"field": "education_level", "operator": "in", "value": ["beginner", "researching"]},
+                    ],
                 }
             ],
             success_metrics=["email_engagement", "resource_downloads", "mortgage_pre_approval", "ready_to_view"],
-            customization_options={
-                "education_pace": True,
-                "local_market_focus": True,
-                "resource_selection": True
-            }
+            customization_options={"education_pace": True, "local_market_focus": True, "resource_selection": True},
         )
 
         self.templates[template.template_id] = template
@@ -559,8 +540,8 @@ Best,
                     "template_id": "luxury_welcome",
                     "personalization_level": "premium",
                     "include_agent_bio": True,
-                    "include_testimonials": True
-                }
+                    "include_testimonials": True,
+                },
             },
             {
                 "id": "luxury_2",
@@ -571,8 +552,8 @@ Best,
                     "property_tier": "luxury",
                     "max_properties": 3,
                     "include_exclusive_listings": True,
-                    "virtual_tour_required": True
-                }
+                    "virtual_tour_required": True,
+                },
             },
             {
                 "id": "luxury_3",
@@ -583,8 +564,8 @@ Best,
                     "title": "Personal call to luxury client {{first_name}} {{last_name}}",
                     "assignee": "luxury_specialist",
                     "priority": "urgent",
-                    "call_type": "luxury_introduction"
-                }
+                    "call_type": "luxury_introduction",
+                },
             },
             {
                 "id": "luxury_4",
@@ -594,9 +575,9 @@ Best,
                 "config": {
                     "subject": "Your Private Property Viewing Experience",
                     "template_id": "luxury_showing_invite",
-                    "include_concierge_services": True
-                }
-            }
+                    "include_concierge_services": True,
+                },
+            },
         ]
 
         template = WorkflowTemplate(
@@ -610,24 +591,20 @@ Best,
             triggers=[
                 {
                     "type": "budget_based",
-                    "conditions": [
-                        {"field": "budget_min", "operator": "greater_than", "value": 1000000}
-                    ]
+                    "conditions": [{"field": "budget_min", "operator": "greater_than", "value": 1000000}],
                 },
                 {
                     "type": "property_based",
-                    "conditions": [
-                        {"field": "property_interest", "operator": "contains", "value": "luxury"}
-                    ]
-                }
+                    "conditions": [{"field": "property_interest", "operator": "contains", "value": "luxury"}],
+                },
             ],
             success_metrics=["personal_call_completed", "private_showing_scheduled", "exclusive_access_granted"],
             customization_options={
                 "concierge_service_level": True,
                 "exclusive_listing_access": True,
-                "personalized_market_reports": True
+                "personalized_market_reports": True,
             },
-            is_premium=True
+            is_premium=True,
         )
 
         self.templates[template.template_id] = template
@@ -644,8 +621,8 @@ Best,
                 "config": {
                     "subject": "Let's Get Your Property Market-Ready!",
                     "template_id": "listing_prep_welcome",
-                    "include_market_analysis": True
-                }
+                    "include_market_analysis": True,
+                },
             },
             {
                 "id": "prep_2",
@@ -655,8 +632,8 @@ Best,
                 "config": {
                     "title": "Schedule home staging consultation for {{property_address}}",
                     "task_type": "staging_consultation",
-                    "priority": "medium"
-                }
+                    "priority": "medium",
+                },
             },
             {
                 "id": "prep_3",
@@ -666,8 +643,8 @@ Best,
                 "config": {
                     "title": "Schedule professional photography for {{property_address}}",
                     "task_type": "photography",
-                    "depends_on": "staging_completed"
-                }
+                    "depends_on": "staging_completed",
+                },
             },
             {
                 "id": "prep_4",
@@ -677,9 +654,9 @@ Best,
                 "config": {
                     "subject": "Your Listing Strategy & Pricing Recommendations",
                     "template_id": "listing_strategy",
-                    "include_comparable_sales": True
-                }
-            }
+                    "include_comparable_sales": True,
+                },
+            },
         ]
 
         template = WorkflowTemplate(
@@ -695,16 +672,12 @@ Best,
                     "type": "intent_based",
                     "conditions": [
                         {"field": "intent", "operator": "equals", "value": "selling"},
-                        {"field": "timeline", "operator": "contains", "value": "1-3 months"}
-                    ]
+                        {"field": "timeline", "operator": "contains", "value": "1-3 months"},
+                    ],
                 }
             ],
             success_metrics=["staging_completed", "photos_taken", "listing_live", "showing_requests"],
-            customization_options={
-                "staging_level": True,
-                "photography_package": True,
-                "marketing_channels": True
-            }
+            customization_options={"staging_level": True, "photography_package": True, "marketing_channels": True},
         )
 
         self.templates[template.template_id] = template
@@ -721,8 +694,8 @@ Best,
                 "config": {
                     "subject": "Congratulations on Your New Home! 🏡",
                     "template_id": "post_closing_congrats",
-                    "include_closing_gift": True
-                }
+                    "include_closing_gift": True,
+                },
             },
             {
                 "id": "post_2",
@@ -732,8 +705,8 @@ Best,
                 "config": {
                     "subject": "How Was Your Home Buying Experience?",
                     "template_id": "satisfaction_survey",
-                    "include_survey_link": True
-                }
+                    "include_survey_link": True,
+                },
             },
             {
                 "id": "post_3",
@@ -743,8 +716,8 @@ Best,
                 "config": {
                     "subject": "Your {{neighborhood}} Neighborhood Guide",
                     "template_id": "local_resources",
-                    "include_vendor_recommendations": True
-                }
+                    "include_vendor_recommendations": True,
+                },
             },
             {
                 "id": "post_4",
@@ -753,7 +726,7 @@ Best,
                 "delay_config": {"type": "fixed", "seconds": 2592000},  # 1 month
                 "config": {
                     "message": "{{first_name}}, how are you settling into your new home? Any questions about the neighborhood? Happy to help! 🏠"
-                }
+                },
             },
             {
                 "id": "post_5",
@@ -763,9 +736,9 @@ Best,
                 "config": {
                     "subject": "Know Anyone Else Looking for a Great Agent?",
                     "template_id": "referral_request",
-                    "include_referral_incentive": True
-                }
-            }
+                    "include_referral_incentive": True,
+                },
+            },
         ]
 
         template = WorkflowTemplate(
@@ -779,17 +752,11 @@ Best,
             triggers=[
                 {
                     "type": "event_based",
-                    "conditions": [
-                        {"field": "transaction_status", "operator": "equals", "value": "closed"}
-                    ]
+                    "conditions": [{"field": "transaction_status", "operator": "equals", "value": "closed"}],
                 }
             ],
             success_metrics=["survey_completed", "positive_review", "referral_received", "client_retention"],
-            customization_options={
-                "follow_up_frequency": True,
-                "gift_selection": True,
-                "local_vendor_network": True
-            }
+            customization_options={"follow_up_frequency": True, "gift_selection": True, "local_vendor_network": True},
         )
 
         self.templates[template.template_id] = template
@@ -807,8 +774,8 @@ Best,
                     "subject": "{{location}} Real Estate Market Update - {{month}} {{year}}",
                     "template_id": "monthly_market_report",
                     "include_market_stats": True,
-                    "include_price_trends": True
-                }
+                    "include_price_trends": True,
+                },
             },
             {
                 "id": "market_2",
@@ -818,8 +785,8 @@ Best,
                 "config": {
                     "property_selection": "featured_listings",
                     "max_properties": 4,
-                    "include_market_analysis": True
-                }
+                    "include_market_analysis": True,
+                },
             },
             {
                 "id": "market_3",
@@ -828,8 +795,8 @@ Best,
                 "delay_config": {"type": "fixed", "seconds": 432000},  # 5 days
                 "config": {
                     "message": "{{first_name}}, did you see this month's {{location}} market trends? Properties are {{market_trend}}. Great time to {{market_action}}! 📊"
-                }
-            }
+                },
+            },
         ]
 
         template = WorkflowTemplate(
@@ -845,16 +812,16 @@ Best,
                     "type": "time_based",
                     "conditions": [
                         {"field": "schedule_type", "operator": "equals", "value": "monthly"},
-                        {"field": "day_of_month", "operator": "equals", "value": 1}
-                    ]
+                        {"field": "day_of_month", "operator": "equals", "value": 1},
+                    ],
                 }
             ],
             success_metrics=["email_opens", "property_inquiries", "market_engagement"],
             customization_options={
                 "market_focus_areas": True,
                 "report_detail_level": True,
-                "property_selection_criteria": True
-            }
+                "property_selection_criteria": True,
+            },
         )
 
         self.templates[template.template_id] = template
@@ -877,14 +844,11 @@ Best,
         """Search templates by name or description"""
         query_lower = query.lower()
         return [
-            t for t in self.templates.values()
-            if query_lower in t.name.lower() or query_lower in t.description.lower()
+            t for t in self.templates.values() if query_lower in t.name.lower() or query_lower in t.description.lower()
         ]
 
     def get_recommended_templates(
-        self,
-        lead_data: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None
+        self, lead_data: Dict[str, Any], context: Optional[Dict[str, Any]] = None
     ) -> List[Dict[str, Any]]:
         """Get recommended templates for a lead"""
 
@@ -894,7 +858,7 @@ Best,
         lead_type = self._determine_lead_type(lead_data)
 
         # Get lead score
-        lead_score = lead_data.get('lead_score', 0)
+        lead_score = lead_data.get("lead_score", 0)
 
         # Get applicable templates
         applicable_templates = self.get_templates_for_lead_type(lead_type)
@@ -903,14 +867,16 @@ Best,
             score = self._calculate_template_score(template, lead_data, lead_type, lead_score)
 
             if score > 0.5:  # Threshold for recommendation
-                recommendations.append({
-                    'template': template,
-                    'score': score,
-                    'reason': self._get_recommendation_reason(template, lead_data)
-                })
+                recommendations.append(
+                    {
+                        "template": template,
+                        "score": score,
+                        "reason": self._get_recommendation_reason(template, lead_data),
+                    }
+                )
 
         # Sort by score
-        recommendations.sort(key=lambda x: x['score'], reverse=True)
+        recommendations.sort(key=lambda x: x["score"], reverse=True)
 
         return recommendations[:5]  # Top 5 recommendations
 
@@ -918,36 +884,32 @@ Best,
         """Determine lead type from lead data"""
 
         # Check explicit lead type field
-        if 'lead_type' in lead_data:
+        if "lead_type" in lead_data:
             try:
-                return LeadType(lead_data['lead_type'])
+                return LeadType(lead_data["lead_type"])
             except ValueError:
                 pass
 
         # Infer from other fields
-        budget = lead_data.get('budget_max', 0)
+        budget = lead_data.get("budget_max", 0)
         if budget > 1000000:
             return LeadType.LUXURY_CLIENT
 
-        intent = lead_data.get('intent', '').lower()
-        if 'sell' in intent:
+        intent = lead_data.get("intent", "").lower()
+        if "sell" in intent:
             return LeadType.SELLER
-        elif 'invest' in intent:
+        elif "invest" in intent:
             return LeadType.INVESTOR
 
         # Check if first-time buyer
-        if lead_data.get('first_time_buyer', False):
+        if lead_data.get("first_time_buyer", False):
             return LeadType.FIRST_TIME_BUYER
 
         # Default to repeat buyer
         return LeadType.REPEAT_BUYER
 
     def _calculate_template_score(
-        self,
-        template: WorkflowTemplate,
-        lead_data: Dict[str, Any],
-        lead_type: LeadType,
-        lead_score: float
+        self, template: WorkflowTemplate, lead_data: Dict[str, Any], lead_type: LeadType, lead_score: float
     ) -> float:
         """Calculate relevance score for template"""
 
@@ -958,34 +920,30 @@ Best,
             score += 0.4
 
         # Lead score alignment (30% of score)
-        if template.template_id == 'hot_lead_acceleration' and lead_score > 70:
+        if template.template_id == "hot_lead_acceleration" and lead_score > 70:
             score += 0.3
-        elif template.template_id == 'long_term_nurture' and lead_score < 40:
+        elif template.template_id == "long_term_nurture" and lead_score < 40:
             score += 0.3
         elif 40 <= lead_score <= 70:
             score += 0.2
 
         # Timeline alignment (20% of score)
-        timeline = lead_data.get('timeline', '').lower()
-        if 'asap' in timeline or 'immediate' in timeline:
+        timeline = lead_data.get("timeline", "").lower()
+        if "asap" in timeline or "immediate" in timeline:
             if template.estimated_duration_days <= 3:
                 score += 0.2
-        elif 'month' in timeline:
+        elif "month" in timeline:
             if template.estimated_duration_days <= 30:
                 score += 0.2
 
         # Budget alignment for luxury templates (10% of score)
-        budget = lead_data.get('budget_max', 0)
+        budget = lead_data.get("budget_max", 0)
         if template.is_premium and budget > 500000:
             score += 0.1
 
         return min(score, 1.0)
 
-    def _get_recommendation_reason(
-        self,
-        template: WorkflowTemplate,
-        lead_data: Dict[str, Any]
-    ) -> str:
+    def _get_recommendation_reason(self, template: WorkflowTemplate, lead_data: Dict[str, Any]) -> str:
         """Get human-readable reason for recommendation"""
 
         reasons = []
@@ -996,24 +954,21 @@ Best,
             reasons.append(f"Designed for {lead_type.value.replace('_', ' ')} leads")
 
         # Lead score
-        lead_score = lead_data.get('lead_score', 0)
-        if lead_score > 70 and 'hot' in template.template_id:
+        lead_score = lead_data.get("lead_score", 0)
+        if lead_score > 70 and "hot" in template.template_id:
             reasons.append("High engagement detected")
-        elif lead_score < 40 and 'nurture' in template.template_id:
+        elif lead_score < 40 and "nurture" in template.template_id:
             reasons.append("Ideal for long-term relationship building")
 
         # Timeline
-        timeline = lead_data.get('timeline', '').lower()
-        if 'asap' in timeline and template.estimated_duration_days <= 3:
+        timeline = lead_data.get("timeline", "").lower()
+        if "asap" in timeline and template.estimated_duration_days <= 3:
             reasons.append("Fast-track sequence for immediate needs")
 
         return "; ".join(reasons) if reasons else "Good general fit for your lead profile"
 
     def customize_template(
-        self,
-        template_id: str,
-        customizations: Dict[str, Any],
-        custom_name: Optional[str] = None
+        self, template_id: str, customizations: Dict[str, Any], custom_name: Optional[str] = None
     ) -> Optional[WorkflowTemplate]:
         """Create customized version of template"""
 
@@ -1027,19 +982,17 @@ Best,
             step_copy = step.copy()
 
             # Apply customizations
-            if 'timing_adjustments' in customizations:
-                timing_mult = customizations['timing_adjustments'].get('multiplier', 1.0)
-                if 'delay_config' in step_copy:
-                    step_copy['delay_config']['seconds'] = int(
-                        step_copy['delay_config']['seconds'] * timing_mult
-                    )
+            if "timing_adjustments" in customizations:
+                timing_mult = customizations["timing_adjustments"].get("multiplier", 1.0)
+                if "delay_config" in step_copy:
+                    step_copy["delay_config"]["seconds"] = int(step_copy["delay_config"]["seconds"] * timing_mult)
 
-            if 'message_personalization' in customizations:
-                personalizations = customizations['message_personalization']
-                if 'config' in step_copy:
+            if "message_personalization" in customizations:
+                personalizations = customizations["message_personalization"]
+                if "config" in step_copy:
                     for key, value in personalizations.items():
-                        if key in step_copy['config']:
-                            step_copy['config'][key] = value
+                        if key in step_copy["config"]:
+                            step_copy["config"][key] = value
 
             customized_steps.append(step_copy)
 
@@ -1058,7 +1011,7 @@ Best,
             triggers=base_template.triggers.copy(),
             success_metrics=base_template.success_metrics.copy(),
             customization_options=base_template.customization_options.copy(),
-            is_premium=base_template.is_premium
+            is_premium=base_template.is_premium,
         )
 
         return customized_template
@@ -1072,18 +1025,14 @@ Best,
 
         # Mock analytics data
         return {
-            'template_id': template_id,
-            'usage_count': 150,
-            'success_rate': 0.68,
-            'avg_completion_rate': 0.72,
-            'top_performing_steps': ['welcome_1', 'property_matches'],
-            'common_drop_off_points': ['welcome_3_followup'],
-            'avg_lead_score_improvement': 15.2,
-            'conversion_metrics': {
-                'email_opens': 0.75,
-                'sms_responses': 0.45,
-                'calls_scheduled': 0.32
-            }
+            "template_id": template_id,
+            "usage_count": 150,
+            "success_rate": 0.68,
+            "avg_completion_rate": 0.72,
+            "top_performing_steps": ["welcome_1", "property_matches"],
+            "common_drop_off_points": ["welcome_3_followup"],
+            "avg_lead_score_improvement": 15.2,
+            "conversion_metrics": {"email_opens": 0.75, "sms_responses": 0.45, "calls_scheduled": 0.32},
         }
 
     def export_template(self, template_id: str) -> Optional[Dict[str, Any]]:
@@ -1094,18 +1043,18 @@ Best,
             return None
 
         return {
-            'template_id': template.template_id,
-            'name': template.name,
-            'description': template.description,
-            'category': template.category.value,
-            'target_lead_types': [lt.value for lt in template.target_lead_types],
-            'estimated_duration_days': template.estimated_duration_days,
-            'steps': template.steps,
-            'triggers': template.triggers,
-            'success_metrics': template.success_metrics,
-            'customization_options': template.customization_options,
-            'is_premium': template.is_premium,
-            'exported_at': datetime.now().isoformat()
+            "template_id": template.template_id,
+            "name": template.name,
+            "description": template.description,
+            "category": template.category.value,
+            "target_lead_types": [lt.value for lt in template.target_lead_types],
+            "estimated_duration_days": template.estimated_duration_days,
+            "steps": template.steps,
+            "triggers": template.triggers,
+            "success_metrics": template.success_metrics,
+            "customization_options": template.customization_options,
+            "is_premium": template.is_premium,
+            "exported_at": datetime.now().isoformat(),
         }
 
     def import_template(self, template_data: Dict[str, Any]) -> bool:
@@ -1113,17 +1062,17 @@ Best,
 
         try:
             template = WorkflowTemplate(
-                template_id=template_data['template_id'],
-                name=template_data['name'],
-                description=template_data['description'],
-                category=WorkflowCategory(template_data['category']),
-                target_lead_types=[LeadType(lt) for lt in template_data['target_lead_types']],
-                estimated_duration_days=template_data['estimated_duration_days'],
-                steps=template_data['steps'],
-                triggers=template_data['triggers'],
-                success_metrics=template_data['success_metrics'],
-                customization_options=template_data['customization_options'],
-                is_premium=template_data.get('is_premium', False)
+                template_id=template_data["template_id"],
+                name=template_data["name"],
+                description=template_data["description"],
+                category=WorkflowCategory(template_data["category"]),
+                target_lead_types=[LeadType(lt) for lt in template_data["target_lead_types"]],
+                estimated_duration_days=template_data["estimated_duration_days"],
+                steps=template_data["steps"],
+                triggers=template_data["triggers"],
+                success_metrics=template_data["success_metrics"],
+                customization_options=template_data["customization_options"],
+                is_premium=template_data.get("is_premium", False),
             )
 
             self.templates[template.template_id] = template
@@ -1140,22 +1089,24 @@ Best,
         by_lead_type = defaultdict(list)
 
         for template in self.templates.values():
-            by_category[template.category.value].append({
-                'id': template.template_id,
-                'name': template.name,
-                'duration_days': template.estimated_duration_days,
-                'is_premium': template.is_premium
-            })
+            by_category[template.category.value].append(
+                {
+                    "id": template.template_id,
+                    "name": template.name,
+                    "duration_days": template.estimated_duration_days,
+                    "is_premium": template.is_premium,
+                }
+            )
 
             for lead_type in template.target_lead_types:
                 by_lead_type[lead_type.value].append(template.template_id)
 
         return {
-            'total_templates': len(self.templates),
-            'premium_templates': len([t for t in self.templates.values() if t.is_premium]),
-            'by_category': dict(by_category),
-            'by_lead_type': dict(by_lead_type),
-            'avg_duration_days': statistics.mean([t.estimated_duration_days for t in self.templates.values()]),
-            'categories': [c.value for c in WorkflowCategory],
-            'lead_types': [lt.value for lt in LeadType]
+            "total_templates": len(self.templates),
+            "premium_templates": len([t for t in self.templates.values() if t.is_premium]),
+            "by_category": dict(by_category),
+            "by_lead_type": dict(by_lead_type),
+            "avg_duration_days": statistics.mean([t.estimated_duration_days for t in self.templates.values()]),
+            "categories": [c.value for c in WorkflowCategory],
+            "lead_types": [lt.value for lt in LeadType],
         }

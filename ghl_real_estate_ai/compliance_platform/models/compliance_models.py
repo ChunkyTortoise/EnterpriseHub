@@ -10,11 +10,12 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ComplianceStatus(str, Enum):
     """Overall compliance status levels"""
+
     COMPLIANT = "compliant"
     PARTIALLY_COMPLIANT = "partially_compliant"
     NON_COMPLIANT = "non_compliant"
@@ -25,15 +26,17 @@ class ComplianceStatus(str, Enum):
 
 class RiskLevel(str, Enum):
     """EU AI Act risk classification levels"""
+
     UNACCEPTABLE = "unacceptable"  # Banned under EU AI Act
-    HIGH = "high"                   # Strict requirements
-    LIMITED = "limited"             # Transparency obligations
-    MINIMAL = "minimal"             # No specific requirements
-    UNKNOWN = "unknown"             # Needs assessment
+    HIGH = "high"  # Strict requirements
+    LIMITED = "limited"  # Transparency obligations
+    MINIMAL = "minimal"  # No specific requirements
+    UNKNOWN = "unknown"  # Needs assessment
 
 
 class RegulationType(str, Enum):
     """Supported regulatory frameworks"""
+
     EU_AI_ACT = "eu_ai_act"
     SEC_AI_GUIDANCE = "sec_ai_guidance"
     HIPAA = "hipaa"
@@ -50,15 +53,17 @@ class RegulationType(str, Enum):
 
 class ViolationSeverity(str, Enum):
     """Severity levels for compliance violations"""
-    CRITICAL = "critical"    # Immediate action required, potential legal exposure
-    HIGH = "high"            # Action required within 24 hours
-    MEDIUM = "medium"        # Action required within 7 days
-    LOW = "low"              # Action required within 30 days
+
+    CRITICAL = "critical"  # Immediate action required, potential legal exposure
+    HIGH = "high"  # Action required within 24 hours
+    MEDIUM = "medium"  # Action required within 7 days
+    LOW = "low"  # Action required within 30 days
     INFORMATIONAL = "informational"  # For awareness only
 
 
 class RemediationStatus(str, Enum):
     """Status of remediation actions"""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -78,9 +83,9 @@ class ComplianceScore(BaseModel):
                 "trend": "improving",
                 "trend_percentage": 5.2,
                 "last_assessed": "2026-01-21T12:00:00Z",
-                "assessor": "automated_v1"
+                "assessor": "automated_v1",
             }
-        }
+        },
     )
     """Quantified compliance score with breakdown"""
     overall_score: float = Field(..., ge=0, le=100, description="Overall compliance percentage")
@@ -125,9 +130,9 @@ class RiskAssessment(BaseModel):
                 "fairness_score": 75.0,
                 "assessed_at": "2026-01-21T12:00:00Z",
                 "risk_factors": ["Processing of sensitive financial data", "Limited explainability"],
-                "recommendations": ["Implement human-in-the-loop validation", "Enhance data logging"]
+                "recommendations": ["Implement human-in-the-loop validation", "Enhance data logging"],
             }
-        }
+        },
     )
     """Comprehensive risk assessment for an AI model or system"""
     assessment_id: str = Field(default_factory=lambda: str(uuid4()))
@@ -186,9 +191,9 @@ class PolicyViolation(BaseModel):
                 "detected_at": "2026-01-21T12:00:00Z",
                 "status": "open",
                 "potential_fine": 150000.0,
-                "reputational_risk": "high"
+                "reputational_risk": "high",
             }
-        }
+        },
     )
     """Detected policy or compliance violation"""
     violation_id: str = Field(default_factory=lambda: str(uuid4()))
@@ -246,6 +251,7 @@ class PolicyViolation(BaseModel):
 
 class RemediationAction(BaseModel):
     """Remediation action for a compliance violation"""
+
     action_id: str = Field(default_factory=lambda: str(uuid4()))
     violation_id: str
 
@@ -281,6 +287,7 @@ class RemediationAction(BaseModel):
 
 class AuditRecord(BaseModel):
     """Compliance audit trail record"""
+
     record_id: str = Field(default_factory=lambda: str(uuid4()))
 
     # Event classification
@@ -327,9 +334,9 @@ class AIModelRegistration(BaseModel):
                 "deployment_location": "cloud",
                 "intended_use": "Predicting residential property price fluctuations",
                 "applicable_regulations": ["gdpr", "eu_ai_act"],
-                "personal_data_processed": True
+                "personal_data_processed": True,
             }
-        }
+        },
     )
     """AI Model registration for compliance tracking"""
     model_id: str = Field(default_factory=lambda: str(uuid4()))
@@ -381,6 +388,7 @@ class AIModelRegistration(BaseModel):
 
 class ComplianceCertification(BaseModel):
     """Compliance certification record"""
+
     certification_id: str = Field(default_factory=lambda: str(uuid4()))
 
     # Certification details
@@ -411,10 +419,7 @@ class ComplianceCertification(BaseModel):
     @property
     def is_valid(self) -> bool:
         """Check if certification is currently valid"""
-        return (
-            self.status == "active"
-            and self.expiry_date > datetime.now(timezone.utc)
-        )
+        return self.status == "active" and self.expiry_date > datetime.now(timezone.utc)
 
     @property
     def days_until_expiry(self) -> int:
@@ -435,9 +440,9 @@ class ComplianceReport(BaseModel):
                 "overall_status": "compliant",
                 "models_assessed": 12,
                 "violations_summary": {"critical": 0, "high": 2, "medium": 5},
-                "key_findings": ["All high-risk models have undergone assessment", "Remediation time improved by 15%"]
+                "key_findings": ["All high-risk models have undergone assessment", "Remediation time improved by 15%"],
             }
-        }
+        },
     )
     """Comprehensive compliance report"""
     report_id: str = Field(default_factory=lambda: str(uuid4()))

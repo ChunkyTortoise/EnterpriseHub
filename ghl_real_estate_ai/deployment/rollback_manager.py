@@ -18,32 +18,29 @@ import asyncio
 import json
 import logging
 import shutil
-from datetime import datetime, timedelta
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import aiofiles
 import asyncpg
 import redis.asyncio as redis
 from pydantic import BaseModel
 
-
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('rollback.log'),
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("rollback.log"), logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
 
 
 class RollbackStatus(Enum):
     """Rollback operation status"""
+
     PENDING = "pending"
     PREPARING = "preparing"
     EXECUTING = "executing"
@@ -55,6 +52,7 @@ class RollbackStatus(Enum):
 
 class RollbackType(Enum):
     """Type of rollback operation"""
+
     AUTOMATIC = "automatic"
     MANUAL = "manual"
     EMERGENCY = "emergency"
@@ -62,6 +60,7 @@ class RollbackType(Enum):
 
 class ComponentType(Enum):
     """Components that can be rolled back"""
+
     APPLICATION = "application"
     DATABASE = "database"
     CONFIGURATION = "configuration"
@@ -72,6 +71,7 @@ class ComponentType(Enum):
 @dataclass
 class RollbackPoint:
     """Rollback point definition"""
+
     id: str
     timestamp: datetime
     version: str
@@ -85,6 +85,7 @@ class RollbackPoint:
 @dataclass
 class RollbackPlan:
     """Rollback execution plan"""
+
     rollback_point_id: str
     target_components: List[ComponentType]
     execution_order: List[ComponentType]
@@ -125,12 +126,7 @@ class RollbackManager:
         except Exception as e:
             logger.error(f"Failed to initialize storage directories: {e}")
 
-    async def create_rollback_point(
-        self,
-        version: str,
-        description: str,
-        created_by: str = "system"
-    ) -> str:
+    async def create_rollback_point(self, version: str, description: str, created_by: str = "system") -> str:
         """Create a new rollback point"""
         timestamp = datetime.utcnow()
         rollback_id = f"rb_{timestamp.strftime('%Y%m%d_%H%M%S')}_{version.replace('.', '_')}"
@@ -152,7 +148,7 @@ class RollbackManager:
                 description=description,
                 components=components,
                 health_snapshot=health_snapshot,
-                created_by=created_by
+                created_by=created_by,
             )
 
             # Validate rollback point
@@ -217,7 +213,7 @@ class RollbackManager:
                 "deployment_config": "production_deployment.yaml",
                 "environment_files": [".env.production"],
                 "backup_size_mb": 150.5,
-                "backup_time": datetime.utcnow().isoformat()
+                "backup_time": datetime.utcnow().isoformat(),
             }
 
         except Exception as e:
@@ -247,13 +243,8 @@ class RollbackManager:
                 "schema_version": "2.0.0",
                 "migration_state": "20260117_120000_add_enhanced_scoring",
                 "backup_size_mb": 45.2,
-                "table_counts": {
-                    "leads": 15420,
-                    "lead_scores": 98765,
-                    "voice_analyses": 5432,
-                    "predictive_models": 15
-                },
-                "backup_time": datetime.utcnow().isoformat()
+                "table_counts": {"leads": 15420, "lead_scores": 98765, "voice_analyses": 5432, "predictive_models": 15},
+                "backup_time": datetime.utcnow().isoformat(),
             }
 
         except Exception as e:
@@ -267,13 +258,7 @@ class RollbackManager:
             config_backup_dir.mkdir(parents=True, exist_ok=True)
 
             # Configuration files to backup
-            config_files = [
-                "nginx.conf",
-                "redis.conf",
-                "docker-compose.yml",
-                "logging.conf",
-                "monitoring.conf"
-            ]
+            config_files = ["nginx.conf", "redis.conf", "docker-compose.yml", "logging.conf", "monitoring.conf"]
 
             # Simulate configuration backup
             logger.info(f"Backing up configuration files to {config_backup_dir}")
@@ -288,9 +273,9 @@ class RollbackManager:
                 "environment_vars": {
                     "SERVICE_VERSION": "2.0.0",
                     "REDIS_URL": "redis://localhost:6379",
-                    "DATABASE_URL": "postgresql://localhost:5432/ghl_real_estate"
+                    "DATABASE_URL": "postgresql://localhost:5432/ghl_real_estate",
                 },
-                "backup_time": datetime.utcnow().isoformat()
+                "backup_time": datetime.utcnow().isoformat(),
             }
 
         except Exception as e:
@@ -307,28 +292,25 @@ class RollbackManager:
 
             logger.info(f"Capturing cache state for rollback point {rollback_id}")
 
-            redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
+            redis_client = redis.Redis(host="localhost", port=6379, decode_responses=True)
 
             # Get Redis info
             redis_info = await redis_client.info()
 
             # Get cache statistics
             cache_stats = {
-                "keyspace_hits": redis_info.get('keyspace_hits', 0),
-                "keyspace_misses": redis_info.get('keyspace_misses', 0),
-                "used_memory": redis_info.get('used_memory_human', '0'),
-                "connected_clients": redis_info.get('connected_clients', 0)
+                "keyspace_hits": redis_info.get("keyspace_hits", 0),
+                "keyspace_misses": redis_info.get("keyspace_misses", 0),
+                "used_memory": redis_info.get("used_memory_human", "0"),
+                "connected_clients": redis_info.get("connected_clients", 0),
             }
 
             return {
                 "backup_method": "redis_dump",
-                "redis_version": redis_info.get('redis_version', 'unknown'),
+                "redis_version": redis_info.get("redis_version", "unknown"),
                 "cache_stats": cache_stats,
-                "configuration": {
-                    "maxmemory_policy": "allkeys-lru",
-                    "timeout": 300
-                },
-                "backup_time": datetime.utcnow().isoformat()
+                "configuration": {"maxmemory_policy": "allkeys-lru", "timeout": 300},
+                "backup_time": datetime.utcnow().isoformat(),
             }
 
         except Exception as e:
@@ -350,17 +332,17 @@ class RollbackManager:
                 "configuration": {
                     "upstream_servers": [
                         {"host": "app1.internal", "port": 8000, "weight": 1},
-                        {"host": "app2.internal", "port": 8000, "weight": 1}
+                        {"host": "app2.internal", "port": 8000, "weight": 1},
                     ],
                     "health_check_path": "/health",
                     "ssl_certificate": "service6.crt",
-                    "ssl_key": "service6.key"
+                    "ssl_key": "service6.key",
                 },
                 "routing_rules": [
                     {"path": "/api/v1/*", "upstream": "service6_backend"},
-                    {"path": "/health/*", "upstream": "service6_health"}
+                    {"path": "/health/*", "upstream": "service6_health"},
                 ],
-                "backup_time": datetime.utcnow().isoformat()
+                "backup_time": datetime.utcnow().isoformat(),
             }
 
         except Exception as e:
@@ -378,14 +360,10 @@ class RollbackManager:
                     "redis": "healthy",
                     "ml_services": "healthy",
                     "voice_ai": "healthy",
-                    "analytics": "healthy"
+                    "analytics": "healthy",
                 },
-                "performance": {
-                    "response_time_ms": 145.0,
-                    "requests_per_second": 125.0,
-                    "error_rate_percent": 0.3
-                },
-                "timestamp": datetime.utcnow().isoformat()
+                "performance": {"response_time_ms": 145.0, "requests_per_second": 125.0, "error_rate_percent": 0.3},
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
         except Exception as e:
@@ -398,11 +376,7 @@ class RollbackManager:
             logger.info(f"Validating rollback point: {rollback_point.id}")
 
             # Check that all components were captured
-            required_components = [
-                ComponentType.APPLICATION,
-                ComponentType.DATABASE,
-                ComponentType.CONFIGURATION
-            ]
+            required_components = [ComponentType.APPLICATION, ComponentType.DATABASE, ComponentType.CONFIGURATION]
 
             for component in required_components:
                 if component not in rollback_point.components:
@@ -439,15 +413,13 @@ class RollbackManager:
                 "timestamp": rollback_point.timestamp.isoformat(),
                 "version": rollback_point.version,
                 "description": rollback_point.description,
-                "components": {
-                    str(k): v for k, v in rollback_point.components.items()
-                },
+                "components": {str(k): v for k, v in rollback_point.components.items()},
                 "health_snapshot": rollback_point.health_snapshot,
                 "created_by": rollback_point.created_by,
-                "validated": rollback_point.validated
+                "validated": rollback_point.validated,
             }
 
-            async with aiofiles.open(metadata_file, 'w') as f:
+            async with aiofiles.open(metadata_file, "w") as f:
                 await f.write(json.dumps(metadata, indent=2))
 
             logger.info(f"Rollback point metadata persisted: {metadata_file}")
@@ -460,7 +432,7 @@ class RollbackManager:
         self,
         rollback_point_id: str,
         rollback_type: RollbackType = RollbackType.MANUAL,
-        target_components: Optional[List[ComponentType]] = None
+        target_components: Optional[List[ComponentType]] = None,
     ) -> bool:
         """Execute rollback to specified point"""
         try:
@@ -477,7 +449,7 @@ class RollbackManager:
                 "type": rollback_type.value,
                 "status": RollbackStatus.PREPARING.value,
                 "start_time": datetime.utcnow(),
-                "target_components": target_components or list(rollback_point.components.keys())
+                "target_components": target_components or list(rollback_point.components.keys()),
             }
 
             logger.info(f"🔄 Starting {rollback_type.value} rollback to {rollback_point_id}")
@@ -514,9 +486,7 @@ class RollbackManager:
             return False
 
     def _create_rollback_plan(
-        self,
-        rollback_point: RollbackPoint,
-        target_components: Optional[List[ComponentType]]
+        self, rollback_point: RollbackPoint, target_components: Optional[List[ComponentType]]
     ) -> RollbackPlan:
         """Create rollback execution plan"""
         # Default to all components if none specified
@@ -525,10 +495,10 @@ class RollbackManager:
         # Define safe execution order (reverse of typical deployment order)
         execution_order = [
             ComponentType.LOAD_BALANCER,  # Stop traffic first
-            ComponentType.APPLICATION,    # Rollback application
-            ComponentType.CACHE,          # Clear/restore cache
+            ComponentType.APPLICATION,  # Rollback application
+            ComponentType.CACHE,  # Clear/restore cache
             ComponentType.CONFIGURATION,  # Restore configuration
-            ComponentType.DATABASE        # Rollback database last
+            ComponentType.DATABASE,  # Rollback database last
         ]
 
         # Filter to only requested components
@@ -540,7 +510,7 @@ class RollbackManager:
             "database_connectivity",
             "cache_connectivity",
             "application_response",
-            "performance_baseline"
+            "performance_baseline",
         ]
 
         # Estimate duration and risk
@@ -554,7 +524,7 @@ class RollbackManager:
             validation_checks=validation_checks,
             estimated_duration=estimated_duration,
             risk_level=risk_level,
-            approval_required=(risk_level == "high")
+            approval_required=(risk_level == "high"),
         )
 
     async def _execute_rollback_plan(self, rollback_point: RollbackPoint, plan: RollbackPlan) -> bool:
@@ -856,7 +826,7 @@ class RollbackManager:
             "active_rollback": self.active_rollback,
             "available_rollback_points": len(self.rollback_points),
             "rollback_history_count": len(self.rollback_history),
-            "last_rollback": self.rollback_history[-1] if self.rollback_history else None
+            "last_rollback": self.rollback_history[-1] if self.rollback_history else None,
         }
 
     def list_rollback_points(self) -> List[Dict[str, Any]]:
@@ -869,7 +839,7 @@ class RollbackManager:
                 "description": rb.description,
                 "created_by": rb.created_by,
                 "validated": rb.validated,
-                "components": list(rb.components.keys())
+                "components": list(rb.components.keys()),
             }
             for rb in sorted(self.rollback_points.values(), key=lambda x: x.timestamp, reverse=True)
         ]
@@ -888,7 +858,7 @@ async def emergency_rollback(rollback_point_id: str) -> bool:
         success = await rollback_manager.execute_rollback(
             rollback_point_id,
             RollbackType.EMERGENCY,
-            [ComponentType.APPLICATION, ComponentType.LOAD_BALANCER]  # Critical components only
+            [ComponentType.APPLICATION, ComponentType.LOAD_BALANCER],  # Critical components only
         )
 
         if success:
@@ -910,9 +880,7 @@ async def main():
 
         # Create a rollback point
         rollback_id = await rollback_manager.create_rollback_point(
-            version="1.9.0",
-            description="Pre-2.0.0 stable deployment",
-            created_by="production_deploy"
+            version="1.9.0", description="Pre-2.0.0 stable deployment", created_by="production_deploy"
         )
 
         logger.info(f"Created rollback point: {rollback_id}")

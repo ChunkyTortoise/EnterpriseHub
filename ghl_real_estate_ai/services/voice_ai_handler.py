@@ -17,29 +17,30 @@ with capabilities no competitor in the Inland Empire can match.
 import asyncio
 import json
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Union, Tuple, AsyncGenerator
-from dataclasses import dataclass, asdict
-from enum import Enum
 import re
 import uuid
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple, Union
 from urllib.parse import quote
 
 from ghl_real_estate_ai.core.llm_client import LLMClient
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import (
-    get_rancho_cucamonga_ai_assistant,
-    RanchoCucamongaConversationContext
-)
-from ghl_real_estate_ai.services.calendar_scheduler import get_smart_scheduler
 from ghl_real_estate_ai.data.rancho_cucamonga_market_data import get_rancho_cucamonga_market_intelligence
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.calendar_scheduler import get_smart_scheduler
+from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import (
+    RanchoCucamongaConversationContext,
+    get_rancho_cucamonga_ai_assistant,
+)
 
 logger = get_logger(__name__)
 
 
 class CallType(Enum):
     """Types of incoming calls"""
+
     NEW_LEAD = "new_lead"
     EXISTING_CLIENT = "existing_client"
     VENDOR_INQUIRY = "vendor_inquiry"
@@ -50,16 +51,18 @@ class CallType(Enum):
 
 class CallPriority(Enum):
     """Call priority levels for routing decisions"""
-    URGENT = "urgent"          # Route to Jorge immediately
-    HIGH = "high"              # Route to Jorge if available
-    NORMAL = "normal"          # Standard priority
-    MEDIUM = "medium"          # AI handles, Jorge backup
-    LOW = "low"                # AI handles completely
-    AUTOMATED = "automated"    # Full AI automation
+
+    URGENT = "urgent"  # Route to Jorge immediately
+    HIGH = "high"  # Route to Jorge if available
+    NORMAL = "normal"  # Standard priority
+    MEDIUM = "medium"  # AI handles, Jorge backup
+    LOW = "low"  # AI handles completely
+    AUTOMATED = "automated"  # Full AI automation
 
 
 class ConversationStage(Enum):
     """Voice conversation stages"""
+
     GREETING = "greeting"
     QUALIFICATION = "qualification"
     DISCOVERY = "discovery"
@@ -72,6 +75,7 @@ class ConversationStage(Enum):
 @dataclass
 class VoiceCallContext:
     """Voice call context and state management"""
+
     call_id: str
     phone_number: str
     caller_name: Optional[str] = None
@@ -122,10 +126,11 @@ class VoiceCallContext:
 @dataclass
 class VoiceResponse:
     """Structured voice AI response"""
+
     text: str
     audio_url: Optional[str] = None
     emotion: str = "neutral"  # neutral, enthusiastic, empathetic, urgent
-    pace: str = "normal"      # slow, normal, fast
+    pace: str = "normal"  # slow, normal, fast
     confidence: float = 1.0
     next_expected_input: Optional[str] = None
     suggested_actions: List[str] = None
@@ -171,35 +176,35 @@ class VoiceAIHandler:
                 "Knowledgeable about Inland Empire",
                 "Logistics/healthcare industry expertise",
                 "Results-oriented but personable",
-                "Speaks with confidence about RC market"
+                "Speaks with confidence about RC market",
             ],
             "speech_patterns": {
                 "greeting_style": "Friendly but professional introduction",
                 "information_delivery": "Clear, benefit-focused explanations",
                 "question_style": "Open-ended to encourage conversation",
-                "closing_style": "Clear next steps with urgency"
+                "closing_style": "Clear next steps with urgency",
             },
             "market_expertise": {
                 "key_phrases": [
                     "Inland Empire specialist",
                     "Logistics and healthcare relocations",
                     "Rancho Cucamonga expert",
-                    "Amazon/Kaiser proximity advantages"
+                    "Amazon/Kaiser proximity advantages",
                 ],
                 "value_propositions": [
                     "Deep local knowledge of IE market",
                     "Industry-specific relocation expertise",
                     "AI-powered market analysis",
-                    "24/7 availability and rapid response"
-                ]
+                    "24/7 availability and rapid response",
+                ],
             },
             "emotion_mapping": {
                 "new_lead": "enthusiastic",
                 "qualification": "professional",
                 "scheduling": "accommodating",
                 "problem_solving": "empathetic",
-                "urgency": "confident"
-            }
+                "urgency": "confident",
+            },
         }
 
     def _load_qualification_questions(self) -> List[Dict[str, Any]]:
@@ -211,7 +216,7 @@ class VoiceAIHandler:
                 "intent": "exclusivity_check",
                 "follow_up": "What's your experience been like so far?",
                 "disqualify_answers": ["yes", "working with someone", "have an agent"],
-                "weight": 20
+                "weight": 20,
             },
             {
                 "id": 2,
@@ -219,7 +224,7 @@ class VoiceAIHandler:
                 "intent": "motivation_discovery",
                 "follow_up": "Which company? I specialize in logistics and healthcare relocations.",
                 "qualify_indicators": ["amazon", "kaiser", "ups", "fedex", "relocating", "new job"],
-                "weight": 15
+                "weight": 15,
             },
             {
                 "id": 3,
@@ -228,7 +233,7 @@ class VoiceAIHandler:
                 "follow_up": "That's great timing with current market conditions.",
                 "qualify_indicators": ["immediately", "30 days", "60 days", "asap", "urgent"],
                 "disqualify_answers": ["just looking", "no rush", "maybe next year"],
-                "weight": 25
+                "weight": 25,
             },
             {
                 "id": 4,
@@ -236,7 +241,7 @@ class VoiceAIHandler:
                 "intent": "financial_readiness",
                 "follow_up": "I can connect you with excellent lenders familiar with IE market.",
                 "qualify_indicators": ["yes", "pre-approved", "cash", "ready"],
-                "weight": 20
+                "weight": 20,
             },
             {
                 "id": 5,
@@ -244,7 +249,7 @@ class VoiceAIHandler:
                 "intent": "budget_qualification",
                 "follow_up": "That budget gives you excellent options in Rancho Cucamonga.",
                 "qualify_threshold": 400000,  # Minimum budget
-                "weight": 15
+                "weight": 15,
             },
             {
                 "id": 6,
@@ -252,7 +257,7 @@ class VoiceAIHandler:
                 "intent": "location_preferences",
                 "follow_up": "I have deep expertise in that area. Let me share some insights.",
                 "qualify_indicators": ["etiwanda", "alta loma", "central", "victoria gardens"],
-                "weight": 5
+                "weight": 5,
             },
             {
                 "id": 7,
@@ -260,8 +265,8 @@ class VoiceAIHandler:
                 "intent": "motivation_discovery",
                 "follow_up": "I understand. Knowing the 'why' helps me find the perfect strategy for you.",
                 "qualify_indicators": ["upsizing", "downsizing", "investment", "school district", "work"],
-                "weight": 10
-            }
+                "weight": 10,
+            },
         ]
 
     async def handle_incoming_call(self, phone_number: str, caller_name: Optional[str] = None) -> VoiceCallContext:
@@ -269,11 +274,7 @@ class VoiceAIHandler:
         call_id = str(uuid.uuid4())
 
         # Create call context
-        context = VoiceCallContext(
-            call_id=call_id,
-            phone_number=phone_number,
-            caller_name=caller_name
-        )
+        context = VoiceCallContext(call_id=call_id, phone_number=phone_number, caller_name=caller_name)
 
         # Check if returning client
         existing_context = await self._check_existing_client(phone_number)
@@ -287,30 +288,27 @@ class VoiceAIHandler:
         logger.info(f"Incoming call initialized: {call_id} from {phone_number}")
         return context
 
-    async def process_voice_input(
-        self,
-        call_id: str,
-        speech_text: str,
-        audio_confidence: float = 1.0
-    ) -> VoiceResponse:
+    async def process_voice_input(self, call_id: str, speech_text: str, audio_confidence: float = 1.0) -> VoiceResponse:
         """Process voice input and generate intelligent response"""
 
         if call_id not in self.active_calls:
             return VoiceResponse(
                 text="I'm sorry, I don't have a record of this call. Let me transfer you to Jorge.",
-                emotion="empathetic"
+                emotion="empathetic",
             )
 
         context = self.active_calls[call_id]
 
         try:
             # Update transcript
-            context.transcript.append({
-                "timestamp": datetime.now().isoformat(),
-                "speaker": "caller",
-                "text": speech_text,
-                "confidence": audio_confidence
-            })
+            context.transcript.append(
+                {
+                    "timestamp": datetime.now().isoformat(),
+                    "speaker": "caller",
+                    "text": speech_text,
+                    "confidence": audio_confidence,
+                }
+            )
 
             # Analyze intent and sentiment
             intent_analysis = await self._analyze_intent(speech_text, context)
@@ -329,21 +327,21 @@ class VoiceAIHandler:
                 return await self._generate_transfer_response(context)
 
             # Generate AI response based on conversation stage
-            ai_response = await self._generate_contextual_response(
-                context, speech_text, intent_analysis, sentiment
-            )
+            ai_response = await self._generate_contextual_response(context, speech_text, intent_analysis, sentiment)
 
             # Update conversation context
             await self._update_conversation_context(context, speech_text, ai_response)
 
             # Store response in context
             context.ai_responses.append(ai_response.text)
-            context.transcript.append({
-                "timestamp": datetime.now().isoformat(),
-                "speaker": "ai_jorge",
-                "text": ai_response.text,
-                "confidence": 1.0
-            })
+            context.transcript.append(
+                {
+                    "timestamp": datetime.now().isoformat(),
+                    "speaker": "ai_jorge",
+                    "text": ai_response.text,
+                    "confidence": 1.0,
+                }
+            )
 
             # Cache conversation state
             await self._cache_conversation_state(context)
@@ -354,7 +352,7 @@ class VoiceAIHandler:
             logger.error(f"Error processing voice input for call {call_id}: {e}")
             return VoiceResponse(
                 text="I apologize for the technical difficulty. Let me connect you with Jorge right away.",
-                emotion="empathetic"
+                emotion="empathetic",
             )
 
     async def _analyze_intent(self, speech_text: str, context: VoiceCallContext) -> Dict[str, Any]:
@@ -384,11 +382,7 @@ Return JSON with: intents, emotion, urgency, qualification_signals, red_flags
 """
 
         try:
-            response = await self.llm_client.agenerate(
-                prompt=prompt,
-                max_tokens=500,
-                temperature=0.3
-            )
+            response = await self.llm_client.agenerate(prompt=prompt, max_tokens=500, temperature=0.3)
 
             # Parse JSON response
             result = json.loads(response.content)
@@ -402,7 +396,7 @@ Return JSON with: intents, emotion, urgency, qualification_signals, red_flags
                 "emotion": "neutral",
                 "urgency": "medium",
                 "qualification_signals": [],
-                "red_flags": []
+                "red_flags": [],
             }
 
     async def _analyze_sentiment(self, speech_text: str) -> Dict[str, float]:
@@ -410,13 +404,32 @@ Return JSON with: intents, emotion, urgency, qualification_signals, red_flags
 
         # Simple sentiment analysis - can be enhanced with more sophisticated models
         positive_words = [
-            "excited", "interested", "love", "perfect", "amazing", "great", "excellent",
-            "ready", "definitely", "absolutely", "fantastic", "wonderful"
+            "excited",
+            "interested",
+            "love",
+            "perfect",
+            "amazing",
+            "great",
+            "excellent",
+            "ready",
+            "definitely",
+            "absolutely",
+            "fantastic",
+            "wonderful",
         ]
 
         negative_words = [
-            "concerned", "worried", "expensive", "problem", "issue", "disappointed",
-            "frustrated", "difficult", "complicated", "unsure", "hesitant"
+            "concerned",
+            "worried",
+            "expensive",
+            "problem",
+            "issue",
+            "disappointed",
+            "frustrated",
+            "difficult",
+            "complicated",
+            "unsure",
+            "hesitant",
         ]
 
         text_lower = speech_text.lower()
@@ -431,10 +444,7 @@ Return JSON with: intents, emotion, urgency, qualification_signals, red_flags
         score = (positive_count - negative_count) / max(total_words / 10, 1)
         score = max(-1.0, min(1.0, score))
 
-        return {
-            "score": score,
-            "confidence": min((positive_count + negative_count) / total_words, 1.0)
-        }
+        return {"score": score, "confidence": min((positive_count + negative_count) / total_words, 1.0)}
 
     async def _make_routing_decision(self, context: VoiceCallContext, current_input: str) -> Dict[str, Any]:
         """Make intelligent routing decision based on conversation context"""
@@ -449,7 +459,7 @@ Return JSON with: intents, emotion, urgency, qualification_signals, red_flags
             "complaint",
             "problem with",
             "emergency",
-            "urgent matter"
+            "urgent matter",
         ]
 
         # Check for explicit transfer requests
@@ -459,7 +469,7 @@ Return JSON with: intents, emotion, urgency, qualification_signals, red_flags
                 return {
                     "should_transfer": True,
                     "reason": f"Explicit request: {trigger}",
-                    "priority": CallPriority.URGENT
+                    "priority": CallPriority.URGENT,
                 }
 
         # Qualification-based routing
@@ -471,14 +481,14 @@ Return JSON with: intents, emotion, urgency, qualification_signals, red_flags
             return {
                 "should_transfer": True,
                 "reason": f"High qualification score: {qualification_score}",
-                "priority": CallPriority.HIGH
+                "priority": CallPriority.HIGH,
             }
 
         # Continue with AI for medium/low qualified leads
         return {
             "should_transfer": False,
             "reason": f"Continuing AI conversation (score: {qualification_score})",
-            "priority": CallPriority.MEDIUM
+            "priority": CallPriority.MEDIUM,
         }
 
     async def _calculate_qualification_score(self, context: VoiceCallContext) -> int:
@@ -508,15 +518,19 @@ Return JSON with: intents, emotion, urgency, qualification_signals, red_flags
         # Pre-approval/financing readiness (15 points)
         financing_indicators = []
         for transcript_item in context.transcript:
-            if any(indicator in transcript_item["text"].lower() for indicator in
-                   ["pre-approved", "pre-qualification", "cash", "financing ready", "loan approved"]):
+            if any(
+                indicator in transcript_item["text"].lower()
+                for indicator in ["pre-approved", "pre-qualification", "cash", "financing ready", "loan approved"]
+            ):
                 score += 15
                 break
 
         # Exclusivity (15 points deduction if working with another agent)
         for transcript_item in context.transcript:
-            if any(exclusive in transcript_item["text"].lower() for exclusive in
-                   ["working with", "have an agent", "another agent"]):
+            if any(
+                exclusive in transcript_item["text"].lower()
+                for exclusive in ["working with", "have an agent", "another agent"]
+            ):
                 score -= 15
                 break
 
@@ -527,11 +541,7 @@ Return JSON with: intents, emotion, urgency, qualification_signals, red_flags
         return max(0, min(score, max_score))
 
     async def _generate_contextual_response(
-        self,
-        context: VoiceCallContext,
-        user_input: str,
-        intent_analysis: Dict[str, Any],
-        sentiment: Dict[str, float]
+        self, context: VoiceCallContext, user_input: str, intent_analysis: Dict[str, Any], sentiment: Dict[str, float]
     ) -> VoiceResponse:
         """Generate contextual AI response using Jorge's voice profile"""
 
@@ -548,7 +558,7 @@ Return JSON with: intents, emotion, urgency, qualification_signals, red_flags
             conversation_history=[
                 {"role": "user" if i % 2 == 0 else "assistant", "content": item["text"]}
                 for i, item in enumerate(context.transcript[-6:])  # Last 6 exchanges
-            ]
+            ],
         )
 
         # Determine emotional tone and pace
@@ -564,15 +574,11 @@ Return JSON with: intents, emotion, urgency, qualification_signals, red_flags
             pace=pace,
             confidence=0.9,
             next_expected_input=self._predict_next_input(context, response),
-            suggested_actions=suggested_actions
+            suggested_actions=suggested_actions,
         )
 
     async def _build_jorge_voice_prompt(
-        self,
-        context: VoiceCallContext,
-        user_input: str,
-        intent_analysis: Dict[str, Any],
-        sentiment: Dict[str, float]
+        self, context: VoiceCallContext, user_input: str, intent_analysis: Dict[str, Any], sentiment: Dict[str, float]
     ) -> str:
         """Build Jorge-specific voice prompt with market expertise"""
 
@@ -589,16 +595,16 @@ JORGE'S VOICE CHARACTERISTICS:
 
 CURRENT CONTEXT:
 - Conversation stage: {context.conversation_stage.value}
-- Caller sentiment: {sentiment.get('score', 0):.2f} (positive if >0)
-- Detected intent: {', '.join(intent_analysis.get('intents', []))}
+- Caller sentiment: {sentiment.get("score", 0):.2f} (positive if >0)
+- Detected intent: {", ".join(intent_analysis.get("intents", []))}
 - Qualification score: {context.qualification_score}/100
 
 CALLER INFORMATION:
 - Phone: {context.phone_number}
-- Name: {context.caller_name or 'Not provided'}
-- Employer: {context.employer or 'Unknown'}
-- Timeline: {context.timeline or 'Not specified'}
-- Budget: {f'${context.budget_range[0]:,}-${context.budget_range[1]:,}' if context.budget_range else 'Not specified'}
+- Name: {context.caller_name or "Not provided"}
+- Employer: {context.employer or "Unknown"}
+- Timeline: {context.timeline or "Not specified"}
+- Budget: {f"${context.budget_range[0]:,}-${context.budget_range[1]:,}" if context.budget_range else "Not specified"}
 
 CONVERSATION GUIDELINES FOR THIS STAGE:
 """
@@ -634,13 +640,13 @@ CONVERSATION GUIDELINES FOR THIS STAGE:
 - Share neighborhood expertise
 - Discuss current opportunities
 - Position yourself as the IE expert
-"""
+""",
         }
 
         base_prompt += stage_guidance.get(context.conversation_stage, "Provide helpful, expert guidance.")
 
         # Add current user input
-        base_prompt += f"\n\nCaller just said: \"{user_input}\"\n\n"
+        base_prompt += f'\n\nCaller just said: "{user_input}"\n\n'
 
         # Add market intelligence if relevant
         if context.neighborhood_preferences:
@@ -655,10 +661,7 @@ End with a question or clear next step when appropriate.
         return base_prompt
 
     def _determine_response_emotion(
-        self,
-        context: VoiceCallContext,
-        intent_analysis: Dict[str, Any],
-        sentiment: Dict[str, float]
+        self, context: VoiceCallContext, intent_analysis: Dict[str, Any], sentiment: Dict[str, float]
     ) -> str:
         """Determine appropriate emotional tone for response"""
 
@@ -674,11 +677,7 @@ End with a question or clear next step when appropriate.
         else:
             return "professional"
 
-    def _determine_response_pace(
-        self,
-        context: VoiceCallContext,
-        intent_analysis: Dict[str, Any]
-    ) -> str:
+    def _determine_response_pace(self, context: VoiceCallContext, intent_analysis: Dict[str, Any]) -> str:
         """Determine appropriate speaking pace"""
 
         if "urgent" in intent_analysis.get("urgency", "").lower():
@@ -691,10 +690,7 @@ End with a question or clear next step when appropriate.
             return "normal"
 
     async def _determine_next_conversation_stage(
-        self,
-        context: VoiceCallContext,
-        user_input: str,
-        intent_analysis: Dict[str, Any]
+        self, context: VoiceCallContext, user_input: str, intent_analysis: Dict[str, Any]
     ) -> ConversationStage:
         """Determine next conversation stage based on context"""
 
@@ -770,10 +766,7 @@ End with a question or clear next step when appropriate.
         return None
 
     async def _update_conversation_context(
-        self,
-        context: VoiceCallContext,
-        user_input: str,
-        ai_response: VoiceResponse
+        self, context: VoiceCallContext, user_input: str, ai_response: VoiceResponse
     ):
         """Update conversation context based on latest exchange"""
 
@@ -791,7 +784,7 @@ End with a question or clear next step when appropriate.
         timeline_patterns = [
             (r"(\d+)\s*(days?|weeks?|months?)", "timeline"),
             (r"(Union[immediately, asap]|right away)", "urgent"),
-            (r"(no Union[rush, just] Union[looking, maybe])", "flexible")
+            (r"(no Union[rush, just] Union[looking, maybe])", "flexible"),
         ]
 
         for pattern, category in timeline_patterns:
@@ -801,7 +794,7 @@ End with a question or clear next step when appropriate.
                 break
 
         # Extract budget information
-        budget_match = re.search(r'\$?([0-9,]+)', user_input.replace(",", ""))
+        budget_match = re.search(r"\$?([0-9,]+)", user_input.replace(",", ""))
         if budget_match and "budget" in user_lower or "price" in user_lower:
             try:
                 budget = int(budget_match.group(1).replace(",", ""))
@@ -812,8 +805,15 @@ End with a question or clear next step when appropriate.
 
         # Extract neighborhood preferences
         ie_neighborhoods = [
-            "etiwanda", "alta loma", "central", "victoria gardens",
-            "terra vista", "day creek", "upland", "fontana", "ontario"
+            "etiwanda",
+            "alta loma",
+            "central",
+            "victoria gardens",
+            "terra vista",
+            "day creek",
+            "upland",
+            "fontana",
+            "ontario",
         ]
         for neighborhood in ie_neighborhoods:
             if neighborhood in user_lower:
@@ -827,10 +827,7 @@ End with a question or clear next step when appropriate.
         """Cache conversation state for persistence"""
 
         cache_key = f"voice_call:{context.call_id}"
-        cache_data = {
-            "context": asdict(context),
-            "timestamp": datetime.now().isoformat()
-        }
+        cache_data = {"context": asdict(context), "timestamp": datetime.now().isoformat()}
 
         # Cache for 1 hour
         await self.cache.set(cache_key, cache_data, ttl=3600)
@@ -851,10 +848,11 @@ End with a question or clear next step when appropriate.
             "Let me connect you with Jorge right away. He'll be able to help you personally.",
             "I'm transferring you to Jorge now. He's our Inland Empire specialist and will take excellent care of you.",
             "Jorge is available right now. Let me get him on the line for you.",
-            "You'll want to speak directly with Jorge about this. Let me connect you immediately."
+            "You'll want to speak directly with Jorge about this. Let me connect you immediately.",
         ]
 
         import random
+
         message = random.choice(transfer_messages)
 
         return VoiceResponse(
@@ -862,7 +860,7 @@ End with a question or clear next step when appropriate.
             emotion="professional",
             pace="normal",
             confidence=1.0,
-            suggested_actions=["transfer_to_jorge", "log_high_priority_lead"]
+            suggested_actions=["transfer_to_jorge", "log_high_priority_lead"],
         )
 
     async def handle_call_completion(self, call_id: str) -> Dict[str, Any]:
@@ -882,7 +880,11 @@ End with a question or clear next step when appropriate.
             "transfer_to_jorge": context.should_transfer_to_jorge,
             "automated_actions": len(context.automated_actions_taken),
             "sentiment_score": context.sentiment_score,
-            "lead_quality": "high" if context.qualification_score >= 70 else "medium" if context.qualification_score >= 40 else "low"
+            "lead_quality": "high"
+            if context.qualification_score >= 70
+            else "medium"
+            if context.qualification_score >= 40
+            else "low",
         }
 
         # Generate follow-up actions
@@ -906,46 +908,54 @@ End with a question or clear next step when appropriate.
 
         # High-priority lead actions
         if context.qualification_score >= 70:
-            actions.extend([
-                {
-                    "action": "schedule_jorge_callback",
-                    "priority": "urgent",
-                    "timeline": "within 1 hour",
-                    "description": "High-qualified lead requires personal follow-up"
-                },
-                {
-                    "action": "send_market_analysis",
-                    "priority": "high",
-                    "timeline": "within 2 hours",
-                    "description": "Custom IE market analysis for their needs"
-                }
-            ])
+            actions.extend(
+                [
+                    {
+                        "action": "schedule_jorge_callback",
+                        "priority": "urgent",
+                        "timeline": "within 1 hour",
+                        "description": "High-qualified lead requires personal follow-up",
+                    },
+                    {
+                        "action": "send_market_analysis",
+                        "priority": "high",
+                        "timeline": "within 2 hours",
+                        "description": "Custom IE market analysis for their needs",
+                    },
+                ]
+            )
 
         # Scheduling actions
         if context.conversation_stage == ConversationStage.SCHEDULING:
-            actions.append({
-                "action": "send_calendar_link",
-                "priority": "high",
-                "timeline": "immediately",
-                "description": "Send calendar booking link while interest is high"
-            })
+            actions.append(
+                {
+                    "action": "send_calendar_link",
+                    "priority": "high",
+                    "timeline": "immediately",
+                    "description": "Send calendar booking link while interest is high",
+                }
+            )
 
         # Information follow-up
         if context.neighborhood_preferences:
-            actions.append({
-                "action": "neighborhood_report",
-                "priority": "medium",
-                "timeline": "within 24 hours",
-                "description": f"Detailed report for {', '.join(context.neighborhood_preferences)}"
-            })
+            actions.append(
+                {
+                    "action": "neighborhood_report",
+                    "priority": "medium",
+                    "timeline": "within 24 hours",
+                    "description": f"Detailed report for {', '.join(context.neighborhood_preferences)}",
+                }
+            )
 
         # CRM updates
-        actions.append({
-            "action": "update_crm",
-            "priority": "medium",
-            "timeline": "within 4 hours",
-            "description": "Update lead profile with conversation insights"
-        })
+        actions.append(
+            {
+                "action": "update_crm",
+                "priority": "medium",
+                "timeline": "within 4 hours",
+                "description": "Update lead profile with conversation insights",
+            }
+        )
 
         return actions
 
@@ -963,13 +973,10 @@ End with a question or clear next step when appropriate.
                 "employer": context.employer,
                 "timeline": context.timeline,
                 "budget_range": context.budget_range,
-                "neighborhoods": context.neighborhood_preferences
+                "neighborhoods": context.neighborhood_preferences,
             },
-            "routing_decision": {
-                "transferred": context.should_transfer_to_jorge,
-                "reason": context.transfer_reason
-            },
-            "analytics": analytics
+            "routing_decision": {"transferred": context.should_transfer_to_jorge, "reason": context.transfer_reason},
+            "analytics": analytics,
         }
 
         # Store in cache (in production, would go to database)
@@ -989,6 +996,7 @@ End with a question or clear next step when appropriate.
         if not date_range:
             # Default to last 7 days
             from datetime import date, timedelta
+
             end_date = date.today()
             start_date = end_date - timedelta(days=7)
             date_range = (start_date.isoformat(), end_date.isoformat())
@@ -999,10 +1007,7 @@ End with a question or clear next step when appropriate.
             "qualification_distribution": {"high": 0, "medium": 0, "low": 0},
             "transfer_rate": 0,
             "top_industries": {},
-            "conversion_metrics": {
-                "appointments_scheduled": 0,
-                "follow_up_actions": 0
-            }
+            "conversion_metrics": {"appointments_scheduled": 0, "follow_up_actions": 0},
         }
 
         # Aggregate daily data (simplified - in production would query database)
@@ -1050,6 +1055,7 @@ End with a question or clear next step when appropriate.
 
 # Singleton instance
 _voice_ai_handler = None
+
 
 def get_voice_ai_handler() -> VoiceAIHandler:
     """Get singleton Voice AI Handler instance"""

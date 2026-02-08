@@ -17,17 +17,17 @@ Date: 2026-01-17
 """
 
 import asyncio
-import time
 import hashlib
 import json
 import logging
-from typing import Dict, List, Any, Optional, Callable
-from datetime import datetime, timedelta
-from dataclasses import dataclass
-from contextlib import asynccontextmanager
-from collections import defaultdict
 import threading
+import time
+from collections import defaultdict
+from contextlib import asynccontextmanager
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 from functools import wraps
+from typing import Any, Callable, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +84,7 @@ WHERE status IN ('qualified', 'engaged', 'hot') AND budget > 0;
 # OPTIMIZATION 2: Enhanced Sentiment Caching
 # ===============================================
 
+
 class OptimizedSentimentCache:
     """High-performance sentiment analysis cache with fingerprinting"""
 
@@ -104,7 +105,7 @@ class OptimizedSentimentCache:
         # Normalize content for fingerprinting
         normalized = content.lower().strip()
         # Remove common variations that don't affect sentiment
-        normalized = ' '.join(normalized.split())  # Normalize whitespace
+        normalized = " ".join(normalized.split())  # Normalize whitespace
 
         # Generate hash
         return hashlib.sha256(normalized.encode()).hexdigest()[:16]
@@ -166,12 +167,12 @@ class OptimizedSentimentCache:
         hit_rate = (self.hit_count / total_requests * 100) if total_requests > 0 else 0
 
         return {
-            'hit_count': self.hit_count,
-            'miss_count': self.miss_count,
-            'hit_rate_percent': round(hit_rate, 2),
-            'cache_size': len(self.cache),
-            'max_size': self.max_size,
-            'eviction_count': self.eviction_count
+            "hit_count": self.hit_count,
+            "miss_count": self.miss_count,
+            "hit_rate_percent": round(hit_rate, 2),
+            "cache_size": len(self.cache),
+            "max_size": self.max_size,
+            "eviction_count": self.eviction_count,
         }
 
     def clear_cache(self):
@@ -181,21 +182,26 @@ class OptimizedSentimentCache:
             self.access_times.clear()
             logger.info("Sentiment cache cleared")
 
+
 # ====================================================
 # OPTIMIZATION 3: Enhanced Circuit Breaker Pattern
 # ====================================================
 
+
 @dataclass
 class CircuitBreakerConfig:
     """Circuit breaker configuration"""
+
     failure_threshold: int = 5
     recovery_timeout: int = 60
     expected_exception: type = Exception
 
+
 class CircuitBreakerState:
-    CLOSED = "closed"      # Normal operation
-    OPEN = "open"          # Failing, rejecting requests
+    CLOSED = "closed"  # Normal operation
+    OPEN = "open"  # Failing, rejecting requests
     HALF_OPEN = "half_open"  # Testing if service recovered
+
 
 class EnhancedCircuitBreaker:
     """Enhanced circuit breaker with graceful degradation"""
@@ -259,8 +265,7 @@ class EnhancedCircuitBreaker:
 
         logger.warning(f"Circuit breaker {self.name} failure {self.failure_count}: {exception}")
 
-        if (self.state == CircuitBreakerState.CLOSED and
-            self.failure_count >= self.config.failure_threshold):
+        if self.state == CircuitBreakerState.CLOSED and self.failure_count >= self.config.failure_threshold:
             self.state = CircuitBreakerState.OPEN
             logger.error(f"Circuit breaker {self.name} OPENED due to {self.failure_count} failures")
         elif self.state == CircuitBreakerState.HALF_OPEN:
@@ -292,23 +297,24 @@ class EnhancedCircuitBreaker:
 
     def get_stats(self) -> Dict[str, Any]:
         """Get circuit breaker statistics"""
-        success_rate = ((self.total_requests - self.failed_requests) /
-                       max(self.total_requests, 1) * 100)
+        success_rate = (self.total_requests - self.failed_requests) / max(self.total_requests, 1) * 100
 
         return {
-            'name': self.name,
-            'state': self.state,
-            'failure_count': self.failure_count,
-            'total_requests': self.total_requests,
-            'failed_requests': self.failed_requests,
-            'degraded_responses': self.degraded_responses,
-            'success_rate_percent': round(success_rate, 2),
-            'last_failure': self.last_failure_time
+            "name": self.name,
+            "state": self.state,
+            "failure_count": self.failure_count,
+            "total_requests": self.total_requests,
+            "failed_requests": self.failed_requests,
+            "degraded_responses": self.degraded_responses,
+            "success_rate_percent": round(success_rate, 2),
+            "last_failure": self.last_failure_time,
         }
+
 
 # ===============================================
 # OPTIMIZATION 4: Memory Pool Management
 # ===============================================
+
 
 class ObjectPool:
     """Generic object pool for memory optimization"""
@@ -350,20 +356,22 @@ class ObjectPool:
     def get_stats(self) -> Dict[str, Any]:
         """Get pool performance statistics"""
         total_acquisitions = self.created_count + self.reused_count
-        reuse_rate = (self.reused_count / max(total_acquisitions, 1) * 100)
+        reuse_rate = self.reused_count / max(total_acquisitions, 1) * 100
 
         return {
-            'created_count': self.created_count,
-            'reused_count': self.reused_count,
-            'reset_count': self.reset_count,
-            'pool_size': len(self.pool),
-            'max_size': self.max_size,
-            'reuse_rate_percent': round(reuse_rate, 2)
+            "created_count": self.created_count,
+            "reused_count": self.reused_count,
+            "reset_count": self.reset_count,
+            "pool_size": len(self.pool),
+            "max_size": self.max_size,
+            "reuse_rate_percent": round(reuse_rate, 2),
         }
+
 
 # ================================================
 # OPTIMIZATION 5: Response Time Monitoring
 # ================================================
+
 
 class PerformanceMonitor:
     """Real-time performance monitoring"""
@@ -407,27 +415,30 @@ class PerformanceMonitor:
             measurements = self.metrics.get(operation, [])
 
         if not measurements:
-            return {'operation': operation, 'measurements': 0}
+            return {"operation": operation, "measurements": 0}
 
         import statistics
+
         return {
-            'operation': operation,
-            'measurements': len(measurements),
-            'avg_ms': round(statistics.mean(measurements), 1),
-            'min_ms': round(min(measurements), 1),
-            'max_ms': round(max(measurements), 1),
-            'p95_ms': round(sorted(measurements)[int(len(measurements) * 0.95)], 1),
-            'threshold_ms': self.thresholds.get(operation),
-            'threshold_violations': sum(1 for m in measurements if m > self.thresholds.get(operation, float('inf')))
+            "operation": operation,
+            "measurements": len(measurements),
+            "avg_ms": round(statistics.mean(measurements), 1),
+            "min_ms": round(min(measurements), 1),
+            "max_ms": round(max(measurements), 1),
+            "p95_ms": round(sorted(measurements)[int(len(measurements) * 0.95)], 1),
+            "threshold_ms": self.thresholds.get(operation),
+            "threshold_violations": sum(1 for m in measurements if m > self.thresholds.get(operation, float("inf"))),
         }
 
     def get_all_stats(self) -> Dict[str, Dict[str, Any]]:
         """Get statistics for all monitored operations"""
         return {op: self.get_stats(op) for op in self.metrics.keys()}
 
+
 # ================================================
 # OPTIMIZATION DEPLOYMENT MANAGER
 # ================================================
+
 
 class OptimizationDeployment:
     """Manages deployment of performance optimizations"""
@@ -443,19 +454,17 @@ class OptimizationDeployment:
 
     def _configure_thresholds(self):
         """Configure performance thresholds"""
-        self.performance_monitor.set_threshold('ml_lead_scoring', 100)  # 100ms
-        self.performance_monitor.set_threshold('voice_ai_processing', 200)  # 200ms
-        self.performance_monitor.set_threshold('predictive_analytics', 2000)  # 2s
-        self.performance_monitor.set_threshold('database_query', 50)  # 50ms
-        self.performance_monitor.set_threshold('cache_operation', 10)  # 10ms
+        self.performance_monitor.set_threshold("ml_lead_scoring", 100)  # 100ms
+        self.performance_monitor.set_threshold("voice_ai_processing", 200)  # 200ms
+        self.performance_monitor.set_threshold("predictive_analytics", 2000)  # 2s
+        self.performance_monitor.set_threshold("database_query", 50)  # 50ms
+        self.performance_monitor.set_threshold("cache_operation", 10)  # 10ms
 
-    def create_circuit_breaker(self, name: str, failure_threshold: int = 5,
-                             recovery_timeout: int = 60) -> EnhancedCircuitBreaker:
+    def create_circuit_breaker(
+        self, name: str, failure_threshold: int = 5, recovery_timeout: int = 60
+    ) -> EnhancedCircuitBreaker:
         """Create circuit breaker for service"""
-        config = CircuitBreakerConfig(
-            failure_threshold=failure_threshold,
-            recovery_timeout=recovery_timeout
-        )
+        config = CircuitBreakerConfig(failure_threshold=failure_threshold, recovery_timeout=recovery_timeout)
 
         circuit_breaker = EnhancedCircuitBreaker(name, config)
         self.circuit_breakers[name] = circuit_breaker
@@ -463,8 +472,9 @@ class OptimizationDeployment:
         logger.info(f"Created circuit breaker for {name}")
         return circuit_breaker
 
-    def create_object_pool(self, name: str, factory: Callable,
-                          reset_func: Callable = None, max_size: int = 100) -> ObjectPool:
+    def create_object_pool(
+        self, name: str, factory: Callable, reset_func: Callable = None, max_size: int = 100
+    ) -> ObjectPool:
         """Create object pool for memory optimization"""
         pool = ObjectPool(factory, reset_func, max_size)
         self.object_pools[name] = pool
@@ -486,7 +496,7 @@ class OptimizationDeployment:
             "Predictive analytics cache index",
             "Lead lifecycle tracking index",
             "Active workflows partial index",
-            "Lead matching composite index"
+            "Lead matching composite index",
         ]
 
         for optimization in optimizations:
@@ -498,13 +508,14 @@ class OptimizationDeployment:
     def get_deployment_status(self) -> Dict[str, Any]:
         """Get status of all optimizations"""
         return {
-            'sentiment_cache': self.sentiment_cache.get_cache_stats(),
-            'circuit_breakers': {name: cb.get_stats() for name, cb in self.circuit_breakers.items()},
-            'object_pools': {name: pool.get_stats() for name, pool in self.object_pools.items()},
-            'performance_monitoring': self.performance_monitor.get_all_stats(),
-            'optimization_count': len(self.circuit_breakers) + len(self.object_pools) + 1,  # +1 for sentiment cache
-            'deployment_time': datetime.now().isoformat()
+            "sentiment_cache": self.sentiment_cache.get_cache_stats(),
+            "circuit_breakers": {name: cb.get_stats() for name, cb in self.circuit_breakers.items()},
+            "object_pools": {name: pool.get_stats() for name, pool in self.object_pools.items()},
+            "performance_monitoring": self.performance_monitor.get_all_stats(),
+            "optimization_count": len(self.circuit_breakers) + len(self.object_pools) + 1,  # +1 for sentiment cache
+            "deployment_time": datetime.now().isoformat(),
         }
+
 
 # Example usage and testing
 async def demonstrate_optimizations():
@@ -529,11 +540,11 @@ async def demonstrate_optimizations():
 
     # Create object pools
     def create_lead_dict():
-        return {'lead_id': '', 'score': 0, 'status': 'new'}
+        return {"lead_id": "", "score": 0, "status": "new"}
 
     def reset_lead_dict(obj):
         obj.clear()
-        obj.update({'lead_id': '', 'score': 0, 'status': 'new'})
+        obj.update({"lead_id": "", "score": 0, "status": "new"})
 
     lead_pool = optimizer.create_object_pool("lead_objects", create_lead_dict, reset_lead_dict, 50)
 
@@ -564,7 +575,7 @@ async def demonstrate_optimizations():
 
     print(f"   Cache Miss: {miss_time:.2f}ms")
     print(f"   Cache Hit: {hit_time:.2f}ms")
-    print(f"   Speedup: {(miss_time/hit_time):.1f}x faster")
+    print(f"   Speedup: {(miss_time / hit_time):.1f}x faster")
 
     # Test object pool
     print(f"\n🎯 Testing Object Pool Performance:")
@@ -572,18 +583,18 @@ async def demonstrate_optimizations():
     start = time.time()
     for i in range(100):
         obj = lead_pool.acquire()
-        obj['lead_id'] = f"test_{i}"
+        obj["lead_id"] = f"test_{i}"
         lead_pool.release(obj)
     pool_time = (time.time() - start) * 1000
 
     start = time.time()
     for i in range(100):
-        obj = {'lead_id': f"test_{i}", 'score': 0, 'status': 'new'}
+        obj = {"lead_id": f"test_{i}", "score": 0, "status": "new"}
     creation_time = (time.time() - start) * 1000
 
     print(f"   Object Pool: {pool_time:.2f}ms for 100 operations")
     print(f"   Direct Creation: {creation_time:.2f}ms for 100 operations")
-    print(f"   Memory Efficiency: {(creation_time/pool_time):.1f}x better")
+    print(f"   Memory Efficiency: {(creation_time / pool_time):.1f}x better")
 
     # Get final status
     status = optimizer.get_deployment_status()
@@ -596,6 +607,7 @@ async def demonstrate_optimizations():
     print(f"\n✅ Performance Optimizations Successfully Deployed!")
 
     return optimizer
+
 
 if __name__ == "__main__":
     # Run demonstration

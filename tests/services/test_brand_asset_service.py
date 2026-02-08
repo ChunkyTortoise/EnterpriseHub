@@ -4,35 +4,40 @@ Validates image processing, CDN integration, and asset management functionality
 for the white-label platform.
 """
 
-import pytest
-import pytest_asyncio
 import asyncio
-import tempfile
-from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch, mock_open
-from pathlib import Path
-from dataclasses import asdict
-import json
 import hashlib
+import json
+import tempfile
+from dataclasses import asdict
+from datetime import datetime
+from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import asyncpg
+import pytest
+import pytest_asyncio
 from PIL import Image
+
 from ghl_real_estate_ai.services.brand_asset_service import (
-    BrandAssetService,
-    BrandAsset,
     AssetType,
-    StorageProvider,
-    ProcessingStatus,
     AssetUploadRequest,
-    AssetVariant
+    AssetVariant,
+    BrandAsset,
+    BrandAssetService,
+    ProcessingStatus,
+    StorageProvider,
 )
 from ghl_real_estate_ai.services.cache_service import CacheService
 
 
 def _enum_json_dumps(obj, **kwargs):
     """JSON dumps that handles Enum serialization."""
-    kwargs.setdefault('default', str)
-    return json.dumps.__wrapped__(obj, **kwargs) if hasattr(json.dumps, '__wrapped__') else json._default_encoder.__class__(default=str).encode(obj)
+    kwargs.setdefault("default", str)
+    return (
+        json.dumps.__wrapped__(obj, **kwargs)
+        if hasattr(json.dumps, "__wrapped__")
+        else json._default_encoder.__class__(default=str).encode(obj)
+    )
 
 
 @pytest_asyncio.fixture
@@ -65,10 +70,10 @@ async def brand_asset_service(mock_db_pool, mock_cache_service):
 def sample_image_bytes():
     """Generate sample image bytes for testing."""
     # Create a simple test image
-    img = Image.new('RGB', (100, 100), color='red')
-    with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
-        img.save(tmp.name, 'PNG')
-        with open(tmp.name, 'rb') as f:
+    img = Image.new("RGB", (100, 100), color="red")
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+        img.save(tmp.name, "PNG")
+        with open(tmp.name, "rb") as f:
             return f.read()
 
 
@@ -83,7 +88,7 @@ def sample_upload_request(sample_image_bytes):
         file_name="logo.png",
         client_id="client_001",
         usage_context="header",
-        auto_process=True
+        auto_process=True,
     )
 
 
@@ -106,7 +111,7 @@ def sample_brand_asset():
         file_size_bytes=1024,
         file_hash="abc123def456",
         usage_context="header",
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
     )
 
 
@@ -123,9 +128,8 @@ class TestBrandAssetService:
         conn_mock.fetchrow.return_value = None  # No duplicate asset
         conn_mock.execute = AsyncMock()
 
-        with patch.object(brand_asset_service, '_upload_to_storage') as mock_upload:
-            with patch.object(brand_asset_service, '_queue_asset_processing') as mock_process:
-
+        with patch.object(brand_asset_service, "_upload_to_storage") as mock_upload:
+            with patch.object(brand_asset_service, "_queue_asset_processing") as mock_process:
                 result = await brand_asset_service.upload_asset(sample_upload_request)
 
                 assert result.agency_id == "agency_001"
@@ -142,15 +146,16 @@ class TestBrandAssetService:
                 mock_process.assert_called_once_with(result.asset_id)
 
     @pytest.mark.asyncio
-    async def test_upload_asset_duplicate_detection(self, brand_asset_service, sample_upload_request, sample_brand_asset, mock_db_pool):
+    async def test_upload_asset_duplicate_detection(
+        self, brand_asset_service, sample_upload_request, sample_brand_asset, mock_db_pool
+    ):
         """Test duplicate asset detection during upload."""
         # Mock database responses
         conn_mock = AsyncMock()
         mock_db_pool.acquire.return_value.__aenter__.return_value = conn_mock
         conn_mock.fetchval.return_value = True  # Agency exists
 
-        with patch.object(brand_asset_service, '_check_duplicate_asset', return_value=sample_brand_asset):
-
+        with patch.object(brand_asset_service, "_check_duplicate_asset", return_value=sample_brand_asset):
             result = await brand_asset_service.upload_asset(sample_upload_request)
 
             assert result.asset_id == sample_brand_asset.asset_id
@@ -171,7 +176,7 @@ class TestBrandAssetService:
     async def test_upload_asset_file_too_large(self, brand_asset_service, sample_upload_request, mock_db_pool):
         """Test asset upload with file too large."""
         # Create oversized file content
-        sample_upload_request.file_content = b'x' * (51 * 1024 * 1024)  # 51MB
+        sample_upload_request.file_content = b"x" * (51 * 1024 * 1024)  # 51MB
 
         # Mock agency exists
         conn_mock = AsyncMock()
@@ -185,39 +190,41 @@ class TestBrandAssetService:
     async def test_get_asset_from_cache(self, brand_asset_service, mock_cache_service, sample_brand_asset):
         """Test getting asset from cache."""
         # Setup cache hit
-        mock_cache_service.get.return_value = json.dumps({
-            "asset_id": "asset_test_123",
-            "agency_id": "agency_001",
-            "client_id": "client_001",
-            "asset_type": "logo",
-            "asset_name": "Company Logo",
-            "file_name": "logo.png",
-            "file_extension": ".png",
-            "mime_type": "image/png",
-            "storage_provider": "s3",
-            "storage_bucket": "test-bucket",
-            "storage_path": "test/path",
-            "storage_url": "https://example.com/test.png",
-            "cdn_url": None,
-            "cdn_cache_control": "max-age=31536000",
-            "file_size_bytes": 1024,
-            "image_width": None,
-            "image_height": None,
-            "file_hash": "abc123",
-            "processing_status": "pending",
-            "processed_variants": {},
-            "processing_error": None,
-            "is_active": True,
-            "usage_context": "header",
-            "display_order": 0,
-            "optimized_size_bytes": None,
-            "optimization_ratio": None,
-            "webp_variant_url": None,
-            "avif_variant_url": None,
-            "asset_metadata": {},
-            "created_at": "2024-01-01T00:00:00",
-            "updated_at": None
-        })
+        mock_cache_service.get.return_value = json.dumps(
+            {
+                "asset_id": "asset_test_123",
+                "agency_id": "agency_001",
+                "client_id": "client_001",
+                "asset_type": "logo",
+                "asset_name": "Company Logo",
+                "file_name": "logo.png",
+                "file_extension": ".png",
+                "mime_type": "image/png",
+                "storage_provider": "s3",
+                "storage_bucket": "test-bucket",
+                "storage_path": "test/path",
+                "storage_url": "https://example.com/test.png",
+                "cdn_url": None,
+                "cdn_cache_control": "max-age=31536000",
+                "file_size_bytes": 1024,
+                "image_width": None,
+                "image_height": None,
+                "file_hash": "abc123",
+                "processing_status": "pending",
+                "processed_variants": {},
+                "processing_error": None,
+                "is_active": True,
+                "usage_context": "header",
+                "display_order": 0,
+                "optimized_size_bytes": None,
+                "optimization_ratio": None,
+                "webp_variant_url": None,
+                "avif_variant_url": None,
+                "asset_metadata": {},
+                "created_at": "2024-01-01T00:00:00",
+                "updated_at": None,
+            }
+        )
 
         result = await brand_asset_service.get_asset("asset_test_123")
 
@@ -267,7 +274,7 @@ class TestBrandAssetService:
             "avif_variant_url": None,
             "asset_metadata": "{}",
             "created_at": datetime.utcnow(),
-            "updated_at": None
+            "updated_at": None,
         }
 
         conn_mock.fetchrow.return_value = db_row
@@ -276,10 +283,10 @@ class TestBrandAssetService:
         _original_json_dumps = json.dumps
 
         def _patched_json_dumps(obj, **kwargs):
-            kwargs.setdefault('default', str)
+            kwargs.setdefault("default", str)
             return _original_json_dumps(obj, **kwargs)
 
-        with patch('ghl_real_estate_ai.services.brand_asset_service.json.dumps', side_effect=_patched_json_dumps):
+        with patch("ghl_real_estate_ai.services.brand_asset_service.json.dumps", side_effect=_patched_json_dumps):
             result = await brand_asset_service.get_asset("asset_test_123")
 
         assert result is not None
@@ -330,7 +337,7 @@ class TestBrandAssetService:
                 "avif_variant_url": None,
                 "asset_metadata": "{}",
                 "created_at": datetime.utcnow(),
-                "updated_at": None
+                "updated_at": None,
             },
             {
                 "asset_id": "asset_002",
@@ -363,8 +370,8 @@ class TestBrandAssetService:
                 "avif_variant_url": None,
                 "asset_metadata": "{}",
                 "created_at": datetime.utcnow(),
-                "updated_at": None
-            }
+                "updated_at": None,
+            },
         ]
 
         conn_mock.fetch.return_value = db_rows
@@ -384,10 +391,7 @@ class TestBrandAssetService:
         conn_mock.fetch.return_value = []
 
         await brand_asset_service.list_agency_assets(
-            "agency_001",
-            asset_type=AssetType.LOGO,
-            client_id="client_001",
-            is_active=True
+            "agency_001", asset_type=AssetType.LOGO, client_id="client_001", is_active=True
         )
 
         # Verify correct query parameters were used
@@ -403,14 +407,15 @@ class TestBrandAssetService:
         sample_brand_asset.file_extension = ".png"
         sample_brand_asset.processing_status = ProcessingStatus.PENDING
 
-        with patch.object(brand_asset_service, 'get_asset', return_value=sample_brand_asset):
-            with patch.object(brand_asset_service, '_update_asset_status') as mock_update_status:
-                with patch.object(brand_asset_service, '_download_asset_for_processing') as mock_download:
-                    with patch.object(brand_asset_service, '_generate_image_variants') as mock_variants:
-                        with patch.object(brand_asset_service, '_generate_modern_formats') as mock_modern:
-                            with patch.object(brand_asset_service, '_upload_variant_to_storage') as mock_upload_variant:
-                                with patch.object(brand_asset_service, '_update_asset_processing_results') as mock_update_results:
-
+        with patch.object(brand_asset_service, "get_asset", return_value=sample_brand_asset):
+            with patch.object(brand_asset_service, "_update_asset_status") as mock_update_status:
+                with patch.object(brand_asset_service, "_download_asset_for_processing") as mock_download:
+                    with patch.object(brand_asset_service, "_generate_image_variants") as mock_variants:
+                        with patch.object(brand_asset_service, "_generate_modern_formats") as mock_modern:
+                            with patch.object(brand_asset_service, "_upload_variant_to_storage") as mock_upload_variant:
+                                with patch.object(
+                                    brand_asset_service, "_update_asset_processing_results"
+                                ) as mock_update_results:
                                     # Mock temp file
                                     temp_file = MagicMock()
                                     temp_file.exists.return_value = True
@@ -421,9 +426,7 @@ class TestBrandAssetService:
                                     mock_variants.return_value = {
                                         "thumbnail": AssetVariant("thumbnail", 150, 150, 5000)
                                     }
-                                    mock_modern.return_value = {
-                                        "webp": AssetVariant("webp", 100, 100, 3000)
-                                    }
+                                    mock_modern.return_value = {"webp": AssetVariant("webp", 100, 100, 3000)}
 
                                     result = await brand_asset_service.process_asset("asset_test_123")
 
@@ -439,8 +442,7 @@ class TestBrandAssetService:
         # Set as non-image asset
         sample_brand_asset.file_extension = ".pdf"
 
-        with patch.object(brand_asset_service, 'get_asset', return_value=sample_brand_asset):
-
+        with patch.object(brand_asset_service, "get_asset", return_value=sample_brand_asset):
             result = await brand_asset_service.process_asset("asset_test_123")
 
             assert result is True  # Should return True but do nothing
@@ -450,8 +452,7 @@ class TestBrandAssetService:
         """Test processing asset that's already being processed."""
         sample_brand_asset.processing_status = ProcessingStatus.PROCESSING
 
-        with patch.object(brand_asset_service, 'get_asset', return_value=sample_brand_asset):
-
+        with patch.object(brand_asset_service, "get_asset", return_value=sample_brand_asset):
             result = await brand_asset_service.process_asset("asset_test_123", force=False)
 
             assert result is False
@@ -461,15 +462,16 @@ class TestBrandAssetService:
         """Test asset processing when download fails."""
         sample_brand_asset.file_extension = ".png"
 
-        with patch.object(brand_asset_service, 'get_asset', return_value=sample_brand_asset):
-            with patch.object(brand_asset_service, '_update_asset_status') as mock_update_status:
-                with patch.object(brand_asset_service, '_download_asset_for_processing', return_value=None):
-
+        with patch.object(brand_asset_service, "get_asset", return_value=sample_brand_asset):
+            with patch.object(brand_asset_service, "_update_asset_status") as mock_update_status:
+                with patch.object(brand_asset_service, "_download_asset_for_processing", return_value=None):
                     result = await brand_asset_service.process_asset("asset_test_123")
 
                     assert result is False
                     mock_update_status.assert_any_call("asset_test_123", ProcessingStatus.PROCESSING)
-                    mock_update_status.assert_any_call("asset_test_123", ProcessingStatus.FAILED, "Failed to download asset")
+                    mock_update_status.assert_any_call(
+                        "asset_test_123", ProcessingStatus.FAILED, "Failed to download asset"
+                    )
 
     @pytest.mark.asyncio
     async def test_delete_asset_soft_delete(self, brand_asset_service, sample_brand_asset, mock_db_pool):
@@ -478,8 +480,7 @@ class TestBrandAssetService:
         mock_db_pool.acquire.return_value.__aenter__.return_value = conn_mock
         conn_mock.execute = AsyncMock()
 
-        with patch.object(brand_asset_service, 'get_asset', return_value=sample_brand_asset):
-
+        with patch.object(brand_asset_service, "get_asset", return_value=sample_brand_asset):
             result = await brand_asset_service.delete_asset("asset_test_123", permanent=False)
 
             assert result is True
@@ -494,10 +495,9 @@ class TestBrandAssetService:
         mock_db_pool.acquire.return_value.__aenter__.return_value = conn_mock
         conn_mock.execute = AsyncMock()
 
-        with patch.object(brand_asset_service, 'get_asset', return_value=sample_brand_asset):
-            with patch.object(brand_asset_service, '_delete_from_storage') as mock_delete_storage:
-                with patch.object(brand_asset_service, '_delete_variant_from_storage') as mock_delete_variants:
-
+        with patch.object(brand_asset_service, "get_asset", return_value=sample_brand_asset):
+            with patch.object(brand_asset_service, "_delete_from_storage") as mock_delete_storage:
+                with patch.object(brand_asset_service, "_delete_variant_from_storage") as mock_delete_variants:
                     result = await brand_asset_service.delete_asset("asset_test_123", permanent=True)
 
                     assert result is True
@@ -523,8 +523,8 @@ class TestBrandAssetService:
         brand_asset_service.s3_client.put_object.assert_called_once()
         call_kwargs = brand_asset_service.s3_client.put_object.call_args.kwargs
 
-        assert call_kwargs['Body'] == content
-        assert call_kwargs['ContentType'] == sample_brand_asset.mime_type
+        assert call_kwargs["Body"] == content
+        assert call_kwargs["ContentType"] == sample_brand_asset.mime_type
         assert sample_brand_asset.storage_path != ""
         assert sample_brand_asset.storage_url != ""
 
@@ -542,8 +542,8 @@ class TestBrandAssetService:
         mock_aiofiles_open.return_value.__aenter__ = AsyncMock(return_value=mock_file_handle)
         mock_aiofiles_open.return_value.__aexit__ = AsyncMock(return_value=False)
 
-        with patch('ghl_real_estate_ai.services.brand_asset_service.aiofiles.open', mock_aiofiles_open):
-            with patch('pathlib.Path.mkdir'):
+        with patch("ghl_real_estate_ai.services.brand_asset_service.aiofiles.open", mock_aiofiles_open):
+            with patch("pathlib.Path.mkdir"):
                 await brand_asset_service._upload_to_local(sample_brand_asset, content)
 
                 assert sample_brand_asset.storage_path != ""
@@ -553,9 +553,9 @@ class TestBrandAssetService:
     async def test_generate_image_variants(self, brand_asset_service, sample_brand_asset):
         """Test image variant generation."""
         # Create a test image file
-        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
-            img = Image.new('RGB', (800, 600), color='blue')
-            img.save(tmp.name, 'PNG')
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+            img = Image.new("RGB", (800, 600), color="blue")
+            img.save(tmp.name, "PNG")
             temp_file = Path(tmp.name)
 
         try:
@@ -568,7 +568,7 @@ class TestBrandAssetService:
             assert len(variants) > 0
             # Should generate variants for sizes smaller than original (800x600)
             # thumbnail (150x150), small (300x300), and medium (600x600) should be generated
-            assert 'thumbnail' in variants or 'small' in variants
+            assert "thumbnail" in variants or "small" in variants
 
         finally:
             # Clean up temp file and any generated variant files
@@ -576,7 +576,10 @@ class TestBrandAssetService:
                 temp_file.unlink()
             # Clean up variant files
             for variant_name in brand_asset_service.variant_sizes.keys():
-                variant_path = temp_file.parent / f"{sample_brand_asset.asset_id}_{variant_name}{sample_brand_asset.file_extension}"
+                variant_path = (
+                    temp_file.parent
+                    / f"{sample_brand_asset.asset_id}_{variant_name}{sample_brand_asset.file_extension}"
+                )
                 if variant_path.exists():
                     variant_path.unlink()
 
@@ -600,7 +603,7 @@ class TestBrandAssetService:
                 storage_url="https://example.com/logo1.png",
                 file_size_bytes=10 * 1024 * 1024,  # 10MB
                 processing_status=ProcessingStatus.COMPLETED,
-                optimized_size_bytes=5 * 1024 * 1024  # 5MB after optimization
+                optimized_size_bytes=5 * 1024 * 1024,  # 5MB after optimization
             ),
             BrandAsset(
                 asset_id="asset_002",
@@ -615,14 +618,13 @@ class TestBrandAssetService:
                 storage_bucket="test-bucket",
                 storage_path="test/path2",
                 storage_url="https://example.com/banner.jpg",
-                file_size_bytes=2 * 1024 * 1024  # 2MB
-            )
+                file_size_bytes=2 * 1024 * 1024,  # 2MB
+            ),
         ]
 
-        with patch.object(brand_asset_service, 'list_agency_assets', return_value=sample_assets):
-            with patch.object(brand_asset_service, '_is_asset_in_use', return_value=False):  # Unused asset
-                with patch.object(brand_asset_service, '_find_duplicate_assets', return_value=[]):
-
+        with patch.object(brand_asset_service, "list_agency_assets", return_value=sample_assets):
+            with patch.object(brand_asset_service, "_is_asset_in_use", return_value=False):  # Unused asset
+                with patch.object(brand_asset_service, "_find_duplicate_assets", return_value=[]):
                     result = await brand_asset_service.optimize_storage_costs("agency_001")
 
                     assert result["total_assets"] == 2
@@ -669,7 +671,7 @@ class TestBrandAssetService:
             "avif_variant_url": None,
             "asset_metadata": "{}",
             "created_at": datetime.utcnow(),
-            "updated_at": None
+            "updated_at": None,
         }
 
         conn_mock.fetchrow.return_value = db_row
@@ -696,13 +698,13 @@ class TestBrandAssetService:
             storage_bucket=None,
             storage_path="test",
             storage_url="test",
-            file_size_bytes=10000  # 10KB original
+            file_size_bytes=10000,  # 10KB original
         )
 
         # Add variants with smaller sizes
         asset.processed_variants = {
             "thumbnail": AssetVariant("thumbnail", 150, 150, 2000),  # 2KB
-            "webp": AssetVariant("webp", 100, 100, 1000)  # 1KB
+            "webp": AssetVariant("webp", 100, 100, 1000),  # 1KB
         }
 
         ratio = brand_asset_service._calculate_optimization_ratio(asset)

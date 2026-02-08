@@ -1,13 +1,14 @@
 """Tests for HeyGen Video Personalization Service."""
 
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 from ghl_real_estate_ai.services.heygen_video_service import (
     HeyGenVideoService,
+    VideoResult,
     VideoStatus,
     VideoTemplate,
-    VideoResult,
 )
 
 
@@ -31,6 +32,7 @@ def buyer_profile():
 # -------------------------------------------------------------------------
 # Video creation
 # -------------------------------------------------------------------------
+
 
 class TestVideoCreation:
     @pytest.mark.asyncio
@@ -79,30 +81,27 @@ class TestVideoCreation:
 # Script generation
 # -------------------------------------------------------------------------
 
+
 class TestScriptGeneration:
     def test_buyer_welcome_personalised(self, service, buyer_profile):
-        script = service._generate_script(
-            VideoTemplate.BUYER_WELCOME, "Sarah", buyer_profile, {}
-        )
+        script = service._generate_script(VideoTemplate.BUYER_WELCOME, "Sarah", buyer_profile, {})
         assert "Sarah" in script.personalized_text
         assert "Victoria Gardens" in script.personalized_text
 
     def test_family_psychographic_hook(self, service):
         profile = {"persona": "family", "bedrooms": "4"}
-        script = service._generate_script(
-            VideoTemplate.BUYER_WELCOME, "Jen", profile, {}
-        )
+        script = service._generate_script(VideoTemplate.BUYER_WELCOME, "Jen", profile, {})
         assert "family" in script.personalized_text.lower() or "schools" in script.personalized_text.lower()
 
     def test_duration_estimate_reasonable(self, service, buyer_profile):
-        script = service._generate_script(
-            VideoTemplate.BUYER_WELCOME, "Sarah", buyer_profile, {}
-        )
+        script = service._generate_script(VideoTemplate.BUYER_WELCOME, "Sarah", buyer_profile, {})
         assert 10 <= script.duration_estimate_sec <= 120
 
     def test_custom_variables_override(self, service, buyer_profile):
         script = service._generate_script(
-            VideoTemplate.BUYER_WELCOME, "Sarah", buyer_profile,
+            VideoTemplate.BUYER_WELCOME,
+            "Sarah",
+            buyer_profile,
             {"area": "Etiwanda"},
         )
         assert "Etiwanda" in script.personalized_text
@@ -111,6 +110,7 @@ class TestScriptGeneration:
 # -------------------------------------------------------------------------
 # Cost management
 # -------------------------------------------------------------------------
+
 
 class TestCostManagement:
     @pytest.mark.asyncio
@@ -139,6 +139,7 @@ class TestCostManagement:
 # -------------------------------------------------------------------------
 # Delivery tracking
 # -------------------------------------------------------------------------
+
 
 class TestDeliveryTracking:
     @pytest.mark.asyncio
@@ -169,6 +170,7 @@ class TestDeliveryTracking:
 # -------------------------------------------------------------------------
 # Lead videos
 # -------------------------------------------------------------------------
+
 
 class TestLeadVideos:
     @pytest.mark.asyncio

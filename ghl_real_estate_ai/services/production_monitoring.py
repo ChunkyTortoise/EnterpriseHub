@@ -9,39 +9,46 @@ Provides comprehensive monitoring capabilities for production deployment:
 - Resource usage monitoring
 """
 
-import time
-import psutil
 import asyncio
-import aiosqlite
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, NamedTuple
-from dataclasses import dataclass, asdict
-from enum import Enum
 import json
 import logging
+import time
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from enum import Enum
 from pathlib import Path
+from typing import Any, Dict, List, NamedTuple, Optional
+
+import aiosqlite
+import psutil
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+
 class ServiceStatus(Enum):
     """Service health status."""
+
     HEALTHY = "healthy"
     WARNING = "warning"
     CRITICAL = "critical"
     DOWN = "down"
 
+
 class MetricType(Enum):
     """Types of metrics to collect."""
+
     COUNTER = "counter"
     GAUGE = "gauge"
     HISTOGRAM = "histogram"
     TIMER = "timer"
 
+
 @dataclass
 class HealthCheck:
     """Health check result."""
+
     service: str
     status: ServiceStatus
     message: str
@@ -49,18 +56,22 @@ class HealthCheck:
     response_time_ms: float
     details: Dict[str, Any] = None
 
+
 @dataclass
 class PerformanceMetric:
     """Performance metric data point."""
+
     name: str
     value: float
     metric_type: MetricType
     timestamp: datetime
     tags: Dict[str, str] = None
 
+
 @dataclass
 class DatabaseMetrics:
     """Database performance metrics."""
+
     connection_count: int
     query_duration_avg_ms: float
     cache_hit_rate: float
@@ -68,15 +79,18 @@ class DatabaseMetrics:
     database_size_mb: float
     last_optimization: datetime
 
+
 @dataclass
 class SystemMetrics:
     """System resource metrics."""
+
     cpu_percent: float
     memory_percent: float
     disk_percent: float
     network_io_mb: float
     active_connections: int
     uptime_hours: float
+
 
 class ProductionMonitor:
     """Comprehensive production monitoring service."""
@@ -91,12 +105,12 @@ class ProductionMonitor:
 
         # Performance thresholds
         self.thresholds = {
-            'response_time_ms': 2000,
-            'cpu_percent': 80,
-            'memory_percent': 85,
-            'disk_percent': 90,
-            'cache_hit_rate': 0.8,
-            'error_rate': 0.05
+            "response_time_ms": 2000,
+            "cpu_percent": 80,
+            "memory_percent": 85,
+            "disk_percent": 90,
+            "cache_hit_rate": 0.8,
+            "error_rate": 0.05,
         }
 
     async def initialize_monitoring(self):
@@ -177,8 +191,8 @@ class ProductionMonitor:
             response_time = (time.time() - start_time) * 1000  # Convert to ms
 
             # Determine status based on response time and result
-            if result.get('healthy', False):
-                if response_time > self.thresholds['response_time_ms']:
+            if result.get("healthy", False):
+                if response_time > self.thresholds["response_time_ms"]:
                     status = ServiceStatus.WARNING
                     message = f"Service healthy but slow response ({response_time:.1f}ms)"
                 else:
@@ -186,7 +200,7 @@ class ProductionMonitor:
                     message = "Service healthy"
             else:
                 status = ServiceStatus.CRITICAL
-                message = result.get('error', 'Health check failed')
+                message = result.get("error", "Health check failed")
 
             health_check = HealthCheck(
                 service=service_name,
@@ -194,7 +208,7 @@ class ProductionMonitor:
                 message=message,
                 timestamp=datetime.now(),
                 response_time_ms=response_time,
-                details=result
+                details=result,
             )
 
             # Store health check result
@@ -213,7 +227,7 @@ class ProductionMonitor:
                 message=f"Health check error: {str(e)}",
                 timestamp=datetime.now(),
                 response_time_ms=response_time,
-                details={'error': str(e)}
+                details={"error": str(e)},
             )
 
             await self._store_health_check(health_check)
@@ -230,7 +244,7 @@ class ProductionMonitor:
             memory_percent = memory.percent
 
             # Disk usage
-            disk = psutil.disk_usage('/')
+            disk = psutil.disk_usage("/")
             disk_percent = (disk.used / disk.total) * 100
 
             # Network I/O (simplified)
@@ -249,7 +263,7 @@ class ProductionMonitor:
                 disk_percent=disk_percent,
                 network_io_mb=network_io_mb,
                 active_connections=connections,
-                uptime_hours=uptime_hours
+                uptime_hours=uptime_hours,
             )
 
             # Store system metrics
@@ -285,9 +299,9 @@ class ProductionMonitor:
                     connection_count=connection_count,
                     query_duration_avg_ms=query_duration,
                     cache_hit_rate=0.85,  # Would be measured from actual cache
-                    slow_queries=0,       # Would be tracked over time
+                    slow_queries=0,  # Would be tracked over time
                     database_size_mb=size_mb,
-                    last_optimization=datetime.now() - timedelta(days=1)
+                    last_optimization=datetime.now() - timedelta(days=1),
                 )
 
             return metrics
@@ -301,41 +315,28 @@ class ProductionMonitor:
                 cache_hit_rate=0.0,
                 slow_queries=999,
                 database_size_mb=0.0,
-                last_optimization=datetime.now() - timedelta(days=30)
+                last_optimization=datetime.now() - timedelta(days=30),
             )
 
-    async def record_metric(
-        self,
-        name: str,
-        value: float,
-        metric_type: MetricType,
-        tags: Dict[str, str] = None
-    ):
+    async def record_metric(self, name: str, value: float, metric_type: MetricType, tags: Dict[str, str] = None):
         """Record a custom performance metric."""
         metric = PerformanceMetric(
-            name=name,
-            value=value,
-            metric_type=metric_type,
-            timestamp=datetime.now(),
-            tags=tags or {}
+            name=name, value=value, metric_type=metric_type, timestamp=datetime.now(), tags=tags or {}
         )
 
         await self._store_performance_metric(metric)
 
-    async def create_alert(
-        self,
-        alert_type: str,
-        message: str,
-        severity: str = "warning",
-        service: str = None
-    ):
+    async def create_alert(self, alert_type: str, message: str, severity: str = "warning", service: str = None):
         """Create an alert for monitoring purposes."""
         try:
             async with aiosqlite.connect(self.monitoring_db_path) as db:
-                await db.execute("""
+                await db.execute(
+                    """
                     INSERT INTO alerts (alert_type, message, severity, service)
                     VALUES (?, ?, ?, ?)
-                """, (alert_type, message, severity, service))
+                """,
+                    (alert_type, message, severity, service),
+                )
                 await db.commit()
 
             logger.warning(f"Alert created: {alert_type} - {message}")
@@ -376,40 +377,41 @@ class ProductionMonitor:
                     system_metrics = await cursor.fetchone()
 
             return {
-                'overall_status': self._calculate_overall_status(health_checks),
-                'services': len(set(hc[0] for hc in health_checks)),
-                'healthy_services': len([hc for hc in health_checks if hc[1] == ServiceStatus.HEALTHY.value]),
-                'active_alerts': len(alerts),
-                'system_metrics': {
-                    'cpu_percent': system_metrics[0] if system_metrics else 0,
-                    'memory_percent': system_metrics[1] if system_metrics else 0,
-                    'disk_percent': system_metrics[2] if system_metrics else 0
-                } if system_metrics else None,
-                'last_updated': datetime.now().isoformat()
+                "overall_status": self._calculate_overall_status(health_checks),
+                "services": len(set(hc[0] for hc in health_checks)),
+                "healthy_services": len([hc for hc in health_checks if hc[1] == ServiceStatus.HEALTHY.value]),
+                "active_alerts": len(alerts),
+                "system_metrics": {
+                    "cpu_percent": system_metrics[0] if system_metrics else 0,
+                    "memory_percent": system_metrics[1] if system_metrics else 0,
+                    "disk_percent": system_metrics[2] if system_metrics else 0,
+                }
+                if system_metrics
+                else None,
+                "last_updated": datetime.now().isoformat(),
             }
 
         except Exception as e:
             logger.error(f"Failed to get health summary: {e}")
-            return {
-                'overall_status': 'unknown',
-                'error': str(e),
-                'last_updated': datetime.now().isoformat()
-            }
+            return {"overall_status": "unknown", "error": str(e), "last_updated": datetime.now().isoformat()}
 
     async def _store_health_check(self, health_check: HealthCheck):
         """Store health check result in database."""
         try:
             async with aiosqlite.connect(self.monitoring_db_path) as db:
-                await db.execute("""
+                await db.execute(
+                    """
                     INSERT INTO health_checks (service, status, message, response_time_ms, details)
                     VALUES (?, ?, ?, ?, ?)
-                """, (
-                    health_check.service,
-                    health_check.status.value,
-                    health_check.message,
-                    health_check.response_time_ms,
-                    json.dumps(health_check.details) if health_check.details else None
-                ))
+                """,
+                    (
+                        health_check.service,
+                        health_check.status.value,
+                        health_check.message,
+                        health_check.response_time_ms,
+                        json.dumps(health_check.details) if health_check.details else None,
+                    ),
+                )
                 await db.commit()
 
         except Exception as e:
@@ -419,15 +421,18 @@ class ProductionMonitor:
         """Store performance metric in database."""
         try:
             async with aiosqlite.connect(self.monitoring_db_path) as db:
-                await db.execute("""
+                await db.execute(
+                    """
                     INSERT INTO performance_metrics (name, value, metric_type, tags)
                     VALUES (?, ?, ?, ?)
-                """, (
-                    metric.name,
-                    metric.value,
-                    metric.metric_type.value,
-                    json.dumps(metric.tags) if metric.tags else None
-                ))
+                """,
+                    (
+                        metric.name,
+                        metric.value,
+                        metric.metric_type.value,
+                        json.dumps(metric.tags) if metric.tags else None,
+                    ),
+                )
                 await db.commit()
 
         except Exception as e:
@@ -437,18 +442,21 @@ class ProductionMonitor:
         """Store system metrics in database."""
         try:
             async with aiosqlite.connect(self.monitoring_db_path) as db:
-                await db.execute("""
+                await db.execute(
+                    """
                     INSERT INTO system_metrics
                     (cpu_percent, memory_percent, disk_percent, network_io_mb, active_connections, uptime_hours)
                     VALUES (?, ?, ?, ?, ?, ?)
-                """, (
-                    metrics.cpu_percent,
-                    metrics.memory_percent,
-                    metrics.disk_percent,
-                    metrics.network_io_mb,
-                    metrics.active_connections,
-                    metrics.uptime_hours
-                ))
+                """,
+                    (
+                        metrics.cpu_percent,
+                        metrics.memory_percent,
+                        metrics.disk_percent,
+                        metrics.network_io_mb,
+                        metrics.active_connections,
+                        metrics.uptime_hours,
+                    ),
+                )
                 await db.commit()
 
         except Exception as e:
@@ -456,79 +464,73 @@ class ProductionMonitor:
 
     async def _check_system_thresholds(self, metrics: SystemMetrics):
         """Check system metrics against thresholds and create alerts."""
-        if metrics.cpu_percent > self.thresholds['cpu_percent']:
+        if metrics.cpu_percent > self.thresholds["cpu_percent"]:
+            await self.create_alert("high_cpu", f"CPU usage high: {metrics.cpu_percent:.1f}%", "warning", "system")
+
+        if metrics.memory_percent > self.thresholds["memory_percent"]:
             await self.create_alert(
-                'high_cpu',
-                f'CPU usage high: {metrics.cpu_percent:.1f}%',
-                'warning',
-                'system'
+                "high_memory", f"Memory usage high: {metrics.memory_percent:.1f}%", "warning", "system"
             )
 
-        if metrics.memory_percent > self.thresholds['memory_percent']:
-            await self.create_alert(
-                'high_memory',
-                f'Memory usage high: {metrics.memory_percent:.1f}%',
-                'warning',
-                'system'
-            )
-
-        if metrics.disk_percent > self.thresholds['disk_percent']:
-            await self.create_alert(
-                'high_disk',
-                f'Disk usage high: {metrics.disk_percent:.1f}%',
-                'critical',
-                'system'
-            )
+        if metrics.disk_percent > self.thresholds["disk_percent"]:
+            await self.create_alert("high_disk", f"Disk usage high: {metrics.disk_percent:.1f}%", "critical", "system")
 
     def _calculate_overall_status(self, health_checks: List[tuple]) -> str:
         """Calculate overall system status from health checks."""
         if not health_checks:
-            return 'unknown'
+            return "unknown"
 
         statuses = [hc[1] for hc in health_checks]
 
         if ServiceStatus.DOWN.value in statuses:
-            return 'critical'
+            return "critical"
         elif ServiceStatus.CRITICAL.value in statuses:
-            return 'critical'
+            return "critical"
         elif ServiceStatus.WARNING.value in statuses:
-            return 'warning'
+            return "warning"
         elif ServiceStatus.HEALTHY.value in statuses:
-            return 'healthy'
+            return "healthy"
         else:
-            return 'unknown'
+            return "unknown"
+
 
 # Health check functions for different services
+
 
 async def check_database_health(db_path: str = "data/auth.db") -> Dict[str, Any]:
     """Health check for database connectivity."""
     try:
         async with aiosqlite.connect(db_path) as db:
             await db.execute("SELECT 1")
-        return {'healthy': True, 'message': 'Database connection successful'}
+        return {"healthy": True, "message": "Database connection successful"}
     except Exception as e:
-        return {'healthy': False, 'error': str(e)}
+        return {"healthy": False, "error": str(e)}
+
 
 async def check_cache_health() -> Dict[str, Any]:
     """Health check for cache service."""
     try:
         # This would connect to Redis in a real implementation
-        return {'healthy': True, 'message': 'Cache service available'}
+        return {"healthy": True, "message": "Cache service available"}
     except Exception as e:
-        return {'healthy': False, 'error': str(e)}
+        return {"healthy": False, "error": str(e)}
+
 
 async def check_auth_service_health() -> Dict[str, Any]:
     """Health check for authentication service."""
     try:
         from ghl_real_estate_ai.services.auth_service import get_auth_service
+
         auth_service = get_auth_service()
         # Simple test of auth service
-        return {'healthy': True, 'message': 'Auth service available'}
+        return {"healthy": True, "message": "Auth service available"}
     except Exception as e:
-        return {'healthy': False, 'error': str(e)}
+        return {"healthy": False, "error": str(e)}
+
 
 # Global monitoring instance
 _production_monitor = None
+
 
 def get_production_monitor() -> ProductionMonitor:
     """Get singleton production monitor instance."""

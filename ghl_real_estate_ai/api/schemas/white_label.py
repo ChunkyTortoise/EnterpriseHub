@@ -5,19 +5,20 @@ supporting the $500K ARR platform foundation.
 """
 
 from datetime import datetime
-from typing import Dict, List, Any, Optional, Union
-from enum import Enum
 from decimal import Decimal
+from enum import Enum
+from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field, EmailStr, ValidationInfo, field_validator
-
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, ValidationInfo, field_validator
 
 # ===================================================================
 # ENUM TYPES
 # ===================================================================
 
+
 class AgencyStatus(str, Enum):
     """Agency status values."""
+
     ACTIVE = "active"
     PENDING = "pending"
     SUSPENDED = "suspended"
@@ -26,6 +27,7 @@ class AgencyStatus(str, Enum):
 
 class AgencyTier(str, Enum):
     """Agency tier values."""
+
     BASIC = "basic"
     PROFESSIONAL = "professional"
     ENTERPRISE = "enterprise"
@@ -33,6 +35,7 @@ class AgencyTier(str, Enum):
 
 class DomainType(str, Enum):
     """Domain configuration types."""
+
     AGENCY = "agency"
     CLIENT = "client"
     CUSTOM = "custom"
@@ -40,6 +43,7 @@ class DomainType(str, Enum):
 
 class VerificationMethod(str, Enum):
     """Domain verification methods."""
+
     DNS = "dns"
     FILE = "file"
     EMAIL = "email"
@@ -47,6 +51,7 @@ class VerificationMethod(str, Enum):
 
 class SSLProvider(str, Enum):
     """SSL certificate providers."""
+
     LETSENCRYPT = "letsencrypt"
     CLOUDFLARE = "cloudflare"
     AWS_ACM = "aws_acm"
@@ -55,6 +60,7 @@ class SSLProvider(str, Enum):
 
 class DNSProvider(str, Enum):
     """DNS service providers."""
+
     CLOUDFLARE = "cloudflare"
     ROUTE53 = "route53"
     GOOGLE_CLOUD_DNS = "google_cloud_dns"
@@ -63,6 +69,7 @@ class DNSProvider(str, Enum):
 
 class AssetType(str, Enum):
     """Brand asset types."""
+
     LOGO = "logo"
     FAVICON = "favicon"
     BANNER = "banner"
@@ -75,6 +82,7 @@ class AssetType(str, Enum):
 
 class ProcessingStatus(str, Enum):
     """Asset processing status."""
+
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
@@ -85,10 +93,12 @@ class ProcessingStatus(str, Enum):
 # AGENCY MANAGEMENT SCHEMAS
 # ===================================================================
 
+
 class AgencyCreateRequest(BaseModel):
     """Request schema for creating an agency."""
+
     agency_name: str = Field(..., min_length=1, max_length=500)
-    agency_slug: str = Field(..., min_length=1, max_length=255, pattern=r'^[a-z0-9-]+$')
+    agency_slug: str = Field(..., min_length=1, max_length=255, pattern=r"^[a-z0-9-]+$")
     contact_email: EmailStr
     contract_value: Decimal = Field(..., gt=0, description="Annual contract value in USD")
     platform_fee_rate: Decimal = Field(0.20, ge=0, le=1, description="Platform fee as decimal (e.g., 0.20 for 20%)")
@@ -100,25 +110,26 @@ class AgencyCreateRequest(BaseModel):
     max_custom_domains: int = Field(10, gt=0, le=100)
     metadata: Dict[str, Any] = {}
 
-    @field_validator('contract_end_date')
+    @field_validator("contract_end_date")
     @classmethod
     def validate_contract_dates(cls, v, info: ValidationInfo):
-        if 'contract_start_date' in info.data and v <= info.data['contract_start_date']:
-            raise ValueError('Contract end date must be after start date')
+        if "contract_start_date" in info.data and v <= info.data["contract_start_date"]:
+            raise ValueError("Contract end date must be after start date")
         return v
 
-    @field_validator('agency_slug')
+    @field_validator("agency_slug")
     @classmethod
     def validate_agency_slug(cls, v):
         if len(v) < 3:
-            raise ValueError('Agency slug must be at least 3 characters')
-        if v.startswith('-') or v.endswith('-'):
-            raise ValueError('Agency slug cannot start or end with hyphen')
+            raise ValueError("Agency slug must be at least 3 characters")
+        if v.startswith("-") or v.endswith("-"):
+            raise ValueError("Agency slug cannot start or end with hyphen")
         return v
 
 
 class AgencyUpdateRequest(BaseModel):
     """Request schema for updating an agency."""
+
     agency_name: Optional[str] = Field(None, min_length=1, max_length=500)
     contact_email: Optional[EmailStr] = None
     status: Optional[AgencyStatus] = None
@@ -132,6 +143,7 @@ class AgencyUpdateRequest(BaseModel):
 
 class AgencyResponse(BaseModel):
     """Response schema for agency information."""
+
     agency_id: str
     agency_name: str
     agency_slug: str
@@ -156,6 +168,7 @@ class AgencyResponse(BaseModel):
 
 class AgencyStatsResponse(BaseModel):
     """Response schema for agency statistics."""
+
     agency_id: str
     agency_name: str
     client_count: int
@@ -170,11 +183,13 @@ class AgencyStatsResponse(BaseModel):
 # CLIENT MANAGEMENT SCHEMAS
 # ===================================================================
 
+
 class ClientCreateRequest(BaseModel):
     """Request schema for creating a client."""
+
     client_name: str = Field(..., min_length=1, max_length=500)
-    client_slug: str = Field(..., min_length=1, max_length=255, pattern=r'^[a-z0-9-]+$')
-    client_type: str = Field("real_estate", pattern=r'^(Union[real_estate, mortgage]|Union[insurance, general])$')
+    client_slug: str = Field(..., min_length=1, max_length=255, pattern=r"^[a-z0-9-]+$")
+    client_type: str = Field("real_estate", pattern=r"^(Union[real_estate, mortgage]|Union[insurance, general])$")
     monthly_fee: Decimal = Field(..., gt=0, description="Monthly fee in USD")
     monthly_volume_limit: int = Field(1000, gt=0, le=100000)
 
@@ -185,20 +200,21 @@ class ClientCreateRequest(BaseModel):
 
     client_metadata: Dict[str, Any] = {}
 
-    @field_validator('client_slug')
+    @field_validator("client_slug")
     @classmethod
     def validate_client_slug(cls, v):
         if len(v) < 3:
-            raise ValueError('Client slug must be at least 3 characters')
-        if v.startswith('-') or v.endswith('-'):
-            raise ValueError('Client slug cannot start or end with hyphen')
+            raise ValueError("Client slug must be at least 3 characters")
+        if v.startswith("-") or v.endswith("-"):
+            raise ValueError("Client slug cannot start or end with hyphen")
         return v
 
 
 class ClientUpdateRequest(BaseModel):
     """Request schema for updating a client."""
+
     client_name: Optional[str] = Field(None, min_length=1, max_length=500)
-    client_type: Optional[str] = Field(None, pattern=r'^(Union[real_estate, mortgage]|Union[insurance, general])$')
+    client_type: Optional[str] = Field(None, pattern=r"^(Union[real_estate, mortgage]|Union[insurance, general])$")
     is_active: Optional[bool] = None
     monthly_fee: Optional[Decimal] = Field(None, gt=0)
     monthly_volume_limit: Optional[int] = Field(None, gt=0, le=100000)
@@ -207,6 +223,7 @@ class ClientUpdateRequest(BaseModel):
 
 class ClientResponse(BaseModel):
     """Response schema for client information."""
+
     client_id: str
     agency_id: str
     client_name: str
@@ -233,10 +250,12 @@ class ClientResponse(BaseModel):
 # DOMAIN CONFIGURATION SCHEMAS
 # ===================================================================
 
+
 class DNSRecordSchema(BaseModel):
     """DNS record schema."""
+
     name: str = Field(..., min_length=1)
-    type: str = Field(..., pattern=r'^(Union[A, AAAA]|Union[CNAME, TXT]|MX)$')
+    type: str = Field(..., pattern=r"^(Union[A, AAAA]|Union[CNAME, TXT]|MX)$")
     value: str = Field(..., min_length=1)
     ttl: int = Field(300, gt=0, le=86400)
     priority: Optional[int] = Field(None, ge=0)
@@ -244,6 +263,7 @@ class DNSRecordSchema(BaseModel):
 
 class DomainCreateRequest(BaseModel):
     """Request schema for creating a domain configuration."""
+
     domain_name: str = Field(..., min_length=4, max_length=255)
     domain_type: DomainType
     client_id: Optional[str] = None
@@ -268,41 +288,44 @@ class DomainCreateRequest(BaseModel):
 
     configuration_metadata: Dict[str, Any] = {}
 
-    @field_validator('domain_name')
+    @field_validator("domain_name")
     @classmethod
     def validate_domain_name(cls, v):
         import re
+
         domain_regex = re.compile(
-            r'^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)*[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$'
+            r"^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)*[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$"
         )
         if not domain_regex.match(v):
-            raise ValueError('Invalid domain name format')
+            raise ValueError("Invalid domain name format")
         return v.lower()
 
-    @field_validator('client_id')
+    @field_validator("client_id")
     @classmethod
     def validate_client_domain_type(cls, v, info: ValidationInfo):
-        if 'domain_type' in info.data:
-            if info.data['domain_type'] == DomainType.CLIENT and not v:
-                raise ValueError('Client ID required for client domain type')
-            if info.data['domain_type'] == DomainType.AGENCY and v:
-                raise ValueError('Client ID should not be provided for agency domain type')
+        if "domain_type" in info.data:
+            if info.data["domain_type"] == DomainType.CLIENT and not v:
+                raise ValueError("Client ID required for client domain type")
+            if info.data["domain_type"] == DomainType.AGENCY and v:
+                raise ValueError("Client ID should not be provided for agency domain type")
         return v
 
 
 class DomainUpdateRequest(BaseModel):
     """Request schema for updating a domain configuration."""
+
     ssl_enabled: Optional[bool] = None
     ssl_auto_renew: Optional[bool] = None
     cdn_enabled: Optional[bool] = None
     cdn_provider: Optional[str] = None
     health_check_url: Optional[str] = None
-    status: Optional[str] = Field(None, pattern=r'^(Union[pending, active]|Union[error, disabled])$')
+    status: Optional[str] = Field(None, pattern=r"^(Union[pending, active]|Union[error, disabled])$")
     configuration_metadata: Optional[Dict[str, Any]] = None
 
 
 class DomainResponse(BaseModel):
     """Response schema for domain configuration."""
+
     domain_id: str
     agency_id: str
     client_id: Optional[str]
@@ -348,6 +371,7 @@ class DomainResponse(BaseModel):
 
 class DomainHealthCheckResponse(BaseModel):
     """Response schema for domain health check."""
+
     domain_name: str
     overall_status: str
     checks: Dict[str, Dict[str, Any]]
@@ -357,6 +381,7 @@ class DomainHealthCheckResponse(BaseModel):
 
 class DNSRecordsUpdateRequest(BaseModel):
     """Request schema for updating DNS records."""
+
     records: List[DNSRecordSchema] = Field(..., min_length=1, max_length=50)
     auto_configure: bool = True
 
@@ -365,8 +390,10 @@ class DNSRecordsUpdateRequest(BaseModel):
 # BRAND ASSET SCHEMAS
 # ===================================================================
 
+
 class AssetVariantSchema(BaseModel):
     """Asset variant schema."""
+
     variant_type: str
     width: Optional[int] = None
     height: Optional[int] = None
@@ -378,6 +405,7 @@ class AssetVariantSchema(BaseModel):
 
 class AssetUploadRequest(BaseModel):
     """Request schema for asset upload (multipart form data)."""
+
     asset_type: AssetType
     asset_name: str = Field(..., min_length=1, max_length=500)
     client_id: Optional[str] = None
@@ -387,6 +415,7 @@ class AssetUploadRequest(BaseModel):
 
 class AssetResponse(BaseModel):
     """Response schema for brand asset."""
+
     asset_id: str
     agency_id: str
     client_id: Optional[str]
@@ -429,6 +458,7 @@ class AssetResponse(BaseModel):
 
 class AssetListResponse(BaseModel):
     """Response schema for asset list."""
+
     assets: List[AssetResponse]
     total_count: int
     total_size_bytes: int
@@ -436,6 +466,7 @@ class AssetListResponse(BaseModel):
 
 class StorageOptimizationResponse(BaseModel):
     """Response schema for storage cost optimization analysis."""
+
     total_assets: int
     total_storage_bytes: int
     potential_savings_bytes: int
@@ -447,8 +478,10 @@ class StorageOptimizationResponse(BaseModel):
 # BRAND CONFIGURATION SCHEMAS
 # ===================================================================
 
+
 class BrandConfigCreateRequest(BaseModel):
     """Request schema for creating brand configuration."""
+
     brand_name: str = Field(..., min_length=1, max_length=500)
     client_id: Optional[str] = None
 
@@ -458,19 +491,19 @@ class BrandConfigCreateRequest(BaseModel):
     favicon_asset_id: Optional[str] = None
 
     # Color palette (hex colors)
-    primary_color: str = Field("#6D28D9", pattern=r'^#[0-9A-Fa-f]{6}$')
-    secondary_color: str = Field("#4C1D95", pattern=r'^#[0-9A-Fa-f]{6}$')
-    accent_color: str = Field("#10B981", pattern=r'^#[0-9A-Fa-f]{6}$')
-    text_color: str = Field("#1F2937", pattern=r'^#[0-9A-Fa-f]{6}$')
-    background_color: str = Field("#F9FAFB", pattern=r'^#[0-9A-Fa-f]{6}$')
-    error_color: str = Field("#DC2626", pattern=r'^#[0-9A-Fa-f]{6}$')
-    success_color: str = Field("#059669", pattern=r'^#[0-9A-Fa-f]{6}$')
-    warning_color: str = Field("#D97706", pattern=r'^#[0-9A-Fa-f]{6}$')
+    primary_color: str = Field("#6D28D9", pattern=r"^#[0-9A-Fa-f]{6}$")
+    secondary_color: str = Field("#4C1D95", pattern=r"^#[0-9A-Fa-f]{6}$")
+    accent_color: str = Field("#10B981", pattern=r"^#[0-9A-Fa-f]{6}$")
+    text_color: str = Field("#1F2937", pattern=r"^#[0-9A-Fa-f]{6}$")
+    background_color: str = Field("#F9FAFB", pattern=r"^#[0-9A-Fa-f]{6}$")
+    error_color: str = Field("#DC2626", pattern=r"^#[0-9A-Fa-f]{6}$")
+    success_color: str = Field("#059669", pattern=r"^#[0-9A-Fa-f]{6}$")
+    warning_color: str = Field("#D97706", pattern=r"^#[0-9A-Fa-f]{6}$")
 
     # Typography
     primary_font_family: str = Field("Inter, sans-serif", max_length=255)
     secondary_font_family: str = Field("system-ui", max_length=255)
-    font_scale: Decimal = Field(Decimal('1.00'), ge=Decimal('0.5'), le=Decimal('2.0'))
+    font_scale: Decimal = Field(Decimal("1.00"), ge=Decimal("0.5"), le=Decimal("2.0"))
 
     # Layout settings
     border_radius: str = Field("8px", max_length=10)
@@ -500,6 +533,7 @@ class BrandConfigCreateRequest(BaseModel):
 
 class BrandConfigUpdateRequest(BaseModel):
     """Request schema for updating brand configuration."""
+
     brand_name: Optional[str] = Field(None, min_length=1, max_length=500)
 
     # Asset IDs
@@ -508,15 +542,15 @@ class BrandConfigUpdateRequest(BaseModel):
     favicon_asset_id: Optional[str] = None
 
     # Color palette
-    primary_color: Optional[str] = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$')
-    secondary_color: Optional[str] = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$')
-    accent_color: Optional[str] = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$')
-    text_color: Optional[str] = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$')
-    background_color: Optional[str] = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$')
+    primary_color: Optional[str] = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
+    secondary_color: Optional[str] = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
+    accent_color: Optional[str] = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
+    text_color: Optional[str] = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
+    background_color: Optional[str] = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
 
     # Typography
     primary_font_family: Optional[str] = Field(None, max_length=255)
-    font_scale: Optional[Decimal] = Field(None, ge=Decimal('0.5'), le=Decimal('2.0'))
+    font_scale: Optional[Decimal] = Field(None, ge=Decimal("0.5"), le=Decimal("2.0"))
 
     # Custom CSS
     custom_css: Optional[str] = Field(None, max_length=50000)
@@ -531,6 +565,7 @@ class BrandConfigUpdateRequest(BaseModel):
 
 class BrandConfigResponse(BaseModel):
     """Response schema for brand configuration."""
+
     config_id: str
     agency_id: str
     client_id: Optional[str]
@@ -590,8 +625,10 @@ class BrandConfigResponse(BaseModel):
 # DEPLOYMENT CONFIGURATION SCHEMAS
 # ===================================================================
 
+
 class DeploymentCreateRequest(BaseModel):
     """Request schema for creating deployment configuration."""
+
     client_id: Optional[str] = None
     primary_domain_id: str
     brand_config_id: Optional[str] = None
@@ -621,6 +658,7 @@ class DeploymentCreateRequest(BaseModel):
 
 class DeploymentUpdateRequest(BaseModel):
     """Request schema for updating deployment configuration."""
+
     enabled_modules: Optional[List[str]] = None
     module_configurations: Optional[Dict[str, Any]] = None
     cache_ttl_seconds: Optional[int] = Field(None, gt=0, le=86400)
@@ -635,13 +673,16 @@ class DeploymentUpdateRequest(BaseModel):
     error_tracking_enabled: Optional[bool] = None
     performance_monitoring: Optional[bool] = None
 
-    deployment_status: Optional[str] = Field(None, pattern=r'^(Union[pending, deploying]|Union[active, error]|disabled)$')
+    deployment_status: Optional[str] = Field(
+        None, pattern=r"^(Union[pending, deploying]|Union[active, error]|disabled)$"
+    )
     deployment_notes: Optional[str] = None
     deployment_metadata: Optional[Dict[str, Any]] = None
 
 
 class DeploymentResponse(BaseModel):
     """Response schema for deployment configuration."""
+
     deployment_id: str
     agency_id: str
     client_id: Optional[str]
@@ -683,8 +724,10 @@ class DeploymentResponse(BaseModel):
 # ANALYTICS AND REPORTING SCHEMAS
 # ===================================================================
 
+
 class PlatformAnalyticsResponse(BaseModel):
     """Response schema for platform analytics."""
+
     metric_id: str
     agency_id: str
     client_id: Optional[str]
@@ -702,18 +745,20 @@ class PlatformAnalyticsResponse(BaseModel):
 
 class AnalyticsQueryRequest(BaseModel):
     """Request schema for analytics queries."""
+
     agency_id: Optional[str] = None
     client_id: Optional[str] = None
     metric_types: List[str] = []
     start_date: datetime
     end_date: datetime
-    granularity: str = Field("hour", pattern=r'^(Union[minute, hour]|Union[day, week]|month)$')
+    granularity: str = Field("hour", pattern=r"^(Union[minute, hour]|Union[day, week]|month)$")
     group_by: List[str] = []
     filters: Dict[str, Any] = {}
 
 
 class AnalyticsSummaryResponse(BaseModel):
     """Response schema for analytics summary."""
+
     total_requests: int
     unique_visitors: int
     avg_response_time_ms: float
@@ -727,8 +772,10 @@ class AnalyticsSummaryResponse(BaseModel):
 # COMMON RESPONSE SCHEMAS
 # ===================================================================
 
+
 class ErrorResponse(BaseModel):
     """Standard error response schema."""
+
     error: str
     message: str
     details: Optional[Dict[str, Any]] = None
@@ -737,6 +784,7 @@ class ErrorResponse(BaseModel):
 
 class SuccessResponse(BaseModel):
     """Standard success response schema."""
+
     success: bool = True
     message: str
     data: Optional[Dict[str, Any]] = None
@@ -745,6 +793,7 @@ class SuccessResponse(BaseModel):
 
 class PaginatedResponse(BaseModel):
     """Paginated response wrapper."""
+
     items: List[Any]
     total_count: int
     page: int
@@ -758,20 +807,24 @@ class PaginatedResponse(BaseModel):
 # VALIDATION HELPERS
 # ===================================================================
 
+
 class PaginationParams(BaseModel):
     """Pagination query parameters."""
+
     page: int = Field(1, gt=0)
     page_size: int = Field(20, gt=0, le=100)
 
 
 class SortParams(BaseModel):
     """Sorting query parameters."""
+
     sort_by: str = "created_at"
-    sort_order: str = Field("desc", pattern=r'^(Union[asc, desc])$')
+    sort_order: str = Field("desc", pattern=r"^(Union[asc, desc])$")
 
 
 class FilterParams(BaseModel):
     """Common filter parameters."""
+
     search: Optional[str] = Field(None, max_length=100)
     status: Optional[str] = None
     created_after: Optional[datetime] = None

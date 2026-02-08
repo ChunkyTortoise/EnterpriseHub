@@ -5,19 +5,17 @@ Enterprise-grade interfaces for AI-powered behavioral learning and personalizati
 Supports multiple ML strategies, online learning, and real-time personalization.
 """
 
+import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import (
-    Dict, List, Optional, Any, Union, Tuple, Callable,
-    AsyncGenerator, Protocol, runtime_checkable
-)
-import uuid
+from typing import Any, AsyncGenerator, Callable, Dict, List, Optional, Protocol, Tuple, Union, runtime_checkable
 
 
 class EventType(Enum):
     """Types of behavioral events tracked by the system"""
+
     PROPERTY_VIEW = "property_view"
     PROPERTY_SWIPE = "property_swipe"
     PROPERTY_LIKE = "property_like"
@@ -44,6 +42,7 @@ class EventType(Enum):
 
 class FeatureType(Enum):
     """Types of features extracted for machine learning"""
+
     NUMERICAL = "numerical"
     CATEGORICAL = "categorical"
     TEMPORAL = "temporal"
@@ -55,6 +54,7 @@ class FeatureType(Enum):
 
 class ModelType(Enum):
     """Types of machine learning models"""
+
     COLLABORATIVE_FILTERING = "collaborative_filtering"
     CONTENT_BASED = "content_based"
     MATRIX_FACTORIZATION = "matrix_factorization"
@@ -69,6 +69,7 @@ class ModelType(Enum):
 
 class LearningMode(Enum):
     """Learning modes for model training"""
+
     BATCH = "batch"
     ONLINE = "online"
     MINI_BATCH = "mini_batch"
@@ -77,6 +78,7 @@ class LearningMode(Enum):
 
 class ConfidenceLevel(Enum):
     """Confidence levels for predictions"""
+
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
@@ -91,6 +93,7 @@ class BehavioralEvent:
     Core unit of data for the learning engine. Contains all necessary
     information for feature extraction and model training.
     """
+
     event_id: str
     event_type: EventType
     timestamp: datetime
@@ -134,11 +137,11 @@ class BehavioralEvent:
             "outcome": self.outcome,
             "outcome_value": self.outcome_value,
             "outcome_timestamp": self.outcome_timestamp.isoformat() if self.outcome_timestamp else None,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'BehavioralEvent':
+    def from_dict(cls, data: Dict[str, Any]) -> "BehavioralEvent":
         """Create from dictionary"""
         return cls(
             event_id=data["event_id"],
@@ -154,8 +157,10 @@ class BehavioralEvent:
             event_data=data.get("event_data", {}),
             outcome=data.get("outcome"),
             outcome_value=data.get("outcome_value"),
-            outcome_timestamp=datetime.fromisoformat(data["outcome_timestamp"]) if data.get("outcome_timestamp") else None,
-            metadata=data.get("metadata", {})
+            outcome_timestamp=datetime.fromisoformat(data["outcome_timestamp"])
+            if data.get("outcome_timestamp")
+            else None,
+            metadata=data.get("metadata", {}),
         )
 
 
@@ -167,6 +172,7 @@ class FeatureVector:
     Contains all extracted features for a specific entity (lead, agent, property)
     along with metadata for tracking and debugging.
     """
+
     entity_id: str
     entity_type: str
     extraction_timestamp: datetime = field(default_factory=datetime.now)
@@ -209,6 +215,7 @@ class LearningContext:
     Provides additional information about the learning context,
     including A/B testing, performance requirements, and business rules.
     """
+
     session_id: Optional[str] = None
     user_id: Optional[str] = None
     experiment_id: Optional[str] = None
@@ -240,7 +247,7 @@ class LearningContext:
             "business_rules": self.business_rules,
             "feature_flags": self.feature_flags,
             "tracking_enabled": self.tracking_enabled,
-            "debug_mode": self.debug_mode
+            "debug_mode": self.debug_mode,
         }
 
 
@@ -252,6 +259,7 @@ class ModelPrediction:
     Contains the prediction, confidence, and explainability information
     for transparency and debugging.
     """
+
     entity_id: str
     predicted_value: float
     confidence: float
@@ -283,7 +291,7 @@ class ModelPrediction:
             "feature_importance": self.feature_importance,
             "reasoning": self.reasoning,
             "processing_time_ms": self.processing_time_ms,
-            "model_metadata": self.model_metadata
+            "model_metadata": self.model_metadata,
         }
 
 
@@ -295,6 +303,7 @@ class TrainingResult:
     Contains metrics, model information, and training metadata
     for monitoring and evaluation.
     """
+
     model_id: str
     training_id: str
     training_timestamp: datetime
@@ -342,7 +351,7 @@ class TrainingResult:
             "feature_names": self.feature_names,
             "model_path": self.model_path,
             "success": self.success,
-            "error_message": self.error_message
+            "error_message": self.error_message,
         }
 
 
@@ -389,7 +398,7 @@ class IBehaviorTracker(ABC):
         event_types: Optional[List[EventType]] = None,
         start_time: Optional[datetime] = None,
         end_time: Optional[datetime] = None,
-        limit: int = 1000
+        limit: int = 1000,
     ) -> List[BehavioralEvent]:
         """
         Retrieve events matching criteria.
@@ -409,9 +418,7 @@ class IBehaviorTracker(ABC):
 
     @abstractmethod
     async def get_event_count(
-        self,
-        entity_id: Optional[str] = None,
-        event_types: Optional[List[EventType]] = None
+        self, entity_id: Optional[str] = None, event_types: Optional[List[EventType]] = None
     ) -> int:
         """
         Count events matching criteria.
@@ -426,12 +433,7 @@ class IBehaviorTracker(ABC):
         pass
 
     @abstractmethod
-    async def record_outcome(
-        self,
-        event_id: str,
-        outcome: str,
-        outcome_value: Optional[float] = None
-    ) -> bool:
+    async def record_outcome(self, event_id: str, outcome: str, outcome_value: Optional[float] = None) -> bool:
         """
         Record outcome for an event (for supervised learning).
 
@@ -456,11 +458,7 @@ class IFeatureEngineer(ABC):
 
     @abstractmethod
     async def extract_features(
-        self,
-        entity_id: str,
-        entity_type: str,
-        events: List[BehavioralEvent],
-        context: Optional[LearningContext] = None
+        self, entity_id: str, entity_type: str, events: List[BehavioralEvent], context: Optional[LearningContext] = None
     ) -> FeatureVector:
         """
         Extract features for a single entity.
@@ -481,7 +479,7 @@ class IFeatureEngineer(ABC):
         self,
         entities: List[Tuple[str, str]],
         events_by_entity: Dict[str, List[BehavioralEvent]],
-        context: Optional[LearningContext] = None
+        context: Optional[LearningContext] = None,
     ) -> Dict[str, FeatureVector]:
         """
         Extract features for multiple entities efficiently.
@@ -550,7 +548,7 @@ class ILearningModel(ABC):
         targets: List[float],
         validation_features: Optional[List[FeatureVector]] = None,
         validation_targets: Optional[List[float]] = None,
-        context: Optional[LearningContext] = None
+        context: Optional[LearningContext] = None,
     ) -> TrainingResult:
         """
         Train the model on feature vectors and targets.
@@ -568,11 +566,7 @@ class ILearningModel(ABC):
         pass
 
     @abstractmethod
-    async def predict(
-        self,
-        features: FeatureVector,
-        context: Optional[LearningContext] = None
-    ) -> ModelPrediction:
+    async def predict(self, features: FeatureVector, context: Optional[LearningContext] = None) -> ModelPrediction:
         """
         Make prediction for a single entity.
 
@@ -587,9 +581,7 @@ class ILearningModel(ABC):
 
     @abstractmethod
     async def predict_batch(
-        self,
-        features: List[FeatureVector],
-        context: Optional[LearningContext] = None
+        self, features: List[FeatureVector], context: Optional[LearningContext] = None
     ) -> List[ModelPrediction]:
         """
         Make predictions for multiple entities efficiently.
@@ -605,10 +597,7 @@ class ILearningModel(ABC):
 
     @abstractmethod
     async def update_online(
-        self,
-        features: FeatureVector,
-        target: float,
-        context: Optional[LearningContext] = None
+        self, features: FeatureVector, target: float, context: Optional[LearningContext] = None
     ) -> bool:
         """
         Update model with new training example (online learning).
@@ -670,11 +659,7 @@ class IPersonalizationEngine(ABC):
 
     @abstractmethod
     async def get_recommendations(
-        self,
-        entity_id: str,
-        entity_type: str,
-        max_results: int = 10,
-        context: Optional[LearningContext] = None
+        self, entity_id: str, entity_type: str, max_results: int = 10, context: Optional[LearningContext] = None
     ) -> List[ModelPrediction]:
         """
         Get personalized recommendations for an entity.
@@ -692,10 +677,7 @@ class IPersonalizationEngine(ABC):
 
     @abstractmethod
     async def get_explanation(
-        self,
-        entity_id: str,
-        prediction: ModelPrediction,
-        context: Optional[LearningContext] = None
+        self, entity_id: str, prediction: ModelPrediction, context: Optional[LearningContext] = None
     ) -> Dict[str, Any]:
         """
         Get explanation for a prediction.
@@ -712,11 +694,7 @@ class IPersonalizationEngine(ABC):
 
     @abstractmethod
     async def record_feedback(
-        self,
-        entity_id: str,
-        prediction_id: str,
-        feedback: str,
-        feedback_value: Optional[float] = None
+        self, entity_id: str, prediction_id: str, feedback: str, feedback_value: Optional[float] = None
     ) -> bool:
         """
         Record user feedback on a prediction.
@@ -747,7 +725,7 @@ class ILearningService(ABC):
         event_type: EventType,
         entity_data: Dict[str, str],
         event_data: Dict[str, Any],
-        context: Optional[LearningContext] = None
+        context: Optional[LearningContext] = None,
     ) -> str:
         """
         Track user interaction and trigger learning.
@@ -765,10 +743,7 @@ class ILearningService(ABC):
 
     @abstractmethod
     async def get_personalized_properties(
-        self,
-        lead_id: str,
-        max_results: int = 10,
-        context: Optional[LearningContext] = None
+        self, lead_id: str, max_results: int = 10, context: Optional[LearningContext] = None
     ) -> List[ModelPrediction]:
         """
         Get personalized property recommendations for a lead.
@@ -784,11 +759,7 @@ class ILearningService(ABC):
         pass
 
     @abstractmethod
-    async def get_agent_insights(
-        self,
-        agent_id: str,
-        context: Optional[LearningContext] = None
-    ) -> Dict[str, Any]:
+    async def get_agent_insights(self, agent_id: str, context: Optional[LearningContext] = None) -> Dict[str, Any]:
         """
         Get performance insights for an agent.
 
@@ -802,12 +773,7 @@ class ILearningService(ABC):
         pass
 
     @abstractmethod
-    async def record_outcome(
-        self,
-        event_id: str,
-        outcome: str,
-        outcome_value: Optional[float] = None
-    ) -> bool:
+    async def record_outcome(self, event_id: str, outcome: str, outcome_value: Optional[float] = None) -> bool:
         """
         Record outcome for a tracked interaction.
 
@@ -841,24 +807,29 @@ PredictionBatch = List[ModelPrediction]
 # Exceptions
 class LearningError(Exception):
     """Base exception for learning engine errors"""
+
     pass
 
 
 class ModelNotTrainedError(LearningError):
     """Model has not been trained yet"""
+
     pass
 
 
 class FeatureExtractionError(LearningError):
     """Error during feature extraction"""
+
     pass
 
 
 class PredictionError(LearningError):
     """Error during prediction"""
+
     pass
 
 
 class TrainingError(LearningError):
     """Error during model training"""
+
     pass

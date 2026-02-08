@@ -1,9 +1,8 @@
+import importlib
 import os
 
 import httpx
 import pytest
-import importlib
-
 
 BASE_URL = os.getenv("ENTERPRISE_API_BASE_URL") or os.getenv("BACKEND_URL")
 

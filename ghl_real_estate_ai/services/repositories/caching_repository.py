@@ -6,28 +6,23 @@ Supports multiple cache backends and configurable TTL.
 """
 
 import asyncio
-import json
 import hashlib
-from typing import Dict, List, Optional, Any, Union
-from datetime import datetime, timedelta
+import json
 import pickle
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Union
 
 try:
     import redis
+
     HAS_REDIS = True
 except ImportError:
     HAS_REDIS = False
 
 try:
-    from .interfaces import (
-        IPropertyRepository, PropertyQuery, RepositoryResult, RepositoryMetadata,
-        RepositoryError
-    )
+    from .interfaces import IPropertyRepository, PropertyQuery, RepositoryError, RepositoryMetadata, RepositoryResult
 except ImportError:
-    from interfaces import (
-        IPropertyRepository, PropertyQuery, RepositoryResult, RepositoryMetadata,
-        RepositoryError
-    )
+    from interfaces import IPropertyRepository, PropertyQuery, RepositoryError, RepositoryMetadata, RepositoryResult
 
 
 class CacheBackend:
@@ -223,8 +218,12 @@ class CachingRepository(IPropertyRepository):
     Uses Decorator pattern to wrap existing repositories with caching functionality.
     """
 
-    def __init__(self, wrapped_repository: IPropertyRepository, cache_backend: CacheBackend,
-                 default_ttl: timedelta = timedelta(minutes=15)):
+    def __init__(
+        self,
+        wrapped_repository: IPropertyRepository,
+        cache_backend: CacheBackend,
+        default_ttl: timedelta = timedelta(minutes=15),
+    ):
         """
         Initialize caching repository.
 
@@ -251,7 +250,7 @@ class CachingRepository(IPropertyRepository):
             return False
 
         # Connect cache backend if needed
-        if hasattr(self.cache_backend, 'connect'):
+        if hasattr(self.cache_backend, "connect"):
             await self.cache_backend.connect()
 
         self._is_connected = True
@@ -261,7 +260,7 @@ class CachingRepository(IPropertyRepository):
         """Disconnect both wrapped repository and cache backend"""
         await self.wrapped_repository.disconnect()
 
-        if hasattr(self.cache_backend, 'disconnect'):
+        if hasattr(self.cache_backend, "disconnect"):
             await self.cache_backend.disconnect()
 
         self._is_connected = False
@@ -275,14 +274,10 @@ class CachingRepository(IPropertyRepository):
             "cache_hits": self.cache_hits,
             "cache_misses": self.cache_misses,
             "cache_hit_rate": self._calculate_hit_rate(),
-            "cache_sets": self.cache_sets
+            "cache_sets": self.cache_sets,
         }
 
-        return {
-            "repository": repo_health,
-            "cache": cache_health,
-            "status": repo_health.get("status", "unknown")
-        }
+        return {"repository": repo_health, "cache": cache_health, "status": repo_health.get("status", "unknown")}
 
     async def find_properties(self, query: PropertyQuery) -> RepositoryResult:
         """Find properties with caching"""
@@ -366,13 +361,13 @@ class CachingRepository(IPropertyRepository):
             "cache_misses": self.cache_misses,
             "cache_hit_rate": self._calculate_hit_rate(),
             "cache_sets": self.cache_sets,
-            "cache_backend": type(self.cache_backend).__name__
+            "cache_backend": type(self.cache_backend).__name__,
         }
 
         return {
             "wrapped_repository": wrapped_metrics,
             "cache_metrics": cache_metrics,
-            "repository_type": "caching_decorator"
+            "repository_type": "caching_decorator",
         }
 
     # Cache management methods
@@ -424,7 +419,7 @@ class CachingRepository(IPropertyRepository):
             "page": query.pagination.page,
             "limit": query.pagination.limit,
             "semantic_query": query.semantic_query,
-            "filters": [(f.field, f.operator.value, f.value) for f in query.filters]
+            "filters": [(f.field, f.operator.value, f.value) for f in query.filters],
         }
 
         # Create hash from deterministic representation

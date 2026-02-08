@@ -5,25 +5,26 @@ Comprehensive testing for high-ticket consulting engagement management
 supporting $25K-$100K project delivery.
 """
 
-import pytest
 import asyncio
 import json
 import tempfile
-from pathlib import Path
 from datetime import datetime, timedelta
-from unittest.mock import patch, MagicMock
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from ghl_real_estate_ai.services.consulting_delivery_service import (
         ConsultingDeliveryService,
         ConsultingEngagement,
-        EngagementTier,
-        EngagementStatus,
-        DeliverableStatus,
-        StakeholderRole,
-        Stakeholder,
         Deliverable,
-        ROIMetrics
+        DeliverableStatus,
+        EngagementStatus,
+        EngagementTier,
+        ROIMetrics,
+        Stakeholder,
+        StakeholderRole,
     )
 except (ImportError, TypeError, AttributeError):
     pytest.skip("required imports unavailable", allow_module_level=True)
@@ -62,7 +63,7 @@ class TestConsultingDeliveryService:
             engagement_preference="email",
             availability={"monday": "9am-5pm", "tuesday": "9am-5pm"},
             decision_authority=["budget", "strategic"],
-            notes="Primary decision maker"
+            notes="Primary decision maker",
         )
 
     @pytest.fixture
@@ -74,11 +75,8 @@ class TestConsultingDeliveryService:
             description="Comprehensive analysis of AI opportunities",
             category="strategic",
             estimated_hours=16,
-            acceptance_criteria=[
-                "Current state analysis completed",
-                "Opportunity matrix delivered"
-            ],
-            client_value="Strategic clarity on $500K+ opportunities"
+            acceptance_criteria=["Current state analysis completed", "Opportunity matrix delivered"],
+            client_value="Strategic clarity on $500K+ opportunities",
         )
 
     @pytest.fixture
@@ -92,7 +90,7 @@ class TestConsultingDeliveryService:
             hours_saved_per_week=45.5,
             customer_satisfaction_score=9.2,
             total_roi_percentage=284.5,
-            payback_period_months=4.2
+            payback_period_months=4.2,
         )
 
     @pytest.mark.asyncio
@@ -104,7 +102,7 @@ class TestConsultingDeliveryService:
             tier=EngagementTier.ACCELERATOR,
             contract_value=30000,
             start_date="2024-01-15T10:00:00",
-            lead_consultant="Sarah Johnson"
+            lead_consultant="Sarah Johnson",
         )
 
         assert engagement_id.startswith("eng_accelerator_")
@@ -127,7 +125,7 @@ class TestConsultingDeliveryService:
             tier=EngagementTier.PLATFORM,
             contract_value=62500,
             start_date="2024-02-01T09:00:00",
-            lead_consultant="Mike Wilson"
+            lead_consultant="Mike Wilson",
         )
 
         engagement = await temp_service.get_engagement(engagement_id)
@@ -150,7 +148,7 @@ class TestConsultingDeliveryService:
             tier=EngagementTier.INNOVATION,
             contract_value=87500,
             start_date="2024-03-01T08:00:00",
-            lead_consultant="Alice Brown"
+            lead_consultant="Alice Brown",
         )
 
         engagement = await temp_service.get_engagement(engagement_id)
@@ -182,14 +180,12 @@ class TestConsultingDeliveryService:
             tier=EngagementTier.ACCELERATOR,
             contract_value=30000,
             start_date="2024-01-15T10:00:00",
-            lead_consultant="Test Consultant"
+            lead_consultant="Test Consultant",
         )
 
         # Update status
         success = await temp_service.update_engagement_status(
-            engagement_id,
-            EngagementStatus.DISCOVERY,
-            "Discovery phase initiated"
+            engagement_id, EngagementStatus.DISCOVERY, "Discovery phase initiated"
         )
 
         assert success is True
@@ -203,10 +199,7 @@ class TestConsultingDeliveryService:
     @pytest.mark.asyncio
     async def test_update_nonexistent_engagement_status(self, temp_service):
         """Test updating status of non-existent engagement."""
-        success = await temp_service.update_engagement_status(
-            "nonexistent_id",
-            EngagementStatus.DISCOVERY
-        )
+        success = await temp_service.update_engagement_status("nonexistent_id", EngagementStatus.DISCOVERY)
 
         assert success is False
 
@@ -220,7 +213,7 @@ class TestConsultingDeliveryService:
             tier=EngagementTier.PLATFORM,
             contract_value=60000,
             start_date="2024-01-15T10:00:00",
-            lead_consultant="Test Consultant"
+            lead_consultant="Test Consultant",
         )
 
         # Add stakeholder
@@ -243,7 +236,7 @@ class TestConsultingDeliveryService:
             tier=EngagementTier.ACCELERATOR,
             contract_value=30000,
             start_date="2024-01-15T10:00:00",
-            lead_consultant="Test Consultant"
+            lead_consultant="Test Consultant",
         )
 
         # Add stakeholder twice
@@ -266,7 +259,7 @@ class TestConsultingDeliveryService:
             tier=EngagementTier.PLATFORM,
             contract_value=60000,
             start_date="2024-01-15T10:00:00",
-            lead_consultant="Test Consultant"
+            lead_consultant="Test Consultant",
         )
 
         engagement = await temp_service.get_engagement(engagement_id)
@@ -278,7 +271,7 @@ class TestConsultingDeliveryService:
             deliverable_id,
             DeliverableStatus.IN_PROGRESS,
             actual_hours=8,
-            notes="Work started on analysis"
+            notes="Work started on analysis",
         )
 
         assert success is True
@@ -301,7 +294,7 @@ class TestConsultingDeliveryService:
             tier=EngagementTier.ACCELERATOR,
             contract_value=30000,
             start_date="2024-01-15T10:00:00",
-            lead_consultant="Test Consultant"
+            lead_consultant="Test Consultant",
         )
 
         engagement = await temp_service.get_engagement(engagement_id)
@@ -309,10 +302,7 @@ class TestConsultingDeliveryService:
 
         # Mark as approved (completed)
         success = await temp_service.update_deliverable_status(
-            engagement_id,
-            deliverable_id,
-            DeliverableStatus.APPROVED,
-            actual_hours=16
+            engagement_id, deliverable_id, DeliverableStatus.APPROVED, actual_hours=16
         )
 
         assert success is True
@@ -335,7 +325,7 @@ class TestConsultingDeliveryService:
             tier=EngagementTier.PLATFORM,
             contract_value=60000,
             start_date="2024-01-15T10:00:00",
-            lead_consultant="Test Consultant"
+            lead_consultant="Test Consultant",
         )
 
         # Track ROI metrics
@@ -348,7 +338,7 @@ class TestConsultingDeliveryService:
         metrics_file = temp_service.metrics_dir / f"{engagement_id}_roi.json"
         assert metrics_file.exists()
 
-        with open(metrics_file, 'r') as f:
+        with open(metrics_file, "r") as f:
             metrics_history = json.load(f)
 
         assert len(metrics_history) == 1
@@ -368,23 +358,23 @@ class TestConsultingDeliveryService:
             tier=EngagementTier.INNOVATION,
             contract_value=85000,
             start_date="2024-01-15T10:00:00",
-            lead_consultant="Test Consultant"
+            lead_consultant="Test Consultant",
         )
 
         # Track multiple measurements
         for i in range(3):
             metrics = ROIMetrics(
                 engagement_id=engagement_id,
-                measurement_date=(datetime.utcnow() - timedelta(days=30*i)).isoformat(),
+                measurement_date=(datetime.utcnow() - timedelta(days=30 * i)).isoformat(),
                 monthly_revenue_increase=100000 + (i * 25000),
-                total_roi_percentage=200 + (i * 50)
+                total_roi_percentage=200 + (i * 50),
             )
 
             await temp_service.track_roi_metrics(engagement_id, metrics)
 
         # Verify all measurements were saved
         metrics_file = temp_service.metrics_dir / f"{engagement_id}_roi.json"
-        with open(metrics_file, 'r') as f:
+        with open(metrics_file, "r") as f:
             metrics_history = json.load(f)
 
         assert len(metrics_history) == 3
@@ -401,18 +391,14 @@ class TestConsultingDeliveryService:
             tier=EngagementTier.PLATFORM,
             contract_value=65000,
             start_date="2024-01-15T10:00:00",
-            lead_consultant="Dashboard Consultant"
+            lead_consultant="Dashboard Consultant",
         )
 
         # Add some progress
         engagement = await temp_service.get_engagement(engagement_id)
         deliverable_id = engagement.deliverables[0].deliverable_id
 
-        await temp_service.update_deliverable_status(
-            engagement_id,
-            deliverable_id,
-            DeliverableStatus.APPROVED
-        )
+        await temp_service.update_deliverable_status(engagement_id, deliverable_id, DeliverableStatus.APPROVED)
 
         # Generate dashboard
         dashboard = await temp_service.get_engagement_dashboard(engagement_id)
@@ -443,7 +429,7 @@ class TestConsultingDeliveryService:
             tier=EngagementTier.ACCELERATOR,
             contract_value=32000,
             start_date="2024-01-01T10:00:00",
-            lead_consultant="Report Consultant"
+            lead_consultant="Report Consultant",
         )
 
         # Generate status report
@@ -520,9 +506,30 @@ class TestConsultingDeliveryService:
         """Test engagement completion percentage calculation."""
         # Create sample engagement with deliverables
         deliverables = [
-            Deliverable(deliverable_id="d1", name="D1", description="", category="", estimated_hours=10, status=DeliverableStatus.APPROVED),
-            Deliverable(deliverable_id="d2", name="D2", description="", category="", estimated_hours=20, status=DeliverableStatus.IN_PROGRESS),
-            Deliverable(deliverable_id="d3", name="D3", description="", category="", estimated_hours=30, status=DeliverableStatus.PLANNED)
+            Deliverable(
+                deliverable_id="d1",
+                name="D1",
+                description="",
+                category="",
+                estimated_hours=10,
+                status=DeliverableStatus.APPROVED,
+            ),
+            Deliverable(
+                deliverable_id="d2",
+                name="D2",
+                description="",
+                category="",
+                estimated_hours=20,
+                status=DeliverableStatus.IN_PROGRESS,
+            ),
+            Deliverable(
+                deliverable_id="d3",
+                name="D3",
+                description="",
+                category="",
+                estimated_hours=30,
+                status=DeliverableStatus.PLANNED,
+            ),
         ]
 
         engagement = ConsultingEngagement(
@@ -536,7 +543,7 @@ class TestConsultingDeliveryService:
             start_date="2024-01-01",
             planned_end_date="2024-03-01",
             lead_consultant="Test",
-            deliverables=deliverables
+            deliverables=deliverables,
         )
 
         completion = temp_service._calculate_completion_percentage(engagement)
@@ -556,7 +563,7 @@ class TestConsultingDeliveryService:
             start_date="2024-01-01",
             planned_end_date="2024-03-01",
             lead_consultant="Test",
-            deliverables=[]
+            deliverables=[],
         )
 
         completion = temp_service._calculate_completion_percentage(engagement)
@@ -586,7 +593,7 @@ class TestConsultingDeliveryService:
             payment_schedule=[],
             start_date=start_date,
             planned_end_date="2024-03-01",
-            lead_consultant="Test"
+            lead_consultant="Test",
         )
 
         week = temp_service._calculate_project_week(engagement)
@@ -610,7 +617,7 @@ class TestConsultingDeliveryService:
                 tier=EngagementTier.ACCELERATOR,
                 contract_value=30000,
                 start_date="invalid-date-format",
-                lead_consultant="Test Consultant"
+                lead_consultant="Test Consultant",
             )
 
     def test_stakeholder_dataclass(self):
@@ -624,7 +631,7 @@ class TestConsultingDeliveryService:
             influence_level=7,
             engagement_preference="phone",
             availability={"monday": "9-5"},
-            decision_authority=["technical"]
+            decision_authority=["technical"],
         )
 
         assert stakeholder.name == "Test User"
@@ -638,7 +645,7 @@ class TestConsultingDeliveryService:
             name="Test Deliverable",
             description="Test description",
             category="strategic",
-            estimated_hours=20
+            estimated_hours=20,
         )
 
         assert deliverable.name == "Test Deliverable"
@@ -652,7 +659,7 @@ class TestConsultingDeliveryService:
             measurement_date="2024-01-15T10:00:00",
             monthly_revenue_increase=150000,
             conversion_rate_improvement=30.0,
-            total_roi_percentage=320.5
+            total_roi_percentage=320.5,
         )
 
         assert roi.engagement_id == "test_eng"

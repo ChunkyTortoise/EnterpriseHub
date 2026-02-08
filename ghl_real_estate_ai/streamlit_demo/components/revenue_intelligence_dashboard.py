@@ -16,35 +16,34 @@ Features:
 This dashboard provides comprehensive business intelligence for Phase 7 advanced AI capabilities.
 """
 
-import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import asyncio
-from datetime import datetime, timedelta, date
-from typing import Dict, List, Any, Optional
 import json
 import logging
 
 # Custom styling and layout
 import time
-import requests
 from dataclasses import dataclass
+from datetime import date, datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import requests
+import streamlit as st
+from plotly.subplots import make_subplots
 
 logger = logging.getLogger(__name__)
 
 # Page configuration
 st.set_page_config(
-    page_title="Revenue Intelligence Dashboard",
-    page_icon="📊",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    page_title="Revenue Intelligence Dashboard", page_icon="📊", layout="wide", initial_sidebar_state="expanded"
 )
 
 # Custom CSS for professional styling
-st.markdown("""
+st.markdown(
+    """
 <style>
     .main > div {
         padding-top: 1rem;
@@ -90,11 +89,15 @@ st.markdown("""
         font-style: italic;
     }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
+
 
 @dataclass
 class RevenueForecastData:
     """Revenue forecast data structure"""
+
     base_forecast: float
     optimistic_forecast: float
     conservative_forecast: float
@@ -104,9 +107,11 @@ class RevenueForecastData:
     lstm_forecast: Optional[float] = None
     ensemble_forecast: Optional[float] = None
 
+
 @dataclass
 class PipelineMetrics:
     """Pipeline performance metrics"""
+
     total_value: float
     deal_count: int
     weighted_probability: float
@@ -114,6 +119,7 @@ class PipelineMetrics:
     high_probability_deals: int
     at_risk_deals: int
     avg_time_to_close: float
+
 
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def load_revenue_forecast_data(timeframe: str = "monthly") -> RevenueForecastData:
@@ -133,11 +139,12 @@ def load_revenue_forecast_data(timeframe: str = "monthly") -> RevenueForecastDat
             prophet_forecast=base_forecast * (0.95 + np.random.normal(0, 0.05)),
             arima_forecast=base_forecast * (0.98 + np.random.normal(0, 0.03)),
             lstm_forecast=base_forecast * (1.02 + np.random.normal(0, 0.04)),
-            ensemble_forecast=base_forecast * (1.01 + np.random.normal(0, 0.02))
+            ensemble_forecast=base_forecast * (1.01 + np.random.normal(0, 0.02)),
         )
     except Exception as e:
         logger.error(f"Failed to load forecast data: {str(e)}")
         return RevenueForecastData(500000, 575000, 425000, 0.85)
+
 
 @st.cache_data(ttl=300)
 def load_pipeline_metrics() -> PipelineMetrics:
@@ -155,11 +162,12 @@ def load_pipeline_metrics() -> PipelineMetrics:
             expected_revenue=total_value * 0.65 * 0.06,  # Jorge's 6% commission
             high_probability_deals=max(0, int(deal_count * 0.3)),
             at_risk_deals=max(0, int(deal_count * 0.15)),
-            avg_time_to_close=35 + np.random.normal(0, 5)
+            avg_time_to_close=35 + np.random.normal(0, 5),
         )
     except Exception as e:
         logger.error(f"Failed to load pipeline data: {str(e)}")
         return PipelineMetrics(10000000, 25, 0.65, 390000, 7, 4, 38)
+
 
 def create_revenue_forecast_chart(forecast_data: RevenueForecastData) -> go.Figure:
     """Create interactive revenue forecast visualization"""
@@ -168,7 +176,7 @@ def create_revenue_forecast_chart(forecast_data: RevenueForecastData) -> go.Figu
     fig = go.Figure()
 
     # Model forecasts
-    models = ['Conservative', 'Base', 'Optimistic', 'Prophet', 'ARIMA', 'LSTM', 'Ensemble']
+    models = ["Conservative", "Base", "Optimistic", "Prophet", "ARIMA", "LSTM", "Ensemble"]
     values = [
         forecast_data.conservative_forecast,
         forecast_data.base_forecast,
@@ -176,33 +184,35 @@ def create_revenue_forecast_chart(forecast_data: RevenueForecastData) -> go.Figu
         forecast_data.prophet_forecast or forecast_data.base_forecast,
         forecast_data.arima_forecast or forecast_data.base_forecast,
         forecast_data.lstm_forecast or forecast_data.base_forecast,
-        forecast_data.ensemble_forecast or forecast_data.base_forecast
+        forecast_data.ensemble_forecast or forecast_data.base_forecast,
     ]
 
     # Color scheme for different model types
-    colors = ['#ff7f7f', '#4CAF50', '#81c784', '#2196F3', '#FF9800', '#9C27B0', '#F44336']
+    colors = ["#ff7f7f", "#4CAF50", "#81c784", "#2196F3", "#FF9800", "#9C27B0", "#F44336"]
 
-    fig.add_trace(go.Bar(
-        x=models,
-        y=values,
-        marker_color=colors,
-        text=[f"${v:,.0f}" for v in values],
-        textposition='outside',
-        name='Revenue Forecast'
-    ))
+    fig.add_trace(
+        go.Bar(
+            x=models,
+            y=values,
+            marker_color=colors,
+            text=[f"${v:,.0f}" for v in values],
+            textposition="outside",
+            name="Revenue Forecast",
+        )
+    )
 
     # Add confidence interval as background
     fig.add_hline(
         y=forecast_data.base_forecast * (1 + (1 - forecast_data.confidence_level)),
         line_dash="dash",
         line_color="gray",
-        annotation_text=f"{forecast_data.confidence_level:.0%} Confidence Upper"
+        annotation_text=f"{forecast_data.confidence_level:.0%} Confidence Upper",
     )
     fig.add_hline(
         y=forecast_data.base_forecast * (1 - (1 - forecast_data.confidence_level)),
         line_dash="dash",
         line_color="gray",
-        annotation_text=f"{forecast_data.confidence_level:.0%} Confidence Lower"
+        annotation_text=f"{forecast_data.confidence_level:.0%} Confidence Lower",
     )
 
     fig.update_layout(
@@ -211,10 +221,11 @@ def create_revenue_forecast_chart(forecast_data: RevenueForecastData) -> go.Figu
         yaxis_title="Revenue ($)",
         height=400,
         showlegend=False,
-        yaxis=dict(tickformat='$,.0f')
+        yaxis=dict(tickformat="$,.0f"),
     )
 
     return fig
+
 
 def create_pipeline_analysis_chart(pipeline: PipelineMetrics) -> go.Figure:
     """Create pipeline analysis visualization"""
@@ -223,33 +234,33 @@ def create_pipeline_analysis_chart(pipeline: PipelineMetrics) -> go.Figure:
     fig = go.Figure()
 
     # Calculate pipeline health score
-    health_score = min(100, (pipeline.weighted_probability * 85 +
-                             (pipeline.high_probability_deals / max(1, pipeline.deal_count)) * 15))
+    health_score = min(
+        100, (pipeline.weighted_probability * 85 + (pipeline.high_probability_deals / max(1, pipeline.deal_count)) * 15)
+    )
 
-    fig.add_trace(go.Indicator(
-        mode = "gauge+number+delta",
-        value = health_score,
-        domain = {'x': [0, 1], 'y': [0, 1]},
-        title = {'text': "Pipeline Health Score"},
-        delta = {'reference': 80, 'increasing': {'color': "green"}, 'decreasing': {'color': "red"}},
-        gauge = {
-            'axis': {'range': [None, 100]},
-            'bar': {'color': "darkgreen"},
-            'steps': [
-                {'range': [0, 50], 'color': "lightgray"},
-                {'range': [50, 80], 'color': "yellow"},
-                {'range': [80, 100], 'color': "lightgreen"}
-            ],
-            'threshold': {
-                'line': {'color': "red", 'width': 4},
-                'thickness': 0.75,
-                'value': 90
-            }
-        }
-    ))
+    fig.add_trace(
+        go.Indicator(
+            mode="gauge+number+delta",
+            value=health_score,
+            domain={"x": [0, 1], "y": [0, 1]},
+            title={"text": "Pipeline Health Score"},
+            delta={"reference": 80, "increasing": {"color": "green"}, "decreasing": {"color": "red"}},
+            gauge={
+                "axis": {"range": [None, 100]},
+                "bar": {"color": "darkgreen"},
+                "steps": [
+                    {"range": [0, 50], "color": "lightgray"},
+                    {"range": [50, 80], "color": "yellow"},
+                    {"range": [80, 100], "color": "lightgreen"},
+                ],
+                "threshold": {"line": {"color": "red", "width": 4}, "thickness": 0.75, "value": 90},
+            },
+        )
+    )
 
     fig.update_layout(height=300)
     return fig
+
 
 def create_deal_probability_distribution() -> go.Figure:
     """Create deal probability distribution chart"""
@@ -262,21 +273,19 @@ def create_deal_probability_distribution() -> go.Figure:
     # Create scatter plot
     fig = go.Figure()
 
-    fig.add_trace(go.Scatter(
-        x=probabilities,
-        y=deal_values,
-        mode='markers',
-        marker=dict(
-            size=12,
-            color=probabilities,
-            colorscale='RdYlGn',
-            showscale=True,
-            colorbar=dict(title="Probability %")
-        ),
-        text=[f"Deal ${v:,.0f}<br>Prob: {p:.1f}%" for p, v in zip(probabilities, deal_values)],
-        hovertemplate='<b>%{text}</b><extra></extra>',
-        name='Active Deals'
-    ))
+    fig.add_trace(
+        go.Scatter(
+            x=probabilities,
+            y=deal_values,
+            mode="markers",
+            marker=dict(
+                size=12, color=probabilities, colorscale="RdYlGn", showscale=True, colorbar=dict(title="Probability %")
+            ),
+            text=[f"Deal ${v:,.0f}<br>Prob: {p:.1f}%" for p, v in zip(probabilities, deal_values)],
+            hovertemplate="<b>%{text}</b><extra></extra>",
+            name="Active Deals",
+        )
+    )
 
     # Add quadrant lines
     fig.add_hline(y=np.median(deal_values), line_dash="dash", line_color="gray", opacity=0.5)
@@ -287,27 +296,29 @@ def create_deal_probability_distribution() -> go.Figure:
         xaxis_title="Closing Probability (%)",
         yaxis_title="Deal Value ($)",
         height=400,
-        yaxis=dict(tickformat='$,.0f')
+        yaxis=dict(tickformat="$,.0f"),
     )
 
     return fig
 
+
 def create_jorge_methodology_performance() -> Dict[str, float]:
     """Generate Jorge methodology performance metrics"""
     return {
-        'methodology_effectiveness': 94.2,
-        'commission_rate_defense': 97.8,
-        'confrontational_success_rate': 91.5,
-        'client_satisfaction': 86.7,
-        'referral_generation_rate': 23.1,
-        'conversion_improvement': 15.3
+        "methodology_effectiveness": 94.2,
+        "commission_rate_defense": 97.8,
+        "confrontational_success_rate": 91.5,
+        "client_satisfaction": 86.7,
+        "referral_generation_rate": 23.1,
+        "conversion_improvement": 15.3,
     }
+
 
 def create_time_series_forecast() -> go.Figure:
     """Create time series forecast chart"""
 
     # Generate historical and forecast data
-    dates = pd.date_range(start='2025-01-01', end='2026-06-01', freq='M')
+    dates = pd.date_range(start="2025-01-01", end="2026-06-01", freq="M")
 
     # Historical data (past 12 months)
     historical = dates[:12]
@@ -324,44 +335,51 @@ def create_time_series_forecast() -> go.Figure:
     fig = go.Figure()
 
     # Historical data
-    fig.add_trace(go.Scatter(
-        x=historical,
-        y=hist_values,
-        mode='lines+markers',
-        name='Historical Revenue',
-        line=dict(color='#2E86AB', width=3)
-    ))
+    fig.add_trace(
+        go.Scatter(
+            x=historical,
+            y=hist_values,
+            mode="lines+markers",
+            name="Historical Revenue",
+            line=dict(color="#2E86AB", width=3),
+        )
+    )
 
     # Forecast data
-    fig.add_trace(go.Scatter(
-        x=forecast_dates,
-        y=forecast_values,
-        mode='lines+markers',
-        name='Forecast',
-        line=dict(color='#A23B72', width=3, dash='dash')
-    ))
+    fig.add_trace(
+        go.Scatter(
+            x=forecast_dates,
+            y=forecast_values,
+            mode="lines+markers",
+            name="Forecast",
+            line=dict(color="#A23B72", width=3, dash="dash"),
+        )
+    )
 
     # Confidence interval
-    fig.add_trace(go.Scatter(
-        x=list(forecast_dates) + list(forecast_dates)[::-1],
-        y=list(upper_ci) + list(lower_ci)[::-1],
-        fill='toself',
-        fillcolor='rgba(162, 59, 114, 0.2)',
-        line=dict(color='rgba(255,255,255,0)'),
-        showlegend=True,
-        name='95% Confidence Interval'
-    ))
+    fig.add_trace(
+        go.Scatter(
+            x=list(forecast_dates) + list(forecast_dates)[::-1],
+            y=list(upper_ci) + list(lower_ci)[::-1],
+            fill="toself",
+            fillcolor="rgba(162, 59, 114, 0.2)",
+            line=dict(color="rgba(255,255,255,0)"),
+            showlegend=True,
+            name="95% Confidence Interval",
+        )
+    )
 
     fig.update_layout(
         title="Revenue Forecast Time Series - 18 Month View",
         xaxis_title="Date",
         yaxis_title="Monthly Revenue ($)",
         height=400,
-        yaxis=dict(tickformat='$,.0f'),
-        hovermode='x unified'
+        yaxis=dict(tickformat="$,.0f"),
+        hovermode="x unified",
     )
 
     return fig
+
 
 def main():
     """Main dashboard function"""
@@ -376,17 +394,11 @@ def main():
     st.sidebar.markdown("## 🎛️ Dashboard Controls")
 
     # Forecast timeframe selector
-    timeframe = st.sidebar.selectbox(
-        "Forecast Timeframe",
-        ["monthly", "quarterly", "annual"],
-        index=0
-    )
+    timeframe = st.sidebar.selectbox("Forecast Timeframe", ["monthly", "quarterly", "annual"], index=0)
 
     # Revenue stream selector
     revenue_stream = st.sidebar.selectbox(
-        "Revenue Stream",
-        ["total_revenue", "seller_commission", "buyer_commission", "referral_income"],
-        index=0
+        "Revenue Stream", ["total_revenue", "seller_commission", "buyer_commission", "referral_income"], index=0
     )
 
     # Auto-refresh toggle
@@ -417,7 +429,7 @@ def main():
             "Revenue Forecast",
             f"${forecast_data.base_forecast:,.0f}",
             delta=f"{((forecast_data.base_forecast / (forecast_data.base_forecast * 0.9)) - 1) * 100:.1f}% vs target",
-            help=f"Base forecast with {forecast_data.confidence_level:.0%} confidence"
+            help=f"Base forecast with {forecast_data.confidence_level:.0%} confidence",
         )
 
     with col2:
@@ -425,7 +437,7 @@ def main():
             "Pipeline Value",
             f"${pipeline_data.total_value:,.0f}",
             delta=f"{pipeline_data.deal_count} active deals",
-            help=f"Total pipeline value across {pipeline_data.deal_count} opportunities"
+            help=f"Total pipeline value across {pipeline_data.deal_count} opportunities",
         )
 
     with col3:
@@ -433,7 +445,7 @@ def main():
             "Expected Revenue",
             f"${pipeline_data.expected_revenue:,.0f}",
             delta=f"{pipeline_data.weighted_probability:.1%} probability",
-            help=f"Probability-weighted revenue from current pipeline"
+            help=f"Probability-weighted revenue from current pipeline",
         )
 
     with col4:
@@ -441,7 +453,7 @@ def main():
             "Jorge Methodology",
             f"{jorge_performance['methodology_effectiveness']:.1f}%",
             delta=f"{jorge_performance['conversion_improvement']:.1f}% improvement",
-            help="Overall effectiveness of Jorge's confrontational methodology"
+            help="Overall effectiveness of Jorge's confrontational methodology",
         )
 
     # Key Performance Indicators
@@ -458,7 +470,8 @@ def main():
         st.markdown("### 🎯 Forecast Accuracy")
 
         # Model performance metrics
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="insight-card">
             <h4>Ensemble Model Performance</h4>
             <ul>
@@ -469,9 +482,12 @@ def main():
             </ul>
             <p class="forecast-confidence">Confidence Level: {forecast_data.confidence_level:.1%}</p>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="opportunity-card">
             <h4>🎯 Strategic Insights</h4>
             <ul>
@@ -481,7 +497,9 @@ def main():
                 <li>Pipeline velocity up 23% this quarter</li>
             </ul>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     # Time series forecast
     st.markdown("### 📊 18-Month Revenue Trajectory")
@@ -517,32 +535,36 @@ def main():
     with col1:
         st.markdown("### Methodology Metrics")
         for metric, value in jorge_performance.items():
-            if metric != 'conversion_improvement':
-                st.metric(
-                    metric.replace('_', ' ').title(),
-                    f"{value:.1f}%"
-                )
+            if metric != "conversion_improvement":
+                st.metric(metric.replace("_", " ").title(), f"{value:.1f}%")
 
     with col2:
         st.markdown("### Commission Defense")
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="metric-card">
             <h3>6% Commission Rate</h3>
-            <h2>{jorge_performance['commission_rate_defense']:.1f}%</h2>
+            <h2>{jorge_performance["commission_rate_defense"]:.1f}%</h2>
             <p>Success rate defending premium commission</p>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="insight-card">
             <h4>Confrontational Approach Success</h4>
-            <p>Jorge's no-nonsense methodology continues to outperform market average by <strong>{jorge_performance['conversion_improvement']:.1f}%</strong></p>
+            <p>Jorge's no-nonsense methodology continues to outperform market average by <strong>{jorge_performance["conversion_improvement"]:.1f}%</strong></p>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     with col3:
         st.markdown("### Strategic Recommendations")
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="opportunity-card">
             <h4>🎯 Immediate Actions</h4>
             <ul>
@@ -552,9 +574,12 @@ def main():
                 <li>Implement urgency-based follow-ups</li>
             </ul>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="risk-card">
             <h4>⚠️ Risk Factors</h4>
             <ul>
@@ -563,7 +588,9 @@ def main():
                 <li>Inventory shortage limiting deals</li>
             </ul>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     # Revenue Optimization Section
     st.markdown("## 🎯 Revenue Optimization Plan")
@@ -589,7 +616,7 @@ def main():
                 "Deal velocity acceleration: +$45k/month",
                 "Premium property focus: +$32k/month",
                 "Referral program enhancement: +$18k/month",
-                "Jorge methodology refinement: +$25k/month"
+                "Jorge methodology refinement: +$25k/month",
             ]
 
             for opp in opportunities:
@@ -603,20 +630,20 @@ def main():
                 "Launch aggressive seller prospecting campaign",
                 "Implement urgency-based follow-up sequences",
                 "Optimize Jorge methodology scripts",
-                "Target premium property segments"
+                "Target premium property segments",
             ],
             "Phase 2 (60 days)": [
                 "Expand referral partner network",
                 "Implement AI-powered lead scoring",
                 "Launch competitive differentiation campaign",
-                "Optimize commission defense strategies"
+                "Optimize commission defense strategies",
             ],
             "Phase 3 (90 days)": [
                 "Market share expansion initiatives",
                 "Team scaling and training",
                 "Technology optimization",
-                "Performance monitoring and adjustment"
-            ]
+                "Performance monitoring and adjustment",
+            ],
         }
 
         for phase, actions in phases.items():
@@ -653,7 +680,7 @@ def main():
             "Inventory Levels": "📉 Low (Seller's Market)",
             "Price Trends": "📈 Increasing (+8% YoY)",
             "Buyer Activity": "⚡ High Demand",
-            "Competition": "🎯 Moderate Pressure"
+            "Competition": "🎯 Moderate Pressure",
         }
 
         for metric, status in market_data.items():
@@ -661,27 +688,34 @@ def main():
 
     with col2:
         st.markdown("### Competitive Analysis")
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="insight-card">
             <h4>Jorge's Market Position</h4>
             <ul>
                 <li><strong>Market Share:</strong> 12.5% (Top 3 in region)</li>
                 <li><strong>Commission Rate:</strong> 6% (Premium positioning)</li>
                 <li><strong>Differentiation Score:</strong> 94/100</li>
-                <li><strong>Client Satisfaction:</strong> {jorge_performance['client_satisfaction']:.1f}%</li>
+                <li><strong>Client Satisfaction:</strong> {jorge_performance["client_satisfaction"]:.1f}%</li>
             </ul>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     # Footer with last update
     st.markdown("---")
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div style="text-align: center; color: #666; padding: 1rem;">
-        📊 Dashboard last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} |
+        📊 Dashboard last updated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")} |
         🚀 Powered by Phase 7 Advanced AI Intelligence |
         🎯 Jorge's Real Estate Empire
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
+
 
 if __name__ == "__main__":
     main()

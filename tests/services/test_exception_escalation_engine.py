@@ -3,20 +3,21 @@ Comprehensive tests for Exception Escalation Engine.
 Tests cover exception detection, classification, resolution strategies, and escalation workflows.
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timedelta
+from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, List, Any
+
+import pytest
 
 try:
     from ghl_real_estate_ai.services.exception_escalation_engine import (
-        ExceptionEscalationEngine,
-        ExceptionType,
         EscalationLevel,
+        ExceptionEscalationEngine,
+        ExceptionRecord,
+        ExceptionType,
         ResolutionStatus,
         ResolutionStrategy,
-        ExceptionRecord
     )
 except (ImportError, TypeError, AttributeError):
     pytest.skip("required imports unavailable", allow_module_level=True)
@@ -41,13 +42,9 @@ class TestExceptionRecord:
             metadata={
                 "lender_requirements": {"max_dti": 0.43},
                 "client_current": {"dti": 0.48},
-                "suggested_solutions": ["increase_down_payment", "find_alternative_lender"]
+                "suggested_solutions": ["increase_down_payment", "find_alternative_lender"],
             },
-            context_data={
-                "property_value": 450000,
-                "loan_amount": 360000,
-                "client_income": 85000
-            }
+            context_data={"property_value": 450000, "loan_amount": 360000, "client_income": 85000},
         )
 
         assert record.id == "exc_001"
@@ -68,7 +65,7 @@ class TestExceptionRecord:
             source_component="vendor_coordination",
             detected_at=datetime.now(),
             escalation_level=EscalationLevel.SYSTEM_RECOVERY,
-            resolution_status=ResolutionStatus.PENDING
+            resolution_status=ResolutionStatus.PENDING,
         )
 
         record_dict = record.__dict__
@@ -87,26 +84,16 @@ class TestResolutionStrategy:
             name="Document Re-collection Strategy",
             description="Automated strategy for re-collecting failed document uploads",
             exception_types=[ExceptionType.DOCUMENT_PROCESSING_ERROR],
-            automated_steps=[
-                "retry_document_upload",
-                "validate_file_format",
-                "notify_client_if_failed"
-            ],
-            escalation_triggers=[
-                "max_retries_exceeded",
-                "client_non_responsive_24h"
-            ],
-            success_criteria=[
-                "document_successfully_processed",
-                "validation_passed"
-            ],
+            automated_steps=["retry_document_upload", "validate_file_format", "notify_client_if_failed"],
+            escalation_triggers=["max_retries_exceeded", "client_non_responsive_24h"],
+            success_criteria=["document_successfully_processed", "validation_passed"],
             estimated_resolution_time=timedelta(hours=2),
             success_rate=0.87,
             metadata={
                 "max_retry_attempts": 3,
                 "supported_formats": ["pdf", "jpg", "png"],
-                "fallback_method": "manual_collection"
-            }
+                "fallback_method": "manual_collection",
+            },
         )
 
         assert strategy.id == "strategy_001"
@@ -123,20 +110,20 @@ class TestExceptionEscalationEngine:
     def mock_dependencies(self):
         """Create mock dependencies for exception engine."""
         return {
-            'cache_service': AsyncMock(),
-            'ghl_service': AsyncMock(),
-            'claude_service': AsyncMock(),
-            'notification_service': AsyncMock(),
-            'recovery_service': AsyncMock()
+            "cache_service": AsyncMock(),
+            "ghl_service": AsyncMock(),
+            "claude_service": AsyncMock(),
+            "notification_service": AsyncMock(),
+            "recovery_service": AsyncMock(),
         }
 
     @pytest.fixture
     def engine(self, mock_dependencies):
         """Create exception engine instance with mocked dependencies."""
         return ExceptionEscalationEngine(
-            cache_service=mock_dependencies['cache_service'],
-            ghl_service=mock_dependencies['ghl_service'],
-            claude_service=mock_dependencies['claude_service']
+            cache_service=mock_dependencies["cache_service"],
+            ghl_service=mock_dependencies["ghl_service"],
+            claude_service=mock_dependencies["claude_service"],
         )
 
     @pytest.mark.asyncio
@@ -151,20 +138,20 @@ class TestExceptionEscalationEngine:
             "context": {
                 "document_id": "doc_456",
                 "validation_errors": ["buyer_signature_missing", "date_incomplete"],
-                "attempted_at": "2024-01-20T14:30:00"
+                "attempted_at": "2024-01-20T14:30:00",
             },
-            "auto_recovery_attempted": False
+            "auto_recovery_attempted": False,
         }
 
         # Mock AI classification
-        mock_dependencies['claude_service'].generate_response.return_value = {
+        mock_dependencies["claude_service"].generate_response.return_value = {
             "classification_result": {
                 "exception_type": "business_logic_error",
                 "severity_confirmation": "high",
                 "escalation_recommendation": "agent_review",
                 "resolution_strategy": "document_re_collection",
                 "estimated_impact": "moderate_delay",
-                "urgency_score": 0.75
+                "urgency_score": 0.75,
             }
         }
 
@@ -178,10 +165,10 @@ class TestExceptionEscalationEngine:
             escalation_triggers=["no_response_48h"],
             success_criteria=["signatures_received"],
             estimated_resolution_time=timedelta(hours=24),
-            success_rate=0.82
+            success_rate=0.82,
         )
 
-        with patch.object(engine, '_get_resolution_strategy', return_value=mock_strategy):
+        with patch.object(engine, "_get_resolution_strategy", return_value=mock_strategy):
             result = await engine.report_exception(exception_data)
 
         assert result["success"] is True
@@ -191,8 +178,8 @@ class TestExceptionEscalationEngine:
         assert result["estimated_resolution_time"] == "24 hours"
 
         # Verify classification and storage
-        mock_dependencies['claude_service'].generate_response.assert_called_once()
-        mock_dependencies['cache_service'].set.assert_called()
+        mock_dependencies["claude_service"].generate_response.assert_called_once()
+        mock_dependencies["cache_service"].set.assert_called()
 
     @pytest.mark.asyncio
     async def test_escalate_to_human_success(self, engine, mock_dependencies):
@@ -205,8 +192,8 @@ class TestExceptionEscalationEngine:
             "additional_context": {
                 "attempts_made": 3,
                 "last_attempt_error": "External service still unavailable",
-                "business_impact": "Closing scheduled in 2 days"
-            }
+                "business_impact": "Closing scheduled in 2 days",
+            },
         }
 
         # Mock existing exception
@@ -220,23 +207,23 @@ class TestExceptionEscalationEngine:
             source_component="vendor_coordination",
             detected_at=datetime.now() - timedelta(hours=4),
             escalation_level=EscalationLevel.SYSTEM_RECOVERY,
-            resolution_status=ResolutionStatus.FAILED_AUTO_RECOVERY
+            resolution_status=ResolutionStatus.FAILED_AUTO_RECOVERY,
         )
 
-        mock_dependencies['cache_service'].get.return_value = mock_exception
+        mock_dependencies["cache_service"].get.return_value = mock_exception
 
         # Mock human escalation workflow
-        mock_dependencies['ghl_service'].create_urgent_task.return_value = {
+        mock_dependencies["ghl_service"].create_urgent_task.return_value = {
             "success": True,
             "task_id": "task_urgent_123",
             "assigned_to": "senior_agent_mike",
-            "priority": "high"
+            "priority": "high",
         }
 
-        mock_dependencies['notification_service'].send_escalation_alert.return_value = {
+        mock_dependencies["notification_service"].send_escalation_alert.return_value = {
             "success": True,
             "alert_id": "alert_456",
-            "recipients_notified": ["manager", "senior_agent"]
+            "recipients_notified": ["manager", "senior_agent"],
         }
 
         result = await engine.escalate_to_human(escalation_data)
@@ -248,8 +235,8 @@ class TestExceptionEscalationEngine:
         assert result["assigned_to"] == "senior_agent_mike"
 
         # Verify escalation actions
-        mock_dependencies['ghl_service'].create_urgent_task.assert_called_once()
-        mock_dependencies['notification_service'].send_escalation_alert.assert_called_once()
+        mock_dependencies["ghl_service"].create_urgent_task.assert_called_once()
+        mock_dependencies["notification_service"].send_escalation_alert.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_execute_resolution_strategy_success(self, engine, mock_dependencies):
@@ -260,8 +247,8 @@ class TestExceptionEscalationEngine:
             "execution_context": {
                 "vendor_id": "vendor_123",
                 "service_type": "appraisal",
-                "original_request_time": "2024-01-20T10:00:00"
-            }
+                "original_request_time": "2024-01-20T10:00:00",
+            },
         }
 
         # Mock resolution strategy
@@ -270,26 +257,22 @@ class TestExceptionEscalationEngine:
             name="Vendor Service Retry",
             description="Retry vendor service with escalated priority",
             exception_types=[ExceptionType.EXTERNAL_SERVICE_ERROR],
-            automated_steps=[
-                "check_vendor_status",
-                "retry_with_priority",
-                "find_alternative_vendor_if_failed"
-            ],
+            automated_steps=["check_vendor_status", "retry_with_priority", "find_alternative_vendor_if_failed"],
             escalation_triggers=["all_vendors_unavailable"],
             success_criteria=["service_request_accepted"],
             estimated_resolution_time=timedelta(hours=1),
-            success_rate=0.78
+            success_rate=0.78,
         )
 
-        mock_dependencies['cache_service'].get.return_value = mock_strategy
+        mock_dependencies["cache_service"].get.return_value = mock_strategy
 
         # Mock strategy execution steps
         execution_results = [
             {"step": "check_vendor_status", "result": "available", "success": True},
-            {"step": "retry_with_priority", "result": "request_accepted", "success": True}
+            {"step": "retry_with_priority", "result": "request_accepted", "success": True},
         ]
 
-        with patch.object(engine, '_execute_strategy_step', side_effect=execution_results):
+        with patch.object(engine, "_execute_strategy_step", side_effect=execution_results):
             result = await engine._execute_resolution_strategy(strategy_execution_data)
 
         assert result["success"] is True
@@ -306,41 +289,41 @@ class TestExceptionEscalationEngine:
             "component": "financing_verification",
             "timestamp": "2024-01-20T15:45:00",
             "request_data": {"loan_application_id": "loan_789", "verification_type": "income"},
-            "system_state": {"api_health": "degraded", "retry_count": 3}
+            "system_state": {"api_health": "degraded", "retry_count": 3},
         }
 
         # Mock comprehensive AI analysis
-        mock_dependencies['claude_service'].generate_response.return_value = {
+        mock_dependencies["claude_service"].generate_response.return_value = {
             "classification_analysis": {
                 "primary_type": "external_service_error",
                 "secondary_types": ["network_connectivity", "api_timeout"],
                 "severity_assessment": {
                     "level": "medium",
                     "justification": "Service degradation but alternative paths available",
-                    "business_impact": "potential_delay"
+                    "business_impact": "potential_delay",
                 },
                 "root_cause_analysis": {
                     "likely_cause": "lender_api_overload",
                     "contributing_factors": ["peak_traffic_time", "api_rate_limiting"],
-                    "confidence": 0.82
+                    "confidence": 0.82,
                 },
                 "resolution_recommendations": [
                     {
                         "strategy": "retry_with_exponential_backoff",
                         "probability_success": 0.75,
-                        "estimated_time": "15_minutes"
+                        "estimated_time": "15_minutes",
                     },
                     {
                         "strategy": "use_alternative_lender_api",
                         "probability_success": 0.90,
-                        "estimated_time": "30_minutes"
-                    }
+                        "estimated_time": "30_minutes",
+                    },
                 ],
                 "escalation_criteria": {
                     "escalate_if": ["retry_fails_3_times", "alternative_api_also_fails"],
                     "escalate_to": "agent_review",
-                    "urgency_factors": ["closing_proximity", "client_expectations"]
-                }
+                    "urgency_factors": ["closing_proximity", "client_expectations"],
+                },
             }
         }
 
@@ -358,7 +341,7 @@ class TestExceptionEscalationEngine:
         pattern_analysis_request = {
             "time_window": "last_7_days",
             "deal_ids": ["deal_001", "deal_002", "deal_003"],
-            "component_filter": None  # Analyze all components
+            "component_filter": None,  # Analyze all components
         }
 
         # Mock historical exception data
@@ -369,7 +352,7 @@ class TestExceptionEscalationEngine:
                 "component": "vendor_coordination",
                 "timestamp": "2024-01-15T10:30:00",
                 "resolved": True,
-                "resolution_time": 45  # minutes
+                "resolution_time": 45,  # minutes
             },
             {
                 "deal_id": "deal_002",
@@ -377,7 +360,7 @@ class TestExceptionEscalationEngine:
                 "component": "vendor_coordination",
                 "timestamp": "2024-01-16T14:20:00",
                 "resolved": True,
-                "resolution_time": 60
+                "resolution_time": 60,
             },
             {
                 "deal_id": "deal_003",
@@ -385,33 +368,33 @@ class TestExceptionEscalationEngine:
                 "component": "document_orchestration",
                 "timestamp": "2024-01-17T09:15:00",
                 "resolved": False,
-                "escalated_to_human": True
-            }
+                "escalated_to_human": True,
+            },
         ]
 
-        mock_dependencies['cache_service'].get.return_value = mock_exceptions
+        mock_dependencies["cache_service"].get.return_value = mock_exceptions
 
         # Mock AI pattern analysis
-        mock_dependencies['claude_service'].generate_response.return_value = {
+        mock_dependencies["claude_service"].generate_response.return_value = {
             "pattern_analysis": {
                 "detected_patterns": [
                     {
                         "pattern": "recurring_vendor_api_timeouts",
                         "frequency": "2_per_day_last_3_days",
                         "confidence": 0.88,
-                        "suggested_action": "implement_vendor_circuit_breaker"
+                        "suggested_action": "implement_vendor_circuit_breaker",
                     }
                 ],
                 "trend_analysis": {
                     "exception_rate_trend": "increasing",
                     "resolution_time_trend": "stable",
-                    "escalation_rate_trend": "concerning_increase"
+                    "escalation_rate_trend": "concerning_increase",
                 },
                 "recommendations": [
                     "implement_proactive_vendor_health_monitoring",
                     "create_vendor_backup_strategies",
-                    "enhance_auto_recovery_capabilities"
-                ]
+                    "enhance_auto_recovery_capabilities",
+                ],
             }
         }
 
@@ -429,11 +412,7 @@ class TestExceptionEscalationEngine:
             "exception_id": "exc_recovery_test",
             "recovery_type": "service_restoration",
             "target_component": "document_orchestration",
-            "recovery_parameters": {
-                "restart_services": True,
-                "clear_cache": True,
-                "validate_connections": True
-            }
+            "recovery_parameters": {"restart_services": True, "clear_cache": True, "validate_connections": True},
         }
 
         # Mock recovery service responses
@@ -442,15 +421,15 @@ class TestExceptionEscalationEngine:
             {"action": "clear_cache", "result": "success", "duration": 10},
             {"action": "validate_connections", "result": "success", "duration": 15},
             {"action": "restart_service", "result": "success", "duration": 20},
-            {"action": "health_check", "result": "healthy", "duration": 10}
+            {"action": "health_check", "result": "healthy", "duration": 10},
         ]
 
-        mock_dependencies['recovery_service'].execute_recovery_workflow.return_value = {
+        mock_dependencies["recovery_service"].execute_recovery_workflow.return_value = {
             "success": True,
             "total_duration": 60,  # seconds
             "steps_completed": 5,
             "service_status": "healthy",
-            "recovery_details": recovery_steps
+            "recovery_details": recovery_steps,
         }
 
         result = await engine.execute_recovery_workflow(recovery_request)
@@ -461,7 +440,7 @@ class TestExceptionEscalationEngine:
         assert result["total_duration"] == 60
 
         # Verify recovery execution
-        mock_dependencies['recovery_service'].execute_recovery_workflow.assert_called_once()
+        mock_dependencies["recovery_service"].execute_recovery_workflow.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_exception_metrics_tracking(self, engine, mock_dependencies):
@@ -469,7 +448,7 @@ class TestExceptionEscalationEngine:
         metrics_request = {
             "time_period": "last_30_days",
             "group_by": ["exception_type", "component", "severity"],
-            "include_trends": True
+            "include_trends": True,
         }
 
         # Mock metrics data
@@ -479,28 +458,28 @@ class TestExceptionEscalationEngine:
                 "external_service_error": 78,
                 "document_processing_error": 45,
                 "business_logic_error": 23,
-                "system_error": 10
+                "system_error": 10,
             },
             "exceptions_by_component": {
                 "vendor_coordination": 68,
                 "document_orchestration": 52,
                 "financing_verification": 24,
-                "communication_engine": 12
+                "communication_engine": 12,
             },
             "resolution_metrics": {
                 "auto_resolved": 124,
                 "escalated_to_human": 32,
                 "average_resolution_time": 45,  # minutes
-                "success_rate": 79.5  # percentage
+                "success_rate": 79.5,  # percentage
             },
             "trends": {
                 "exception_rate_change": "+12%",
                 "resolution_time_change": "-8%",
-                "escalation_rate_change": "+15%"
-            }
+                "escalation_rate_change": "+15%",
+            },
         }
 
-        mock_dependencies['cache_service'].get.return_value = mock_metrics
+        mock_dependencies["cache_service"].get.return_value = mock_metrics
 
         result = await engine.get_exception_metrics(metrics_request)
 
@@ -518,35 +497,35 @@ class TestExceptionEscalationEngine:
             "risk_factors": {
                 "vendor_availability": "limited",
                 "financing_complexity": "high",
-                "timeline_pressure": "moderate"
+                "timeline_pressure": "moderate",
             },
             "historical_patterns": {
                 "similar_deals_exception_rate": 0.35,
-                "common_failure_points": ["vendor_scheduling", "document_delays"]
-            }
+                "common_failure_points": ["vendor_scheduling", "document_delays"],
+            },
         }
 
         # Mock AI risk assessment
-        mock_dependencies['claude_service'].generate_response.return_value = {
+        mock_dependencies["claude_service"].generate_response.return_value = {
             "risk_assessment": {
                 "overall_risk_score": 0.72,
                 "high_risk_areas": [
                     {
                         "area": "vendor_scheduling",
                         "risk_score": 0.85,
-                        "prevention_actions": ["book_backup_vendors", "extend_scheduling_window"]
+                        "prevention_actions": ["book_backup_vendors", "extend_scheduling_window"],
                     },
                     {
                         "area": "financing_timeline",
                         "risk_score": 0.68,
-                        "prevention_actions": ["expedite_document_collection", "lender_communication"]
-                    }
+                        "prevention_actions": ["expedite_document_collection", "lender_communication"],
+                    },
                 ],
                 "recommended_preventive_measures": [
                     "implement_vendor_contingency_plan",
                     "accelerate_document_workflow",
-                    "increase_communication_frequency"
-                ]
+                    "increase_communication_frequency",
+                ],
             }
         }
 
@@ -564,13 +543,10 @@ class TestExceptionEscalationEngine:
             "business_impact": "closing_at_risk",
             "days_to_closing": 1,
             "client_expectations": "high",
-            "financial_impact": 5000
+            "financial_impact": 5000,
         }
 
-        severity = engine._calculate_exception_severity(
-            ExceptionType.BUSINESS_LOGIC_ERROR,
-            high_severity_context
-        )
+        severity = engine._calculate_exception_severity(ExceptionType.BUSINESS_LOGIC_ERROR, high_severity_context)
         assert severity == "high"
 
         # Low severity: Minor issue with time buffer
@@ -578,13 +554,10 @@ class TestExceptionEscalationEngine:
             "business_impact": "minor_delay",
             "days_to_closing": 15,
             "client_expectations": "flexible",
-            "financial_impact": 0
+            "financial_impact": 0,
         }
 
-        severity = engine._calculate_exception_severity(
-            ExceptionType.SYSTEM_ERROR,
-            low_severity_context
-        )
+        severity = engine._calculate_exception_severity(ExceptionType.SYSTEM_ERROR, low_severity_context)
         assert severity == "low"
 
     def test_escalation_threshold_logic(self, engine):
@@ -594,7 +567,7 @@ class TestExceptionEscalationEngine:
             "retry_count": 3,
             "time_since_first_attempt": 120,  # minutes
             "business_criticality": "high",
-            "auto_recovery_success_rate": 0.2
+            "auto_recovery_success_rate": 0.2,
         }
 
         should_escalate = engine._should_escalate_to_human(escalation_context)
@@ -605,7 +578,7 @@ class TestExceptionEscalationEngine:
             "retry_count": 1,
             "time_since_first_attempt": 5,
             "business_criticality": "low",
-            "auto_recovery_success_rate": 0.9
+            "auto_recovery_success_rate": 0.9,
         }
 
         should_escalate = engine._should_escalate_to_human(no_escalation_context)

@@ -13,23 +13,22 @@ Follows patterns from:
 - ghl_real_estate_ai/compliance_platform/models/compliance_models.py (Pydantic patterns)
 """
 
-from datetime import datetime, timezone, timedelta
+import hashlib
+import re
+import secrets
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set
 from uuid import uuid4
-import re
-import secrets
-import hashlib
 
 from pydantic import (
     BaseModel,
-    Field,
+    ConfigDict,
     EmailStr,
+    Field,
     field_validator,
     model_validator,
-    ConfigDict,
 )
-
 
 # =============================================================================
 # Enums
@@ -38,6 +37,7 @@ from pydantic import (
 
 class SubscriptionTier(str, Enum):
     """Subscription tier levels with increasing capabilities"""
+
     FREE = "free"
     STARTER = "starter"
     PROFESSIONAL = "professional"
@@ -67,6 +67,7 @@ class SubscriptionTier(str, Enum):
 
 class OrganizationStatus(str, Enum):
     """Organization lifecycle status"""
+
     ACTIVE = "active"
     SUSPENDED = "suspended"
     TRIAL = "trial"
@@ -86,6 +87,7 @@ class OrganizationStatus(str, Enum):
 
 class UserRole(str, Enum):
     """User roles within an organization"""
+
     OWNER = "owner"
     ADMIN = "admin"
     COMPLIANCE_OFFICER = "compliance_officer"
@@ -253,7 +255,7 @@ TIER_LIMITS: Dict[SubscriptionTier, Dict[str, Any]] = {
     },
     SubscriptionTier.ENTERPRISE: {
         "max_models": -1,  # Unlimited
-        "max_users": -1,   # Unlimited
+        "max_users": -1,  # Unlimited
         "max_assessments": -1,  # Unlimited
         "features": ["all"],
     },
@@ -357,8 +359,7 @@ class Organization(BaseModel):
         """Validate slug format - must be URL-safe"""
         if not re.match(r"^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$", v):
             raise ValueError(
-                "Slug must start and end with alphanumeric and contain only "
-                "lowercase letters, numbers, and hyphens"
+                "Slug must start and end with alphanumeric and contain only lowercase letters, numbers, and hyphens"
             )
         # Reserved slugs
         reserved = {"admin", "api", "www", "app", "dashboard", "login", "signup"}
@@ -549,9 +550,7 @@ class TenantContext(BaseModel):
     def require_permission(self, permission: Permission) -> None:
         """Raise exception if permission is missing"""
         if not self.has_permission(permission):
-            raise PermissionError(
-                f"Permission '{permission.value}' required for this operation"
-            )
+            raise PermissionError(f"Permission '{permission.value}' required for this operation")
 
 
 class AuditLogEntry(BaseModel):
@@ -686,9 +685,7 @@ class UsageMetrics(BaseModel):
             "is_unlimited": max_value == -1,
             "is_reached": max_value != -1 and current >= max_value,
             "remaining": max_value - current if max_value != -1 else None,
-            "percentage_used": (
-                (current / max_value * 100) if max_value > 0 else 0
-            ),
+            "percentage_used": ((current / max_value * 100) if max_value > 0 else 0),
         }
 
 
@@ -706,9 +703,7 @@ class InviteToken(BaseModel):
     invited_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     # Expiry
-    expires_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc) + timedelta(days=7)
-    )
+    expires_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc) + timedelta(days=7))
 
     # Status
     is_used: bool = Field(default=False)

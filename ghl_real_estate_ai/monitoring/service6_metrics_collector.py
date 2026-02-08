@@ -12,15 +12,15 @@ Features:
 """
 
 import asyncio
+import functools
 import json
 import time
 import uuid
 from contextlib import asynccontextmanager
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union, Callable
-import functools
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
@@ -31,6 +31,7 @@ logger = get_logger(__name__)
 
 class MetricType(Enum):
     """Types of metrics collected"""
+
     AGENT_PERFORMANCE = "agent_performance"
     CONSENSUS_METRICS = "consensus_metrics"
     DATABASE_PERFORMANCE = "database_performance"
@@ -40,15 +41,17 @@ class MetricType(Enum):
 
 class MetricCategory(Enum):
     """Metric categories for organization"""
-    COUNTER = "counter"       # Monotonic increasing (requests, errors)
-    GAUGE = "gauge"          # Point-in-time values (CPU, memory, active leads)
-    HISTOGRAM = "histogram"   # Distribution of values (response times)
-    TIMER = "timer"          # Duration measurements
+
+    COUNTER = "counter"  # Monotonic increasing (requests, errors)
+    GAUGE = "gauge"  # Point-in-time values (CPU, memory, active leads)
+    HISTOGRAM = "histogram"  # Distribution of values (response times)
+    TIMER = "timer"  # Duration measurements
 
 
 @dataclass
 class Metric:
     """Individual metric data point"""
+
     name: str
     value: Union[int, float]
     metric_type: MetricType
@@ -67,6 +70,7 @@ class Metric:
 @dataclass
 class AgentPerformanceMetric:
     """Agent-specific performance metrics"""
+
     agent_id: str
     agent_type: str
     operation_type: str
@@ -79,11 +83,7 @@ class AgentPerformanceMetric:
 
     def to_metric(self) -> List[Metric]:
         """Convert to standard metrics"""
-        base_tags = {
-            "agent_id": self.agent_id,
-            "agent_type": self.agent_type,
-            "operation_type": self.operation_type
-        }
+        base_tags = {"agent_id": self.agent_id, "agent_type": self.agent_type, "operation_type": self.operation_type}
 
         metrics = [
             # Execution time
@@ -93,7 +93,7 @@ class AgentPerformanceMetric:
                 metric_type=MetricType.AGENT_PERFORMANCE,
                 category=MetricCategory.HISTOGRAM,
                 timestamp=self.timestamp,
-                tags=base_tags
+                tags=base_tags,
             ),
             # Success/failure counter
             Metric(
@@ -102,20 +102,22 @@ class AgentPerformanceMetric:
                 metric_type=MetricType.AGENT_PERFORMANCE,
                 category=MetricCategory.COUNTER,
                 timestamp=self.timestamp,
-                tags={**base_tags, "status": "success" if self.success else "failure"}
-            )
+                tags={**base_tags, "status": "success" if self.success else "failure"},
+            ),
         ]
 
         # Confidence metric if available
         if self.confidence is not None:
-            metrics.append(Metric(
-                name="agent_confidence_score",
-                value=self.confidence,
-                metric_type=MetricType.AGENT_PERFORMANCE,
-                category=MetricCategory.GAUGE,
-                timestamp=self.timestamp,
-                tags=base_tags
-            ))
+            metrics.append(
+                Metric(
+                    name="agent_confidence_score",
+                    value=self.confidence,
+                    metric_type=MetricType.AGENT_PERFORMANCE,
+                    category=MetricCategory.GAUGE,
+                    timestamp=self.timestamp,
+                    tags=base_tags,
+                )
+            )
 
         return metrics
 
@@ -123,6 +125,7 @@ class AgentPerformanceMetric:
 @dataclass
 class ConsensusMetric:
     """Multi-agent consensus metrics"""
+
     consensus_id: str
     lead_id: str
     participating_agents: List[str]
@@ -138,7 +141,7 @@ class ConsensusMetric:
         base_tags = {
             "consensus_id": self.consensus_id,
             "agent_count": str(len(self.participating_agents)),
-            "decision": self.final_decision
+            "decision": self.final_decision,
         }
 
         return [
@@ -149,7 +152,7 @@ class ConsensusMetric:
                 metric_type=MetricType.CONSENSUS_METRICS,
                 category=MetricCategory.HISTOGRAM,
                 timestamp=self.timestamp,
-                tags=base_tags
+                tags=base_tags,
             ),
             # Consensus confidence
             Metric(
@@ -158,7 +161,7 @@ class ConsensusMetric:
                 metric_type=MetricType.CONSENSUS_METRICS,
                 category=MetricCategory.GAUGE,
                 timestamp=self.timestamp,
-                tags=base_tags
+                tags=base_tags,
             ),
             # Agreement score
             Metric(
@@ -167,7 +170,7 @@ class ConsensusMetric:
                 metric_type=MetricType.CONSENSUS_METRICS,
                 category=MetricCategory.GAUGE,
                 timestamp=self.timestamp,
-                tags=base_tags
+                tags=base_tags,
             ),
             # Conflicting agents
             Metric(
@@ -176,8 +179,8 @@ class ConsensusMetric:
                 metric_type=MetricType.CONSENSUS_METRICS,
                 category=MetricCategory.GAUGE,
                 timestamp=self.timestamp,
-                tags=base_tags
-            )
+                tags=base_tags,
+            ),
         ]
 
 
@@ -190,12 +193,7 @@ class FailsafeMetricsCollector:
         self.cache_service = None
         self.database_service = None
         self.collection_task = None
-        self.stats = {
-            "collected": 0,
-            "dropped": 0,
-            "errors": 0,
-            "last_collection": None
-        }
+        self.stats = {"collected": 0, "dropped": 0, "errors": 0, "last_collection": None}
 
     async def initialize(self):
         """Initialize metrics collector"""
@@ -208,13 +206,12 @@ class FailsafeMetricsCollector:
 
             logger.info(
                 "METRICS_COLLECTOR_INITIALIZED: Failsafe metrics collector started",
-                extra={"max_queue_size": self.max_queue_size}
+                extra={"max_queue_size": self.max_queue_size},
             )
 
         except Exception as e:
             logger.error(
-                f"METRICS_COLLECTOR_INIT_FAILED: Failed to initialize metrics collector: {e}",
-                extra={"error": str(e)}
+                f"METRICS_COLLECTOR_INIT_FAILED: Failed to initialize metrics collector: {e}", extra={"error": str(e)}
             )
 
     async def collect_metric(self, metric: Metric) -> bool:
@@ -237,8 +234,8 @@ class FailsafeMetricsCollector:
                 extra={
                     "metric_name": metric.name,
                     "queue_size": self.max_queue_size,
-                    "dropped_count": self.stats["dropped"]
-                }
+                    "dropped_count": self.stats["dropped"],
+                },
             )
             return False
 
@@ -247,11 +244,7 @@ class FailsafeMetricsCollector:
             self.stats["errors"] += 1
             logger.error(
                 f"METRIC_COLLECTION_ERROR: Error collecting metric: {e}",
-                extra={
-                    "metric_name": metric.name,
-                    "error": str(e),
-                    "error_count": self.stats["errors"]
-                }
+                extra={"metric_name": metric.name, "error": str(e), "error_count": self.stats["errors"]},
             )
             return False
 
@@ -270,10 +263,7 @@ class FailsafeMetricsCollector:
                     try:
                         # Wait for metric with remaining timeout
                         remaining_timeout = max(0.1, deadline - time.time())
-                        metric = await asyncio.wait_for(
-                            self.metrics_queue.get(),
-                            timeout=remaining_timeout
-                        )
+                        metric = await asyncio.wait_for(self.metrics_queue.get(), timeout=remaining_timeout)
                         metrics_batch.append(metric)
                     except asyncio.TimeoutError:
                         break
@@ -284,10 +274,7 @@ class FailsafeMetricsCollector:
                     self.stats["last_collection"] = datetime.now()
 
             except Exception as e:
-                logger.error(
-                    f"METRICS_WORKER_ERROR: Error in metrics collection worker: {e}",
-                    extra={"error": str(e)}
-                )
+                logger.error(f"METRICS_WORKER_ERROR: Error in metrics collection worker: {e}", extra={"error": str(e)})
                 # Wait before retry to prevent tight error loop
                 await asyncio.sleep(5.0)
 
@@ -303,10 +290,7 @@ class FailsafeMetricsCollector:
         except Exception as e:
             logger.error(
                 f"METRICS_PROCESSING_ERROR: Error processing metrics batch: {e}",
-                extra={
-                    "batch_size": len(metrics),
-                    "error": str(e)
-                }
+                extra={"batch_size": len(metrics), "error": str(e)},
             )
             # Fallback: Write to local file
             await self._write_to_failsafe_log(metrics)
@@ -323,7 +307,7 @@ class FailsafeMetricsCollector:
                 await self.cache_service.set(
                     key,
                     json.dumps(asdict(metric), default=str),
-                    ttl=3600  # 1 hour TTL for hot data
+                    ttl=3600,  # 1 hour TTL for hot data
                 )
 
                 # Update aggregated counters
@@ -342,15 +326,17 @@ class FailsafeMetricsCollector:
                 # Prepare batch insert
                 values = []
                 for metric in metrics:
-                    values.append((
-                        metric.name,
-                        metric.value,
-                        metric.metric_type.value,
-                        metric.category.value,
-                        metric.timestamp,
-                        json.dumps(metric.tags),
-                        json.dumps(metric.metadata)
-                    ))
+                    values.append(
+                        (
+                            metric.name,
+                            metric.value,
+                            metric.metric_type.value,
+                            metric.category.value,
+                            metric.timestamp,
+                            json.dumps(metric.tags),
+                            json.dumps(metric.metadata),
+                        )
+                    )
 
                 # Batch insert for performance
                 insert_query = """
@@ -387,6 +373,7 @@ class FailsafeMetricsCollector:
         """Fallback: Write metrics to local log file"""
         try:
             import os
+
             log_dir = "/tmp/service6_metrics"
             os.makedirs(log_dir, exist_ok=True)
 
@@ -397,10 +384,7 @@ class FailsafeMetricsCollector:
                 for metric in metrics:
                     f.write(json.dumps(asdict(metric), default=str) + "\n")
 
-            logger.info(
-                f"FAILSAFE_LOG: Wrote {len(metrics)} metrics to failsafe log",
-                extra={"log_file": log_file}
-            )
+            logger.info(f"FAILSAFE_LOG: Wrote {len(metrics)} metrics to failsafe log", extra={"log_file": log_file})
 
         except Exception as e:
             logger.error(f"Failsafe logging failed: {e}")
@@ -411,7 +395,7 @@ class FailsafeMetricsCollector:
             **self.stats,
             "queue_size": self.metrics_queue.qsize(),
             "queue_capacity": self.max_queue_size,
-            "queue_utilization": self.metrics_queue.qsize() / self.max_queue_size
+            "queue_utilization": self.metrics_queue.qsize() / self.max_queue_size,
         }
 
 
@@ -423,10 +407,7 @@ class PerformanceTracker:
 
     @asynccontextmanager
     async def track_operation(
-        self,
-        operation_name: str,
-        component: str = "unknown",
-        metadata: Optional[Dict[str, Any]] = None
+        self, operation_name: str, component: str = "unknown", metadata: Optional[Dict[str, Any]] = None
     ):
         """Track operation performance with context manager"""
         operation_id = f"{operation_name}_{uuid.uuid4().hex[:8]}"
@@ -434,11 +415,7 @@ class PerformanceTracker:
 
         logger.debug(
             f"OPERATION_START: Starting tracked operation",
-            extra={
-                "operation_id": operation_id,
-                "operation_name": operation_name,
-                "component": component
-            }
+            extra={"operation_id": operation_id, "operation_name": operation_name, "component": component},
         )
 
         try:
@@ -453,22 +430,15 @@ class PerformanceTracker:
                 metric_type=MetricType.SYSTEM_HEALTH,
                 category=MetricCategory.HISTOGRAM,
                 timestamp=datetime.now(),
-                tags={
-                    "operation": operation_name,
-                    "component": component,
-                    "status": "success"
-                },
-                metadata=metadata or {}
+                tags={"operation": operation_name, "component": component, "status": "success"},
+                metadata=metadata or {},
             )
 
             await self.metrics_collector.collect_metric(success_metric)
 
             logger.debug(
                 f"OPERATION_SUCCESS: Operation completed successfully",
-                extra={
-                    "operation_id": operation_id,
-                    "duration_ms": duration_ms
-                }
+                extra={"operation_id": operation_id, "duration_ms": duration_ms},
             )
 
         except Exception as e:
@@ -485,30 +455,22 @@ class PerformanceTracker:
                     "operation": operation_name,
                     "component": component,
                     "status": "failure",
-                    "error_type": type(e).__name__
+                    "error_type": type(e).__name__,
                 },
-                metadata={**(metadata or {}), "error": str(e)}
+                metadata={**(metadata or {}), "error": str(e)},
             )
 
             await self.metrics_collector.collect_metric(failure_metric)
 
             logger.error(
                 f"OPERATION_FAILURE: Operation failed",
-                extra={
-                    "operation_id": operation_id,
-                    "duration_ms": duration_ms,
-                    "error": str(e)
-                }
+                extra={"operation_id": operation_id, "duration_ms": duration_ms, "error": str(e)},
             )
 
             raise
 
 
-def track_agent_performance(
-    agent_type: str = None,
-    operation_type: str = "analysis",
-    collect_confidence: bool = True
-):
+def track_agent_performance(agent_type: str = None, operation_type: str = "analysis", collect_confidence: bool = True):
     """Decorator to track agent performance"""
 
     def decorator(func):
@@ -521,21 +483,21 @@ def track_agent_performance(
                 return await func(*args, **kwargs)
 
             # Extract agent info
-            agent_id = getattr(args[0], 'agent_id', 'unknown') if args else 'unknown'
-            determined_agent_type = agent_type or getattr(args[0], 'agent_type', 'unknown') if args else 'unknown'
+            agent_id = getattr(args[0], "agent_id", "unknown") if args else "unknown"
+            determined_agent_type = agent_type or getattr(args[0], "agent_type", "unknown") if args else "unknown"
 
             start_time = time.perf_counter()
             success = False
             confidence = None
             error_type = None
-            lead_id = kwargs.get('lead_id') or (args[1] if len(args) > 1 else None)
+            lead_id = kwargs.get("lead_id") or (args[1] if len(args) > 1 else None)
 
             try:
                 result = await func(*args, **kwargs)
                 success = True
 
                 # Extract confidence from result if requested
-                if collect_confidence and hasattr(result, 'confidence'):
+                if collect_confidence and hasattr(result, "confidence"):
                     confidence = result.confidence
 
                 return result
@@ -558,7 +520,7 @@ def track_agent_performance(
                         confidence=confidence,
                         lead_id=str(lead_id) if lead_id else None,
                         error_type=error_type,
-                        timestamp=datetime.now()
+                        timestamp=datetime.now(),
                     )
 
                     # Convert to standard metrics and collect
@@ -570,6 +532,7 @@ def track_agent_performance(
                     logger.debug(f"Metric collection failed: {collection_error}")
 
         return wrapper
+
     return decorator
 
 
@@ -595,13 +558,13 @@ def _get_global_metrics_collector() -> Optional[FailsafeMetricsCollector]:
 
 # Export public interface
 __all__ = [
-    'MetricType',
-    'MetricCategory',
-    'Metric',
-    'AgentPerformanceMetric',
-    'ConsensusMetric',
-    'FailsafeMetricsCollector',
-    'PerformanceTracker',
-    'track_agent_performance',
-    'initialize_metrics_collector'
+    "MetricType",
+    "MetricCategory",
+    "Metric",
+    "AgentPerformanceMetric",
+    "ConsensusMetric",
+    "FailsafeMetricsCollector",
+    "PerformanceTracker",
+    "track_agent_performance",
+    "initialize_metrics_collector",
 ]

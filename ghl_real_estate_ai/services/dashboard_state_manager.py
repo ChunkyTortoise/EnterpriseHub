@@ -7,16 +7,19 @@ Provides persistent storage and intelligent defaults.
 
 import json
 import os
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
+from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-from dataclasses import dataclass, asdict, field
-from enum import Enum
+
 import streamlit as st
+
 
 @dataclass
 class DashboardView:
     """Represents a saved dashboard view configuration"""
+
     id: str
     name: str
     description: str
@@ -27,22 +30,20 @@ class DashboardView:
     tags: List[str] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
-            **asdict(self),
-            'created_at': self.created_at.isoformat(),
-            'last_used': self.last_used.isoformat()
-        }
+        return {**asdict(self), "created_at": self.created_at.isoformat(), "last_used": self.last_used.isoformat()}
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'DashboardView':
-        data['created_at'] = datetime.fromisoformat(data['created_at'])
-        data['last_used'] = datetime.fromisoformat(data['last_used'])
+    def from_dict(cls, data: Dict[str, Any]) -> "DashboardView":
+        data["created_at"] = datetime.fromisoformat(data["created_at"])
+        data["last_used"] = datetime.fromisoformat(data["last_used"])
         return cls(**data)
+
 
 @dataclass
 class UserPreferences:
     """User dashboard preferences"""
-    theme: str = 'light'  # light, dark, auto
+
+    theme: str = "light"  # light, dark, auto
     auto_refresh: bool = True
     refresh_interval: int = 2  # seconds
     notifications_enabled: bool = True
@@ -50,17 +51,20 @@ class UserPreferences:
     mobile_optimized: bool = True
     compact_view: bool = False
     show_animations: bool = True
-    default_time_range: str = '24h'  # 1h, 6h, 24h, 7d, 30d
-    timezone: str = 'UTC'
+    default_time_range: str = "24h"  # 1h, 6h, 24h, 7d, 30d
+    timezone: str = "UTC"
+
 
 class ViewType(Enum):
     """Types of dashboard views"""
+
     OVERVIEW = "overview"
     LEADS = "leads"
     ANALYTICS = "analytics"
     PERFORMANCE = "performance"
     ALERTS = "alerts"
     CUSTOM = "custom"
+
 
 class DashboardStateManager:
     """
@@ -95,13 +99,13 @@ class DashboardStateManager:
 
     def _init_session_state(self):
         """Initialize Streamlit session state"""
-        if 'dashboard_state_manager' not in st.session_state:
+        if "dashboard_state_manager" not in st.session_state:
             st.session_state.dashboard_state_manager = self
 
-        if 'dashboard_filters' not in st.session_state:
+        if "dashboard_filters" not in st.session_state:
             st.session_state.dashboard_filters = {}
 
-        if 'dashboard_preferences' not in st.session_state:
+        if "dashboard_preferences" not in st.session_state:
             st.session_state.dashboard_preferences = asdict(self.user_preferences)
 
     def _get_user_file(self) -> Path:
@@ -114,26 +118,26 @@ class DashboardStateManager:
 
         if user_file.exists():
             try:
-                with open(user_file, 'r') as f:
+                with open(user_file, "r") as f:
                     data = json.load(f)
 
                 # Load preferences
-                if 'preferences' in data:
-                    prefs_dict = data['preferences']
+                if "preferences" in data:
+                    prefs_dict = data["preferences"]
                     self.user_preferences = UserPreferences(**prefs_dict)
 
                 # Load saved views
-                if 'saved_views' in data:
-                    for view_id, view_data in data['saved_views'].items():
+                if "saved_views" in data:
+                    for view_id, view_data in data["saved_views"].items():
                         self.saved_views[view_id] = DashboardView.from_dict(view_data)
 
                 # Load current view
-                if 'current_view_id' in data and data['current_view_id'] in self.saved_views:
-                    self.current_view = self.saved_views[data['current_view_id']]
+                if "current_view_id" in data and data["current_view_id"] in self.saved_views:
+                    self.current_view = self.saved_views[data["current_view_id"]]
 
                 # Load active filters
-                if 'active_filters' in data:
-                    self.active_filters = data['active_filters']
+                if "active_filters" in data:
+                    self.active_filters = data["active_filters"]
 
                 self.last_save_time = datetime.now()
 
@@ -155,12 +159,12 @@ class DashboardStateManager:
                     "layout": "grid",
                     "components": ["lead_scoreboard", "alert_center", "performance_summary"],
                     "time_range": "24h",
-                    "auto_refresh": True
+                    "auto_refresh": True,
                 },
                 created_at=datetime.now(),
                 last_used=datetime.now(),
                 is_default=True,
-                tags=["executive", "kpi", "overview"]
+                tags=["executive", "kpi", "overview"],
             ),
             DashboardView(
                 id="leads_focus",
@@ -170,11 +174,11 @@ class DashboardStateManager:
                     "layout": "columns",
                     "components": ["lead_scoreboard", "lead_analytics", "conversion_funnel"],
                     "time_range": "7d",
-                    "filters": {"status": ["hot", "warm"]}
+                    "filters": {"status": ["hot", "warm"]},
                 },
                 created_at=datetime.now(),
                 last_used=datetime.now(),
-                tags=["leads", "sales", "pipeline"]
+                tags=["leads", "sales", "pipeline"],
             ),
             DashboardView(
                 id="analytics_deep",
@@ -184,12 +188,12 @@ class DashboardStateManager:
                     "layout": "dashboard",
                     "components": ["interactive_analytics", "performance_trends", "forecast"],
                     "time_range": "30d",
-                    "chart_types": ["line", "bar", "funnel"]
+                    "chart_types": ["line", "bar", "funnel"],
                 },
                 created_at=datetime.now(),
                 last_used=datetime.now(),
-                tags=["analytics", "reporting", "trends"]
-            )
+                tags=["analytics", "reporting", "trends"],
+            ),
         ]
 
         for view in default_views:
@@ -209,16 +213,13 @@ class DashboardStateManager:
             data = {
                 "user_id": self.user_id,
                 "preferences": asdict(self.user_preferences),
-                "saved_views": {
-                    view_id: view.to_dict()
-                    for view_id, view in self.saved_views.items()
-                },
+                "saved_views": {view_id: view.to_dict() for view_id, view in self.saved_views.items()},
                 "current_view_id": self.current_view.id if self.current_view else None,
                 "active_filters": self.active_filters,
-                "last_updated": datetime.now().isoformat()
+                "last_updated": datetime.now().isoformat(),
             }
 
-            with open(user_file, 'w') as f:
+            with open(user_file, "w") as f:
                 json.dump(data, f, indent=2)
 
             self.last_save_time = datetime.now()
@@ -324,7 +325,7 @@ class DashboardStateManager:
             self.active_filters[filter_name] = value
 
             # Update session state
-            if 'dashboard_filters' in st.session_state:
+            if "dashboard_filters" in st.session_state:
                 st.session_state.dashboard_filters[filter_name] = value
 
             self._track_state_change("filter_set", {"filter": filter_name, "value": value})
@@ -340,7 +341,7 @@ class DashboardStateManager:
             del self.active_filters[filter_name]
 
             # Update session state
-            if 'dashboard_filters' in st.session_state and filter_name in st.session_state.dashboard_filters:
+            if "dashboard_filters" in st.session_state and filter_name in st.session_state.dashboard_filters:
                 del st.session_state.dashboard_filters[filter_name]
 
             self._track_state_change("filter_removed", {"filter": filter_name})
@@ -353,7 +354,7 @@ class DashboardStateManager:
         self.active_filters.clear()
 
         # Update session state
-        if 'dashboard_filters' in st.session_state:
+        if "dashboard_filters" in st.session_state:
             st.session_state.dashboard_filters.clear()
 
         self._track_state_change("filters_cleared", {})
@@ -368,7 +369,7 @@ class DashboardStateManager:
         current_config = {
             "filters": self.active_filters.copy(),
             "preferences": asdict(self.user_preferences),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         view = DashboardView(
@@ -378,7 +379,7 @@ class DashboardStateManager:
             config=current_config,
             created_at=datetime.now(),
             last_used=datetime.now(),
-            tags=tags
+            tags=tags,
         )
 
         self.save_view(view)
@@ -399,20 +400,14 @@ class DashboardStateManager:
             "gap": 16,
             "mobile_columns": 1,
             "tablet_columns": 2,
-            "responsive_breakpoints": {
-                "mobile": 768,
-                "tablet": 1024
-            }
+            "responsive_breakpoints": {"mobile": 768, "tablet": 1024},
         }
 
     def _track_state_change(self, action: str, details: Dict[str, Any]):
         """Track state changes for analytics"""
-        self.state_changes.append({
-            "timestamp": datetime.now().isoformat(),
-            "action": action,
-            "details": details,
-            "user_id": self.user_id
-        })
+        self.state_changes.append(
+            {"timestamp": datetime.now().isoformat(), "action": action, "details": details, "user_id": self.user_id}
+        )
 
         # Keep only last 100 changes
         if len(self.state_changes) > 100:
@@ -425,8 +420,7 @@ class DashboardStateManager:
         week_ago = now - timedelta(days=7)
 
         recent_changes = [
-            change for change in self.state_changes
-            if datetime.fromisoformat(change['timestamp']) > day_ago
+            change for change in self.state_changes if datetime.fromisoformat(change["timestamp"]) > day_ago
         ]
 
         return {
@@ -436,7 +430,7 @@ class DashboardStateManager:
             "most_used_filters": self._get_most_used_filters(),
             "session_duration": (now - (self.last_save_time or now)).total_seconds(),
             "preferences": asdict(self.user_preferences),
-            "total_saved_views": len(self.saved_views)
+            "total_saved_views": len(self.saved_views),
         }
 
     def _get_most_used_view(self) -> Optional[str]:
@@ -451,8 +445,8 @@ class DashboardStateManager:
         filter_counts = {}
 
         for change in self.state_changes:
-            if change['action'] == 'filter_set':
-                filter_name = change['details'].get('filter')
+            if change["action"] == "filter_set":
+                filter_name = change["details"].get("filter")
                 if filter_name:
                     filter_counts[filter_name] = filter_counts.get(filter_name, 0) + 1
 
@@ -468,7 +462,7 @@ class DashboardStateManager:
             "active_filters": self.active_filters,
             "state_changes": self.state_changes,
             "export_timestamp": datetime.now().isoformat(),
-            "version": "1.0"
+            "version": "1.0",
         }
 
     def import_state(self, state_data: Dict[str, Any]) -> bool:
@@ -510,6 +504,7 @@ class DashboardStateManager:
 # Singleton instance for global access
 _state_manager_instance = None
 
+
 def get_dashboard_state_manager(user_id: Optional[str] = None) -> DashboardStateManager:
     """Get or create singleton dashboard state manager"""
     global _state_manager_instance
@@ -543,7 +538,7 @@ def dashboard_sidebar_controls():
         range(len(view_names)),
         index=current_index,
         format_func=lambda x: view_names[x],
-        key="dashboard_view_selector"
+        key="dashboard_view_selector",
     )
 
     if selected_view != current_index:
@@ -557,16 +552,12 @@ def dashboard_sidebar_controls():
 
     with col1:
         auto_refresh = st.checkbox(
-            "Auto Refresh",
-            value=state_manager.user_preferences.auto_refresh,
-            key="auto_refresh_toggle"
+            "Auto Refresh", value=state_manager.user_preferences.auto_refresh, key="auto_refresh_toggle"
         )
 
     with col2:
         notifications = st.checkbox(
-            "Notifications",
-            value=state_manager.user_preferences.notifications_enabled,
-            key="notifications_toggle"
+            "Notifications", value=state_manager.user_preferences.notifications_enabled, key="notifications_toggle"
         )
 
     # Update preferences if changed
@@ -582,7 +573,7 @@ def dashboard_sidebar_controls():
         min_value=1,
         max_value=30,
         value=state_manager.user_preferences.refresh_interval,
-        key="refresh_interval_slider"
+        key="refresh_interval_slider",
     )
 
     if refresh_interval != state_manager.user_preferences.refresh_interval:

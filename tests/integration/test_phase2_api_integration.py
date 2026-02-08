@@ -5,26 +5,26 @@ Tests API routes with schema models, performance validation, and Jorge methodolo
 Built for Jorge's Real Estate AI Platform - Phase 2: Intelligence Layer
 """
 
-import pytest
 import json
 from datetime import datetime
-from unittest.mock import Mock, patch, AsyncMock
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
 
-from fastapi.testclient import TestClient
+import pytest
 from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 # Import Phase 2 API components
 try:
     from ghl_real_estate_ai.api.routes.phase2_intelligence import router as phase2_router
     from ghl_real_estate_ai.api.schemas.phase2_intelligence_models import (
-        PropertyMatchRequestAPI,
-        ConversationAnalysisRequestAPI,
-        PreferenceLearningRequestAPI,
-        CrossTrackHandoffRequestAPI,
         AdvancedPropertyMatchAPI,
+        ConversationAnalysisRequestAPI,
         ConversationInsightAPI,
-        PreferenceProfileAPI
+        CrossTrackHandoffRequestAPI,
+        PreferenceLearningRequestAPI,
+        PreferenceProfileAPI,
+        PropertyMatchRequestAPI,
     )
 except (ImportError, TypeError, AttributeError):
     pytest.skip("required imports unavailable", allow_module_level=True)
@@ -46,8 +46,10 @@ class TestPhase2IntegrationAPI:
         mock_user = {"user_id": "test_user", "location_id": "test_location"}
         mock_access = True
 
-        with patch("ghl_real_estate_ai.api.routes.phase2_intelligence.get_current_user", return_value=mock_user), \
-             patch("ghl_real_estate_ai.api.routes.phase2_intelligence.get_location_access", return_value=mock_access):
+        with (
+            patch("ghl_real_estate_ai.api.routes.phase2_intelligence.get_current_user", return_value=mock_user),
+            patch("ghl_real_estate_ai.api.routes.phase2_intelligence.get_location_access", return_value=mock_access),
+        ):
             yield mock_user
 
     @pytest.fixture
@@ -58,17 +60,17 @@ class TestPhase2IntegrationAPI:
             "preferences": {
                 "price_range": {"min": 400000, "max": 600000},
                 "bedrooms": {"min": 3, "ideal": 4},
-                "lifestyle_features": {"home_office": 0.9, "pool": 0.7}
+                "lifestyle_features": {"home_office": 0.9, "pool": 0.7},
             },
             "conversation_history": [
                 {
                     "message": "We absolutely need a home office",
                     "timestamp": "2025-01-25T10:00:00Z",
-                    "engagement_score": 0.9
+                    "engagement_score": 0.9,
                 }
             ],
             "max_results": 5,
-            "min_score": 0.7
+            "min_score": 0.7,
         }
 
     @pytest.fixture
@@ -78,19 +80,11 @@ class TestPhase2IntegrationAPI:
             "conversation_id": "conv_12345",
             "lead_id": "lead_67890",
             "conversation_history": [
-                {
-                    "role": "user",
-                    "content": "I'm concerned about the price",
-                    "timestamp": "2025-01-25T10:00:00Z"
-                },
-                {
-                    "role": "agent",
-                    "content": "Let me show you comparable sales",
-                    "timestamp": "2025-01-25T10:01:00Z"
-                }
+                {"role": "user", "content": "I'm concerned about the price", "timestamp": "2025-01-25T10:00:00Z"},
+                {"role": "agent", "content": "Let me show you comparable sales", "timestamp": "2025-01-25T10:01:00Z"},
             ],
             "enable_preference_learning": True,
-            "analysis_type": "comprehensive"
+            "analysis_type": "comprehensive",
         }
 
     @pytest.fixture
@@ -103,16 +97,14 @@ class TestPhase2IntegrationAPI:
                 {
                     "message": "We need a modern home with a pool",
                     "timestamp": "2025-01-25T10:00:00Z",
-                    "confidence": 0.85
+                    "confidence": 0.85,
                 }
             ],
-            "confidence_threshold": 0.7
+            "confidence_threshold": 0.7,
         }
 
     @pytest.mark.asyncio
-    async def test_property_matching_api_integration(
-        self, mock_auth_dependencies, property_match_request_data
-    ):
+    async def test_property_matching_api_integration(self, mock_auth_dependencies, property_match_request_data):
         """Test property matching API with schema validation."""
 
         # Mock the property matching engine
@@ -124,12 +116,7 @@ class TestPhase2IntegrationAPI:
                 behavioral_fit=0.91,
                 engagement_prediction=0.85,
                 urgency_match=0.88,
-                property_summary={
-                    "price": 525000,
-                    "bedrooms": 4,
-                    "bathrooms": 3,
-                    "neighborhood": "Domain"
-                },
+                property_summary={"price": 525000, "bedrooms": 4, "bathrooms": 3, "neighborhood": "Domain"},
                 feature_matches={"home_office": 0.95, "pool": 0.8},
                 location_score=0.87,
                 presentation_strategy="lifestyle_match",
@@ -138,7 +125,7 @@ class TestPhase2IntegrationAPI:
                 rank=1,
                 market_competitiveness=0.85,
                 processing_time_ms=85,
-                confidence_score=0.89
+                confidence_score=0.89,
             )
         ]
 
@@ -148,14 +135,14 @@ class TestPhase2IntegrationAPI:
             "price_weight": 0.25,
             "urgency_weight": 0.15,
             "lifestyle_weight": 0.1,
-            "conversation_insights": {
-                "home_office_emphasis": 0.9
-            },
+            "conversation_insights": {"home_office_emphasis": 0.9},
             "processing_time_ms": 25,
-            "confidence_score": 0.87
+            "confidence_score": 0.87,
         }
 
-        with patch("ghl_real_estate_ai.services.advanced_property_matching_engine.get_advanced_property_matching_engine") as mock_engine:
+        with patch(
+            "ghl_real_estate_ai.services.advanced_property_matching_engine.get_advanced_property_matching_engine"
+        ) as mock_engine:
             mock_instance = Mock()
             mock_instance.find_behavioral_matches = AsyncMock(return_value=mock_matches)
             mock_instance.get_behavioral_weights = AsyncMock(return_value=mock_weights)
@@ -169,7 +156,7 @@ class TestPhase2IntegrationAPI:
                 # Make API request
                 response = client.post(
                     "/api/v1/phase2-intelligence/test_location/property-matching/analyze",
-                    json=property_match_request_data
+                    json=property_match_request_data,
                 )
 
                 # Validate response
@@ -215,7 +202,7 @@ class TestPhase2IntegrationAPI:
             concern_indicators=["price_sensitivity"],
             recommended_next_actions=["Provide market analysis", "Address price concerns"],
             processing_time_ms=340,
-            confidence_score=0.82
+            confidence_score=0.82,
         )
 
         mock_objections = [
@@ -226,7 +213,7 @@ class TestPhase2IntegrationAPI:
                 "detected_at_offset_seconds": 30,
                 "severity_level": 4,
                 "suggested_responses": ["Let me show you comparable sales"],
-                "confidence_score": 0.91
+                "confidence_score": 0.91,
             }
         ]
 
@@ -238,7 +225,7 @@ class TestPhase2IntegrationAPI:
                 "priority_level": 3,
                 "opportunity_description": "Could have provided data sooner",
                 "recommended_approach": "Lead with market data",
-                "confidence_score": 0.78
+                "confidence_score": 0.78,
             }
         ]
 
@@ -249,11 +236,13 @@ class TestPhase2IntegrationAPI:
                 "sentiment_classification": "slightly_negative",
                 "confidence": 0.85,
                 "speaker": "user",
-                "trigger_phrase": "concerned about the price"
+                "trigger_phrase": "concerned about the price",
             }
         ]
 
-        with patch("ghl_real_estate_ai.services.conversation_intelligence_service.get_conversation_intelligence_service") as mock_service:
+        with patch(
+            "ghl_real_estate_ai.services.conversation_intelligence_service.get_conversation_intelligence_service"
+        ) as mock_service:
             mock_instance = Mock()
             mock_instance.analyze_conversation_with_insights = AsyncMock(return_value=mock_insights)
             mock_instance.detect_objections_and_recommend_responses = AsyncMock(return_value=mock_objections)
@@ -269,7 +258,7 @@ class TestPhase2IntegrationAPI:
                 # Make API request
                 response = client.post(
                     "/api/v1/phase2-intelligence/test_location/conversation-intelligence/analyze",
-                    json=conversation_analysis_request_data
+                    json=conversation_analysis_request_data,
                 )
 
                 # Validate response
@@ -292,9 +281,7 @@ class TestPhase2IntegrationAPI:
                 assert data["processing_time_ms"] < 500  # Performance target
 
     @pytest.mark.asyncio
-    async def test_preference_learning_api_integration(
-        self, mock_auth_dependencies, preference_learning_request_data
-    ):
+    async def test_preference_learning_api_integration(self, mock_auth_dependencies, preference_learning_request_data):
         """Test preference learning API with schema validation."""
 
         # Mock preference profile result
@@ -312,10 +299,12 @@ class TestPhase2IntegrationAPI:
             prediction_accuracy_score=0.79,
             consistency_score=0.82,
             processing_time_ms=42,
-            confidence_score=0.84
+            confidence_score=0.84,
         )
 
-        with patch("ghl_real_estate_ai.services.client_preference_learning_engine.get_client_preference_learning_engine") as mock_engine:
+        with patch(
+            "ghl_real_estate_ai.services.client_preference_learning_engine.get_client_preference_learning_engine"
+        ) as mock_engine:
             mock_instance = Mock()
             mock_instance.learn_from_conversation = AsyncMock(return_value=mock_profile)
             mock_engine.return_value = mock_instance
@@ -328,7 +317,7 @@ class TestPhase2IntegrationAPI:
                 # Make API request
                 response = client.post(
                     "/api/v1/phase2-intelligence/test_location/preference-learning/analyze",
-                    json=preference_learning_request_data
+                    json=preference_learning_request_data,
                 )
 
                 # Validate response
@@ -360,25 +349,30 @@ class TestPhase2IntegrationAPI:
             "client_id": "client_67890",
             "qualification_score": 0.87,
             "handoff_reason": "qualified_buyer",
-            "agent_notes": "Ready for property viewings"
+            "agent_notes": "Ready for property viewings",
         }
 
         # Mock service responses
         mock_conversation_insights = [
             {"conversation_id": "conv_1", "engagement_score": 0.85},
-            {"conversation_id": "conv_2", "engagement_score": 0.78}
+            {"conversation_id": "conv_2", "engagement_score": 0.78},
         ]
 
         mock_preference_profile = {
             "client_id": "client_67890",
             "overall_confidence_score": 0.81,
-            "lifestyle_features": {"home_office": 0.9}
+            "lifestyle_features": {"home_office": 0.9},
         }
 
-        with patch("ghl_real_estate_ai.services.conversation_intelligence_service.get_conversation_intelligence_service") as mock_conv_service, \
-             patch("ghl_real_estate_ai.services.client_preference_learning_engine.get_client_preference_learning_engine") as mock_pref_service, \
-             patch("ghl_real_estate_ai.services.event_publisher.get_event_publisher") as mock_publisher:
-
+        with (
+            patch(
+                "ghl_real_estate_ai.services.conversation_intelligence_service.get_conversation_intelligence_service"
+            ) as mock_conv_service,
+            patch(
+                "ghl_real_estate_ai.services.client_preference_learning_engine.get_client_preference_learning_engine"
+            ) as mock_pref_service,
+            patch("ghl_real_estate_ai.services.event_publisher.get_event_publisher") as mock_publisher,
+        ):
             # Setup service mocks
             mock_conv_instance = Mock()
             mock_conv_instance.get_conversation_insights = AsyncMock(return_value=mock_conversation_insights)
@@ -394,8 +388,7 @@ class TestPhase2IntegrationAPI:
 
             # Make API request
             response = client.post(
-                "/api/v1/phase2-intelligence/test_location/coordination/lead-to-client-handoff",
-                json=handoff_request
+                "/api/v1/phase2-intelligence/test_location/coordination/lead-to-client-handoff", json=handoff_request
             )
 
             # Validate response
@@ -427,10 +420,17 @@ class TestPhase2IntegrationAPI:
         mock_conversation_health = {"status": "healthy", "avg_processing_time": 340}
         mock_preference_health = {"status": "healthy", "avg_update_time": 35}
 
-        with patch("ghl_real_estate_ai.services.advanced_property_matching_engine.get_advanced_property_matching_engine") as mock_prop_engine, \
-             patch("ghl_real_estate_ai.services.conversation_intelligence_service.get_conversation_intelligence_service") as mock_conv_service, \
-             patch("ghl_real_estate_ai.services.client_preference_learning_engine.get_client_preference_learning_engine") as mock_pref_engine:
-
+        with (
+            patch(
+                "ghl_real_estate_ai.services.advanced_property_matching_engine.get_advanced_property_matching_engine"
+            ) as mock_prop_engine,
+            patch(
+                "ghl_real_estate_ai.services.conversation_intelligence_service.get_conversation_intelligence_service"
+            ) as mock_conv_service,
+            patch(
+                "ghl_real_estate_ai.services.client_preference_learning_engine.get_client_preference_learning_engine"
+            ) as mock_pref_engine,
+        ):
             # Setup health check mocks
             mock_prop_instance = Mock()
             mock_prop_instance.get_health_status = AsyncMock(return_value=mock_property_health)
@@ -478,12 +478,11 @@ class TestPhase2IntegrationAPI:
             "lead_id": "",  # Invalid: empty string
             "preferences": {},  # Invalid: empty preferences
             "max_results": 0,  # Invalid: must be >= 1
-            "min_score": 1.5   # Invalid: must be <= 1.0
+            "min_score": 1.5,  # Invalid: must be <= 1.0
         }
 
         response = client.post(
-            "/api/v1/phase2-intelligence/test_location/property-matching/analyze",
-            json=invalid_request
+            "/api/v1/phase2-intelligence/test_location/property-matching/analyze", json=invalid_request
         )
 
         # Should return validation error
@@ -504,24 +503,25 @@ class TestPhase2IntegrationAPI:
             "lead_id": "lead_test",
             "preferences": {"price_range": {"min": 400000, "max": 600000}},
             "max_results": 5,
-            "min_score": 0.6
+            "min_score": 0.6,
         }
 
         # Mock fast response for cache testing
-        with patch("ghl_real_estate_ai.services.advanced_property_matching_engine.get_advanced_property_matching_engine") as mock_engine:
+        with patch(
+            "ghl_real_estate_ai.services.advanced_property_matching_engine.get_advanced_property_matching_engine"
+        ) as mock_engine:
             mock_instance = Mock()
             mock_instance.find_behavioral_matches = AsyncMock(return_value=[])
-            mock_instance.get_behavioral_weights = AsyncMock(return_value={
-                "feature_weight": 0.3,
-                "processing_time_ms": 25
-            })
+            mock_instance.get_behavioral_weights = AsyncMock(
+                return_value={"feature_weight": 0.3, "processing_time_ms": 25}
+            )
             mock_engine.return_value = mock_instance
 
             with patch("ghl_real_estate_ai.services.event_publisher.get_event_publisher"):
                 # Make API request
                 response = client.post(
                     "/api/v1/phase2-intelligence/test_location/property-matching/analyze?force_refresh=false",
-                    json=valid_request
+                    json=valid_request,
                 )
 
                 # Validate that performance data is included

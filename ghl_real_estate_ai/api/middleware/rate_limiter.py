@@ -10,37 +10,40 @@ Features:
 - Automatic threat detection and mitigation
 """
 
-from fastapi import Request, HTTPException, status
-from starlette.middleware.base import BaseHTTPMiddleware
+import asyncio
+import ipaddress
+import json
 from collections import defaultdict, deque
 from datetime import datetime, timedelta
-from typing import Dict, Tuple, Set, Optional
-import asyncio
-import json
-import ipaddress
+from typing import Dict, Optional, Set, Tuple
+
+from fastapi import HTTPException, Request, status
+from starlette.middleware.base import BaseHTTPMiddleware
+
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
+
 
 class ThreatDetector:
     """Advanced threat detection for rate limiting."""
 
     def __init__(self):
         self.suspicious_patterns = {
-            'rapid_requests': deque(maxlen=1000),  # Track rapid request patterns
-            'failed_auth': defaultdict(int),       # Failed authentication attempts
-            'bot_indicators': set(),               # Known bot user agents
-            'blocked_ips': set(),                  # Temporarily blocked IPs
+            "rapid_requests": deque(maxlen=1000),  # Track rapid request patterns
+            "failed_auth": defaultdict(int),  # Failed authentication attempts
+            "bot_indicators": set(),  # Known bot user agents
+            "blocked_ips": set(),  # Temporarily blocked IPs
         }
         self.block_duration = timedelta(minutes=15)
 
     def is_blocked_ip(self, ip: str) -> bool:
         """Check if IP is currently blocked."""
-        return ip in self.suspicious_patterns['blocked_ips']
+        return ip in self.suspicious_patterns["blocked_ips"]
 
     def add_blocked_ip(self, ip: str, reason: str = "rate_limit_violation"):
         """Add IP to blocked list with logging."""
-        self.suspicious_patterns['blocked_ips'].add(ip)
+        self.suspicious_patterns["blocked_ips"].add(ip)
         logger.warning(
             f"IP blocked due to {reason}",
             extra={
@@ -48,15 +51,22 @@ class ThreatDetector:
                 "ip_address": ip,
                 "reason": reason,
                 "blocked_until": (datetime.now() + self.block_duration).isoformat(),
-                "event_id": "RATE_001"
-            }
+                "event_id": "RATE_001",
+            },
         )
 
     def detect_bot_patterns(self, user_agent: str) -> bool:
         """Detect potential bot traffic."""
         bot_indicators = [
-            'bot', 'crawler', 'spider', 'scraper', 'curl', 'wget',
-            'python-requests', 'postman', 'insomnia'
+            "bot",
+            "crawler",
+            "spider",
+            "scraper",
+            "curl",
+            "wget",
+            "python-requests",
+            "postman",
+            "insomnia",
         ]
         user_agent_lower = user_agent.lower()
         return any(indicator in user_agent_lower for indicator in bot_indicators)
@@ -70,7 +80,7 @@ class EnhancedRateLimiter:
         requests_per_minute: int = 100,
         burst: int = 20,
         authenticated_rpm: int = 1000,
-        websocket_connections_per_ip: int = 10
+        websocket_connections_per_ip: int = 10,
     ):
         self.requests_per_minute = requests_per_minute
         self.authenticated_rpm = authenticated_rpm
@@ -84,12 +94,7 @@ class EnhancedRateLimiter:
         self.threat_detector = ThreatDetector()
 
     async def is_allowed(
-        self,
-        key: str,
-        is_authenticated: bool = False,
-        request_type: str = "http",
-        user_agent: str = "",
-        path: str = ""
+        self, key: str, is_authenticated: bool = False, request_type: str = "http", user_agent: str = "", path: str = ""
     ) -> Tuple[bool, Optional[str]]:
         """
         Enhanced rate limiting with threat detection.
@@ -110,8 +115,8 @@ class EnhancedRateLimiter:
                         "security_event": "bot_detection",
                         "ip_address": key,
                         "user_agent": user_agent,
-                        "event_id": "RATE_002"
-                    }
+                        "event_id": "RATE_002",
+                    },
                 )
                 # Apply stricter limits for bots
                 rpm = self.requests_per_minute // 4
@@ -129,16 +134,11 @@ class EnhancedRateLimiter:
             now = datetime.now()
 
             # Track request pattern
-            self.request_history[key].append({
-                'timestamp': now,
-                'path': path,
-                'authenticated': is_authenticated
-            })
+            self.request_history[key].append({"timestamp": now, "path": path, "authenticated": is_authenticated})
 
             # Detect rapid fire requests (potential attack)
             recent_requests = [
-                req for req in self.request_history[key]
-                if now - req['timestamp'] < timedelta(seconds=10)
+                req for req in self.request_history[key] if now - req["timestamp"] < timedelta(seconds=10)
             ]
 
             if len(recent_requests) > 50:  # More than 50 requests in 10 seconds
@@ -162,10 +162,9 @@ class EnhancedRateLimiter:
                 return True, None
             else:
                 # Track rate limit violations
-                violations = len([
-                    req for req in self.request_history[key]
-                    if now - req['timestamp'] < timedelta(minutes=5)
-                ])
+                violations = len(
+                    [req for req in self.request_history[key] if now - req["timestamp"] < timedelta(minutes=5)]
+                )
 
                 if violations > rpm // 2:  # Too many violations in 5 minutes
                     self.threat_detector.add_blocked_ip(key, "repeated_rate_limit_violations")
@@ -183,17 +182,10 @@ class EnhancedRateLimitMiddleware(BaseHTTPMiddleware):
     """Enterprise FastAPI middleware for rate limiting with security features."""
 
     def __init__(
-        self,
-        app,
-        requests_per_minute: int = 100,
-        authenticated_rpm: int = 1000,
-        enable_ip_blocking: bool = True
+        self, app, requests_per_minute: int = 100, authenticated_rpm: int = 1000, enable_ip_blocking: bool = True
     ):
         super().__init__(app)
-        self.limiter = EnhancedRateLimiter(
-            requests_per_minute=requests_per_minute,
-            authenticated_rpm=authenticated_rpm
-        )
+        self.limiter = EnhancedRateLimiter(requests_per_minute=requests_per_minute, authenticated_rpm=authenticated_rpm)
         self.enable_ip_blocking = enable_ip_blocking
 
     def _get_client_identifier(self, request: Request) -> str:
@@ -202,7 +194,7 @@ class EnhancedRateLimitMiddleware(BaseHTTPMiddleware):
         forwarded_for = request.headers.get("X-Forwarded-For")
         if forwarded_for:
             # Take the first IP (original client)
-            return forwarded_for.split(',')[0].strip()
+            return forwarded_for.split(",")[0].strip()
 
         real_ip = request.headers.get("X-Real-IP")
         if real_ip:
@@ -243,7 +235,7 @@ class EnhancedRateLimitMiddleware(BaseHTTPMiddleware):
             is_authenticated=is_authenticated,
             request_type=request_type,
             user_agent=user_agent,
-            path=path
+            path=path,
         )
 
         if not allowed:
@@ -257,8 +249,8 @@ class EnhancedRateLimitMiddleware(BaseHTTPMiddleware):
                     "user_agent": user_agent,
                     "is_authenticated": is_authenticated,
                     "reason": reason or "Rate limit exceeded",
-                    "event_id": "RATE_003"
-                }
+                    "event_id": "RATE_003",
+                },
             )
 
             # Return detailed error response
@@ -268,13 +260,13 @@ class EnhancedRateLimitMiddleware(BaseHTTPMiddleware):
                     "error": "Rate limit exceeded",
                     "message": reason or "Too many requests. Please try again later.",
                     "retry_after": 60,  # Seconds
-                    "type": "rate_limit_error"
+                    "type": "rate_limit_error",
                 },
                 headers={
                     "Retry-After": "60",
                     "X-Rate-Limit-Remaining": "0",
-                    "X-Rate-Limit-Reset": str(int((datetime.now() + timedelta(minutes=1)).timestamp()))
-                }
+                    "X-Rate-Limit-Reset": str(int((datetime.now() + timedelta(minutes=1)).timestamp())),
+                },
             )
 
         # Process request

@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 
 class AnomalyType(str, Enum):
     """Types of compliance anomalies that can be detected"""
+
     SCORE_SPIKE = "score_spike"
     SCORE_DROP = "score_drop"
     VIOLATION_SURGE = "violation_surge"
@@ -27,6 +28,7 @@ class AnomalyType(str, Enum):
 
 class AnomalySeverity(str, Enum):
     """Severity levels for detected anomalies"""
+
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -35,6 +37,7 @@ class AnomalySeverity(str, Enum):
 
 class ComplianceAnomaly(BaseModel):
     """A detected compliance anomaly with investigation recommendations"""
+
     id: str = Field(default_factory=lambda: str(uuid4()))
     model_id: str
     anomaly_type: AnomalyType
@@ -65,6 +68,7 @@ class ComplianceAnomaly(BaseModel):
 
 class AnomalyDetectionConfig(BaseModel):
     """Configuration for anomaly detection thresholds"""
+
     score_change_threshold: float = Field(default=15.0, description="% change to flag")
     violation_surge_threshold: int = Field(default=3, description="violations in period to flag")
     assessment_gap_days: int = Field(default=30, description="days without assessment to flag")
@@ -110,34 +114,20 @@ class ComplianceAnomalyDetector:
             for h in historical_data
             if "compliance_score" in h or "score" in h
         ]
-        current_score = current_metrics.get(
-            "compliance_score", current_metrics.get("score", 0.0)
-        )
+        current_score = current_metrics.get("compliance_score", current_metrics.get("score", 0.0))
 
         # 1. Score anomaly detection
         if historical_scores:
-            score_anomaly = await self.detect_score_anomaly(
-                model_id, current_score, historical_scores
-            )
+            score_anomaly = await self.detect_score_anomaly(model_id, current_score, historical_scores)
             if score_anomaly:
                 anomalies.append(score_anomaly)
 
         # 2. Violation surge detection
         recent_violations = current_metrics.get("recent_violations", [])
-        historical_violation_counts = [
-            len(h.get("violations", []))
-            for h in historical_data
-            if "violations" in h
-        ]
+        historical_violation_counts = [len(h.get("violations", [])) for h in historical_data if "violations" in h]
         if historical_violation_counts:
-            avg_violation_rate = (
-                statistics.mean(historical_violation_counts)
-                if historical_violation_counts
-                else 0.0
-            )
-            violation_anomaly = await self.detect_violation_surge(
-                model_id, recent_violations, avg_violation_rate
-            )
+            avg_violation_rate = statistics.mean(historical_violation_counts) if historical_violation_counts else 0.0
+            violation_anomaly = await self.detect_violation_surge(model_id, recent_violations, avg_violation_rate)
             if violation_anomaly:
                 anomalies.append(violation_anomaly)
 
@@ -145,9 +135,7 @@ class ComplianceAnomalyDetector:
         last_assessment = current_metrics.get("last_assessment")
         if last_assessment:
             if isinstance(last_assessment, str):
-                last_assessment = datetime.fromisoformat(
-                    last_assessment.replace("Z", "+00:00")
-                )
+                last_assessment = datetime.fromisoformat(last_assessment.replace("Z", "+00:00"))
             gap_anomaly = await self.detect_assessment_gap(model_id, last_assessment)
             if gap_anomaly:
                 anomalies.append(gap_anomaly)
@@ -161,9 +149,7 @@ class ComplianceAnomalyDetector:
         if risk_history:
             current_risk = current_metrics.get("risk_level")
             if current_risk:
-                risk_history.append(
-                    {"risk_level": current_risk, "timestamp": datetime.now(timezone.utc)}
-                )
+                risk_history.append({"risk_level": current_risk, "timestamp": datetime.now(timezone.utc)})
             risk_anomaly = await self.detect_risk_escalation(model_id, risk_history)
             if risk_anomaly:
                 anomalies.append(risk_anomaly)
@@ -171,38 +157,24 @@ class ComplianceAnomalyDetector:
         # 5. Remediation stall detection
         open_remediations = current_metrics.get("open_remediations", [])
         if open_remediations:
-            stall_anomaly = await self.detect_remediation_stall(
-                model_id, open_remediations
-            )
+            stall_anomaly = await self.detect_remediation_stall(model_id, open_remediations)
             if stall_anomaly:
                 anomalies.append(stall_anomaly)
 
         # 6. Pattern anomaly detection on key metrics
         for metric_name in ["fairness_score", "transparency_score", "robustness_score"]:
-            values = [
-                h.get(metric_name, 0.0)
-                for h in historical_data
-                if metric_name in h
-            ]
-            timestamps = [
-                h.get("timestamp", datetime.now(timezone.utc))
-                for h in historical_data
-                if metric_name in h
-            ]
+            values = [h.get(metric_name, 0.0) for h in historical_data if metric_name in h]
+            timestamps = [h.get("timestamp", datetime.now(timezone.utc)) for h in historical_data if metric_name in h]
             if values and len(values) >= self.config.min_history_points:
                 # Parse timestamps if they're strings
                 parsed_timestamps = []
                 for ts in timestamps:
                     if isinstance(ts, str):
-                        parsed_timestamps.append(
-                            datetime.fromisoformat(ts.replace("Z", "+00:00"))
-                        )
+                        parsed_timestamps.append(datetime.fromisoformat(ts.replace("Z", "+00:00")))
                     else:
                         parsed_timestamps.append(ts)
 
-                pattern_anomaly = await self.detect_pattern_anomaly(
-                    model_id, metric_name, values, parsed_timestamps
-                )
+                pattern_anomaly = await self.detect_pattern_anomaly(model_id, metric_name, values, parsed_timestamps)
                 if pattern_anomaly:
                     anomalies.append(pattern_anomaly)
 
@@ -252,9 +224,7 @@ class ComplianceAnomalyDetector:
         severity = self._classify_severity(abs(z_score), anomaly_type)
         confidence = min(0.99, 0.5 + (abs(z_score) - self.config.z_score_threshold) * 0.1)
 
-        investigation_steps = self._generate_investigation_steps_for_score(
-            anomaly_type, current_score, mean_score
-        )
+        investigation_steps = self._generate_investigation_steps_for_score(anomaly_type, current_score, mean_score)
 
         return ComplianceAnomaly(
             model_id=model_id,
@@ -464,19 +434,13 @@ class ComplianceAnomalyDetector:
         # Check the last few entries for escalation
         recent = sorted_history[-3:] if len(sorted_history) >= 3 else sorted_history
 
-        risk_levels = [
-            risk_order.get(str(r.get("risk_level", "unknown")).lower(), 2)
-            for r in recent
-        ]
+        risk_levels = [risk_order.get(str(r.get("risk_level", "unknown")).lower(), 2) for r in recent]
 
         # Check for significant jump
         if len(risk_levels) < 2:
             return None
 
-        max_jump = max(
-            risk_levels[i] - risk_levels[i - 1]
-            for i in range(1, len(risk_levels))
-        )
+        max_jump = max(risk_levels[i] - risk_levels[i - 1] for i in range(1, len(risk_levels)))
 
         if max_jump < self.config.risk_escalation_threshold:
             return None
@@ -558,28 +522,32 @@ class ComplianceAnomalyDetector:
             days_stalled = (now - last_update).days
 
             if days_stalled >= self.config.remediation_stall_days:
-                stalled_items.append({
-                    **remediation,
-                    "days_stalled": days_stalled,
-                })
+                stalled_items.append(
+                    {
+                        **remediation,
+                        "days_stalled": days_stalled,
+                    }
+                )
 
         if not stalled_items:
             return None
 
         # Check for overdue items
         overdue_items = [
-            r for r in stalled_items
-            if r.get("due_date") and (
+            r
+            for r in stalled_items
+            if r.get("due_date")
+            and (
                 datetime.fromisoformat(str(r["due_date"]).replace("Z", "+00:00"))
                 if isinstance(r["due_date"], str)
                 else r["due_date"]
-            ) < now
+            )
+            < now
         ]
 
         # Severity based on overdue count and severity of stalled items
         critical_stalled = sum(
-            1 for r in stalled_items
-            if r.get("priority", 5) <= 1 or r.get("severity", "").lower() == "critical"
+            1 for r in stalled_items if r.get("priority", 5) <= 1 or r.get("severity", "").lower() == "critical"
         )
 
         if critical_stalled >= 2 or len(overdue_items) >= 3:
@@ -780,7 +748,7 @@ class ComplianceAnomalyDetector:
         slopes = []
 
         for i in range(len(values) - window + 1):
-            window_values = values[i:i + window]
+            window_values = values[i : i + window]
             # Simple slope as last - first
             slope = (window_values[-1] - window_values[0]) / (window - 1)
             slopes.append(slope)
@@ -792,8 +760,8 @@ class ComplianceAnomalyDetector:
         # Find significant slope reversals where both before and after are substantial
         for i in range(2, len(slopes) - 1):
             # Check for sign reversal with significant magnitude
-            before_slopes = slopes[max(0, i - 2):i]
-            after_slopes = slopes[i:min(len(slopes), i + 2)]
+            before_slopes = slopes[max(0, i - 2) : i]
+            after_slopes = slopes[i : min(len(slopes), i + 2)]
 
             # Both periods need consistent direction
             before_avg = statistics.mean(before_slopes)
@@ -811,9 +779,7 @@ class ComplianceAnomalyDetector:
 
         return None
 
-    def _calculate_baseline(
-        self, model_id: str, historical_data: List[Dict[str, Any]]
-    ) -> Dict[str, float]:
+    def _calculate_baseline(self, model_id: str, historical_data: List[Dict[str, Any]]) -> Dict[str, float]:
         """
         Calculate baseline metrics for a model from historical data.
 
@@ -827,17 +793,21 @@ class ComplianceAnomalyDetector:
         baseline: Dict[str, float] = {}
 
         metric_keys = [
-            "compliance_score", "score", "fairness_score", "transparency_score",
-            "robustness_score", "privacy_score", "security_score", "risk_score",
+            "compliance_score",
+            "score",
+            "fairness_score",
+            "transparency_score",
+            "robustness_score",
+            "privacy_score",
+            "security_score",
+            "risk_score",
         ]
 
         for key in metric_keys:
             values = [h.get(key, 0.0) for h in historical_data if key in h]
             if values:
                 baseline[key] = statistics.mean(values)
-                baseline[f"{key}_stdev"] = (
-                    statistics.stdev(values) if len(values) > 1 else 0.0
-                )
+                baseline[f"{key}_stdev"] = statistics.stdev(values) if len(values) > 1 else 0.0
 
         # Cache the baseline
         self._baselines[model_id] = baseline
@@ -846,9 +816,7 @@ class ComplianceAnomalyDetector:
 
     # Severity classification
 
-    def _classify_severity(
-        self, deviation: float, anomaly_type: AnomalyType
-    ) -> AnomalySeverity:
+    def _classify_severity(self, deviation: float, anomaly_type: AnomalyType) -> AnomalySeverity:
         """
         Classify anomaly severity based on deviation and type.
 
@@ -881,9 +849,7 @@ class ComplianceAnomalyDetector:
         else:
             return AnomalySeverity.LOW
 
-    def _generate_investigation_steps(
-        self, anomaly: ComplianceAnomaly
-    ) -> List[str]:
+    def _generate_investigation_steps(self, anomaly: ComplianceAnomaly) -> List[str]:
         """
         Generate recommended investigation steps based on anomaly.
 

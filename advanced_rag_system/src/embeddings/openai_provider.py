@@ -213,7 +213,7 @@ class OpenAIEmbeddingProvider(EmbeddingProvider):
                     )
 
                 # Exponential backoff
-                wait_time = 2 ** attempt
+                wait_time = 2**attempt
                 await asyncio.sleep(wait_time)
                 return await self._embed_batch_with_retry(texts, attempt + 1)
 
@@ -225,7 +225,7 @@ class OpenAIEmbeddingProvider(EmbeddingProvider):
                         provider="openai",
                     )
 
-                wait_time = 2 ** attempt
+                wait_time = 2**attempt
                 await asyncio.sleep(wait_time)
                 return await self._embed_batch_with_retry(texts, attempt + 1)
 
@@ -237,7 +237,7 @@ class OpenAIEmbeddingProvider(EmbeddingProvider):
                         provider="openai",
                     )
 
-                wait_time = 2 ** attempt
+                wait_time = 2**attempt
                 await asyncio.sleep(wait_time)
                 return await self._embed_batch_with_retry(texts, attempt + 1)
 

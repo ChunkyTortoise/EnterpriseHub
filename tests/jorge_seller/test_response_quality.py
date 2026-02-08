@@ -3,18 +3,18 @@ Tests for HIGH-001: Semantic Response Quality Assessment
 
 Tests that response quality is based on semantic meaning, not just length.
 """
-import pytest
+
 from unittest.mock import AsyncMock, Mock
+
+import pytest
+
 from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
 
 
 @pytest.fixture
 def mock_conversation_manager():
     manager = AsyncMock()
-    manager.get_context.return_value = {
-        "seller_preferences": {},
-        "conversation_history": []
-    }
+    manager.get_context.return_value = {"seller_preferences": {}, "conversation_history": []}
     manager.extract_seller_data.return_value = {}
     return manager
 
@@ -131,16 +131,11 @@ async def test_integration_with_extraction(seller_engine, mock_conversation_mana
     user_message = "yes"
 
     # Mock extraction to return minimal data
-    mock_conversation_manager.extract_seller_data.return_value = {
-        "timeline_acceptable": True,
-        "questions_answered": 1
-    }
+    mock_conversation_manager.extract_seller_data.return_value = {"timeline_acceptable": True, "questions_answered": 1}
 
     # Process the response
     result = await seller_engine.process_seller_response(
-        contact_id=contact_id,
-        user_message=user_message,
-        location_id=location_id
+        contact_id=contact_id, user_message=user_message, location_id=location_id
     )
 
     # Check that response quality is properly assessed

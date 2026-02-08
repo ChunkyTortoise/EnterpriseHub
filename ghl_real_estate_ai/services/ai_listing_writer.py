@@ -75,9 +75,7 @@ class AIListingWriterService:
 
         # Generate based on style
         if style == ListingStyle.LUXURY.value:
-            listing = self._generate_luxury_listing(
-                address, bedrooms, bathrooms, sqft, price, features, neighborhood
-            )
+            listing = self._generate_luxury_listing(address, bedrooms, bathrooms, sqft, price, features, neighborhood)
         elif style == ListingStyle.FIRST_TIME_BUYER.value:
             listing = self._generate_first_time_buyer_listing(
                 address, bedrooms, bathrooms, sqft, price, features, neighborhood
@@ -87,9 +85,7 @@ class AIListingWriterService:
                 address, bedrooms, bathrooms, sqft, price, features, property_type
             )
         elif style == ListingStyle.FAMILY.value:
-            listing = self._generate_family_listing(
-                address, bedrooms, bathrooms, sqft, price, features, neighborhood
-            )
+            listing = self._generate_family_listing(address, bedrooms, bathrooms, sqft, price, features, neighborhood)
         else:  # Professional
             listing = self._generate_professional_listing(
                 address, bedrooms, bathrooms, sqft, price, features, property_type
@@ -139,9 +135,7 @@ class AIListingWriterService:
             for feature in features[:5]:
                 description += f"• {feature}\n"
 
-        description += (
-            f"\n\nPriced at ${price:,}, this property offers excellent value. "
-        )
+        description += f"\n\nPriced at ${price:,}, this property offers excellent value. "
         description += "Schedule your private showing today."
 
         highlights = [
@@ -183,9 +177,7 @@ class AIListingWriterService:
 
         description += f"\n\nFeaturing {bedrooms} generously-appointed bedrooms and "
         description += f"{bathrooms} spa-inspired bathrooms, every detail has been "
-        description += (
-            "meticulously curated to create an atmosphere of refined sophistication. "
-        )
+        description += "meticulously curated to create an atmosphere of refined sophistication. "
 
         if features:
             luxury_features = [f.lower() for f in features]
@@ -227,21 +219,15 @@ class AIListingWriterService:
 
         title = f"Perfect Starter Home - {bedrooms} Bed/{bathrooms} Bath"
 
-        description = (
-            f"Welcome home! This charming {bedrooms}-bedroom property at {address} "
-        )
+        description = f"Welcome home! This charming {bedrooms}-bedroom property at {address} "
         description += "is perfect for first-time buyers. "
 
         if neighborhood:
             description += f"\n\nLocated in the friendly {neighborhood} community, "
             description += "you'll love the neighborhood feel and convenience. "
 
-        description += (
-            f"\n\nInside, you'll find {sqft:,} sq ft of comfortable living space "
-        )
-        description += (
-            f"with {bedrooms} cozy bedrooms and {bathrooms} updated bathrooms. "
-        )
+        description += f"\n\nInside, you'll find {sqft:,} sq ft of comfortable living space "
+        description += f"with {bedrooms} cozy bedrooms and {bathrooms} updated bathrooms. "
 
         if features:
             description += "\n\nWhat makes this home special:\n"
@@ -289,9 +275,7 @@ class AIListingWriterService:
         description += f"is priced to sell at ${price:,}. "
 
         description += f"\n\nKey Investment Metrics:\n"
-        description += (
-            f"• {sqft:,} sq ft (${price_per_sqft:.2f}/sq ft)\n" if sqft else ""
-        )
+        description += f"• {sqft:,} sq ft (${price_per_sqft:.2f}/sq ft)\n" if sqft else ""
         description += f"• Estimated rental income: ${estimated_rent:,}/month\n"
         description += f"• {bedrooms} bedrooms attract stable tenants\n"
 
@@ -337,12 +321,8 @@ class AIListingWriterService:
         description += f"{sqft:,} sq ft of family-friendly living space. "
 
         if neighborhood:
-            description += (
-                f"\n\nThe {neighborhood} neighborhood is perfect for families - "
-            )
-            description += (
-                "great schools nearby, parks, and a friendly community atmosphere. "
-            )
+            description += f"\n\nThe {neighborhood} neighborhood is perfect for families - "
+            description += "great schools nearby, parks, and a friendly community atmosphere. "
 
         description += f"\n\nInside, you'll find plenty of room for everyone:\n"
         description += f"• {bedrooms} bedrooms for the whole family\n"
@@ -350,9 +330,7 @@ class AIListingWriterService:
 
         # Highlight family-friendly features
         family_keywords = ["yard", "garage", "basement", "playroom", "school", "park"]
-        family_features = [
-            f for f in features if any(k in f.lower() for k in family_keywords)
-        ]
+        family_features = [f for f in features if any(k in f.lower() for k in family_keywords)]
 
         if family_features:
             description += f"\n\nFamily-Friendly Features:\n"
@@ -376,9 +354,7 @@ class AIListingWriterService:
             "call_to_action": "Schedule a Family Tour Today!",
         }
 
-    def _generate_seo_keywords(
-        self, property_data: Dict[str, Any], style: str
-    ) -> List[str]:
+    def _generate_seo_keywords(self, property_data: Dict[str, Any], style: str) -> List[str]:
         """Generate SEO-optimized keywords"""
 
         keywords = []
@@ -444,9 +420,7 @@ class AIListingWriterService:
             },
         }
 
-    def generate_multiple_versions(
-        self, property_data: Dict[str, Any], styles: List[str] = None
-    ) -> Dict[str, Any]:
+    def generate_multiple_versions(self, property_data: Dict[str, Any], styles: List[str] = None) -> Dict[str, Any]:
         """
         Generate multiple listing versions for A/B testing
 
@@ -498,7 +472,7 @@ def demo_listing_writer():
     styles = ["professional", "luxury", "first_time_buyer", "family"]
 
     for style in styles:
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print(f"Style: {style.upper()}")
         print("=" * 70)
 
@@ -510,9 +484,7 @@ def demo_listing_writer():
         for highlight in listing["highlights"]:
             print(f"  • {highlight}")
         print(f"\nCTA: {listing['call_to_action']}")
-        print(
-            f"\nStats: {listing['word_count']} words, {listing['char_count']} characters"
-        )
+        print(f"\nStats: {listing['word_count']} words, {listing['char_count']} characters")
 
         if "seo_keywords" in listing:
             print(f"\nSEO Keywords: {', '.join(listing['seo_keywords'][:5])}...")

@@ -4,8 +4,9 @@ Tests for Jorge Performance Tracker Service.
 Validates latency tracking, percentile calculations, and SLA compliance.
 """
 
-import pytest
 import time
+
+import pytest
 
 from ghl_real_estate_ai.services.jorge.performance_tracker import (
     PerformanceTracker,
@@ -110,8 +111,7 @@ class TestPerformanceTracker:
 
         compliance = await tracker.check_sla_compliance()
         lead_bot_compliance = next(
-            (c for c in compliance if c["bot_name"] == "lead_bot" and c["operation"] == "full_qualification"),
-            None
+            (c for c in compliance if c["bot_name"] == "lead_bot" and c["operation"] == "full_qualification"), None
         )
 
         assert lead_bot_compliance is not None
@@ -131,8 +131,7 @@ class TestPerformanceTracker:
 
         compliance = await tracker.check_sla_compliance()
         lead_bot_compliance = next(
-            (c for c in compliance if c["bot_name"] == "lead_bot" and c["operation"] == "full_qualification"),
-            None
+            (c for c in compliance if c["bot_name"] == "lead_bot" and c["operation"] == "full_qualification"), None
         )
 
         assert lead_bot_compliance is not None

@@ -30,13 +30,13 @@ Example:
         failure_threshold=5,
         reset_timeout=60.0,
     )
-    
+
     async with breaker:
         result = await generate_embeddings(text)
 
     # Direct usage
     breaker = CircuitBreaker(name="vector_store")
-    
+
     @breaker.protect
     async def query_vector_store(query: str):
         return await vector_store.search(query)
@@ -91,24 +91,12 @@ class CircuitBreakerConfig(BaseModel):
     """
 
     name: str = Field(default="default", description="Circuit breaker name")
-    failure_threshold: int = Field(
-        default=5, ge=1, description="Failures before opening circuit"
-    )
-    success_threshold: int = Field(
-        default=3, ge=1, description="Successes to close from half-open"
-    )
-    reset_timeout: float = Field(
-        default=60.0, ge=1.0, description="Seconds before recovery attempt"
-    )
-    half_open_max_calls: int = Field(
-        default=3, ge=1, description="Max calls in half-open state"
-    )
-    exponential_base: float = Field(
-        default=2.0, ge=1.0, description="Exponential backoff base"
-    )
-    max_retry_delay: float = Field(
-        default=60.0, ge=1.0, description="Maximum retry delay"
-    )
+    failure_threshold: int = Field(default=5, ge=1, description="Failures before opening circuit")
+    success_threshold: int = Field(default=3, ge=1, description="Successes to close from half-open")
+    reset_timeout: float = Field(default=60.0, ge=1.0, description="Seconds before recovery attempt")
+    half_open_max_calls: int = Field(default=3, ge=1, description="Max calls in half-open state")
+    exponential_base: float = Field(default=2.0, ge=1.0, description="Exponential backoff base")
+    max_retry_delay: float = Field(default=60.0, ge=1.0, description="Maximum retry delay")
 
 
 class CircuitBreakerError(RAGException):
@@ -586,7 +574,7 @@ class CircuitBreaker:
             Delay in seconds before next retry
         """
         delay = min(
-            self.config.exponential_base ** attempt,
+            self.config.exponential_base**attempt,
             self.config.max_retry_delay,
         )
         return delay

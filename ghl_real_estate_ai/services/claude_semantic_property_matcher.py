@@ -2,24 +2,29 @@
 Claude Semantic Property Matcher - Advanced AI-Powered Property Matching
 Provides lifestyle-based matching using behavioral psychology and Claude AI.
 """
-import json
+
 import asyncio
+import json
 import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
 from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import streamlit as st
+
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.claude_conversation_intelligence import get_conversation_intelligence
 
 # Import existing services
 from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
-from ghl_real_estate_ai.services.claude_conversation_intelligence import get_conversation_intelligence
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
+
 
 @dataclass
 class PropertyMatch:
     """Enhanced property match with semantic analysis."""
+
     property: Dict[str, Any]
     match_score: float  # 0.0-1.0
     lifestyle_fit: float  # 0.0-1.0
@@ -29,15 +34,18 @@ class PropertyMatch:
     presentation_strategy: str
     viewing_probability: float
 
+
 @dataclass
 class LifestyleProfile:
     """Detailed lifestyle profile extracted from lead behavior."""
+
     personality_type: str  # "analytical", "emotional", "social", "practical"
     life_stage: str  # "young_professional", "growing_family", "empty_nester", "retiree"
     priorities: Dict[str, float]  # {"status": 0.8, "convenience": 0.6, ...}
     hidden_desires: List[str]
     future_planning: Dict[str, Any]
     decision_style: str  # "thorough", "quick", "collaborative", "delegated"
+
 
 class ClaudeSemanticPropertyMatcher:
     """
@@ -56,10 +64,7 @@ class ClaudeSemanticPropertyMatcher:
             from ghl_real_estate_ai.core.llm_client import LLMClient
             from ghl_real_estate_ai.ghl_utils.config import settings
 
-            self.claude_client = LLMClient(
-                provider="claude",
-                model=settings.claude_model
-            )
+            self.claude_client = LLMClient(provider="claude", model=settings.claude_model)
             self.enabled = True
             logger.info("ClaudeSemanticPropertyMatcher initialized successfully")
         except Exception as e:
@@ -67,7 +72,9 @@ class ClaudeSemanticPropertyMatcher:
             self.claude_client = None
             self.enabled = False
 
-    async def find_lifestyle_matches(self, lead_profile: Dict, properties: List[Dict] = None, limit: int = 5) -> List[PropertyMatch]:
+    async def find_lifestyle_matches(
+        self, lead_profile: Dict, properties: List[Dict] = None, limit: int = 5
+    ) -> List[PropertyMatch]:
         """
         Claude-powered lifestyle matching beyond basic filters.
 
@@ -102,7 +109,9 @@ class ClaudeSemanticPropertyMatcher:
                     matches.append(match)
 
             # Sort by combined score (match + lifestyle + psychology)
-            matches.sort(key=lambda m: (m.match_score * 0.4 + m.lifestyle_fit * 0.4 + m.viewing_probability * 0.2), reverse=True)
+            matches.sort(
+                key=lambda m: m.match_score * 0.4 + m.lifestyle_fit * 0.4 + m.viewing_probability * 0.2, reverse=True
+            )
 
             logger.info(f"Generated {len(matches)} lifestyle matches for {lead_profile.get('lead_id', 'unknown')}")
             return matches[:limit]
@@ -111,7 +120,9 @@ class ClaudeSemanticPropertyMatcher:
             logger.error(f"Error in lifestyle matching: {e}")
             return self._get_fallback_matches(lead_profile, properties, limit)
 
-    async def generate_personalized_presentation(self, property: Dict, lead: Dict, match_analysis: PropertyMatch = None) -> Dict:
+    async def generate_personalized_presentation(
+        self, property: Dict, lead: Dict, match_analysis: PropertyMatch = None
+    ) -> Dict:
         """
         Create personalized property presentations with Claude.
 
@@ -131,7 +142,7 @@ class ClaudeSemanticPropertyMatcher:
 
             response = await self.claude_client.chat(
                 messages=[{"role": "user", "content": presentation_prompt}],
-                temperature=0.6  # Balanced creativity and consistency
+                temperature=0.6,  # Balanced creativity and consistency
             )
 
             presentation = self._parse_presentation_response(response.content)
@@ -162,7 +173,7 @@ class ClaudeSemanticPropertyMatcher:
 
             response = await self.claude_client.chat(
                 messages=[{"role": "user", "content": prediction_prompt}],
-                temperature=0.3  # Lower temperature for consistent predictions
+                temperature=0.3,  # Lower temperature for consistent predictions
             )
 
             prediction = self._parse_viewing_prediction(response.content)
@@ -174,7 +185,7 @@ class ClaudeSemanticPropertyMatcher:
 
     async def _extract_lifestyle_profile(self, lead_profile: Dict) -> LifestyleProfile:
         """Extract detailed lifestyle profile using Claude analysis."""
-        lead_id = lead_profile.get('lead_id', 'unknown')
+        lead_id = lead_profile.get("lead_id", "unknown")
 
         # Check cache first
         if lead_id in self.lifestyle_cache:
@@ -189,8 +200,7 @@ class ClaudeSemanticPropertyMatcher:
             lifestyle_prompt = self._build_lifestyle_analysis_prompt(lead_profile)
 
             response = await self.claude_client.chat(
-                messages=[{"role": "user", "content": lifestyle_prompt}],
-                temperature=0.4
+                messages=[{"role": "user", "content": lifestyle_prompt}], temperature=0.4
             )
 
             lifestyle_profile = self._parse_lifestyle_profile(response.content)
@@ -198,34 +208,37 @@ class ClaudeSemanticPropertyMatcher:
             # Cache the result
             self.lifestyle_cache[lead_id] = (lifestyle_profile, datetime.now())
 
-            logger.info(f"Extracted lifestyle profile: {lifestyle_profile.personality_type}, {lifestyle_profile.life_stage}")
+            logger.info(
+                f"Extracted lifestyle profile: {lifestyle_profile.personality_type}, {lifestyle_profile.life_stage}"
+            )
             return lifestyle_profile
 
         except Exception as e:
             logger.error(f"Error extracting lifestyle profile: {e}")
             return self._get_fallback_lifestyle_profile()
 
-    async def _analyze_property_match(self, property_data: Dict, lead_profile: Dict, lifestyle_profile: LifestyleProfile) -> PropertyMatch:
+    async def _analyze_property_match(
+        self, property_data: Dict, lead_profile: Dict, lifestyle_profile: LifestyleProfile
+    ) -> PropertyMatch:
         """Analyze individual property match with psychological insights."""
         try:
             match_prompt = self._build_property_match_prompt(property_data, lead_profile, lifestyle_profile)
 
             response = await self.claude_client.chat(
-                messages=[{"role": "user", "content": match_prompt}],
-                temperature=0.5
+                messages=[{"role": "user", "content": match_prompt}], temperature=0.5
             )
 
             match_data = self._parse_property_match_response(response.content)
 
             return PropertyMatch(
                 property=property_data,
-                match_score=float(match_data.get('match_score', 0.5)),
-                lifestyle_fit=float(match_data.get('lifestyle_fit', 0.5)),
-                psychological_appeal=match_data.get('psychological_appeal', 'Standard appeal'),
-                reasoning=match_data.get('reasoning', 'Basic feature matching'),
-                objection_predictions=match_data.get('objection_predictions', []),
-                presentation_strategy=match_data.get('presentation_strategy', 'Standard presentation'),
-                viewing_probability=float(match_data.get('viewing_probability', 0.5))
+                match_score=float(match_data.get("match_score", 0.5)),
+                lifestyle_fit=float(match_data.get("lifestyle_fit", 0.5)),
+                psychological_appeal=match_data.get("psychological_appeal", "Standard appeal"),
+                reasoning=match_data.get("reasoning", "Basic feature matching"),
+                objection_predictions=match_data.get("objection_predictions", []),
+                presentation_strategy=match_data.get("presentation_strategy", "Standard presentation"),
+                viewing_probability=float(match_data.get("viewing_probability", 0.5)),
             )
 
         except Exception as e:
@@ -328,7 +341,9 @@ IMPORTANT: Analyze each lifestyle dimension carefully. Look for:
 - Long-term lifestyle compatibility considerations
 """
 
-    def _build_property_match_prompt(self, property_data: Dict, lead_profile: Dict, lifestyle_profile: LifestyleProfile) -> str:
+    def _build_property_match_prompt(
+        self, property_data: Dict, lead_profile: Dict, lifestyle_profile: LifestyleProfile
+    ) -> str:
         """Build prompt for property-specific match analysis."""
         return f"""
 As a real estate psychology expert, analyze how well this property matches the lead's psychological profile.
@@ -444,19 +459,20 @@ Provide just the probability score (e.g., 0.73) with brief reasoning.
         """Parse Claude's lifestyle analysis response."""
         try:
             import re
-            json_match = re.search(r'\\{.*\\}', response_content, re.DOTALL)
+
+            json_match = re.search(r"\\{.*\\}", response_content, re.DOTALL)
             if json_match:
                 data = json.loads(json_match.group())
             else:
                 data = self._extract_fallback_lifestyle_data(response_content)
 
             return LifestyleProfile(
-                personality_type=data.get('personality_type', 'analytical'),
-                life_stage=data.get('life_stage', 'young_professional'),
-                priorities=data.get('priorities', {}),
-                hidden_desires=data.get('hidden_desires', []),
-                future_planning=data.get('future_planning', {}),
-                decision_style=data.get('decision_style', 'thorough')
+                personality_type=data.get("personality_type", "analytical"),
+                life_stage=data.get("life_stage", "young_professional"),
+                priorities=data.get("priorities", {}),
+                hidden_desires=data.get("hidden_desires", []),
+                future_planning=data.get("future_planning", {}),
+                decision_style=data.get("decision_style", "thorough"),
             )
         except Exception as e:
             logger.error(f"Error parsing lifestyle profile: {e}")
@@ -466,7 +482,8 @@ Provide just the probability score (e.g., 0.73) with brief reasoning.
         """Parse Claude's property match analysis."""
         try:
             import re
-            json_match = re.search(r'\\{.*\\}', response_content, re.DOTALL)
+
+            json_match = re.search(r"\\{.*\\}", response_content, re.DOTALL)
             if json_match:
                 return json.loads(json_match.group())
             else:
@@ -478,7 +495,7 @@ Provide just the probability score (e.g., 0.73) with brief reasoning.
                     "reasoning": "Matches key criteria",
                     "objection_predictions": ["Budget", "Timeline"],
                     "presentation_strategy": "Focus on value and convenience",
-                    "viewing_probability": 0.6
+                    "viewing_probability": 0.6,
                 }
         except Exception as e:
             logger.error(f"Error parsing property match: {e}")
@@ -488,7 +505,8 @@ Provide just the probability score (e.g., 0.73) with brief reasoning.
         """Parse Claude's presentation strategy response."""
         try:
             import re
-            json_match = re.search(r'\\{.*\\}', response_content, re.DOTALL)
+
+            json_match = re.search(r"\\{.*\\}", response_content, re.DOTALL)
             if json_match:
                 return json.loads(json_match.group())
             else:
@@ -496,7 +514,7 @@ Provide just the probability score (e.g., 0.73) with brief reasoning.
                     "opening_hook": "This property offers excellent value",
                     "key_selling_points": ["Great location", "Updated features"],
                     "story_narrative": "Perfect for your lifestyle",
-                    "next_steps": "Schedule a viewing"
+                    "next_steps": "Schedule a viewing",
                 }
         except Exception as e:
             logger.error(f"Error parsing presentation: {e}")
@@ -506,8 +524,9 @@ Provide just the probability score (e.g., 0.73) with brief reasoning.
         """Parse viewing probability from Claude response."""
         try:
             import re
+
             # Look for float values in the response
-            float_match = re.search(r'(0\\.\\d+|1\\.Union[0, 0]|1)', response_content)
+            float_match = re.search(r"(0\\.\\d+|1\\.Union[0, 0]|1)", response_content)
             if float_match:
                 return float(float_match.group())
             else:
@@ -521,23 +540,22 @@ Provide just the probability score (e.g., 0.73) with brief reasoning.
             properties = self.base_matcher.listings
 
         # Use basic matcher for fallback
-        basic_matches = self.base_matcher.find_matches(
-            lead_profile.get('extracted_preferences', {}),
-            limit=limit
-        )
+        basic_matches = self.base_matcher.find_matches(lead_profile.get("extracted_preferences", {}), limit=limit)
 
         fallback_matches = []
         for match in basic_matches:
-            fallback_matches.append(PropertyMatch(
-                property=match,
-                match_score=match.get('match_score', 70) / 100.0,
-                lifestyle_fit=0.6,
-                psychological_appeal="Good basic compatibility",
-                reasoning="Matches basic criteria and preferences",
-                objection_predictions=["Budget questions", "Timeline concerns"],
-                presentation_strategy="Focus on key features and value",
-                viewing_probability=0.6
-            ))
+            fallback_matches.append(
+                PropertyMatch(
+                    property=match,
+                    match_score=match.get("match_score", 70) / 100.0,
+                    lifestyle_fit=0.6,
+                    psychological_appeal="Good basic compatibility",
+                    reasoning="Matches basic criteria and preferences",
+                    objection_predictions=["Budget questions", "Timeline concerns"],
+                    presentation_strategy="Focus on key features and value",
+                    viewing_probability=0.6,
+                )
+            )
 
         return fallback_matches
 
@@ -553,7 +571,6 @@ Provide just the probability score (e.g., 0.73) with brief reasoning.
             "career": 0.6,
             "lifestyle": 0.5,
             "privacy": 0.5,
-
             # Enhanced Dimensions (16+ New)
             "social_connectivity": 0.4,
             "cultural_fit": 0.5,
@@ -570,7 +587,7 @@ Provide just the probability score (e.g., 0.73) with brief reasoning.
             "educational_priorities": 0.4,
             "entertainment_hosting": 0.3,
             "outdoor_recreation": 0.4,
-            "cultural_access": 0.4
+            "cultural_access": 0.4,
         }
 
         enhanced_future_planning = {
@@ -579,7 +596,7 @@ Provide just the probability score (e.g., 0.73) with brief reasoning.
             "financial_goals": "wealth_building",
             "lifestyle_evolution": "upgrading",
             "geographic_flexibility": "willing_to_relocate",
-            "housing_permanence": "medium_term"
+            "housing_permanence": "medium_term",
         }
 
         return LifestyleProfile(
@@ -591,10 +608,10 @@ Provide just the probability score (e.g., 0.73) with brief reasoning.
                 "Investment growth potential",
                 "Professional image enhancement",
                 "Future family accommodation",
-                "Technology-enabled living"
+                "Technology-enabled living",
             ],
             future_planning=enhanced_future_planning,
-            decision_style="thorough"
+            decision_style="thorough",
         )
 
     def _get_fallback_property_match(self, property_data: Dict) -> PropertyMatch:
@@ -607,7 +624,7 @@ Provide just the probability score (e.g., 0.73) with brief reasoning.
             reasoning="Basic feature matching",
             objection_predictions=["Budget", "Location"],
             presentation_strategy="Standard presentation",
-            viewing_probability=0.6
+            viewing_probability=0.6,
         )
 
     def _get_fallback_presentation(self, property: Dict, lead: Dict) -> Dict:
@@ -618,7 +635,7 @@ Provide just the probability score (e.g., 0.73) with brief reasoning.
             "story_narrative": "Perfect fit for your lifestyle and budget",
             "logical_arguments": ["Competitive pricing", "Strong neighborhood"],
             "emotional_appeals": ["Comfort", "Security", "Pride of ownership"],
-            "next_steps": "Schedule a viewing to see it in person"
+            "next_steps": "Schedule a viewing to see it in person",
         }
 
     def render_semantic_matching_interface(self, lead_profile: Dict) -> None:
@@ -643,20 +660,22 @@ Provide just the probability score (e.g., 0.73) with brief reasoning.
                     asyncio.set_event_loop(loop)
 
                 # Get semantic matches
-                matches = loop.run_until_complete(
-                    self.find_lifestyle_matches(lead_profile, limit=3)
-                )
+                matches = loop.run_until_complete(self.find_lifestyle_matches(lead_profile, limit=3))
 
                 if matches:
                     st.success(f"Found {len(matches)} psychologically compatible properties")
 
                     for i, match in enumerate(matches, 1):
-                        with st.expander(f"🏠 Match #{i}: {match.property.get('address', 'Unknown Address')}", expanded=(i == 1)):
+                        with st.expander(
+                            f"🏠 Match #{i}: {match.property.get('address', 'Unknown Address')}", expanded=(i == 1)
+                        ):
                             col1, col2 = st.columns([2, 1])
 
                             with col1:
                                 st.markdown(f"**Price:** ${match.property.get('price', 0):,}")
-                                st.markdown(f"**Beds/Baths:** {match.property.get('beds', 0)}BD / {match.property.get('baths', 0)}BA")
+                                st.markdown(
+                                    f"**Beds/Baths:** {match.property.get('beds', 0)}BD / {match.property.get('baths', 0)}BA"
+                                )
                                 st.markdown(f"**Sqft:** {match.property.get('sqft', 0):,}")
 
                             with col2:
@@ -683,28 +702,26 @@ Provide just the probability score (e.g., 0.73) with brief reasoning.
                             if st.button(f"📝 Generate Presentation", key=f"presentation_{i}"):
                                 with st.spinner("Generating personalized presentation..."):
                                     presentation = loop.run_until_complete(
-                                        self.generate_personalized_presentation(
-                                            match.property,
-                                            lead_profile,
-                                            match
-                                        )
+                                        self.generate_personalized_presentation(match.property, lead_profile, match)
                                     )
 
                                     st.markdown("##### 🎣 Opening Hook")
-                                    st.success(presentation.get('opening_hook', ''))
+                                    st.success(presentation.get("opening_hook", ""))
 
                                     st.markdown("##### 🎯 Key Selling Points")
-                                    for point in presentation.get('key_selling_points', []):
+                                    for point in presentation.get("key_selling_points", []):
                                         st.markdown(f"• {point}")
 
                                     st.markdown("##### 📖 Story Narrative")
-                                    st.info(presentation.get('story_narrative', ''))
+                                    st.info(presentation.get("story_narrative", ""))
 
                 else:
                     st.warning("No compatible properties found. Try adjusting search criteria.")
 
+
 # Global instance for easy access
 _semantic_property_matcher = None
+
 
 def get_semantic_property_matcher() -> ClaudeSemanticPropertyMatcher:
     """Get global semantic property matcher instance."""

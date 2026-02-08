@@ -28,22 +28,25 @@ Version: 1.0.0
 """
 
 import asyncio
-import time
-import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Callable
-from dataclasses import dataclass, field
-from collections import deque, defaultdict
-import statistics
 import json
+import logging
+import statistics
 import threading
+import time
+from collections import defaultdict, deque
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any, Callable, Dict, List, Optional
+
 import psutil
 
 logger = logging.getLogger(__name__)
 
+
 class JorgeMetricType(Enum):
     """Performance metrics specific to Jorge bots"""
+
     # Response Performance
     CONVERSATION_LATENCY = "conversation_latency"
     STALL_DETECTION_LATENCY = "stall_detection_latency"
@@ -72,16 +75,20 @@ class JorgeMetricType(Enum):
     CPU_UTILIZATION = "cpu_utilization"
     CACHE_HIT_RATE = "cache_hit_rate"
 
+
 class AlertLevel(Enum):
     """Alert severity levels for Jorge performance"""
+
     INFO = "info"
     WARNING = "warning"
     CRITICAL = "critical"
     BUSINESS_IMPACT = "business_impact"
 
+
 @dataclass
 class JorgePerformanceAlert:
     """Performance alert for Jorge bots"""
+
     alert_id: str
     alert_level: AlertLevel
     metric_type: JorgeMetricType
@@ -94,9 +101,11 @@ class JorgePerformanceAlert:
     resolved: bool = False
     resolution_time: Optional[datetime] = None
 
+
 @dataclass
 class JorgePerformanceThresholds:
     """Performance thresholds for Jorge bot alerting"""
+
     # Response Time Thresholds (milliseconds)
     conversation_latency_warning: float = 300.0
     conversation_latency_critical: float = 500.0
@@ -124,9 +133,11 @@ class JorgePerformanceThresholds:
     cpu_utilization_warning: float = 70.0
     cpu_utilization_critical: float = 85.0
 
+
 @dataclass
 class ConversationMetrics:
     """Metrics for individual conversations"""
+
     conversation_id: str
     bot_type: str
     start_time: datetime
@@ -139,6 +150,7 @@ class ConversationMetrics:
     memory_usage_mb: float = 0.0
     completed: bool = False
     completion_time: Optional[datetime] = None
+
 
 class JorgePerformanceMonitor:
     """Real-time performance monitoring for Jorge bots"""
@@ -190,13 +202,16 @@ class JorgePerformanceMonitor:
         """Record the start of a conversation"""
         with self._lock:
             self.active_conversations[conversation_id] = ConversationMetrics(
-                conversation_id=conversation_id,
-                bot_type=bot_type,
-                start_time=datetime.now()
+                conversation_id=conversation_id, bot_type=bot_type, start_time=datetime.now()
             )
 
-    def record_conversation_turn(self, conversation_id: str, response_time_ms: float,
-                               stall_detected: bool = False, intervention_deployed: bool = False) -> None:
+    def record_conversation_turn(
+        self,
+        conversation_id: str,
+        response_time_ms: float,
+        stall_detected: bool = False,
+        intervention_deployed: bool = False,
+    ) -> None:
         """Record a conversation turn with performance metrics"""
         with self._lock:
             if conversation_id not in self.active_conversations:
@@ -211,9 +226,8 @@ class JorgePerformanceMonitor:
                 metrics.avg_response_time_ms = response_time_ms
             else:
                 metrics.avg_response_time_ms = (
-                    (metrics.avg_response_time_ms * (metrics.total_turns - 1) + response_time_ms) /
-                    metrics.total_turns
-                )
+                    metrics.avg_response_time_ms * (metrics.total_turns - 1) + response_time_ms
+                ) / metrics.total_turns
 
             metrics.max_response_time_ms = max(metrics.max_response_time_ms, response_time_ms)
 
@@ -223,37 +237,38 @@ class JorgePerformanceMonitor:
                 metrics.interventions_deployed += 1
 
             # Record system-wide metrics
-            self._record_metric(JorgeMetricType.CONVERSATION_LATENCY, response_time_ms, {
-                'conversation_id': conversation_id,
-                'bot_type': metrics.bot_type,
-                'turn': metrics.total_turns
-            })
+            self._record_metric(
+                JorgeMetricType.CONVERSATION_LATENCY,
+                response_time_ms,
+                {"conversation_id": conversation_id, "bot_type": metrics.bot_type, "turn": metrics.total_turns},
+            )
 
             # Check for performance alerts
             self._check_response_time_alerts(conversation_id, response_time_ms, metrics.bot_type)
 
-    def record_stall_detection(self, conversation_id: str, detection_time_ms: float,
-                             accuracy_score: float) -> None:
+    def record_stall_detection(self, conversation_id: str, detection_time_ms: float, accuracy_score: float) -> None:
         """Record stall detection performance"""
         with self._lock:
             # Record metrics
-            self._record_metric(JorgeMetricType.STALL_DETECTION_LATENCY, detection_time_ms, {
-                'conversation_id': conversation_id
-            })
-            self._record_metric(JorgeMetricType.STALL_DETECTION_ACCURACY, accuracy_score, {
-                'conversation_id': conversation_id
-            })
+            self._record_metric(
+                JorgeMetricType.STALL_DETECTION_LATENCY, detection_time_ms, {"conversation_id": conversation_id}
+            )
+            self._record_metric(
+                JorgeMetricType.STALL_DETECTION_ACCURACY, accuracy_score, {"conversation_id": conversation_id}
+            )
 
             # Check alerts
             if detection_time_ms > self.thresholds.stall_detection_latency_warning:
                 self._create_alert(
-                    AlertLevel.WARNING if detection_time_ms < self.thresholds.stall_detection_latency_critical else AlertLevel.CRITICAL,
+                    AlertLevel.WARNING
+                    if detection_time_ms < self.thresholds.stall_detection_latency_critical
+                    else AlertLevel.CRITICAL,
                     JorgeMetricType.STALL_DETECTION_LATENCY,
                     detection_time_ms,
                     self.thresholds.stall_detection_latency_warning,
                     f"Stall detection latency high: {detection_time_ms:.1f}ms",
                     "seller",
-                    conversation_id
+                    conversation_id,
                 )
 
     def record_lead_reengagement(self, success: bool, lead_type: str, days_since_contact: int) -> None:
@@ -263,33 +278,35 @@ class JorgePerformanceMonitor:
             success_value = 1.0 if success else 0.0
 
             # Weight based on lead difficulty (cold leads success worth more)
-            weight_multiplier = {
-                'hot': 1.0,
-                'warm': 1.2,
-                'cold': 1.5
-            }.get(lead_type, 1.0)
+            weight_multiplier = {"hot": 1.0, "warm": 1.2, "cold": 1.5}.get(lead_type, 1.0)
 
             weighted_success = success_value * weight_multiplier
 
-            self._record_metric(JorgeMetricType.LEAD_REENGAGEMENT_RATE, weighted_success, {
-                'lead_type': lead_type,
-                'days_since_contact': days_since_contact,
-                'success': success
-            })
+            self._record_metric(
+                JorgeMetricType.LEAD_REENGAGEMENT_RATE,
+                weighted_success,
+                {"lead_type": lead_type, "days_since_contact": days_since_contact, "success": success},
+            )
 
-    def record_property_match(self, match_accuracy: float, buyer_preferences: Dict[str, Any],
-                            property_features: Dict[str, Any]) -> None:
+    def record_property_match(
+        self, match_accuracy: float, buyer_preferences: Dict[str, Any], property_features: Dict[str, Any]
+    ) -> None:
         """Record property matching accuracy"""
         with self._lock:
-            self._record_metric(JorgeMetricType.PROPERTY_MATCHING_ACCURACY, match_accuracy, {
-                'buyer_bedrooms': buyer_preferences.get('bedrooms'),
-                'buyer_budget': buyer_preferences.get('budget'),
-                'property_bedrooms': property_features.get('bedrooms'),
-                'property_price': property_features.get('price')
-            })
+            self._record_metric(
+                JorgeMetricType.PROPERTY_MATCHING_ACCURACY,
+                match_accuracy,
+                {
+                    "buyer_bedrooms": buyer_preferences.get("bedrooms"),
+                    "buyer_budget": buyer_preferences.get("budget"),
+                    "property_bedrooms": property_features.get("bedrooms"),
+                    "property_price": property_features.get("price"),
+                },
+            )
 
-    def record_qualification_completion(self, conversation_id: str, qualification_score: float,
-                                      methodology_adherence_score: float) -> None:
+    def record_qualification_completion(
+        self, conversation_id: str, qualification_score: float, methodology_adherence_score: float
+    ) -> None:
         """Record completion of lead qualification"""
         with self._lock:
             if conversation_id in self.active_conversations:
@@ -302,32 +319,35 @@ class JorgePerformanceMonitor:
                 duration = (metrics.completion_time - metrics.start_time).total_seconds()
 
                 # Record business metrics
-                self._record_metric(JorgeMetricType.JORGE_METHODOLOGY_ADHERENCE, methodology_adherence_score, {
-                    'conversation_id': conversation_id,
-                    'bot_type': metrics.bot_type,
-                    'duration_seconds': duration
-                })
+                self._record_metric(
+                    JorgeMetricType.JORGE_METHODOLOGY_ADHERENCE,
+                    methodology_adherence_score,
+                    {"conversation_id": conversation_id, "bot_type": metrics.bot_type, "duration_seconds": duration},
+                )
 
                 # Move to completed conversations
                 del self.active_conversations[conversation_id]
 
-    def record_business_outcome(self, conversation_id: str, outcome_type: str,
-                              revenue_attributed: float = 0.0) -> None:
+    def record_business_outcome(self, conversation_id: str, outcome_type: str, revenue_attributed: float = 0.0) -> None:
         """Record business outcome from conversation"""
         with self._lock:
             outcome_value = {
-                'qualified': 1.0,
-                'appointment_set': 2.0,
-                'showing_booked': 3.0,
-                'offer_made': 5.0,
-                'deal_closed': 10.0
+                "qualified": 1.0,
+                "appointment_set": 2.0,
+                "showing_booked": 3.0,
+                "offer_made": 5.0,
+                "deal_closed": 10.0,
             }.get(outcome_type, 0.0)
 
-            self._record_metric(JorgeMetricType.CONVERSION_FUNNEL_EFFICIENCY, outcome_value, {
-                'conversation_id': conversation_id,
-                'outcome_type': outcome_type,
-                'revenue_attributed': revenue_attributed
-            })
+            self._record_metric(
+                JorgeMetricType.CONVERSION_FUNNEL_EFFICIENCY,
+                outcome_value,
+                {
+                    "conversation_id": conversation_id,
+                    "outcome_type": outcome_type,
+                    "revenue_attributed": revenue_attributed,
+                },
+            )
 
     def get_real_time_metrics(self) -> Dict[str, Any]:
         """Get current real-time performance metrics"""
@@ -336,13 +356,13 @@ class JorgePerformanceMonitor:
 
             # Calculate current performance
             metrics = {
-                'timestamp': current_time.isoformat(),
-                'active_conversations': len(self.active_conversations),
-                'system_performance': self._calculate_system_performance(),
-                'accuracy_metrics': self._calculate_accuracy_metrics(),
-                'business_metrics': self._calculate_business_metrics(),
-                'alert_summary': self._get_alert_summary(),
-                'trend_analysis': self._calculate_trend_analysis()
+                "timestamp": current_time.isoformat(),
+                "active_conversations": len(self.active_conversations),
+                "system_performance": self._calculate_system_performance(),
+                "accuracy_metrics": self._calculate_accuracy_metrics(),
+                "business_metrics": self._calculate_business_metrics(),
+                "alert_summary": self._get_alert_summary(),
+                "trend_analysis": self._calculate_trend_analysis(),
             }
 
             return metrics
@@ -355,16 +375,16 @@ class JorgePerformanceMonitor:
 
             metrics = self.active_conversations[conversation_id]
             return {
-                'conversation_id': conversation_id,
-                'bot_type': metrics.bot_type,
-                'duration_seconds': (datetime.now() - metrics.start_time).total_seconds(),
-                'total_turns': metrics.total_turns,
-                'avg_response_time_ms': metrics.avg_response_time_ms,
-                'max_response_time_ms': metrics.max_response_time_ms,
-                'stalls_detected': metrics.stalls_detected,
-                'interventions_deployed': metrics.interventions_deployed,
-                'qualification_score': metrics.qualification_score,
-                'memory_usage_mb': metrics.memory_usage_mb
+                "conversation_id": conversation_id,
+                "bot_type": metrics.bot_type,
+                "duration_seconds": (datetime.now() - metrics.start_time).total_seconds(),
+                "total_turns": metrics.total_turns,
+                "avg_response_time_ms": metrics.avg_response_time_ms,
+                "max_response_time_ms": metrics.max_response_time_ms,
+                "stalls_detected": metrics.stalls_detected,
+                "interventions_deployed": metrics.interventions_deployed,
+                "qualification_score": metrics.qualification_score,
+                "memory_usage_mb": metrics.memory_usage_mb,
             }
 
     def get_performance_summary(self, hours_back: int = 24) -> Dict[str, Any]:
@@ -373,13 +393,13 @@ class JorgePerformanceMonitor:
             cutoff_time = datetime.now() - timedelta(hours=hours_back)
 
             summary = {
-                'time_period_hours': hours_back,
-                'response_time_performance': self._summarize_response_times(cutoff_time),
-                'accuracy_performance': self._summarize_accuracy_metrics(cutoff_time),
-                'business_performance': self._summarize_business_metrics(cutoff_time),
-                'system_performance': self._summarize_system_metrics(cutoff_time),
-                'alert_summary': self._summarize_alerts(cutoff_time),
-                'performance_score': self._calculate_overall_performance_score(cutoff_time)
+                "time_period_hours": hours_back,
+                "response_time_performance": self._summarize_response_times(cutoff_time),
+                "accuracy_performance": self._summarize_accuracy_metrics(cutoff_time),
+                "business_performance": self._summarize_business_metrics(cutoff_time),
+                "system_performance": self._summarize_system_metrics(cutoff_time),
+                "alert_summary": self._summarize_alerts(cutoff_time),
+                "performance_score": self._calculate_overall_performance_score(cutoff_time),
             }
 
             return summary
@@ -395,11 +415,7 @@ class JorgePerformanceMonitor:
     # Private methods
     def _record_metric(self, metric_type: JorgeMetricType, value: float, context: Dict[str, Any]) -> None:
         """Record a metric value with context"""
-        metric_entry = {
-            'value': value,
-            'timestamp': datetime.now(),
-            'context': context
-        }
+        metric_entry = {"value": value, "timestamp": datetime.now(), "context": context}
 
         self.metrics[metric_type].append(metric_entry)
 
@@ -410,9 +426,16 @@ class JorgePerformanceMonitor:
             except Exception as e:
                 logger.error(f"Error in metric handler: {e}")
 
-    def _create_alert(self, level: AlertLevel, metric_type: JorgeMetricType,
-                     current_value: float, threshold_value: float,
-                     message: str, bot_type: str, conversation_id: Optional[str] = None) -> None:
+    def _create_alert(
+        self,
+        level: AlertLevel,
+        metric_type: JorgeMetricType,
+        current_value: float,
+        threshold_value: float,
+        message: str,
+        bot_type: str,
+        conversation_id: Optional[str] = None,
+    ) -> None:
         """Create and process a performance alert"""
         alert_id = f"{metric_type.value}_{int(time.time())}"
 
@@ -424,7 +447,7 @@ class JorgePerformanceMonitor:
             threshold_value=threshold_value,
             message=message,
             bot_type=bot_type,
-            conversation_id=conversation_id
+            conversation_id=conversation_id,
         )
 
         self.active_alerts[alert_id] = alert
@@ -442,8 +465,11 @@ class JorgePerformanceMonitor:
     def _check_response_time_alerts(self, conversation_id: str, response_time_ms: float, bot_type: str) -> None:
         """Check if response time triggers alerts"""
         if response_time_ms > self.thresholds.conversation_latency_warning:
-            level = (AlertLevel.CRITICAL if response_time_ms > self.thresholds.conversation_latency_critical
-                    else AlertLevel.WARNING)
+            level = (
+                AlertLevel.CRITICAL
+                if response_time_ms > self.thresholds.conversation_latency_critical
+                else AlertLevel.WARNING
+            )
 
             self._create_alert(
                 level,
@@ -452,7 +478,7 @@ class JorgePerformanceMonitor:
                 self.thresholds.conversation_latency_warning,
                 f"Conversation response time high: {response_time_ms:.1f}ms",
                 bot_type,
-                conversation_id
+                conversation_id,
             )
 
     def _calculate_system_performance(self) -> Dict[str, Any]:
@@ -463,13 +489,12 @@ class JorgePerformanceMonitor:
             cpu_percent = psutil.cpu_percent()
 
             return {
-                'memory_usage_mb': memory_mb,
-                'cpu_utilization_percent': cpu_percent,
-                'active_conversations': len(self.active_conversations),
-                'memory_per_conversation_mb': (
-                    memory_mb / len(self.active_conversations)
-                    if self.active_conversations else 0
-                )
+                "memory_usage_mb": memory_mb,
+                "cpu_utilization_percent": cpu_percent,
+                "active_conversations": len(self.active_conversations),
+                "memory_per_conversation_mb": (
+                    memory_mb / len(self.active_conversations) if self.active_conversations else 0
+                ),
             }
         except Exception as e:
             logger.error(f"Error calculating system performance: {e}")
@@ -480,50 +505,44 @@ class JorgePerformanceMonitor:
         recent_cutoff = datetime.now() - timedelta(hours=1)
 
         # Get recent accuracy measurements
-        stall_accuracy = self._get_recent_metric_average(
-            JorgeMetricType.STALL_DETECTION_ACCURACY, recent_cutoff
-        )
-        reengagement_rate = self._get_recent_metric_average(
-            JorgeMetricType.LEAD_REENGAGEMENT_RATE, recent_cutoff
-        )
-        matching_accuracy = self._get_recent_metric_average(
-            JorgeMetricType.PROPERTY_MATCHING_ACCURACY, recent_cutoff
-        )
+        stall_accuracy = self._get_recent_metric_average(JorgeMetricType.STALL_DETECTION_ACCURACY, recent_cutoff)
+        reengagement_rate = self._get_recent_metric_average(JorgeMetricType.LEAD_REENGAGEMENT_RATE, recent_cutoff)
+        matching_accuracy = self._get_recent_metric_average(JorgeMetricType.PROPERTY_MATCHING_ACCURACY, recent_cutoff)
 
         return {
-            'stall_detection_accuracy': stall_accuracy,
-            'lead_reengagement_rate': reengagement_rate,
-            'property_matching_accuracy': matching_accuracy,
-            'target_stall_detection': 0.913,
-            'target_reengagement': 0.785,
-            'target_matching': 0.897
+            "stall_detection_accuracy": stall_accuracy,
+            "lead_reengagement_rate": reengagement_rate,
+            "property_matching_accuracy": matching_accuracy,
+            "target_stall_detection": 0.913,
+            "target_reengagement": 0.785,
+            "target_matching": 0.897,
         }
 
     def _calculate_business_metrics(self) -> Dict[str, Any]:
         """Calculate current business performance metrics"""
         recent_cutoff = datetime.now() - timedelta(hours=1)
 
-        qualified_leads = len([
-            m for m in self.metrics[JorgeMetricType.CONVERSION_FUNNEL_EFFICIENCY]
-            if m['timestamp'] >= recent_cutoff and m['context'].get('outcome_type') == 'qualified'
-        ])
+        qualified_leads = len(
+            [
+                m
+                for m in self.metrics[JorgeMetricType.CONVERSION_FUNNEL_EFFICIENCY]
+                if m["timestamp"] >= recent_cutoff and m["context"].get("outcome_type") == "qualified"
+            ]
+        )
 
         return {
-            'qualified_leads_last_hour': qualified_leads,
-            'conversion_efficiency': self._get_recent_metric_average(
+            "qualified_leads_last_hour": qualified_leads,
+            "conversion_efficiency": self._get_recent_metric_average(
                 JorgeMetricType.CONVERSION_FUNNEL_EFFICIENCY, recent_cutoff
             ),
-            'methodology_adherence': self._get_recent_metric_average(
+            "methodology_adherence": self._get_recent_metric_average(
                 JorgeMetricType.JORGE_METHODOLOGY_ADHERENCE, recent_cutoff
-            )
+            ),
         }
 
     def _get_recent_metric_average(self, metric_type: JorgeMetricType, cutoff_time: datetime) -> Optional[float]:
         """Get average value for a metric since cutoff time"""
-        recent_metrics = [
-            m['value'] for m in self.metrics[metric_type]
-            if m['timestamp'] >= cutoff_time
-        ]
+        recent_metrics = [m["value"] for m in self.metrics[metric_type] if m["timestamp"] >= cutoff_time]
 
         return statistics.mean(recent_metrics) if recent_metrics else None
 
@@ -536,11 +555,11 @@ class JorgePerformanceMonitor:
             alert_counts[alert.alert_level.value] += 1
 
         return {
-            'total_active_alerts': len(active_alerts),
-            'critical_alerts': alert_counts['critical'],
-            'warning_alerts': alert_counts['warning'],
-            'info_alerts': alert_counts['info'],
-            'business_impact_alerts': alert_counts['business_impact']
+            "total_active_alerts": len(active_alerts),
+            "critical_alerts": alert_counts["critical"],
+            "warning_alerts": alert_counts["warning"],
+            "info_alerts": alert_counts["info"],
+            "business_impact_alerts": alert_counts["business_impact"],
         }
 
     def _calculate_trend_analysis(self) -> Dict[str, Any]:
@@ -548,31 +567,24 @@ class JorgePerformanceMonitor:
         hour_ago = datetime.now() - timedelta(hours=1)
         day_ago = datetime.now() - timedelta(days=1)
 
-        response_time_trend = self._calculate_metric_trend(
-            JorgeMetricType.CONVERSATION_LATENCY, hour_ago, day_ago
-        )
+        response_time_trend = self._calculate_metric_trend(JorgeMetricType.CONVERSATION_LATENCY, hour_ago, day_ago)
 
-        accuracy_trend = self._calculate_metric_trend(
-            JorgeMetricType.STALL_DETECTION_ACCURACY, hour_ago, day_ago
-        )
+        accuracy_trend = self._calculate_metric_trend(JorgeMetricType.STALL_DETECTION_ACCURACY, hour_ago, day_ago)
 
         return {
-            'response_time_trend': response_time_trend,
-            'accuracy_trend': accuracy_trend,
-            'trend_direction': 'improving' if response_time_trend < 0 and accuracy_trend > 0 else 'declining'
+            "response_time_trend": response_time_trend,
+            "accuracy_trend": accuracy_trend,
+            "trend_direction": "improving" if response_time_trend < 0 and accuracy_trend > 0 else "declining",
         }
 
-    def _calculate_metric_trend(self, metric_type: JorgeMetricType,
-                              recent_cutoff: datetime, baseline_cutoff: datetime) -> float:
+    def _calculate_metric_trend(
+        self, metric_type: JorgeMetricType, recent_cutoff: datetime, baseline_cutoff: datetime
+    ) -> float:
         """Calculate trend for a metric (positive = improving, negative = declining)"""
-        recent_values = [
-            m['value'] for m in self.metrics[metric_type]
-            if recent_cutoff <= m['timestamp']
-        ]
+        recent_values = [m["value"] for m in self.metrics[metric_type] if recent_cutoff <= m["timestamp"]]
 
         baseline_values = [
-            m['value'] for m in self.metrics[metric_type]
-            if baseline_cutoff <= m['timestamp'] < recent_cutoff
+            m["value"] for m in self.metrics[metric_type] if baseline_cutoff <= m["timestamp"] < recent_cutoff
         ]
 
         if not recent_values or not baseline_values:
@@ -597,22 +609,26 @@ class JorgePerformanceMonitor:
 
                 # Record system performance
                 if system_metrics:
-                    self._record_metric(JorgeMetricType.CONCURRENT_CONVERSATIONS,
-                                      system_metrics['active_conversations'], {})
-                    self._record_metric(JorgeMetricType.MEMORY_PER_CONVERSATION,
-                                      system_metrics['memory_per_conversation_mb'], {})
-                    self._record_metric(JorgeMetricType.CPU_UTILIZATION,
-                                      system_metrics['cpu_utilization_percent'], {})
+                    self._record_metric(
+                        JorgeMetricType.CONCURRENT_CONVERSATIONS, system_metrics["active_conversations"], {}
+                    )
+                    self._record_metric(
+                        JorgeMetricType.MEMORY_PER_CONVERSATION, system_metrics["memory_per_conversation_mb"], {}
+                    )
+                    self._record_metric(JorgeMetricType.CPU_UTILIZATION, system_metrics["cpu_utilization_percent"], {})
 
                 # Check for system performance alerts
-                if system_metrics.get('memory_per_conversation_mb', 0) > self.thresholds.memory_per_conversation_warning_mb:
+                if (
+                    system_metrics.get("memory_per_conversation_mb", 0)
+                    > self.thresholds.memory_per_conversation_warning_mb
+                ):
                     self._create_alert(
                         AlertLevel.WARNING,
                         JorgeMetricType.MEMORY_PER_CONVERSATION,
-                        system_metrics['memory_per_conversation_mb'],
+                        system_metrics["memory_per_conversation_mb"],
                         self.thresholds.memory_per_conversation_warning_mb,
                         f"High memory usage per conversation: {system_metrics['memory_per_conversation_mb']:.1f}MB",
-                        "system"
+                        "system",
                     )
 
                 # Clean up old metrics and alerts
@@ -635,14 +651,14 @@ class JorgePerformanceMonitor:
             for metric_type in self.metrics:
                 # Filter out very old entries
                 self.metrics[metric_type] = deque(
-                    [m for m in self.metrics[metric_type] if m['timestamp'] > cutoff_time],
-                    maxlen=1000
+                    [m for m in self.metrics[metric_type] if m["timestamp"] > cutoff_time], maxlen=1000
                 )
 
             # Clean up resolved alerts older than 24 hours
             alert_cutoff = datetime.now() - timedelta(hours=24)
             resolved_alerts = [
-                alert_id for alert_id, alert in self.active_alerts.items()
+                alert_id
+                for alert_id, alert in self.active_alerts.items()
                 if alert.resolved and alert.resolution_time and alert.resolution_time < alert_cutoff
             ]
 
@@ -652,100 +668,92 @@ class JorgePerformanceMonitor:
     def _summarize_response_times(self, cutoff_time: datetime) -> Dict[str, Any]:
         """Summarize response time performance"""
         response_times = [
-            m['value'] for m in self.metrics[JorgeMetricType.CONVERSATION_LATENCY]
-            if m['timestamp'] >= cutoff_time
+            m["value"] for m in self.metrics[JorgeMetricType.CONVERSATION_LATENCY] if m["timestamp"] >= cutoff_time
         ]
 
         if not response_times:
             return {}
 
         return {
-            'avg_response_time_ms': statistics.mean(response_times),
-            'p50_response_time_ms': statistics.median(response_times),
-            'p95_response_time_ms': np.percentile(response_times, 95),
-            'p99_response_time_ms': np.percentile(response_times, 99),
-            'max_response_time_ms': max(response_times),
-            'total_requests': len(response_times),
-            'target_met_percentage': (
-                sum(1 for t in response_times if t < self.thresholds.conversation_latency_warning) /
-                len(response_times) * 100
-            )
+            "avg_response_time_ms": statistics.mean(response_times),
+            "p50_response_time_ms": statistics.median(response_times),
+            "p95_response_time_ms": np.percentile(response_times, 95),
+            "p99_response_time_ms": np.percentile(response_times, 99),
+            "max_response_time_ms": max(response_times),
+            "total_requests": len(response_times),
+            "target_met_percentage": (
+                sum(1 for t in response_times if t < self.thresholds.conversation_latency_warning)
+                / len(response_times)
+                * 100
+            ),
         }
 
     def _summarize_accuracy_metrics(self, cutoff_time: datetime) -> Dict[str, Any]:
         """Summarize accuracy performance"""
         return {
-            'stall_detection_accuracy': self._get_recent_metric_average(
+            "stall_detection_accuracy": self._get_recent_metric_average(
                 JorgeMetricType.STALL_DETECTION_ACCURACY, cutoff_time
             ),
-            'reengagement_rate': self._get_recent_metric_average(
-                JorgeMetricType.LEAD_REENGAGEMENT_RATE, cutoff_time
-            ),
-            'property_matching_accuracy': self._get_recent_metric_average(
+            "reengagement_rate": self._get_recent_metric_average(JorgeMetricType.LEAD_REENGAGEMENT_RATE, cutoff_time),
+            "property_matching_accuracy": self._get_recent_metric_average(
                 JorgeMetricType.PROPERTY_MATCHING_ACCURACY, cutoff_time
             ),
-            'methodology_adherence': self._get_recent_metric_average(
+            "methodology_adherence": self._get_recent_metric_average(
                 JorgeMetricType.JORGE_METHODOLOGY_ADHERENCE, cutoff_time
-            )
+            ),
         }
 
     def _summarize_business_metrics(self, cutoff_time: datetime) -> Dict[str, Any]:
         """Summarize business performance"""
         conversions = [
-            m for m in self.metrics[JorgeMetricType.CONVERSION_FUNNEL_EFFICIENCY]
-            if m['timestamp'] >= cutoff_time
+            m for m in self.metrics[JorgeMetricType.CONVERSION_FUNNEL_EFFICIENCY] if m["timestamp"] >= cutoff_time
         ]
 
-        qualified_leads = sum(
-            1 for m in conversions
-            if m['context'].get('outcome_type') == 'qualified'
-        )
+        qualified_leads = sum(1 for m in conversions if m["context"].get("outcome_type") == "qualified")
 
-        closed_deals = sum(
-            1 for m in conversions
-            if m['context'].get('outcome_type') == 'deal_closed'
-        )
+        closed_deals = sum(1 for m in conversions if m["context"].get("outcome_type") == "deal_closed")
 
         return {
-            'qualified_leads': qualified_leads,
-            'closed_deals': closed_deals,
-            'conversion_rate': closed_deals / max(qualified_leads, 1),
-            'total_revenue_attributed': sum(
-                m['context'].get('revenue_attributed', 0) for m in conversions
-            )
+            "qualified_leads": qualified_leads,
+            "closed_deals": closed_deals,
+            "conversion_rate": closed_deals / max(qualified_leads, 1),
+            "total_revenue_attributed": sum(m["context"].get("revenue_attributed", 0) for m in conversions),
         }
 
     def _summarize_system_metrics(self, cutoff_time: datetime) -> Dict[str, Any]:
         """Summarize system performance"""
         return {
-            'avg_memory_per_conversation': self._get_recent_metric_average(
+            "avg_memory_per_conversation": self._get_recent_metric_average(
                 JorgeMetricType.MEMORY_PER_CONVERSATION, cutoff_time
             ),
-            'avg_cpu_utilization': self._get_recent_metric_average(
-                JorgeMetricType.CPU_UTILIZATION, cutoff_time
+            "avg_cpu_utilization": self._get_recent_metric_average(JorgeMetricType.CPU_UTILIZATION, cutoff_time),
+            "max_concurrent_conversations": max(
+                (
+                    m["value"]
+                    for m in self.metrics[JorgeMetricType.CONCURRENT_CONVERSATIONS]
+                    if m["timestamp"] >= cutoff_time
+                ),
+                default=0,
             ),
-            'max_concurrent_conversations': max(
-                (m['value'] for m in self.metrics[JorgeMetricType.CONCURRENT_CONVERSATIONS]
-                 if m['timestamp'] >= cutoff_time), default=0
-            )
         }
 
     def _summarize_alerts(self, cutoff_time: datetime) -> Dict[str, Any]:
         """Summarize alert activity"""
-        recent_alerts = [
-            alert for alert in self.alert_history
-            if alert.timestamp >= cutoff_time
-        ]
+        recent_alerts = [alert for alert in self.alert_history if alert.timestamp >= cutoff_time]
 
         return {
-            'total_alerts': len(recent_alerts),
-            'critical_alerts': sum(1 for a in recent_alerts if a.alert_level == AlertLevel.CRITICAL),
-            'warning_alerts': sum(1 for a in recent_alerts if a.alert_level == AlertLevel.WARNING),
-            'avg_resolution_time_minutes': statistics.mean([
-                (a.resolution_time - a.timestamp).total_seconds() / 60
-                for a in recent_alerts
-                if a.resolved and a.resolution_time
-            ]) if any(a.resolved for a in recent_alerts) else None
+            "total_alerts": len(recent_alerts),
+            "critical_alerts": sum(1 for a in recent_alerts if a.alert_level == AlertLevel.CRITICAL),
+            "warning_alerts": sum(1 for a in recent_alerts if a.alert_level == AlertLevel.WARNING),
+            "avg_resolution_time_minutes": statistics.mean(
+                [
+                    (a.resolution_time - a.timestamp).total_seconds() / 60
+                    for a in recent_alerts
+                    if a.resolved and a.resolution_time
+                ]
+            )
+            if any(a.resolved for a in recent_alerts)
+            else None,
         }
 
     def _calculate_overall_performance_score(self, cutoff_time: datetime) -> float:
@@ -754,8 +762,7 @@ class JorgePerformanceMonitor:
 
         # Response time score (30% weight)
         response_times = [
-            m['value'] for m in self.metrics[JorgeMetricType.CONVERSATION_LATENCY]
-            if m['timestamp'] >= cutoff_time
+            m["value"] for m in self.metrics[JorgeMetricType.CONVERSATION_LATENCY] if m["timestamp"] >= cutoff_time
         ]
         if response_times:
             avg_response = statistics.mean(response_times)
@@ -766,7 +773,7 @@ class JorgePerformanceMonitor:
         accuracy_metrics = [
             self._get_recent_metric_average(JorgeMetricType.STALL_DETECTION_ACCURACY, cutoff_time),
             self._get_recent_metric_average(JorgeMetricType.LEAD_REENGAGEMENT_RATE, cutoff_time),
-            self._get_recent_metric_average(JorgeMetricType.PROPERTY_MATCHING_ACCURACY, cutoff_time)
+            self._get_recent_metric_average(JorgeMetricType.PROPERTY_MATCHING_ACCURACY, cutoff_time),
         ]
         accuracy_metrics = [a for a in accuracy_metrics if a is not None]
         if accuracy_metrics:
@@ -784,10 +791,7 @@ class JorgePerformanceMonitor:
             scores.append((system_score, 0.20))
 
         # Alert penalty (10% weight)
-        recent_alerts = [
-            alert for alert in self.alert_history
-            if alert.timestamp >= cutoff_time
-        ]
+        recent_alerts = [alert for alert in self.alert_history if alert.timestamp >= cutoff_time]
         alert_penalty = min(50, len(recent_alerts) * 5)  # Each alert reduces score
         alert_score = 100 - alert_penalty
         scores.append((alert_score, 0.10))
@@ -800,8 +804,10 @@ class JorgePerformanceMonitor:
 
         return 50.0  # Default neutral score
 
+
 # Example usage and testing
 if __name__ == "__main__":
+
     async def demo_jorge_monitoring():
         """Demonstration of Jorge performance monitoring"""
 
@@ -830,9 +836,7 @@ if __name__ == "__main__":
             stall_detected = turn == 3  # Stall detected on turn 3
             intervention = turn == 4  # Intervention on turn 4
 
-            monitor.record_conversation_turn(
-                conversation_id, response_time, stall_detected, intervention
-            )
+            monitor.record_conversation_turn(conversation_id, response_time, stall_detected, intervention)
 
             print(f"Turn {turn + 1}: {response_time}ms response time")
 

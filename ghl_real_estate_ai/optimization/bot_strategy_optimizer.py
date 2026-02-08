@@ -12,34 +12,37 @@ Features:
 """
 
 import asyncio
-import numpy as np
-import pandas as pd
 import json
 import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, asdict
 import warnings
-warnings.filterwarnings('ignore')
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
+import pandas as pd
+
+warnings.filterwarnings("ignore")
 
 # ML and optimization imports
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, precision_score, recall_score
-from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn.cluster import KMeans
 import scipy.stats as stats
 from scipy.optimize import minimize
+from sklearn.cluster import KMeans
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+
+from ghl_real_estate_ai.agents.intent_decoder import IntentDecoder
+from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
+from ghl_real_estate_ai.agents.lead_bot import LeadBot
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 # Jorge's platform imports
 from ghl_real_estate_ai.services.ghl_service import GHLService
 from ghl_real_estate_ai.services.memory_service import MemoryService
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.services.analytics_service import AnalyticsService
-from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
-from ghl_real_estate_ai.agents.lead_bot import LeadBot
-from ghl_real_estate_ai.agents.intent_decoder import IntentDecoder
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -47,9 +50,11 @@ logger = get_logger(__name__)
 # BOT OPTIMIZATION DATA MODELS
 # =============================================================================
 
+
 @dataclass
 class ConversationStrategy:
     """Bot conversation strategy with performance metrics."""
+
     strategy_id: str
     strategy_name: str
     bot_type: str  # 'jorge_seller_bot', 'lead_bot'
@@ -78,9 +83,11 @@ class ConversationStrategy:
     success_patterns: List[Dict[str, Any]]
     failure_patterns: List[Dict[str, Any]]
 
+
 @dataclass
 class BotOptimization:
     """Bot optimization recommendation with implementation details."""
+
     optimization_id: str
     bot_name: str
     optimization_type: str  # 'response_content', 'timing', 'personalization', 'escalation'
@@ -110,9 +117,11 @@ class BotOptimization:
     data_period_days: int
     conversation_sample_size: int
 
+
 @dataclass
 class PersonalizationProfile:
     """Lead-specific conversation personalization profile."""
+
     profile_id: str
     lead_characteristics: Dict[str, Any]
 
@@ -133,9 +142,11 @@ class PersonalizationProfile:
     last_optimization: datetime
     success_history: List[Dict[str, Any]]
 
+
 @dataclass
 class PerformancePattern:
     """Identified performance pattern from successful conversations."""
+
     pattern_id: str
     pattern_type: str  # 'opening', 'objection_handling', 'closing', 'timing'
     pattern_description: str
@@ -164,6 +175,7 @@ class PerformancePattern:
     discovered_timestamp: datetime
     last_validated: datetime
     implementation_status: str
+
 
 class BotStrategyOptimizer:
     """
@@ -212,10 +224,9 @@ class BotStrategyOptimizer:
     # MAIN OPTIMIZATION INTERFACES
     # =========================================================================
 
-    async def optimize_conversation_strategy(self,
-                                           bot_name: str,
-                                           lead_profile: Dict[str, Any],
-                                           context: Dict[str, Any] = None) -> ConversationStrategy:
+    async def optimize_conversation_strategy(
+        self, bot_name: str, lead_profile: Dict[str, Any], context: Dict[str, Any] = None
+    ) -> ConversationStrategy:
         """
         Generate optimized conversation strategy for specific lead.
 
@@ -234,9 +245,7 @@ class BotStrategyOptimizer:
             personalization_profile = await self._get_personalization_profile(lead_profile)
 
             # Analyze historical performance patterns for similar leads
-            similar_patterns = await self._find_similar_success_patterns(
-                lead_profile, bot_name
-            )
+            similar_patterns = await self._find_similar_success_patterns(lead_profile, bot_name)
 
             # Get current bot performance baseline
             current_performance = await self._get_bot_performance_metrics(bot_name)
@@ -247,14 +256,10 @@ class BotStrategyOptimizer:
             )
 
             # Validate strategy against Jorge's methodology
-            methodology_validation = await self._validate_jorge_methodology_alignment(
-                optimized_strategy, lead_profile
-            )
+            methodology_validation = await self._validate_jorge_methodology_alignment(optimized_strategy, lead_profile)
 
             # Apply methodology adjustments
-            optimized_strategy = await self._apply_methodology_adjustments(
-                optimized_strategy, methodology_validation
-            )
+            optimized_strategy = await self._apply_methodology_adjustments(optimized_strategy, methodology_validation)
 
             # Calculate expected performance improvement
             performance_projection = await self._project_strategy_performance(
@@ -266,14 +271,14 @@ class BotStrategyOptimizer:
                 strategy_id=f"strat_{bot_name}_{int(time.time())}",
                 strategy_name=f"Optimized {bot_name.title()} Strategy",
                 bot_type=bot_name,
-                approach_type=optimized_strategy['approach_type'],
-                response_patterns=optimized_strategy['response_patterns'],
-                timing_parameters=optimized_strategy['timing_parameters'],
-                personalization_rules=optimized_strategy['personalization_rules'],
-                conversion_rate=performance_projection['projected_conversion_rate'],
-                response_rate=performance_projection['projected_response_rate'],
-                engagement_score=performance_projection['projected_engagement_score'],
-                jorge_alignment_score=methodology_validation['alignment_score'],
+                approach_type=optimized_strategy["approach_type"],
+                response_patterns=optimized_strategy["response_patterns"],
+                timing_parameters=optimized_strategy["timing_parameters"],
+                personalization_rules=optimized_strategy["personalization_rules"],
+                conversion_rate=performance_projection["projected_conversion_rate"],
+                response_rate=performance_projection["projected_response_rate"],
+                engagement_score=performance_projection["projected_engagement_score"],
+                jorge_alignment_score=methodology_validation["alignment_score"],
                 test_sessions=0,
                 control_sessions=0,
                 statistical_significance=0.0,
@@ -281,11 +286,12 @@ class BotStrategyOptimizer:
                 active=False,  # Will be activated after A/B test validation
                 last_updated=datetime.now(),
                 success_patterns=similar_patterns,
-                failure_patterns=await self._identify_failure_patterns(lead_profile, bot_name)
+                failure_patterns=await self._identify_failure_patterns(lead_profile, bot_name),
             )
 
-            logger.info(f"Generated optimized strategy with {strategy.jorge_alignment_score:.1%} "
-                       f"Jorge methodology alignment")
+            logger.info(
+                f"Generated optimized strategy with {strategy.jorge_alignment_score:.1%} Jorge methodology alignment"
+            )
 
             return strategy
 
@@ -293,10 +299,9 @@ class BotStrategyOptimizer:
             logger.error(f"Error optimizing conversation strategy: {e}")
             return await self._get_fallback_strategy(bot_name)
 
-    async def recommend_timing_optimization(self,
-                                          lead_id: str,
-                                          bot_name: str,
-                                          action_type: str = 'follow_up') -> Dict[str, Any]:
+    async def recommend_timing_optimization(
+        self, lead_id: str, bot_name: str, action_type: str = "follow_up"
+    ) -> Dict[str, Any]:
         """
         Recommend optimal timing for bot actions based on lead behavior patterns.
 
@@ -315,19 +320,13 @@ class BotStrategyOptimizer:
             interaction_history = await self._get_lead_interaction_history(lead_id)
 
             # Analyze response patterns by time of day/week
-            temporal_patterns = await self._analyze_temporal_response_patterns(
-                interaction_history, action_type
-            )
+            temporal_patterns = await self._analyze_temporal_response_patterns(interaction_history, action_type)
 
             # Get lead's personal timing preferences
-            personal_preferences = await self._extract_personal_timing_preferences(
-                lead_id, interaction_history
-            )
+            personal_preferences = await self._extract_personal_timing_preferences(lead_id, interaction_history)
 
             # Analyze market-wide timing patterns for similar leads
-            market_patterns = await self._analyze_market_timing_patterns(
-                lead_id, bot_name, action_type
-            )
+            market_patterns = await self._analyze_market_timing_patterns(lead_id, bot_name, action_type)
 
             # Generate optimal timing recommendations
             timing_optimization = await self._generate_timing_recommendations(
@@ -335,35 +334,32 @@ class BotStrategyOptimizer:
             )
 
             # Apply Jorge methodology timing principles
-            jorge_timing = await self._apply_jorge_timing_methodology(
-                timing_optimization, action_type
-            )
+            jorge_timing = await self._apply_jorge_timing_methodology(timing_optimization, action_type)
 
             timing_recommendation = {
-                'optimal_contact_time': jorge_timing['optimal_time'],
-                'success_probability': jorge_timing['success_probability'],
-                'confidence_score': jorge_timing['confidence_score'],
-                'alternative_windows': jorge_timing['alternative_windows'],
-
+                "optimal_contact_time": jorge_timing["optimal_time"],
+                "success_probability": jorge_timing["success_probability"],
+                "confidence_score": jorge_timing["confidence_score"],
+                "alternative_windows": jorge_timing["alternative_windows"],
                 # Jorge-specific timing insights
-                'confrontational_readiness_score': jorge_timing['confrontational_readiness'],
-                'pressure_application_timing': jorge_timing['pressure_timing'],
-                'escalation_window': jorge_timing['escalation_window'],
-
+                "confrontational_readiness_score": jorge_timing["confrontational_readiness"],
+                "pressure_application_timing": jorge_timing["pressure_timing"],
+                "escalation_window": jorge_timing["escalation_window"],
                 # Implementation details
-                'recommended_delay_hours': jorge_timing['delay_hours'],
-                'followup_sequence_timing': jorge_timing['sequence_timing'],
-                'emergency_override_conditions': jorge_timing['emergency_conditions'],
-
+                "recommended_delay_hours": jorge_timing["delay_hours"],
+                "followup_sequence_timing": jorge_timing["sequence_timing"],
+                "emergency_override_conditions": jorge_timing["emergency_conditions"],
                 # Analytics
-                'analysis_timestamp': datetime.now(),
-                'data_confidence': jorge_timing['data_confidence'],
-                'sample_size': len(interaction_history),
-                'methodology_alignment': jorge_timing['methodology_score']
+                "analysis_timestamp": datetime.now(),
+                "data_confidence": jorge_timing["data_confidence"],
+                "sample_size": len(interaction_history),
+                "methodology_alignment": jorge_timing["methodology_score"],
             }
 
-            logger.info(f"Optimal timing: {timing_recommendation['optimal_contact_time']} "
-                       f"({timing_recommendation['success_probability']:.1%} success probability)")
+            logger.info(
+                f"Optimal timing: {timing_recommendation['optimal_contact_time']} "
+                f"({timing_recommendation['success_probability']:.1%} success probability)"
+            )
 
             return timing_recommendation
 
@@ -371,8 +367,7 @@ class BotStrategyOptimizer:
             logger.error(f"Error optimizing timing: {e}")
             return await self._get_fallback_timing_recommendation(action_type)
 
-    async def analyze_objection_patterns(self,
-                                       time_period_days: int = 30) -> Dict[str, Any]:
+    async def analyze_objection_patterns(self, time_period_days: int = 30) -> Dict[str, Any]:
         """
         Analyze objection patterns to optimize Jorge's objection handling strategies.
 
@@ -396,9 +391,7 @@ class BotStrategyOptimizer:
             objection_analysis = await self._categorize_objections(objection_data)
 
             # Analyze Jorge's current objection handling effectiveness
-            handling_effectiveness = await self._analyze_objection_handling_effectiveness(
-                objection_data
-            )
+            handling_effectiveness = await self._analyze_objection_handling_effectiveness(objection_data)
 
             # Identify most successful objection handling patterns
             success_patterns = await self._identify_objection_success_patterns(objection_data)
@@ -409,52 +402,45 @@ class BotStrategyOptimizer:
             )
 
             # Validate against Jorge's confrontational methodology
-            methodology_validation = await self._validate_objection_methodology(
-                optimization_recommendations
-            )
+            methodology_validation = await self._validate_objection_methodology(optimization_recommendations)
 
             comprehensive_analysis = {
-                'analysis_period': f"{time_period_days} days",
-                'total_objections_analyzed': len(objection_data),
-
+                "analysis_period": f"{time_period_days} days",
+                "total_objections_analyzed": len(objection_data),
                 # Objection categorization
-                'objection_categories': objection_analysis['categories'],
-                'frequency_distribution': objection_analysis['frequency'],
-                'severity_analysis': objection_analysis['severity'],
-
+                "objection_categories": objection_analysis["categories"],
+                "frequency_distribution": objection_analysis["frequency"],
+                "severity_analysis": objection_analysis["severity"],
                 # Effectiveness metrics
-                'current_success_rate': handling_effectiveness['overall_success_rate'],
-                'success_rate_by_category': handling_effectiveness['category_success_rates'],
-                'response_time_impact': handling_effectiveness['timing_analysis'],
-
+                "current_success_rate": handling_effectiveness["overall_success_rate"],
+                "success_rate_by_category": handling_effectiveness["category_success_rates"],
+                "response_time_impact": handling_effectiveness["timing_analysis"],
                 # Success patterns
-                'winning_approaches': success_patterns['effective_responses'],
-                'jorge_methodology_effectiveness': success_patterns['confrontational_success'],
-                'timing_patterns': success_patterns['optimal_timing'],
-
+                "winning_approaches": success_patterns["effective_responses"],
+                "jorge_methodology_effectiveness": success_patterns["confrontational_success"],
+                "timing_patterns": success_patterns["optimal_timing"],
                 # Optimization recommendations
-                'recommended_improvements': optimization_recommendations['improvements'],
-                'script_optimizations': optimization_recommendations['script_changes'],
-                'training_priorities': optimization_recommendations['training_focus'],
-
+                "recommended_improvements": optimization_recommendations["improvements"],
+                "script_optimizations": optimization_recommendations["script_changes"],
+                "training_priorities": optimization_recommendations["training_focus"],
                 # Jorge-specific insights
-                'confrontational_approach_optimization': methodology_validation['confrontational_optimization'],
-                'pressure_application_improvements': methodology_validation['pressure_optimization'],
-                'jorge_unique_advantages': methodology_validation['unique_advantages'],
-
+                "confrontational_approach_optimization": methodology_validation["confrontational_optimization"],
+                "pressure_application_improvements": methodology_validation["pressure_optimization"],
+                "jorge_unique_advantages": methodology_validation["unique_advantages"],
                 # Implementation roadmap
-                'implementation_priority': optimization_recommendations['priority_order'],
-                'expected_improvement': optimization_recommendations['projected_improvement'],
-                'ab_test_recommendations': optimization_recommendations['test_strategies'],
-
+                "implementation_priority": optimization_recommendations["priority_order"],
+                "expected_improvement": optimization_recommendations["projected_improvement"],
+                "ab_test_recommendations": optimization_recommendations["test_strategies"],
                 # Metadata
-                'analysis_timestamp': datetime.now(),
-                'data_quality_score': objection_analysis['data_quality'],
-                'statistical_confidence': handling_effectiveness['confidence_level']
+                "analysis_timestamp": datetime.now(),
+                "data_quality_score": objection_analysis["data_quality"],
+                "statistical_confidence": handling_effectiveness["confidence_level"],
             }
 
-            logger.info(f"Objection analysis complete: {comprehensive_analysis['current_success_rate']:.1%} "
-                       f"current success rate across {len(objection_analysis['categories'])} categories")
+            logger.info(
+                f"Objection analysis complete: {comprehensive_analysis['current_success_rate']:.1%} "
+                f"current success rate across {len(objection_analysis['categories'])} categories"
+            )
 
             return comprehensive_analysis
 
@@ -462,9 +448,9 @@ class BotStrategyOptimizer:
             logger.error(f"Error analyzing objection patterns: {e}")
             return await self._get_baseline_objection_analysis()
 
-    async def generate_response_variations(self,
-                                         context: Dict[str, Any],
-                                         response_count: int = 5) -> List[Dict[str, Any]]:
+    async def generate_response_variations(
+        self, context: Dict[str, Any], response_count: int = 5
+    ) -> List[Dict[str, Any]]:
         """
         Generate A/B test variations for bot responses using ML optimization.
 
@@ -479,9 +465,9 @@ class BotStrategyOptimizer:
 
         try:
             # Extract context elements
-            lead_profile = context.get('lead_profile', {})
-            conversation_history = context.get('conversation_history', [])
-            current_situation = context.get('current_situation', {})
+            lead_profile = context.get("lead_profile", {})
+            conversation_history = context.get("conversation_history", [])
+            current_situation = context.get("current_situation", {})
 
             # Get base response from current bot logic
             base_response = await self._get_base_bot_response(context)
@@ -490,48 +476,33 @@ class BotStrategyOptimizer:
             variations = []
 
             # Variation 1: Jorge's confrontational approach (enhanced)
-            confrontational_variation = await self._generate_confrontational_variation(
-                base_response, context
-            )
+            confrontational_variation = await self._generate_confrontational_variation(base_response, context)
             variations.append(confrontational_variation)
 
             # Variation 2: Consultative approach with Jorge methodology
-            consultative_variation = await self._generate_consultative_variation(
-                base_response, context
-            )
+            consultative_variation = await self._generate_consultative_variation(base_response, context)
             variations.append(consultative_variation)
 
             # Variation 3: Urgency-focused approach
-            urgency_variation = await self._generate_urgency_variation(
-                base_response, context
-            )
+            urgency_variation = await self._generate_urgency_variation(base_response, context)
             variations.append(urgency_variation)
 
             # Variation 4: Value-proposition focused
-            value_variation = await self._generate_value_variation(
-                base_response, context
-            )
+            value_variation = await self._generate_value_variation(base_response, context)
             variations.append(value_variation)
 
             # Variation 5: Personalized based on lead characteristics
-            personalized_variation = await self._generate_personalized_variation(
-                base_response, context, lead_profile
-            )
+            personalized_variation = await self._generate_personalized_variation(base_response, context, lead_profile)
             variations.append(personalized_variation)
 
             # Predict performance for each variation
             for i, variation in enumerate(variations[:response_count]):
-                performance_prediction = await self._predict_variation_performance(
-                    variation, context
-                )
+                performance_prediction = await self._predict_variation_performance(variation, context)
                 variation.update(performance_prediction)
-                variation['variation_id'] = f"var_{i+1}_{int(time.time())}"
+                variation["variation_id"] = f"var_{i + 1}_{int(time.time())}"
 
             # Sort by predicted performance
-            variations.sort(
-                key=lambda x: x.get('predicted_conversion_probability', 0),
-                reverse=True
-            )
+            variations.sort(key=lambda x: x.get("predicted_conversion_probability", 0), reverse=True)
 
             logger.info(f"Generated {len(variations)} response variations with performance predictions")
 
@@ -545,9 +516,9 @@ class BotStrategyOptimizer:
     # PERFORMANCE PATTERN RECOGNITION
     # =========================================================================
 
-    async def identify_winning_conversation_patterns(self,
-                                                   bot_name: str,
-                                                   analysis_period_days: int = 90) -> List[PerformancePattern]:
+    async def identify_winning_conversation_patterns(
+        self, bot_name: str, analysis_period_days: int = 90
+    ) -> List[PerformancePattern]:
         """
         Identify conversation patterns that lead to highest conversion rates.
 
@@ -562,9 +533,7 @@ class BotStrategyOptimizer:
 
         try:
             # Collect conversation data with outcomes
-            conversation_data = await self._collect_conversation_outcomes(
-                bot_name, analysis_period_days
-            )
+            conversation_data = await self._collect_conversation_outcomes(bot_name, analysis_period_days)
 
             if len(conversation_data) < self.min_sample_size:
                 logger.warning("Insufficient conversation data for pattern analysis")
@@ -572,29 +541,21 @@ class BotStrategyOptimizer:
 
             # Separate successful and unsuccessful conversations
             successful_conversations = [
-                conv for conv in conversation_data
-                if conv.get('outcome', {}).get('converted', False)
+                conv for conv in conversation_data if conv.get("outcome", {}).get("converted", False)
             ]
 
             unsuccessful_conversations = [
-                conv for conv in conversation_data
-                if not conv.get('outcome', {}).get('converted', False)
+                conv for conv in conversation_data if not conv.get("outcome", {}).get("converted", False)
             ]
 
             # Identify patterns in successful conversations
-            success_patterns = await self._extract_conversation_patterns(
-                successful_conversations, 'success'
-            )
+            success_patterns = await self._extract_conversation_patterns(successful_conversations, "success")
 
             # Identify anti-patterns from unsuccessful conversations
-            failure_patterns = await self._extract_conversation_patterns(
-                unsuccessful_conversations, 'failure'
-            )
+            failure_patterns = await self._extract_conversation_patterns(unsuccessful_conversations, "failure")
 
             # Find distinctive patterns (high in success, low in failure)
-            distinctive_patterns = await self._identify_distinctive_patterns(
-                success_patterns, failure_patterns
-            )
+            distinctive_patterns = await self._identify_distinctive_patterns(success_patterns, failure_patterns)
 
             # Validate patterns for statistical significance
             validated_patterns = []
@@ -603,17 +564,17 @@ class BotStrategyOptimizer:
                     pattern, successful_conversations, unsuccessful_conversations
                 )
 
-                if validation['statistically_significant']:
+                if validation["statistically_significant"]:
                     pattern_obj = PerformancePattern(
                         pattern_id=f"pattern_{bot_name}_{int(time.time())}_{hash(pattern['description']) % 10000}",
-                        pattern_type=pattern['type'],
-                        pattern_description=pattern['description'],
-                        conversation_elements=pattern['elements'],
-                        success_indicators=pattern['success_indicators'],
-                        context_requirements=pattern['context_requirements'],
-                        success_rate=validation['success_rate'],
-                        sample_size=validation['sample_size'],
-                        statistical_confidence=validation['confidence'],
+                        pattern_type=pattern["type"],
+                        pattern_description=pattern["description"],
+                        conversation_elements=pattern["elements"],
+                        success_indicators=pattern["success_indicators"],
+                        context_requirements=pattern["context_requirements"],
+                        success_rate=validation["success_rate"],
+                        sample_size=validation["sample_size"],
+                        statistical_confidence=validation["confidence"],
                         jorge_technique_category=await self._categorize_jorge_technique(pattern),
                         confrontational_effectiveness=await self._measure_confrontational_effectiveness(pattern),
                         pressure_application_timing=await self._analyze_pressure_timing(pattern),
@@ -622,16 +583,13 @@ class BotStrategyOptimizer:
                         combination_potential=await self._analyze_combination_potential(pattern),
                         discovered_timestamp=datetime.now(),
                         last_validated=datetime.now(),
-                        implementation_status='identified'
+                        implementation_status="identified",
                     )
 
                     validated_patterns.append(pattern_obj)
 
             # Sort by effectiveness and Jorge methodology alignment
-            validated_patterns.sort(
-                key=lambda x: (x.success_rate * x.confrontational_effectiveness),
-                reverse=True
-            )
+            validated_patterns.sort(key=lambda x: x.success_rate * x.confrontational_effectiveness, reverse=True)
 
             logger.info(f"Identified {len(validated_patterns)} winning conversation patterns")
 
@@ -641,8 +599,7 @@ class BotStrategyOptimizer:
             logger.error(f"Error identifying conversation patterns: {e}")
             return []
 
-    async def analyze_jorge_methodology_effectiveness(self,
-                                                    analysis_period_days: int = 60) -> Dict[str, Any]:
+    async def analyze_jorge_methodology_effectiveness(self, analysis_period_days: int = 60) -> Dict[str, Any]:
         """
         Analyze effectiveness of Jorge's confrontational methodology.
 
@@ -656,33 +613,23 @@ class BotStrategyOptimizer:
 
         try:
             # Collect conversations with Jorge methodology indicators
-            jorge_conversations = await self._collect_jorge_methodology_conversations(
-                analysis_period_days
-            )
+            jorge_conversations = await self._collect_jorge_methodology_conversations(analysis_period_days)
 
             if len(jorge_conversations) < 30:
                 logger.warning("Insufficient Jorge methodology data for analysis")
                 return await self._get_baseline_methodology_analysis()
 
             # Analyze confrontational approach effectiveness
-            confrontational_analysis = await self._analyze_confrontational_effectiveness(
-                jorge_conversations
-            )
+            confrontational_analysis = await self._analyze_confrontational_effectiveness(jorge_conversations)
 
             # Analyze direct questioning impact
-            direct_questioning_analysis = await self._analyze_direct_questioning_impact(
-                jorge_conversations
-            )
+            direct_questioning_analysis = await self._analyze_direct_questioning_impact(jorge_conversations)
 
             # Analyze pressure application effectiveness
-            pressure_analysis = await self._analyze_pressure_application_effectiveness(
-                jorge_conversations
-            )
+            pressure_analysis = await self._analyze_pressure_application_effectiveness(jorge_conversations)
 
             # Compare with industry benchmarks
-            benchmark_comparison = await self._compare_with_industry_benchmarks(
-                jorge_conversations
-            )
+            benchmark_comparison = await self._compare_with_industry_benchmarks(jorge_conversations)
 
             # Generate optimization recommendations
             optimization_recommendations = await self._generate_methodology_optimizations(
@@ -690,61 +637,55 @@ class BotStrategyOptimizer:
             )
 
             methodology_analysis = {
-                'analysis_period': f"{analysis_period_days} days",
-                'total_conversations_analyzed': len(jorge_conversations),
-
+                "analysis_period": f"{analysis_period_days} days",
+                "total_conversations_analyzed": len(jorge_conversations),
                 # Confrontational approach analysis
-                'confrontational_effectiveness': {
-                    'overall_conversion_rate': confrontational_analysis['conversion_rate'],
-                    'response_rate': confrontational_analysis['response_rate'],
-                    'lead_qualification_speed': confrontational_analysis['qualification_speed'],
-                    'optimal_confrontation_level': confrontational_analysis['optimal_level']
+                "confrontational_effectiveness": {
+                    "overall_conversion_rate": confrontational_analysis["conversion_rate"],
+                    "response_rate": confrontational_analysis["response_rate"],
+                    "lead_qualification_speed": confrontational_analysis["qualification_speed"],
+                    "optimal_confrontation_level": confrontational_analysis["optimal_level"],
                 },
-
                 # Direct questioning analysis
-                'direct_questioning_impact': {
-                    'answer_rate': direct_questioning_analysis['answer_rate'],
-                    'information_quality': direct_questioning_analysis['info_quality'],
-                    'lead_comfort_level': direct_questioning_analysis['comfort_level'],
-                    'qualification_accuracy': direct_questioning_analysis['accuracy']
+                "direct_questioning_impact": {
+                    "answer_rate": direct_questioning_analysis["answer_rate"],
+                    "information_quality": direct_questioning_analysis["info_quality"],
+                    "lead_comfort_level": direct_questioning_analysis["comfort_level"],
+                    "qualification_accuracy": direct_questioning_analysis["accuracy"],
                 },
-
                 # Pressure application analysis
-                'pressure_application_effectiveness': {
-                    'decision_acceleration': pressure_analysis['decision_acceleration'],
-                    'objection_reduction': pressure_analysis['objection_reduction'],
-                    'commitment_increase': pressure_analysis['commitment_increase'],
-                    'optimal_pressure_timing': pressure_analysis['optimal_timing']
+                "pressure_application_effectiveness": {
+                    "decision_acceleration": pressure_analysis["decision_acceleration"],
+                    "objection_reduction": pressure_analysis["objection_reduction"],
+                    "commitment_increase": pressure_analysis["commitment_increase"],
+                    "optimal_pressure_timing": pressure_analysis["optimal_timing"],
                 },
-
                 # Benchmark comparison
-                'industry_comparison': {
-                    'jorge_vs_industry_conversion': benchmark_comparison['conversion_comparison'],
-                    'jorge_vs_industry_speed': benchmark_comparison['speed_comparison'],
-                    'jorge_vs_industry_qualification': benchmark_comparison['qualification_comparison'],
-                    'competitive_advantages': benchmark_comparison['advantages']
+                "industry_comparison": {
+                    "jorge_vs_industry_conversion": benchmark_comparison["conversion_comparison"],
+                    "jorge_vs_industry_speed": benchmark_comparison["speed_comparison"],
+                    "jorge_vs_industry_qualification": benchmark_comparison["qualification_comparison"],
+                    "competitive_advantages": benchmark_comparison["advantages"],
                 },
-
                 # Optimization opportunities
-                'optimization_recommendations': optimization_recommendations,
-
+                "optimization_recommendations": optimization_recommendations,
                 # Jorge-specific insights
-                'jorge_unique_strengths': await self._identify_jorge_unique_strengths(jorge_conversations),
-                'methodology_refinements': await self._suggest_methodology_refinements(jorge_conversations),
-
+                "jorge_unique_strengths": await self._identify_jorge_unique_strengths(jorge_conversations),
+                "methodology_refinements": await self._suggest_methodology_refinements(jorge_conversations),
                 # Implementation guidance
-                'training_recommendations': await self._generate_training_recommendations(optimization_recommendations),
-                'script_improvements': await self._suggest_script_improvements(optimization_recommendations),
-
+                "training_recommendations": await self._generate_training_recommendations(optimization_recommendations),
+                "script_improvements": await self._suggest_script_improvements(optimization_recommendations),
                 # Metadata
-                'analysis_timestamp': datetime.now(),
-                'statistical_confidence': confrontational_analysis.get('confidence', 0.85),
-                'data_quality_score': await self._calculate_data_quality_score(jorge_conversations)
+                "analysis_timestamp": datetime.now(),
+                "statistical_confidence": confrontational_analysis.get("confidence", 0.85),
+                "data_quality_score": await self._calculate_data_quality_score(jorge_conversations),
             }
 
-            logger.info(f"Jorge methodology analysis complete: "
-                       f"{methodology_analysis['confrontational_effectiveness']['overall_conversion_rate']:.1%} "
-                       f"conversion rate with confrontational approach")
+            logger.info(
+                f"Jorge methodology analysis complete: "
+                f"{methodology_analysis['confrontational_effectiveness']['overall_conversion_rate']:.1%} "
+                f"conversion rate with confrontational approach"
+            )
 
             return methodology_analysis
 
@@ -756,10 +697,9 @@ class BotStrategyOptimizer:
     # A/B TESTING AND STRATEGY VALIDATION
     # =========================================================================
 
-    async def implement_ab_test_strategy(self,
-                                       strategy: ConversationStrategy,
-                                       test_duration_days: int = 14,
-                                       test_split: float = 0.5) -> Dict[str, Any]:
+    async def implement_ab_test_strategy(
+        self, strategy: ConversationStrategy, test_duration_days: int = 14, test_split: float = 0.5
+    ) -> Dict[str, Any]:
         """
         Implement A/B test for new conversation strategy.
 
@@ -776,90 +716,81 @@ class BotStrategyOptimizer:
         try:
             # Create A/B test configuration
             test_config = {
-                'test_id': f"ab_test_{strategy.strategy_id}_{int(time.time())}",
-                'strategy_id': strategy.strategy_id,
-                'test_start_date': datetime.now(),
-                'test_end_date': datetime.now() + timedelta(days=test_duration_days),
-                'test_duration_days': test_duration_days,
-                'traffic_split': test_split,
-                'min_sample_size': self.min_sample_size,
-                'significance_threshold': self.significance_threshold,
-
+                "test_id": f"ab_test_{strategy.strategy_id}_{int(time.time())}",
+                "strategy_id": strategy.strategy_id,
+                "test_start_date": datetime.now(),
+                "test_end_date": datetime.now() + timedelta(days=test_duration_days),
+                "test_duration_days": test_duration_days,
+                "traffic_split": test_split,
+                "min_sample_size": self.min_sample_size,
+                "significance_threshold": self.significance_threshold,
                 # Test groups
-                'control_group': {
-                    'name': 'Current Strategy',
-                    'traffic_percentage': 1 - test_split,
-                    'strategy': await self._get_current_bot_strategy(strategy.bot_type)
+                "control_group": {
+                    "name": "Current Strategy",
+                    "traffic_percentage": 1 - test_split,
+                    "strategy": await self._get_current_bot_strategy(strategy.bot_type),
                 },
-
-                'test_group': {
-                    'name': strategy.strategy_name,
-                    'traffic_percentage': test_split,
-                    'strategy': strategy
-                },
-
+                "test_group": {"name": strategy.strategy_name, "traffic_percentage": test_split, "strategy": strategy},
                 # Success metrics
-                'primary_metric': 'conversion_rate',
-                'secondary_metrics': [
-                    'response_rate',
-                    'engagement_score',
-                    'appointment_set_rate',
-                    'jorge_alignment_score'
+                "primary_metric": "conversion_rate",
+                "secondary_metrics": [
+                    "response_rate",
+                    "engagement_score",
+                    "appointment_set_rate",
+                    "jorge_alignment_score",
                 ],
-
                 # Monitoring and alerts
-                'monitoring_frequency_hours': 6,
-                'early_stopping_conditions': {
-                    'min_effect_size': 0.05,  # 5% minimum improvement
-                    'max_p_value': 0.01,      # High significance threshold
-                    'max_negative_impact': -0.02  # Stop if performance drops 2%
+                "monitoring_frequency_hours": 6,
+                "early_stopping_conditions": {
+                    "min_effect_size": 0.05,  # 5% minimum improvement
+                    "max_p_value": 0.01,  # High significance threshold
+                    "max_negative_impact": -0.02,  # Stop if performance drops 2%
                 },
-
                 # Implementation details
-                'rollout_strategy': 'gradual',
-                'rollback_conditions': await self._define_rollback_conditions(strategy),
-                'winner_criteria': await self._define_winner_criteria(),
-
+                "rollout_strategy": "gradual",
+                "rollback_conditions": await self._define_rollback_conditions(strategy),
+                "winner_criteria": await self._define_winner_criteria(),
                 # Jorge methodology validation
-                'methodology_constraints': await self._define_methodology_constraints(),
-                'jorge_approval_required': True,
-
+                "methodology_constraints": await self._define_methodology_constraints(),
+                "jorge_approval_required": True,
                 # Status tracking
-                'status': 'configured',
-                'current_sample_size': {'control': 0, 'test': 0},
-                'current_results': {},
-                'statistical_significance': None
+                "status": "configured",
+                "current_sample_size": {"control": 0, "test": 0},
+                "current_results": {},
+                "statistical_significance": None,
             }
 
             # Store test configuration
-            self.ab_tests[test_config['test_id']] = test_config
+            self.ab_tests[test_config["test_id"]] = test_config
 
             # Set up monitoring and alerting
             await self._setup_ab_test_monitoring(test_config)
 
             # Activate the test
-            test_config['status'] = 'active'
+            test_config["status"] = "active"
 
-            logger.info(f"A/B test activated: {test_config['test_id']} "
-                       f"({test_split:.1%} traffic split for {test_duration_days} days)")
+            logger.info(
+                f"A/B test activated: {test_config['test_id']} "
+                f"({test_split:.1%} traffic split for {test_duration_days} days)"
+            )
 
             return {
-                'test_id': test_config['test_id'],
-                'status': 'active',
-                'configuration': test_config,
-                'monitoring_dashboard_url': f"/ab-tests/{test_config['test_id']}",
-                'expected_completion_date': test_config['test_end_date'].isoformat(),
-                'minimum_runtime_days': max(7, test_duration_days // 2),
-                'early_results_available_date': (datetime.now() + timedelta(days=3)).isoformat()
+                "test_id": test_config["test_id"],
+                "status": "active",
+                "configuration": test_config,
+                "monitoring_dashboard_url": f"/ab-tests/{test_config['test_id']}",
+                "expected_completion_date": test_config["test_end_date"].isoformat(),
+                "minimum_runtime_days": max(7, test_duration_days // 2),
+                "early_results_available_date": (datetime.now() + timedelta(days=3)).isoformat(),
             }
 
         except Exception as e:
             logger.error(f"Error implementing A/B test: {e}")
             return {
-                'test_id': None,
-                'status': 'failed',
-                'error': str(e),
-                'fallback_action': 'Continue with current strategy'
+                "test_id": None,
+                "status": "failed",
+                "error": str(e),
+                "fallback_action": "Continue with current strategy",
             }
 
     async def monitor_ab_test_results(self, test_id: str) -> Dict[str, Any]:
@@ -878,46 +809,41 @@ class BotStrategyOptimizer:
 
             # Generate results summary
             results = {
-                'test_id': test_id,
-                'test_status': test_config['status'],
-                'test_progress': await self._calculate_test_progress(test_config, test_data),
-
+                "test_id": test_id,
+                "test_status": test_config["status"],
+                "test_progress": await self._calculate_test_progress(test_config, test_data),
                 # Performance metrics
-                'control_performance': test_data['control_metrics'],
-                'test_performance': test_data['test_metrics'],
-                'performance_delta': test_data['performance_delta'],
-
+                "control_performance": test_data["control_metrics"],
+                "test_performance": test_data["test_metrics"],
+                "performance_delta": test_data["performance_delta"],
                 # Statistical analysis
-                'statistical_significance': significance_analysis['significant'],
-                'p_value': significance_analysis['p_value'],
-                'confidence_interval': significance_analysis['confidence_interval'],
-                'effect_size': significance_analysis['effect_size'],
-
+                "statistical_significance": significance_analysis["significant"],
+                "p_value": significance_analysis["p_value"],
+                "confidence_interval": significance_analysis["confidence_interval"],
+                "effect_size": significance_analysis["effect_size"],
                 # Jorge methodology validation
-                'methodology_compliance': await self._validate_methodology_compliance(test_data),
-                'jorge_alignment_impact': test_data['jorge_metrics'],
-
+                "methodology_compliance": await self._validate_methodology_compliance(test_data),
+                "jorge_alignment_impact": test_data["jorge_metrics"],
                 # Decision recommendations
-                'recommendation': await self._generate_test_recommendation(
+                "recommendation": await self._generate_test_recommendation(
                     significance_analysis, test_data, test_config
                 ),
-                'next_steps': await self._determine_next_steps(significance_analysis, test_config),
-
+                "next_steps": await self._determine_next_steps(significance_analysis, test_config),
                 # Implementation details
-                'sample_sizes': test_data['sample_sizes'],
-                'remaining_runtime': await self._calculate_remaining_runtime(test_config),
-                'early_stopping_triggered': significance_analysis.get('early_stopping', False)
+                "sample_sizes": test_data["sample_sizes"],
+                "remaining_runtime": await self._calculate_remaining_runtime(test_config),
+                "early_stopping_triggered": significance_analysis.get("early_stopping", False),
             }
 
             # Update test configuration with results
-            test_config['current_results'] = results
-            test_config['last_updated'] = datetime.now()
+            test_config["current_results"] = results
+            test_config["last_updated"] = datetime.now()
 
             return results
 
         except Exception as e:
             logger.error(f"Error monitoring A/B test {test_id}: {e}")
-            return {'test_id': test_id, 'status': 'error', 'error': str(e)}
+            return {"test_id": test_id, "status": "error", "error": str(e)}
 
     # =========================================================================
     # HELPER METHODS AND UTILITIES
@@ -928,21 +854,21 @@ class BotStrategyOptimizer:
         try:
             # Analyze lead characteristics
             lead_characteristics = {
-                'communication_style': lead_profile.get('communication_preference', 'direct'),
-                'response_speed': lead_profile.get('avg_response_time_hours', 24),
-                'engagement_level': lead_profile.get('engagement_score', 0.5),
-                'temperature': lead_profile.get('seller_temperature', 50),
-                'motivation': lead_profile.get('motivation', 'exploring'),
-                'timeline': lead_profile.get('timeline', '60_days')
+                "communication_style": lead_profile.get("communication_preference", "direct"),
+                "response_speed": lead_profile.get("avg_response_time_hours", 24),
+                "engagement_level": lead_profile.get("engagement_score", 0.5),
+                "temperature": lead_profile.get("seller_temperature", 50),
+                "motivation": lead_profile.get("motivation", "exploring"),
+                "timeline": lead_profile.get("timeline", "60_days"),
             }
 
             # Determine optimal approach
-            if lead_characteristics['temperature'] > 75:
-                preferred_approach = 'direct_closing'
-            elif lead_characteristics['engagement_level'] > 0.7:
-                preferred_approach = 'consultative_with_pressure'
+            if lead_characteristics["temperature"] > 75:
+                preferred_approach = "direct_closing"
+            elif lead_characteristics["engagement_level"] > 0.7:
+                preferred_approach = "consultative_with_pressure"
             else:
-                preferred_approach = 'educational_then_confrontational'
+                preferred_approach = "educational_then_confrontational"
 
             # Calculate Jorge methodology fit
             confrontational_receptivity = await self._calculate_confrontational_receptivity(lead_profile)
@@ -957,10 +883,10 @@ class BotStrategyOptimizer:
                 confrontational_receptivity=confrontational_receptivity,
                 direct_question_effectiveness=await self._calculate_direct_question_effectiveness(lead_profile),
                 objection_patterns=await self._predict_objection_patterns(lead_profile),
-                conversion_probability=lead_profile.get('predicted_conversion_probability', 0.5),
+                conversion_probability=lead_profile.get("predicted_conversion_probability", 0.5),
                 strategy_confidence=0.8,
                 last_optimization=datetime.now(),
-                success_history=[]
+                success_history=[],
             )
 
             return profile
@@ -969,75 +895,74 @@ class BotStrategyOptimizer:
             logger.error(f"Error creating personalization profile: {e}")
             return await self._get_default_personalization_profile()
 
-    async def _find_similar_success_patterns(self,
-                                           lead_profile: Dict[str, Any],
-                                           bot_name: str) -> List[Dict[str, Any]]:
+    async def _find_similar_success_patterns(self, lead_profile: Dict[str, Any], bot_name: str) -> List[Dict[str, Any]]:
         """Find success patterns from similar leads."""
         # Implementation would analyze historical data for similar leads
         return [
             {
-                'pattern_type': 'direct_questioning',
-                'success_rate': 0.78,
-                'description': 'Direct price qualification followed by timeline pressure',
-                'usage_context': 'high_temperature_leads'
+                "pattern_type": "direct_questioning",
+                "success_rate": 0.78,
+                "description": "Direct price qualification followed by timeline pressure",
+                "usage_context": "high_temperature_leads",
             },
             {
-                'pattern_type': 'objection_preemption',
-                'success_rate': 0.65,
-                'description': 'Address common objections before they arise',
-                'usage_context': 'analytical_personality_types'
-            }
+                "pattern_type": "objection_preemption",
+                "success_rate": 0.65,
+                "description": "Address common objections before they arise",
+                "usage_context": "analytical_personality_types",
+            },
         ]
 
     # Placeholder methods for comprehensive functionality
     async def _get_bot_performance_metrics(self, bot_name: str) -> Dict[str, float]:
         return {
-            'conversion_rate': 0.34,
-            'response_rate': 0.67,
-            'engagement_score': 0.72,
-            'avg_conversation_length': 6.5
+            "conversion_rate": 0.34,
+            "response_rate": 0.67,
+            "engagement_score": 0.72,
+            "avg_conversation_length": 6.5,
         }
 
-    async def _generate_optimized_strategy(self,
-                                         bot_name: str,
-                                         personalization_profile: PersonalizationProfile,
-                                         similar_patterns: List[Dict],
-                                         context: Dict) -> Dict[str, Any]:
+    async def _generate_optimized_strategy(
+        self,
+        bot_name: str,
+        personalization_profile: PersonalizationProfile,
+        similar_patterns: List[Dict],
+        context: Dict,
+    ) -> Dict[str, Any]:
         return {
-            'approach_type': personalization_profile.preferred_approach,
-            'response_patterns': {
-                'opening': ['Direct qualification question', 'Timeline inquiry'],
-                'objection_handling': ['Acknowledge and redirect', 'Use data to overcome'],
-                'closing': ['Create urgency', 'Summarize value proposition']
+            "approach_type": personalization_profile.preferred_approach,
+            "response_patterns": {
+                "opening": ["Direct qualification question", "Timeline inquiry"],
+                "objection_handling": ["Acknowledge and redirect", "Use data to overcome"],
+                "closing": ["Create urgency", "Summarize value proposition"],
             },
-            'timing_parameters': {'response_delay_minutes': 5, 'followup_hours': 24},
-            'personalization_rules': {'use_name': True, 'reference_property': True}
+            "timing_parameters": {"response_delay_minutes": 5, "followup_hours": 24},
+            "personalization_rules": {"use_name": True, "reference_property": True},
         }
 
-    async def _validate_jorge_methodology_alignment(self,
-                                                  strategy: Dict[str, Any],
-                                                  lead_profile: Dict[str, Any]) -> Dict[str, float]:
+    async def _validate_jorge_methodology_alignment(
+        self, strategy: Dict[str, Any], lead_profile: Dict[str, Any]
+    ) -> Dict[str, float]:
         return {
-            'alignment_score': 0.85,
-            'confrontational_appropriateness': 0.80,
-            'direct_questioning_fit': 0.90,
-            'pressure_application_timing': 0.75
+            "alignment_score": 0.85,
+            "confrontational_appropriateness": 0.80,
+            "direct_questioning_fit": 0.90,
+            "pressure_application_timing": 0.75,
         }
 
-    async def _apply_methodology_adjustments(self,
-                                           strategy: Dict[str, Any],
-                                           validation: Dict[str, float]) -> Dict[str, Any]:
+    async def _apply_methodology_adjustments(
+        self, strategy: Dict[str, Any], validation: Dict[str, float]
+    ) -> Dict[str, Any]:
         # Apply Jorge methodology enhancements
         return strategy
 
-    async def _project_strategy_performance(self,
-                                          strategy: Dict[str, Any],
-                                          current_performance: Dict[str, float],
-                                          lead_profile: Dict[str, Any]) -> Dict[str, float]:
+    async def _project_strategy_performance(
+        self, strategy: Dict[str, Any], current_performance: Dict[str, float], lead_profile: Dict[str, Any]
+    ) -> Dict[str, float]:
         return {
-            'projected_conversion_rate': current_performance['conversion_rate'] * 1.15,
-            'projected_response_rate': current_performance['response_rate'] * 1.08,
-            'projected_engagement_score': current_performance['engagement_score'] * 1.12
+            "projected_conversion_rate": current_performance["conversion_rate"] * 1.15,
+            "projected_response_rate": current_performance["response_rate"] * 1.08,
+            "projected_engagement_score": current_performance["engagement_score"] * 1.12,
         }
 
     # Additional placeholder methods would be implemented for full functionality
@@ -1046,7 +971,7 @@ class BotStrategyOptimizer:
             strategy_id=f"fallback_{bot_name}",
             strategy_name=f"Fallback {bot_name} Strategy",
             bot_type=bot_name,
-            approach_type='consultative',
+            approach_type="consultative",
             response_patterns={},
             timing_parameters={},
             personalization_rules={},
@@ -1061,7 +986,7 @@ class BotStrategyOptimizer:
             active=True,
             last_updated=datetime.now(),
             success_patterns=[],
-            failure_patterns=[]
+            failure_patterns=[],
         )
 
     # Many more helper methods would be implemented for the complete system...
@@ -1084,26 +1009,26 @@ class BotStrategyOptimizer:
 
     async def _apply_jorge_timing_methodology(self, timing: Dict, action_type: str) -> Dict:
         return {
-            'optimal_time': 'Tuesday 10:00 AM',
-            'success_probability': 0.78,
-            'confidence_score': 0.85,
-            'alternative_windows': ['Wednesday 2:00 PM'],
-            'confrontational_readiness': 0.80,
-            'pressure_timing': 'after_initial_response',
-            'escalation_window': 'within_48_hours',
-            'delay_hours': 2,
-            'sequence_timing': {'followup_1': 24, 'followup_2': 72},
-            'emergency_conditions': ['competitor_contact'],
-            'data_confidence': 0.75,
-            'methodology_score': 0.88
+            "optimal_time": "Tuesday 10:00 AM",
+            "success_probability": 0.78,
+            "confidence_score": 0.85,
+            "alternative_windows": ["Wednesday 2:00 PM"],
+            "confrontational_readiness": 0.80,
+            "pressure_timing": "after_initial_response",
+            "escalation_window": "within_48_hours",
+            "delay_hours": 2,
+            "sequence_timing": {"followup_1": 24, "followup_2": 72},
+            "emergency_conditions": ["competitor_contact"],
+            "data_confidence": 0.75,
+            "methodology_score": 0.88,
         }
 
     async def _get_fallback_timing_recommendation(self, action_type: str) -> Dict:
         return {
-            'optimal_contact_time': 'Tuesday 10:00 AM',
-            'success_probability': 0.65,
-            'confidence_score': 0.50,
-            'recommended_delay_hours': 24
+            "optimal_contact_time": "Tuesday 10:00 AM",
+            "success_probability": 0.65,
+            "confidence_score": 0.50,
+            "recommended_delay_hours": 24,
         }
 
 
@@ -1112,6 +1037,7 @@ class BotStrategyOptimizer:
 # =============================================================================
 
 _bot_optimizer_instance = None
+
 
 def get_bot_strategy_optimizer() -> BotStrategyOptimizer:
     """Get singleton bot strategy optimizer instance."""
@@ -1126,6 +1052,7 @@ def get_bot_strategy_optimizer() -> BotStrategyOptimizer:
 # =============================================================================
 
 if __name__ == "__main__":
+
     async def main():
         print("🤖 Jorge's Bot Strategy Optimization Engine - Track 5")
         print("=" * 60)
@@ -1136,26 +1063,22 @@ if __name__ == "__main__":
         print("\n🎯 Optimizing conversation strategy...")
 
         demo_lead_profile = {
-            'id': 'demo_lead_001',
-            'seller_temperature': 75,
-            'communication_preference': 'direct',
-            'engagement_score': 0.8,
-            'motivation': 'job_relocation',
-            'timeline': '30_days'
+            "id": "demo_lead_001",
+            "seller_temperature": 75,
+            "communication_preference": "direct",
+            "engagement_score": 0.8,
+            "motivation": "job_relocation",
+            "timeline": "30_days",
         }
 
-        strategy = await optimizer.optimize_conversation_strategy(
-            'jorge_seller_bot', demo_lead_profile
-        )
+        strategy = await optimizer.optimize_conversation_strategy("jorge_seller_bot", demo_lead_profile)
 
         print(f"✅ Generated optimized strategy: {strategy.strategy_name}")
         print(f"   🎯 Jorge alignment: {strategy.jorge_alignment_score:.1%}")
         print(f"   📈 Projected conversion: {strategy.conversion_rate:.1%}")
 
         print("\n🕐 Optimizing timing...")
-        timing = await optimizer.recommend_timing_optimization(
-            'demo_lead_001', 'jorge_seller_bot', 'follow_up'
-        )
+        timing = await optimizer.recommend_timing_optimization("demo_lead_001", "jorge_seller_bot", "follow_up")
 
         print(f"✅ Optimal contact time: {timing['optimal_contact_time']}")
         print(f"   📊 Success probability: {timing['success_probability']:.1%}")

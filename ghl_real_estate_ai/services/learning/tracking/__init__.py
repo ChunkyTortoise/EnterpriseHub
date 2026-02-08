@@ -8,7 +8,4 @@ Supports multiple storage backends with consistent interface.
 from .behavior_tracker import InMemoryBehaviorTracker
 from .event_collector import EventCollector
 
-__all__ = [
-    "InMemoryBehaviorTracker",
-    "EventCollector"
-]
+__all__ = ["InMemoryBehaviorTracker", "EventCollector"]

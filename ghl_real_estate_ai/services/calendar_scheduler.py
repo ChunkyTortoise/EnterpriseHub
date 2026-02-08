@@ -24,10 +24,10 @@ Security Features:
 """
 
 import asyncio
+import uuid
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
-import uuid
 
 import pytz
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -61,9 +61,9 @@ class AppointmentDuration(int, Enum):
 
     BUYER_CONSULTATION = 60  # 1 hour buyer consultation
     LISTING_APPOINTMENT = 90  # 1.5 hours listing presentation
-    INVESTOR_MEETING = 45    # 45 min investor meeting
-    PROPERTY_SHOWING = 30    # 30 min property showing
-    FOLLOW_UP_CALL = 15      # 15 min follow-up call
+    INVESTOR_MEETING = 45  # 45 min investor meeting
+    PROPERTY_SHOWING = 30  # 30 min property showing
+    FOLLOW_UP_CALL = 15  # 15 min follow-up call
 
 
 class TimeSlot(BaseModel):
@@ -76,7 +76,7 @@ class TimeSlot(BaseModel):
     timezone: str = "America/Los_Angeles"
     is_available: bool = True
 
-    @field_validator('start_time', 'end_time')
+    @field_validator("start_time", "end_time")
     @classmethod
     def validate_timezone_aware(cls, v):
         """Ensure all datetime objects are timezone-aware."""
@@ -109,7 +109,7 @@ class AppointmentBooking(BaseModel):
     confirmation_sent: bool = False
     calendar_event_id: Optional[str] = None
 
-    @field_validator('lead_score')
+    @field_validator("lead_score")
     @classmethod
     def validate_score_threshold(cls, v):
         """Ensure lead score meets booking threshold."""
@@ -166,8 +166,8 @@ class CalendarScheduler:
                 "calendar_id": self.calendar_id,
                 "booking_threshold": self.booking_threshold,
                 "buffer_minutes": self.buffer_minutes,
-                "business_hours": self.business_hours
-            }
+                "business_hours": self.business_hours,
+            },
         )
 
     def _get_business_hours(self) -> Dict[str, Dict[str, str]]:
@@ -184,14 +184,11 @@ class CalendarScheduler:
             "thursday": {"start": "09:00", "end": "18:00"},
             "friday": {"start": "09:00", "end": "18:00"},
             "saturday": {"start": "10:00", "end": "16:00"},
-            "sunday": {"start": "closed", "end": "closed"}
+            "sunday": {"start": "closed", "end": "closed"},
         }
 
     async def should_auto_book(
-        self,
-        lead_score: int,
-        contact_info: Dict[str, Any],
-        extracted_data: Dict[str, Any]
+        self, lead_score: int, contact_info: Dict[str, Any], extracted_data: Dict[str, Any]
     ) -> Tuple[bool, str, AppointmentType]:
         """
         Determine if lead qualifies for automatic booking.
@@ -222,8 +219,8 @@ class CalendarScheduler:
                         "contact_id": contact_id,
                         "lead_score": lead_score,
                         "threshold": self.booking_threshold,
-                        "reason": "score_too_low"
-                    }
+                        "reason": "score_too_low",
+                    },
                 )
                 return False, reason, AppointmentType.BUYER_CONSULTATION
 
@@ -235,8 +232,8 @@ class CalendarScheduler:
                     extra={
                         "contact_id": contact_id,
                         "reason": "rate_limit_exceeded",
-                        "security_event": "potential_booking_abuse"
-                    }
+                        "security_event": "potential_booking_abuse",
+                    },
                 )
                 return False, reason, AppointmentType.BUYER_CONSULTATION
 
@@ -249,8 +246,8 @@ class CalendarScheduler:
                         "contact_id": contact_id,
                         "has_phone": bool(contact_info.get("phone")),
                         "has_email": bool(contact_info.get("email")),
-                        "reason": "missing_contact_info"
-                    }
+                        "reason": "missing_contact_info",
+                    },
                 )
                 return False, reason, AppointmentType.BUYER_CONSULTATION
 
@@ -272,8 +269,8 @@ class CalendarScheduler:
                     "lead_score": lead_score,
                     "appointment_type": appointment_type.value,
                     "is_urgent": is_urgent,
-                    "reason": "qualified_for_booking"
-                }
+                    "reason": "qualified_for_booking",
+                },
             )
 
             return True, reason, appointment_type
@@ -286,9 +283,9 @@ class CalendarScheduler:
                     "contact_id": contact_id,
                     "error": str(e),
                     "error_type": type(e).__name__,
-                    "security_event": "auto_booking_evaluation_failure"
+                    "security_event": "auto_booking_evaluation_failure",
                 },
-                exc_info=True
+                exc_info=True,
             )
             return False, error_msg, AppointmentType.BUYER_CONSULTATION
 
@@ -323,8 +320,8 @@ class CalendarScheduler:
                     "contact_id": contact_id,
                     "attempts_count": len(recent_attempts),
                     "max_allowed": self._max_attempts_per_hour,
-                    "security_event": "rate_limit_exceeded"
-                }
+                    "security_event": "rate_limit_exceeded",
+                },
             )
             return False
 
@@ -371,17 +368,22 @@ class CalendarScheduler:
 
         timeline_lower = timeline.lower()
         urgent_keywords = [
-            "asap", "immediately", "urgent", "this month", "this week",
-            "next week", "soon", "right away", "now", "quickly"
+            "asap",
+            "immediately",
+            "urgent",
+            "this month",
+            "this week",
+            "next week",
+            "soon",
+            "right away",
+            "now",
+            "quickly",
         ]
 
         return any(keyword in timeline_lower for keyword in urgent_keywords)
 
     async def get_available_slots(
-        self,
-        appointment_type: AppointmentType,
-        days_ahead: int = 7,
-        preferred_times: Optional[List[str]] = None
+        self, appointment_type: AppointmentType, days_ahead: int = 7, preferred_times: Optional[List[str]] = None
     ) -> List[TimeSlot]:
         """
         Get available appointment slots for the specified type.
@@ -400,8 +402,8 @@ class CalendarScheduler:
                 extra={
                     "calendar_id": self.calendar_id,
                     "appointment_type": appointment_type.value,
-                    "security_event": "calendar_misconfiguration"
-                }
+                    "security_event": "calendar_misconfiguration",
+                },
             )
             return []
 
@@ -415,7 +417,7 @@ class CalendarScheduler:
                 calendar_id=self.calendar_id,
                 start_date=start_date.isoformat(),
                 end_date=end_date.isoformat(),
-                timezone="America/Los_Angeles"
+                timezone="America/Los_Angeles",
             )
 
             # Process and filter slots
@@ -452,7 +454,7 @@ class CalendarScheduler:
                         end_time=end_time,
                         duration_minutes=duration,
                         appointment_type=appointment_type,
-                        timezone="America/Los_Angeles"
+                        timezone="America/Los_Angeles",
                     )
 
                     available_slots.append(time_slot)
@@ -460,11 +462,7 @@ class CalendarScheduler:
                 except (ValueError, KeyError) as e:
                     logger.warning(
                         f"Failed to parse slot data: {slot_data} - {str(e)}",
-                        extra={
-                            "slot_data": slot_data,
-                            "error": str(e),
-                            "appointment_type": appointment_type.value
-                        }
+                        extra={"slot_data": slot_data, "error": str(e), "appointment_type": appointment_type.value},
                     )
                     continue
 
@@ -479,8 +477,8 @@ class CalendarScheduler:
                     "slots_found": len(available_slots),
                     "slots_returned": len(limited_slots),
                     "days_ahead": days_ahead,
-                    "calendar_id": self.calendar_id
-                }
+                    "calendar_id": self.calendar_id,
+                },
             )
 
             return limited_slots
@@ -494,9 +492,9 @@ class CalendarScheduler:
                     "appointment_type": appointment_type.value,
                     "error": str(e),
                     "error_type": type(e).__name__,
-                    "security_event": "slot_fetch_failure"
+                    "security_event": "slot_fetch_failure",
                 },
-                exc_info=True
+                exc_info=True,
             )
             return []
 
@@ -534,12 +532,7 @@ class CalendarScheduler:
         except (ValueError, AttributeError) as e:
             logger.warning(
                 f"Failed to parse business hours: {start_time_str}-{end_time_str} - {str(e)}",
-                extra={
-                    "weekday": weekday,
-                    "start_time": start_time_str,
-                    "end_time": end_time_str,
-                    "error": str(e)
-                }
+                extra={"weekday": weekday, "start_time": start_time_str, "end_time": end_time_str, "error": str(e)},
             )
             return False
 
@@ -557,9 +550,9 @@ class CalendarScheduler:
         hour = slot_time.hour
 
         time_periods = {
-            "morning": range(8, 12),      # 8 AM - 12 PM
-            "afternoon": range(12, 17),   # 12 PM - 5 PM
-            "evening": range(17, 20)      # 5 PM - 8 PM
+            "morning": range(8, 12),  # 8 AM - 12 PM
+            "afternoon": range(12, 17),  # 12 PM - 5 PM
+            "evening": range(17, 20),  # 5 PM - 8 PM
         }
 
         for preferred in preferred_times:
@@ -575,7 +568,7 @@ class CalendarScheduler:
         contact_info: Dict[str, Any],
         time_slot: TimeSlot,
         lead_score: int,
-        extracted_data: Dict[str, Any]
+        extracted_data: Dict[str, Any],
     ) -> BookingResult:
         """
         Book an appointment for a qualified lead.
@@ -599,8 +592,8 @@ class CalendarScheduler:
                 "contact_id": contact_id,
                 "appointment_type": time_slot.appointment_type.value,
                 "appointment_time": time_slot.start_time.isoformat(),
-                "lead_score": lead_score
-            }
+                "lead_score": lead_score,
+            },
         )
 
         try:
@@ -611,7 +604,7 @@ class CalendarScheduler:
                 lead_score=lead_score,
                 appointment_type=time_slot.appointment_type,
                 time_slot=time_slot,
-                contact_info=contact_info
+                contact_info=contact_info,
             )
 
             # Create appointment in GHL calendar
@@ -624,16 +617,14 @@ class CalendarScheduler:
                 calendar_id=self.calendar_id,
                 start_time=time_slot.start_time.isoformat(),
                 title=appointment_title,
-                assigned_user_id=settings.jorge_user_id
+                assigned_user_id=settings.jorge_user_id,
             )
 
             # Update booking with calendar event ID
             booking.calendar_event_id = calendar_response.get("id")
 
             # Generate confirmation actions
-            confirmation_actions = await self._generate_confirmation_actions(
-                booking, contact_info, extracted_data
-            )
+            confirmation_actions = await self._generate_confirmation_actions(booking, contact_info, extracted_data)
 
             # Mark confirmation as sent
             booking.confirmation_sent = True
@@ -647,15 +638,11 @@ class CalendarScheduler:
                     "appointment_type": time_slot.appointment_type.value,
                     "appointment_time": time_slot.start_time.isoformat(),
                     "confirmation_actions": len(confirmation_actions),
-                    "security_event": "appointment_booked_successfully"
-                }
+                    "security_event": "appointment_booked_successfully",
+                },
             )
 
-            return BookingResult(
-                success=True,
-                booking=booking,
-                confirmation_actions=confirmation_actions
-            )
+            return BookingResult(success=True, booking=booking, confirmation_actions=confirmation_actions)
 
         except Exception as e:
             error_msg = f"Failed to book appointment: {str(e)}"
@@ -666,26 +653,20 @@ class CalendarScheduler:
                     "contact_id": contact_id,
                     "error": str(e),
                     "error_type": type(e).__name__,
-                    "security_event": "appointment_booking_failure"
+                    "security_event": "appointment_booking_failure",
                 },
-                exc_info=True
+                exc_info=True,
             )
 
             # Check if we should fallback to manual scheduling
             fallback_to_manual = self._should_fallback_to_manual(e)
 
             return BookingResult(
-                success=False,
-                error_message=error_msg,
-                fallback_to_manual=fallback_to_manual,
-                confirmation_actions=[]
+                success=False, error_message=error_msg, fallback_to_manual=fallback_to_manual, confirmation_actions=[]
             )
 
     def _generate_appointment_title(
-        self,
-        contact_info: Dict[str, Any],
-        appointment_type: AppointmentType,
-        extracted_data: Dict[str, Any]
+        self, contact_info: Dict[str, Any], appointment_type: AppointmentType, extracted_data: Dict[str, Any]
     ) -> str:
         """
         Generate descriptive appointment title.
@@ -707,7 +688,7 @@ class CalendarScheduler:
             AppointmentType.LISTING_APPOINTMENT: "Listing Appointment",
             AppointmentType.INVESTOR_MEETING: "Investor Meeting",
             AppointmentType.PROPERTY_SHOWING: "Property Showing",
-            AppointmentType.FOLLOW_UP_CALL: "Follow-up Call"
+            AppointmentType.FOLLOW_UP_CALL: "Follow-up Call",
         }
 
         base_title = f"{type_titles[appointment_type]} - {name}"
@@ -731,10 +712,7 @@ class CalendarScheduler:
         return base_title
 
     async def _generate_confirmation_actions(
-        self,
-        booking: AppointmentBooking,
-        contact_info: Dict[str, Any],
-        extracted_data: Dict[str, Any]
+        self, booking: AppointmentBooking, contact_info: Dict[str, Any], extracted_data: Dict[str, Any]
     ) -> List[GHLAction]:
         """
         Generate GHL actions for appointment confirmation.
@@ -753,54 +731,41 @@ class CalendarScheduler:
         confirmation_message = self._generate_confirmation_message(booking, contact_info)
 
         # Send SMS confirmation
-        actions.append(GHLAction(
-            type=ActionType.SEND_MESSAGE,
-            message=confirmation_message,
-            channel=MessageType.SMS
-        ))
+        actions.append(GHLAction(type=ActionType.SEND_MESSAGE, message=confirmation_message, channel=MessageType.SMS))
 
         # Add appointment-related tags
-        actions.append(GHLAction(
-            type=ActionType.ADD_TAG,
-            tag=f"Appointment-{booking.appointment_type.value.title()}"
-        ))
+        actions.append(GHLAction(type=ActionType.ADD_TAG, tag=f"Appointment-{booking.appointment_type.value.title()}"))
 
-        actions.append(GHLAction(
-            type=ActionType.ADD_TAG,
-            tag="Auto-Booked"
-        ))
+        actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Auto-Booked"))
 
         # Add urgent tag if timeline is urgent
         timeline = extracted_data.get("timeline", "")
         if self._is_urgent_timeline(timeline):
-            actions.append(GHLAction(
-                type=ActionType.ADD_TAG,
-                tag="Urgent-Timeline"
-            ))
+            actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Urgent-Timeline"))
 
         # Update appointment details in custom fields
         if settings.custom_field_appointment_time:
             formatted_time = booking.time_slot.format_for_lead()
-            actions.append(GHLAction(
-                type=ActionType.UPDATE_CUSTOM_FIELD,
-                field=settings.custom_field_appointment_time,
-                value=formatted_time
-            ))
+            actions.append(
+                GHLAction(
+                    type=ActionType.UPDATE_CUSTOM_FIELD,
+                    field=settings.custom_field_appointment_time,
+                    value=formatted_time,
+                )
+            )
 
         if settings.custom_field_appointment_type:
-            actions.append(GHLAction(
-                type=ActionType.UPDATE_CUSTOM_FIELD,
-                field=settings.custom_field_appointment_type,
-                value=booking.appointment_type.value
-            ))
+            actions.append(
+                GHLAction(
+                    type=ActionType.UPDATE_CUSTOM_FIELD,
+                    field=settings.custom_field_appointment_type,
+                    value=booking.appointment_type.value,
+                )
+            )
 
         return actions
 
-    def _generate_confirmation_message(
-        self,
-        booking: AppointmentBooking,
-        contact_info: Dict[str, Any]
-    ) -> str:
+    def _generate_confirmation_message(self, booking: AppointmentBooking, contact_info: Dict[str, Any]) -> str:
         """
         Generate SMS confirmation message for the appointment.
 
@@ -811,7 +776,7 @@ class CalendarScheduler:
         Returns:
             Formatted confirmation message
         """
-        name = contact_info.get('first_name', 'there')
+        name = contact_info.get("first_name", "there")
         appointment_time = booking.time_slot.format_for_lead()
 
         type_messages = {
@@ -819,7 +784,7 @@ class CalendarScheduler:
             AppointmentType.LISTING_APPOINTMENT: "listing appointment",
             AppointmentType.INVESTOR_MEETING: "investment discussion",
             AppointmentType.PROPERTY_SHOWING: "property showing",
-            AppointmentType.FOLLOW_UP_CALL: "follow-up call"
+            AppointmentType.FOLLOW_UP_CALL: "follow-up call",
         }
 
         appointment_description = type_messages[booking.appointment_type]
@@ -859,7 +824,7 @@ Looking forward to helping you with your real estate needs!
             "double booking",
             "timeout",
             "rate limit",
-            "api error"
+            "api error",
         ]
 
         error_str = str(error).lower()
@@ -870,7 +835,7 @@ Looking forward to helping you with your real estate needs!
         contact_id: str,
         appointment_type: AppointmentType,
         preferred_times: Optional[List[str]] = None,
-        days_ahead: int = 5
+        days_ahead: int = 5,
     ) -> List[str]:
         """
         Generate appointment time suggestions for AI responses.
@@ -886,9 +851,7 @@ Looking forward to helping you with your real estate needs!
         """
         try:
             available_slots = await self.get_available_slots(
-                appointment_type=appointment_type,
-                days_ahead=days_ahead,
-                preferred_times=preferred_times
+                appointment_type=appointment_type, days_ahead=days_ahead, preferred_times=preferred_times
             )
 
             if not available_slots:
@@ -897,8 +860,8 @@ Looking forward to helping you with your real estate needs!
                     extra={
                         "contact_id": contact_id,
                         "appointment_type": appointment_type.value,
-                        "days_ahead": days_ahead
-                    }
+                        "days_ahead": days_ahead,
+                    },
                 )
                 return ["I need to check my calendar and get back to you with available times"]
 
@@ -913,8 +876,8 @@ Looking forward to helping you with your real estate needs!
                 extra={
                     "contact_id": contact_id,
                     "appointment_type": appointment_type.value,
-                    "suggestions_count": len(suggestions)
-                }
+                    "suggestions_count": len(suggestions),
+                },
             )
 
             return suggestions
@@ -922,12 +885,8 @@ Looking forward to helping you with your real estate needs!
         except Exception as e:
             logger.error(
                 f"Failed to generate time suggestions for {contact_id}: {str(e)}",
-                extra={
-                    "contact_id": contact_id,
-                    "error": str(e),
-                    "error_type": type(e).__name__
-                },
-                exc_info=True
+                extra={"contact_id": contact_id, "error": str(e), "error_type": type(e).__name__},
+                exc_info=True,
             )
             return ["Let me check my calendar and get back to you with some available times"]
 
@@ -937,7 +896,7 @@ Looking forward to helping you with your real estate needs!
         contact_info: Dict[str, Any],
         lead_score: int,
         extracted_data: Dict[str, Any],
-        message_content: str
+        message_content: str,
     ) -> Tuple[bool, str, List[GHLAction]]:
         """
         Handle incoming appointment booking request from qualified lead.
@@ -963,19 +922,12 @@ Looking forward to helping you with your real estate needs!
             if not should_book:
                 logger.info(
                     f"Auto-booking not triggered for {contact_id}: {reason}",
-                    extra={
-                        "contact_id": contact_id,
-                        "lead_score": lead_score,
-                        "reason": reason
-                    }
+                    extra={"contact_id": contact_id, "lead_score": lead_score, "reason": reason},
                 )
                 return False, "", []
 
             # Get available slots
-            available_slots = await self.get_available_slots(
-                appointment_type=appointment_type,
-                days_ahead=7
-            )
+            available_slots = await self.get_available_slots(appointment_type=appointment_type, days_ahead=7)
 
             if not available_slots:
                 # No availability - fallback to manual scheduling
@@ -986,15 +938,12 @@ Looking forward to helping you with your real estate needs!
 
                 fallback_actions = [
                     GHLAction(type=ActionType.ADD_TAG, tag="Needs-Manual-Scheduling"),
-                    GHLAction(type=ActionType.ADD_TAG, tag="High-Priority-Lead")
+                    GHLAction(type=ActionType.ADD_TAG, tag="High-Priority-Lead"),
                 ]
 
                 if settings.manual_scheduling_workflow_id:
                     fallback_actions.append(
-                        GHLAction(
-                            type=ActionType.TRIGGER_WORKFLOW,
-                            workflow_id=settings.manual_scheduling_workflow_id
-                        )
+                        GHLAction(type=ActionType.TRIGGER_WORKFLOW, workflow_id=settings.manual_scheduling_workflow_id)
                     )
 
                 return True, fallback_message, fallback_actions
@@ -1006,12 +955,12 @@ Looking forward to helping you with your real estate needs!
                 contact_info=contact_info,
                 time_slot=first_slot,
                 lead_score=lead_score,
-                extracted_data=extracted_data
+                extracted_data=extracted_data,
             )
 
             if booking_result.success:
                 # Successful booking
-                name = contact_info.get('first_name', 'there')
+                name = contact_info.get("first_name", "there")
                 appointment_time = first_slot.format_for_lead()
 
                 response_message = (
@@ -1031,7 +980,7 @@ Looking forward to helping you with your real estate needs!
 
                 fallback_actions = [
                     GHLAction(type=ActionType.ADD_TAG, tag="Booking-Failed-Manual-Needed"),
-                    GHLAction(type=ActionType.ADD_TAG, tag="High-Priority-Lead")
+                    GHLAction(type=ActionType.ADD_TAG, tag="High-Priority-Lead"),
                 ]
 
                 return True, response_message, fallback_actions
@@ -1043,8 +992,8 @@ Looking forward to helping you with your real estate needs!
                     extra={
                         "contact_id": contact_id,
                         "error": booking_result.error_message,
-                        "security_event": "booking_system_failure"
-                    }
+                        "security_event": "booking_system_failure",
+                    },
                 )
 
                 response_message = (
@@ -1052,10 +1001,14 @@ Looking forward to helping you with your real estate needs!
                     "availability and get back to you with some options that work for your schedule."
                 )
 
-                return True, response_message, [
-                    GHLAction(type=ActionType.ADD_TAG, tag="Booking-System-Error"),
-                    GHLAction(type=ActionType.ADD_TAG, tag="Needs-Manual-Scheduling")
-                ]
+                return (
+                    True,
+                    response_message,
+                    [
+                        GHLAction(type=ActionType.ADD_TAG, tag="Booking-System-Error"),
+                        GHLAction(type=ActionType.ADD_TAG, tag="Needs-Manual-Scheduling"),
+                    ],
+                )
 
         except Exception as e:
             logger.error(
@@ -1064,9 +1017,9 @@ Looking forward to helping you with your real estate needs!
                     "contact_id": contact_id,
                     "error": str(e),
                     "error_type": type(e).__name__,
-                    "security_event": "appointment_handler_critical_failure"
+                    "security_event": "appointment_handler_critical_failure",
                 },
-                exc_info=True
+                exc_info=True,
             )
 
             # Graceful fallback - don't expose errors to lead
@@ -1080,7 +1033,7 @@ _scheduler_instance: Optional[CalendarScheduler] = None
 def get_smart_scheduler(ghl_client: Optional[GHLClient] = None) -> CalendarScheduler:
     """
     Get or create a global instance of CalendarScheduler.
-    
+
     Returns:
         CalendarScheduler instance
     """

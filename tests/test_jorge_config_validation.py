@@ -14,10 +14,14 @@ from ghl_real_estate_ai.ghl_utils.jorge_config import (
 class TestValidateGHLIntegration:
     """Tests for JorgeEnvironmentSettings.validate_ghl_integration()."""
 
-    @patch.dict(os.environ, {
-        "JORGE_SELLER_MODE": "true",
-        "JORGE_BUYER_MODE": "true",
-    }, clear=False)
+    @patch.dict(
+        os.environ,
+        {
+            "JORGE_SELLER_MODE": "true",
+            "JORGE_BUYER_MODE": "true",
+        },
+        clear=False,
+    )
     def test_validate_warns_on_missing_workflow_ids(self):
         """validate_ghl_integration() returns warnings when workflow env vars are absent."""
         # Remove any workflow env vars that might be set
@@ -25,10 +29,15 @@ class TestValidateGHLIntegration:
             "JORGE_SELLER_MODE": "true",
             "JORGE_BUYER_MODE": "true",
         }
-        for key in ("HOT_SELLER_WORKFLOW_ID", "WARM_SELLER_WORKFLOW_ID",
-                     "HOT_BUYER_WORKFLOW_ID", "WARM_BUYER_WORKFLOW_ID",
-                     "CUSTOM_FIELD_LEAD_SCORE", "CUSTOM_FIELD_SELLER_TEMPERATURE",
-                     "CUSTOM_FIELD_BUDGET"):
+        for key in (
+            "HOT_SELLER_WORKFLOW_ID",
+            "WARM_SELLER_WORKFLOW_ID",
+            "HOT_BUYER_WORKFLOW_ID",
+            "WARM_BUYER_WORKFLOW_ID",
+            "CUSTOM_FIELD_LEAD_SCORE",
+            "CUSTOM_FIELD_SELLER_TEMPERATURE",
+            "CUSTOM_FIELD_BUDGET",
+        ):
             env_overrides[key] = ""
 
         with patch.dict(os.environ, env_overrides, clear=False):
@@ -43,27 +52,35 @@ class TestValidateGHLIntegration:
         assert any("CUSTOM_FIELD_SELLER_TEMPERATURE" in w for w in warnings)
         assert any("CUSTOM_FIELD_BUDGET" in w for w in warnings)
 
-    @patch.dict(os.environ, {
-        "JORGE_SELLER_MODE": "true",
-        "JORGE_BUYER_MODE": "true",
-        "HOT_SELLER_WORKFLOW_ID": "wf_hot_seller_123",
-        "WARM_SELLER_WORKFLOW_ID": "wf_warm_seller_456",
-        "HOT_BUYER_WORKFLOW_ID": "wf_hot_buyer_789",
-        "WARM_BUYER_WORKFLOW_ID": "wf_warm_buyer_abc",
-        "CUSTOM_FIELD_LEAD_SCORE": "cf_lead_score",
-        "CUSTOM_FIELD_SELLER_TEMPERATURE": "cf_seller_temp",
-        "CUSTOM_FIELD_BUDGET": "cf_budget",
-    }, clear=False)
+    @patch.dict(
+        os.environ,
+        {
+            "JORGE_SELLER_MODE": "true",
+            "JORGE_BUYER_MODE": "true",
+            "HOT_SELLER_WORKFLOW_ID": "wf_hot_seller_123",
+            "WARM_SELLER_WORKFLOW_ID": "wf_warm_seller_456",
+            "HOT_BUYER_WORKFLOW_ID": "wf_hot_buyer_789",
+            "WARM_BUYER_WORKFLOW_ID": "wf_warm_buyer_abc",
+            "CUSTOM_FIELD_LEAD_SCORE": "cf_lead_score",
+            "CUSTOM_FIELD_SELLER_TEMPERATURE": "cf_seller_temp",
+            "CUSTOM_FIELD_BUDGET": "cf_budget",
+        },
+        clear=False,
+    )
     def test_validate_clean_when_all_set(self):
         """No warnings when all env vars are properly configured."""
         settings = JorgeEnvironmentSettings()
         warnings = settings.validate_ghl_integration()
         assert warnings == []
 
-    @patch.dict(os.environ, {
-        "JORGE_SELLER_MODE": "false",
-        "JORGE_BUYER_MODE": "false",
-    }, clear=False)
+    @patch.dict(
+        os.environ,
+        {
+            "JORGE_SELLER_MODE": "false",
+            "JORGE_BUYER_MODE": "false",
+        },
+        clear=False,
+    )
     def test_seller_mode_disabled_skips_seller_validation(self):
         """No seller/buyer workflow warnings when modes are disabled."""
         env_overrides = {

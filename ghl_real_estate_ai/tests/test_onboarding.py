@@ -4,24 +4,26 @@ Test Suite for Partner Onboarding CLI Tool.
 Tests the interactive onboarding process for new real estate partners/tenants.
 Follows TDD discipline: RED -> GREEN -> REFACTOR
 """
+
 import json
 import os
-import pytest
-from pathlib import Path
-from unittest.mock import patch, MagicMock
-from io import StringIO
 import sys
+from io import StringIO
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 # Add project root to path
 sys.path.append(os.getcwd())
 sys.path.append(os.path.join(os.getcwd(), "ghl-real-estate-ai"))
 
 from scripts.onboard_partner import (
+    check_duplicate_tenant,
+    interactive_onboard,
     validate_api_key,
     validate_location_id,
     validate_partner_name,
-    interactive_onboard,
-    check_duplicate_tenant,
 )
 
 
@@ -30,12 +32,7 @@ class TestInputValidation:
 
     def test_validate_partner_name_success(self):
         """Should accept valid partner names."""
-        valid_names = [
-            "ABC Realty",
-            "Smith & Co.",
-            "Real Estate 360",
-            "The Property Group"
-        ]
+        valid_names = ["ABC Realty", "Smith & Co.", "Real Estate 360", "The Property Group"]
         for name in valid_names:
             assert validate_partner_name(name) is True
 
@@ -47,12 +44,7 @@ class TestInputValidation:
 
     def test_validate_location_id_success(self):
         """Should accept valid GHL Location IDs."""
-        valid_ids = [
-            "abc123xyz",
-            "LOC-2024-001",
-            "location_12345",
-            "ghl_loc_abc123"
-        ]
+        valid_ids = ["abc123xyz", "LOC-2024-001", "location_12345", "ghl_loc_abc123"]
         for loc_id in valid_ids:
             assert validate_location_id(loc_id) is True
 
@@ -64,11 +56,7 @@ class TestInputValidation:
 
     def test_validate_anthropic_api_key_success(self):
         """Should accept valid Anthropic API keys."""
-        valid_keys = [
-            "sk-ant-api03-abc123",
-            "sk-ant-api02-xyz789-long-key-here",
-            "sk-ant-sid01-testkey123456789"
-        ]
+        valid_keys = ["sk-ant-api03-abc123", "sk-ant-api02-xyz789-long-key-here", "sk-ant-sid01-testkey123456789"]
         for key in valid_keys:
             assert validate_api_key(key, "anthropic") is True
 
@@ -79,7 +67,7 @@ class TestInputValidation:
             "   ",
             "sk-test-123",  # Wrong prefix
             "api-key-123",  # Wrong format
-            "sk-ant-ab"     # Too short
+            "sk-ant-ab",  # Too short
         ]
         for key in invalid_keys:
             assert validate_api_key(key, "anthropic") is False
@@ -90,7 +78,7 @@ class TestInputValidation:
             "ghl-api-key-123456789",
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",  # JWT format
             "pk_live_123456789abcdef",
-            "sk_test_987654321fedcba"
+            "sk_test_987654321fedcba",
         ]
         for key in valid_keys:
             assert validate_api_key(key, "ghl") is True
@@ -101,7 +89,7 @@ class TestInputValidation:
             "",
             "   ",
             "abc",  # Too short
-            "12345"  # Too short
+            "12345",  # Too short
         ]
         for key in invalid_keys:
             assert validate_api_key(key, "ghl") is False
@@ -116,7 +104,7 @@ class TestDuplicateDetection:
         tenants_dir = tmp_path / "tenants"
         tenants_dir.mkdir()
 
-        with patch('scripts.onboard_partner.Path') as mock_path:
+        with patch("scripts.onboard_partner.Path") as mock_path:
             mock_path.return_value = tenants_dir
             assert check_duplicate_tenant(location_id, tenants_dir) is False
 
@@ -141,26 +129,28 @@ class TestInteractiveOnboarding:
         """Should successfully register a new tenant with valid inputs."""
         # Setup test data
         inputs = [
-            "Acme Real Estate",      # Partner name
-            "loc_acme_001",          # Location ID
+            "Acme Real Estate",  # Partner name
+            "loc_acme_001",  # Location ID
             "sk-ant-api03-test123456789",  # Anthropic key
-            "ghl-api-key-acme-test",       # GHL key
-            "cal_acme_primary",       # Calendar ID
-            "y"                       # Confirmation
+            "ghl-api-key-acme-test",  # GHL key
+            "cal_acme_primary",  # Calendar ID
+            "y",  # Confirmation
         ]
         input_generator = iter(inputs)
-        monkeypatch.setattr('builtins.input', lambda _: next(input_generator))
+        monkeypatch.setattr("builtins.input", lambda _: next(input_generator))
 
         # Mock tenants directory
         tenants_dir = tmp_path / "tenants"
         tenants_dir.mkdir()
 
-        with patch('scripts.onboard_partner.TenantService') as mock_service:
+        with patch("scripts.onboard_partner.TenantService") as mock_service:
             mock_instance = MagicMock()
             # Fix: Make save_tenant_config return an async coroutine
             mock_instance.save_tenant_config = MagicMock(return_value=None)
+
             async def async_save(*args, **kwargs):
                 return None
+
             mock_instance.save_tenant_config = MagicMock(side_effect=async_save)
             mock_service.return_value = mock_instance
 
@@ -171,10 +161,10 @@ class TestInteractiveOnboarding:
             mock_instance.save_tenant_config.assert_called_once()
             call_args = mock_instance.save_tenant_config.call_args
 
-            assert call_args[1]['location_id'] == "loc_acme_001"
-            assert call_args[1]['anthropic_api_key'] == "sk-ant-api03-test123456789"
-            assert call_args[1]['ghl_api_key'] == "ghl-api-key-acme-test"
-            assert call_args[1]['ghl_calendar_id'] == "cal_acme_primary"
+            assert call_args[1]["location_id"] == "loc_acme_001"
+            assert call_args[1]["anthropic_api_key"] == "sk-ant-api03-test123456789"
+            assert call_args[1]["ghl_api_key"] == "ghl-api-key-acme-test"
+            assert call_args[1]["ghl_calendar_id"] == "cal_acme_primary"
             assert result is True
 
     @pytest.mark.asyncio
@@ -190,12 +180,12 @@ class TestInteractiveOnboarding:
             "Duplicate Realty",
             "loc_duplicate_001",  # This already exists
             "sk-ant-api03-test123",
-            "ghl-api-key-test"
+            "ghl-api-key-test",
         ]
         input_generator = iter(inputs)
-        monkeypatch.setattr('builtins.input', lambda _: next(input_generator))
+        monkeypatch.setattr("builtins.input", lambda _: next(input_generator))
 
-        with patch('scripts.onboard_partner.Path') as mock_path:
+        with patch("scripts.onboard_partner.Path") as mock_path:
             mock_path.return_value = tenants_dir
 
             # Should fail and ask for new location_id
@@ -211,16 +201,18 @@ class TestInteractiveOnboarding:
             "sk-ant-api03-basic123456789",
             "ghl-api-key-basic-test",
             "",  # Empty calendar ID (optional)
-            "y"  # Confirmation
+            "y",  # Confirmation
         ]
         input_generator = iter(inputs)
-        monkeypatch.setattr('builtins.input', lambda _: next(input_generator))
+        monkeypatch.setattr("builtins.input", lambda _: next(input_generator))
 
-        with patch('scripts.onboard_partner.TenantService') as mock_service:
+        with patch("scripts.onboard_partner.TenantService") as mock_service:
             mock_instance = MagicMock()
+
             # Fix: Make save_tenant_config return an async coroutine
             async def async_save(*args, **kwargs):
                 return None
+
             mock_instance.save_tenant_config = MagicMock(side_effect=async_save)
             mock_service.return_value = mock_instance
 
@@ -228,7 +220,7 @@ class TestInteractiveOnboarding:
 
             # Verify calendar_id was None or empty
             call_args = mock_instance.save_tenant_config.call_args
-            assert call_args[1].get('ghl_calendar_id') in [None, ""]
+            assert call_args[1].get("ghl_calendar_id") in [None, ""]
             assert result is True
 
     @pytest.mark.asyncio
@@ -242,16 +234,18 @@ class TestInteractiveOnboarding:
             "sk-ant-api03-valid123456789",
             "ghl-api-key-valid-test",
             "",
-            "y"  # Confirmation
+            "y",  # Confirmation
         ]
         input_generator = iter(inputs)
-        monkeypatch.setattr('builtins.input', lambda _: next(input_generator))
+        monkeypatch.setattr("builtins.input", lambda _: next(input_generator))
 
-        with patch('scripts.onboard_partner.TenantService') as mock_service:
+        with patch("scripts.onboard_partner.TenantService") as mock_service:
             mock_instance = MagicMock()
+
             # Fix: Make save_tenant_config return an async coroutine
             async def async_save(*args, **kwargs):
                 return None
+
             mock_instance.save_tenant_config = MagicMock(side_effect=async_save)
             mock_service.return_value = mock_instance
 
@@ -281,7 +275,7 @@ class TestFileSystemOperations:
             location_id="test_loc_001",
             anthropic_api_key="sk-ant-api03-test123",
             ghl_api_key="ghl-test-key",
-            ghl_calendar_id="cal_test_001"
+            ghl_calendar_id="cal_test_001",
         )
 
         # Verify file exists
@@ -289,13 +283,13 @@ class TestFileSystemOperations:
         assert expected_file.exists()
 
         # Verify content
-        with open(expected_file, 'r') as f:
+        with open(expected_file, "r") as f:
             data = json.load(f)
-            assert data['location_id'] == "test_loc_001"
-            assert data['anthropic_api_key'] == "sk-ant-api03-test123"
-            assert data['ghl_api_key'] == "ghl-test-key"
-            assert data['ghl_calendar_id'] == "cal_test_001"
-            assert 'updated_at' in data
+            assert data["location_id"] == "test_loc_001"
+            assert data["anthropic_api_key"] == "sk-ant-api03-test123"
+            assert data["ghl_api_key"] == "ghl-test-key"
+            assert data["ghl_calendar_id"] == "cal_test_001"
+            assert "updated_at" in data
 
     @pytest.mark.asyncio
     async def test_tenant_directory_auto_creation(self):
@@ -321,28 +315,18 @@ class TestEdgeCases:
 
     def test_validate_location_id_special_characters(self):
         """Should accept location IDs with valid special characters."""
-        valid_ids = [
-            "loc-123-abc",
-            "loc_123_abc",
-            "LOC.123.ABC"
-        ]
+        valid_ids = ["loc-123-abc", "loc_123_abc", "LOC.123.ABC"]
         for loc_id in valid_ids:
             assert validate_location_id(loc_id) is True
 
     @pytest.mark.asyncio
     async def test_onboarding_with_tenant_service_failure(self, monkeypatch):
         """Should handle TenantService errors gracefully."""
-        inputs = [
-            "Failure Test Realty",
-            "loc_fail_001",
-            "sk-ant-api03-fail123456789",
-            "ghl-api-key-fail-test",
-            ""
-        ]
+        inputs = ["Failure Test Realty", "loc_fail_001", "sk-ant-api03-fail123456789", "ghl-api-key-fail-test", ""]
         input_generator = iter(inputs)
-        monkeypatch.setattr('builtins.input', lambda _: next(input_generator))
+        monkeypatch.setattr("builtins.input", lambda _: next(input_generator))
 
-        with patch('scripts.onboard_partner.TenantService') as mock_service:
+        with patch("scripts.onboard_partner.TenantService") as mock_service:
             mock_instance = MagicMock()
             mock_instance.save_tenant_config.side_effect = Exception("Database error")
             mock_service.return_value = mock_instance

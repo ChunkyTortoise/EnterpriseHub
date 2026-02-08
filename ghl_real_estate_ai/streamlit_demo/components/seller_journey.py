@@ -1,23 +1,27 @@
-import streamlit as st
+import asyncio
+import json
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import asyncio
-import json
+import streamlit as st
+
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 
 # Import enhanced services
 try:
     from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
+
     CLAUDE_AVAILABLE = True
 except ImportError:
     CLAUDE_AVAILABLE = False
 
+
 def render_rlhf_module(message_id: str, current_tone: str):
     """Renders RLHF feedback buttons for Jorge's tone optimization"""
-    if 'rlhf_feedback' not in st.session_state:
+    if "rlhf_feedback" not in st.session_state:
         st.session_state.rlhf_feedback = {}
-        
+
     cols = st.columns([1, 1, 8])
     with cols[0]:
         if st.button("👍", key=f"up_{message_id}", help="Tone is perfect"):
@@ -27,6 +31,7 @@ def render_rlhf_module(message_id: str, current_tone: str):
         if st.button("👎", key=f"down_{message_id}", help="Too aggressive or too soft"):
             st.session_state.rlhf_feedback[message_id] = {"score": 0, "tone": current_tone}
             st.toast("Feedback recorded: Tone needs adjustment", icon="⚠️")
+
 
 def render_seller_prep_checklist():
     """Comprehensive seller preparation checklist"""
@@ -44,7 +49,7 @@ def render_seller_prep_checklist():
     with col1:
         st.metric("✅ Tasks Completed", f"{completed_tasks}/{total_tasks}")
     with col2:
-        st.metric("📈 Progress", f"{progress*100:.0f}%")
+        st.metric("📈 Progress", f"{progress * 100:.0f}%")
     with col3:
         st.metric("🏠 Market Readiness", "Good")
     with col4:
@@ -54,21 +59,36 @@ def render_seller_prep_checklist():
     st.progress(progress)
 
     # Checklist categories
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "🏠 Interior Prep", "🌿 Exterior Prep", "📄 Documentation", "📸 Marketing Prep", "🔧 Repairs & Updates"
-    ])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(
+        ["🏠 Interior Prep", "🌿 Exterior Prep", "📄 Documentation", "📸 Marketing Prep", "🔧 Repairs & Updates"]
+    )
 
     with tab1:
         st.markdown("##### Interior Preparation")
 
         interior_tasks = [
-            {"task": "Deep clean all rooms", "status": "✅", "priority": "High", "notes": "Professional cleaning scheduled"},
+            {
+                "task": "Deep clean all rooms",
+                "status": "✅",
+                "priority": "High",
+                "notes": "Professional cleaning scheduled",
+            },
             {"task": "Declutter and organize", "status": "✅", "priority": "High", "notes": "Completed last weekend"},
-            {"task": "Fresh paint (neutral colors)", "status": "⏳", "priority": "High", "notes": "Painter coming Monday"},
+            {
+                "task": "Fresh paint (neutral colors)",
+                "status": "⏳",
+                "priority": "High",
+                "notes": "Painter coming Monday",
+            },
             {"task": "Clean windows inside", "status": "✅", "priority": "Medium", "notes": "Done with deep cleaning"},
             {"task": "Replace burnt-out bulbs", "status": "❌", "priority": "Medium", "notes": "Need LED bulbs"},
             {"task": "Remove personal photos", "status": "✅", "priority": "Medium", "notes": "Stored in garage"},
-            {"task": "Stage furniture arrangement", "status": "❌", "priority": "Medium", "notes": "Stager coming Thursday"},
+            {
+                "task": "Stage furniture arrangement",
+                "status": "❌",
+                "priority": "Medium",
+                "notes": "Stager coming Thursday",
+            },
             {"task": "Fix squeaky doors/hinges", "status": "❌", "priority": "Low", "notes": "Need WD-40"},
         ]
 
@@ -79,10 +99,14 @@ def render_seller_prep_checklist():
                 with col1:
                     st.markdown(f"{task['status']} {task['task']}")
                 with col2:
-                    priority_color = "red" if task['priority'] == "High" else "orange" if task['priority'] == "Medium" else "green"
-                    st.markdown(f"<span style='color: {priority_color};'>{task['priority']}</span>", unsafe_allow_html=True)
+                    priority_color = (
+                        "red" if task["priority"] == "High" else "orange" if task["priority"] == "Medium" else "green"
+                    )
+                    st.markdown(
+                        f"<span style='color: {priority_color};'>{task['priority']}</span>", unsafe_allow_html=True
+                    )
                 with col3:
-                    if task['status'] == "❌":
+                    if task["status"] == "❌":
                         if st.button("Mark Done", key=f"interior_{task['task'][:10]}"):
                             st.success("Task completed!")
                 with col4:
@@ -95,11 +119,31 @@ def render_seller_prep_checklist():
             {"task": "Mow and edge lawn", "status": "✅", "priority": "High", "notes": "Weekly maintenance"},
             {"task": "Trim bushes and trees", "status": "✅", "priority": "High", "notes": "Landscaper completed"},
             {"task": "Plant seasonal flowers", "status": "⏳", "priority": "Medium", "notes": "Scheduled for weekend"},
-            {"task": "Power wash driveway/walkways", "status": "❌", "priority": "High", "notes": "Rent pressure washer"},
-            {"task": "Clean exterior windows", "status": "❌", "priority": "Medium", "notes": "Include in window service"},
-            {"task": "Touch up exterior paint", "status": "❌", "priority": "Medium", "notes": "Minor spots identified"},
+            {
+                "task": "Power wash driveway/walkways",
+                "status": "❌",
+                "priority": "High",
+                "notes": "Rent pressure washer",
+            },
+            {
+                "task": "Clean exterior windows",
+                "status": "❌",
+                "priority": "Medium",
+                "notes": "Include in window service",
+            },
+            {
+                "task": "Touch up exterior paint",
+                "status": "❌",
+                "priority": "Medium",
+                "notes": "Minor spots identified",
+            },
             {"task": "Clean gutters", "status": "✅", "priority": "Low", "notes": "Done in fall"},
-            {"task": "Ensure adequate outdoor lighting", "status": "⏳", "priority": "Medium", "notes": "Adding pathway lights"},
+            {
+                "task": "Ensure adequate outdoor lighting",
+                "status": "⏳",
+                "priority": "Medium",
+                "notes": "Adding pathway lights",
+            },
         ]
 
         for task in exterior_tasks:
@@ -109,10 +153,14 @@ def render_seller_prep_checklist():
                 with col1:
                     st.markdown(f"{task['status']} {task['task']}")
                 with col2:
-                    priority_color = "red" if task['priority'] == "High" else "orange" if task['priority'] == "Medium" else "green"
-                    st.markdown(f"<span style='color: {priority_color};'>{task['priority']}</span>", unsafe_allow_html=True)
+                    priority_color = (
+                        "red" if task["priority"] == "High" else "orange" if task["priority"] == "Medium" else "green"
+                    )
+                    st.markdown(
+                        f"<span style='color: {priority_color};'>{task['priority']}</span>", unsafe_allow_html=True
+                    )
                 with col3:
-                    if task['status'] == "❌":
+                    if task["status"] == "❌":
                         if st.button("Mark Done", key=f"exterior_{task['task'][:10]}"):
                             st.success("Task completed!")
                 with col4:
@@ -123,10 +171,20 @@ def render_seller_prep_checklist():
 
         documents = [
             {"doc": "Property deed", "status": "✅", "location": "File cabinet", "notes": "Original in safe"},
-            {"doc": "Previous property disclosures", "status": "✅", "location": "With agent", "notes": "From purchase"},
+            {
+                "doc": "Previous property disclosures",
+                "status": "✅",
+                "location": "With agent",
+                "notes": "From purchase",
+            },
             {"doc": "Recent utility bills", "status": "✅", "location": "Office desk", "notes": "Last 3 months"},
             {"doc": "HOA documents (if applicable)", "status": "N/A", "location": "-", "notes": "No HOA"},
-            {"doc": "Survey/plat of property", "status": "⏳", "location": "Searching", "notes": "Request from title company"},
+            {
+                "doc": "Survey/plat of property",
+                "status": "⏳",
+                "location": "Searching",
+                "notes": "Request from title company",
+            },
             {"doc": "Warranty information", "status": "❌", "location": "Need to gather", "notes": "HVAC, appliances"},
             {"doc": "Home inspection reports", "status": "✅", "location": "With agent", "notes": "From 2019 purchase"},
             {"doc": "Property tax records", "status": "✅", "location": "Online access", "notes": "Current and paid"},
@@ -139,9 +197,9 @@ def render_seller_prep_checklist():
                 with col1:
                     st.markdown(f"{doc['status']} {doc['doc']}")
                 with col2:
-                    st.markdown(doc['location'])
+                    st.markdown(doc["location"])
                 with col3:
-                    if doc['status'] == "❌":
+                    if doc["status"] == "❌":
                         if st.button("Found", key=f"doc_{doc['doc'][:8]}"):
                             st.success("Document located!")
                 with col4:
@@ -151,13 +209,38 @@ def render_seller_prep_checklist():
         st.markdown("##### Marketing Preparation")
 
         marketing_tasks = [
-            {"task": "Professional photography", "status": "⏳", "priority": "High", "notes": "Scheduled for next Tuesday"},
+            {
+                "task": "Professional photography",
+                "status": "⏳",
+                "priority": "High",
+                "notes": "Scheduled for next Tuesday",
+            },
             {"task": "Drone/aerial photos", "status": "❌", "priority": "Medium", "notes": "Include with photography"},
             {"task": "Virtual tour/3D scan", "status": "❌", "priority": "Medium", "notes": "Optional upgrade"},
-            {"task": "Write compelling listing description", "status": "⏳", "priority": "High", "notes": "Agent drafting"},
-            {"task": "Create property feature list", "status": "✅", "priority": "Medium", "notes": "Completed with agent"},
-            {"task": "Gather neighborhood amenities info", "status": "✅", "priority": "Low", "notes": "Schools, shopping, etc."},
-            {"task": "Plan open house logistics", "status": "❌", "priority": "Medium", "notes": "After photos complete"},
+            {
+                "task": "Write compelling listing description",
+                "status": "⏳",
+                "priority": "High",
+                "notes": "Agent drafting",
+            },
+            {
+                "task": "Create property feature list",
+                "status": "✅",
+                "priority": "Medium",
+                "notes": "Completed with agent",
+            },
+            {
+                "task": "Gather neighborhood amenities info",
+                "status": "✅",
+                "priority": "Low",
+                "notes": "Schools, shopping, etc.",
+            },
+            {
+                "task": "Plan open house logistics",
+                "status": "❌",
+                "priority": "Medium",
+                "notes": "After photos complete",
+            },
         ]
 
         for task in marketing_tasks:
@@ -167,10 +250,14 @@ def render_seller_prep_checklist():
                 with col1:
                     st.markdown(f"{task['status']} {task['task']}")
                 with col2:
-                    priority_color = "red" if task['priority'] == "High" else "orange" if task['priority'] == "Medium" else "green"
-                    st.markdown(f"<span style='color: {priority_color};'>{task['priority']}</span>", unsafe_allow_html=True)
+                    priority_color = (
+                        "red" if task["priority"] == "High" else "orange" if task["priority"] == "Medium" else "green"
+                    )
+                    st.markdown(
+                        f"<span style='color: {priority_color};'>{task['priority']}</span>", unsafe_allow_html=True
+                    )
                 with col3:
-                    if task['status'] == "❌":
+                    if task["status"] == "❌":
                         if st.button("Complete", key=f"marketing_{task['task'][:10]}"):
                             st.success("Task completed!")
                 with col4:
@@ -180,14 +267,38 @@ def render_seller_prep_checklist():
         st.markdown("##### Repairs & Updates")
 
         repairs = [
-            {"item": "Fix leaky kitchen faucet", "priority": "High", "cost": "$150", "status": "⏳", "notes": "Plumber scheduled"},
-            {"item": "Replace cracked outlet cover", "priority": "Medium", "cost": "$5", "status": "❌", "notes": "Hardware store trip"},
-            {"item": "Caulk around master bathtub", "priority": "Medium", "cost": "$20", "status": "❌", "notes": "DIY project"},
-            {"item": "Touch up paint in hallway", "priority": "Low", "cost": "$25", "status": "⏳", "notes": "With main painting"},
+            {
+                "item": "Fix leaky kitchen faucet",
+                "priority": "High",
+                "cost": "$150",
+                "status": "⏳",
+                "notes": "Plumber scheduled",
+            },
+            {
+                "item": "Replace cracked outlet cover",
+                "priority": "Medium",
+                "cost": "$5",
+                "status": "❌",
+                "notes": "Hardware store trip",
+            },
+            {
+                "item": "Caulk around master bathtub",
+                "priority": "Medium",
+                "cost": "$20",
+                "status": "❌",
+                "notes": "DIY project",
+            },
+            {
+                "item": "Touch up paint in hallway",
+                "priority": "Low",
+                "cost": "$25",
+                "status": "⏳",
+                "notes": "With main painting",
+            },
             {"item": "Replace air filter", "priority": "Low", "cost": "$15", "status": "✅", "notes": "Done monthly"},
         ]
 
-        total_repair_cost = sum([int(repair['cost'].replace('$', '')) for repair in repairs])
+        total_repair_cost = sum([int(repair["cost"].replace("$", "")) for repair in repairs])
 
         st.markdown(f"**Total Estimated Repair Cost:** ${total_repair_cost}")
 
@@ -198,12 +309,20 @@ def render_seller_prep_checklist():
                 with col1:
                     st.markdown(f"{repair['status']} {repair['item']}")
                 with col2:
-                    priority_color = "red" if repair['priority'] == "High" else "orange" if repair['priority'] == "Medium" else "green"
-                    st.markdown(f"<span style='color: {priority_color};'>{repair['priority']}</span>", unsafe_allow_html=True)
+                    priority_color = (
+                        "red"
+                        if repair["priority"] == "High"
+                        else "orange"
+                        if repair["priority"] == "Medium"
+                        else "green"
+                    )
+                    st.markdown(
+                        f"<span style='color: {priority_color};'>{repair['priority']}</span>", unsafe_allow_html=True
+                    )
                 with col3:
-                    st.markdown(repair['cost'])
+                    st.markdown(repair["cost"])
                 with col4:
-                    if repair['status'] == "❌":
+                    if repair["status"] == "❌":
                         if st.button("Fixed", key=f"repair_{repair['item'][:8]}"):
                             st.success("Repair completed!")
                 with col5:
@@ -229,6 +348,7 @@ def render_seller_prep_checklist():
         if st.button("💰 Get Cost Estimates"):
             st.info("Contractor quotes requested!")
 
+
 def render_marketing_campaign_dashboard():
     """Marketing campaign performance and management dashboard"""
     st.subheader("📈 Marketing Campaign Dashboard")
@@ -247,9 +367,15 @@ def render_marketing_campaign_dashboard():
         st.metric("📅 Showings Scheduled", "18", delta="5 pending")
 
     # Detailed analytics tabs
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "📊 Performance Analytics", "🌐 Online Listings", "📸 Marketing Materials", "📅 Showing Activity", "📈 Market Feedback"
-    ])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(
+        [
+            "📊 Performance Analytics",
+            "🌐 Online Listings",
+            "📸 Marketing Materials",
+            "📅 Showing Activity",
+            "📈 Market Feedback",
+        ]
+    )
 
     with tab1:
         st.markdown("##### Performance Analytics")
@@ -280,7 +406,7 @@ def render_marketing_campaign_dashboard():
             {"Metric": "View-to-Inquiry Rate", "Current": "1.65%", "Goal": "2.0%", "Status": "📈 Improving"},
             {"Metric": "Inquiry-to-Showing Rate", "Current": "38.3%", "Goal": "35%", "Status": "✅ Exceeding"},
             {"Metric": "Days on Market", "Current": "8 days", "Goal": "< 15 days", "Status": "🎯 On Target"},
-            {"Metric": "Price per Sq Ft", "Current": "$263", "Goal": "$255", "Status": "💰 Above Market"}
+            {"Metric": "Price per Sq Ft", "Current": "$263", "Goal": "$255", "Status": "💰 Above Market"},
         ]
 
         metrics_df = pd.DataFrame(metrics_data)
@@ -296,7 +422,7 @@ def render_marketing_campaign_dashboard():
                 "views": "1,247",
                 "leads": "23",
                 "last_updated": "Today",
-                "notes": "Primary listing source"
+                "notes": "Primary listing source",
             },
             {
                 "platform": "Zillow",
@@ -304,7 +430,7 @@ def render_marketing_campaign_dashboard():
                 "views": "892",
                 "leads": "18",
                 "last_updated": "2 days ago",
-                "notes": "High traffic source"
+                "notes": "High traffic source",
             },
             {
                 "platform": "Realtor.com",
@@ -312,7 +438,7 @@ def render_marketing_campaign_dashboard():
                 "views": "654",
                 "leads": "15",
                 "last_updated": "Today",
-                "notes": "Good conversion rate"
+                "notes": "Good conversion rate",
             },
             {
                 "platform": "Company Website",
@@ -320,7 +446,7 @@ def render_marketing_campaign_dashboard():
                 "views": "234",
                 "leads": "4",
                 "last_updated": "1 day ago",
-                "notes": "Brand awareness"
+                "notes": "Brand awareness",
             },
             {
                 "platform": "Facebook Marketplace",
@@ -328,8 +454,8 @@ def render_marketing_campaign_dashboard():
                 "views": "0",
                 "leads": "0",
                 "last_updated": "N/A",
-                "notes": "Awaiting approval"
-            }
+                "notes": "Awaiting approval",
+            },
         ]
 
         for listing in listings:
@@ -339,13 +465,13 @@ def render_marketing_campaign_dashboard():
                 with col1:
                     st.markdown(f"**{listing['platform']}**")
                 with col2:
-                    st.markdown(listing['status'])
+                    st.markdown(listing["status"])
                 with col3:
-                    st.markdown(listing['views'])
+                    st.markdown(listing["views"])
                 with col4:
-                    st.markdown(listing['leads'])
+                    st.markdown(listing["leads"])
                 with col5:
-                    st.markdown(listing['last_updated'])
+                    st.markdown(listing["last_updated"])
                 with col6:
                     st.markdown(f"*{listing['notes']}*")
 
@@ -362,7 +488,7 @@ def render_marketing_campaign_dashboard():
             {"photo": "Living Room", "views": "2,203", "saves": "67", "engagement": "3.0%"},
             {"photo": "Kitchen", "views": "2,156", "saves": "78", "engagement": "3.6%"},
             {"photo": "Master Bedroom", "views": "1,834", "saves": "45", "engagement": "2.5%"},
-            {"photo": "Backyard", "views": "1,623", "saves": "52", "engagement": "3.2%"}
+            {"photo": "Backyard", "views": "1,623", "saves": "52", "engagement": "3.2%"},
         ]
 
         for photo in photos:
@@ -376,9 +502,11 @@ def render_marketing_campaign_dashboard():
                 with col3:
                     st.markdown(f"💾 {photo['saves']}")
                 with col4:
-                    engagement_float = float(photo['engagement'].replace('%', ''))
+                    engagement_float = float(photo["engagement"].replace("%", ""))
                     color = "green" if engagement_float >= 3.0 else "orange"
-                    st.markdown(f"<span style='color: {color};'>📈 {photo['engagement']}</span>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"<span style='color: {color};'>📈 {photo['engagement']}</span>", unsafe_allow_html=True
+                    )
 
         # Marketing materials status
         st.markdown("**Marketing Materials Checklist**")
@@ -388,7 +516,7 @@ def render_marketing_campaign_dashboard():
             {"item": "Feature Sheet/Flyer", "status": "✅ Complete"},
             {"item": "Virtual Tour", "status": "⏳ In Progress"},
             {"item": "Drone/Aerial Video", "status": "❌ Pending"},
-            {"item": "Social Media Posts", "status": "✅ Posted Daily"}
+            {"item": "Social Media Posts", "status": "✅ Posted Daily"},
         ]
 
         for material in materials:
@@ -396,7 +524,7 @@ def render_marketing_campaign_dashboard():
             with col1:
                 st.markdown(f"• {material['item']}")
             with col2:
-                st.markdown(material['status'])
+                st.markdown(material["status"])
 
     with tab4:
         st.markdown("##### Showing Activity")
@@ -410,29 +538,29 @@ def render_marketing_campaign_dashboard():
                 "time": "2:00 PM",
                 "type": "Private Showing",
                 "agent": "Sarah Johnson (Buyer Agent)",
-                "notes": "Pre-approved buyer, serious interest"
+                "notes": "Pre-approved buyer, serious interest",
             },
             {
                 "date": "Tomorrow",
                 "time": "10:00 AM",
                 "type": "Private Showing",
                 "agent": "Mike Chen (Buyer Agent)",
-                "notes": "First-time homebuyer"
+                "notes": "First-time homebuyer",
             },
             {
                 "date": "Saturday",
                 "time": "1:00-4:00 PM",
                 "type": "Open House",
                 "agent": "Your Listing Agent",
-                "notes": "First open house event"
+                "notes": "First open house event",
             },
             {
                 "date": "Sunday",
                 "time": "11:00 AM",
                 "type": "Private Showing",
                 "agent": "Lisa Rodriguez (Buyer Agent)",
-                "notes": "Investor client"
-            }
+                "notes": "Investor client",
+            },
         ]
 
         for showing in showings:
@@ -447,7 +575,7 @@ def render_marketing_campaign_dashboard():
                     st.markdown(f"**{showing['type']}**")
                     st.markdown(f"*{showing['agent']}*")
                 with col4:
-                    st.markdown(showing['notes'])
+                    st.markdown(showing["notes"])
 
                 st.markdown("---")
 
@@ -476,28 +604,28 @@ def render_marketing_campaign_dashboard():
                 "date": "2 days ago",
                 "rating": "⭐⭐⭐⭐⭐",
                 "comment": "Beautiful home, well-maintained. Buyers loved the kitchen updates.",
-                "concerns": "Slight concern about backyard size for their dogs."
+                "concerns": "Slight concern about backyard size for their dogs.",
             },
             {
                 "source": "Mike Chen (Buyer Agent)",
                 "date": "3 days ago",
                 "rating": "⭐⭐⭐⭐",
                 "comment": "Great location and condition. Competitive price point.",
-                "concerns": "Buyers prefer a larger master bathroom."
+                "concerns": "Buyers prefer a larger master bathroom.",
             },
             {
                 "source": "Lisa Rodriguez (Buyer Agent)",
                 "date": "1 week ago",
                 "rating": "⭐⭐⭐⭐⭐",
                 "comment": "Excellent investment opportunity. Cash buyer interested.",
-                "concerns": "None - ready to make offer."
-            }
+                "concerns": "None - ready to make offer.",
+            },
         ]
 
         for fb in feedback:
             with st.expander(f"{fb['source']} - {fb['rating']} ({fb['date']})"):
                 st.markdown(f"**Comment:** {fb['comment']}")
-                if fb['concerns']:
+                if fb["concerns"]:
                     st.markdown(f"**Concerns:** {fb['concerns']}")
 
         # Market positioning analysis
@@ -519,7 +647,10 @@ def render_marketing_campaign_dashboard():
             st.markdown("• 🔸 Single-car garage only")
 
         # Recommendations
-        st.info("💡 **Agent Recommendations:** Continue current marketing strategy. Consider hosting second open house to capture weekend traffic. Price point is well-positioned for quick sale.")
+        st.info(
+            "💡 **Agent Recommendations:** Continue current marketing strategy. Consider hosting second open house to capture weekend traffic. Price point is well-positioned for quick sale."
+        )
+
 
 def render_seller_communication_portal():
     """Communication hub for seller-agent interaction"""
@@ -539,9 +670,9 @@ def render_seller_communication_portal():
         st.metric("🏠 Showing Reports", "8", delta="3 new")
 
     # Communication tabs
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "💬 Messages", "📞 Calls & Meetings", "📊 Reports & Updates", "📅 Showing Feedback", "📋 Documents"
-    ])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(
+        ["💬 Messages", "📞 Calls & Meetings", "📊 Reports & Updates", "📅 Showing Feedback", "📋 Documents"]
+    )
 
     with tab1:
         st.markdown("##### Message Center")
@@ -566,45 +697,48 @@ def render_seller_communication_portal():
                 "subject": "Showing Report - Great Feedback!",
                 "time": "2 hours ago",
                 "preview": "Had two showings today with very positive feedback. The buyers loved...",
-                "unread": True
+                "unread": True,
             },
             {
                 "from": "Transaction Coordinator",
                 "subject": "Document Upload Required",
                 "time": "1 day ago",
                 "preview": "Please upload the signed property disclosure form to complete...",
-                "unread": True
+                "unread": True,
             },
             {
                 "from": "Your Listing Agent",
                 "subject": "Weekly Market Update",
                 "time": "3 days ago",
                 "preview": "Market activity remains strong in your neighborhood. Three new...",
-                "unread": False
+                "unread": False,
             },
             {
                 "from": "Marketing Team",
                 "subject": "Photos Ready for Approval",
                 "time": "5 days ago",
                 "preview": "Professional photography is complete! Please review the gallery...",
-                "unread": False
-            }
+                "unread": False,
+            },
         ]
 
         for message in messages:
-            unread_style = "background-color: #E3F2FD;" if message['unread'] else "background-color: white;"
+            unread_style = "background-color: #E3F2FD;" if message["unread"] else "background-color: white;"
 
             with st.container():
-                st.markdown(f"""
+                st.markdown(
+                    f"""
                 <div style="{unread_style} padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #2196F3;">
                     <div style="display: flex; justify-content: between; margin-bottom: 5px;">
-                        <strong>{'📧 ' if message['unread'] else '✉️ '}{message['subject']}</strong>
-                        <span style="color: #666; font-size: 0.9em; margin-left: auto;">{message['time']}</span>
+                        <strong>{"📧 " if message["unread"] else "✉️ "}{message["subject"]}</strong>
+                        <span style="color: #666; font-size: 0.9em; margin-left: auto;">{message["time"]}</span>
                     </div>
-                    <div style="color: #666; font-size: 0.9em; margin-bottom: 5px;">From: {message['from']}</div>
-                    <div style="color: #333;">{message['preview']}</div>
+                    <div style="color: #666; font-size: 0.9em; margin-bottom: 5px;">From: {message["from"]}</div>
+                    <div style="color: #333;">{message["preview"]}</div>
                 </div>
-                """, unsafe_allow_html=True)
+                """,
+                    unsafe_allow_html=True,
+                )
 
                 col1, col2, col3 = st.columns([1, 1, 4])
                 with col1:
@@ -613,9 +747,12 @@ def render_seller_communication_portal():
                 with col2:
                     if st.button("↩️ Reply", key=f"reply_{message['subject'][:10]}"):
                         st.info("Reply window opened...")
-                
+
                 # Pillar 3: RLHF Loop
-                st.markdown("<div style='margin-top: 5px; opacity: 0.7; font-size: 0.7rem;'>Rate AI Tone Accuracy:</div>", unsafe_allow_html=True)
+                st.markdown(
+                    "<div style='margin-top: 5px; opacity: 0.7; font-size: 0.7rem;'>Rate AI Tone Accuracy:</div>",
+                    unsafe_allow_html=True,
+                )
                 render_rlhf_module(f"msg_{hash(message['subject'])}", "Confrontational")
 
     with tab2:
@@ -630,15 +767,15 @@ def render_seller_communication_portal():
                 "date": "Tomorrow",
                 "time": "10:00 AM",
                 "type": "Phone Call",
-                "agenda": "Discuss showing feedback and next steps"
+                "agenda": "Discuss showing feedback and next steps",
             },
             {
                 "title": "Marketing Strategy Review",
                 "date": "Friday",
                 "time": "2:00 PM",
                 "type": "Video Call",
-                "agenda": "Review performance metrics and adjust strategy"
-            }
+                "agenda": "Review performance metrics and adjust strategy",
+            },
         ]
 
         for meeting in meetings:
@@ -649,9 +786,9 @@ def render_seller_communication_portal():
                     st.markdown(f"**📅 {meeting['title']}**")
                     st.markdown(f"*{meeting['agenda']}*")
                 with col2:
-                    st.markdown(meeting['date'])
+                    st.markdown(meeting["date"])
                 with col3:
-                    st.markdown(meeting['time'])
+                    st.markdown(meeting["time"])
                 with col4:
                     if st.button("📞 Join", key=f"join_{meeting['title'][:8]}"):
                         st.success("Meeting link opened!")
@@ -666,14 +803,14 @@ def render_seller_communication_portal():
                 "date": "Yesterday",
                 "duration": "15 minutes",
                 "type": "📞 Phone Call",
-                "summary": "Discussed pricing strategy and showing feedback"
+                "summary": "Discussed pricing strategy and showing feedback",
             },
             {
                 "date": "3 days ago",
                 "duration": "22 minutes",
                 "type": "💻 Video Call",
-                "summary": "Reviewed marketing materials and listing photos"
-            }
+                "summary": "Reviewed marketing materials and listing photos",
+            },
         ]
 
         for call in calls:
@@ -692,20 +829,20 @@ def render_seller_communication_portal():
                 "report": "Weekly Activity Report",
                 "frequency": "Every Monday",
                 "last_sent": "3 days ago",
-                "next_due": "In 4 days"
+                "next_due": "In 4 days",
             },
             {
                 "report": "Showing Summary",
                 "frequency": "After each showing",
                 "last_sent": "Today",
-                "next_due": "As needed"
+                "next_due": "As needed",
             },
             {
                 "report": "Market Analysis Update",
                 "frequency": "Bi-weekly",
                 "last_sent": "1 week ago",
-                "next_due": "Next week"
-            }
+                "next_due": "Next week",
+            },
         ]
 
         for report in reports:
@@ -713,11 +850,11 @@ def render_seller_communication_portal():
             with col1:
                 st.markdown(f"**{report['report']}**")
             with col2:
-                st.markdown(report['frequency'])
+                st.markdown(report["frequency"])
             with col3:
-                st.markdown(report['last_sent'])
+                st.markdown(report["last_sent"])
             with col4:
-                st.markdown(report['next_due'])
+                st.markdown(report["next_due"])
 
         # Recent reports
         st.markdown("**Recent Reports**")
@@ -782,7 +919,7 @@ def render_seller_communication_portal():
                 "rating": 5,
                 "highlights": "Kitchen updates, hardwood floors, location",
                 "concerns": "Master bathroom size",
-                "likelihood": "High - second showing planned"
+                "likelihood": "High - second showing planned",
             },
             {
                 "date": "Yesterday 11:00 AM",
@@ -790,7 +927,7 @@ def render_seller_communication_portal():
                 "rating": 4,
                 "highlights": "Move-in ready condition, good value",
                 "concerns": "Prefers larger backyard",
-                "likelihood": "Medium - still considering options"
+                "likelihood": "Medium - still considering options",
             },
             {
                 "date": "2 days ago 3:00 PM",
@@ -798,8 +935,8 @@ def render_seller_communication_portal():
                 "rating": 5,
                 "highlights": "Investment potential, neighborhood growth",
                 "concerns": "None mentioned",
-                "likelihood": "Very High - cash buyer ready to offer"
-            }
+                "likelihood": "Very High - cash buyer ready to offer",
+            },
         ]
 
         for feedback in detailed_feedback:
@@ -813,12 +950,21 @@ def render_seller_communication_portal():
                 with col2:
                     st.markdown(f"**Rating:** {'⭐' * feedback['rating']}")
                     st.markdown(f"**Highlights:** {feedback['highlights']}")
-                    if feedback['concerns'] != "None mentioned":
+                    if feedback["concerns"] != "None mentioned":
                         st.markdown(f"**Concerns:** {feedback['concerns']}")
 
                 with col3:
-                    likelihood_color = "green" if "High" in feedback['likelihood'] else "orange" if "Medium" in feedback['likelihood'] else "red"
-                    st.markdown(f"<span style='color: {likelihood_color};'>**{feedback['likelihood']}**</span>", unsafe_allow_html=True)
+                    likelihood_color = (
+                        "green"
+                        if "High" in feedback["likelihood"]
+                        else "orange"
+                        if "Medium" in feedback["likelihood"]
+                        else "red"
+                    )
+                    st.markdown(
+                        f"<span style='color: {likelihood_color};'>**{feedback['likelihood']}**</span>",
+                        unsafe_allow_html=True,
+                    )
 
                 st.markdown("---")
 
@@ -837,7 +983,7 @@ def render_seller_communication_portal():
                 {"doc": "MLS Listing Form", "status": "✅ Complete"},
                 {"doc": "Lead Paint Disclosure", "status": "⏳ Pending"},
                 {"doc": "HOA Documents", "status": "N/A"},
-                {"doc": "Survey/Plat", "status": "⏳ Requested"}
+                {"doc": "Survey/Plat", "status": "⏳ Requested"},
             ]
 
             for doc in required_docs:
@@ -845,7 +991,7 @@ def render_seller_communication_portal():
                 with col_a:
                     st.markdown(f"• {doc['doc']}")
                 with col_b:
-                    st.markdown(doc['status'])
+                    st.markdown(doc["status"])
 
         with col2:
             st.markdown("**📁 Shared Documents**")
@@ -855,7 +1001,7 @@ def render_seller_communication_portal():
                 {"doc": "Marketing Flyer", "date": "4 days ago"},
                 {"doc": "CMA Report", "date": "1 week ago"},
                 {"doc": "Listing Analytics", "date": "Yesterday"},
-                {"doc": "Showing Reports", "date": "Today"}
+                {"doc": "Showing Reports", "date": "Today"},
             ]
 
             for doc in shared_docs:
@@ -871,13 +1017,14 @@ def render_seller_communication_portal():
 
         col1, col2 = st.columns([3, 1])
         with col1:
-            uploaded_file = st.file_uploader("Choose file", type=['pdf', 'doc', 'docx', 'jpg', 'png'])
+            uploaded_file = st.file_uploader("Choose file", type=["pdf", "doc", "docx", "jpg", "png"])
         with col2:
             if st.button("Upload"):
                 if uploaded_file:
                     st.success("Document uploaded successfully!")
                 else:
                     st.warning("Please select a file first.")
+
 
 def render_transaction_timeline():
     """Transaction timeline and offer management"""
@@ -897,9 +1044,7 @@ def render_transaction_timeline():
         st.metric("📊 Current Status", "Active")
 
     # Main timeline tabs
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "📋 Current Offers", "📅 Timeline", "🔄 Next Steps", "📊 Milestones"
-    ])
+    tab1, tab2, tab3, tab4 = st.tabs(["📋 Current Offers", "📅 Timeline", "🔄 Next Steps", "📊 Milestones"])
 
     with tab1:
         st.markdown("##### Active Offers")
@@ -914,7 +1059,7 @@ def render_transaction_timeline():
                 "contingencies": "Inspection, Financing",
                 "status": "🟡 Under Review",
                 "expires": "Tomorrow 5:00 PM",
-                "notes": "Strong offer, motivated buyers"
+                "notes": "Strong offer, motivated buyers",
             },
             {
                 "buyer": "Investment Group (Lisa Rodriguez, Buyer Agent)",
@@ -925,8 +1070,8 @@ def render_transaction_timeline():
                 "contingencies": "Inspection Only (7 days)",
                 "status": "🟢 Active",
                 "expires": "Today 6:00 PM",
-                "notes": "Cash offer, quick close, investor buyer"
-            }
+                "notes": "Cash offer, quick close, investor buyer",
+            },
         ]
 
         for i, offer in enumerate(offers):
@@ -967,16 +1112,61 @@ def render_transaction_timeline():
 
         # Timeline visualization
         timeline_events = [
-            {"date": "Jan 1", "event": "🏠 Listed Property", "status": "✅ Complete", "notes": "Initial listing activation"},
-            {"date": "Jan 2", "event": "📸 Photography Complete", "status": "✅ Complete", "notes": "Professional photos taken"},
-            {"date": "Jan 3", "event": "🌐 Online Marketing Launch", "status": "✅ Complete", "notes": "Listed on all major platforms"},
-            {"date": "Jan 5", "event": "🏠 First Showing", "status": "✅ Complete", "notes": "Private showing with positive feedback"},
-            {"date": "Jan 8", "event": "🤝 First Offers Received", "status": "⏳ In Progress", "notes": "Two offers currently under review"},
-            {"date": "Jan 9", "event": "📋 Offer Decision", "status": "🔄 Pending", "notes": "Accept, counter, or decline current offers"},
-            {"date": "Jan 10", "event": "📝 Contract Execution", "status": "⏸️ Waiting", "notes": "Dependent on offer decision"},
-            {"date": "Jan 17", "event": "🔍 Inspection Period", "status": "📅 Scheduled", "notes": "7-10 day inspection window"},
-            {"date": "Jan 24", "event": "💰 Financing Approval", "status": "📅 Scheduled", "notes": "Buyer financing deadline"},
-            {"date": "Feb 7", "event": "🏡 Closing", "status": "🎯 Target", "notes": "Estimated closing date"}
+            {
+                "date": "Jan 1",
+                "event": "🏠 Listed Property",
+                "status": "✅ Complete",
+                "notes": "Initial listing activation",
+            },
+            {
+                "date": "Jan 2",
+                "event": "📸 Photography Complete",
+                "status": "✅ Complete",
+                "notes": "Professional photos taken",
+            },
+            {
+                "date": "Jan 3",
+                "event": "🌐 Online Marketing Launch",
+                "status": "✅ Complete",
+                "notes": "Listed on all major platforms",
+            },
+            {
+                "date": "Jan 5",
+                "event": "🏠 First Showing",
+                "status": "✅ Complete",
+                "notes": "Private showing with positive feedback",
+            },
+            {
+                "date": "Jan 8",
+                "event": "🤝 First Offers Received",
+                "status": "⏳ In Progress",
+                "notes": "Two offers currently under review",
+            },
+            {
+                "date": "Jan 9",
+                "event": "📋 Offer Decision",
+                "status": "🔄 Pending",
+                "notes": "Accept, counter, or decline current offers",
+            },
+            {
+                "date": "Jan 10",
+                "event": "📝 Contract Execution",
+                "status": "⏸️ Waiting",
+                "notes": "Dependent on offer decision",
+            },
+            {
+                "date": "Jan 17",
+                "event": "🔍 Inspection Period",
+                "status": "📅 Scheduled",
+                "notes": "7-10 day inspection window",
+            },
+            {
+                "date": "Jan 24",
+                "event": "💰 Financing Approval",
+                "status": "📅 Scheduled",
+                "notes": "Buyer financing deadline",
+            },
+            {"date": "Feb 7", "event": "🏡 Closing", "status": "🎯 Target", "notes": "Estimated closing date"},
         ]
 
         for event in timeline_events:
@@ -987,7 +1177,7 @@ def render_transaction_timeline():
             with col2:
                 st.markdown(f"{event['event']}")
             with col3:
-                st.markdown(event['status'])
+                st.markdown(event["status"])
             with col4:
                 st.markdown(f"*{event['notes']}*")
 
@@ -1002,20 +1192,20 @@ def render_transaction_timeline():
                 "action": "Review and respond to current offers",
                 "priority": "🔴 High",
                 "deadline": "Tomorrow 5:00 PM",
-                "responsible": "You & Listing Agent"
+                "responsible": "You & Listing Agent",
             },
             {
                 "action": "Prepare counter-offer strategy",
                 "priority": "🟡 Medium",
                 "deadline": "Today",
-                "responsible": "Listing Agent"
+                "responsible": "Listing Agent",
             },
             {
                 "action": "Schedule additional showings for weekend",
                 "priority": "🟢 Normal",
                 "deadline": "End of week",
-                "responsible": "Showing Coordinator"
-            }
+                "responsible": "Showing Coordinator",
+            },
         ]
 
         for action in immediate_actions:
@@ -1025,9 +1215,9 @@ def render_transaction_timeline():
                 with col1:
                     st.markdown(f"• {action['action']}")
                 with col2:
-                    st.markdown(action['priority'])
+                    st.markdown(action["priority"])
                 with col3:
-                    st.markdown(action['deadline'])
+                    st.markdown(action["deadline"])
                 with col4:
                     st.markdown(f"*{action['responsible']}*")
 
@@ -1038,28 +1228,20 @@ def render_transaction_timeline():
             {
                 "milestone": "Contract Execution",
                 "target_date": "Within 3 days",
-                "description": "Accept offer and execute purchase contract"
+                "description": "Accept offer and execute purchase contract",
             },
             {
                 "milestone": "Inspection Period",
                 "target_date": "Days 4-10",
-                "description": "Buyer inspection and potential negotiations"
+                "description": "Buyer inspection and potential negotiations",
             },
-            {
-                "milestone": "Appraisal",
-                "target_date": "Days 10-15",
-                "description": "Lender-ordered property appraisal"
-            },
+            {"milestone": "Appraisal", "target_date": "Days 10-15", "description": "Lender-ordered property appraisal"},
             {
                 "milestone": "Final Approval",
                 "target_date": "Days 20-25",
-                "description": "Buyer's loan final approval and clear to close"
+                "description": "Buyer's loan final approval and clear to close",
             },
-            {
-                "milestone": "Closing",
-                "target_date": "Day 30",
-                "description": "Title transfer and sale completion"
-            }
+            {"milestone": "Closing", "target_date": "Day 30", "description": "Title transfer and sale completion"},
         ]
 
         for milestone in milestones:
@@ -1069,9 +1251,9 @@ def render_transaction_timeline():
                 with col1:
                     st.markdown(f"**📍 {milestone['milestone']}**")
                 with col2:
-                    st.markdown(milestone['target_date'])
+                    st.markdown(milestone["target_date"])
                 with col3:
-                    st.markdown(milestone['description'])
+                    st.markdown(milestone["description"])
 
     with tab4:
         st.markdown("##### Progress Milestones")
@@ -1084,7 +1266,7 @@ def render_transaction_timeline():
             {"milestone": "Receive Offers", "progress": 60, "status": "⏳ In Progress"},
             {"milestone": "Accept Contract", "progress": 0, "status": "⏸️ Pending"},
             {"milestone": "Navigate Contingencies", "progress": 0, "status": "⏸️ Future"},
-            {"milestone": "Close Sale", "progress": 0, "status": "⏸️ Future"}
+            {"milestone": "Close Sale", "progress": 0, "status": "⏸️ Future"},
         ]
 
         for milestone in milestones_progress:
@@ -1093,10 +1275,10 @@ def render_transaction_timeline():
             with col1:
                 st.markdown(f"**{milestone['milestone']}**")
             with col2:
-                st.progress(milestone['progress'] / 100)
+                st.progress(milestone["progress"] / 100)
                 st.markdown(f"{milestone['progress']}% Complete")
             with col3:
-                st.markdown(milestone['status'])
+                st.markdown(milestone["status"])
 
         # Key metrics
         st.markdown("**📊 Sale Performance Metrics**")
@@ -1105,7 +1287,7 @@ def render_transaction_timeline():
             {"metric": "Time to First Offer", "value": "8 days", "benchmark": "< 14 days", "status": "🎯 Excellent"},
             {"metric": "Offer Quality", "value": "Strong", "benchmark": "At/Asking or Above", "status": "✅ Good"},
             {"metric": "Marketing Reach", "value": "2,847 views", "benchmark": "> 1,000", "status": "🚀 Exceeding"},
-            {"metric": "Showing Interest", "value": "18 showings", "benchmark": "> 10", "status": "✅ Strong"}
+            {"metric": "Showing Interest", "value": "18 showings", "benchmark": "> 10", "status": "✅ Strong"},
         ]
 
         for metric in metrics:
@@ -1113,11 +1295,12 @@ def render_transaction_timeline():
             with col1:
                 st.markdown(f"**{metric['metric']}**")
             with col2:
-                st.markdown(metric['value'])
+                st.markdown(metric["value"])
             with col3:
-                st.markdown(metric['benchmark'])
+                st.markdown(metric["benchmark"])
             with col4:
-                st.markdown(metric['status'])
+                st.markdown(metric["status"])
+
 
 def render_seller_analytics():
     """Comprehensive seller analytics and insights"""
@@ -1135,9 +1318,9 @@ def render_seller_analytics():
         st.metric("🎯 Success Probability", "92%", delta="Strong indicators")
 
     # Detailed analytics
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "💰 Financial Analysis", "📊 Market Performance", "🎯 Success Predictors", "📈 Competitive Position"
-    ])
+    tab1, tab2, tab3, tab4 = st.tabs(
+        ["💰 Financial Analysis", "📊 Market Performance", "🎯 Success Predictors", "📈 Competitive Position"]
+    )
 
     with tab1:
         st.markdown("##### Financial Projection")
@@ -1159,25 +1342,32 @@ def render_seller_analytics():
 
             net_proceeds = sale_price - commission - closing_costs - repairs - staging - other_costs
 
-            st.markdown(f"""
+            st.markdown(
+                f"""
             <div style='background: rgba(22, 27, 34, 0.7); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);'>
                 <div style='font-size: 0.75rem; color: #8B949E; font-weight: 700; text-transform: uppercase;'>Net Proceeds</div>
                 <div style='font-size: 2.5rem; font-weight: 700; color: #10b981; margin: 10px 0;'>${net_proceeds:,.0f}</div>
                 <div style='font-size: 0.85rem; color: #8B949E;'>Projected based on $492k contract value</div>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
         with col2:
             # Visual breakdown
             costs = ["Commission", "Closing Costs", "Repairs", "Other", "Net Proceeds"]
             amounts = [commission, closing_costs, repairs, staging + other_costs, net_proceeds]
 
-            fig = go.Figure(data=[go.Pie(
-                labels=costs,
-                values=amounts,
-                hole=.5,
-                marker=dict(colors=['#6366F1', '#8b5cf6', '#ef4444', '#f59e0b', '#10b981'])
-            )])
+            fig = go.Figure(
+                data=[
+                    go.Pie(
+                        labels=costs,
+                        values=amounts,
+                        hole=0.5,
+                        marker=dict(colors=["#6366F1", "#8b5cf6", "#ef4444", "#f59e0b", "#10b981"]),
+                    )
+                ]
+            )
             st.plotly_chart(style_obsidian_chart(fig), use_container_width=True)
 
     with tab2:
@@ -1189,7 +1379,7 @@ def render_seller_analytics():
 
         with col1:
             st.markdown("**📊 Your Property vs. Market Average**")
-            
+
             # Using custom dossier style for comparison
             dossier_html = """
             <div style='display: grid; gap: 1rem;'>
@@ -1218,12 +1408,16 @@ def render_seller_analytics():
             inquiries = [28, 19]
 
             fig_performance = go.Figure()
-            fig_performance.add_trace(go.Scatter(x=weeks, y=views, mode='lines+markers', name='Views', line=dict(color='#6366F1')))
-            fig_performance.add_trace(go.Scatter(x=weeks, y=inquiries, mode='lines+markers', name='Inquiries', line=dict(color='#10b981'), yaxis='y2'))
-
-            fig_performance.update_layout(
-                yaxis2=dict(overlaying='y', side='right')
+            fig_performance.add_trace(
+                go.Scatter(x=weeks, y=views, mode="lines+markers", name="Views", line=dict(color="#6366F1"))
             )
+            fig_performance.add_trace(
+                go.Scatter(
+                    x=weeks, y=inquiries, mode="lines+markers", name="Inquiries", line=dict(color="#10b981"), yaxis="y2"
+                )
+            )
+
+            fig_performance.update_layout(yaxis2=dict(overlaying="y", side="right"))
             st.plotly_chart(style_obsidian_chart(fig_performance), use_container_width=True)
 
         # Market conditions impact
@@ -1233,7 +1427,7 @@ def render_seller_analytics():
             {"Factor": "Interest Rates", "Current": "7.25%", "Trend": "📈 Stable", "Impact": "Neutral"},
             {"Factor": "Inventory Levels", "Current": "2.1 months", "Trend": "📉 Low", "Impact": "🟢 Favorable"},
             {"Factor": "Buyer Demand", "Current": "High", "Trend": "📈 Strong", "Impact": "🟢 Favorable"},
-            {"Factor": "Seasonal Timing", "Current": "Peak Season", "Trend": "📈 Optimal", "Impact": "🟢 Favorable"}
+            {"Factor": "Seasonal Timing", "Current": "Peak Season", "Trend": "📈 Optimal", "Impact": "🟢 Favorable"},
         ]
 
         for condition in conditions:
@@ -1241,12 +1435,20 @@ def render_seller_analytics():
             with col1:
                 st.markdown(f"**{condition['Factor']}**")
             with col2:
-                st.markdown(condition['Current'])
+                st.markdown(condition["Current"])
             with col3:
-                st.markdown(condition['Trend'])
+                st.markdown(condition["Trend"])
             with col4:
-                impact_color = "green" if "Favorable" in condition['Impact'] else "orange" if "Neutral" in condition['Impact'] else "red"
-                st.markdown(f"<span style='color: {impact_color};'>{condition['Impact']}</span>", unsafe_allow_html=True)
+                impact_color = (
+                    "green"
+                    if "Favorable" in condition["Impact"]
+                    else "orange"
+                    if "Neutral" in condition["Impact"]
+                    else "red"
+                )
+                st.markdown(
+                    f"<span style='color: {impact_color};'>{condition['Impact']}</span>", unsafe_allow_html=True
+                )
 
     with tab3:
         st.markdown("##### Success Probability Indicators")
@@ -1258,7 +1460,7 @@ def render_seller_analytics():
             {"Factor": "Market Timing", "Score": 92, "Weight": "20%", "Impact": "Very High"},
             {"Factor": "Marketing Quality", "Score": 90, "Weight": "15%", "Impact": "High"},
             {"Factor": "Agent Performance", "Score": 94, "Weight": "10%", "Impact": "High"},
-            {"Factor": "Location Desirability", "Score": 85, "Weight": "10%", "Impact": "Medium-High"}
+            {"Factor": "Location Desirability", "Score": 85, "Weight": "10%", "Impact": "Medium-High"},
         ]
 
         for factor in success_factors:
@@ -1266,20 +1468,24 @@ def render_seller_analytics():
 
             with col1:
                 st.markdown(f"**{factor['Factor']}**")
-                st.progress(factor['Score'] / 100)
+                st.progress(factor["Score"] / 100)
 
             with col2:
                 st.markdown(f"{factor['Score']}/100")
 
             with col3:
-                st.markdown(factor['Weight'])
+                st.markdown(factor["Weight"])
 
             with col4:
-                impact_color = "green" if "Very High" in factor['Impact'] else "blue" if "High" in factor['Impact'] else "orange"
+                impact_color = (
+                    "green" if "Very High" in factor["Impact"] else "blue" if "High" in factor["Impact"] else "orange"
+                )
                 st.markdown(f"<span style='color: {impact_color};'>{factor['Impact']}</span>", unsafe_allow_html=True)
 
         # Overall score calculation
-        weighted_score = sum([factor['Score'] * float(factor['Weight'].replace('%', '')) / 100 for factor in success_factors])
+        weighted_score = sum(
+            [factor["Score"] * float(factor["Weight"].replace("%", "")) / 100 for factor in success_factors]
+        )
 
         st.markdown(f"**🎯 Overall Success Score: {weighted_score:.1f}/100**")
 
@@ -1306,7 +1512,7 @@ def render_seller_analytics():
                 "beds_baths": "3 bed / 2.5 bath",
                 "sqft": "1,920 sqft",
                 "advantage": "Better condition, lower price",
-                "risk": "Similar features, longer on market"
+                "risk": "Similar features, longer on market",
             },
             {
                 "address": "1678 Oak Avenue",
@@ -1315,7 +1521,7 @@ def render_seller_analytics():
                 "beds_baths": "3 bed / 2 bath",
                 "sqft": "1,750 sqft",
                 "advantage": "Larger, better updates",
-                "risk": "Direct competition, similar price"
+                "risk": "Direct competition, similar price",
             },
             {
                 "address": "1234 Pine Drive",
@@ -1324,8 +1530,8 @@ def render_seller_analytics():
                 "beds_baths": "4 bed / 2.5 bath",
                 "sqft": "2,100 sqft",
                 "advantage": "Better value per sqft",
-                "risk": "Larger home, higher price point"
-            }
+                "risk": "Larger home, higher price point",
+            },
         ]
 
         for competitor in competitors:
@@ -1344,10 +1550,22 @@ def render_seller_analytics():
         st.markdown("**🎯 Strategic Positioning Summary**")
 
         positioning = [
-            {"Aspect": "Price Point", "Position": "Competitive", "Strategy": "Priced to move quickly while maximizing value"},
-            {"Aspect": "Condition", "Position": "Superior", "Strategy": "Highlight move-in ready status and recent updates"},
-            {"Aspect": "Marketing", "Position": "Leading", "Strategy": "Professional presentation generating strong interest"},
-            {"Aspect": "Timing", "Position": "Optimal", "Strategy": "Listed during peak buyer activity period"}
+            {
+                "Aspect": "Price Point",
+                "Position": "Competitive",
+                "Strategy": "Priced to move quickly while maximizing value",
+            },
+            {
+                "Aspect": "Condition",
+                "Position": "Superior",
+                "Strategy": "Highlight move-in ready status and recent updates",
+            },
+            {
+                "Aspect": "Marketing",
+                "Position": "Leading",
+                "Strategy": "Professional presentation generating strong interest",
+            },
+            {"Aspect": "Timing", "Position": "Optimal", "Strategy": "Listed during peak buyer activity period"},
         ]
 
         for pos in positioning:
@@ -1355,7 +1573,13 @@ def render_seller_analytics():
             with col1:
                 st.markdown(f"**{pos['Aspect']}:**")
             with col2:
-                position_color = "green" if pos['Position'] in ["Superior", "Leading", "Optimal"] else "blue" if pos['Position'] == "Competitive" else "orange"
+                position_color = (
+                    "green"
+                    if pos["Position"] in ["Superior", "Leading", "Optimal"]
+                    else "blue"
+                    if pos["Position"] == "Competitive"
+                    else "orange"
+                )
                 st.markdown(f"<span style='color: {position_color};'>{pos['Position']}</span>", unsafe_allow_html=True)
             with col3:
                 st.markdown(f"*{pos['Strategy']}*")
@@ -1369,11 +1593,21 @@ def render_seller_analytics():
         - Current positioning should result in sale within 2-3 weeks at or near asking price
         """)
 
-def render_seller_journey_hub(services, render_property_valuation_engine, render_seller_prep_checklist, render_marketing_campaign_dashboard, render_seller_communication_portal, render_transaction_timeline, render_seller_analytics):
+
+def render_seller_journey_hub(
+    services,
+    render_property_valuation_engine,
+    render_seller_prep_checklist,
+    render_marketing_campaign_dashboard,
+    render_seller_communication_portal,
+    render_transaction_timeline,
+    render_seller_analytics,
+):
     """Render the complete seller experience - Obsidian Command Edition"""
-    from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart, render_dossier_block
-    
-    st.markdown("""
+    from ghl_real_estate_ai.streamlit_demo.obsidian_theme import render_dossier_block, style_obsidian_chart
+
+    st.markdown(
+        """
         <div style="background: rgba(22, 27, 34, 0.85); backdrop-filter: blur(20px); padding: 1.5rem 2.5rem; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);">
             <div>
                 <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 2.5rem; font-weight: 700; margin: 0; color: #FFFFFF; letter-spacing: -0.04em; text-transform: uppercase;">🏡 SELLER JOURNEY HUB</h1>
@@ -1385,10 +1619,13 @@ def render_seller_journey_hub(services, render_property_valuation_engine, render
                 </div>
             </div>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     # Claude's Seller Journey Counsel - Obsidian Glassmorphism
-    st.markdown("""
+    st.markdown(
+        """
         <div style='background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(20, 184, 166, 0.05) 100%); 
                     border: 1px solid rgba(16, 185, 129, 0.2); 
                     border-radius: 20px; 
@@ -1400,11 +1637,13 @@ def render_seller_journey_hub(services, render_property_valuation_engine, render
                 <div style='flex-grow: 1;'>
                     <h3 style='margin: 0 0 1rem 0; color: white !important; font-family: "Space Grotesk", sans-serif; font-size: 1.75rem;'>Claude's Seller Counsel</h3>
                     <div style='color: #f8fafc; font-size: 1.1rem; line-height: 1.6; font-weight: 500;'>
-    """, unsafe_allow_html=True)
-    
+    """,
+        unsafe_allow_html=True,
+    )
+
     if CLAUDE_AVAILABLE:
         orchestrator = get_claude_orchestrator()
-        
+
         with st.spinner("Claude is optimizing the seller journey..."):
             try:
                 # Build inventory context
@@ -1412,116 +1651,91 @@ def render_seller_journey_hub(services, render_property_valuation_engine, render
                     "active_listings": 3,
                     "avg_dom": 12,
                     "market_trend": "rising",
-                    "market": st.session_state.get("selected_market", "Austin")
+                    "market": st.session_state.get("selected_market", "Austin"),
                 }
-                
+
                 # Use chat_query for inventory advice
                 inventory_result = run_async(
                     orchestrator.chat_query(
                         query="Provide strategic inventory optimization counsel. Analyze current market velocity and suggest 2 focus areas for listing maximization.",
-                        context={"metrics": inventory_metrics, "task": "inventory_counsel"}
+                        context={"metrics": inventory_metrics, "task": "inventory_counsel"},
                     )
                 )
                 st.markdown(inventory_result.content)
             except Exception as e:
-                st.markdown("""
+                st.markdown(
+                    """
                 <ul style='margin: 0; padding-left: 1.5rem;'>
                     <li><strong>💎 Value Maximizer:</strong> Active listings showing strong engagement.</li>
                     <li><strong>⏱️ Velocity Check:</strong> Market DOM remains low; focus on quick contract execution.</li>
                 </ul>
-                """, unsafe_allow_html=True)
+                """,
+                    unsafe_allow_html=True,
+                )
     else:
-        st.markdown("""
+        st.markdown(
+            """
         <ul style='margin: 0; padding-left: 1.5rem;'>
             <li><strong>💎 Value Maximizer:</strong> Your 'Alta Loma' listing is seeing 2x higher engagement than neighborhood comps. I recommend a 'Coming Soon' email blast to your luxury investor list.</li>
             <li><strong>⏱️ Velocity Check:</strong> Current market days-on-market (DOM) is dropping. We should push for a contract execution within the next 72 hours to maintain momentum.</li>
         </ul>
-        """, unsafe_allow_html=True)
-    
+        """,
+            unsafe_allow_html=True,
+        )
+
     st.markdown("</div></div></div>", unsafe_allow_html=True)
-    
+
     if st.button("📊 Draft Strategic Market Update", use_container_width=True, type="primary"):
         st.toast("Claude is drafting a performance report for your seller...", icon="✍️")
 
         # Seller navigation tabs
 
-        tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
-
-            "📊 Property Valuation",
-
-            "✍️ Listing Architect",
-
-            "📋 Seller Prep",
-
-            "📈 Marketing Campaign",
-
-            "🌐 Seller Portal",
-
-            "💬 Communication",
-
-            "📅 Timeline & Offers",
-
-            "📊 Seller Analytics"
-
-        ])
-
-    
+        tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs(
+            [
+                "📊 Property Valuation",
+                "✍️ Listing Architect",
+                "📋 Seller Prep",
+                "📈 Marketing Campaign",
+                "🌐 Seller Portal",
+                "💬 Communication",
+                "📅 Timeline & Offers",
+                "📊 Seller Analytics",
+            ]
+        )
 
         with tab1:
-
             render_property_valuation_engine()
-
-    
 
         with tab2:
             try:
                 from ghl_real_estate_ai.streamlit_demo.components.listing_architect import render_listing_architect
+
                 render_listing_architect()
             except ImportError:
                 st.info("✍️ Listing Architect component coming soon")
 
-    
-
         with tab3:
-
             render_seller_prep_checklist()
 
-    
-
         with tab4:
-
             render_marketing_campaign_dashboard()
 
-    
-
         with tab5:
-
             try:
-
-                from ghl_real_estate_ai.streamlit_demo.components.seller_portal_manager import render_seller_portal_manager
+                from ghl_real_estate_ai.streamlit_demo.components.seller_portal_manager import (
+                    render_seller_portal_manager,
+                )
 
                 render_seller_portal_manager()
 
             except ImportError:
-
                 st.info("🌐 Seller Portal Manager loading...")
 
-    
-
         with tab6:
-
             render_seller_communication_portal()
 
-    
-
         with tab7:
-
             render_transaction_timeline()
 
-    
-
         with tab8:
-
             render_seller_analytics()
-
-    

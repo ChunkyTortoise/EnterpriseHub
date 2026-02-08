@@ -8,27 +8,27 @@ Validates re-ranking quality and performance targets:
 - Accuracy: >85% relevant results in top-5
 """
 
-import pytest
 import asyncio
-import time
 import statistics
+import time
 from typing import List
 from uuid import uuid4
 
-from src.core.types import SearchResult, DocumentChunk, Metadata
+import pytest
+from src.core.types import DocumentChunk, Metadata, SearchResult
 from src.reranking.base import (
     BaseReRanker,
+    MockReRanker,
     ReRankingConfig,
     ReRankingResult,
     ReRankingStrategy,
-    MockReRanker,
 )
 from src.reranking.cross_encoder import CrossEncoderReRanker
-
 
 # ============================================================================
 # Test Data Generators
 # ============================================================================
+
 
 def create_corpus(size: int) -> List[DocumentChunk]:
     """Create a corpus of document chunks."""
@@ -48,12 +48,14 @@ def create_corpus(size: int) -> List[DocumentChunk]:
     chunks = []
     for i in range(size):
         content = topics[i % len(topics)]
-        chunks.append(DocumentChunk(
-            document_id=doc_id,
-            content=f"{content} (variant {i})",
-            index=i,
-            metadata=Metadata(title=f"Document {i}"),
-        ))
+        chunks.append(
+            DocumentChunk(
+                document_id=doc_id,
+                content=f"{content} (variant {i})",
+                index=i,
+                metadata=Metadata(title=f"Document {i}"),
+            )
+        )
     return chunks
 
 
@@ -75,6 +77,7 @@ def create_search_results(chunks: List[DocumentChunk], count: int = None) -> Lis
 # Re-ranking Latency Benchmarks
 # ============================================================================
 
+
 class TestReRankingLatency:
     """Benchmark re-ranking operation latency."""
 
@@ -87,8 +90,13 @@ class TestReRankingLatency:
         await reranker.initialize()
 
         latencies = []
-        queries = ["machine learning", "neural networks", "deep learning",
-                    "computer vision", "natural language processing"]
+        queries = [
+            "machine learning",
+            "neural networks",
+            "deep learning",
+            "computer vision",
+            "natural language processing",
+        ]
 
         for query in queries:
             start = time.perf_counter()
@@ -140,7 +148,7 @@ class TestReRankingLatency:
         corpus = create_corpus(20)
         results = create_search_results(corpus)
 
-        with patch('src.reranking.cross_encoder.SENTENCE_TRANSFORMERS_AVAILABLE', False):
+        with patch("src.reranking.cross_encoder.SENTENCE_TRANSFORMERS_AVAILABLE", False):
             reranker = CrossEncoderReRanker()
             await reranker.initialize()
 
@@ -155,6 +163,7 @@ class TestReRankingLatency:
 # ============================================================================
 # Re-ranking Quality Benchmarks
 # ============================================================================
+
 
 class TestReRankingQuality:
     """Benchmark re-ranking quality and accuracy."""
@@ -178,16 +187,31 @@ class TestReRankingQuality:
         """Results with query term overlap should rank higher after reranking."""
         doc_id = uuid4()
         chunks = [
-            DocumentChunk(document_id=doc_id, content="Python web framework for building APIs", index=0, metadata=Metadata()),
-            DocumentChunk(document_id=doc_id, content="Machine learning algorithms for classification", index=1, metadata=Metadata()),
-            DocumentChunk(document_id=doc_id, content="Database indexing and query optimization", index=2, metadata=Metadata()),
-            DocumentChunk(document_id=doc_id, content="Machine learning model training and evaluation", index=3, metadata=Metadata()),
-            DocumentChunk(document_id=doc_id, content="Network security and firewall configuration", index=4, metadata=Metadata()),
+            DocumentChunk(
+                document_id=doc_id, content="Python web framework for building APIs", index=0, metadata=Metadata()
+            ),
+            DocumentChunk(
+                document_id=doc_id,
+                content="Machine learning algorithms for classification",
+                index=1,
+                metadata=Metadata(),
+            ),
+            DocumentChunk(
+                document_id=doc_id, content="Database indexing and query optimization", index=2, metadata=Metadata()
+            ),
+            DocumentChunk(
+                document_id=doc_id,
+                content="Machine learning model training and evaluation",
+                index=3,
+                metadata=Metadata(),
+            ),
+            DocumentChunk(
+                document_id=doc_id, content="Network security and firewall configuration", index=4, metadata=Metadata()
+            ),
         ]
         # Initial ordering: web, ml-1, db, ml-2, security (ML docs at ranks 2 and 4)
         results = [
-            SearchResult(chunk=chunks[i], score=0.9 - i * 0.1, rank=i + 1, distance=0.1 + i * 0.1)
-            for i in range(5)
+            SearchResult(chunk=chunks[i], score=0.9 - i * 0.1, rank=i + 1, distance=0.1 + i * 0.1) for i in range(5)
         ]
 
         reranker = MockReRanker(config=ReRankingConfig(strategy=ReRankingStrategy.REPLACE))
@@ -198,9 +222,7 @@ class TestReRankingQuality:
         # ML-related documents (indices 1, 3) should be in top positions
         top_3_contents = [r.chunk.content for r in reranked.results[:3]]
         ml_in_top_3 = sum(1 for c in top_3_contents if "machine learning" in c.lower())
-        assert ml_in_top_3 >= 1, (
-            f"Expected ML docs in top 3, got: {top_3_contents}"
-        )
+        assert ml_in_top_3 >= 1, f"Expected ML docs in top 3, got: {top_3_contents}"
         await reranker.close()
 
     @pytest.mark.asyncio
@@ -215,9 +237,7 @@ class TestReRankingQuality:
             reranked = await reranker.rerank("test query", results)
 
             for r in reranked.results:
-                assert 0.0 <= r.score <= 1.0, (
-                    f"Score {r.score} out of range for strategy {strategy.value}"
-                )
+                assert 0.0 <= r.score <= 1.0, f"Score {r.score} out of range for strategy {strategy.value}"
             await reranker.close()
 
     @pytest.mark.asyncio
@@ -251,6 +271,7 @@ class TestReRankingQuality:
 # Strategy Comparison Benchmarks
 # ============================================================================
 
+
 class TestStrategyComparison:
     """Compare performance across all 4 re-ranking strategies."""
 
@@ -268,9 +289,7 @@ class TestStrategyComparison:
 
             reranked = await reranker.rerank(query, results)
 
-            assert len(reranked.results) == len(results), (
-                f"Strategy {strategy.value} changed result count"
-            )
+            assert len(reranked.results) == len(results), f"Strategy {strategy.value} changed result count"
             assert reranked.processing_time_ms >= 0
             assert reranked.original_count == len(results)
             await reranker.close()
@@ -339,6 +358,7 @@ class TestStrategyComparison:
 # Throughput Benchmarks
 # ============================================================================
 
+
 class TestReRankingThroughput:
     """Benchmark re-ranking throughput."""
 
@@ -351,8 +371,11 @@ class TestReRankingThroughput:
         await reranker.initialize()
 
         queries = [
-            "machine learning", "deep learning", "neural networks",
-            "computer vision", "natural language processing",
+            "machine learning",
+            "deep learning",
+            "neural networks",
+            "computer vision",
+            "natural language processing",
         ]
 
         start = time.perf_counter()
@@ -364,9 +387,7 @@ class TestReRankingThroughput:
         elapsed = time.perf_counter() - start
 
         throughput = count / elapsed
-        assert throughput > 50, (
-            f"Throughput {throughput:.0f} ops/s below 50 ops/s target"
-        )
+        assert throughput > 50, f"Throughput {throughput:.0f} ops/s below 50 ops/s target"
         await reranker.close()
 
     @pytest.mark.asyncio
@@ -394,7 +415,5 @@ class TestReRankingThroughput:
         # Floor the base time at 0.1ms to avoid unstable ratios when
         # sub-millisecond times dominate.
         ratio = times[100] / max(times[10], 0.1)
-        assert ratio < 25, (
-            f"100 results took {ratio:.1f}x longer than 10 results (expected <25x)"
-        )
+        assert ratio < 25, f"100 results took {ratio:.1f}x longer than 10 results (expected <25x)"
         await reranker.close()

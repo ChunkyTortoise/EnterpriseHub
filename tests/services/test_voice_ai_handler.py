@@ -2,19 +2,20 @@
 Test suite for Voice AI Handler - Advanced voice AI phone integration system
 """
 
-import pytest
 import asyncio
-from unittest.mock import Mock, AsyncMock, patch
 from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 from ghl_real_estate_ai.services.voice_ai_handler import (
+    CallPriority,
+    CallType,
+    ConversationStage,
     VoiceAIHandler,
     VoiceCallContext,
     VoiceResponse,
-    CallType,
-    CallPriority,
-    ConversationStage,
-    get_voice_ai_handler
+    get_voice_ai_handler,
 )
 
 
@@ -27,11 +28,7 @@ def voice_handler():
 @pytest.fixture
 def sample_call_context():
     """Create sample call context for testing"""
-    return VoiceCallContext(
-        call_id="test-call-123",
-        phone_number="+19095551234",
-        caller_name="John Smith"
-    )
+    return VoiceCallContext(call_id="test-call-123", phone_number="+19095551234", caller_name="John Smith")
 
 
 @pytest.mark.asyncio
@@ -41,17 +38,14 @@ class TestVoiceAIHandler:
     async def test_voice_handler_initialization(self, voice_handler):
         """Test voice handler initializes correctly"""
         assert voice_handler is not None
-        assert hasattr(voice_handler, 'llm_client')
-        assert hasattr(voice_handler, 'rc_assistant')
-        assert hasattr(voice_handler, 'qualification_questions')
+        assert hasattr(voice_handler, "llm_client")
+        assert hasattr(voice_handler, "rc_assistant")
+        assert hasattr(voice_handler, "qualification_questions")
         assert len(voice_handler.qualification_questions) == 7
 
     async def test_handle_incoming_call(self, voice_handler):
         """Test incoming call handling"""
-        context = await voice_handler.handle_incoming_call(
-            phone_number="+19095551234",
-            caller_name="Jane Doe"
-        )
+        context = await voice_handler.handle_incoming_call(phone_number="+19095551234", caller_name="Jane Doe")
 
         assert context is not None
         assert context.phone_number == "+19095551234"
@@ -65,15 +59,21 @@ class TestVoiceAIHandler:
         # Add call to active calls
         voice_handler.active_calls[sample_call_context.call_id] = sample_call_context
 
-        with patch.object(voice_handler.llm_client, 'agenerate') as mock_agenerate, \
-             patch.object(voice_handler.rc_assistant, 'generate_response') as mock_generate:
-            mock_agenerate.return_value = Mock(content='{"intents": ["greeting"], "emotion": "neutral", "urgency": "low", "qualification_signals": [], "red_flags": []}')
-            mock_generate.return_value = "Hi John! I'm Jorge Martinez, your Inland Empire real estate specialist. How can I help you today?"
+        with (
+            patch.object(voice_handler.llm_client, "agenerate") as mock_agenerate,
+            patch.object(voice_handler.rc_assistant, "generate_response") as mock_generate,
+        ):
+            mock_agenerate.return_value = Mock(
+                content='{"intents": ["greeting"], "emotion": "neutral", "urgency": "low", "qualification_signals": [], "red_flags": []}'
+            )
+            mock_generate.return_value = (
+                "Hi John! I'm Jorge Martinez, your Inland Empire real estate specialist. How can I help you today?"
+            )
 
             response = await voice_handler.process_voice_input(
                 call_id=sample_call_context.call_id,
                 speech_text="Hi, I'm looking for a real estate agent",
-                audio_confidence=0.9
+                audio_confidence=0.9,
             )
 
             assert isinstance(response, VoiceResponse)
@@ -83,21 +83,23 @@ class TestVoiceAIHandler:
     async def test_process_voice_input_qualification_stage(self, voice_handler):
         """Test voice input processing during qualification"""
         context = VoiceCallContext(
-            call_id="test-qual-123",
-            phone_number="+19095551234",
-            conversation_stage=ConversationStage.QUALIFICATION
+            call_id="test-qual-123", phone_number="+19095551234", conversation_stage=ConversationStage.QUALIFICATION
         )
         voice_handler.active_calls[context.call_id] = context
 
-        with patch.object(voice_handler.llm_client, 'agenerate') as mock_agenerate, \
-             patch.object(voice_handler.rc_assistant, 'generate_response') as mock_generate:
-            mock_agenerate.return_value = Mock(content='{"intents": ["information"], "emotion": "interested", "urgency": "medium", "qualification_signals": ["employer", "timeline"], "red_flags": []}')
+        with (
+            patch.object(voice_handler.llm_client, "agenerate") as mock_agenerate,
+            patch.object(voice_handler.rc_assistant, "generate_response") as mock_generate,
+        ):
+            mock_agenerate.return_value = Mock(
+                content='{"intents": ["information"], "emotion": "interested", "urgency": "medium", "qualification_signals": ["employer", "timeline"], "red_flags": []}'
+            )
             mock_generate.return_value = "Great! Are you currently working with another real estate agent?"
 
             response = await voice_handler.process_voice_input(
                 call_id=context.call_id,
                 speech_text="I work for Amazon and need to find a home near the warehouse",
-                audio_confidence=0.85
+                audio_confidence=0.85,
             )
 
             assert response is not None
@@ -112,13 +114,13 @@ class TestVoiceAIHandler:
             phone_number="+19095551234",
             employer="Amazon",
             timeline="30 days",
-            budget_range=(600000, 700000)
+            budget_range=(600000, 700000),
         )
 
         # Add some conversation history indicating pre-approval
         context.transcript = [
             {"speaker": "caller", "text": "Yes, I'm pre-approved for financing", "confidence": 0.9},
-            {"speaker": "caller", "text": "I need to move in 30 days for my job", "confidence": 0.9}
+            {"speaker": "caller", "text": "I need to move in 30 days for my job", "confidence": 0.9},
         ]
 
         score = await voice_handler._calculate_qualification_score(context)
@@ -129,14 +131,13 @@ class TestVoiceAIHandler:
 
     async def test_intent_analysis(self, voice_handler, sample_call_context):
         """Test intent analysis functionality"""
-        with patch.object(voice_handler.llm_client, 'agenerate') as mock_agenerate:
+        with patch.object(voice_handler.llm_client, "agenerate") as mock_agenerate:
             mock_agenerate.return_value = Mock(
                 content='{"intents": ["scheduling"], "emotion": "excited", "urgency": "high", "qualification_signals": ["timeline"], "red_flags": []}'
             )
 
             intent_analysis = await voice_handler._analyze_intent(
-                "I need to see houses this weekend",
-                sample_call_context
+                "I need to see houses this weekend", sample_call_context
             )
 
             assert "scheduling" in intent_analysis["intents"]
@@ -148,10 +149,10 @@ class TestVoiceAIHandler:
             call_id="test-route-123",
             phone_number="+19095551234",
             qualification_score=85,  # High score
-            employer="Kaiser"
+            employer="Kaiser",
         )
 
-        with patch.object(voice_handler, '_calculate_qualification_score') as mock_score:
+        with patch.object(voice_handler, "_calculate_qualification_score") as mock_score:
             mock_score.return_value = 85
 
             routing = await voice_handler._make_routing_decision(context, "I'm ready to buy immediately")
@@ -161,10 +162,7 @@ class TestVoiceAIHandler:
 
     async def test_routing_decision_transfer_request(self, voice_handler, sample_call_context):
         """Test routing decision for explicit transfer requests"""
-        routing = await voice_handler._make_routing_decision(
-            sample_call_context,
-            "I want to speak to Jorge directly"
-        )
+        routing = await voice_handler._make_routing_decision(sample_call_context, "I want to speak to Jorge directly")
 
         assert routing["should_transfer"] is True
         assert "speak to jorge" in routing["reason"].lower()
@@ -175,14 +173,16 @@ class TestVoiceAIHandler:
             call_id="test-response-123",
             phone_number="+19095551234",
             conversation_stage=ConversationStage.DISCOVERY,
-            employer="Amazon"
+            employer="Amazon",
         )
 
         intent_analysis = {"intents": ["information"], "emotion": "interested", "urgency": "medium"}
         sentiment = {"score": 0.3}
 
-        with patch.object(voice_handler.rc_assistant, 'generate_response') as mock_generate:
-            mock_generate.return_value = "That's great! Amazon employees love the Etiwanda area for its proximity to the distribution centers."
+        with patch.object(voice_handler.rc_assistant, "generate_response") as mock_generate:
+            mock_generate.return_value = (
+                "That's great! Amazon employees love the Etiwanda area for its proximity to the distribution centers."
+            )
 
             response = await voice_handler._generate_contextual_response(
                 context, "Where do most Amazon workers live?", intent_analysis, sentiment
@@ -198,12 +198,12 @@ class TestVoiceAIHandler:
             phone_number="+19095551234",
             qualification_score=75,
             duration_seconds=300,
-            should_transfer_to_jorge=True
+            should_transfer_to_jorge=True,
         )
 
         voice_handler.active_calls[context.call_id] = context
 
-        with patch.object(voice_handler, '_store_call_record') as mock_store:
+        with patch.object(voice_handler, "_store_call_record") as mock_store:
             mock_store.return_value = None
 
             analytics = await voice_handler.handle_call_completion(context.call_id)
@@ -223,8 +223,13 @@ class TestVoiceAIHandler:
         profile = voice_handler.jorge_voice_profile
 
         assert "Inland Empire specialist" in profile["market_expertise"]["key_phrases"]
-        assert any(p.lower() == "logistics and healthcare relocations" for p in profile["market_expertise"]["key_phrases"])
-        assert "professional_friendly" in profile["speech_patterns"]["greeting_style"].lower() or "friendly but professional" in profile["speech_patterns"]["greeting_style"].lower()
+        assert any(
+            p.lower() == "logistics and healthcare relocations" for p in profile["market_expertise"]["key_phrases"]
+        )
+        assert (
+            "professional_friendly" in profile["speech_patterns"]["greeting_style"].lower()
+            or "friendly but professional" in profile["speech_patterns"]["greeting_style"].lower()
+        )
 
     async def test_qualification_questions_loading(self, voice_handler):
         """Test qualification questions configuration"""
@@ -235,14 +240,14 @@ class TestVoiceAIHandler:
         all_questions_text = " ".join(q["question"].lower() for q in questions)
         assert "agent" in all_questions_text or "working with" in all_questions_text
         assert "timeline" in all_questions_text or "when" in all_questions_text
-        assert "pre-approved" in all_questions_text or "financing" in all_questions_text or "budget" in all_questions_text
+        assert (
+            "pre-approved" in all_questions_text or "financing" in all_questions_text or "budget" in all_questions_text
+        )
 
     async def test_conversation_stage_progression(self, voice_handler):
         """Test conversation stage progression logic"""
         context = VoiceCallContext(
-            call_id="test-stage-123",
-            phone_number="+19095551234",
-            conversation_stage=ConversationStage.QUALIFICATION
+            call_id="test-stage-123", phone_number="+19095551234", conversation_stage=ConversationStage.QUALIFICATION
         )
 
         intent_analysis = {"intents": ["scheduling"], "urgency": "high"}
@@ -263,10 +268,10 @@ class TestVoiceAIHandler:
             "call_id": "test-123",
             "duration": 240,
             "qualification_data": {"score": 80, "employer": "Amazon"},
-            "routing_decision": {"transferred": True}
+            "routing_decision": {"transferred": True},
         }
 
-        with patch.object(voice_handler.cache, 'get') as mock_get:
+        with patch.object(voice_handler.cache, "get") as mock_get:
             mock_get.return_value = [sample_record]
 
             analytics = await voice_handler.get_call_analytics()
@@ -278,9 +283,7 @@ class TestVoiceAIHandler:
     async def test_error_handling_invalid_call(self, voice_handler):
         """Test error handling for invalid call ID"""
         response = await voice_handler.process_voice_input(
-            call_id="invalid-call-id",
-            speech_text="Hello",
-            audio_confidence=0.9
+            call_id="invalid-call-id", speech_text="Hello", audio_confidence=0.9
         )
 
         assert "transfer you to Jorge" in response.text
@@ -311,21 +314,17 @@ class TestVoiceAIHandler:
         """Test cache integration for conversation state"""
         voice_handler.active_calls[sample_call_context.call_id] = sample_call_context
 
-        with patch.object(voice_handler.cache, 'set') as mock_set:
+        with patch.object(voice_handler.cache, "set") as mock_set:
             await voice_handler._cache_conversation_state(sample_call_context)
             mock_set.assert_called_once()
 
     async def test_conversation_stage_guidance(self, voice_handler):
         """Test stage-specific conversation guidance"""
         context = VoiceCallContext(
-            call_id="test-guidance-123",
-            phone_number="+19095551234",
-            conversation_stage=ConversationStage.QUALIFICATION
+            call_id="test-guidance-123", phone_number="+19095551234", conversation_stage=ConversationStage.QUALIFICATION
         )
 
-        prompt = await voice_handler._build_jorge_voice_prompt(
-            context, "Tell me about the area", {}, {"score": 0.5}
-        )
+        prompt = await voice_handler._build_jorge_voice_prompt(context, "Tell me about the area", {}, {"score": 0.5})
 
         assert "qualification" in prompt.lower()
         assert "jorge martinez" in prompt.lower()
@@ -338,10 +337,7 @@ class TestVoiceCallContext:
 
     def test_context_initialization(self):
         """Test context initialization with defaults"""
-        context = VoiceCallContext(
-            call_id="test-123",
-            phone_number="+19095551234"
-        )
+        context = VoiceCallContext(call_id="test-123", phone_number="+19095551234")
 
         assert context.call_id == "test-123"
         assert context.phone_number == "+19095551234"
@@ -358,7 +354,7 @@ class TestVoiceCallContext:
             caller_name="Jane Doe",
             call_type=CallType.EXISTING_CLIENT,
             priority=CallPriority.HIGH,
-            employer="Amazon"
+            employer="Amazon",
         )
 
         assert context.caller_name == "Jane Doe"
@@ -373,11 +369,7 @@ class TestVoiceResponse:
 
     def test_response_initialization(self):
         """Test response initialization"""
-        response = VoiceResponse(
-            text="Hello! How can I help you today?",
-            emotion="friendly",
-            pace="normal"
-        )
+        response = VoiceResponse(text="Hello! How can I help you today?", emotion="friendly", pace="normal")
 
         assert response.text == "Hello! How can I help you today?"
         assert response.emotion == "friendly"
@@ -388,8 +380,7 @@ class TestVoiceResponse:
     def test_response_with_actions(self):
         """Test response with suggested actions"""
         response = VoiceResponse(
-            text="Let me schedule that for you.",
-            suggested_actions=["schedule_appointment", "send_calendar_link"]
+            text="Let me schedule that for you.", suggested_actions=["schedule_appointment", "send_calendar_link"]
         )
 
         assert len(response.suggested_actions) == 2
@@ -409,23 +400,17 @@ class TestVoiceAIIntegration:
         # Start call
         context = await handler.handle_incoming_call("+19095551234", "Test User")
 
-        with patch.object(handler.llm_client, 'agenerate') as mock_agenerate:
+        with patch.object(handler.llm_client, "agenerate") as mock_agenerate:
             mock_agenerate.return_value = Mock(content="Hi! I'm Jorge, your Inland Empire specialist.")
 
             # Process greeting
-            response1 = await handler.process_voice_input(
-                context.call_id,
-                "Hi, I'm looking for a home",
-                0.9
-            )
+            response1 = await handler.process_voice_input(context.call_id, "Hi, I'm looking for a home", 0.9)
 
             assert "Jorge" in response1.text
 
             # Process qualification
             response2 = await handler.process_voice_input(
-                context.call_id,
-                "I work for Amazon and need to buy in 60 days",
-                0.9
+                context.call_id, "I work for Amazon and need to buy in 60 days", 0.9
             )
 
             assert response2 is not None
@@ -449,14 +434,10 @@ class TestVoiceAIIntegration:
 
         # Process voice for each call
         for context in calls:
-            with patch.object(handler.llm_client, 'agenerate') as mock_agenerate:
+            with patch.object(handler.llm_client, "agenerate") as mock_agenerate:
                 mock_agenerate.return_value = Mock(content="Hello!")
 
-                response = await handler.process_voice_input(
-                    context.call_id,
-                    "Hello",
-                    0.9
-                )
+                response = await handler.process_voice_input(context.call_id, "Hello", 0.9)
                 assert response is not None
 
         # Complete all calls

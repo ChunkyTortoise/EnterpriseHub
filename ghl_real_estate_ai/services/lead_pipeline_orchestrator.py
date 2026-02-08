@@ -28,6 +28,7 @@ logger = get_logger(__name__)
 @dataclass
 class LeadPipelineResult:
     """Simple result wrapper for pipeline actions."""
+
     success: bool
     message: str = ""
     metadata: Optional[Dict[str, Any]] = None
@@ -82,9 +83,7 @@ class LeadPipelineOrchestrator:
         ctx["journey_id"] = journey_id
         ctx.setdefault("pipeline_source", source)
         ctx.setdefault("ingested_at", datetime.utcnow().isoformat())
-        await self.conversation_manager.memory_service.save_context(
-            contact_id, ctx, location_id=location_id
-        )
+        await self.conversation_manager.memory_service.save_context(contact_id, ctx, location_id=location_id)
 
         await self.event_publisher.publish_lead_update(
             lead_id=contact_id,
@@ -128,7 +127,9 @@ class LeadPipelineOrchestrator:
         context = await self.conversation_manager.get_context(contact_id, location_id=location_id)
         journey_id = context.get("journey_id")
         if not journey_id:
-            journey_id = tracker.start_journey(contact_id, context.get("contact_name", "Lead"), source=context.get("pipeline_source", "unknown"))
+            journey_id = tracker.start_journey(
+                contact_id, context.get("contact_name", "Lead"), source=context.get("pipeline_source", "unknown")
+            )
             context["journey_id"] = journey_id
 
         now = datetime.utcnow().isoformat()
@@ -150,9 +151,7 @@ class LeadPipelineOrchestrator:
         if predictive_score:
             context["predictive_score"] = predictive_score
 
-        await self.conversation_manager.memory_service.save_context(
-            contact_id, context, location_id=location_id
-        )
+        await self.conversation_manager.memory_service.save_context(contact_id, context, location_id=location_id)
 
         # Lifecycle stage transitions
         target_stage = "contacted"
@@ -167,7 +166,7 @@ class LeadPipelineOrchestrator:
         if current_stage in stage_order and target_stage in stage_order:
             current_index = stage_order.index(current_stage)
             target_index = stage_order.index(target_stage)
-            for stage in stage_order[current_index + 1: target_index + 1]:
+            for stage in stage_order[current_index + 1 : target_index + 1]:
                 tracker.transition_stage(journey_id, stage, reason="qualification_update", lead_score=score)
 
         # GHL sync actions
@@ -179,25 +178,30 @@ class LeadPipelineOrchestrator:
 
         percentage_score = self.lead_scorer.get_percentage_score(score)
         if settings.custom_field_lead_score:
-            actions.append({
-                "type": "update_custom_field",
-                "field": settings.custom_field_lead_score,
-                "value": percentage_score,
-            })
+            actions.append(
+                {
+                    "type": "update_custom_field",
+                    "field": settings.custom_field_lead_score,
+                    "value": percentage_score,
+                }
+            )
 
         if actions:
             ghl_client = await self._get_tenant_ghl_client(location_id)
-            from ghl_real_estate_ai.api.schemas.ghl import GHLAction, ActionType
+            from ghl_real_estate_ai.api.schemas.ghl import ActionType, GHLAction
+
             formatted_actions = []
             for action in actions:
                 if action["type"] == "add_tag":
                     formatted_actions.append(GHLAction(type=ActionType.ADD_TAG, tag=action["tag"]))
                 elif action["type"] == "update_custom_field":
-                    formatted_actions.append(GHLAction(
-                        type=ActionType.UPDATE_CUSTOM_FIELD,
-                        field=action["field"],
-                        value=action["value"],
-                    ))
+                    formatted_actions.append(
+                        GHLAction(
+                            type=ActionType.UPDATE_CUSTOM_FIELD,
+                            field=action["field"],
+                            value=action["value"],
+                        )
+                    )
             if formatted_actions:
                 await ghl_client.apply_actions(contact_id, formatted_actions)
 
@@ -301,19 +305,24 @@ class LeadPipelineOrchestrator:
         await self.conversation_manager.memory_service.save_context(contact_id, context, location_id=location_id)
 
         actions = []
-        from ghl_real_estate_ai.api.schemas.ghl import GHLAction, ActionType
+        from ghl_real_estate_ai.api.schemas.ghl import ActionType, GHLAction
+
         if settings.custom_field_appointment_time:
-            actions.append(GHLAction(
-                type=ActionType.UPDATE_CUSTOM_FIELD,
-                field=settings.custom_field_appointment_time,
-                value=appointment_time,
-            ))
+            actions.append(
+                GHLAction(
+                    type=ActionType.UPDATE_CUSTOM_FIELD,
+                    field=settings.custom_field_appointment_time,
+                    value=appointment_time,
+                )
+            )
         if settings.custom_field_appointment_type:
-            actions.append(GHLAction(
-                type=ActionType.UPDATE_CUSTOM_FIELD,
-                field=settings.custom_field_appointment_type,
-                value=appointment_type,
-            ))
+            actions.append(
+                GHLAction(
+                    type=ActionType.UPDATE_CUSTOM_FIELD,
+                    field=settings.custom_field_appointment_type,
+                    value=appointment_type,
+                )
+            )
         actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Appointment-Booked"))
 
         ghl_client = await self._get_tenant_ghl_client(location_id)
@@ -338,7 +347,11 @@ class LeadPipelineOrchestrator:
                 name="Hot Lead Rapid Response",
                 trigger=TriggerType.NEW_LEAD,
                 steps=[
-                    {"channel": "sms", "delay_hours": 0.02, "content": "Hi {{first_name}}, Jorge here. I can help right away."},
+                    {
+                        "channel": "sms",
+                        "delay_hours": 0.02,
+                        "content": "Hi {{first_name}}, Jorge here. I can help right away.",
+                    },
                     {"channel": "call", "delay_hours": 1, "content": "Call task: hot lead follow-up."},
                 ],
             )
@@ -348,7 +361,11 @@ class LeadPipelineOrchestrator:
                 trigger=TriggerType.NEW_LEAD,
                 steps=[
                     {"channel": "sms", "delay_hours": 6, "content": "Quick check-in on your home search."},
-                    {"channel": "email", "delay_hours": 24, "content": {"subject": "Next steps", "body": "Here are some options..."}},
+                    {
+                        "channel": "email",
+                        "delay_hours": 24,
+                        "content": {"subject": "Next steps", "body": "Here are some options..."},
+                    },
                 ],
             )
         else:
@@ -357,8 +374,16 @@ class LeadPipelineOrchestrator:
                 trigger=TriggerType.NEW_LEAD,
                 steps=[
                     {"channel": "sms", "delay_hours": 72, "content": "Just following up with some tips."},
-                    {"channel": "email", "delay_hours": 168, "content": {"subject": "Market update", "body": "Sharing recent trends."}},
-                    {"channel": "email", "delay_hours": 720, "content": {"subject": "Still interested?", "body": "Happy to help anytime."}},
+                    {
+                        "channel": "email",
+                        "delay_hours": 168,
+                        "content": {"subject": "Market update", "body": "Sharing recent trends."},
+                    },
+                    {
+                        "channel": "email",
+                        "delay_hours": 720,
+                        "content": {"subject": "Still interested?", "body": "Happy to help anytime."},
+                    },
                 ],
             )
 

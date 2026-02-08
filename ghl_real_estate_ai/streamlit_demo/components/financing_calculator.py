@@ -1,6 +1,7 @@
-import streamlit as st
 import pandas as pd
 import plotly.express as px
+import streamlit as st
+
 
 def render_financing_calculator():
     """Comprehensive financing calculator with multiple scenarios"""
@@ -32,7 +33,9 @@ def render_financing_calculator():
     num_payments = loan_term * 12
 
     if monthly_rate > 0:
-        monthly_principal_interest = loan_amount * (monthly_rate * (1 + monthly_rate)**num_payments) / ((1 + monthly_rate)**num_payments - 1)
+        monthly_principal_interest = (
+            loan_amount * (monthly_rate * (1 + monthly_rate) ** num_payments) / ((1 + monthly_rate) ** num_payments - 1)
+        )
     else:
         monthly_principal_interest = loan_amount / num_payments
 
@@ -58,14 +61,13 @@ def render_financing_calculator():
     # Payment breakdown chart
     payment_data = {
         "Component": ["Principal & Interest", "Property Tax", "Insurance", "HOA", "PMI"],
-        "Amount": [monthly_principal_interest, monthly_tax, monthly_insurance, hoa_monthly, monthly_pmi]
+        "Amount": [monthly_principal_interest, monthly_tax, monthly_insurance, hoa_monthly, monthly_pmi],
     }
 
     df = pd.DataFrame(payment_data)
     df = df[df["Amount"] > 0]  # Only show components with values
 
-    fig = px.pie(df, values="Amount", names="Component",
-                title="Monthly Payment Breakdown")
+    fig = px.pie(df, values="Amount", names="Component", title="Monthly Payment Breakdown")
     st.plotly_chart(fig, use_container_width=True)
 
     # Affordability analysis
@@ -98,14 +100,24 @@ def render_financing_calculator():
         scenario_down = home_price * (dp / 100)
         scenario_loan = home_price - scenario_down
         scenario_pmi = (scenario_loan * 0.005) / 12 if dp < 20 else 0
-        scenario_payment = scenario_loan * (monthly_rate * (1 + monthly_rate)**num_payments) / ((1 + monthly_rate)**num_payments - 1) + monthly_tax + monthly_insurance + hoa_monthly + scenario_pmi
+        scenario_payment = (
+            scenario_loan
+            * (monthly_rate * (1 + monthly_rate) ** num_payments)
+            / ((1 + monthly_rate) ** num_payments - 1)
+            + monthly_tax
+            + monthly_insurance
+            + hoa_monthly
+            + scenario_pmi
+        )
 
-        scenarios.append({
-            "Down Payment %": f"{dp}%",
-            "Down Payment $": f"${scenario_down:,.0f}",
-            "Monthly Payment": f"${scenario_payment:,.0f}",
-            "PMI": f"${scenario_pmi:,.0f}" if scenario_pmi > 0 else "None"
-        })
+        scenarios.append(
+            {
+                "Down Payment %": f"{dp}%",
+                "Down Payment $": f"${scenario_down:,.0f}",
+                "Monthly Payment": f"${scenario_payment:,.0f}",
+                "PMI": f"${scenario_pmi:,.0f}" if scenario_pmi > 0 else "None",
+            }
+        )
 
     scenario_df = pd.DataFrame(scenarios)
     st.dataframe(scenario_df, use_container_width=True)

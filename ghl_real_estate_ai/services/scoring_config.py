@@ -20,16 +20,17 @@ Version: 1.0.0
 """
 
 import os
-from typing import Dict, List, Optional, Any
-from dataclasses import dataclass, asdict
-from enum import Enum
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional
 
 from .dynamic_scoring_weights import LeadSegment, MarketCondition, ScoringWeights
 
 
 class ScoringEnvironment(str, Enum):
     """Scoring system environments"""
+
     DEVELOPMENT = "development"
     STAGING = "staging"
     PRODUCTION = "production"
@@ -39,6 +40,7 @@ class ScoringEnvironment(str, Enum):
 @dataclass
 class PerformanceConfig:
     """Performance and timeout configurations"""
+
     max_scoring_time_ms: int = 500
     redis_timeout_ms: int = 100
     cache_ttl_seconds: int = 300
@@ -50,6 +52,7 @@ class PerformanceConfig:
 @dataclass
 class MarketThresholds:
     """Market condition detection thresholds"""
+
     sellers_market_inventory: float = 2.0
     buyers_market_inventory: float = 6.0
     high_price_trend: float = 5.0
@@ -63,6 +66,7 @@ class MarketThresholds:
 @dataclass
 class FeatureFlags:
     """Feature flags for gradual rollout"""
+
     enable_dynamic_weights: bool = True
     enable_ml_scoring: bool = True
     enable_market_adjustments: bool = True
@@ -76,6 +80,7 @@ class FeatureFlags:
 @dataclass
 class ABTestingConfig:
     """A/B testing configuration"""
+
     default_traffic_split: float = 0.1  # 10% in tests by default
     min_sample_size: int = 100
     max_test_duration_days: int = 30
@@ -87,6 +92,7 @@ class ABTestingConfig:
 @dataclass
 class ScoringModeConfig:
     """Configuration for different scoring modes"""
+
     jorge_weight: float = 0.4
     ml_weight: float = 0.3
     dynamic_weight: float = 0.3
@@ -112,13 +118,13 @@ class ScoringConfigManager:
 
     def _detect_environment(self) -> ScoringEnvironment:
         """Auto-detect environment from environment variables"""
-        env_var = os.getenv('SCORING_ENVIRONMENT', os.getenv('ENVIRONMENT', 'development')).lower()
+        env_var = os.getenv("SCORING_ENVIRONMENT", os.getenv("ENVIRONMENT", "development")).lower()
 
-        if env_var in ['prod', 'production']:
+        if env_var in ["prod", "production"]:
             return ScoringEnvironment.PRODUCTION
-        elif env_var in ['stage', 'staging']:
+        elif env_var in ["stage", "staging"]:
             return ScoringEnvironment.STAGING
-        elif env_var in ['demo']:
+        elif env_var in ["demo"]:
             return ScoringEnvironment.DEMO
         else:
             return ScoringEnvironment.DEVELOPMENT
@@ -142,7 +148,7 @@ class ScoringConfigManager:
                 enable_performance_optimization=True,
                 enable_real_time_updates=False,  # Disabled in prod initially
                 enable_advanced_segmentation=False,  # Disabled in prod initially
-                enable_multi_tenant=True
+                enable_multi_tenant=True,
             )
             # Stricter performance requirements
             self.performance.max_scoring_time_ms = 300
@@ -157,7 +163,7 @@ class ScoringConfigManager:
                 enable_performance_optimization=True,
                 enable_real_time_updates=True,  # Test new features
                 enable_advanced_segmentation=True,
-                enable_multi_tenant=True
+                enable_multi_tenant=True,
             )
 
         elif self.environment == ScoringEnvironment.DEMO:
@@ -169,7 +175,7 @@ class ScoringConfigManager:
                 enable_performance_optimization=False,
                 enable_real_time_updates=False,
                 enable_advanced_segmentation=False,
-                enable_multi_tenant=False
+                enable_multi_tenant=False,
             )
 
         else:  # DEVELOPMENT
@@ -181,7 +187,7 @@ class ScoringConfigManager:
                 enable_performance_optimization=True,
                 enable_real_time_updates=True,
                 enable_advanced_segmentation=True,
-                enable_multi_tenant=True
+                enable_multi_tenant=True,
             )
             # Relaxed performance for debugging
             self.performance.max_scoring_time_ms = 1000
@@ -193,34 +199,34 @@ class ScoringConfigManager:
         """Load configuration overrides from environment variables"""
 
         # Performance overrides
-        if os.getenv('SCORING_MAX_TIME_MS'):
-            self.performance.max_scoring_time_ms = int(os.getenv('SCORING_MAX_TIME_MS'))
+        if os.getenv("SCORING_MAX_TIME_MS"):
+            self.performance.max_scoring_time_ms = int(os.getenv("SCORING_MAX_TIME_MS"))
 
-        if os.getenv('SCORING_REDIS_TIMEOUT_MS'):
-            self.performance.redis_timeout_ms = int(os.getenv('SCORING_REDIS_TIMEOUT_MS'))
+        if os.getenv("SCORING_REDIS_TIMEOUT_MS"):
+            self.performance.redis_timeout_ms = int(os.getenv("SCORING_REDIS_TIMEOUT_MS"))
 
-        if os.getenv('SCORING_CACHE_TTL'):
-            self.performance.cache_ttl_seconds = int(os.getenv('SCORING_CACHE_TTL'))
+        if os.getenv("SCORING_CACHE_TTL"):
+            self.performance.cache_ttl_seconds = int(os.getenv("SCORING_CACHE_TTL"))
 
         # Feature flag overrides
-        if os.getenv('ENABLE_DYNAMIC_WEIGHTS'):
-            self.features.enable_dynamic_weights = os.getenv('ENABLE_DYNAMIC_WEIGHTS').lower() == 'true'
+        if os.getenv("ENABLE_DYNAMIC_WEIGHTS"):
+            self.features.enable_dynamic_weights = os.getenv("ENABLE_DYNAMIC_WEIGHTS").lower() == "true"
 
-        if os.getenv('ENABLE_ML_SCORING'):
-            self.features.enable_ml_scoring = os.getenv('ENABLE_ML_SCORING').lower() == 'true'
+        if os.getenv("ENABLE_ML_SCORING"):
+            self.features.enable_ml_scoring = os.getenv("ENABLE_ML_SCORING").lower() == "true"
 
-        if os.getenv('ENABLE_AB_TESTING'):
-            self.features.enable_ab_testing = os.getenv('ENABLE_AB_TESTING').lower() == 'true'
+        if os.getenv("ENABLE_AB_TESTING"):
+            self.features.enable_ab_testing = os.getenv("ENABLE_AB_TESTING").lower() == "true"
 
         # Scoring mode overrides
-        if os.getenv('JORGE_WEIGHT'):
-            self.scoring_modes.jorge_weight = float(os.getenv('JORGE_WEIGHT'))
+        if os.getenv("JORGE_WEIGHT"):
+            self.scoring_modes.jorge_weight = float(os.getenv("JORGE_WEIGHT"))
 
-        if os.getenv('ML_WEIGHT'):
-            self.scoring_modes.ml_weight = float(os.getenv('ML_WEIGHT'))
+        if os.getenv("ML_WEIGHT"):
+            self.scoring_modes.ml_weight = float(os.getenv("ML_WEIGHT"))
 
-        if os.getenv('DYNAMIC_WEIGHT'):
-            self.scoring_modes.dynamic_weight = float(os.getenv('DYNAMIC_WEIGHT'))
+        if os.getenv("DYNAMIC_WEIGHT"):
+            self.scoring_modes.dynamic_weight = float(os.getenv("DYNAMIC_WEIGHT"))
 
     def get_segment_weights(self, segment: LeadSegment) -> ScoringWeights:
         """Get default weights for a lead segment"""
@@ -235,7 +241,7 @@ class ScoringConfigManager:
                 timeline_urgency=0.10,
                 property_matches=0.10,
                 communication_quality=0.08,
-                source_quality=0.02
+                source_quality=0.02,
             ),
             LeadSegment.INVESTOR: ScoringWeights(
                 engagement_score=0.15,
@@ -245,7 +251,7 @@ class ScoringConfigManager:
                 timeline_urgency=0.15,
                 property_matches=0.12,
                 communication_quality=0.03,
-                source_quality=0.02
+                source_quality=0.02,
             ),
             LeadSegment.LUXURY: ScoringWeights(
                 engagement_score=0.18,
@@ -255,7 +261,7 @@ class ScoringConfigManager:
                 timeline_urgency=0.08,
                 property_matches=0.20,
                 communication_quality=0.20,
-                source_quality=0.02
+                source_quality=0.02,
             ),
             LeadSegment.SELLER: ScoringWeights(
                 engagement_score=0.20,
@@ -265,8 +271,8 @@ class ScoringConfigManager:
                 timeline_urgency=0.25,
                 property_matches=0.05,
                 communication_quality=0.15,
-                source_quality=0.02
-            )
+                source_quality=0.02,
+            ),
         }
 
         return weights_map.get(segment, weights_map[LeadSegment.FIRST_TIME_BUYER])
@@ -277,49 +283,22 @@ class ScoringConfigManager:
         # Base market adjustments by segment
         adjustments = {
             LeadSegment.FIRST_TIME_BUYER: {
-                MarketCondition.SELLERS_MARKET: {
-                    "timeline_urgency": 0.3,
-                    "budget_match": 0.2
-                },
-                MarketCondition.BUYERS_MARKET: {
-                    "engagement_score": 0.2,
-                    "page_views": 0.1
-                },
-                MarketCondition.SEASONAL_LOW: {
-                    "engagement_score": 0.15,
-                    "timeline_urgency": -0.1
-                }
+                MarketCondition.SELLERS_MARKET: {"timeline_urgency": 0.3, "budget_match": 0.2},
+                MarketCondition.BUYERS_MARKET: {"engagement_score": 0.2, "page_views": 0.1},
+                MarketCondition.SEASONAL_LOW: {"engagement_score": 0.15, "timeline_urgency": -0.1},
             },
             LeadSegment.INVESTOR: {
-                MarketCondition.SELLERS_MARKET: {
-                    "response_time": 0.4,
-                    "timeline_urgency": 0.2
-                },
-                MarketCondition.BUYERS_MARKET: {
-                    "budget_match": 0.3,
-                    "property_matches": 0.15
-                }
+                MarketCondition.SELLERS_MARKET: {"response_time": 0.4, "timeline_urgency": 0.2},
+                MarketCondition.BUYERS_MARKET: {"budget_match": 0.3, "property_matches": 0.15},
             },
             LeadSegment.LUXURY: {
-                MarketCondition.SELLERS_MARKET: {
-                    "property_matches": 0.3,
-                    "communication_quality": 0.25
-                },
-                MarketCondition.BUYERS_MARKET: {
-                    "timeline_urgency": -0.2,
-                    "budget_match": 0.1
-                }
+                MarketCondition.SELLERS_MARKET: {"property_matches": 0.3, "communication_quality": 0.25},
+                MarketCondition.BUYERS_MARKET: {"timeline_urgency": -0.2, "budget_match": 0.1},
             },
             LeadSegment.SELLER: {
-                MarketCondition.BUYERS_MARKET: {
-                    "timeline_urgency": 0.35,
-                    "communication_quality": 0.2
-                },
-                MarketCondition.SELLERS_MARKET: {
-                    "timeline_urgency": -0.1,
-                    "budget_match": 0.2
-                }
-            }
+                MarketCondition.BUYERS_MARKET: {"timeline_urgency": 0.35, "communication_quality": 0.2},
+                MarketCondition.SELLERS_MARKET: {"timeline_urgency": -0.1, "budget_match": 0.2},
+            },
         }
 
         return adjustments.get(segment, {})
@@ -358,7 +337,7 @@ class ScoringConfigManager:
             "socket_timeout": self.performance.redis_timeout_ms / 1000.0,
             "socket_connect_timeout": self.performance.redis_timeout_ms / 1000.0,
             "retry_on_timeout": True,
-            "health_check_interval": 30
+            "health_check_interval": 30,
         }
 
     def validate_configuration(self) -> List[str]:
@@ -366,9 +345,9 @@ class ScoringConfigManager:
         issues = []
 
         # Validate scoring mode weights sum to 1
-        total_weight = (self.scoring_modes.jorge_weight +
-                       self.scoring_modes.ml_weight +
-                       self.scoring_modes.dynamic_weight)
+        total_weight = (
+            self.scoring_modes.jorge_weight + self.scoring_modes.ml_weight + self.scoring_modes.dynamic_weight
+        )
 
         if abs(total_weight - 1.0) > 0.01:
             issues.append(f"Scoring mode weights sum to {total_weight:.3f}, should be 1.0")
@@ -406,7 +385,7 @@ class ScoringConfigManager:
             "market_thresholds": asdict(self.market_thresholds),
             "ab_testing": asdict(self.ab_testing),
             "scoring_modes": asdict(self.scoring_modes),
-            "validation_issues": self.validate_configuration()
+            "validation_issues": self.validate_configuration(),
         }
 
     def update_feature_flag(self, feature: str, enabled: bool):
@@ -425,13 +404,9 @@ class ScoringConfigManager:
         else:
             raise ValueError(f"Unknown performance setting: {setting}")
 
-    def create_tenant_config(self, tenant_id: str, overrides: Dict[str, Any]) -> 'TenantScoringConfig':
+    def create_tenant_config(self, tenant_id: str, overrides: Dict[str, Any]) -> "TenantScoringConfig":
         """Create tenant-specific configuration"""
-        return TenantScoringConfig(
-            tenant_id=tenant_id,
-            base_config=self,
-            overrides=overrides
-        )
+        return TenantScoringConfig(tenant_id=tenant_id, base_config=self, overrides=overrides)
 
 
 class TenantScoringConfig:
@@ -470,10 +445,7 @@ class TenantScoringConfig:
             thresholds = self.overrides["tier_thresholds"]
             # Adjust for confidence if not explicitly overridden
             if confidence < 0.8 and "confidence_adjustment" not in self.overrides:
-                return {
-                    "hot": thresholds.get("hot", 70) + 5,
-                    "warm": thresholds.get("warm", 50) + 5
-                }
+                return {"hot": thresholds.get("hot", 70) + 5, "warm": thresholds.get("warm", 50) + 5}
             return thresholds
 
         return self.base_config.get_tier_thresholds(confidence)
@@ -484,12 +456,13 @@ class TenantScoringConfig:
             "tenant_id": self.tenant_id,
             "base_environment": self.base_config.environment.value,
             "overrides": self.overrides,
-            "created_at": self.created_at.isoformat()
+            "created_at": self.created_at.isoformat(),
         }
 
 
 # Global configuration instance
 _config_manager = None
+
 
 def get_scoring_config(environment: Optional[ScoringEnvironment] = None) -> ScoringConfigManager:
     """Get global scoring configuration manager (singleton)"""
@@ -514,14 +487,14 @@ EXAMPLE_CONFIGS = {
         "features.enable_real_time_updates": False,
         "features.enable_advanced_segmentation": False,
         "performance.max_scoring_time_ms": 250,
-        "tier_thresholds": {"hot": 75, "warm": 55}
+        "tier_thresholds": {"hot": 75, "warm": 55},
     },
     "high_volume_tenant": {
         "performance.max_scoring_time_ms": 100,
         "performance.cache_ttl_seconds": 600,
         "features.enable_performance_optimization": True,
         "scoring_modes.jorge_weight": 0.3,
-        "scoring_modes.dynamic_weight": 0.4
+        "scoring_modes.dynamic_weight": 0.4,
     },
     "luxury_focused_tenant": {
         "segment_weights.luxury": {
@@ -532,10 +505,10 @@ EXAMPLE_CONFIGS = {
             "timeline_urgency": 0.05,
             "property_matches": 0.25,
             "communication_quality": 0.25,
-            "source_quality": 0.05
+            "source_quality": 0.05,
         },
-        "tier_thresholds": {"hot": 80, "warm": 65}
-    }
+        "tier_thresholds": {"hot": 80, "warm": 65},
+    },
 }
 
 
@@ -564,8 +537,7 @@ if __name__ == "__main__":
     print("🏢 Tenant-Specific Configuration:")
     base_config = get_scoring_config(ScoringEnvironment.PRODUCTION)
     tenant_config = base_config.create_tenant_config(
-        tenant_id="luxury_realty_co",
-        overrides=EXAMPLE_CONFIGS["luxury_focused_tenant"]
+        tenant_id="luxury_realty_co", overrides=EXAMPLE_CONFIGS["luxury_focused_tenant"]
     )
 
     luxury_weights = tenant_config.get_segment_weights(LeadSegment.LUXURY)

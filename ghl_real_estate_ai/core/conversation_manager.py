@@ -9,37 +9,38 @@ Orchestrates conversation flow by:
 
 This is the core brain of the system.
 """
-from typing import Dict, List, Optional, Any
-from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
+
 import json
 import os
-
-from ghl_real_estate_ai.core.llm_client import LLMClient
-from ghl_real_estate_ai.core.rag_engine import RAGEngine
-from ghl_real_estate_ai.services.lead_scorer import LeadScorer
-from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import PredictiveLeadScorerV2
-from ghl_real_estate_ai.services.memory_service import MemoryService
-from ghl_real_estate_ai.services.analytics_engine import AnalyticsEngine
-from ghl_real_estate_ai.services.analytics_service import AnalyticsService
-from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
-from ghl_real_estate_ai.prompts.reengagement_templates import REENGAGEMENT_TEMPLATES
-from ghl_real_estate_ai.ghl_utils.config import settings
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.core.governance_engine import GovernanceEngine
+from ghl_real_estate_ai.core.llm_client import LLMClient
+from ghl_real_estate_ai.core.rag_engine import RAGEngine
 from ghl_real_estate_ai.core.recovery_engine import RecoveryEngine
+from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.prompts.reengagement_templates import REENGAGEMENT_TEMPLATES
+from ghl_real_estate_ai.services.analytics_engine import AnalyticsEngine
+from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+from ghl_real_estate_ai.services.lead_scorer import LeadScorer
+from ghl_real_estate_ai.services.memory_service import MemoryService
+from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import PredictiveLeadScorerV2
+from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
 
 # Import conversation optimizer with error handling
 try:
     from ghl_real_estate_ai.services.conversation_optimizer import ConversationOptimizer
+
     CONVERSATION_OPTIMIZER_AVAILABLE = True
 except ImportError:
     CONVERSATION_OPTIMIZER_AVAILABLE = False
     ConversationOptimizer = None
 
 # Feature flag for conversation optimization
-ENABLE_CONVERSATION_OPTIMIZATION = os.getenv('ENABLE_CONVERSATION_OPTIMIZATION', 'false').lower() == 'true'
+ENABLE_CONVERSATION_OPTIMIZATION = os.getenv("ENABLE_CONVERSATION_OPTIMIZATION", "false").lower() == "true"
 
 logger = get_logger(__name__)
 
@@ -47,6 +48,7 @@ logger = get_logger(__name__)
 @dataclass
 class AIResponse:
     """AI-generated response with extracted data."""
+
     message: str
     extracted_data: Dict[str, Any]
     reasoning: str = ""
@@ -70,15 +72,11 @@ class ConversationManager:
     def __init__(self):
         """Initialize conversation manager with dependencies."""
         # Initialize LLM client for Claude Sonnet 4.5
-        self.llm_client = LLMClient(
-            provider="claude",
-            model=settings.claude_model
-        )
+        self.llm_client = LLMClient(provider="claude", model=settings.claude_model)
 
         # Initialize RAG engine for knowledge base queries
         self.rag_engine = RAGEngine(
-            collection_name=settings.chroma_collection_name,
-            persist_directory=settings.chroma_persist_directory
+            collection_name=settings.chroma_collection_name, persist_directory=settings.chroma_persist_directory
         )
 
         # Initialize lead scorers
@@ -90,13 +88,13 @@ class ConversationManager:
 
         # Analytics engine for metrics collection
         self.analytics_engine = AnalyticsEngine()
-        
+
         # New Analytics Service for token tracking
         self.analytics = AnalyticsService()
 
         # Property matcher for listing recommendations
         self.property_matcher = PropertyMatcher()
-        
+
         # --- GOVERNANCE & RECOVERY (AGENT G1 & R1) ---
         self.governance = GovernanceEngine()
         self.recovery = RecoveryEngine()
@@ -130,19 +128,21 @@ class ConversationManager:
             Conversation context dict with history and extracted data
         """
         context = await self.memory_service.get_context(contact_id, location_id=location_id)
-        
+
         # Check for session gap (Smart Resume)
         last_interaction = context.get("last_interaction_at")
         if last_interaction:
             last_dt = datetime.fromisoformat(last_interaction)
             hours_since = (datetime.utcnow() - last_dt).total_seconds() / 3600
-            
+
             if hours_since > settings.previous_context_window_hours:
                 # Long gap detected - this is a returning lead session
                 context["is_returning_lead"] = True
                 context["hours_since_last_interaction"] = hours_since
-                logger.info(f"Returning lead detected for {contact_id} ({hours_since:.1f} hours since last interaction)")
-        
+                logger.info(
+                    f"Returning lead detected for {contact_id} ({hours_since:.1f} hours since last interaction)"
+                )
+
         return context
 
     async def update_context(
@@ -152,7 +152,7 @@ class ConversationManager:
         ai_response: str,
         extracted_data: Optional[Dict[str, Any]] = None,
         location_id: Optional[str] = None,
-        seller_temperature: Optional[str] = None
+        seller_temperature: Optional[str] = None,
     ) -> None:
         """
         Update conversation context with new messages and data.
@@ -168,16 +168,12 @@ class ConversationManager:
         context = await self.get_context(contact_id, location_id=location_id)
 
         # Add messages to history
-        context["conversation_history"].append({
-            "role": "user",
-            "content": user_message,
-            "timestamp": datetime.utcnow().isoformat()
-        })
-        context["conversation_history"].append({
-            "role": "assistant",
-            "content": ai_response,
-            "timestamp": datetime.utcnow().isoformat()
-        })
+        context["conversation_history"].append(
+            {"role": "user", "content": user_message, "timestamp": datetime.utcnow().isoformat()}
+        )
+        context["conversation_history"].append(
+            {"role": "assistant", "content": ai_response, "timestamp": datetime.utcnow().isoformat()}
+        )
 
         # Update last interaction time
         context["last_interaction_at"] = datetime.utcnow().isoformat()
@@ -185,7 +181,10 @@ class ConversationManager:
         # Merge extracted data (new data overrides old)
         if extracted_data:
             # Check if this is seller data (Jorge's seller bot)
-            if seller_temperature or any(key in extracted_data for key in ["motivation", "timeline_acceptable", "property_condition", "price_expectation"]):
+            if seller_temperature or any(
+                key in extracted_data
+                for key in ["motivation", "timeline_acceptable", "property_condition", "price_expectation"]
+            ):
                 # Handle seller data
                 if "seller_preferences" not in context:
                     context["seller_preferences"] = {}
@@ -207,11 +206,11 @@ class ConversationManager:
         # Serialize the dataclass to a dict for storage
         predictive_data = asdict(predictive_result)
         predictive_data["priority_level"] = predictive_result.priority_level.value
-        
+
         # Ensure last_updated is a string for JSON serialization
         if isinstance(predictive_data.get("last_updated"), datetime):
             predictive_data["last_updated"] = predictive_data["last_updated"].isoformat()
-            
+
         context["predictive_score"] = predictive_data
 
         # Optimize conversation history with intelligent context pruning
@@ -222,18 +221,18 @@ class ConversationManager:
                 token_budget = self.conversation_optimizer.calculate_token_budget(
                     system_prompt="",  # Will be calculated during response generation
                     current_message=current_message,
-                    max_context_tokens=7000  # Conservative budget for context
+                    max_context_tokens=7000,  # Conservative budget for context
                 )
-                
+
                 # Apply intelligent optimization
                 optimized_history, stats = self.conversation_optimizer.optimize_conversation_history(
                     conversation_history=context["conversation_history"],
                     token_budget=token_budget,
-                    preserve_preferences=True  # Always preserve user preferences
+                    preserve_preferences=True,  # Always preserve user preferences
                 )
-                
+
                 context["conversation_history"] = optimized_history
-                
+
                 # Log optimization stats for monitoring
                 if stats and stats.get("tokens_saved", 0) > 0:
                     logger.info(
@@ -241,12 +240,9 @@ class ConversationManager:
                         f"{stats['savings_percentage']:.1f}% tokens saved "
                         f"({stats['tokens_saved']} tokens), "
                         f"{stats['messages_removed']} messages removed",
-                        extra={
-                            "contact_id": contact_id,
-                            "optimization_stats": stats
-                        }
+                        extra={"contact_id": contact_id, "optimization_stats": stats},
                     )
-                
+
             except Exception as e:
                 # Graceful degradation - use original logic
                 logger.warning(f"Conversation optimization failed: {e}")
@@ -270,8 +266,8 @@ class ConversationManager:
             extra={
                 "contact_id": contact_id,
                 "history_length": len(context["conversation_history"]),
-                "preferences": context["extracted_preferences"]
-            }
+                "preferences": context["extracted_preferences"],
+            },
         )
 
     async def extract_data(
@@ -279,7 +275,7 @@ class ConversationManager:
         user_message: str,
         current_preferences: Dict[str, Any],
         tenant_config: Optional[Dict[str, Any]] = None,
-        images: Optional[List[str]] = None
+        images: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """
         Extract structured data from user message.
@@ -332,9 +328,7 @@ Return ONLY valid JSON with extracted fields. If a field is not mentioned, omit 
             llm_client = self.llm_client
             if tenant_config and tenant_config.get("anthropic_api_key"):
                 llm_client = LLMClient(
-                    provider="claude",
-                    model=settings.claude_model,
-                    api_key=tenant_config["anthropic_api_key"]
+                    provider="claude", model=settings.claude_model, api_key=tenant_config["anthropic_api_key"]
                 )
 
             # Use Claude to extract data with low temperature for consistency
@@ -343,9 +337,9 @@ Return ONLY valid JSON with extracted fields. If a field is not mentioned, omit 
                 system_prompt="You are a data extraction specialist. Return only valid JSON.",
                 temperature=0,
                 max_tokens=500,
-                images=images
+                images=images,
             )
-            
+
             # Record usage
             location_id = tenant_config.get("location_id", "unknown") if tenant_config else "unknown"
             provider_val = response.provider.value if hasattr(response.provider, "value") else str(response.provider)
@@ -355,7 +349,7 @@ Return ONLY valid JSON with extracted fields. If a field is not mentioned, omit 
                 provider=provider_val,
                 input_tokens=response.input_tokens or 0,
                 output_tokens=response.output_tokens or 0,
-                cached=False
+                cached=False,
             )
 
             extracted = json.loads(response.content)
@@ -365,18 +359,12 @@ Return ONLY valid JSON with extracted fields. If a field is not mentioned, omit 
             if pathway != "unknown":
                 extracted["pathway"] = pathway
 
-            logger.info(
-                "Extracted data from message",
-                extra={"extracted": extracted}
-            )
+            logger.info("Extracted data from message", extra={"extracted": extracted})
 
             return extracted
 
         except (json.JSONDecodeError, Exception) as e:
-            logger.error(
-                f"Failed to extract data: {str(e)}",
-                extra={"error": str(e), "user_message": user_message}
-            )
+            logger.error(f"Failed to extract data: {str(e)}", extra={"error": str(e), "user_message": user_message})
             return {}
 
     async def extract_seller_data(
@@ -384,7 +372,7 @@ Return ONLY valid JSON with extracted fields. If a field is not mentioned, omit 
         user_message: str,
         current_seller_data: Dict[str, Any],
         tenant_config: Optional[Dict[str, Any]] = None,
-        images: Optional[List[str]] = None
+        images: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """
         Extract seller-specific data from user message using Claude.
@@ -439,9 +427,7 @@ Count questions_answered based on how many of the 4 main categories have data.
             llm_client = self.llm_client
             if tenant_config and tenant_config.get("anthropic_api_key"):
                 llm_client = LLMClient(
-                    provider="claude",
-                    model=settings.claude_model,
-                    api_key=tenant_config["anthropic_api_key"]
+                    provider="claude", model=settings.claude_model, api_key=tenant_config["anthropic_api_key"]
                 )
 
             # Use Claude to extract seller data
@@ -450,7 +436,7 @@ Count questions_answered based on how many of the 4 main categories have data.
                 system_prompt="You are a seller data extraction specialist for real estate. Return only valid JSON.",
                 temperature=0,
                 max_tokens=500,
-                images=images
+                images=images,
             )
 
             # Record usage
@@ -462,7 +448,7 @@ Count questions_answered based on how many of the 4 main categories have data.
                 provider=provider_val,
                 input_tokens=response.input_tokens or 0,
                 output_tokens=response.output_tokens or 0,
-                cached=False
+                cached=False,
             )
 
             extracted_data = json.loads(response.content)
@@ -481,18 +467,14 @@ Count questions_answered based on how many of the 4 main categories have data.
 
             logger.info(
                 "Extracted seller data from message",
-                extra={
-                    "extracted": merged_data,
-                    "questions_answered": questions_answered
-                }
+                extra={"extracted": merged_data, "questions_answered": questions_answered},
             )
 
             return merged_data
 
         except (json.JSONDecodeError, Exception) as e:
             logger.error(
-                f"Failed to extract seller data: {str(e)}",
-                extra={"error": str(e), "user_message": user_message}
+                f"Failed to extract seller data: {str(e)}", extra={"error": str(e), "user_message": user_message}
             )
             return current_seller_data
 
@@ -532,42 +514,56 @@ Count questions_answered based on how many of the 4 main categories have data.
     def detect_intent_pathway(self, message: str) -> str:
         """
         Detect if lead is interested in wholesale or listing based on keywords.
-        
+
         Wholesale indicators:
         - "as-is", "fast sale", "cash offer", "quick", "need to sell fast"
-        
-        Listing indicators:  
-        - "best price", "top dollar", "what's it worth", 
+
+        Listing indicators:
+        - "best price", "top dollar", "what's it worth",
         - "how much can i get", "market value", "list it"
-        
+
         Returns:
             "wholesale", "listing", or "unknown"
         """
         message_lower = message.lower()
-        
+
         # More robust matching for common phrases
         wholesale_patterns = [
-            "as-is", "as is", "fast sale", "cash offer", "quick", 
-            "need to sell fast", "sell quickly", "don't want to fix"
+            "as-is",
+            "as is",
+            "fast sale",
+            "cash offer",
+            "quick",
+            "need to sell fast",
+            "sell quickly",
+            "don't want to fix",
         ]
-        
+
         listing_patterns = [
-            "best price", "top dollar", "what's it worth", "worth",
-            "how much can i get", "market value", "list it", "mls"
+            "best price",
+            "top dollar",
+            "what's it worth",
+            "worth",
+            "how much can i get",
+            "market value",
+            "list it",
+            "mls",
         ]
-        
+
         if any(pattern in message_lower for pattern in wholesale_patterns):
             return "wholesale"
         # Special check for "worth" to avoid too many false positives, but catch "what is my house worth"
         if any(pattern in message_lower for pattern in listing_patterns):
             # If it's just "worth", check if it's related to the house
-            if "worth" in message_lower and not any(p in message_lower for p in ["best price", "top dollar", "market value"]):
+            if "worth" in message_lower and not any(
+                p in message_lower for p in ["best price", "top dollar", "market value"]
+            ):
                 if any(k in message_lower for k in ["house", "home", "property", "place", "it"]):
                     return "listing"
                 else:
                     return "unknown"
             return "listing"
-            
+
         return "unknown"
 
     async def generate_response(
@@ -577,7 +573,7 @@ Count questions_answered based on how many of the 4 main categories have data.
         context: Dict[str, Any],
         is_buyer: bool = True,
         tenant_config: Optional[Dict[str, Any]] = None,
-        ghl_client: Optional[Any] = None
+        ghl_client: Optional[Any] = None,
     ) -> AIResponse:
         """
         Generate AI response using Claude + RAG with parallel pipeline.
@@ -602,23 +598,17 @@ Count questions_answered based on how many of the 4 main categories have data.
         calendar_id = (tenant_config.get("ghl_calendar_id") if tenant_config else None) or settings.ghl_calendar_id
         # 1. Extraction (Still sequential as it's the primary dependency)
         if not context.get("conversation_history"):
-            extracted_data = await self.extract_data(
-                user_message,
-                {},
-                tenant_config=tenant_config
-            )
+            extracted_data = await self.extract_data(user_message, {}, tenant_config=tenant_config)
         else:
             extracted_data = await self.extract_data(
-                user_message,
-                context.get("extracted_preferences", {}),
-                tenant_config=tenant_config
+                user_message, context.get("extracted_preferences", {}), tenant_config=tenant_config
             )
 
         merged_preferences = {**context.get("extracted_preferences", {}), **extracted_data}
 
         # 2. Parallel Pipeline Execution
         # We run RAG, Lead Scoring, and Slots/Matches in parallel
-        
+
         # Prepare RAG query
         pathway = merged_preferences.get("pathway")
         home_condition = merged_preferences.get("home_condition", "").lower()
@@ -646,23 +636,24 @@ Count questions_answered based on how many of the 4 main categories have data.
                 if matches:
                     # Parallelize explanations for each match
                     explanation_tasks = [
-                        self.property_matcher.agentic_explain_match(prop, merged_preferences)
-                        for prop in matches
+                        self.property_matcher.agentic_explain_match(prop, merged_preferences) for prop in matches
                     ]
                     explanations = await asyncio.gather(*explanation_tasks, return_exceptions=True)
-                    
+
                     results = []
                     for i, prop in enumerate(matches):
-                        explanation = explanations[i] if not isinstance(explanations[i], Exception) else "Great match for your needs."
+                        explanation = (
+                            explanations[i]
+                            if not isinstance(explanations[i], Exception)
+                            else "Great match for your needs."
+                        )
                         results.append((prop, explanation))
                     return results
             return []
 
         # Execute parallel tasks
         rag_task = self.rag_engine.search_corrective(
-            query=enhanced_query,
-            n_results=settings.rag_top_k_results,
-            location_id=location_id
+            query=enhanced_query, n_results=settings.rag_top_k_results, location_id=location_id
         )
 
         # Run Lead Score calculation
@@ -670,31 +661,22 @@ Count questions_answered based on how many of the 4 main categories have data.
             {
                 "extracted_preferences": merged_preferences,
                 "conversation_history": context.get("conversation_history", []),
-                "created_at": context.get("created_at")
+                "created_at": context.get("created_at"),
             }
         )
-        
+
         # Run Predictive Scoring in parallel (optimization)
         predictive_task = self.predictive_scorer.calculate_predictive_score(
-            {
-                **context,
-                "extracted_preferences": merged_preferences
-            }, 
-            location=location_id_str
+            {**context, "extracted_preferences": merged_preferences}, location=location_id_str
         )
 
         # Launch all parallel tasks
         results = await asyncio.gather(
-            rag_task,
-            score_task,
-            get_slots_task(),
-            get_matches_task(),
-            predictive_task,
-            return_exceptions=True
+            rag_task, score_task, get_slots_task(), get_matches_task(), predictive_task, return_exceptions=True
         )
         # Unpack results with safety
         relevant_docs = results[0] if not isinstance(results[0], Exception) else []
-        
+
         # Ensure lead_score is an integer (awaited result from score_task)
         lead_score_result = results[1]
         if isinstance(lead_score_result, Exception):
@@ -702,18 +684,19 @@ Count questions_answered based on how many of the 4 main categories have data.
             lead_score = 0
         else:
             lead_score = int(lead_score_result) if lead_score_result is not None else 0
-            
+
         slots = results[2] if not isinstance(results[2], Exception) else []
         property_matches_data = results[3] if not isinstance(results[3], Exception) else []
-        
+
         # Unpack predictive score
         predictive_result = results[4] if not isinstance(results[4], Exception) else None
 
         # 3. Process results into formatted strings
-        relevant_knowledge = "\n\n".join([
-            f"[{doc.metadata.get('category', 'info')}]: {doc.text}"
-            for doc in relevant_docs
-        ]) if relevant_docs else "No specific knowledge base matches."
+        relevant_knowledge = (
+            "\n\n".join([f"[{doc.metadata.get('category', 'info')}]: {doc.text}" for doc in relevant_docs])
+            if relevant_docs
+            else "No specific knowledge base matches."
+        )
 
         available_slots_text = ""
         if lead_score >= 3 and slots:
@@ -745,7 +728,7 @@ Count questions_answered based on how many of the 4 main categories have data.
                         contact_id=contact_id,
                         calendar_id=calendar_id,
                         start_time=matched_slot,
-                        title=f"AI Booking: {contact_info.get('first_name', 'Lead')}"
+                        title=f"AI Booking: {contact_info.get('first_name', 'Lead')}",
                     )
                     dt = datetime.fromisoformat(matched_slot.replace("Z", "+00:00"))
                     appointment_booked_msg = f"\n\n[SYSTEM: Confirmed for {dt.strftime('%a @ %I:%M %p')}]"
@@ -754,6 +737,7 @@ Count questions_answered based on how many of the 4 main categories have data.
 
         # 5. Build system prompt and Generate response
         from ghl_real_estate_ai.prompts.system_prompts import build_system_prompt
+
         system_prompt = build_system_prompt(
             contact_name=contact_name,
             conversation_stage=context.get("conversation_stage", "qualifying"),
@@ -766,52 +750,50 @@ Count questions_answered based on how many of the 4 main categories have data.
             property_recommendations=property_recommendations,
             is_returning_lead=context.get("is_returning_lead", False),
             hours_since=context.get("hours_since_last_interaction", 0),
-            predictive_score=predictive_result  # Pass predictive score to prompt
+            predictive_score=predictive_result,  # Pass predictive score to prompt
         )
 
         response_start_time = time.time()
-        
+
         # LLM Call (Sequential)
         try:
             llm_client = self.llm_client
             if tenant_config and tenant_config.get("anthropic_api_key"):
                 llm_client = LLMClient(
-                    provider="claude",
-                    model=settings.claude_model,
-                    api_key=tenant_config["anthropic_api_key"]
+                    provider="claude", model=settings.claude_model, api_key=tenant_config["anthropic_api_key"]
                 )
 
-            history = [{"role": msg["role"], "content": msg["content"]} for msg in context.get("conversation_history", [])]
+            history = [
+                {"role": msg["role"], "content": msg["content"]} for msg in context.get("conversation_history", [])
+            ]
 
             ai_response_obj = await llm_client.agenerate(
                 prompt=user_message,
                 system_prompt=system_prompt,
                 history=history,
                 temperature=settings.temperature,
-                max_tokens=settings.max_tokens
+                max_tokens=settings.max_tokens,
             )
-            
+
             response_content = ai_response_obj.content
-            
+
         except Exception as e:
             logger.error(f"Primary generation failed, triggering RECOVERY MODE: {e}")
             self.recovery.log_failure("llm")
-            
+
             # SAFE MODE FALLBACK
             response_content = self.recovery.get_safe_fallback(
                 contact_name=contact_name,
                 conversation_history=context.get("conversation_history", []),
                 extracted_preferences=merged_preferences,
-                is_seller=not is_buyer
+                is_seller=not is_buyer,
             )
-            
+
             # Create a mock response object for tracking
-            from ghl_real_estate_ai.core.llm_client import LLMResponse, LLMProvider
+            from ghl_real_estate_ai.core.llm_client import LLMProvider, LLMResponse
+
             ai_response_obj = LLMResponse(
-                content=response_content,
-                provider=LLMProvider.CLAUDE,
-                model="recovery-mode-fallback",
-                tokens_used=0
+                content=response_content, provider=LLMProvider.CLAUDE, model="recovery-mode-fallback", tokens_used=0
             )
 
         response_time_ms = (time.time() - response_start_time) * 1000
@@ -821,7 +803,7 @@ Count questions_answered based on how many of the 4 main categories have data.
 
         # 6. Post-Processing (Background Tasks)
         contact_id = contact_info.get("id", "unknown")
-        
+
         # Background task for analytics and predictive scoring
         async def post_processing():
             # Track usage
@@ -832,20 +814,23 @@ Count questions_answered based on how many of the 4 main categories have data.
                 input_tokens=ai_response_obj.input_tokens or 0,
                 output_tokens=ai_response_obj.output_tokens or 0,
                 cached=False,
-                contact_id=contact_id
+                contact_id=contact_id,
             )
-            
+
             # Update predictive scoring in context (already calculated in parallel)
             if predictive_result:
                 from dataclasses import asdict
+
                 predictive_data = asdict(predictive_result)
                 predictive_data["priority_level"] = predictive_result.priority_level.value
                 if isinstance(predictive_data.get("last_updated"), datetime):
                     predictive_data["last_updated"] = predictive_data["last_updated"].isoformat()
                 context["predictive_score"] = predictive_data
-            
+
             # Record event
-            appointment_scheduled = any(k in final_message.lower() for k in ["schedule", "appointment", "calendar", "book"])
+            appointment_scheduled = any(
+                k in final_message.lower() for k in ["schedule", "appointment", "calendar", "book"]
+            )
             await self.analytics_engine.record_event(
                 contact_id=contact_id,
                 location_id=location_id_str,
@@ -856,7 +841,7 @@ Count questions_answered based on how many of the 4 main categories have data.
                 response_time_ms=response_time_ms,
                 context=context,
                 appointment_scheduled=appointment_scheduled,
-                predictive_result=predictive_result
+                predictive_result=predictive_result,
             )
 
         # Fire and forget post-processing
@@ -867,7 +852,7 @@ Count questions_answered based on how many of the 4 main categories have data.
             extracted_data=extracted_data,
             reasoning=f"Lead score: {lead_score}/100",
             lead_score=lead_score,
-            predictive_score=None # Will be updated in context via background task
+            predictive_score=None,  # Will be updated in context via background task
         )
 
     async def extract_data(self, contact_id: str, location_id: Optional[str] = None) -> int:

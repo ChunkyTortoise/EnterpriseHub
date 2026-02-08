@@ -3,14 +3,15 @@ Comprehensive test suite for the Autonomous Deal Orchestration system.
 Runs all orchestration tests and provides detailed reporting.
 """
 
-import pytest
 import asyncio
-import sys
-import os
-from pathlib import Path
-import time
-from typing import Dict, List, Any
 import json
+import os
+import sys
+import time
+from pathlib import Path
+from typing import Any, Dict, List
+
+import pytest
 
 # Add project root to path for imports
 project_root = Path(__file__).parent.parent
@@ -39,7 +40,7 @@ class OrchestrationTestSuite:
             "Vendor Coordination": "tests/services/test_vendor_coordination_engine.py",
             "Communication Engine": "tests/services/test_proactive_communication_engine.py",
             "Exception Handling": "tests/services/test_exception_escalation_engine.py",
-            "Dashboard Component": "tests/streamlit_demo/components/test_autonomous_deal_orchestration_dashboard.py"
+            "Dashboard Component": "tests/streamlit_demo/components/test_autonomous_deal_orchestration_dashboard.py",
         }
 
         # Run each test module
@@ -65,33 +66,21 @@ class OrchestrationTestSuite:
             # Run pytest on the specific module
             import subprocess
 
-            cmd = [
-                sys.executable, "-m", "pytest",
-                test_path,
-                "-v",
-                "--tb=short",
-                "--no-header",
-                "--quiet"
-            ]
+            cmd = [sys.executable, "-m", "pytest", test_path, "-v", "--tb=short", "--no-header", "--quiet"]
 
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                cwd=project_root
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, cwd=project_root)
 
             # Parse pytest output
-            output_lines = result.stdout.split('\n')
+            output_lines = result.stdout.split("\n")
 
             tests_run = 0
             failures = 0
             passed = True
 
             for line in output_lines:
-                if '::' in line and ('PASSED' in line or 'FAILED' in line):
+                if "::" in line and ("PASSED" in line or "FAILED" in line):
                     tests_run += 1
-                    if 'FAILED' in line:
+                    if "FAILED" in line:
                         failures += 1
                         passed = False
 
@@ -101,18 +90,11 @@ class OrchestrationTestSuite:
                 "failures": failures,
                 "output": result.stdout,
                 "errors": result.stderr,
-                "return_code": result.returncode
+                "return_code": result.returncode,
             }
 
         except Exception as e:
-            return {
-                "passed": False,
-                "tests_run": 0,
-                "failures": 1,
-                "output": "",
-                "errors": str(e),
-                "return_code": -1
-            }
+            return {"passed": False, "tests_run": 0, "failures": 1, "output": "", "errors": str(e), "return_code": -1}
 
     def _generate_final_report(self) -> Dict[str, Any]:
         """Generate comprehensive final test report."""
@@ -137,7 +119,7 @@ class OrchestrationTestSuite:
         print(f"   Total Tests: {total_tests}")
         print(f"   Passed: {total_passed}")
         print(f"   Failed: {total_failures}")
-        print(f"   Success Rate: {(total_passed/total_tests*100 if total_tests > 0 else 0):.1f}%")
+        print(f"   Success Rate: {(total_passed / total_tests * 100 if total_tests > 0 else 0):.1f}%")
         print(f"   Duration: {test_duration:.2f} seconds")
 
         if overall_success:
@@ -150,10 +132,10 @@ class OrchestrationTestSuite:
             "total_tests": total_tests,
             "total_passed": total_passed,
             "total_failures": total_failures,
-            "success_rate": total_passed/total_tests*100 if total_tests > 0 else 0,
+            "success_rate": total_passed / total_tests * 100 if total_tests > 0 else 0,
             "duration": test_duration,
             "module_results": self.test_results,
-            "timestamp": time.time()
+            "timestamp": time.time(),
         }
 
     def run_integration_tests(self) -> Dict[str, Any]:
@@ -166,7 +148,7 @@ class OrchestrationTestSuite:
             self._test_orchestrator_vendor_integration,
             self._test_orchestrator_communication_integration,
             self._test_full_workflow_integration,
-            self._test_exception_recovery_integration
+            self._test_exception_recovery_integration,
         ]
 
         results = {}
@@ -218,7 +200,7 @@ class OrchestrationTestSuite:
             "concurrent_deals": self._test_concurrent_deal_processing(),
             "large_dataset": self._test_large_dataset_handling(),
             "memory_usage": self._test_memory_efficiency(),
-            "response_times": self._test_response_times()
+            "response_times": self._test_response_times(),
         }
 
         for test_name, result in performance_results.items():
@@ -253,7 +235,7 @@ class OrchestrationTestSuite:
         report_path = project_root / "tests" / "reports" / filename
         report_path.parent.mkdir(exist_ok=True)
 
-        with open(report_path, 'w') as f:
+        with open(report_path, "w") as f:
             json.dump(results, f, indent=2, default=str)
 
         print(f"\n📄 Test report saved to: {report_path}")
@@ -270,7 +252,7 @@ class OrchestrationTestSuite:
             "Vendor Coordination": ["scheduling", "performance_tracking", "communication"],
             "Communication Engine": ["multi_channel", "personalization", "scheduling"],
             "Exception Handling": ["detection", "classification", "escalation", "recovery"],
-            "Dashboard": ["rendering", "interactivity", "real_time_updates"]
+            "Dashboard": ["rendering", "interactivity", "real_time_updates"],
         }
 
         coverage_results = {}
@@ -284,7 +266,7 @@ class OrchestrationTestSuite:
                 "covered_features": covered_features,
                 "total_features": total_features,
                 "coverage_percentage": coverage_percentage,
-                "missing_tests": []  # Mock: no missing tests
+                "missing_tests": [],  # Mock: no missing tests
             }
 
             print(f"✅ {component:<20} {coverage_percentage:>6.1f}% coverage")
@@ -295,7 +277,7 @@ class OrchestrationTestSuite:
         return {
             "overall_coverage": overall_coverage,
             "component_coverage": coverage_results,
-            "meets_threshold": overall_coverage >= 80  # 80% minimum threshold
+            "meets_threshold": overall_coverage >= 80,  # 80% minimum threshold
         }
 
 
@@ -322,11 +304,8 @@ def main():
         "performance_tests": performance_results,
         "coverage_analysis": coverage_results,
         "overall_status": {
-            "ready_for_deployment": (
-                test_results["overall_success"] and
-                coverage_results["meets_threshold"]
-            )
-        }
+            "ready_for_deployment": (test_results["overall_success"] and coverage_results["meets_threshold"])
+        },
     }
 
     # Generate final report

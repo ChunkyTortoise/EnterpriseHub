@@ -18,22 +18,23 @@ Features:
 
 import asyncio
 import json
+import weakref
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Set, Union
 from uuid import uuid4
-import weakref
 
 from pydantic import BaseModel, Field
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 
 class ComplianceEventType(str, Enum):
     """Compliance event types for pub/sub channels"""
+
     MODEL_REGISTERED = "compliance.model.registered"
     MODEL_UPDATED = "compliance.model.updated"
     ASSESSMENT_COMPLETED = "compliance.assessment.completed"
@@ -49,6 +50,7 @@ class ComplianceEventType(str, Enum):
 
 class ComplianceEvent(BaseModel):
     """Compliance event model for pub/sub messaging"""
+
     event_id: str = Field(default_factory=lambda: str(uuid4()))
     event_type: ComplianceEventType
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -61,16 +63,16 @@ class ComplianceEvent(BaseModel):
     def to_json(self) -> str:
         """Serialize event to JSON string"""
         data = self.model_dump()
-        data['timestamp'] = self.timestamp.isoformat()
-        data['event_type'] = self.event_type.value
+        data["timestamp"] = self.timestamp.isoformat()
+        data["event_type"] = self.event_type.value
         return json.dumps(data)
 
     @classmethod
     def from_json(cls, json_str: str) -> "ComplianceEvent":
         """Deserialize event from JSON string"""
         data = json.loads(json_str)
-        data['timestamp'] = datetime.fromisoformat(data['timestamp'])
-        data['event_type'] = ComplianceEventType(data['event_type'])
+        data["timestamp"] = datetime.fromisoformat(data["timestamp"])
+        data["event_type"] = ComplianceEventType(data["event_type"])
         return cls(**data)
 
     def get_channel(self, prefix: str = "compliance") -> str:
@@ -110,7 +112,7 @@ class ComplianceEventPublisher:
         retry_attempts: int = 3,
         retry_delay: float = 1.0,
     ):
-        self.redis_url = redis_url or getattr(settings, 'redis_url', 'redis://localhost:6379')
+        self.redis_url = redis_url or getattr(settings, "redis_url", "redis://localhost:6379")
         self.channel_prefix = channel_prefix
         self.max_connections = max_connections
         self.socket_timeout = socket_timeout
@@ -124,10 +126,10 @@ class ComplianceEventPublisher:
 
         # Metrics tracking
         self._metrics = {
-            'events_published': 0,
-            'events_failed': 0,
-            'reconnections': 0,
-            'last_published_at': None,
+            "events_published": 0,
+            "events_failed": 0,
+            "reconnections": 0,
+            "last_published_at": None,
         }
 
         logger.info(
@@ -183,8 +185,7 @@ class ComplianceEventPublisher:
 
             except Exception as e:
                 logger.warning(
-                    f"Failed to connect to Redis: {e}. "
-                    "Publisher will operate in fallback mode (logging only)."
+                    f"Failed to connect to Redis: {e}. Publisher will operate in fallback mode (logging only)."
                 )
                 self._connected = False
                 return False
@@ -221,7 +222,7 @@ class ComplianceEventPublisher:
             return True
         except Exception:
             self._connected = False
-            self._metrics['reconnections'] += 1
+            self._metrics["reconnections"] += 1
             logger.info("Redis connection lost, attempting reconnection...")
             return await self.connect()
 
@@ -247,10 +248,8 @@ class ComplianceEventPublisher:
 
         # Fallback mode if Redis not available
         if not await self._ensure_connected():
-            logger.warning(
-                f"Redis unavailable, event logged but not published: {event.event_id}"
-            )
-            self._metrics['events_failed'] += 1
+            logger.warning(f"Redis unavailable, event logged but not published: {event.event_id}")
+            self._metrics["events_failed"] += 1
             return 0
 
         # Retry loop for publish
@@ -261,8 +260,8 @@ class ComplianceEventPublisher:
                 # Also publish to the "all" channel for subscribers listening to everything
                 await self._redis.publish(f"{self.channel_prefix}:all", message)
 
-                self._metrics['events_published'] += 1
-                self._metrics['last_published_at'] = datetime.now(timezone.utc)
+                self._metrics["events_published"] += 1
+                self._metrics["last_published_at"] = datetime.now(timezone.utc)
 
                 logger.debug(
                     f"Event published successfully: event_id={event.event_id}, "
@@ -271,14 +270,12 @@ class ComplianceEventPublisher:
                 return subscriber_count
 
             except Exception as e:
-                logger.warning(
-                    f"Publish attempt {attempt + 1}/{self.retry_attempts} failed: {e}"
-                )
+                logger.warning(f"Publish attempt {attempt + 1}/{self.retry_attempts} failed: {e}")
                 if attempt < self.retry_attempts - 1:
                     await asyncio.sleep(self.retry_delay)
                     await self._ensure_connected()
 
-        self._metrics['events_failed'] += 1
+        self._metrics["events_failed"] += 1
         logger.error(f"Failed to publish event after {self.retry_attempts} attempts: {event.event_id}")
         return 0
 
@@ -308,8 +305,8 @@ class ComplianceEventPublisher:
             model_name=model_name,
             payload=violation_data,
             metadata={
-                'severity': violation_data.get('severity', 'unknown'),
-                'regulation': violation_data.get('regulation', 'unknown'),
+                "severity": violation_data.get("severity", "unknown"),
+                "regulation": violation_data.get("regulation", "unknown"),
             },
         )
         await self.publish(event)
@@ -345,15 +342,14 @@ class ComplianceEventPublisher:
             model_id=model_id,
             model_name=model_name,
             payload={
-                'old_score': old_score,
-                'new_score': new_score,
-                'change': score_change,
-                'direction': direction,
+                "old_score": old_score,
+                "new_score": new_score,
+                "change": score_change,
+                "direction": direction,
             },
             metadata={
-                'significant_change': abs(score_change) >= 5.0,
-                'threshold_crossed': (old_score >= 70 and new_score < 70) or
-                                     (old_score < 70 and new_score >= 70),
+                "significant_change": abs(score_change) >= 5.0,
+                "threshold_crossed": (old_score >= 70 and new_score < 70) or (old_score < 70 and new_score >= 70),
             },
         )
         await self.publish(event)
@@ -390,15 +386,15 @@ class ComplianceEventPublisher:
             model_id=model_id,
             model_name=model_name,
             payload={
-                'metric': metric,
-                'value': value,
-                'threshold': threshold,
-                'breach_amount': value - threshold,
-                'breach_percentage': breach_percentage,
+                "metric": metric,
+                "value": value,
+                "threshold": threshold,
+                "breach_amount": value - threshold,
+                "breach_percentage": breach_percentage,
             },
             metadata={
-                'critical': breach_percentage >= 20.0,
-                'requires_immediate_action': value < 50.0 if threshold >= 70.0 else False,
+                "critical": breach_percentage >= 20.0,
+                "requires_immediate_action": value < 50.0 if threshold >= 70.0 else False,
             },
         )
         await self.publish(event)
@@ -431,14 +427,14 @@ class ComplianceEventPublisher:
             model_id=model_id,
             model_name=model_name,
             payload={
-                'violation_id': violation_id,
-                'remediation_plan': remediation_plan,
-                'estimated_completion': remediation_plan.get('estimated_completion'),
-                'assigned_to': remediation_plan.get('assigned_to'),
+                "violation_id": violation_id,
+                "remediation_plan": remediation_plan,
+                "estimated_completion": remediation_plan.get("estimated_completion"),
+                "assigned_to": remediation_plan.get("assigned_to"),
             },
             metadata={
-                'priority': remediation_plan.get('priority', 'medium'),
-                'auto_remediation': remediation_plan.get('auto_remediation', False),
+                "priority": remediation_plan.get("priority", "medium"),
+                "auto_remediation": remediation_plan.get("auto_remediation", False),
             },
         )
         await self.publish(event)
@@ -473,14 +469,18 @@ class ComplianceEventPublisher:
             model_id=model_id,
             model_name=model_name,
             payload={
-                'certification_id': certification_id,
-                'expiry_date': expiry_date.isoformat(),
-                'days_until_expiry': days_until_expiry,
+                "certification_id": certification_id,
+                "expiry_date": expiry_date.isoformat(),
+                "days_until_expiry": days_until_expiry,
             },
             metadata={
-                'urgency': 'critical' if days_until_expiry <= 7 else
-                          'high' if days_until_expiry <= 30 else
-                          'medium' if days_until_expiry <= 60 else 'low',
+                "urgency": "critical"
+                if days_until_expiry <= 7
+                else "high"
+                if days_until_expiry <= 30
+                else "medium"
+                if days_until_expiry <= 60
+                else "low",
             },
         )
         await self.publish(event)
@@ -490,8 +490,8 @@ class ComplianceEventPublisher:
         """Get publisher metrics"""
         return {
             **self._metrics,
-            'connected': self._connected,
-            'redis_url': self.redis_url,
+            "connected": self._connected,
+            "redis_url": self.redis_url,
         }
 
 
@@ -516,7 +516,7 @@ class ComplianceEventSubscriber:
         reconnect_delay: float = 1.0,
         max_reconnect_delay: float = 30.0,
     ):
-        self.redis_url = redis_url or getattr(settings, 'redis_url', 'redis://localhost:6379')
+        self.redis_url = redis_url or getattr(settings, "redis_url", "redis://localhost:6379")
         self.channel_prefix = channel_prefix
         self.max_connections = max_connections
         self.socket_timeout = socket_timeout
@@ -535,12 +535,12 @@ class ComplianceEventSubscriber:
 
         # Metrics tracking
         self._metrics = {
-            'events_received': 0,
-            'events_processed': 0,
-            'events_failed': 0,
-            'handler_errors': 0,
-            'reconnections': 0,
-            'last_received_at': None,
+            "events_received": 0,
+            "events_processed": 0,
+            "events_failed": 0,
+            "handler_errors": 0,
+            "reconnections": 0,
+            "last_received_at": None,
         }
 
         logger.info(
@@ -802,7 +802,7 @@ class ComplianceEventSubscriber:
                     if not self._running:
                         break
 
-                    if message['type'] == 'message':
+                    if message["type"] == "message":
                         await self._process_message(message)
 
                 # Reset reconnect delay on successful operation
@@ -816,7 +816,7 @@ class ComplianceEventSubscriber:
                     break
 
                 logger.error(f"Error in listen loop: {e}")
-                self._metrics['reconnections'] += 1
+                self._metrics["reconnections"] += 1
 
                 # Exponential backoff for reconnection
                 logger.info(f"Attempting reconnection in {reconnect_delay}s...")
@@ -844,20 +844,19 @@ class ComplianceEventSubscriber:
         Args:
             message: Raw Redis pubsub message
         """
-        self._metrics['events_received'] += 1
+        self._metrics["events_received"] += 1
 
         try:
             # Parse the event from the message data
-            data = message.get('data')
+            data = message.get("data")
             if isinstance(data, bytes):
-                data = data.decode('utf-8')
+                data = data.decode("utf-8")
 
             event = ComplianceEvent.from_json(data)
-            self._metrics['last_received_at'] = datetime.now(timezone.utc)
+            self._metrics["last_received_at"] = datetime.now(timezone.utc)
 
             logger.debug(
-                f"Processing event: type={event.event_type.value}, "
-                f"event_id={event.event_id}, model_id={event.model_id}"
+                f"Processing event: type={event.event_type.value}, event_id={event.event_id}, model_id={event.model_id}"
             )
 
             # Find and execute handlers
@@ -873,10 +872,8 @@ class ComplianceEventSubscriber:
                             await result
                         handlers_executed += 1
                     except Exception as handler_error:
-                        logger.error(
-                            f"Handler error for event {event.event_id}: {handler_error}"
-                        )
-                        self._metrics['handler_errors'] += 1
+                        logger.error(f"Handler error for event {event.event_id}: {handler_error}")
+                        self._metrics["handler_errors"] += 1
 
             # Execute "all" handlers
             for handler in self._all_handlers:
@@ -886,36 +883,31 @@ class ComplianceEventSubscriber:
                         await result
                     handlers_executed += 1
                 except Exception as handler_error:
-                    logger.error(
-                        f"All-handler error for event {event.event_id}: {handler_error}"
-                    )
-                    self._metrics['handler_errors'] += 1
+                    logger.error(f"All-handler error for event {event.event_id}: {handler_error}")
+                    self._metrics["handler_errors"] += 1
 
             if handlers_executed > 0:
-                self._metrics['events_processed'] += 1
-                logger.debug(
-                    f"Event processed: event_id={event.event_id}, "
-                    f"handlers_executed={handlers_executed}"
-                )
+                self._metrics["events_processed"] += 1
+                logger.debug(f"Event processed: event_id={event.event_id}, handlers_executed={handlers_executed}")
             else:
                 logger.debug(f"No handlers for event: {event.event_id}")
 
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse event JSON: {e}")
-            self._metrics['events_failed'] += 1
+            self._metrics["events_failed"] += 1
 
         except Exception as e:
             logger.error(f"Failed to process message: {e}")
-            self._metrics['events_failed'] += 1
+            self._metrics["events_failed"] += 1
 
     def get_metrics(self) -> Dict[str, Any]:
         """Get subscriber metrics"""
         return {
             **self._metrics,
-            'running': self._running,
-            'subscribed_channels': list(self._subscribed_channels),
-            'handler_count': sum(len(h) for h in self._handlers.values()) + len(self._all_handlers),
-            'redis_url': self.redis_url,
+            "running": self._running,
+            "subscribed_channels": list(self._subscribed_channels),
+            "handler_count": sum(len(h) for h in self._handlers.values()) + len(self._all_handlers),
+            "redis_url": self.redis_url,
         }
 
 
@@ -977,25 +969,25 @@ class ComplianceEventBus:
     # Convenience methods from publisher
     async def publish_violation(self, *args, **kwargs) -> ComplianceEvent:
         """Publish a violation detected event."""
-        kwargs.setdefault('source', self.service_name)
+        kwargs.setdefault("source", self.service_name)
         return await self._publisher.publish_violation(*args, **kwargs)
 
     async def publish_score_change(self, *args, **kwargs) -> ComplianceEvent:
         """Publish a score change event."""
-        kwargs.setdefault('source', self.service_name)
+        kwargs.setdefault("source", self.service_name)
         return await self._publisher.publish_score_change(*args, **kwargs)
 
     async def publish_threshold_breach(self, *args, **kwargs) -> ComplianceEvent:
         """Publish a threshold breach event."""
-        kwargs.setdefault('source', self.service_name)
+        kwargs.setdefault("source", self.service_name)
         return await self._publisher.publish_threshold_breach(*args, **kwargs)
 
     def get_metrics(self) -> Dict[str, Any]:
         """Get combined metrics from publisher and subscriber."""
         return {
-            'service_name': self.service_name,
-            'publisher': self._publisher.get_metrics(),
-            'subscriber': self._subscriber.get_metrics(),
+            "service_name": self.service_name,
+            "publisher": self._publisher.get_metrics(),
+            "subscriber": self._subscriber.get_metrics(),
         }
 
     async def __aenter__(self):

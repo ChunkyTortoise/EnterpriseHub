@@ -3,23 +3,40 @@ Comprehensive tests for Advanced Agent Ecosystem
 Tests ClaudeConciergeAgent, PropertyIntelligenceAgent, and CustomerJourneyOrchestrator
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 from ghl_real_estate_ai.agents.claude_concierge_agent import (
-    ClaudeConciergeAgent, PlatformKnowledgeEngine, ContextAwarenessEngine,
-    UserSession, UserIntent, PlatformContext, ConciergeMode
-)
-from ghl_real_estate_ai.agents.property_intelligence_agent import (
-    PropertyIntelligenceAgent, PropertyDataCollector, InvestmentAnalysisEngine,
-    PropertyIntelligenceRequest, PropertyType, InvestmentStrategy, PropertyIntelligenceLevel
+    ClaudeConciergeAgent,
+    ConciergeMode,
+    ContextAwarenessEngine,
+    PlatformContext,
+    PlatformKnowledgeEngine,
+    UserIntent,
+    UserSession,
 )
 from ghl_real_estate_ai.agents.customer_journey_orchestrator import (
-    CustomerJourneyOrchestrator, JourneyTemplateEngine, JourneyAnalyticsEngine,
-    CustomerProfile, CustomerType, JourneyStage, JourneyPriority
+    CustomerJourneyOrchestrator,
+    CustomerProfile,
+    CustomerType,
+    JourneyAnalyticsEngine,
+    JourneyPriority,
+    JourneyStage,
+    JourneyTemplateEngine,
 )
+from ghl_real_estate_ai.agents.property_intelligence_agent import (
+    InvestmentAnalysisEngine,
+    InvestmentStrategy,
+    PropertyDataCollector,
+    PropertyIntelligenceAgent,
+    PropertyIntelligenceLevel,
+    PropertyIntelligenceRequest,
+    PropertyType,
+)
+
 
 class TestClaudeConciergeAgent:
     """Test suite for Claude Concierge Agent."""
@@ -34,9 +51,10 @@ class TestClaudeConciergeAgent:
 
     @pytest.fixture
     def concierge_agent(self, mock_claude_assistant):
-        with patch('ghl_real_estate_ai.agents.claude_concierge_agent.ClaudeAssistant',
-                  return_value=mock_claude_assistant):
-            with patch('ghl_real_estate_ai.agents.claude_concierge_agent.get_event_publisher') as mock_publisher:
+        with patch(
+            "ghl_real_estate_ai.agents.claude_concierge_agent.ClaudeAssistant", return_value=mock_claude_assistant
+        ):
+            with patch("ghl_real_estate_ai.agents.claude_concierge_agent.get_event_publisher") as mock_publisher:
                 mock_publisher.return_value = AsyncMock()
                 return ClaudeConciergeAgent()
 
@@ -61,11 +79,7 @@ class TestClaudeConciergeAgent:
         context_engine = ContextAwarenessEngine()
 
         # Track user activity
-        activity = {
-            "page": "lead_management",
-            "action": "view_leads",
-            "duration": 120
-        }
+        activity = {"page": "lead_management", "action": "view_leads", "duration": 120}
 
         session = await context_engine.track_user_activity("user123", activity)
 
@@ -84,7 +98,7 @@ class TestClaudeConciergeAgent:
             ({"page": "dashboard", "action": "view"}, PlatformContext.DASHBOARD),
             ({"page": "property_analysis", "action": "generate_cma"}, PlatformContext.PROPERTY_ANALYSIS),
             ({"page": "bot_management", "action": "configure"}, PlatformContext.BOT_MANAGEMENT),
-            ({"page": "reports", "action": "analyze"}, PlatformContext.REPORTS)
+            ({"page": "reports", "action": "analyze"}, PlatformContext.REPORTS),
         ]
 
         for activity, expected_context in test_cases:
@@ -101,7 +115,7 @@ class TestClaudeConciergeAgent:
             session_start=datetime.now(),
             last_activity=datetime.now(),
             current_context=PlatformContext.DASHBOARD,
-            detected_intent=UserIntent.TROUBLESHOOTING
+            detected_intent=UserIntent.TROUBLESHOOTING,
         )
 
         # Simulate error activity
@@ -116,11 +130,7 @@ class TestClaudeConciergeAgent:
         result = await concierge_agent.process_user_interaction(
             user_id="test_user",
             message="How do I set up Jorge's adaptive questioning?",
-            context={
-                "page": "bot_management",
-                "action": "configuration",
-                "device": "desktop"
-            }
+            context={"page": "bot_management", "action": "configuration", "device": "desktop"},
         )
 
         assert "concierge_response" in result
@@ -139,12 +149,11 @@ class TestClaudeConciergeAgent:
             session_start=datetime.now(),
             last_activity=datetime.now(),
             current_context=PlatformContext.LEAD_MANAGEMENT,
-            detected_intent=UserIntent.WORKING
+            detected_intent=UserIntent.WORKING,
         )
 
         coordination_result = await coordinator.coordinate_agent_assistance(
-            "I need help qualifying a seller lead",
-            session
+            "I need help qualifying a seller lead", session
         )
 
         assert "coordinated_response" in coordination_result
@@ -163,13 +172,14 @@ class TestClaudeConciergeAgent:
             last_activity=datetime.now(),
             current_context=PlatformContext.LEAD_MANAGEMENT,
             detected_intent=UserIntent.TROUBLESHOOTING,
-            frustration_indicators=["error_encountered"]
+            frustration_indicators=["error_encountered"],
         )
 
         recommendations = await proactive_assistant.generate_proactive_recommendations(session)
 
         assert len(recommendations) > 0
         assert any(rec.recommendation_type == "frustration_assistance" for rec in recommendations)
+
 
 class TestPropertyIntelligenceAgent:
     """Test suite for Property Intelligence Agent."""
@@ -184,9 +194,10 @@ class TestPropertyIntelligenceAgent:
 
     @pytest.fixture
     def property_agent(self, mock_claude_assistant):
-        with patch('ghl_real_estate_ai.agents.property_intelligence_agent.ClaudeAssistant',
-                  return_value=mock_claude_assistant):
-            with patch('ghl_real_estate_ai.agents.property_intelligence_agent.get_event_publisher') as mock_publisher:
+        with patch(
+            "ghl_real_estate_ai.agents.property_intelligence_agent.ClaudeAssistant", return_value=mock_claude_assistant
+        ):
+            with patch("ghl_real_estate_ai.agents.property_intelligence_agent.get_event_publisher") as mock_publisher:
                 mock_publisher.return_value = AsyncMock()
                 return PropertyIntelligenceAgent()
 
@@ -196,14 +207,17 @@ class TestPropertyIntelligenceAgent:
         collector = PropertyDataCollector()
 
         property_data = await collector.collect_property_data(
-            "123 Test St, Rancho Cucamonga, CA",
-            PropertyIntelligenceLevel.STANDARD
+            "123 Test St, Rancho Cucamonga, CA", PropertyIntelligenceLevel.STANDARD
         )
 
         # Verify all required data sections
         required_sections = [
-            "basic_info", "market_data", "neighborhood_data",
-            "comparable_sales", "rental_comps", "public_records"
+            "basic_info",
+            "market_data",
+            "neighborhood_data",
+            "comparable_sales",
+            "rental_comps",
+            "public_records",
         ]
 
         for section in required_sections:
@@ -212,8 +226,7 @@ class TestPropertyIntelligenceAgent:
 
         # Test premium data inclusion
         premium_data = await collector.collect_property_data(
-            "123 Test St, Rancho Cucamonga, CA",
-            PropertyIntelligenceLevel.PREMIUM
+            "123 Test St, Rancho Cucamonga, CA", PropertyIntelligenceLevel.PREMIUM
         )
 
         assert "investment_metrics" in premium_data
@@ -226,28 +239,18 @@ class TestPropertyIntelligenceAgent:
 
         # Mock property data
         property_data = {
-            "basic_info": {
-                "square_footage": 2000,
-                "current_list_price": 400000,
-                "property_tax": 8000
-            },
+            "basic_info": {"square_footage": 2000, "current_list_price": 400000, "property_tax": 8000},
             "market_data": {
                 "market_appreciation_5y": 25.0,
                 "days_on_market_avg": 30,
-                "market_trend": "seller_favorable"
+                "market_trend": "seller_favorable",
             },
-            "rental_comps": [
-                {"rent_per_sqft": 1.25, "monthly_rent": 2500}
-            ],
-            "neighborhood_data": {
-                "crime_index": 20
-            }
+            "rental_comps": [{"rent_per_sqft": 1.25, "monthly_rent": 2500}],
+            "neighborhood_data": {"crime_index": 20},
         }
 
         scoring = await analyzer.analyze_investment_potential(
-            property_data,
-            InvestmentStrategy.RENTAL_INCOME,
-            "intermediate"
+            property_data, InvestmentStrategy.RENTAL_INCOME, "intermediate"
         )
 
         assert isinstance(scoring.total_score, float)
@@ -262,26 +265,14 @@ class TestPropertyIntelligenceAgent:
         analyzer = InvestmentAnalysisEngine()
 
         property_data = {
-            "basic_info": {
-                "square_footage": 2000,
-                "current_list_price": 700000,
-                "property_tax": 10000
-            },
-            "market_data": {
-                "price_per_sqft": 200,
-                "days_on_market_avg": 25,
-                "market_trend": "seller_favorable"
-            },
+            "basic_info": {"square_footage": 2000, "current_list_price": 700000, "property_tax": 10000},
+            "market_data": {"price_per_sqft": 200, "days_on_market_avg": 25, "market_trend": "seller_favorable"},
             "rental_comps": [],
-            "neighborhood_data": {
-                "crime_index": 15
-            }
+            "neighborhood_data": {"crime_index": 15},
         }
 
         scoring = await analyzer.analyze_investment_potential(
-            property_data,
-            InvestmentStrategy.FIX_AND_FLIP,
-            "advanced"
+            property_data, InvestmentStrategy.FIX_AND_FLIP, "advanced"
         )
 
         assert scoring.cash_flow_score == 0  # No ongoing cash flow for flips
@@ -297,37 +288,37 @@ class TestPropertyIntelligenceAgent:
             property_type=PropertyType.SINGLE_FAMILY,
             intelligence_level=PropertyIntelligenceLevel.STANDARD,
             investment_strategy=InvestmentStrategy.BUY_AND_HOLD,
-            investor_profile="intermediate"
+            investor_profile="intermediate",
         )
 
-        with patch.object(property_agent.data_collector, 'collect_property_data') as mock_collector:
+        with patch.object(property_agent.data_collector, "collect_property_data") as mock_collector:
             mock_collector.return_value = {
                 "basic_info": {
                     "square_footage": 2000,
                     "current_list_price": 400000,
                     "property_tax": 6000,
-                    "year_built": 2005
+                    "year_built": 2005,
                 },
                 "market_data": {
                     "market_appreciation_5y": 25.0,
                     "days_on_market_avg": 30,
                     "market_trend": "seller_favorable",
                     "median_home_value": 420000,
-                    "price_per_sqft": 210
+                    "price_per_sqft": 210,
                 },
                 "neighborhood_data": {
                     "crime_index": 15,
                     "walkability_score": 72,
                     "school_ratings": {"elementary": 8, "middle": 7, "high": 7},
                     "amenities": ["parks", "shopping", "restaurants", "gym"],
-                    "median_income": 85000
+                    "median_income": 85000,
                 },
                 "rental_comps": [{"rent_per_sqft": 1.3}],
                 "comparable_sales": [
                     {"sale_price": 390000, "similarity_score": 0.88},
-                    {"sale_price": 415000, "similarity_score": 0.85}
+                    {"sale_price": 415000, "similarity_score": 0.85},
                 ],
-                "public_records": {"permit_history": []}
+                "public_records": {"permit_history": []},
             }
 
             report = await property_agent.analyze_property(request)
@@ -348,8 +339,8 @@ class TestPropertyIntelligenceAgent:
             "market_data": {"median_home_value": 400000, "days_on_market_avg": 35},
             "comparable_sales": [
                 {"sale_price": 440000, "similarity_score": 0.9},
-                {"sale_price": 460000, "similarity_score": 0.85}
-            ]
+                {"sale_price": 460000, "similarity_score": 0.85},
+            ],
         }
 
         positioning = await property_agent._analyze_market_positioning(property_data)
@@ -358,6 +349,7 @@ class TestPropertyIntelligenceAgent:
         assert positioning.price_position in ["below_market", "at_market", "above_market"]
         assert positioning.days_on_market_prediction > 0
         assert len(positioning.comparable_properties) > 0
+
 
 class TestCustomerJourneyOrchestrator:
     """Test suite for Customer Journey Orchestrator."""
@@ -372,15 +364,23 @@ class TestCustomerJourneyOrchestrator:
 
     @pytest.fixture
     def journey_orchestrator(self, mock_claude_assistant):
-        with patch('ghl_real_estate_ai.agents.customer_journey_orchestrator.ClaudeAssistant',
-                  return_value=mock_claude_assistant):
-            with patch('ghl_real_estate_ai.agents.customer_journey_orchestrator.get_event_publisher') as mock_publisher:
+        with patch(
+            "ghl_real_estate_ai.agents.customer_journey_orchestrator.ClaudeAssistant",
+            return_value=mock_claude_assistant,
+        ):
+            with patch("ghl_real_estate_ai.agents.customer_journey_orchestrator.get_event_publisher") as mock_publisher:
                 mock_publisher.return_value = AsyncMock()
-                with patch('ghl_real_estate_ai.agents.customer_journey_orchestrator.get_claude_concierge') as mock_concierge:
+                with patch(
+                    "ghl_real_estate_ai.agents.customer_journey_orchestrator.get_claude_concierge"
+                ) as mock_concierge:
                     mock_concierge.return_value = AsyncMock()
-                    with patch('ghl_real_estate_ai.agents.customer_journey_orchestrator.get_enhanced_bot_orchestrator') as mock_bot_orch:
+                    with patch(
+                        "ghl_real_estate_ai.agents.customer_journey_orchestrator.get_enhanced_bot_orchestrator"
+                    ) as mock_bot_orch:
                         mock_bot_orch.return_value = AsyncMock()
-                        with patch('ghl_real_estate_ai.agents.customer_journey_orchestrator.get_property_intelligence_agent') as mock_prop_intel:
+                        with patch(
+                            "ghl_real_estate_ai.agents.customer_journey_orchestrator.get_property_intelligence_agent"
+                        ) as mock_prop_intel:
                             mock_prop_intel.return_value = AsyncMock()
                             return CustomerJourneyOrchestrator()
 
@@ -397,8 +397,8 @@ class TestCustomerJourneyOrchestrator:
         # Test first-time buyer template structure
         ftb_template = template_engine.get_journey_template(CustomerType.FIRST_TIME_BUYER)
         assert len(ftb_template) > 0
-        assert all(hasattr(step, 'step_id') for step in ftb_template)
-        assert all(hasattr(step, 'required_agents') for step in ftb_template)
+        assert all(hasattr(step, "step_id") for step in ftb_template)
+        assert all(hasattr(step, "required_agents") for step in ftb_template)
 
     @pytest.mark.asyncio
     async def test_journey_template_customization(self):
@@ -415,7 +415,7 @@ class TestCustomerJourneyOrchestrator:
             response_speed_preference="immediate",
             information_depth_preference="detailed",
             decision_making_style="analytical",
-            investment_experience="advanced"
+            investment_experience="advanced",
         )
 
         # Get and customize template
@@ -438,15 +438,15 @@ class TestCustomerJourneyOrchestrator:
                 "timestamp": "2026-01-01T10:00:00",
                 "status": "completed",
                 "duration": 60,
-                "agents_used": ["claude_concierge"]
+                "agents_used": ["claude_concierge"],
             },
             {
                 "step_name": "Financial Qualification",
                 "timestamp": "2026-01-03T14:00:00",
                 "status": "completed",
                 "duration": 120,
-                "agents_used": ["adaptive_jorge"]
-            }
+                "agents_used": ["adaptive_jorge"],
+            },
         ]
 
         performance = await analytics.analyze_journey_performance("test_customer", journey_history)
@@ -462,13 +462,11 @@ class TestCustomerJourneyOrchestrator:
         initial_context = {
             "priority": JourneyPriority.HIGH,
             "communication_preference": "sms",
-            "budget_range": (700000, 700000)
+            "budget_range": (700000, 700000),
         }
 
         result = await journey_orchestrator.start_customer_journey(
-            customer_id="new_customer_123",
-            customer_type=CustomerType.FIRST_TIME_BUYER,
-            initial_context=initial_context
+            customer_id="new_customer_123", customer_type=CustomerType.FIRST_TIME_BUYER, initial_context=initial_context
         )
 
         assert result["journey_id"] == "new_customer_123"
@@ -482,22 +480,12 @@ class TestCustomerJourneyOrchestrator:
         """Test advancing customer through journey steps."""
         # First start a journey
         initial_context = {"priority": JourneyPriority.MEDIUM}
-        await journey_orchestrator.start_customer_journey(
-            "advancement_test",
-            CustomerType.SELLER,
-            initial_context
-        )
+        await journey_orchestrator.start_customer_journey("advancement_test", CustomerType.SELLER, initial_context)
 
         # Advance to next step
-        completion_data = {
-            "motivation_confirmed": True,
-            "timeline_established": True
-        }
+        completion_data = {"motivation_confirmed": True, "timeline_established": True}
 
-        advancement_result = await journey_orchestrator.advance_customer_journey(
-            "advancement_test",
-            completion_data
-        )
+        advancement_result = await journey_orchestrator.advance_customer_journey("advancement_test", completion_data)
 
         assert advancement_result["advancement_status"] == "advanced"
         assert "previous_step" in advancement_result
@@ -518,7 +506,7 @@ class TestCustomerJourneyOrchestrator:
             estimated_duration="1 day",
             success_criteria=["Test completed"],
             exit_conditions=["Test failed"],
-            next_steps=["test_002"]
+            next_steps=["test_002"],
         )
 
         # Create customer profile
@@ -530,7 +518,7 @@ class TestCustomerJourneyOrchestrator:
             communication_preference="email",
             response_speed_preference="same_day",
             information_depth_preference="detailed",
-            decision_making_style="analytical"
+            decision_making_style="analytical",
         )
 
         handoffs = await journey_orchestrator._plan_agent_handoffs(step, profile, {})
@@ -545,9 +533,7 @@ class TestCustomerJourneyOrchestrator:
         """Test retrieving journey status for active customer."""
         # Start journey first
         await journey_orchestrator.start_customer_journey(
-            "status_test",
-            CustomerType.INVESTOR,
-            {"priority": JourneyPriority.MEDIUM}
+            "status_test", CustomerType.INVESTOR, {"priority": JourneyPriority.MEDIUM}
         )
 
         status = await journey_orchestrator.get_journey_status("status_test")
@@ -572,7 +558,7 @@ class TestCustomerJourneyOrchestrator:
                 communication_preference="phone",
                 response_speed_preference="same_day",
                 information_depth_preference="moderate",
-                decision_making_style="collaborative"
+                decision_making_style="collaborative",
             ),
             "journey_history": [
                 {
@@ -582,7 +568,7 @@ class TestCustomerJourneyOrchestrator:
                     "status": "completed",
                     "satisfaction": 85,
                     "duration": 60,
-                    "agents_used": ["adaptive_jorge"]
+                    "agents_used": ["adaptive_jorge"],
                 },
                 {
                     "step_name": "Property Valuation",
@@ -591,10 +577,10 @@ class TestCustomerJourneyOrchestrator:
                     "status": "completed",
                     "satisfaction": 90,
                     "duration": 120,
-                    "agents_used": ["property_intelligence"]
-                }
+                    "agents_used": ["property_intelligence"],
+                },
             ],
-            "start_time": datetime.now() - timedelta(days=7)
+            "start_time": datetime.now() - timedelta(days=7),
         }
 
         journey_orchestrator.active_journeys[customer_id] = journey_state
@@ -605,6 +591,7 @@ class TestCustomerJourneyOrchestrator:
         assert completion_result["customer_id"] == customer_id
         assert "performance_analysis" in completion_result
         assert "completion_report" in completion_result
+
 
 class TestIntegratedAgentEcosystem:
     """Integration tests for the complete advanced agent ecosystem."""
@@ -641,6 +628,7 @@ class TestIntegratedAgentEcosystem:
         """Test error handling and fallback mechanisms across agents."""
         # Verify graceful degradation when agents encounter errors
         pass
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

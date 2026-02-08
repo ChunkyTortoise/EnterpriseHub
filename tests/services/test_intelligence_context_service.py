@@ -16,33 +16,34 @@ Test Coverage:
 Author: Jorge's Real Estate AI Platform - Phase 3.2 Testing
 """
 
-import pytest
 import asyncio
-import time
 import json
+import time
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List
 from unittest.mock import AsyncMock, Mock, patch
-from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List
+
+import pytest
+
+# Import models
+from ghl_real_estate_ai.models.bot_handoff import (
+    BotTransition,
+    BotType,
+    ContextHandoff,
+    HandoffStatus,
+    IntelligenceSnapshot,
+    PreservedIntelligence,
+    TransitionHistory,
+    TransitionReason,
+)
+from ghl_real_estate_ai.models.intelligence_context import BotIntelligenceContext
 
 # Import service under test
 from ghl_real_estate_ai.services.intelligence_context_service import (
     IntelligenceContextService,
     get_intelligence_context_service,
-    health_check
+    health_check,
 )
-
-# Import models
-from ghl_real_estate_ai.models.bot_handoff import (
-    IntelligenceSnapshot,
-    PreservedIntelligence,
-    BotTransition,
-    ContextHandoff,
-    TransitionHistory,
-    BotType,
-    TransitionReason,
-    HandoffStatus
-)
-from ghl_real_estate_ai.models.intelligence_context import BotIntelligenceContext
 
 
 class TestIntelligenceContextService:
@@ -88,70 +89,53 @@ class TestIntelligenceContextService:
     def sample_intelligence_data(self) -> Dict[str, Any]:
         """Sample intelligence data for testing."""
         return {
-            'property_intelligence': {
-                'top_matches': [
+            "property_intelligence": {
+                "top_matches": [
                     {
-                        'property_id': 'prop_123',
-                        'overall_score': 0.95,
-                        'behavioral_fit': 0.88,
-                        'presentation_strategy': 'lifestyle_match'
+                        "property_id": "prop_123",
+                        "overall_score": 0.95,
+                        "behavioral_fit": 0.88,
+                        "presentation_strategy": "lifestyle_match",
                     },
                     {
-                        'property_id': 'prop_456',
-                        'overall_score': 0.82,
-                        'behavioral_fit': 0.75,
-                        'presentation_strategy': 'investment_focus'
+                        "property_id": "prop_456",
+                        "overall_score": 0.82,
+                        "behavioral_fit": 0.75,
+                        "presentation_strategy": "investment_focus",
+                    },
+                ],
+                "best_match_score": 0.95,
+                "presentation_strategy": "lifestyle_match",
+            },
+            "conversation_intelligence": {
+                "objections_detected": [
+                    {"type": "price", "severity": 0.7, "confidence": 0.85, "context": "Concerned about market value"}
+                ],
+                "overall_sentiment": 0.6,
+                "sentiment_trend": "improving",
+                "conversation_quality_score": 78.5,
+                "response_recommendations": [
+                    {
+                        "response_text": "Let me show you recent comparable sales",
+                        "confidence": 0.9,
+                        "tone": "consultative",
                     }
                 ],
-                'best_match_score': 0.95,
-                'presentation_strategy': 'lifestyle_match'
             },
-            'conversation_intelligence': {
-                'objections_detected': [
-                    {
-                        'type': 'price',
-                        'severity': 0.7,
-                        'confidence': 0.85,
-                        'context': 'Concerned about market value'
-                    }
-                ],
-                'overall_sentiment': 0.6,
-                'sentiment_trend': 'improving',
-                'conversation_quality_score': 78.5,
-                'response_recommendations': [
-                    {
-                        'response_text': 'Let me show you recent comparable sales',
-                        'confidence': 0.9,
-                        'tone': 'consultative'
-                    }
-                ]
+            "preference_intelligence": {
+                "preference_profile": {"budget_max": 600000, "bedrooms": 3, "move_timeline": "3_months"},
+                "budget_range": {"min": 400000, "max": 600000},
+                "location_preferences": {"austin_central": 0.8},
+                "feature_preferences": {"pool": True, "garage": True},
+                "profile_completeness": 0.75,
+                "urgency_level": 0.7,
             },
-            'preference_intelligence': {
-                'preference_profile': {
-                    'budget_max': 600000,
-                    'bedrooms': 3,
-                    'move_timeline': '3_months'
-                },
-                'budget_range': {'min': 400000, 'max': 600000},
-                'location_preferences': {'austin_central': 0.8},
-                'feature_preferences': {'pool': True, 'garage': True},
-                'profile_completeness': 0.75,
-                'urgency_level': 0.7
-            },
-            'conversation_history': [
-                {
-                    'role': 'user',
-                    'content': 'Need to sell quickly',
-                    'timestamp': '2024-01-25T09:00:00Z'
-                },
-                {
-                    'role': 'assistant',
-                    'content': 'What\'s your timeline?',
-                    'timestamp': '2024-01-25T09:01:00Z'
-                }
+            "conversation_history": [
+                {"role": "user", "content": "Need to sell quickly", "timestamp": "2024-01-25T09:00:00Z"},
+                {"role": "assistant", "content": "What's your timeline?", "timestamp": "2024-01-25T09:01:00Z"},
             ],
-            'qualification_scores': {'FRS': 85.0, 'PCS': 90.0},
-            'temperature_classification': 'hot'
+            "qualification_scores": {"FRS": 85.0, "PCS": 90.0},
+            "temperature_classification": "hot",
         }
 
     @pytest.fixture
@@ -166,15 +150,12 @@ class TestIntelligenceContextService:
             transition_reason=TransitionReason.QUALIFIED_BUYER,
             handoff_message="Seller qualified, also interested in buying. FRS 85/PCS 90.",
             recommended_approach="consultative",
-            priority_level="high"
+            priority_level="high",
         )
 
     @pytest.fixture
     def context_service(
-        self,
-        mock_cache_service,
-        mock_event_publisher,
-        mock_bot_middleware
+        self, mock_cache_service, mock_event_publisher, mock_bot_middleware
     ) -> IntelligenceContextService:
         """Create context service with mocked dependencies."""
         service = IntelligenceContextService()
@@ -188,10 +169,7 @@ class TestIntelligenceContextService:
 
     @pytest.mark.asyncio
     async def test_preserve_intelligence_success(
-        self,
-        context_service,
-        sample_intelligence_data,
-        sample_bot_transition
+        self, context_service, sample_intelligence_data, sample_bot_transition
     ):
         """Test successful intelligence preservation."""
         # Arrange
@@ -204,7 +182,7 @@ class TestIntelligenceContextService:
             lead_id=lead_id,
             intelligence_data=sample_intelligence_data,
             bot_transition=sample_bot_transition,
-            location_id=location_id
+            location_id=location_id,
         )
         preservation_latency = (time.time() - start_time) * 1000
 
@@ -223,19 +201,16 @@ class TestIntelligenceContextService:
         # Verify cache was called with correct parameters (snapshot + history)
         assert context_service.cache.set.call_count >= 1
         cache_call = context_service.cache.set.call_args_list[0]
-        assert cache_call[1]['ttl'] == 7200  # 2-hour TTL for handoffs
+        assert cache_call[1]["ttl"] == 7200  # 2-hour TTL for handoffs
 
         # Verify event publishing
         context_service.event_publisher.publish_lead_update.assert_called_once()
         event_call = context_service.event_publisher.publish_lead_update.call_args
-        assert event_call[1]['action'] == 'bot_handoff'
+        assert event_call[1]["action"] == "bot_handoff"
 
     @pytest.mark.asyncio
     async def test_retrieve_intelligence_context_success(
-        self,
-        context_service,
-        sample_intelligence_data,
-        sample_bot_transition
+        self, context_service, sample_intelligence_data, sample_bot_transition
     ):
         """Test successful intelligence context retrieval."""
         # Arrange
@@ -252,26 +227,25 @@ class TestIntelligenceContextService:
             target_bot=target_bot,
             snapshot_timestamp=datetime.now(timezone.utc),
             preserved_intelligence=PreservedIntelligence(
-                top_property_matches=[{'property_id': 'prop_123', 'score': 0.9}],
+                top_property_matches=[{"property_id": "prop_123", "score": 0.9}],
                 best_match_score=0.9,
                 conversation_quality_score=78.5,
                 overall_sentiment=0.6,
-                profile_completeness=0.75
+                profile_completeness=0.75,
             ),
             conversation_summary="Seller qualified, interested in buying",
-            transition_reason=TransitionReason.QUALIFIED_BUYER
+            transition_reason=TransitionReason.QUALIFIED_BUYER,
         )
 
         # Mock cache hit - override side_effect with direct return
         context_service.cache.get.side_effect = None
-        context_service.cache.get.side_effect = None; context_service.cache.get.return_value = snapshot.to_json()
+        context_service.cache.get.side_effect = None
+        context_service.cache.get.return_value = snapshot.to_json()
 
         # Act
         start_time = time.time()
         result = await context_service.retrieve_intelligence_context(
-            lead_id=lead_id,
-            target_bot=target_bot,
-            location_id=location_id
+            lead_id=lead_id, target_bot=target_bot, location_id=location_id
         )
         retrieval_latency = (time.time() - start_time) * 1000
 
@@ -289,10 +263,7 @@ class TestIntelligenceContextService:
         context_service.cache.get.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_retrieve_intelligence_context_not_found(
-        self,
-        context_service
-    ):
+    async def test_retrieve_intelligence_context_not_found(self, context_service):
         """Test retrieval when no context is found."""
         # Arrange
         lead_id = "lead_456"
@@ -300,13 +271,12 @@ class TestIntelligenceContextService:
         location_id = "austin"
 
         # Mock cache miss
-        context_service.cache.get.side_effect = None; context_service.cache.get.return_value = None
+        context_service.cache.get.side_effect = None
+        context_service.cache.get.return_value = None
 
         # Act
         result = await context_service.retrieve_intelligence_context(
-            lead_id=lead_id,
-            target_bot=target_bot,
-            location_id=location_id
+            lead_id=lead_id, target_bot=target_bot, location_id=location_id
         )
 
         # Assert
@@ -316,10 +286,7 @@ class TestIntelligenceContextService:
         context_service.cache.get.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_retrieve_intelligence_context_expired(
-        self,
-        context_service
-    ):
+    async def test_retrieve_intelligence_context_expired(self, context_service):
         """Test retrieval of expired context."""
         # Arrange
         lead_id = "lead_123"
@@ -337,18 +304,17 @@ class TestIntelligenceContextService:
             snapshot_timestamp=expired_timestamp,
             preserved_intelligence=PreservedIntelligence.create_empty(),
             conversation_summary="Expired context",
-            transition_reason=TransitionReason.QUALIFIED_BUYER
+            transition_reason=TransitionReason.QUALIFIED_BUYER,
         )
 
         # Mock cache returning expired data - override side_effect
         context_service.cache.get.side_effect = None
-        context_service.cache.get.side_effect = None; context_service.cache.get.return_value = expired_snapshot.to_json()
+        context_service.cache.get.side_effect = None
+        context_service.cache.get.return_value = expired_snapshot.to_json()
 
         # Act
         result = await context_service.retrieve_intelligence_context(
-            lead_id=lead_id,
-            target_bot=target_bot,
-            location_id=location_id
+            lead_id=lead_id, target_bot=target_bot, location_id=location_id
         )
 
         # Assert
@@ -358,10 +324,7 @@ class TestIntelligenceContextService:
         context_service.cache.delete.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_tenant_isolation(
-        self,
-        context_service
-    ):
+    async def test_tenant_isolation(self, context_service):
         """Test tenant isolation in context retrieval."""
         # Arrange
         lead_id = "lead_123"
@@ -379,29 +342,23 @@ class TestIntelligenceContextService:
             snapshot_timestamp=datetime.now(timezone.utc),
             preserved_intelligence=PreservedIntelligence.create_empty(),
             conversation_summary="Wrong tenant context",
-            transition_reason=TransitionReason.QUALIFIED_BUYER
+            transition_reason=TransitionReason.QUALIFIED_BUYER,
         )
 
         # Mock cache hit with wrong tenant
-        context_service.cache.get.side_effect = None; context_service.cache.get.return_value = snapshot.to_json()
+        context_service.cache.get.side_effect = None
+        context_service.cache.get.return_value = snapshot.to_json()
 
         # Act
         result = await context_service.retrieve_intelligence_context(
-            lead_id=lead_id,
-            target_bot=target_bot,
-            location_id=requested_location
+            lead_id=lead_id, target_bot=target_bot, location_id=requested_location
         )
 
         # Assert
         assert result is None  # Should reject due to location mismatch
 
     @pytest.mark.asyncio
-    async def test_create_intelligence_snapshot(
-        self,
-        context_service,
-        sample_intelligence_data,
-        sample_bot_transition
-    ):
+    async def test_create_intelligence_snapshot(self, context_service, sample_intelligence_data, sample_bot_transition):
         """Test intelligence snapshot creation from intelligence data."""
         # Arrange
         lead_id = "lead_123"
@@ -412,7 +369,7 @@ class TestIntelligenceContextService:
             lead_id=lead_id,
             location_id=location_id,
             intelligence_data=sample_intelligence_data,
-            bot_transition=sample_bot_transition
+            bot_transition=sample_bot_transition,
         )
 
         # Assert
@@ -433,41 +390,34 @@ class TestIntelligenceContextService:
         assert "FRS 85" in snapshot.conversation_summary
 
         # Verify qualification scores extraction
-        assert snapshot.qualification_scores['FRS'] == 85.0
-        assert snapshot.qualification_scores['PCS'] == 90.0
+        assert snapshot.qualification_scores["FRS"] == 85.0
+        assert snapshot.qualification_scores["PCS"] == 90.0
 
         # Verify strategic guidance
         assert len(snapshot.recommended_next_actions) > 0
-        assert snapshot.strategic_approach in ['confrontational', 'consultative']
+        assert snapshot.strategic_approach in ["confrontational", "consultative"]
 
     @pytest.mark.asyncio
-    async def test_transition_history_tracking(
-        self,
-        context_service,
-        sample_intelligence_data,
-        sample_bot_transition
-    ):
+    async def test_transition_history_tracking(self, context_service, sample_intelligence_data, sample_bot_transition):
         """Test transition history tracking and retrieval."""
         # Arrange
         lead_id = "lead_123"
         location_id = "austin"
 
         # Mock empty history initially
-        context_service.cache.get.side_effect = None; context_service.cache.get.return_value = None
+        context_service.cache.get.side_effect = None
+        context_service.cache.get.return_value = None
 
         # Act - preserve intelligence (creates history)
         await context_service.preserve_intelligence(
             lead_id=lead_id,
             intelligence_data=sample_intelligence_data,
             bot_transition=sample_bot_transition,
-            location_id=location_id
+            location_id=location_id,
         )
 
         # Retrieve history
-        history = await context_service.get_transition_history(
-            lead_id=lead_id,
-            location_id=location_id
-        )
+        history = await context_service.get_transition_history(lead_id=lead_id, location_id=location_id)
 
         # Assert
         assert isinstance(history, TransitionHistory)
@@ -479,11 +429,7 @@ class TestIntelligenceContextService:
         assert history.successful_handoffs >= 0
 
     @pytest.mark.asyncio
-    async def test_bot_handoff_scenarios(
-        self,
-        context_service,
-        sample_intelligence_data
-    ):
+    async def test_bot_handoff_scenarios(self, context_service, sample_intelligence_data):
         """Test different bot handoff scenarios."""
         lead_id = "lead_123"
         location_id = "austin"
@@ -492,32 +438,32 @@ class TestIntelligenceContextService:
         scenarios = [
             # Seller → Buyer (qualified buyer)
             {
-                'source': BotType.JORGE_SELLER,
-                'target': BotType.JORGE_BUYER,
-                'reason': TransitionReason.QUALIFIED_BUYER,
-                'message': 'Seller qualified, also wants to buy'
+                "source": BotType.JORGE_SELLER,
+                "target": BotType.JORGE_BUYER,
+                "reason": TransitionReason.QUALIFIED_BUYER,
+                "message": "Seller qualified, also wants to buy",
             },
             # Lead → Seller (lead activation)
             {
-                'source': BotType.LEAD_BOT,
-                'target': BotType.JORGE_SELLER,
-                'reason': TransitionReason.LEAD_ACTIVATED,
-                'message': 'Lead showed selling interest'
+                "source": BotType.LEAD_BOT,
+                "target": BotType.JORGE_SELLER,
+                "reason": TransitionReason.LEAD_ACTIVATED,
+                "message": "Lead showed selling interest",
             },
             # Buyer → Lead (dormant lead)
             {
-                'source': BotType.JORGE_BUYER,
-                'target': BotType.LEAD_BOT,
-                'reason': TransitionReason.DORMANT_LEAD,
-                'message': 'Buyer went inactive, moving to nurture'
+                "source": BotType.JORGE_BUYER,
+                "target": BotType.LEAD_BOT,
+                "reason": TransitionReason.DORMANT_LEAD,
+                "message": "Buyer went inactive, moving to nurture",
             },
             # Any → Manual (escalation)
             {
-                'source': BotType.JORGE_SELLER,
-                'target': BotType.MANUAL_AGENT,
-                'reason': TransitionReason.ESCALATION_REQUESTED,
-                'message': 'Complex situation requires human intervention'
-            }
+                "source": BotType.JORGE_SELLER,
+                "target": BotType.MANUAL_AGENT,
+                "reason": TransitionReason.ESCALATION_REQUESTED,
+                "message": "Complex situation requires human intervention",
+            },
         ]
 
         for scenario in scenarios:
@@ -526,10 +472,10 @@ class TestIntelligenceContextService:
                 transition_id=f"trans_{scenario['source'].value}_{scenario['target'].value}",
                 lead_id=lead_id,
                 location_id=location_id,
-                source_bot=scenario['source'],
-                target_bot=scenario['target'],
-                transition_reason=scenario['reason'],
-                handoff_message=scenario['message']
+                source_bot=scenario["source"],
+                target_bot=scenario["target"],
+                transition_reason=scenario["reason"],
+                handoff_message=scenario["message"],
             )
 
             # Act
@@ -537,7 +483,7 @@ class TestIntelligenceContextService:
                 lead_id=lead_id,
                 intelligence_data=sample_intelligence_data,
                 bot_transition=transition,
-                location_id=location_id
+                location_id=location_id,
             )
 
             # Assert
@@ -546,26 +492,19 @@ class TestIntelligenceContextService:
 
             # Verify retrieval works
             retrieved = await context_service.retrieve_intelligence_context(
-                lead_id=lead_id,
-                target_bot=scenario['target'],
-                location_id=location_id
+                lead_id=lead_id, target_bot=scenario["target"], location_id=location_id
             )
 
             assert retrieved is not None
-            assert retrieved.source_bot == scenario['source']
-            assert retrieved.target_bot == scenario['target']
-            assert retrieved.transition_reason == scenario['reason']
+            assert retrieved.source_bot == scenario["source"]
+            assert retrieved.target_bot == scenario["target"]
+            assert retrieved.transition_reason == scenario["reason"]
 
             # Clear cache for next scenario - reset mock store
             context_service.cache.delete = AsyncMock(side_effect=lambda key=None, **kw: None)
 
     @pytest.mark.asyncio
-    async def test_cache_service_failure(
-        self,
-        context_service,
-        sample_intelligence_data,
-        sample_bot_transition
-    ):
+    async def test_cache_service_failure(self, context_service, sample_intelligence_data, sample_bot_transition):
         """Test behavior when cache service fails."""
         # Arrange
         lead_id = "lead_123"
@@ -579,7 +518,7 @@ class TestIntelligenceContextService:
             lead_id=lead_id,
             intelligence_data=sample_intelligence_data,
             bot_transition=sample_bot_transition,
-            location_id=location_id
+            location_id=location_id,
         )
 
         # Assert
@@ -588,12 +527,7 @@ class TestIntelligenceContextService:
         assert "Redis connection failed" in result.error_message
 
     @pytest.mark.asyncio
-    async def test_event_publishing_failure(
-        self,
-        context_service,
-        sample_intelligence_data,
-        sample_bot_transition
-    ):
+    async def test_event_publishing_failure(self, context_service, sample_intelligence_data, sample_bot_transition):
         """Test behavior when event publishing fails."""
         # Arrange
         lead_id = "lead_123"
@@ -607,7 +541,7 @@ class TestIntelligenceContextService:
             lead_id=lead_id,
             intelligence_data=sample_intelligence_data,
             bot_transition=sample_bot_transition,
-            location_id=location_id
+            location_id=location_id,
         )
 
         # Assert
@@ -615,12 +549,7 @@ class TestIntelligenceContextService:
         assert result.success == True
 
     @pytest.mark.asyncio
-    async def test_performance_metrics_tracking(
-        self,
-        context_service,
-        sample_intelligence_data,
-        sample_bot_transition
-    ):
+    async def test_performance_metrics_tracking(self, context_service, sample_intelligence_data, sample_bot_transition):
         """Test performance metrics tracking."""
         # Arrange
         lead_id = "lead_123"
@@ -634,32 +563,27 @@ class TestIntelligenceContextService:
             lead_id=lead_id,
             intelligence_data=sample_intelligence_data,
             bot_transition=sample_bot_transition,
-            location_id=location_id
+            location_id=location_id,
         )
 
         # Perform retrieval operations
-        context_service.cache.get.side_effect = None; context_service.cache.get.return_value = None  # Cache miss
+        context_service.cache.get.side_effect = None
+        context_service.cache.get.return_value = None  # Cache miss
         await context_service.retrieve_intelligence_context(
-            lead_id=lead_id,
-            target_bot=BotType.JORGE_BUYER,
-            location_id=location_id
+            lead_id=lead_id, target_bot=BotType.JORGE_BUYER, location_id=location_id
         )
 
         # Get updated metrics
         updated_metrics = context_service.get_metrics()
 
         # Assert
-        assert updated_metrics['total_preservations'] > initial_metrics['total_preservations']
-        assert updated_metrics['total_retrievals'] > initial_metrics['total_retrievals']
-        assert updated_metrics['avg_preservation_latency_ms'] >= 0
-        assert updated_metrics['avg_retrieval_latency_ms'] >= 0
+        assert updated_metrics["total_preservations"] > initial_metrics["total_preservations"]
+        assert updated_metrics["total_retrievals"] > initial_metrics["total_retrievals"]
+        assert updated_metrics["avg_preservation_latency_ms"] >= 0
+        assert updated_metrics["avg_retrieval_latency_ms"] >= 0
 
     @pytest.mark.asyncio
-    async def test_empty_intelligence_data(
-        self,
-        context_service,
-        sample_bot_transition
-    ):
+    async def test_empty_intelligence_data(self, context_service, sample_bot_transition):
         """Test behavior with empty intelligence data."""
         # Arrange
         lead_id = "lead_123"
@@ -671,7 +595,7 @@ class TestIntelligenceContextService:
             lead_id=lead_id,
             intelligence_data=empty_intelligence,
             bot_transition=sample_bot_transition,
-            location_id=location_id
+            location_id=location_id,
         )
 
         # Assert
@@ -680,20 +604,14 @@ class TestIntelligenceContextService:
 
         # Retrieve and verify
         retrieved = await context_service.retrieve_intelligence_context(
-            lead_id=lead_id,
-            target_bot=sample_bot_transition.target_bot,
-            location_id=location_id
+            lead_id=lead_id, target_bot=sample_bot_transition.target_bot, location_id=location_id
         )
 
         assert retrieved is not None
         assert retrieved.preserved_intelligence.profile_completeness == 0.0
 
     @pytest.mark.asyncio
-    async def test_large_intelligence_data(
-        self,
-        context_service,
-        sample_bot_transition
-    ):
+    async def test_large_intelligence_data(self, context_service, sample_bot_transition):
         """Test behavior with large intelligence data."""
         # Arrange
         lead_id = "lead_123"
@@ -701,13 +619,10 @@ class TestIntelligenceContextService:
 
         # Create large intelligence data (simulate large conversation history)
         large_intelligence = {
-            'property_intelligence': {
-                'top_matches': [{'property_id': f'prop_{i}', 'score': 0.8} for i in range(100)]
-            },
-            'conversation_history': [
-                {'role': 'user', 'content': f'Message {i}', 'timestamp': '2024-01-25T09:00:00Z'}
-                for i in range(1000)
-            ]
+            "property_intelligence": {"top_matches": [{"property_id": f"prop_{i}", "score": 0.8} for i in range(100)]},
+            "conversation_history": [
+                {"role": "user", "content": f"Message {i}", "timestamp": "2024-01-25T09:00:00Z"} for i in range(1000)
+            ],
         }
 
         # Act
@@ -715,7 +630,7 @@ class TestIntelligenceContextService:
             lead_id=lead_id,
             intelligence_data=large_intelligence,
             bot_transition=sample_bot_transition,
-            location_id=location_id
+            location_id=location_id,
         )
 
         # Assert
@@ -747,11 +662,11 @@ class TestIntelligenceContextServiceIntegration:
 
         # Assert
         assert isinstance(health, dict)
-        assert 'service' in health
-        assert 'status' in health
-        assert 'version' in health
-        assert 'metrics' in health
-        assert health['service'] == 'IntelligenceContextService'
+        assert "service" in health
+        assert "status" in health
+        assert "version" in health
+        assert "metrics" in health
+        assert health["service"] == "IntelligenceContextService"
 
 
 class TestBotHandoffModels:
@@ -769,7 +684,7 @@ class TestBotHandoffModels:
             snapshot_timestamp=datetime.now(timezone.utc),
             preserved_intelligence=PreservedIntelligence.create_empty(),
             conversation_summary="Test conversation",
-            transition_reason=TransitionReason.QUALIFIED_BUYER
+            transition_reason=TransitionReason.QUALIFIED_BUYER,
         )
 
         # Act
@@ -793,7 +708,7 @@ class TestBotHandoffModels:
             source_bot=BotType.JORGE_SELLER,
             target_bot=BotType.JORGE_BUYER,
             transition_reason=TransitionReason.QUALIFIED_BUYER,
-            handoff_message="Qualified seller also wants to buy"
+            handoff_message="Qualified seller also wants to buy",
         )
 
         # Act
@@ -815,7 +730,7 @@ class TestBotHandoffModels:
             intelligence_snapshot_id="snap_123",
             transition_id="trans_123",
             preservation_latency_ms=45.5,
-            cache_key="test_key"
+            cache_key="test_key",
         )
 
         assert success_handoff.success == True
@@ -827,7 +742,7 @@ class TestBotHandoffModels:
             lead_id="lead_123",
             location_id="austin",
             error_message="Cache service unavailable",
-            preservation_latency_ms=100.0
+            preservation_latency_ms=100.0,
         )
 
         assert failed_handoff.success == False
@@ -846,7 +761,7 @@ class TestBotHandoffModels:
             source_bot=BotType.JORGE_SELLER,
             target_bot=BotType.JORGE_BUYER,
             transition_reason=TransitionReason.QUALIFIED_BUYER,
-            handoff_message="Test transition"
+            handoff_message="Test transition",
         )
 
         handoff = ContextHandoff.create_success(
@@ -855,7 +770,7 @@ class TestBotHandoffModels:
             intelligence_snapshot_id="snap_123",
             transition_id="trans_123",
             preservation_latency_ms=30.0,
-            cache_key="test_key"
+            cache_key="test_key",
         )
 
         # Act
@@ -876,14 +791,12 @@ class TestBotHandoffModels:
         """Test PreservedIntelligence data extraction and serialization."""
         # Arrange
         intelligence = PreservedIntelligence(
-            top_property_matches=[
-                {'property_id': 'prop_123', 'score': 0.9}
-            ],
+            top_property_matches=[{"property_id": "prop_123", "score": 0.9}],
             best_match_score=0.9,
             conversation_quality_score=85.0,
             overall_sentiment=0.7,
-            budget_range={'min': 400000, 'max': 600000},
-            profile_completeness=0.8
+            budget_range={"min": 400000, "max": 600000},
+            profile_completeness=0.8,
         )
 
         # Act
@@ -904,7 +817,7 @@ class TestBotHandoffModels:
             BotType.JORGE_BUYER,
             BotType.LEAD_BOT,
             BotType.AI_CONCIERGE,
-            BotType.MANUAL_AGENT
+            BotType.MANUAL_AGENT,
         ]
 
         for bot_type in valid_types:
@@ -924,7 +837,7 @@ class TestBotHandoffModels:
             TransitionReason.LEAD_ACTIVATED,
             TransitionReason.DORMANT_LEAD,
             TransitionReason.ESCALATION_REQUESTED,
-            TransitionReason.MANUAL_OVERRIDE
+            TransitionReason.MANUAL_OVERRIDE,
         ]
 
         for reason in valid_reasons:

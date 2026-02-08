@@ -5,28 +5,31 @@ Handles WebSocket and Redis configuration with environment-specific validation,
 connection testing, and fallback management for the GHL Real Estate AI system.
 """
 
-import os
 import asyncio
 import json
-from typing import Dict, Any, Optional, Tuple, Union
-from dataclasses import dataclass, asdict
-from enum import Enum
 import logging
+import os
+from dataclasses import asdict, dataclass
+from enum import Enum
+from typing import Any, Dict, Optional, Tuple, Union
 
 try:
     import redis
+
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
 
 try:
     import websockets
+
     WEBSOCKETS_AVAILABLE = True
 except ImportError:
     WEBSOCKETS_AVAILABLE = False
 
 try:
     import aioredis
+
     AIOREDIS_AVAILABLE = True
 except ImportError:
     AIOREDIS_AVAILABLE = False
@@ -37,6 +40,7 @@ logger = logging.getLogger(__name__)
 
 class ConnectionStatus(Enum):
     """Connection status enumeration"""
+
     CONNECTED = "connected"
     DISCONNECTED = "disconnected"
     CONNECTING = "connecting"
@@ -47,6 +51,7 @@ class ConnectionStatus(Enum):
 @dataclass
 class RedisConfig:
     """Redis configuration with validation"""
+
     url: str
     password: Optional[str] = None
     db: int = 0
@@ -64,7 +69,7 @@ class RedisConfig:
             "retry_on_timeout": self.retry_on_timeout,
             "health_check_interval": self.health_check_interval,
             "max_connections": self.max_connections,
-            "decode_responses": True
+            "decode_responses": True,
         }
 
         if self.password:
@@ -76,6 +81,7 @@ class RedisConfig:
 @dataclass
 class WebSocketConfig:
     """WebSocket configuration with validation"""
+
     host: str = "localhost"
     port: int = 8765
     path: str = "/ws"
@@ -106,6 +112,7 @@ class WebSocketConfig:
 @dataclass
 class RealtimeConfig:
     """Real-time service configuration"""
+
     enabled: bool = True
     use_websocket: bool = True
     poll_interval: int = 2
@@ -133,7 +140,7 @@ class RealtimeConfigManager:
         self._aioredis_client: Optional[Any] = None
         self._connection_status = {
             "redis": ConnectionStatus.NOT_CONFIGURED,
-            "websocket": ConnectionStatus.NOT_CONFIGURED
+            "websocket": ConnectionStatus.NOT_CONFIGURED,
         }
 
     def _load_redis_config(self) -> RedisConfig:
@@ -148,7 +155,7 @@ class RealtimeConfigManager:
             socket_timeout=int(os.getenv("REDIS_SOCKET_TIMEOUT", "30")),
             socket_connect_timeout=int(os.getenv("REDIS_SOCKET_CONNECT_TIMEOUT", "30")),
             retry_on_timeout=os.getenv("REDIS_RETRY_ON_TIMEOUT", "true").lower() == "true",
-            health_check_interval=int(os.getenv("REDIS_HEALTH_CHECK_INTERVAL", "30"))
+            health_check_interval=int(os.getenv("REDIS_HEALTH_CHECK_INTERVAL", "30")),
         )
 
     def _load_websocket_config(self) -> WebSocketConfig:
@@ -167,7 +174,7 @@ class RealtimeConfigManager:
             max_queue=int(os.getenv("WEBSOCKET_MAX_QUEUE", "32")),
             reconnect_attempts=int(os.getenv("WEBSOCKET_RECONNECT_ATTEMPTS", "5")),
             reconnect_delay=int(os.getenv("WEBSOCKET_RECONNECT_DELAY", "2")),
-            fallback_to_polling=os.getenv("WEBSOCKET_FALLBACK_TO_POLLING", "true").lower() == "true"
+            fallback_to_polling=os.getenv("WEBSOCKET_FALLBACK_TO_POLLING", "true").lower() == "true",
         )
 
     def _load_realtime_config(self) -> RealtimeConfig:
@@ -180,7 +187,7 @@ class RealtimeConfigManager:
             cache_ttl=int(os.getenv("REALTIME_CACHE_TTL", "3600")),
             event_dedup_window=int(os.getenv("REALTIME_EVENT_DEDUP_WINDOW", "30")),
             high_priority_threshold=int(os.getenv("REALTIME_HIGH_PRIORITY_THRESHOLD", "3")),
-            batch_size=int(os.getenv("REALTIME_BATCH_SIZE", "50"))
+            batch_size=int(os.getenv("REALTIME_BATCH_SIZE", "50")),
         )
 
     async def test_redis_connection(self) -> Tuple[bool, str]:
@@ -220,7 +227,7 @@ class RealtimeConfigManager:
                 ping_timeout=self.websocket_config.ping_timeout,
                 close_timeout=self.websocket_config.close_timeout,
                 max_size=self.websocket_config.max_size,
-                max_queue=self.websocket_config.max_queue
+                max_queue=self.websocket_config.max_queue,
             ) as websocket:
                 # Send a test message
                 test_message = {"type": "ping", "timestamp": asyncio.get_event_loop().time()}
@@ -248,10 +255,7 @@ class RealtimeConfigManager:
 
         if self._redis_client is None:
             try:
-                self._redis_client = redis.from_url(
-                    self.redis_config.url,
-                    **self.redis_config.to_dict()
-                )
+                self._redis_client = redis.from_url(self.redis_config.url, **self.redis_config.to_dict())
             except Exception as e:
                 logger.error(f"Failed to create Redis client: {e}")
                 return None
@@ -282,23 +286,23 @@ class RealtimeConfigManager:
                 "redis": {
                     "available": REDIS_AVAILABLE,
                     "configured": bool(self.redis_config.url),
-                    "status": self._connection_status["redis"].value
+                    "status": self._connection_status["redis"].value,
                 },
                 "websocket": {
                     "available": WEBSOCKETS_AVAILABLE,
                     "configured": True,  # WebSocket config always has defaults
-                    "status": self._connection_status["websocket"].value
+                    "status": self._connection_status["websocket"].value,
                 },
                 "realtime": {
                     "enabled": self.realtime_config.enabled,
-                    "use_websocket": self.realtime_config.use_websocket and WEBSOCKETS_AVAILABLE
-                }
+                    "use_websocket": self.realtime_config.use_websocket and WEBSOCKETS_AVAILABLE,
+                },
             },
             "configuration": {
                 "redis": asdict(self.redis_config) if REDIS_AVAILABLE else None,
                 "websocket": asdict(self.websocket_config),
-                "realtime": asdict(self.realtime_config)
-            }
+                "realtime": asdict(self.realtime_config),
+            },
         }
 
         # Check for configuration issues
@@ -329,25 +333,17 @@ class RealtimeConfigManager:
 
         # Test Redis
         redis_success, redis_message = await self.test_redis_connection()
-        results["redis"] = {
-            "success": redis_success,
-            "message": redis_message,
-            "available": REDIS_AVAILABLE
-        }
+        results["redis"] = {"success": redis_success, "message": redis_message, "available": REDIS_AVAILABLE}
 
         # Test WebSocket
         ws_success, ws_message = await self.test_websocket_connection()
-        results["websocket"] = {
-            "success": ws_success,
-            "message": ws_message,
-            "available": WEBSOCKETS_AVAILABLE
-        }
+        results["websocket"] = {"success": ws_success, "message": ws_message, "available": WEBSOCKETS_AVAILABLE}
 
         # Overall status
         results["overall"] = {
             "ready": redis_success and (ws_success or self.websocket_config.fallback_to_polling),
             "realtime_capable": redis_success and ws_success,
-            "fallback_mode": redis_success and not ws_success and self.websocket_config.fallback_to_polling
+            "fallback_mode": redis_success and not ws_success and self.websocket_config.fallback_to_polling,
         }
 
         return results
@@ -360,7 +356,7 @@ class RealtimeConfigManager:
             "redis_railway": "redis://default:password@host:port",
             "websocket_local": "ws://localhost:8765/ws",
             "websocket_secure": "wss://your-domain.com/ws",
-            "websocket_development": f"{self.websocket_config.url}"
+            "websocket_development": f"{self.websocket_config.url}",
         }
 
     def get_environment_template(self) -> str:
@@ -389,6 +385,7 @@ REALTIME_MAX_EVENTS=1000
 
 # Global instance
 _config_manager = None
+
 
 def get_config_manager() -> RealtimeConfigManager:
     """Get or create global configuration manager instance"""
@@ -424,10 +421,10 @@ async def validate_realtime_setup() -> Dict[str, Any]:
         "validation": validation_report,
         "connections": connection_results,
         "ready_for_production": (
-            validation_report["valid"] and
-            connection_results["overall"]["ready"] and
-            len(validation_report["errors"]) == 0
-        )
+            validation_report["valid"]
+            and connection_results["overall"]["ready"]
+            and len(validation_report["errors"]) == 0
+        ),
     }
 
 
@@ -444,10 +441,10 @@ if __name__ == "__main__":
         validation = manager.validate_configuration()
         print(f"\nConfiguration Valid: {validation['valid']}")
 
-        if validation['errors']:
-            print("Errors:", validation['errors'])
-        if validation['warnings']:
-            print("Warnings:", validation['warnings'])
+        if validation["errors"]:
+            print("Errors:", validation["errors"])
+        if validation["warnings"]:
+            print("Warnings:", validation["warnings"])
 
         # Test connections
         results = await manager.test_all_connections()

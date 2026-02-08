@@ -9,23 +9,24 @@ Tests automated property alert functionality including:
 - Corporate relocation timing alerts
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import Mock, AsyncMock, patch
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 try:
+    from ghl_real_estate_ai.services.austin_market_service import PropertyListing, PropertyType
     from ghl_real_estate_ai.services.property_alerts import (
-        PropertyAlertSystem,
         AlertCriteria,
-        PropertyAlert,
-        MarketAlert,
-        AlertType,
         AlertPriority,
-        get_property_alert_system
+        AlertType,
+        MarketAlert,
+        PropertyAlert,
+        PropertyAlertSystem,
+        get_property_alert_system,
     )
-    from ghl_real_estate_ai.services.austin_market_service import PropertyType, PropertyListing
 except (ImportError, TypeError, AttributeError, Exception):
     pytest.skip("required imports unavailable", allow_module_level=True)
 
@@ -42,7 +43,7 @@ class TestAlertCriteria:
             min_beds=2,
             property_types=[PropertyType.SINGLE_FAMILY],
             neighborhoods=["Round Rock", "Domain"],
-            work_location="Apple"
+            work_location="Apple",
         )
 
         assert criteria.lead_id == "test_lead_001"
@@ -88,7 +89,7 @@ class TestPropertyAlert:
             message="New listing matches your criteria",
             detailed_analysis={"match_score": 85},
             action_items=["Schedule showing"],
-            expiry_time=datetime.now() + timedelta(hours=48)
+            expiry_time=datetime.now() + timedelta(hours=48),
         )
 
         assert alert.alert_id == "alert_001"
@@ -118,7 +119,7 @@ class TestPropertyAlertSystem:
             min_beds=3,
             neighborhoods=["Round Rock"],
             work_location="Apple",
-            max_commute_time=30
+            max_commute_time=30,
         )
 
     @pytest.fixture
@@ -144,7 +145,7 @@ class TestPropertyAlertSystem:
             photos=["photo1.jpg"],
             description="Beautiful home in Round Rock",
             listing_agent={"name": "Jorge Martinez"},
-            last_updated=datetime.now()
+            last_updated=datetime.now(),
         )
 
     @pytest.mark.asyncio
@@ -170,9 +171,7 @@ class TestPropertyAlertSystem:
         sample_criteria.max_price = 800000
         sample_criteria.neighborhoods = ["Round Rock", "Cedar Park"]
 
-        success = await alert_system.update_lead_alerts(
-            sample_criteria.lead_id, sample_criteria
-        )
+        success = await alert_system.update_lead_alerts(sample_criteria.lead_id, sample_criteria)
 
         assert success is True
 
@@ -221,7 +220,7 @@ class TestPropertyAlertSystem:
         assert matches is False
 
     @pytest.mark.asyncio
-    @patch('ghl_real_estate_ai.services.property_alerts.PropertyAlertSystem._get_recent_listings')
+    @patch("ghl_real_estate_ai.services.property_alerts.PropertyAlertSystem._get_recent_listings")
     async def test_check_new_listings(self, mock_get_recent, alert_system, sample_criteria, sample_property):
         """Test checking for new listing alerts."""
         # Setup
@@ -240,7 +239,7 @@ class TestPropertyAlertSystem:
         assert "Schedule showing" in alert.action_items
 
     @pytest.mark.asyncio
-    @patch('ghl_real_estate_ai.services.property_alerts.PropertyAlertSystem._get_price_changed_properties')
+    @patch("ghl_real_estate_ai.services.property_alerts.PropertyAlertSystem._get_price_changed_properties")
     async def test_check_price_drops(self, mock_get_price_changed, alert_system, sample_criteria, sample_property):
         """Test checking for price drop alerts."""
         # Setup property with price change
@@ -250,7 +249,7 @@ class TestPropertyAlertSystem:
                 "amount": 25000,
                 "previous_price": 575000,
                 "new_price": 550000,
-                "date": datetime.now() - timedelta(days=1)
+                "date": datetime.now() - timedelta(days=1),
             }
         ]
 
@@ -270,9 +269,11 @@ class TestPropertyAlertSystem:
         assert "price drop" in alert.message.lower()
 
     @pytest.mark.asyncio
-    @patch('ghl_real_estate_ai.services.property_alerts.PropertyAlertSystem._get_recent_listings')
-    @patch('ghl_real_estate_ai.services.property_alerts.PropertyAlertSystem._calculate_opportunity_score')
-    async def test_check_market_opportunities(self, mock_calc_score, mock_get_recent, alert_system, sample_criteria, sample_property):
+    @patch("ghl_real_estate_ai.services.property_alerts.PropertyAlertSystem._get_recent_listings")
+    @patch("ghl_real_estate_ai.services.property_alerts.PropertyAlertSystem._calculate_opportunity_score")
+    async def test_check_market_opportunities(
+        self, mock_calc_score, mock_get_recent, alert_system, sample_criteria, sample_property
+    ):
         """Test checking for market opportunity alerts."""
         # Setup
         mock_get_recent.return_value = [sample_property]
@@ -297,8 +298,10 @@ class TestPropertyAlertSystem:
         await alert_system.setup_lead_alerts(sample_criteria)
 
         # Mock market service to return low inventory
-        with patch.object(alert_system.market_service, 'get_market_metrics') as mock_metrics:
-            mock_metrics.return_value = Mock(months_supply=1.2, inventory_count=500, market_condition=Mock(value="strong_sellers"))
+        with patch.object(alert_system.market_service, "get_market_metrics") as mock_metrics:
+            mock_metrics.return_value = Mock(
+                months_supply=1.2, inventory_count=500, market_condition=Mock(value="strong_sellers")
+            )
 
             # Mock finding leads in neighborhood
             alert_system._find_leads_in_neighborhood = AsyncMock(return_value=[sample_criteria.lead_id])
@@ -318,14 +321,16 @@ class TestPropertyAlertSystem:
         await alert_system.setup_lead_alerts(sample_criteria)
 
         # Mock corporate events
-        alert_system._get_corporate_events = AsyncMock(return_value=[
-            {
-                "type": "expansion",
-                "company": "Apple",
-                "announcement_date": datetime.now() - timedelta(days=2),
-                "impact": "5000 new jobs"
-            }
-        ])
+        alert_system._get_corporate_events = AsyncMock(
+            return_value=[
+                {
+                    "type": "expansion",
+                    "company": "Apple",
+                    "announcement_date": datetime.now() - timedelta(days=2),
+                    "impact": "5000 new jobs",
+                }
+            ]
+        )
 
         alert_system._find_corporate_affected_leads = AsyncMock(return_value=[sample_criteria.lead_id])
 
@@ -400,7 +405,7 @@ class TestPropertyAlertSystem:
                 lead_id=f"lead_{i:03d}",
                 min_price=300000 + i * 50000,
                 max_price=700000 + i * 100000,
-                neighborhoods=["Round Rock", "Domain"][i % 2:i % 2 + 1]
+                neighborhoods=["Round Rock", "Domain"][i % 2 : i % 2 + 1],
             )
             criteria_list.append(criteria)
             await alert_system.setup_lead_alerts(criteria)
@@ -432,7 +437,7 @@ class TestPropertyAlertSystem:
             message="Test message",
             detailed_analysis={},
             action_items=[],
-            expiry_time=datetime.now() + timedelta(minutes=5)  # Short expiry
+            expiry_time=datetime.now() + timedelta(minutes=5),  # Short expiry
         )
 
         # Verify expiry time is set correctly
@@ -454,7 +459,7 @@ class TestPropertyAlertSystem:
             lifestyle_preferences=["walkable", "family-friendly"],
             must_have_features=["garage", "yard"],
             work_location="Apple",
-            max_commute_time=25
+            max_commute_time=25,
         )
 
         await alert_system.setup_lead_alerts(criteria)
@@ -480,7 +485,7 @@ class TestPropertyAlertSystem:
             photos=[],
             description="Perfect family home",
             listing_agent={"name": "Jorge Martinez"},
-            last_updated=datetime.now()
+            last_updated=datetime.now(),
         )
 
         # Test matching
@@ -515,7 +520,7 @@ class TestPropertyAlertsIntegration:
             neighborhoods=["Round Rock", "Cedar Park"],
             work_location="Apple",
             max_commute_time=30,
-            lifestyle_preferences=["family-friendly"]
+            lifestyle_preferences=["family-friendly"],
         )
 
         # Setup alerts
@@ -543,22 +548,22 @@ class TestPropertyAlertsIntegration:
                 work_location="Apple",
                 neighborhoods=["Round Rock"],
                 min_price=500000,
-                max_price=900000
+                max_price=900000,
             ),
             AlertCriteria(
                 lead_id="lead_google",
                 work_location="Google",
                 neighborhoods=["Downtown", "South Lamar"],
                 min_price=400000,
-                max_price=700000
+                max_price=700000,
             ),
             AlertCriteria(
                 lead_id="lead_tesla",
                 work_location="Tesla",
                 neighborhoods=["East Austin", "Mueller"],
                 min_price=300000,
-                max_price=600000
-            )
+                max_price=600000,
+            ),
         ]
 
         # Setup all criteria
@@ -586,7 +591,7 @@ class TestPropertyAlertsIntegration:
                 min_price=300000 + i * 25000,
                 max_price=600000 + i * 50000,
                 min_beds=2 + (i % 3),
-                neighborhoods=["Round Rock", "Cedar Park", "Domain", "Downtown"][i % 4:i % 4 + 1]
+                neighborhoods=["Round Rock", "Cedar Park", "Domain", "Downtown"][i % 4 : i % 4 + 1],
             )
             await alert_system.setup_lead_alerts(criteria)
 
@@ -650,7 +655,7 @@ class TestAlertErrorHandling:
         await alert_system.setup_lead_alerts(criteria)
 
         # Mock service failures
-        with patch.object(alert_system, '_get_recent_listings', side_effect=Exception("Service failure")):
+        with patch.object(alert_system, "_get_recent_listings", side_effect=Exception("Service failure")):
             results = await alert_system.process_all_alerts()
 
             # Should return empty results, not crash
@@ -663,12 +668,12 @@ class TestAlertErrorHandling:
         criteria = AlertCriteria(lead_id="cache_test")
 
         # Mock cache failure
-        with patch.object(alert_system.cache, 'set', side_effect=Exception("Cache failure")):
+        with patch.object(alert_system.cache, "set", side_effect=Exception("Cache failure")):
             # Should still complete successfully
             success = await alert_system.setup_lead_alerts(criteria)
             # May succeed or fail, but should not crash
 
-        with patch.object(alert_system.cache, 'get', side_effect=Exception("Cache failure")):
+        with patch.object(alert_system.cache, "get", side_effect=Exception("Cache failure")):
             summary = await alert_system.get_alert_summary("cache_test")
             # Should handle gracefully
             assert isinstance(summary, dict)

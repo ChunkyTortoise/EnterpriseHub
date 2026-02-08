@@ -41,9 +41,7 @@ class MarketTimingService:
         self._calculate_market_benchmarks()
 
     def calculate_market_timing_score(
-        self,
-        property_data: Dict[str, Any],
-        market_context: Optional[Dict[str, Any]] = None
+        self, property_data: Dict[str, Any], market_context: Optional[Dict[str, Any]] = None
     ) -> MarketTimingScore:
         """
         Calculate comprehensive market timing score for a property.
@@ -67,24 +65,16 @@ class MarketTimingService:
         # Calculate individual timing factors
         dom_score = self._calculate_dom_score(days_on_market)
         price_trend_score = self._calculate_price_trend_score(property_data)
-        inventory_score = self._calculate_inventory_scarcity_score(
-            neighborhood, property_type, current_price
-        )
+        inventory_score = self._calculate_inventory_scarcity_score(neighborhood, property_type, current_price)
 
         # Assess competition level
-        competition_level = self._assess_competition_level(
-            days_on_market, neighborhood, property_type
-        )
+        competition_level = self._assess_competition_level(days_on_market, neighborhood, property_type)
 
         # Calculate overall timing score
-        optimal_timing_score = self._calculate_optimal_timing_score(
-            dom_score, price_trend_score, inventory_score
-        )
+        optimal_timing_score = self._calculate_optimal_timing_score(dom_score, price_trend_score, inventory_score)
 
         # Determine urgency indicator
-        urgency_indicator = self._determine_urgency_indicator(
-            days_on_market, competition_level, inventory_score
-        )
+        urgency_indicator = self._determine_urgency_indicator(days_on_market, competition_level, inventory_score)
 
         # Generate reasoning
         reasoning = self._generate_timing_reasoning(
@@ -98,13 +88,10 @@ class MarketTimingService:
             competition_level=competition_level,
             optimal_timing_score=optimal_timing_score,
             urgency_indicator=urgency_indicator,
-            reasoning=reasoning
+            reasoning=reasoning,
         )
 
-    def get_market_opportunity_insights(
-        self,
-        property_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def get_market_opportunity_insights(self, property_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Get detailed market opportunity insights for agent use.
 
@@ -122,16 +109,13 @@ class MarketTimingService:
             "market_position": self._assess_market_position(timing_score),
             "recommended_actions": self._get_recommended_actions(timing_score),
             "price_guidance": self._get_price_guidance(property_data, timing_score),
-            "timing_advice": self._get_timing_advice(timing_score)
+            "timing_advice": self._get_timing_advice(timing_score),
         }
 
         return insights
 
     def analyze_neighborhood_market(
-        self,
-        neighborhood: str,
-        property_type: str = "",
-        price_range: Optional[Tuple[int, int]] = None
+        self, neighborhood: str, property_type: str = "", price_range: Optional[Tuple[int, int]] = None
     ) -> Dict[str, Any]:
         """
         Analyze market conditions for a specific neighborhood.
@@ -146,22 +130,19 @@ class MarketTimingService:
         """
         # Filter properties for this neighborhood
         neighborhood_props = [
-            prop for prop in self.property_data
+            prop
+            for prop in self.property_data
             if prop.get("address", {}).get("neighborhood", "").lower() == neighborhood.lower()
         ]
 
         if property_type:
             neighborhood_props = [
-                prop for prop in neighborhood_props
-                if property_type.lower() in prop.get("property_type", "").lower()
+                prop for prop in neighborhood_props if property_type.lower() in prop.get("property_type", "").lower()
             ]
 
         if price_range:
             min_price, max_price = price_range
-            neighborhood_props = [
-                prop for prop in neighborhood_props
-                if min_price <= prop.get("price", 0) <= max_price
-            ]
+            neighborhood_props = [prop for prop in neighborhood_props if min_price <= prop.get("price", 0) <= max_price]
 
         if not neighborhood_props:
             return self._create_empty_market_analysis(neighborhood)
@@ -187,7 +168,7 @@ class MarketTimingService:
             "price_trend": price_trend,
             "market_temperature": self._assess_market_temperature(avg_dom, inventory_count),
             "buyer_advantage": self._assess_buyer_advantage(avg_dom, inventory_count),
-            "last_updated": datetime.utcnow().isoformat()
+            "last_updated": datetime.utcnow().isoformat(),
         }
 
     # Core calculation methods
@@ -239,12 +220,7 @@ class MarketTimingService:
             # Likely original price
             return 0.3
 
-    def _calculate_inventory_scarcity_score(
-        self,
-        neighborhood: str,
-        property_type: str,
-        price: int
-    ) -> float:
+    def _calculate_inventory_scarcity_score(self, neighborhood: str, property_type: str, price: int) -> float:
         """
         Calculate inventory scarcity score for the market segment.
 
@@ -267,17 +243,10 @@ class MarketTimingService:
         else:
             return 0.2  # Abundant supply
 
-    def _assess_competition_level(
-        self,
-        days_on_market: int,
-        neighborhood: str,
-        property_type: str
-    ) -> str:
+    def _assess_competition_level(self, days_on_market: int, neighborhood: str, property_type: str) -> str:
         """Assess competition level for the property."""
         # Get market benchmarks for this area
-        benchmark_dom = self.market_benchmarks.get("avg_dom_by_neighborhood", {}).get(
-            neighborhood.lower(), 30
-        )
+        benchmark_dom = self.market_benchmarks.get("avg_dom_by_neighborhood", {}).get(neighborhood.lower(), 30)
 
         if days_on_market < benchmark_dom * 0.5:
             return "high"  # Moving much faster than average
@@ -287,10 +256,7 @@ class MarketTimingService:
             return "low"
 
     def _calculate_optimal_timing_score(
-        self,
-        dom_score: float,
-        price_trend_score: float,
-        inventory_score: float
+        self, dom_score: float, price_trend_score: float, inventory_score: float
     ) -> float:
         """
         Calculate overall optimal timing score.
@@ -300,18 +266,9 @@ class MarketTimingService:
         - Price trend: 30% (price reduction opportunity)
         - Inventory scarcity: 20% (market urgency)
         """
-        return (
-            dom_score * 0.5 +
-            price_trend_score * 0.3 +
-            inventory_score * 0.2
-        )
+        return dom_score * 0.5 + price_trend_score * 0.3 + inventory_score * 0.2
 
-    def _determine_urgency_indicator(
-        self,
-        days_on_market: int,
-        competition_level: str,
-        inventory_score: float
-    ) -> str:
+    def _determine_urgency_indicator(self, days_on_market: int, competition_level: str, inventory_score: float) -> str:
         """Determine buyer urgency indicator."""
         # High inventory scarcity or high competition = act fast
         if inventory_score >= 0.8 or competition_level == "high":
@@ -324,11 +281,7 @@ class MarketTimingService:
             return "can_wait"
 
     def _generate_timing_reasoning(
-        self,
-        days_on_market: int,
-        competition_level: str,
-        price_trend_score: float,
-        inventory_score: float
+        self, days_on_market: int, competition_level: str, price_trend_score: float, inventory_score: float
     ) -> str:
         """Generate human-readable timing reasoning."""
         reasoning_parts = []
@@ -363,12 +316,7 @@ class MarketTimingService:
 
     # Market analysis helper methods
 
-    def _find_similar_properties(
-        self,
-        neighborhood: str,
-        property_type: str,
-        price: int
-    ) -> List[Dict[str, Any]]:
+    def _find_similar_properties(self, neighborhood: str, property_type: str, price: int) -> List[Dict[str, Any]]:
         """Find similar properties for inventory analysis."""
         price_range = 0.15  # ±15% price range
         min_price = price * (1 - price_range)
@@ -456,25 +404,25 @@ class MarketTimingService:
             return {
                 "level": "low",
                 "strategies": ["Full asking price", "Attractive terms", "Quick close"],
-                "expected_discount": "0-1%"
+                "expected_discount": "0-1%",
             }
         elif days_on_market < 21:
             return {
                 "level": "moderate",
                 "strategies": ["Reasonable offer", "Ask for repairs", "Negotiate closing costs"],
-                "expected_discount": "1-3%"
+                "expected_discount": "1-3%",
             }
         elif days_on_market < 60:
             return {
                 "level": "good",
                 "strategies": ["Below asking price", "Request concessions", "Inspect everything"],
-                "expected_discount": "3-8%"
+                "expected_discount": "3-8%",
             }
         else:
             return {
                 "level": "high",
                 "strategies": ["Aggressive pricing", "Major concessions", "Take your time"],
-                "expected_discount": "8-15%"
+                "expected_discount": "8-15%",
             }
 
     def _assess_seller_motivation(self, days_on_market: int, property_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -501,7 +449,7 @@ class MarketTimingService:
             "must sell": 3,
             "relocated": 2,
             "job transfer": 2,
-            "bring offers": 1
+            "bring offers": 1,
         }
 
         for indicator, score in motivation_indicators.items():
@@ -519,11 +467,7 @@ class MarketTimingService:
         else:
             level = "low"
 
-        return {
-            "level": level,
-            "score": motivation_score,
-            "factors": factors
-        }
+        return {"level": level, "score": motivation_score, "factors": factors}
 
     def _assess_market_position(self, timing_score: MarketTimingScore) -> str:
         """Assess the property's position in the market."""
@@ -543,37 +487,39 @@ class MarketTimingService:
         actions = []
 
         if timing_score.urgency_indicator == "act_fast":
-            actions.extend([
-                "Schedule showing immediately",
-                "Prepare competitive offer",
-                "Get pre-approval ready",
-                "Consider waiving contingencies"
-            ])
+            actions.extend(
+                [
+                    "Schedule showing immediately",
+                    "Prepare competitive offer",
+                    "Get pre-approval ready",
+                    "Consider waiving contingencies",
+                ]
+            )
         elif timing_score.urgency_indicator == "good_time":
-            actions.extend([
-                "Schedule showing this week",
-                "Prepare reasonable offer",
-                "Include standard contingencies",
-                "Plan negotiation strategy"
-            ])
+            actions.extend(
+                [
+                    "Schedule showing this week",
+                    "Prepare reasonable offer",
+                    "Include standard contingencies",
+                    "Plan negotiation strategy",
+                ]
+            )
         else:  # can_wait
-            actions.extend([
-                "Take time to evaluate",
-                "Compare with other options",
-                "Plan strategic offer",
-                "Include buyer-favorable terms"
-            ])
+            actions.extend(
+                [
+                    "Take time to evaluate",
+                    "Compare with other options",
+                    "Plan strategic offer",
+                    "Include buyer-favorable terms",
+                ]
+            )
 
         if timing_score.days_on_market_score > 0.7:
             actions.append("Negotiate price reduction")
 
         return actions
 
-    def _get_price_guidance(
-        self,
-        property_data: Dict[str, Any],
-        timing_score: MarketTimingScore
-    ) -> Dict[str, Any]:
+    def _get_price_guidance(self, property_data: Dict[str, Any], timing_score: MarketTimingScore) -> Dict[str, Any]:
         """Get price guidance based on market timing."""
         asking_price = property_data.get("price", 0)
 
@@ -599,7 +545,7 @@ class MarketTimingService:
             "suggested_range": f"${min_offer:,} - ${max_offer:,}",
             "min_offer": min_offer,
             "max_offer": max_offer,
-            "rationale": f"Based on {timing_score.days_on_market_score:.1%} negotiation opportunity"
+            "rationale": f"Based on {timing_score.days_on_market_score:.1%} negotiation opportunity",
         }
 
     def _get_timing_advice(self, timing_score: MarketTimingScore) -> str:
@@ -638,8 +584,8 @@ class MarketTimingService:
                 "spring": {"multiplier": 1.1, "description": "Peak buying season"},
                 "summer": {"multiplier": 1.05, "description": "Active market"},
                 "fall": {"multiplier": 0.95, "description": "Cooling market"},
-                "winter": {"multiplier": 0.9, "description": "Slowest season"}
-            }
+                "winter": {"multiplier": 0.9, "description": "Slowest season"},
+            },
         }
 
     def _calculate_market_benchmarks(self):
@@ -659,9 +605,7 @@ class MarketTimingService:
             neighborhood_dom[neighborhood].append(dom)
 
         avg_dom_by_neighborhood = {
-            neighborhood: statistics.mean(doms)
-            for neighborhood, doms in neighborhood_dom.items()
-            if doms
+            neighborhood: statistics.mean(doms) for neighborhood, doms in neighborhood_dom.items() if doms
         }
 
         # Calculate overall market benchmarks
@@ -672,7 +616,7 @@ class MarketTimingService:
             "avg_dom_by_neighborhood": avg_dom_by_neighborhood,
             "overall_avg_dom": statistics.mean(all_doms) if all_doms else 30,
             "median_price": statistics.median(all_prices) if all_prices else 500000,
-            "total_inventory": len(self.property_data)
+            "total_inventory": len(self.property_data),
         }
 
     def _create_empty_market_analysis(self, neighborhood: str) -> Dict[str, Any]:
@@ -687,7 +631,7 @@ class MarketTimingService:
             "market_temperature": "unknown",
             "buyer_advantage": "unknown",
             "error": "No data available for this area",
-            "last_updated": datetime.utcnow().isoformat()
+            "last_updated": datetime.utcnow().isoformat(),
         }
 
 
@@ -706,7 +650,7 @@ def demo_market_timing():
             "property_type": "Single Family",
             "price": 675000,
             "days_on_market": 5,
-            "description": "Charming home in desirable area"
+            "description": "Charming home in desirable area",
         },
         {
             "id": "test_stale",
@@ -714,7 +658,7 @@ def demo_market_timing():
             "property_type": "Single Family",
             "price": 725000,
             "days_on_market": 78,
-            "description": "Luxury home, motivated seller, bring offers"
+            "description": "Luxury home, motivated seller, bring offers",
         },
         {
             "id": "test_normal",
@@ -722,15 +666,15 @@ def demo_market_timing():
             "property_type": "Single Family",
             "price": 520000,
             "days_on_market": 24,
-            "description": "Well-maintained family home"
-        }
+            "description": "Well-maintained family home",
+        },
     ]
 
     for prop in test_properties:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Property: {prop['address']['neighborhood']} - {prop['days_on_market']} DOM")
         print(f"Price: ${prop['price']:,}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         timing_score = service.calculate_market_timing_score(prop)
 

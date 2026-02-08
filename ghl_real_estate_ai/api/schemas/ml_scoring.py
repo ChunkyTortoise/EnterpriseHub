@@ -9,38 +9,43 @@ Integrates with:
 """
 
 from datetime import datetime
-from typing import Dict, List, Optional, Any, Union
 from enum import Enum
-from pydantic import BaseModel, Field, field_validator
+from typing import Any, Dict, List, Optional, Union
 from uuid import UUID, uuid4
+
+from pydantic import BaseModel, Field, field_validator
 
 
 class ConfidenceLevel(str, Enum):
     """ML prediction confidence levels"""
-    HIGH = "high"          # >= 0.85, use ML prediction
-    MEDIUM = "medium"      # 0.65-0.85, use with caution
-    LOW = "low"           # < 0.65, escalate to Claude AI
-    UNCERTAIN = "uncertain" # Model unavailable/error
+
+    HIGH = "high"  # >= 0.85, use ML prediction
+    MEDIUM = "medium"  # 0.65-0.85, use with caution
+    LOW = "low"  # < 0.65, escalate to Claude AI
+    UNCERTAIN = "uncertain"  # Model unavailable/error
 
 
 class LeadClassification(str, Enum):
     """Lead classification categories"""
-    HOT = "hot"           # High conversion probability (80%+)
-    WARM = "warm"         # Moderate conversion probability (50-80%)
-    COLD = "cold"         # Low conversion probability (<50%)
-    UNQUALIFIED = "unqualified" # Not a viable lead
+
+    HOT = "hot"  # High conversion probability (80%+)
+    WARM = "warm"  # Moderate conversion probability (50-80%)
+    COLD = "cold"  # Low conversion probability (<50%)
+    UNQUALIFIED = "unqualified"  # Not a viable lead
 
 
 class ScoreSource(str, Enum):
     """Source of the lead score"""
-    ML_ONLY = "ml_only"              # Pure ML prediction (high confidence)
+
+    ML_ONLY = "ml_only"  # Pure ML prediction (high confidence)
     ML_CLAUDE_HYBRID = "ml_claude_hybrid"  # ML + Claude analysis
-    CLAUDE_ONLY = "claude_only"      # Claude-only analysis (ML unavailable)
-    CACHE = "cache"                  # Cached previous result
+    CLAUDE_ONLY = "claude_only"  # Claude-only analysis (ML unavailable)
+    CACHE = "cache"  # Cached previous result
 
 
 class LeadScoringRequest(BaseModel):
     """Request schema for lead scoring API"""
+
     lead_id: str = Field(..., description="Unique identifier for the lead")
     lead_name: str = Field(..., description="Lead's name for personalization")
 
@@ -77,23 +82,24 @@ class LeadScoringRequest(BaseModel):
     include_explanations: bool = Field(True, description="Include ML feature explanations")
     timeout_ms: Optional[int] = Field(5000, ge=100, le=30000, description="Timeout in milliseconds")
 
-    @field_validator('email')
+    @field_validator("email")
     @classmethod
     def validate_email(cls, v):
-        if v and '@' not in v:
-            raise ValueError('Invalid email format')
+        if v and "@" not in v:
+            raise ValueError("Invalid email format")
         return v
 
-    @field_validator('phone')
+    @field_validator("phone")
     @classmethod
     def validate_phone(cls, v):
-        if v and len(v.replace('+', '').replace('-', '').replace('(', '').replace(')', '').replace(' ', '')) < 10:
-            raise ValueError('Phone number must be at least 10 digits')
+        if v and len(v.replace("+", "").replace("-", "").replace("(", "").replace(")", "").replace(" ", "")) < 10:
+            raise ValueError("Phone number must be at least 10 digits")
         return v
 
 
 class BatchScoringRequest(BaseModel):
     """Request schema for batch lead scoring"""
+
     leads: List[LeadScoringRequest] = Field(..., max_length=100, description="List of leads to score")
     parallel_processing: bool = Field(True, description="Process leads in parallel")
     include_summary: bool = Field(True, description="Include batch processing summary")
@@ -102,6 +108,7 @@ class BatchScoringRequest(BaseModel):
 
 class MLFeatureExplanation(BaseModel):
     """ML feature importance explanation"""
+
     feature_name: str = Field(..., description="Name of the ML feature")
     feature_value: Union[float, str, bool] = Field(..., description="Value of the feature")
     importance_score: float = Field(..., ge=0, le=1, description="SHAP importance score (0-1)")
@@ -111,6 +118,7 @@ class MLFeatureExplanation(BaseModel):
 
 class LeadScoringResponse(BaseModel):
     """Response schema for lead scoring API"""
+
     # Request identification
     lead_id: str = Field(..., description="Lead identifier from request")
     request_id: str = Field(default_factory=lambda: str(uuid4()), description="Unique request identifier")
@@ -153,6 +161,7 @@ class LeadScoringResponse(BaseModel):
 
 class BatchScoringResponse(BaseModel):
     """Response schema for batch lead scoring"""
+
     batch_id: str = Field(default_factory=lambda: str(uuid4()), description="Batch processing identifier")
     total_leads: int = Field(..., description="Total number of leads processed")
     successful_scores: int = Field(..., description="Number of successful scores")
@@ -176,6 +185,7 @@ class BatchScoringResponse(BaseModel):
 
 class LeadScoreHistoryResponse(BaseModel):
     """Response schema for lead scoring history"""
+
     lead_id: str = Field(..., description="Lead identifier")
     score_history: List[LeadScoringResponse] = Field(..., description="Historical scores")
     score_trend: str = Field(..., description="improving, declining, or stable")
@@ -186,6 +196,7 @@ class LeadScoreHistoryResponse(BaseModel):
 
 class MLModelStatus(BaseModel):
     """Response schema for ML model status"""
+
     model_name: str = Field(..., description="Name of the ML model")
     model_version: str = Field(..., description="Model version identifier")
     is_available: bool = Field(..., description="Whether model is available")
@@ -207,6 +218,7 @@ class MLModelStatus(BaseModel):
 
 class ErrorResponse(BaseModel):
     """Standard error response schema"""
+
     error: str = Field(..., description="Error type")
     message: str = Field(..., description="Human-readable error message")
     details: Optional[Dict[str, Any]] = Field(None, description="Additional error details")
@@ -216,6 +228,7 @@ class ErrorResponse(BaseModel):
 
 class HealthCheckResponse(BaseModel):
     """Health check response schema"""
+
     status: str = Field(..., description="overall, ml_model, cache, database")
     ml_model_status: str = Field(..., description="available, unavailable, degraded")
     cache_status: str = Field(..., description="available, unavailable, degraded")
@@ -234,6 +247,7 @@ class HealthCheckResponse(BaseModel):
 # WebSocket message schemas for real-time updates
 class WebSocketMessage(BaseModel):
     """Base WebSocket message schema"""
+
     type: str = Field(..., description="Message type")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Message timestamp")
     message_id: str = Field(default_factory=lambda: str(uuid4()), description="Unique message identifier")
@@ -241,6 +255,7 @@ class WebSocketMessage(BaseModel):
 
 class LeadScoredEvent(WebSocketMessage):
     """WebSocket event for when a lead is scored"""
+
     type: str = Field("lead_scored", description="Message type")
     lead_id: str = Field(..., description="Lead identifier")
     lead_name: str = Field(..., description="Lead name")
@@ -252,6 +267,7 @@ class LeadScoredEvent(WebSocketMessage):
 
 class BatchProcessingEvent(WebSocketMessage):
     """WebSocket event for batch processing updates"""
+
     type: str = Field("batch_processing", description="Message type")
     batch_id: str = Field(..., description="Batch identifier")
     total_leads: int = Field(..., description="Total leads in batch")
@@ -262,6 +278,7 @@ class BatchProcessingEvent(WebSocketMessage):
 
 class ModelStatusEvent(WebSocketMessage):
     """WebSocket event for ML model status changes"""
+
     type: str = Field("model_status", description="Message type")
     model_name: str = Field(..., description="Model name")
     status: str = Field(..., description="available, unavailable, degraded")

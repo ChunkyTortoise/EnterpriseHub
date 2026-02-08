@@ -10,22 +10,27 @@ Provides comprehensive visibility into:
 """
 
 import asyncio
-import streamlit as st
-import pandas as pd
-import plotly.graph_objects as go
-import plotly.express as px
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Union
 import json
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Union
 
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import streamlit as st
+
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.agent_mesh_coordinator import (
-    get_mesh_coordinator, TaskPriority, AgentStatus, AgentCapability
+    AgentCapability,
+    AgentStatus,
+    TaskPriority,
+    get_mesh_coordinator,
 )
 from ghl_real_estate_ai.services.mesh_agent_registry import get_agent_registry
 from ghl_real_estate_ai.services.token_tracker import TokenTracker
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
+
 
 def agent_mesh_dashboard():
     """Main agent mesh dashboard interface"""
@@ -51,18 +56,14 @@ def agent_mesh_dashboard():
     # Auto-refresh mechanism
     if auto_refresh:
         import time
+
         time.sleep(refresh_interval)
         st.rerun()
 
     # Main tabs
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-        "📊 Overview",
-        "🤖 Agents",
-        "📋 Tasks",
-        "💰 Cost Tracking",
-        "⚡ Performance",
-        "⚙️ Management"
-    ])
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
+        ["📊 Overview", "🤖 Agents", "📋 Tasks", "💰 Cost Tracking", "⚡ Performance", "⚙️ Management"]
+    )
 
     with tab1:
         render_overview_tab(mesh_coordinator, agent_registry, token_tracker)
@@ -82,6 +83,7 @@ def agent_mesh_dashboard():
     with tab6:
         render_management_tab(mesh_coordinator, agent_registry)
 
+
 @st.cache_data(ttl=30)
 def get_mesh_overview_data():
     """Get cached mesh overview data"""
@@ -98,6 +100,7 @@ def get_mesh_overview_data():
         logger.error(f"Error getting mesh overview: {e}")
         return {}, {}
 
+
 def render_overview_tab(mesh_coordinator, agent_registry, token_tracker):
     """Render overview dashboard tab"""
 
@@ -111,35 +114,19 @@ def render_overview_tab(mesh_coordinator, agent_registry, token_tracker):
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.metric(
-            "Total Agents",
-            registry_status.get("total_agents", 0),
-            delta=None
-        )
+        st.metric("Total Agents", registry_status.get("total_agents", 0), delta=None)
 
     with col2:
         active_agents = mesh_status.get("agents", {}).get("active", 0)
-        st.metric(
-            "Active Agents",
-            active_agents,
-            delta=None
-        )
+        st.metric("Active Agents", active_agents, delta=None)
 
     with col3:
         active_tasks = mesh_status.get("tasks", {}).get("active", 0)
-        st.metric(
-            "Active Tasks",
-            active_tasks,
-            delta=None
-        )
+        st.metric("Active Tasks", active_tasks, delta=None)
 
     with col4:
         total_cost = mesh_status.get("costs", {}).get("total_cost_today", 0)
-        st.metric(
-            "Today's Cost",
-            f"${total_cost:.2f}",
-            delta=None
-        )
+        st.metric("Today's Cost", f"${total_cost:.2f}", delta=None)
 
     # Agent status distribution
     col1, col2 = st.columns(2)
@@ -149,11 +136,13 @@ def render_overview_tab(mesh_coordinator, agent_registry, token_tracker):
         agent_status_data = mesh_status.get("agents", {})
 
         if agent_status_data:
-            status_df = pd.DataFrame([
-                {"Status": status.replace("_", " ").title(), "Count": count}
-                for status, count in agent_status_data.items()
-                if count > 0
-            ])
+            status_df = pd.DataFrame(
+                [
+                    {"Status": status.replace("_", " ").title(), "Count": count}
+                    for status, count in agent_status_data.items()
+                    if count > 0
+                ]
+            )
 
             if not status_df.empty:
                 fig = px.pie(
@@ -161,9 +150,9 @@ def render_overview_tab(mesh_coordinator, agent_registry, token_tracker):
                     values="Count",
                     names="Status",
                     title="Agent Status",
-                    color_discrete_sequence=px.colors.qualitative.Set3
+                    color_discrete_sequence=px.colors.qualitative.Set3,
                 )
-                fig.update_traces(textposition='inside', textinfo='percent+label')
+                fig.update_traces(textposition="inside", textinfo="percent+label")
                 st.plotly_chart(fig, use_container_width=True)
             else:
                 st.info("No active agents found")
@@ -173,11 +162,13 @@ def render_overview_tab(mesh_coordinator, agent_registry, token_tracker):
         capability_data = registry_status.get("agents_by_capability", {})
 
         if capability_data:
-            cap_df = pd.DataFrame([
-                {"Capability": cap.replace("_", " ").title(), "Agents": count}
-                for cap, count in capability_data.items()
-                if count > 0
-            ])
+            cap_df = pd.DataFrame(
+                [
+                    {"Capability": cap.replace("_", " ").title(), "Agents": count}
+                    for cap, count in capability_data.items()
+                    if count > 0
+                ]
+            )
 
             if not cap_df.empty:
                 fig = px.bar(
@@ -186,7 +177,7 @@ def render_overview_tab(mesh_coordinator, agent_registry, token_tracker):
                     y="Agents",
                     title="Agents by Capability",
                     color="Agents",
-                    color_continuous_scale="Blues"
+                    color_continuous_scale="Blues",
                 )
                 fig.update_xaxis(tickangle=45)
                 st.plotly_chart(fig, use_container_width=True)
@@ -200,27 +191,15 @@ def render_overview_tab(mesh_coordinator, agent_registry, token_tracker):
 
         with pcol1:
             success_rate = performance.get("average_success_rate", 0)
-            st.metric(
-                "Average Success Rate",
-                f"{success_rate:.1f}%",
-                delta=None
-            )
+            st.metric("Average Success Rate", f"{success_rate:.1f}%", delta=None)
 
         with pcol2:
             response_time = performance.get("average_response_time", 0)
-            st.metric(
-                "Avg Response Time",
-                f"{response_time:.2f}s",
-                delta=None
-            )
+            st.metric("Avg Response Time", f"{response_time:.2f}s", delta=None)
 
         with pcol3:
             utilization = performance.get("mesh_utilization", 0)
-            st.metric(
-                "Mesh Utilization",
-                f"{utilization:.1f}%",
-                delta=None
-            )
+            st.metric("Mesh Utilization", f"{utilization:.1f}%", delta=None)
 
     # Recent activity timeline
     st.subheader("Recent Activity")
@@ -242,6 +221,7 @@ def render_overview_tab(mesh_coordinator, agent_registry, token_tracker):
         else:
             st.warning(f"⚠️ **{event['Time']}** - {event['Event']}")
 
+
 def render_agents_tab(mesh_coordinator, agent_registry):
     """Render agents management tab"""
 
@@ -255,39 +235,32 @@ def render_agents_tab(mesh_coordinator, agent_registry):
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            status_filter = st.selectbox(
-                "Filter by Status",
-                ["All"] + [status.value for status in AgentStatus]
-            )
+            status_filter = st.selectbox("Filter by Status", ["All"] + [status.value for status in AgentStatus])
 
         with col2:
-            capability_filter = st.selectbox(
-                "Filter by Capability",
-                ["All"] + [cap.value for cap in AgentCapability]
-            )
+            capability_filter = st.selectbox("Filter by Capability", ["All"] + [cap.value for cap in AgentCapability])
 
         with col3:
-            agent_type_filter = st.selectbox(
-                "Filter by Type",
-                ["All", "Jorge Bots", "Services", "MCP Agents"]
-            )
+            agent_type_filter = st.selectbox("Filter by Type", ["All", "Jorge Bots", "Services", "MCP Agents"])
 
         # Agent details table
-        if hasattr(agent_registry, 'registered_agents') and agent_registry.registered_agents:
+        if hasattr(agent_registry, "registered_agents") and agent_registry.registered_agents:
             agent_data = []
 
             for agent_id, agent in agent_registry.registered_agents.items():
-                agent_data.append({
-                    "Agent ID": agent_id,
-                    "Name": agent.name,
-                    "Status": agent.status.value,
-                    "Capabilities": ", ".join([cap.value for cap in agent.capabilities]),
-                    "Current Tasks": f"{agent.current_tasks}/{agent.max_concurrent_tasks}",
-                    "Load %": f"{agent.load_factor:.1f}%",
-                    "Success Rate": f"{agent.metrics.success_rate:.1f}%",
-                    "Avg Response": f"{agent.metrics.average_response_time:.2f}s",
-                    "Cost/Token": f"${agent.cost_per_token:.6f}",
-                })
+                agent_data.append(
+                    {
+                        "Agent ID": agent_id,
+                        "Name": agent.name,
+                        "Status": agent.status.value,
+                        "Capabilities": ", ".join([cap.value for cap in agent.capabilities]),
+                        "Current Tasks": f"{agent.current_tasks}/{agent.max_concurrent_tasks}",
+                        "Load %": f"{agent.load_factor:.1f}%",
+                        "Success Rate": f"{agent.metrics.success_rate:.1f}%",
+                        "Avg Response": f"{agent.metrics.average_response_time:.2f}s",
+                        "Cost/Token": f"${agent.cost_per_token:.6f}",
+                    }
+                )
 
             df = pd.DataFrame(agent_data)
 
@@ -311,16 +284,11 @@ def render_agents_tab(mesh_coordinator, agent_registry):
             # Agent details expander
             if not df.empty:
                 st.subheader("Agent Details")
-                selected_agent = st.selectbox(
-                    "Select agent for details",
-                    df["Agent ID"].tolist()
-                )
+                selected_agent = st.selectbox("Select agent for details", df["Agent ID"].tolist())
 
                 if selected_agent:
                     try:
-                        agent_details = asyncio.run(
-                            mesh_coordinator.get_agent_details(selected_agent)
-                        )
+                        agent_details = asyncio.run(mesh_coordinator.get_agent_details(selected_agent))
 
                         if agent_details:
                             col1, col2 = st.columns(2)
@@ -346,6 +314,7 @@ def render_agents_tab(mesh_coordinator, agent_registry):
     except Exception as e:
         st.error(f"Error loading agent data: {e}")
 
+
 def render_tasks_tab(mesh_coordinator):
     """Render task management tab"""
 
@@ -361,33 +330,21 @@ def render_tasks_tab(mesh_coordinator):
                     "property_matching",
                     "conversation_analysis",
                     "followup_automation",
-                    "crm_operations"
-                ]
+                    "crm_operations",
+                ],
             )
 
-            priority = st.selectbox(
-                "Priority",
-                [p.name for p in TaskPriority]
-            )
+            priority = st.selectbox("Priority", [p.name for p in TaskPriority])
 
-            payload = st.text_area(
-                "Task Payload (JSON)",
-                value='{"example": "data"}',
-                height=100
-            )
+            payload = st.text_area("Task Payload (JSON)", value='{"example": "data"}', height=100)
 
-            max_cost = st.number_input(
-                "Max Cost ($)",
-                min_value=0.01,
-                max_value=10.0,
-                value=1.0,
-                step=0.01
-            )
+            max_cost = st.number_input("Max Cost ($)", min_value=0.01, max_value=10.0, value=1.0, step=0.01)
 
             if st.form_submit_button("Submit Task"):
                 try:
-                    from ghl_real_estate_ai.services.agent_mesh_coordinator import AgentTask
                     from uuid import uuid4
+
+                    from ghl_real_estate_ai.services.agent_mesh_coordinator import AgentTask
 
                     # Parse payload
                     task_payload = json.loads(payload)
@@ -402,7 +359,7 @@ def render_tasks_tab(mesh_coordinator):
                         created_at=datetime.now(),
                         deadline=None,
                         max_cost=max_cost,
-                        requester_id="dashboard_user"
+                        requester_id="dashboard_user",
                     )
 
                     # Submit task
@@ -417,19 +374,21 @@ def render_tasks_tab(mesh_coordinator):
 
     try:
         # Get active tasks from mesh coordinator
-        if hasattr(mesh_coordinator, 'active_tasks') and mesh_coordinator.active_tasks:
+        if hasattr(mesh_coordinator, "active_tasks") and mesh_coordinator.active_tasks:
             task_data = []
 
             for task_id, task in mesh_coordinator.active_tasks.items():
-                task_data.append({
-                    "Task ID": task_id[:8] + "...",  # Shortened for display
-                    "Type": task.task_type,
-                    "Priority": task.priority.name,
-                    "Assigned Agent": task.assigned_agent or "Pending",
-                    "Created": task.created_at.strftime("%H:%M:%S"),
-                    "Status": "In Progress" if task.started_at else "Queued",
-                    "Max Cost": f"${task.max_cost or 0:.2f}"
-                })
+                task_data.append(
+                    {
+                        "Task ID": task_id[:8] + "...",  # Shortened for display
+                        "Type": task.task_type,
+                        "Priority": task.priority.name,
+                        "Assigned Agent": task.assigned_agent or "Pending",
+                        "Created": task.created_at.strftime("%H:%M:%S"),
+                        "Status": "In Progress" if task.started_at else "Queued",
+                        "Max Cost": f"${task.max_cost or 0:.2f}",
+                    }
+                )
 
             if task_data:
                 st.dataframe(pd.DataFrame(task_data), use_container_width=True)
@@ -445,7 +404,7 @@ def render_tasks_tab(mesh_coordinator):
     st.subheader("Recent Completed Tasks")
 
     try:
-        if hasattr(mesh_coordinator, 'completed_tasks') and mesh_coordinator.completed_tasks:
+        if hasattr(mesh_coordinator, "completed_tasks") and mesh_coordinator.completed_tasks:
             completed_data = []
 
             # Get last 10 completed tasks
@@ -455,14 +414,16 @@ def render_tasks_tab(mesh_coordinator):
                 status = "Success" if not task.error else "Failed"
                 exec_time = task.execution_time or 0
 
-                completed_data.append({
-                    "Task ID": task_id[:8] + "...",
-                    "Type": task.task_type,
-                    "Agent": task.assigned_agent or "Unknown",
-                    "Status": status,
-                    "Execution Time": f"{exec_time:.2f}s",
-                    "Completed": task.completed_at.strftime("%H:%M:%S") if task.completed_at else "Unknown"
-                })
+                completed_data.append(
+                    {
+                        "Task ID": task_id[:8] + "...",
+                        "Type": task.task_type,
+                        "Agent": task.assigned_agent or "Unknown",
+                        "Status": status,
+                        "Execution Time": f"{exec_time:.2f}s",
+                        "Completed": task.completed_at.strftime("%H:%M:%S") if task.completed_at else "Unknown",
+                    }
+                )
 
             if completed_data:
                 st.dataframe(pd.DataFrame(completed_data), use_container_width=True)
@@ -473,6 +434,7 @@ def render_tasks_tab(mesh_coordinator):
 
     except Exception as e:
         st.error(f"Error loading completed tasks: {e}")
+
 
 def render_cost_tracking_tab(token_tracker):
     """Render cost tracking tab"""
@@ -489,24 +451,16 @@ def render_cost_tracking_tab(token_tracker):
         col1, col2, col3, col4 = st.columns(4)
 
         with col1:
-            st.metric(
-                "Today's Cost",
-                f"${today_cost:.2f}",
-                delta=f"+${today_cost * 0.15:.2f} vs yesterday"
-            )
+            st.metric("Today's Cost", f"${today_cost:.2f}", delta=f"+${today_cost * 0.15:.2f} vs yesterday")
 
         with col2:
-            st.metric(
-                "This Hour",
-                f"${today_cost / 24:.2f}",
-                delta=None
-            )
+            st.metric("This Hour", f"${today_cost / 24:.2f}", delta=None)
 
         with col3:
             st.metric(
                 "Projected Monthly",
                 f"${projected_monthly:.2f}",
-                delta=f"{(projected_monthly / budget_limit) * 100:.1f}% of budget"
+                delta=f"{(projected_monthly / budget_limit) * 100:.1f}% of budget",
             )
 
         with col4:
@@ -514,7 +468,7 @@ def render_cost_tracking_tab(token_tracker):
             st.metric(
                 "Budget Remaining",
                 f"${budget_remaining:.2f}",
-                delta=f"{(budget_remaining / budget_limit) * 100:.1f}% left"
+                delta=f"{(budget_remaining / budget_limit) * 100:.1f}% left",
             )
 
         # Cost breakdown chart
@@ -522,16 +476,10 @@ def render_cost_tracking_tab(token_tracker):
 
         with col1:
             st.subheader("Cost by Agent Type")
-            cost_by_type = {
-                "Jorge Bots": 8.50,
-                "Services": 2.30,
-                "MCP Agents": 1.65
-            }
+            cost_by_type = {"Jorge Bots": 8.50, "Services": 2.30, "MCP Agents": 1.65}
 
             fig = px.pie(
-                values=list(cost_by_type.values()),
-                names=list(cost_by_type.keys()),
-                title="Today's Cost Distribution"
+                values=list(cost_by_type.values()), names=list(cost_by_type.keys()), title="Today's Cost Distribution"
             )
             st.plotly_chart(fig, use_container_width=True)
 
@@ -541,18 +489,10 @@ def render_cost_tracking_tab(token_tracker):
             costs = [today_cost / 24 * (1 + (h % 8) * 0.2) for h in hours]
 
             fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=hours,
-                y=costs,
-                mode='lines+markers',
-                name='Hourly Cost',
-                line=dict(color='blue')
-            ))
-            fig.update_layout(
-                title="Cost Trend (24h)",
-                xaxis_title="Hour",
-                yaxis_title="Cost ($)"
+            fig.add_trace(
+                go.Scatter(x=hours, y=costs, mode="lines+markers", name="Hourly Cost", line=dict(color="blue"))
             )
+            fig.update_layout(title="Cost Trend (24h)", xaxis_title="Hour", yaxis_title="Cost ($)")
             st.plotly_chart(fig, use_container_width=True)
 
         # Budget alerts
@@ -577,6 +517,7 @@ def render_cost_tracking_tab(token_tracker):
     except Exception as e:
         st.error(f"Error loading cost data: {e}")
 
+
 def render_performance_tab(mesh_coordinator):
     """Render performance monitoring tab"""
 
@@ -587,32 +528,16 @@ def render_performance_tab(mesh_coordinator):
         col1, col2, col3, col4 = st.columns(4)
 
         with col1:
-            st.metric(
-                "System Response Time",
-                "2.3s",
-                delta="-0.5s vs last hour"
-            )
+            st.metric("System Response Time", "2.3s", delta="-0.5s vs last hour")
 
         with col2:
-            st.metric(
-                "Task Success Rate",
-                "94.2%",
-                delta="+1.8% vs yesterday"
-            )
+            st.metric("Task Success Rate", "94.2%", delta="+1.8% vs yesterday")
 
         with col3:
-            st.metric(
-                "Queue Processing",
-                "0.8s avg",
-                delta="-0.2s vs last hour"
-            )
+            st.metric("Queue Processing", "0.8s avg", delta="-0.2s vs last hour")
 
         with col4:
-            st.metric(
-                "Agent Availability",
-                "87.5%",
-                delta="+5.2% vs yesterday"
-            )
+            st.metric("Agent Availability", "87.5%", delta="+5.2% vs yesterday")
 
         # Performance charts
         col1, col2 = st.columns(2)
@@ -624,20 +549,15 @@ def render_performance_tab(mesh_coordinator):
                 "Property Matcher": 0.8,
                 "Conversation Intelligence": 1.2,
                 "Lead Lifecycle": 3.4,
-                "MCP GHL": 0.5
+                "MCP GHL": 0.5,
             }
 
-            df = pd.DataFrame([
-                {"Agent": agent, "Response Time (s)": time}
-                for agent, time in agent_response_times.items()
-            ])
+            df = pd.DataFrame(
+                [{"Agent": agent, "Response Time (s)": time} for agent, time in agent_response_times.items()]
+            )
 
             fig = px.bar(
-                df,
-                x="Agent",
-                y="Response Time (s)",
-                color="Response Time (s)",
-                color_continuous_scale="RdYlBu_r"
+                df, x="Agent", y="Response Time (s)", color="Response Time (s)", color_continuous_scale="RdYlBu_r"
             )
             fig.update_xaxis(tickangle=45)
             st.plotly_chart(fig, use_container_width=True)
@@ -648,17 +568,13 @@ def render_performance_tab(mesh_coordinator):
             processing_rate = [45, 52, 48, 61, 55, 58, 62, 59, 56, 64, 61, 58]
 
             fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=hours,
-                y=processing_rate,
-                mode='lines+markers',
-                name='Tasks/Hour',
-                line=dict(color='green')
-            ))
+            fig.add_trace(
+                go.Scatter(
+                    x=hours, y=processing_rate, mode="lines+markers", name="Tasks/Hour", line=dict(color="green")
+                )
+            )
             fig.update_layout(
-                title="Task Processing Rate (12h)",
-                xaxis_title="Hours Ago",
-                yaxis_title="Tasks Processed"
+                title="Task Processing Rate (12h)", xaxis_title="Hours Ago", yaxis_title="Tasks Processed"
             )
             st.plotly_chart(fig, use_container_width=True)
 
@@ -670,20 +586,20 @@ def render_performance_tab(mesh_coordinator):
                 "type": "success",
                 "title": "Progressive Skills Optimization",
                 "message": "68% token reduction achieved through progressive skills implementation",
-                "recommendation": "Continue using progressive skills for Jorge bot qualification tasks"
+                "recommendation": "Continue using progressive skills for Jorge bot qualification tasks",
             },
             {
                 "type": "warning",
                 "title": "Lead Lifecycle Agent Load",
                 "message": "Lead Lifecycle Bot showing higher than average response times",
-                "recommendation": "Consider adding a second instance during peak hours (2-6 PM)"
+                "recommendation": "Consider adding a second instance during peak hours (2-6 PM)",
             },
             {
                 "type": "info",
                 "title": "MCP Integration Efficiency",
                 "message": "MCP agents showing excellent cost-per-operation metrics",
-                "recommendation": "Expand MCP usage for routine CRM and data operations"
-            }
+                "recommendation": "Expand MCP usage for routine CRM and data operations",
+            },
         ]
 
         for insight in insights:
@@ -696,6 +612,7 @@ def render_performance_tab(mesh_coordinator):
 
     except Exception as e:
         st.error(f"Error loading performance data: {e}")
+
 
 def render_management_tab(mesh_coordinator, agent_registry):
     """Render mesh management tab"""
@@ -734,8 +651,7 @@ def render_management_tab(mesh_coordinator, agent_registry):
         st.write("**Emergency Controls**")
 
         emergency_reason = st.text_input(
-            "Emergency Shutdown Reason",
-            placeholder="Enter reason for emergency shutdown..."
+            "Emergency Shutdown Reason", placeholder="Enter reason for emergency shutdown..."
         )
 
         if st.button("🚨 EMERGENCY SHUTDOWN", type="primary"):
@@ -754,7 +670,7 @@ def render_management_tab(mesh_coordinator, agent_registry):
     with st.expander("View Mesh Configuration"):
         try:
             config_path = ".claude/agent-mesh/mesh-config.json"
-            with open(config_path, 'r') as f:
+            with open(config_path, "r") as f:
                 config = json.load(f)
 
             st.json(config)
@@ -781,6 +697,7 @@ def render_management_tab(mesh_coordinator, agent_registry):
 
     except Exception as e:
         st.error(f"Error loading system status: {e}")
+
 
 if __name__ == "__main__":
     agent_mesh_dashboard()

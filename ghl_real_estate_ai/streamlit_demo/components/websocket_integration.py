@@ -7,12 +7,14 @@ uses JavaScript injection for WebSocket communication and session state updates
 for dashboard reactivity.
 """
 
-import streamlit as st
 import asyncio
 import json
 import time
-from typing import Dict, Any, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+import streamlit as st
+
 
 def inject_websocket_client(websocket_url: str = "ws://localhost:8000/ws", debug: bool = False):
     """
@@ -239,64 +241,64 @@ def inject_websocket_client(websocket_url: str = "ws://localhost:8000/ws", debug
 
     st.markdown(websocket_js, unsafe_allow_html=True)
 
+
 def initialize_websocket_state():
     """Initialize WebSocket-related session state variables."""
 
     # Connection state
-    if 'ws_connection_status' not in st.session_state:
-        st.session_state.ws_connection_status = 'initializing'
+    if "ws_connection_status" not in st.session_state:
+        st.session_state.ws_connection_status = "initializing"
 
     # Event storage
-    if 'ws_events' not in st.session_state:
+    if "ws_events" not in st.session_state:
         st.session_state.ws_events = []
 
     # Last event time for triggering reloads
-    if 'ws_last_event_time' not in st.session_state:
+    if "ws_last_event_time" not in st.session_state:
         st.session_state.ws_last_event_time = 0
 
     # Event-specific states
-    if 'ws_seller_qualification_events' not in st.session_state:
+    if "ws_seller_qualification_events" not in st.session_state:
         st.session_state.ws_seller_qualification_events = []
 
-    if 'ws_buyer_qualification_events' not in st.session_state:
+    if "ws_buyer_qualification_events" not in st.session_state:
         st.session_state.ws_buyer_qualification_events = []
 
-    if 'ws_bot_status_events' not in st.session_state:
+    if "ws_bot_status_events" not in st.session_state:
         st.session_state.ws_bot_status_events = []
 
-    if 'ws_property_alert_events' not in st.session_state:
+    if "ws_property_alert_events" not in st.session_state:
         st.session_state.ws_property_alert_events = []
 
-    if 'ws_claude_events' not in st.session_state:
+    if "ws_claude_events" not in st.session_state:
         st.session_state.ws_claude_events = []
+
 
 def render_websocket_status_indicator():
     """Render WebSocket connection status indicator."""
 
-    status = st.session_state.get('ws_connection_status', 'disconnected')
-    events_count = len(st.session_state.get('ws_events', []))
+    status = st.session_state.get("ws_connection_status", "disconnected")
+    events_count = len(st.session_state.get("ws_events", []))
 
-    status_colors = {
-        'connected': '🟢',
-        'connecting': '🟡',
-        'disconnected': '🔴',
-        'error': '🔴',
-        'initializing': '🟡'
-    }
+    status_colors = {"connected": "🟢", "connecting": "🟡", "disconnected": "🔴", "error": "🔴", "initializing": "🟡"}
 
-    status_icon = status_colors.get(status, '⚪')
+    status_icon = status_colors.get(status, "⚪")
 
     with st.container():
         col1, col2, col3 = st.columns([1, 2, 1])
 
         with col2:
-            st.markdown(f"""
+            st.markdown(
+                f"""
                 <div style="text-align: center; padding: 0.5rem; background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
                     <span style="font-size: 0.8rem; color: #8B949E;">REAL-TIME STATUS</span><br>
                     <span style="font-size: 1rem;">{status_icon} {status.title()}</span>
-                    {f'<br><span style="font-size: 0.7rem; color: #8B949E;">{events_count} events</span>' if events_count > 0 else ''}
+                    {f'<br><span style="font-size: 0.7rem; color: #8B949E;">{events_count} events</span>' if events_count > 0 else ""}
                 </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
+
 
 def get_latest_events(event_type: Optional[str] = None, limit: int = 10) -> List[Dict[str, Any]]:
     """
@@ -312,21 +314,20 @@ def get_latest_events(event_type: Optional[str] = None, limit: int = 10) -> List
 
     # Try to get events from localStorage via JavaScript (fallback)
     # In a production app, you'd want a more robust state bridge
-    all_events = st.session_state.get('ws_events', [])
+    all_events = st.session_state.get("ws_events", [])
 
     if event_type:
-        filtered_events = [e for e in all_events if e.get('event_type') == event_type]
+        filtered_events = [e for e in all_events if e.get("event_type") == event_type]
     else:
         filtered_events = all_events
 
     # Sort by timestamp (newest first)
     sorted_events = sorted(
-        filtered_events,
-        key=lambda x: x.get('timestamp', x.get('client_timestamp', '')),
-        reverse=True
+        filtered_events, key=lambda x: x.get("timestamp", x.get("client_timestamp", "")), reverse=True
     )
 
     return sorted_events[:limit]
+
 
 def check_for_new_events() -> bool:
     """
@@ -335,14 +336,15 @@ def check_for_new_events() -> bool:
     Returns:
         True if new events are available
     """
-    current_time = st.session_state.get('ws_last_event_time', 0)
-    last_check = st.session_state.get('ws_last_check_time', 0)
+    current_time = st.session_state.get("ws_last_event_time", 0)
+    last_check = st.session_state.get("ws_last_check_time", 0)
 
     if current_time > last_check:
         st.session_state.ws_last_check_time = current_time
         return True
 
     return False
+
 
 def auto_refresh_on_events(refresh_interval: int = 2000):
     """
@@ -391,6 +393,7 @@ def auto_refresh_on_events(refresh_interval: int = 2000):
 
     st.markdown(auto_refresh_js, unsafe_allow_html=True)
 
+
 def render_event_debug_panel():
     """Render debug panel showing recent WebSocket events."""
 
@@ -401,13 +404,14 @@ def render_event_debug_panel():
 
         if events:
             for i, event in enumerate(events):
-                event_time = event.get('timestamp', event.get('client_timestamp', 'Unknown'))
-                event_type = event.get('event_type', 'unknown')
+                event_time = event.get("timestamp", event.get("client_timestamp", "Unknown"))
+                event_type = event.get("event_type", "unknown")
 
                 with st.sidebar.expander(f"{event_type} - {event_time}"[:30]):
                     st.json(event)
         else:
             st.sidebar.info("No events received yet")
+
 
 def setup_websocket_dashboard():
     """
@@ -432,36 +436,44 @@ def setup_websocket_dashboard():
     # Debug panel
     render_event_debug_panel()
 
+
 # Event-specific helper functions for dashboard components
+
 
 def get_seller_qualification_updates():
     """Get recent seller qualification events."""
-    return get_latest_events('jorge_qualification_progress', limit=5)
+    return get_latest_events("jorge_qualification_progress", limit=5)
+
 
 def get_buyer_qualification_updates():
     """Get recent buyer qualification events."""
-    return get_latest_events('buyer_qualification_complete', limit=5)
+    return get_latest_events("buyer_qualification_complete", limit=5)
+
 
 def get_bot_status_updates():
     """Get recent bot status events."""
-    return get_latest_events('bot_status_update', limit=10)
+    return get_latest_events("bot_status_update", limit=10)
+
 
 def get_property_alerts():
     """Get recent property alert events."""
-    return get_latest_events('property_alert', limit=5)
+    return get_latest_events("property_alert", limit=5)
+
 
 def get_claude_concierge_updates():
     """Get recent Claude concierge events."""
-    coaching_events = get_latest_events('coaching_opportunity', limit=3)
-    insight_events = get_latest_events('proactive_insight', limit=3)
+    coaching_events = get_latest_events("coaching_opportunity", limit=3)
+    insight_events = get_latest_events("proactive_insight", limit=3)
 
     # Combine and sort by timestamp
     all_events = coaching_events + insight_events
-    return sorted(all_events, key=lambda x: x.get('timestamp', ''), reverse=True)[:5]
+    return sorted(all_events, key=lambda x: x.get("timestamp", ""), reverse=True)[:5]
+
 
 def get_sms_compliance_updates():
     """Get recent SMS compliance events."""
-    return get_latest_events('sms_compliance', limit=5)
+    return get_latest_events("sms_compliance", limit=5)
+
 
 # Usage example in dashboard components:
 """

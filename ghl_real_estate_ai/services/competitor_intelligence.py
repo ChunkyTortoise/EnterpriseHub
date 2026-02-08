@@ -8,13 +8,14 @@ This service provides:
 4. Integration with alert and response systems
 """
 
-import re
 import asyncio
 import logging
-from typing import Dict, List, Optional, Tuple, Any, Union
+import re
 from dataclasses import dataclass
-from enum import Enum
 from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 # Temporarily disable spacy due to Python 3.14 compatibility issues
 # try:
 #     import spacy
@@ -31,6 +32,7 @@ Matcher = None
 
 try:
     from textblob import TextBlob
+
     HAS_TEXTBLOB = True
 except ImportError:
     HAS_TEXTBLOB = False
@@ -38,6 +40,7 @@ except ImportError:
 import pandas as pd
 
 from ghl_real_estate_ai.services.cache_service import CacheService
+
 # from ghl_real_estate_ai.ghl_utils.config import get_config_manager  # Not available
 
 
@@ -46,6 +49,7 @@ logger = logging.getLogger(__name__)
 
 class RiskLevel(Enum):
     """Risk level for competitive situations (int values enable .value ordering)"""
+
     LOW = 0
     MEDIUM = 1
     HIGH = 2
@@ -75,6 +79,7 @@ class RiskLevel(Enum):
 @dataclass
 class CompetitorMention:
     """Data structure for competitor mentions detected in conversations"""
+
     competitor_type: str
     competitor_name: Optional[str]
     mention_text: str
@@ -90,6 +95,7 @@ class CompetitorMention:
 @dataclass
 class CompetitiveAnalysis:
     """Complete competitive analysis for a conversation"""
+
     has_competitor_risk: bool
     risk_level: RiskLevel
     mentions: List[CompetitorMention]
@@ -158,7 +164,7 @@ class CompetitorIntelligenceService:
             {"LOWER": {"IN": ["working", "dealing", "talking", "meeting"]}},
             {"LOWER": "with", "OP": "?"},
             {"LOWER": {"IN": ["another", "a", "an", "my"]}, "OP": "?"},
-            {"LOWER": {"IN": ["agent", "realtor", "broker", "representative", "rep"]}}
+            {"LOWER": {"IN": ["agent", "realtor", "broker", "representative", "rep"]}},
         ]
         self._matcher.add("WORKING_WITH", [working_with_pattern])
 
@@ -167,7 +173,7 @@ class CompetitorIntelligenceService:
             {"LOWER": {"IN": ["already", "currently"]}},
             {"LOWER": {"IN": ["have", "got", "using", "work"]}},
             {"LOWER": {"IN": ["a", "an"]}, "OP": "?"},
-            {"LOWER": {"IN": ["agent", "realtor", "broker"]}}
+            {"LOWER": {"IN": ["agent", "realtor", "broker"]}},
         ]
         self._matcher.add("ALREADY_HAVE", [already_have_pattern])
 
@@ -189,58 +195,54 @@ class CompetitorIntelligenceService:
                 {
                     "pattern": r"(working with|dealing with|talking to|meeting with).{0,20}\b(agent|realtor|broker|representative)\b",
                     "weight": 0.8,
-                    "risk_level": RiskLevel.HIGH
+                    "risk_level": RiskLevel.HIGH,
                 },
                 {
                     "pattern": r"(already have|currently have|got an?|under contract with).{0,20}\b(agent|realtor|broker)\b",
                     "weight": 0.9,
-                    "risk_level": RiskLevel.CRITICAL
+                    "risk_level": RiskLevel.CRITICAL,
                 },
                 {
                     "pattern": r"\b(another|different|my other|my current|other)\b.{0,20}\b(agent|realtor|broker|company)\b",
                     "weight": 0.7,
-                    "risk_level": RiskLevel.MEDIUM
+                    "risk_level": RiskLevel.MEDIUM,
                 },
                 {
                     "pattern": r"\b(sign|signed|signing)\b.{0,20}\b(with them|with another|with her|with him|agreement)\b",
                     "weight": 0.9,
-                    "risk_level": RiskLevel.CRITICAL
-                }
+                    "risk_level": RiskLevel.CRITICAL,
+                },
             ],
             "indirect_indicators": [
                 {
                     "pattern": r"(shopping around|comparing.{0,20}agent|compare)",
                     "weight": 0.5,
-                    "risk_level": RiskLevel.MEDIUM
+                    "risk_level": RiskLevel.MEDIUM,
                 },
                 {
                     "pattern": r"(not ready to commit|still deciding|need to think)",
                     "weight": 0.4,
-                    "risk_level": RiskLevel.LOW
+                    "risk_level": RiskLevel.LOW,
                 },
                 {
                     "pattern": r"\bmight\b.{0,20}\b(look|other|option|elsewhere)\b",
                     "weight": 0.4,
-                    "risk_level": RiskLevel.LOW
-                }
+                    "risk_level": RiskLevel.LOW,
+                },
             ],
             "urgency_indicators": [
                 {
                     "pattern": r"\b(deadline|urgent|ASAP|immediately|closing soon|closing next)\b",
                     "weight": 0.6,
-                    "risk_level": RiskLevel.HIGH
+                    "risk_level": RiskLevel.HIGH,
                 },
                 {
                     "pattern": r"\b(other offers|multiple bids|time sensitive)\b",
                     "weight": 0.7,
-                    "risk_level": RiskLevel.HIGH
+                    "risk_level": RiskLevel.HIGH,
                 },
-                {
-                    "pattern": r"\bneed to decide\b",
-                    "weight": 0.5,
-                    "risk_level": RiskLevel.HIGH
-                }
-            ]
+                {"pattern": r"\bneed to decide\b", "weight": 0.5, "risk_level": RiskLevel.HIGH},
+            ],
         }
 
     def _load_rc_competitors(self) -> Dict[str, Dict]:
@@ -252,33 +254,33 @@ class CompetitorIntelligenceService:
                     "market_share": 0.28,
                     "strengths": ["brand recognition", "training program", "technology"],
                     "weaknesses": ["high agent turnover", "commission splits", "corporate culture"],
-                    "jorge_advantages": ["personal attention", "local expertise", "investor focus"]
+                    "jorge_advantages": ["personal attention", "local expertise", "investor focus"],
                 },
                 "remax": {
                     "names": ["remax", "re/max", "re max"],
                     "market_share": 0.18,
                     "strengths": ["global brand", "marketing support"],
                     "weaknesses": ["franchise fees", "less local focus"],
-                    "jorge_advantages": ["inland empire native knowledge", "ai integration", "logistics relocations"]
+                    "jorge_advantages": ["inland empire native knowledge", "ai integration", "logistics relocations"],
                 },
                 "coldwell_banker": {
                     "names": ["coldwell banker", "coldwell", "banker"],
                     "market_share": 0.12,
                     "strengths": ["luxury market", "established presence"],
                     "weaknesses": ["traditional approach", "slower adoption"],
-                    "jorge_advantages": ["modern technology", "faster response", "data-driven"]
-                }
+                    "jorge_advantages": ["modern technology", "faster response", "data-driven"],
+                },
             },
             "independent_agents": {
                 "high_volume_agents": {
                     "characteristics": ["established relationships", "referral networks"],
-                    "jorge_advantages": ["ai-powered insights", "realtime market data", "24/7 availability"]
+                    "jorge_advantages": ["ai-powered insights", "realtime market data", "24/7 availability"],
                 }
             },
             "discount_brokerages": {
                 "characteristics": ["lower fees", "limited service"],
-                "jorge_advantages": ["full service", "personalized attention", "proven results"]
-            }
+                "jorge_advantages": ["full service", "personalized attention", "proven results"],
+            },
         }
 
     def _load_risk_indicators(self) -> Dict[str, float]:
@@ -288,23 +290,25 @@ class CompetitorIntelligenceService:
                 "closing_soon": 0.9,
                 "under_contract": 0.95,
                 "looking_this_week": 0.8,
-                "no_timeline": 0.2
+                "no_timeline": 0.2,
             },
             "engagement_level": {
                 "first_contact": 0.3,
                 "multiple_conversations": 0.6,
                 "viewed_properties": 0.7,
-                "scheduled_showing": 0.8
+                "scheduled_showing": 0.8,
             },
             "competitor_relationship": {
                 "just_met": 0.4,
                 "working_together": 0.8,
                 "signed_agreement": 0.95,
-                "family_friend": 0.9
-            }
+                "family_friend": 0.9,
+            },
         }
 
-    async def analyze_conversation(self, message_text: str, conversation_history: List[Dict] = None) -> CompetitiveAnalysis:
+    async def analyze_conversation(
+        self, message_text: str, conversation_history: List[Dict] = None
+    ) -> CompetitiveAnalysis:
         """
         Analyze conversation for competitor mentions and competitive risk
 
@@ -345,7 +349,7 @@ class CompetitorIntelligenceService:
                 alert_required=overall_risk in [RiskLevel.HIGH, RiskLevel.CRITICAL],
                 escalation_needed=overall_risk == RiskLevel.CRITICAL,
                 recovery_strategies=recommendations.get("recovery_strategies", []),
-                confidence_score=self._calculate_confidence_score(mentions)
+                confidence_score=self._calculate_confidence_score(mentions),
             )
 
             # Cache result for 5 minutes
@@ -363,7 +367,7 @@ class CompetitorIntelligenceService:
                 alert_required=False,
                 escalation_needed=False,
                 recovery_strategies=[],
-                confidence_score=0.0
+                confidence_score=0.0,
             )
 
     async def _detect_competitor_mentions(self, text: str) -> List[CompetitorMention]:
@@ -416,7 +420,7 @@ class CompetitorIntelligenceService:
                 timestamp=datetime.now(),
                 patterns_matched=[label],
                 sentiment_score=0.0,
-                urgency_indicators=[]
+                urgency_indicators=[],
             )
             mentions.append(mention)
 
@@ -443,7 +447,7 @@ class CompetitorIntelligenceService:
                         timestamp=datetime.now(),
                         patterns_matched=[pattern],
                         sentiment_score=0.0,
-                        urgency_indicators=self._extract_urgency_indicators(text)
+                        urgency_indicators=self._extract_urgency_indicators(text),
                     )
                     mentions.append(mention)
 
@@ -469,7 +473,7 @@ class CompetitorIntelligenceService:
                                 timestamp=datetime.now(),
                                 patterns_matched=["named_competitor"],
                                 sentiment_score=0.0,
-                                urgency_indicators=self._extract_urgency_indicators(text)
+                                urgency_indicators=self._extract_urgency_indicators(text),
                             )
                             mentions.append(mention)
 
@@ -488,7 +492,7 @@ class CompetitorIntelligenceService:
         urgency_patterns = [
             r"\b(urgent|ASAP|immediately|deadline|closing soon)\b",
             r"\b(this week|today|tomorrow|right away)\b",
-            r"\b(time sensitive|running out of time|need to decide)\b"
+            r"\b(time sensitive|running out of time|need to decide)\b",
         ]
 
         indicators = []
@@ -503,7 +507,7 @@ class CompetitorIntelligenceService:
         risk_mapping = {
             "WORKING_WITH": RiskLevel.HIGH,
             "ALREADY_HAVE": RiskLevel.CRITICAL,
-            "COMPETITOR_NAME": RiskLevel.HIGH
+            "COMPETITOR_NAME": RiskLevel.HIGH,
         }
         return risk_mapping.get(pattern_label, RiskLevel.MEDIUM)
 
@@ -530,7 +534,7 @@ class CompetitorIntelligenceService:
                 timestamp=datetime.now(),
                 patterns_matched=["relationship_building"],
                 sentiment_score=0.0,
-                urgency_indicators=[]
+                urgency_indicators=[],
             )
             context_mentions.append(mention)
 
@@ -570,50 +574,49 @@ class CompetitorIntelligenceService:
         else:
             return RiskLevel.LOW
 
-    async def _generate_recommendations(self, mentions: List[CompetitorMention], risk_level: RiskLevel) -> Dict[str, List[str]]:
+    async def _generate_recommendations(
+        self, mentions: List[CompetitorMention], risk_level: RiskLevel
+    ) -> Dict[str, List[str]]:
         """Generate competitive response recommendations"""
-        recommendations = {
-            "responses": [],
-            "recovery_strategies": []
-        }
+        recommendations = {"responses": [], "recovery_strategies": []}
 
         if risk_level == RiskLevel.LOW:
             recommendations["responses"] = [
                 "I'd love to understand what you're looking for in an agent to make sure I'm the right fit.",
-                "What's most important to you in this process?"
+                "What's most important to you in this process?",
             ]
 
         elif risk_level == RiskLevel.MEDIUM:
             recommendations["responses"] = [
                 "I understand you're exploring your options - that's smart! Let me share what makes working with me different.",
-                "I'd love to show you how my approach could benefit your specific situation."
+                "I'd love to show you how my approach could benefit your specific situation.",
             ]
             recommendations["recovery_strategies"] = [
                 "Highlight unique value propositions",
                 "Share recent success stories",
-                "Offer immediate value (market analysis, property insights)"
+                "Offer immediate value (market analysis, property insights)",
             ]
 
         elif risk_level == RiskLevel.HIGH:
             recommendations["responses"] = [
                 "I respect that you're working with someone else. If that doesn't work out, I'm here to help.",
-                "Even if you have an agent, I'd love to provide a second opinion or market insights."
+                "Even if you have an agent, I'd love to provide a second opinion or market insights.",
             ]
             recommendations["recovery_strategies"] = [
                 "Position as backup/secondary resource",
                 "Offer specialized services",
-                "Maintain relationship for future opportunities"
+                "Maintain relationship for future opportunities",
             ]
 
         elif risk_level == RiskLevel.CRITICAL:
             recommendations["responses"] = [
                 "I understand you're committed to your current agent. I'm here if anything changes.",
-                "Would you be open to me staying in touch with market updates?"
+                "Would you be open to me staying in touch with market updates?",
             ]
             recommendations["recovery_strategies"] = [
                 "Immediate human intervention required",
                 "Jorge should personally reach out",
-                "Long-term nurturing strategy"
+                "Long-term nurturing strategy",
             ]
 
         return recommendations
@@ -625,8 +628,7 @@ class CompetitorIntelligenceService:
 
         # Weighted average of confidence scores
         total_weight = sum(mention.confidence_score for mention in mentions)
-        weighted_score = sum(mention.confidence_score * self._risk_weight(mention.risk_level)
-                           for mention in mentions)
+        weighted_score = sum(mention.confidence_score * self._risk_weight(mention.risk_level) for mention in mentions)
 
         if total_weight == 0:
             return 0.0
@@ -635,12 +637,7 @@ class CompetitorIntelligenceService:
 
     def _risk_weight(self, risk_level: RiskLevel) -> float:
         """Get weight multiplier for risk level"""
-        weights = {
-            RiskLevel.LOW: 0.5,
-            RiskLevel.MEDIUM: 0.7,
-            RiskLevel.HIGH: 0.9,
-            RiskLevel.CRITICAL: 1.0
-        }
+        weights = {RiskLevel.LOW: 0.5, RiskLevel.MEDIUM: 0.7, RiskLevel.HIGH: 0.9, RiskLevel.CRITICAL: 1.0}
         return weights.get(risk_level, 0.5)
 
     async def get_competitor_insights(self, competitor_name: str) -> Dict[str, Any]:
@@ -663,7 +660,7 @@ class CompetitorIntelligenceService:
                             "market_share": comp_data["market_share"],
                             "strengths": comp_data["strengths"],
                             "weaknesses": comp_data["weaknesses"],
-                            "jorge_advantages": comp_data["jorge_advantages"]
+                            "jorge_advantages": comp_data["jorge_advantages"],
                         }
                         break
 
@@ -674,7 +671,7 @@ class CompetitorIntelligenceService:
                 "market_share": 0.0,
                 "strengths": ["established presence"],
                 "weaknesses": ["unknown"],
-                "jorge_advantages": ["personalized service", "technology edge", "local expertise"]
+                "jorge_advantages": ["personalized service", "technology edge", "local expertise"],
             }
 
         # Cache for 1 hour
@@ -687,7 +684,7 @@ class CompetitorIntelligenceService:
             "lead_id": lead_id,
             "outcome": outcome,  # "won", "lost", "pending"
             "competitor_name": competitor_name,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         # Store for analytics and model improvement
@@ -699,6 +696,7 @@ class CompetitorIntelligenceService:
 
 # Singleton instance for global use
 _competitor_intelligence_instance = None
+
 
 def get_competitor_intelligence() -> CompetitorIntelligenceService:
     """Get singleton competitor intelligence service instance"""

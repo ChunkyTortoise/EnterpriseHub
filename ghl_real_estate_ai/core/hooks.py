@@ -1,14 +1,16 @@
 """
 Gemini Workflow Hooks System.
 
-Provides lifecycle hooks for the Agent system, allowing for 
+Provides lifecycle hooks for the Agent system, allowing for
 custom logic before/after LLM interactions and Tool execution.
 """
+
 import asyncio
 import inspect
-from typing import Callable, List, Optional, Any, Dict, Union, Awaitable
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Union
+
 
 class HookEvent(Enum):
     SESSION_START = "session_start"
@@ -18,18 +20,21 @@ class HookEvent(Enum):
     POST_TOOL_EXECUTION = "post_tool_execution"
     ON_ERROR = "on_error"
 
+
 @dataclass
 class HookContext:
     """Context passed to hooks."""
+
     event: HookEvent
     agent_name: str
     input_data: Optional[Any] = None
     output_data: Optional[Any] = None
     metadata: Optional[Dict[str, Any]] = None
 
+
 class HookManager:
     """Manages lifecycle hooks, supporting both sync and async callbacks."""
-    
+
     def __init__(self):
         self._hooks: Dict[HookEvent, List[Callable[[HookContext], Union[None, Awaitable[None]]]]] = {
             event: [] for event in HookEvent
@@ -69,12 +74,15 @@ class HookManager:
             except Exception as e:
                 print(f"Error in async hook {event.value}: {e}")
 
+
 # Global hook manager instance
 hooks = HookManager()
+
 
 # Example built-in hook: Audit Logging
 def audit_log_hook(ctx: HookContext):
     if ctx.event == HookEvent.POST_TOOL_EXECUTION:
         print(f"[AUDIT] Agent '{ctx.agent_name}' executed tool. Result size: {len(str(ctx.output_data))} chars")
+
 
 hooks.register(HookEvent.POST_TOOL_EXECUTION, audit_log_hook)

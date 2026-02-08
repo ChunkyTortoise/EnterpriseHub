@@ -5,20 +5,20 @@ Validates Bug #1 fix (add_documents uses add_chunks) and Bug #4 fix
 """
 
 import sys
-import pytest
+from typing import List
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
-from typing import List
 
-from src.core.types import DocumentChunk, Metadata, SearchResult
+import pytest
 from src.core.exceptions import RetrievalError
+from src.core.types import DocumentChunk, Metadata, SearchResult
 from src.retrieval.dense.dense_retriever_mock import MockDenseRetriever
 from src.vector_store.base import SearchOptions, VectorStoreConfig
-
 
 # ---------------------------------------------------------------------------
 # Shared fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def sample_chunks() -> List[DocumentChunk]:
@@ -49,8 +49,8 @@ def sample_chunks() -> List[DocumentChunk]:
 # MockDenseRetriever tests
 # ===========================================================================
 
-class TestMockDenseRetriever:
 
+class TestMockDenseRetriever:
     @pytest.mark.asyncio
     async def test_initialize(self):
         retriever = MockDenseRetriever()
@@ -141,10 +141,12 @@ class TestMockDenseRetriever:
 # not be available in all environments.  We mock the heavy imports so we can
 # test the *logic* of add_documents / search without needing a real ChromaDB.
 
+
 def _import_dense_retriever():
     """Lazily import DenseRetriever, mocking chromadb if needed."""
     try:
         from src.retrieval.dense.dense_retriever import DenseRetriever
+
         return DenseRetriever
     except (ImportError, Exception):
         # Patch chromadb so the module can be imported
@@ -159,18 +161,23 @@ def _import_dense_retriever():
         # Also patch pydantic settings if needed
         mock_settings_mod = MagicMock()
 
-        with patch.dict(sys.modules, {
-            "chromadb": mock_chromadb,
-            "chromadb.config": mock_chromadb.config,
-            "chromadb.api.models.Collection": MagicMock(),
-        }):
+        with patch.dict(
+            sys.modules,
+            {
+                "chromadb": mock_chromadb,
+                "chromadb.config": mock_chromadb.config,
+                "chromadb.api.models.Collection": MagicMock(),
+            },
+        ):
             # Force re-import
             import importlib
+
             if "src.vector_store.chroma_store" in sys.modules:
                 importlib.reload(sys.modules["src.vector_store.chroma_store"])
             if "src.retrieval.dense.dense_retriever" in sys.modules:
                 importlib.reload(sys.modules["src.retrieval.dense.dense_retriever"])
             from src.retrieval.dense.dense_retriever import DenseRetriever
+
             return DenseRetriever
 
 
@@ -196,9 +203,7 @@ class TestDenseRetriever:
 
         # Mock embedding provider
         mock_embed_provider = AsyncMock()
-        mock_embed_provider.embed = AsyncMock(
-            return_value=[[0.1] * 1536 for _ in sample_chunks]
-        )
+        mock_embed_provider.embed = AsyncMock(return_value=[[0.1] * 1536 for _ in sample_chunks])
 
         # Mock vector store
         mock_vector_store = AsyncMock()
@@ -231,9 +236,7 @@ class TestDenseRetriever:
         retriever._document_count = 0
 
         mock_embed_provider = AsyncMock()
-        mock_embed_provider.embed = AsyncMock(
-            return_value=[[0.1] * 1536]
-        )
+        mock_embed_provider.embed = AsyncMock(return_value=[[0.1] * 1536])
 
         expected_result = SearchResult(
             chunk=sample_chunks[0],

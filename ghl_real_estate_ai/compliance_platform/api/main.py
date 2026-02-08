@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+
 from .router import router as compliance_router
 from .webhooks import router as webhooks_router
 
@@ -12,7 +13,7 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Adjust for production
+    allow_origins=["*"],  # Adjust for production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -22,15 +23,18 @@ app.add_middleware(
 app.include_router(compliance_router)
 app.include_router(webhooks_router)
 
+
 @app.on_event("startup")
 async def startup_event():
     from ..database.database import init_db
+
     await init_db()
+
 
 @app.get("/")
 async def root():
     return {
         "message": "Enterprise AI Compliance Platform API is running",
         "docs": "/docs",
-        "health": "/api/v1/compliance/health"
+        "health": "/api/v1/compliance/health",
     }

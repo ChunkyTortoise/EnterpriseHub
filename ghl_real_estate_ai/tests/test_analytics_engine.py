@@ -9,28 +9,31 @@ Validates:
 - Topic/keyword distribution
 - Performance overhead (<50ms target)
 """
-import pytest
+
 import asyncio
-import time
 import json
-from pathlib import Path
-from datetime import datetime, timedelta
-from unittest.mock import MagicMock
 
 # Add project root to path
 import sys
+import time
+from datetime import datetime, timedelta
+from pathlib import Path
+from unittest.mock import MagicMock
+
+import pytest
+
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from ghl_real_estate_ai.services.analytics_engine import (
     AnalyticsEngine,
-    MetricsCollector,
-    ConversionTracker,
-    ResponseTimeAnalyzer,
     ComplianceMonitor,
-    TopicDistributionAnalyzer,
     ConversationMetrics,
-    ConversionFunnel
+    ConversionFunnel,
+    ConversionTracker,
+    MetricsCollector,
+    ResponseTimeAnalyzer,
+    TopicDistributionAnalyzer,
 )
 
 
@@ -62,7 +65,7 @@ class TestMetricsCollector:
             "created_at": datetime.utcnow().isoformat(),
             "conversation_history": [{"role": "user", "content": "Hi"}],
             "extracted_preferences": {"pathway": "wholesale"},
-            "is_returning_lead": False
+            "is_returning_lead": False,
         }
 
         metrics = await metrics_collector.record_conversation_event(
@@ -74,7 +77,7 @@ class TestMetricsCollector:
             response="Great! What's your budget?",
             response_time_ms=250.5,
             context=context,
-            appointment_scheduled=False
+            appointment_scheduled=False,
         )
 
         assert metrics.contact_id == "c123"
@@ -90,10 +93,7 @@ class TestMetricsCollector:
     @pytest.mark.asyncio
     async def test_keyword_extraction(self, metrics_collector):
         """Test keyword extraction from messages."""
-        context = {
-            "created_at": datetime.utcnow().isoformat(),
-            "conversation_history": []
-        }
+        context = {"created_at": datetime.utcnow().isoformat(), "conversation_history": []}
 
         # Test budget keyword
         metrics = await metrics_collector.record_conversation_event(
@@ -104,7 +104,7 @@ class TestMetricsCollector:
             message="My budget is $500,000",
             response="Got it!",
             response_time_ms=100,
-            context=context
+            context=context,
         )
 
         assert "budget" in metrics.keywords_detected
@@ -118,7 +118,7 @@ class TestMetricsCollector:
             message="I want a home in the Austin area",
             response="Great area!",
             response_time_ms=100,
-            context=context
+            context=context,
         )
 
         assert "location" in metrics.keywords_detected
@@ -131,7 +131,7 @@ class TestMetricsCollector:
             message="I need to move ASAP",
             response="Understood!",
             response_time_ms=100,
-            context=context
+            context=context,
         )
 
         assert "timeline" in metrics.keywords_detected
@@ -139,10 +139,7 @@ class TestMetricsCollector:
     @pytest.mark.asyncio
     async def test_topic_classification(self, metrics_collector):
         """Test topic classification."""
-        context = {
-            "created_at": datetime.utcnow().isoformat(),
-            "conversation_history": []
-        }
+        context = {"created_at": datetime.utcnow().isoformat(), "conversation_history": []}
 
         # Test buyer topic
         metrics = await metrics_collector.record_conversation_event(
@@ -153,7 +150,7 @@ class TestMetricsCollector:
             message="I'm looking to buy a house",
             response="Let me help!",
             response_time_ms=100,
-            context=context
+            context=context,
         )
 
         assert "buyer" in metrics.topics
@@ -167,7 +164,7 @@ class TestMetricsCollector:
             message="I need to sell my home quickly",
             response="I can help!",
             response_time_ms=100,
-            context=context
+            context=context,
         )
 
         assert "seller" in metrics.topics
@@ -181,7 +178,7 @@ class TestMetricsCollector:
             message="Looking for a cash offer, sell as-is",
             response="We can do that!",
             response_time_ms=100,
-            context=context
+            context=context,
         )
 
         assert "wholesale" in metrics.topics
@@ -189,10 +186,7 @@ class TestMetricsCollector:
     @pytest.mark.asyncio
     async def test_sms_compliance_check(self, metrics_collector):
         """Test SMS compliance detection."""
-        context = {
-            "created_at": datetime.utcnow().isoformat(),
-            "conversation_history": []
-        }
+        context = {"created_at": datetime.utcnow().isoformat(), "conversation_history": []}
 
         # Compliant message (under 160 chars)
         metrics = await metrics_collector.record_conversation_event(
@@ -203,7 +197,7 @@ class TestMetricsCollector:
             message="Test",
             response="Short response",
             response_time_ms=100,
-            context=context
+            context=context,
         )
 
         assert metrics.sms_compliant
@@ -219,7 +213,7 @@ class TestMetricsCollector:
             message="Test",
             response=long_response,
             response_time_ms=100,
-            context=context
+            context=context,
         )
 
         assert not metrics.sms_compliant
@@ -235,18 +229,13 @@ class TestMetricsCollector:
         assert professional_keywords >= 0.9
 
         # Casual tone should score lower
-        casual_keywords = metrics_collector._analyze_tone(
-            "lol omg haha that's crazy!!! btw idk"
-        )
+        casual_keywords = metrics_collector._analyze_tone("lol omg haha that's crazy!!! btw idk")
         assert casual_keywords < 0.7
 
     @pytest.mark.asyncio
     async def test_metrics_persistence(self, metrics_collector):
         """Test that metrics persist to disk."""
-        context = {
-            "created_at": datetime.utcnow().isoformat(),
-            "conversation_history": []
-        }
+        context = {"created_at": datetime.utcnow().isoformat(), "conversation_history": []}
 
         # Record metric
         await metrics_collector.record_conversation_event(
@@ -257,7 +246,7 @@ class TestMetricsCollector:
             message="Test message",
             response="Test response",
             response_time_ms=100,
-            context=context
+            context=context,
         )
 
         # Force flush
@@ -278,10 +267,7 @@ class TestMetricsCollector:
     @pytest.mark.asyncio
     async def test_get_metrics(self, metrics_collector):
         """Test retrieving metrics."""
-        context = {
-            "created_at": datetime.utcnow().isoformat(),
-            "conversation_history": []
-        }
+        context = {"created_at": datetime.utcnow().isoformat(), "conversation_history": []}
 
         # Record multiple metrics
         for i in range(5):
@@ -293,7 +279,7 @@ class TestMetricsCollector:
                 message=f"Message {i}",
                 response=f"Response {i}",
                 response_time_ms=100 + (i * 10),
-                context=context
+                context=context,
             )
 
         # Retrieve metrics
@@ -310,10 +296,7 @@ class TestConversionTracker:
     @pytest.mark.asyncio
     async def test_calculate_funnel(self, metrics_collector):
         """Test conversion funnel calculation."""
-        context = {
-            "created_at": datetime.utcnow().isoformat(),
-            "conversation_history": []
-        }
+        context = {"created_at": datetime.utcnow().isoformat(), "conversation_history": []}
 
         # Create leads at different stages
         # Cold leads
@@ -326,7 +309,7 @@ class TestConversionTracker:
                 message="Test",
                 response="Response",
                 response_time_ms=100,
-                context=context
+                context=context,
             )
 
         # Warm leads
@@ -339,7 +322,7 @@ class TestConversionTracker:
                 message="Test",
                 response="Response",
                 response_time_ms=100,
-                context=context
+                context=context,
             )
 
         # Hot leads
@@ -353,7 +336,7 @@ class TestConversionTracker:
                 response="Response",
                 response_time_ms=100,
                 context=context,
-                appointment_scheduled=(i < 2)  # 2 out of 3 scheduled
+                appointment_scheduled=(i < 2),  # 2 out of 3 scheduled
             )
 
         # Calculate funnel
@@ -367,7 +350,7 @@ class TestConversionTracker:
         assert funnel.appointments_scheduled == 2
 
         # Check conversion rates
-        assert funnel.hot_to_appointment_rate == pytest.approx(2/3, rel=0.01)
+        assert funnel.hot_to_appointment_rate == pytest.approx(2 / 3, rel=0.01)
 
     @pytest.mark.asyncio
     async def test_empty_funnel(self, metrics_collector):
@@ -387,10 +370,7 @@ class TestResponseTimeAnalyzer:
     @pytest.mark.asyncio
     async def test_analyze_response_times(self, metrics_collector):
         """Test response time analysis."""
-        context = {
-            "created_at": datetime.utcnow().isoformat(),
-            "conversation_history": []
-        }
+        context = {"created_at": datetime.utcnow().isoformat(), "conversation_history": []}
 
         # Record metrics with varying response times
         response_times = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
@@ -404,7 +384,7 @@ class TestResponseTimeAnalyzer:
                 message="Test",
                 response="Response",
                 response_time_ms=rt,
-                context=context
+                context=context,
             )
 
         # Analyze
@@ -425,10 +405,7 @@ class TestResponseTimeAnalyzer:
     @pytest.mark.asyncio
     async def test_response_times_by_classification(self, metrics_collector):
         """Test response time breakdown by lead classification."""
-        context = {
-            "created_at": datetime.utcnow().isoformat(),
-            "conversation_history": []
-        }
+        context = {"created_at": datetime.utcnow().isoformat(), "conversation_history": []}
 
         # Cold leads - slower response
         for i in range(5):
@@ -440,7 +417,7 @@ class TestResponseTimeAnalyzer:
                 message="Test",
                 response="Response",
                 response_time_ms=500,
-                context=context
+                context=context,
             )
 
         # Hot leads - faster response
@@ -453,7 +430,7 @@ class TestResponseTimeAnalyzer:
                 message="Test",
                 response="Response",
                 response_time_ms=200,
-                context=context
+                context=context,
             )
 
         # Analyze
@@ -475,10 +452,7 @@ class TestComplianceMonitor:
     @pytest.mark.asyncio
     async def test_check_compliance(self, metrics_collector):
         """Test compliance checking."""
-        context = {
-            "created_at": datetime.utcnow().isoformat(),
-            "conversation_history": []
-        }
+        context = {"created_at": datetime.utcnow().isoformat(), "conversation_history": []}
 
         # Compliant messages
         for i in range(8):
@@ -490,7 +464,7 @@ class TestComplianceMonitor:
                 message="Test",
                 response="Short response",  # Under 160 chars
                 response_time_ms=100,
-                context=context
+                context=context,
             )
 
         # Non-compliant messages
@@ -503,7 +477,7 @@ class TestComplianceMonitor:
                 message="Test",
                 response="A" * 200,  # Over 160 chars
                 response_time_ms=100,
-                context=context
+                context=context,
             )
 
         # Check compliance
@@ -519,10 +493,7 @@ class TestComplianceMonitor:
     @pytest.mark.asyncio
     async def test_compliance_violations(self, metrics_collector):
         """Test compliance violation tracking."""
-        context = {
-            "created_at": datetime.utcnow().isoformat(),
-            "conversation_history": []
-        }
+        context = {"created_at": datetime.utcnow().isoformat(), "conversation_history": []}
 
         # Record violation
         await metrics_collector.record_conversation_event(
@@ -533,7 +504,7 @@ class TestComplianceMonitor:
             message="Test",
             response="A" * 250,  # 250 chars
             response_time_ms=100,
-            context=context
+            context=context,
         )
 
         # Check violations
@@ -555,10 +526,7 @@ class TestTopicDistributionAnalyzer:
     @pytest.mark.asyncio
     async def test_analyze_topics(self, metrics_collector):
         """Test topic distribution analysis."""
-        context = {
-            "created_at": datetime.utcnow().isoformat(),
-            "conversation_history": []
-        }
+        context = {"created_at": datetime.utcnow().isoformat(), "conversation_history": []}
 
         # Budget-related messages
         for i in range(5):
@@ -570,7 +538,7 @@ class TestTopicDistributionAnalyzer:
                 message="What's my budget range?",
                 response="Tell me more",
                 response_time_ms=100,
-                context=context
+                context=context,
             )
 
         # Location-related messages
@@ -583,7 +551,7 @@ class TestTopicDistributionAnalyzer:
                 message="I want a house in the Austin area",
                 response="Great area!",
                 response_time_ms=100,
-                context=context
+                context=context,
             )
         # Analyze
         analyzer = TopicDistributionAnalyzer(metrics_collector)
@@ -607,13 +575,13 @@ class TestTopicDistributionAnalyzer:
         context_wholesale = {
             "created_at": datetime.utcnow().isoformat(),
             "conversation_history": [],
-            "extracted_preferences": {"pathway": "wholesale"}
+            "extracted_preferences": {"pathway": "wholesale"},
         }
 
         context_listing = {
             "created_at": datetime.utcnow().isoformat(),
             "conversation_history": [],
-            "extracted_preferences": {"pathway": "listing"}
+            "extracted_preferences": {"pathway": "listing"},
         }
 
         # Wholesale contacts
@@ -626,7 +594,7 @@ class TestTopicDistributionAnalyzer:
                 message="Test",
                 response="Response",
                 response_time_ms=100,
-                context=context_wholesale
+                context=context_wholesale,
             )
 
         # Listing contacts
@@ -639,7 +607,7 @@ class TestTopicDistributionAnalyzer:
                 message="Test",
                 response="Response",
                 response_time_ms=100,
-                context=context_listing
+                context=context_listing,
             )
 
         # Analyze
@@ -658,10 +626,7 @@ class TestAnalyticsEngine:
     @pytest.mark.asyncio
     async def test_record_event(self, analytics_engine):
         """Test recording event through engine."""
-        context = {
-            "created_at": datetime.utcnow().isoformat(),
-            "conversation_history": []
-        }
+        context = {"created_at": datetime.utcnow().isoformat(), "conversation_history": []}
 
         metrics = await analytics_engine.record_event(
             contact_id="c123",
@@ -671,7 +636,7 @@ class TestAnalyticsEngine:
             message="I'm looking for a home",
             response="I can help!",
             response_time_ms=250.5,
-            context=context
+            context=context,
         )
 
         assert metrics.contact_id == "c123"
@@ -680,10 +645,7 @@ class TestAnalyticsEngine:
     @pytest.mark.asyncio
     async def test_get_comprehensive_report(self, analytics_engine):
         """Test comprehensive report generation."""
-        context = {
-            "created_at": datetime.utcnow().isoformat(),
-            "conversation_history": []
-        }
+        context = {"created_at": datetime.utcnow().isoformat(), "conversation_history": []}
 
         # Record some events
         for i in range(10):
@@ -695,7 +657,7 @@ class TestAnalyticsEngine:
                 message=f"Looking for a home with budget $500k",
                 response="Great! Let me help you.",
                 response_time_ms=100 + (i * 10),
-                context=context
+                context=context,
             )
 
         # Get report
@@ -712,16 +674,10 @@ class TestAnalyticsEngine:
     @pytest.mark.asyncio
     async def test_ab_test_tracking(self, analytics_engine):
         """Test A/B test experiment tracking."""
-        context = {
-            "created_at": datetime.utcnow().isoformat(),
-            "conversation_history": []
-        }
+        context = {"created_at": datetime.utcnow().isoformat(), "conversation_history": []}
 
         # Record event with experiment data
-        experiment_data = {
-            "experiment_id": "exp_001",
-            "variant": "a"
-        }
+        experiment_data = {"experiment_id": "exp_001", "variant": "a"}
 
         metrics = await analytics_engine.record_event(
             contact_id="c123",
@@ -732,7 +688,7 @@ class TestAnalyticsEngine:
             response="Response",
             response_time_ms=100,
             context=context,
-            experiment_data=experiment_data
+            experiment_data=experiment_data,
         )
 
         assert metrics.experiment_id == "exp_001"
@@ -745,10 +701,7 @@ class TestPerformance:
     @pytest.mark.asyncio
     async def test_collection_performance(self, analytics_engine):
         """Test that metrics collection is under 50ms."""
-        context = {
-            "created_at": datetime.utcnow().isoformat(),
-            "conversation_history": []
-        }
+        context = {"created_at": datetime.utcnow().isoformat(), "conversation_history": []}
 
         # Measure collection time
         start_time = time.time()
@@ -761,7 +714,7 @@ class TestPerformance:
             message="I'm looking for a 3-bedroom home in Austin with a budget of $500,000",
             response="Great! I can help you find the perfect home. What's your timeline?",
             response_time_ms=250,
-            context=context
+            context=context,
         )
 
         collection_time_ms = (time.time() - start_time) * 1000
@@ -772,10 +725,7 @@ class TestPerformance:
     @pytest.mark.asyncio
     async def test_bulk_collection_performance(self, analytics_engine):
         """Test performance with bulk operations."""
-        context = {
-            "created_at": datetime.utcnow().isoformat(),
-            "conversation_history": []
-        }
+        context = {"created_at": datetime.utcnow().isoformat(), "conversation_history": []}
 
         # Collect 100 metrics
         start_time = time.time()
@@ -789,7 +739,7 @@ class TestPerformance:
                 message="Test message",
                 response="Test response",
                 response_time_ms=100,
-                context=context
+                context=context,
             )
 
         total_time_ms = (time.time() - start_time) * 1000
@@ -805,10 +755,7 @@ class TestEdgeCases:
     @pytest.mark.asyncio
     async def test_empty_message(self, analytics_engine):
         """Test handling of empty messages."""
-        context = {
-            "created_at": datetime.utcnow().isoformat(),
-            "conversation_history": []
-        }
+        context = {"created_at": datetime.utcnow().isoformat(), "conversation_history": []}
 
         metrics = await analytics_engine.record_event(
             contact_id="c123",
@@ -818,7 +765,7 @@ class TestEdgeCases:
             message="",
             response="",
             response_time_ms=100,
-            context=context
+            context=context,
         )
 
         assert metrics is not None
@@ -839,7 +786,7 @@ class TestEdgeCases:
             message="Test",
             response="Response",
             response_time_ms=100,
-            context=context
+            context=context,
         )
 
         assert metrics is not None
@@ -848,10 +795,7 @@ class TestEdgeCases:
     @pytest.mark.asyncio
     async def test_date_range_retrieval(self, analytics_engine):
         """Test retrieving metrics across date range."""
-        context = {
-            "created_at": datetime.utcnow().isoformat(),
-            "conversation_history": []
-        }
+        context = {"created_at": datetime.utcnow().isoformat(), "conversation_history": []}
 
         # Record event
         await analytics_engine.record_event(
@@ -862,7 +806,7 @@ class TestEdgeCases:
             message="Test",
             response="Response",
             response_time_ms=100,
-            context=context
+            context=context,
         )
 
         # Get metrics for yesterday through tomorrow

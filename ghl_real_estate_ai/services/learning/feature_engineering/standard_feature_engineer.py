@@ -6,15 +6,21 @@ Provides comprehensive feature extraction for property, behavior, and contextual
 """
 
 import asyncio
-import numpy as np
-from typing import Dict, List, Optional, Any, Tuple
-from datetime import datetime, timedelta
-from collections import defaultdict, Counter
 import logging
+from collections import Counter, defaultdict
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
 
 from ..interfaces import (
-    IFeatureEngineer, IBehaviorTracker, BehavioralEvent,
-    FeatureVector, EventType, FeatureType, FeatureExtractionError
+    BehavioralEvent,
+    EventType,
+    FeatureExtractionError,
+    FeatureType,
+    FeatureVector,
+    IBehaviorTracker,
+    IFeatureEngineer,
 )
 
 logger = logging.getLogger(__name__)
@@ -43,20 +49,16 @@ class StandardFeatureEngineer(IFeatureEngineer):
 
         # Behavioral pattern detection
         self.pattern_window_hours = self.config.get("pattern_window_hours", 24)
-        self.engagement_score_weights = self.config.get("engagement_score_weights", {
-            "view": 1.0,
-            "like": 2.0,
-            "save": 3.0,
-            "share": 2.5,
-            "booking": 5.0
-        })
+        self.engagement_score_weights = self.config.get(
+            "engagement_score_weights", {"view": 1.0, "like": 2.0, "save": 3.0, "share": 2.5, "booking": 5.0}
+        )
 
         # Statistical tracking
         self.stats = {
             "features_extracted": 0,
             "feature_cache_hits": 0,
             "extraction_errors": 0,
-            "processing_time_ms": []
+            "processing_time_ms": [],
         }
 
         # Feature cache for performance
@@ -64,11 +66,7 @@ class StandardFeatureEngineer(IFeatureEngineer):
         self._cache_ttl_minutes = self.config.get("cache_ttl_minutes", 15)
 
     async def extract_features(
-        self,
-        entity_id: str,
-        entity_type: str,
-        events: List[BehavioralEvent],
-        context: Optional[Dict[str, Any]] = None
+        self, entity_id: str, entity_type: str, events: List[BehavioralEvent], context: Optional[Dict[str, Any]] = None
     ) -> FeatureVector:
         """Extract comprehensive feature vector for entity"""
 
@@ -98,11 +96,7 @@ class StandardFeatureEngineer(IFeatureEngineer):
             temporal_features = await self._extract_temporal_features(filtered_events, context)
 
             # Combine all features
-            all_numerical = {
-                **numerical_features,
-                **behavioral_features,
-                **temporal_features
-            }
+            all_numerical = {**numerical_features, **behavioral_features, **temporal_features}
 
             # Normalize if configured
             if self.normalize_features:
@@ -120,8 +114,8 @@ class StandardFeatureEngineer(IFeatureEngineer):
                     "event_count": len(filtered_events),
                     "lookback_days": self.lookback_days,
                     "processing_time_ms": (datetime.now() - start_time).total_seconds() * 1000,
-                    "feature_extraction_version": "1.0.0"
-                }
+                    "feature_extraction_version": "1.0.0",
+                },
             )
 
             # Cache the result
@@ -142,7 +136,7 @@ class StandardFeatureEngineer(IFeatureEngineer):
     async def extract_features_batch(
         self,
         entities: List[Tuple[str, str]],  # (entity_id, entity_type) pairs
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[Dict[str, Any]] = None,
     ) -> List[FeatureVector]:
         """Extract features for multiple entities efficiently"""
 
@@ -171,9 +165,7 @@ class StandardFeatureEngineer(IFeatureEngineer):
         return feature_vectors
 
     async def _extract_numerical_features(
-        self,
-        events: List[BehavioralEvent],
-        context: Optional[Dict[str, Any]]
+        self, events: List[BehavioralEvent], context: Optional[Dict[str, Any]]
     ) -> Dict[str, float]:
         """Extract numerical features from events"""
 
@@ -235,9 +227,7 @@ class StandardFeatureEngineer(IFeatureEngineer):
         return features
 
     async def _extract_categorical_features(
-        self,
-        events: List[BehavioralEvent],
-        context: Optional[Dict[str, Any]]
+        self, events: List[BehavioralEvent], context: Optional[Dict[str, Any]]
     ) -> Dict[str, str]:
         """Extract categorical features from events"""
 
@@ -250,8 +240,7 @@ class StandardFeatureEngineer(IFeatureEngineer):
             features["primary_event_type"] = most_common_event.value
 
         # Device preferences
-        devices = [e.event_data.get("device_type") for e in events
-                  if e.event_data and "device_type" in e.event_data]
+        devices = [e.event_data.get("device_type") for e in events if e.event_data and "device_type" in e.event_data]
         if devices:
             device_counts = Counter(devices)
             features["preferred_device"] = device_counts.most_common(1)[0][0]
@@ -284,9 +273,7 @@ class StandardFeatureEngineer(IFeatureEngineer):
         return features
 
     async def _extract_behavioral_features(
-        self,
-        events: List[BehavioralEvent],
-        context: Optional[Dict[str, Any]]
+        self, events: List[BehavioralEvent], context: Optional[Dict[str, Any]]
     ) -> Dict[str, float]:
         """Extract behavioral pattern features"""
 
@@ -340,9 +327,7 @@ class StandardFeatureEngineer(IFeatureEngineer):
         return features
 
     async def _extract_temporal_features(
-        self,
-        events: List[BehavioralEvent],
-        context: Optional[Dict[str, Any]]
+        self, events: List[BehavioralEvent], context: Optional[Dict[str, Any]]
     ) -> Dict[str, float]:
         """Extract time-based features"""
 
@@ -385,7 +370,7 @@ class StandardFeatureEngineer(IFeatureEngineer):
             EventType.BOOKING_REQUEST: 5.0,
             EventType.BOOKING_COMPLETED: 7.0,
             EventType.SEARCH_QUERY: 1.5,
-            EventType.FILTER_APPLIED: 1.2
+            EventType.FILTER_APPLIED: 1.2,
         }
 
         weight = base_weights.get(event.event_type, 1.0)
@@ -446,8 +431,9 @@ class StandardFeatureEngineer(IFeatureEngineer):
 
         # Count events at each funnel stage
         views = len([e for e in events if e.event_type == EventType.PROPERTY_VIEW])
-        likes = len([e for e in events if e.event_type == EventType.PROPERTY_SWIPE
-                    and e.event_data.get("liked", False)])
+        likes = len(
+            [e for e in events if e.event_type == EventType.PROPERTY_SWIPE and e.event_data.get("liked", False)]
+        )
         saves = len([e for e in events if e.event_type == EventType.PROPERTY_SAVE])
         bookings = len([e for e in events if e.event_type == EventType.BOOKING_REQUEST])
         completed = len([e for e in events if e.event_type == EventType.BOOKING_COMPLETED])
@@ -519,24 +505,17 @@ class StandardFeatureEngineer(IFeatureEngineer):
         return FeatureVector(
             entity_id=entity_id,
             entity_type=entity_type,
-            numerical_features={
-                "total_events": 0.0,
-                "engagement_score": 0.0,
-                "days_since_last_activity": 999.0
-            },
-            categorical_features={
-                "primary_event_type": "unknown",
-                "preferred_device": "unknown"
-            },
+            numerical_features={"total_events": 0.0, "engagement_score": 0.0, "days_since_last_activity": 999.0},
+            categorical_features={"primary_event_type": "unknown", "preferred_device": "unknown"},
             feature_names=[
-                "total_events", "engagement_score", "days_since_last_activity",
-                "primary_event_type", "preferred_device"
+                "total_events",
+                "engagement_score",
+                "days_since_last_activity",
+                "primary_event_type",
+                "preferred_device",
             ],
             extraction_timestamp=datetime.now(),
-            metadata={
-                "minimal_features": True,
-                "reason": "insufficient_events"
-            }
+            metadata={"minimal_features": True, "reason": "insufficient_events"},
         )
 
     def _get_cached_features(self, cache_key: str) -> Optional[FeatureVector]:
@@ -584,8 +563,11 @@ class StandardFeatureEngineer(IFeatureEngineer):
             **self.stats,
             "avg_processing_time_ms": np.mean(processing_times) if processing_times else 0,
             "cache_size": len(self._feature_cache),
-            "cache_hit_rate": (self.stats["feature_cache_hits"] /
-                             max(self.stats["features_extracted"] + self.stats["feature_cache_hits"], 1)) * 100
+            "cache_hit_rate": (
+                self.stats["feature_cache_hits"]
+                / max(self.stats["features_extracted"] + self.stats["feature_cache_hits"], 1)
+            )
+            * 100,
         }
 
     async def clear_cache(self):
@@ -596,7 +578,7 @@ class StandardFeatureEngineer(IFeatureEngineer):
         self,
         entities: List[Tuple[str, str]],
         events_by_entity: Dict[str, List[BehavioralEvent]],
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, FeatureVector]:
         """Extract features for multiple entities efficiently"""
 
@@ -634,48 +616,101 @@ class StandardFeatureEngineer(IFeatureEngineer):
 
         # Base numerical features
         numerical_features = [
-            "total_events", "unique_sessions", "unique_properties",
-            "property_view_count", "property_swipe_count", "property_save_count",
-            "search_query_count", "filter_applied_count", "booking_request_count",
-            "activity_time_span_hours", "avg_events_per_hour",
-            "avg_view_duration_seconds", "max_view_duration_seconds", "total_view_time_seconds",
-            "engagement_score", "avg_engagement_per_event",
-            "booking_requests_count", "booking_completions_count", "booking_completion_rate",
-            "avg_session_length", "max_session_length", "avg_session_duration_seconds",
-            "max_session_duration_seconds", "avg_properties_per_sequence",
-            "max_properties_per_sequence", "property_revisit_rate",
-            "searches_per_session", "filters_per_search",
-            "days_since_last_activity", "active_days", "events_per_active_day",
-            "activity_time_std", "peak_activity_hour",
-            "view_to_like_rate", "view_to_save_rate", "view_to_booking_rate",
+            "total_events",
+            "unique_sessions",
+            "unique_properties",
+            "property_view_count",
+            "property_swipe_count",
+            "property_save_count",
+            "search_query_count",
+            "filter_applied_count",
+            "booking_request_count",
+            "activity_time_span_hours",
+            "avg_events_per_hour",
+            "avg_view_duration_seconds",
+            "max_view_duration_seconds",
+            "total_view_time_seconds",
+            "engagement_score",
+            "avg_engagement_per_event",
+            "booking_requests_count",
+            "booking_completions_count",
+            "booking_completion_rate",
+            "avg_session_length",
+            "max_session_length",
+            "avg_session_duration_seconds",
+            "max_session_duration_seconds",
+            "avg_properties_per_sequence",
+            "max_properties_per_sequence",
+            "property_revisit_rate",
+            "searches_per_session",
+            "filters_per_search",
+            "days_since_last_activity",
+            "active_days",
+            "events_per_active_day",
+            "activity_time_std",
+            "peak_activity_hour",
+            "view_to_like_rate",
+            "view_to_save_rate",
+            "view_to_booking_rate",
             "save_to_booking_rate",
             # Property features
-            "property_type_diversity", "most_viewed_type_ratio", "avg_price_viewed",
-            "min_price_viewed", "max_price_viewed", "price_std", "price_range_span",
-            "location_diversity", "location_concentration", "avg_size_preference",
-            "size_preference_std", "avg_bedrooms_preference", "bedroom_preference_std",
+            "property_type_diversity",
+            "most_viewed_type_ratio",
+            "avg_price_viewed",
+            "min_price_viewed",
+            "max_price_viewed",
+            "price_std",
+            "price_range_span",
+            "location_diversity",
+            "location_concentration",
+            "avg_size_preference",
+            "size_preference_std",
+            "avg_bedrooms_preference",
+            "bedroom_preference_std",
             "property_features_diversity",
             # Behavioral features
-            "total_engagement_score", "engagement_std", "max_engagement_event",
-            "high_value_action_ratio", "avg_time_between_events", "interaction_velocity",
-            "interaction_consistency", "burst_interaction_ratio", "like_ratio",
-            "decision_confidence", "save_rate", "booking_follow_through",
-            "exploration_ratio", "property_loyalty", "search_refinement_rate",
+            "total_engagement_score",
+            "engagement_std",
+            "max_engagement_event",
+            "high_value_action_ratio",
+            "avg_time_between_events",
+            "interaction_velocity",
+            "interaction_consistency",
+            "burst_interaction_ratio",
+            "like_ratio",
+            "decision_confidence",
+            "save_rate",
+            "booking_follow_through",
+            "exploration_ratio",
+            "property_loyalty",
+            "search_refinement_rate",
             # Session features
-            "explicit_sessions_count", "inferred_sessions_count",
-            "avg_inferred_session_length", "avg_inferred_session_duration",
-            "max_events_per_day", "weekday_consistency", "time_concentration",
+            "explicit_sessions_count",
+            "inferred_sessions_count",
+            "avg_inferred_session_length",
+            "avg_inferred_session_duration",
+            "max_events_per_day",
+            "weekday_consistency",
+            "time_concentration",
             # Temporal features
-            "events_per_hour", "activity_hour_std", "avg_days_between_sessions",
-            "session_regularity", "weekday_entropy", "hourly_entropy",
-            "activity_trend_slope", "hours_since_last_activity",
-            "recent_activity_count", "recent_activity_ratio"
+            "events_per_hour",
+            "activity_hour_std",
+            "avg_days_between_sessions",
+            "session_regularity",
+            "weekday_entropy",
+            "hourly_entropy",
+            "activity_trend_slope",
+            "hours_since_last_activity",
+            "recent_activity_count",
+            "recent_activity_ratio",
         ]
 
         # Categorical features
         categorical_features = [
-            "primary_event_type", "preferred_device", "preferred_property_type",
-            "preferred_time_period"
+            "primary_event_type",
+            "preferred_device",
+            "preferred_property_type",
+            "preferred_time_period",
         ]
 
         return numerical_features + categorical_features
@@ -688,8 +723,10 @@ class StandardFeatureEngineer(IFeatureEngineer):
 
         # Categorical features
         categorical_features = {
-            "primary_event_type", "preferred_device", "preferred_property_type",
-            "preferred_time_period"
+            "primary_event_type",
+            "preferred_device",
+            "preferred_property_type",
+            "preferred_time_period",
         }
 
         # Assign types

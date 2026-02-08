@@ -12,16 +12,16 @@ from src.multimodal.image_retriever import (
     MockCLIPEmbeddingProvider,
 )
 from src.multimodal.structured_retriever import (
+    StructuredQuery,
     StructuredRetriever,
     StructuredRetrieverConfig,
-    StructuredQuery,
     TableSchema,
 )
 from src.multimodal.unified_retriever import (
+    QueryModality,
     UnifiedRetriever,
     UnifiedRetrieverConfig,
     UnifiedSearchResult,
-    QueryModality,
 )
 
 __all__ = [

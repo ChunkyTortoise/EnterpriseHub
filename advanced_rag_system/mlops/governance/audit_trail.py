@@ -2,22 +2,24 @@
 Enterprise ML Governance and Audit Trail System
 Demonstrates compliance, lineage tracking, and governance for production ML
 """
+
+import hashlib
 import json
 import logging
-from datetime import datetime, timedelta
-from enum import Enum
-from typing import Dict, List, Optional, Any, Union
-from dataclasses import dataclass, field, asdict
-from pathlib import Path
-import hashlib
 import uuid
 from abc import ABC, abstractmethod
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
 logger = logging.getLogger(__name__)
 
 
 class EventType(Enum):
     """Types of audit events"""
+
     MODEL_REGISTRATION = "model_registration"
     MODEL_PROMOTION = "model_promotion"
     MODEL_DEPLOYMENT = "model_deployment"
@@ -34,6 +36,7 @@ class EventType(Enum):
 
 class ComplianceFramework(Enum):
     """Supported compliance frameworks"""
+
     GDPR = "gdpr"
     CCPA = "ccpa"
     SOX = "sox"
@@ -45,6 +48,7 @@ class ComplianceFramework(Enum):
 
 class RiskLevel(Enum):
     """Risk assessment levels"""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -54,6 +58,7 @@ class RiskLevel(Enum):
 @dataclass
 class AuditEvent:
     """Comprehensive audit event record"""
+
     # Core identification
     event_id: str
     timestamp: datetime
@@ -102,24 +107,24 @@ class AuditEvent:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization"""
         data = asdict(self)
-        data['timestamp'] = self.timestamp.isoformat()
-        data['event_type'] = self.event_type.value
-        data['risk_level'] = self.risk_level.value
-        data['compliance_frameworks'] = [f.value for f in self.compliance_frameworks]
+        data["timestamp"] = self.timestamp.isoformat()
+        data["event_type"] = self.event_type.value
+        data["risk_level"] = self.risk_level.value
+        data["compliance_frameworks"] = [f.value for f in self.compliance_frameworks]
         if self.approval_timestamp:
-            data['approval_timestamp'] = self.approval_timestamp.isoformat()
+            data["approval_timestamp"] = self.approval_timestamp.isoformat()
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'AuditEvent':
+    def from_dict(cls, data: Dict[str, Any]) -> "AuditEvent":
         """Create from dictionary"""
         # Convert back from serialized format
-        data['timestamp'] = datetime.fromisoformat(data['timestamp'])
-        data['event_type'] = EventType(data['event_type'])
-        data['risk_level'] = RiskLevel(data['risk_level'])
-        data['compliance_frameworks'] = [ComplianceFramework(f) for f in data.get('compliance_frameworks', [])]
-        if data.get('approval_timestamp'):
-            data['approval_timestamp'] = datetime.fromisoformat(data['approval_timestamp'])
+        data["timestamp"] = datetime.fromisoformat(data["timestamp"])
+        data["event_type"] = EventType(data["event_type"])
+        data["risk_level"] = RiskLevel(data["risk_level"])
+        data["compliance_frameworks"] = [ComplianceFramework(f) for f in data.get("compliance_frameworks", [])]
+        if data.get("approval_timestamp"):
+            data["approval_timestamp"] = datetime.fromisoformat(data["approval_timestamp"])
         return cls(**data)
 
 
@@ -132,7 +137,7 @@ class LineageNode:
         node_type: str,
         name: str,
         version: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         """Initialize lineage node"""
         self.node_id = node_id
@@ -159,14 +164,14 @@ class LineageNode:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary"""
         return {
-            'node_id': self.node_id,
-            'node_type': self.node_type,
-            'name': self.name,
-            'version': self.version,
-            'metadata': self.metadata,
-            'created_at': self.created_at.isoformat(),
-            'parents': self.parents,
-            'children': self.children
+            "node_id": self.node_id,
+            "node_type": self.node_type,
+            "name": self.name,
+            "version": self.version,
+            "metadata": self.metadata,
+            "created_at": self.created_at.isoformat(),
+            "parents": self.parents,
+            "children": self.children,
         }
 
 
@@ -197,9 +202,9 @@ class FileAuditHandler(AuditEventHandler):
             # Write event to hourly file
             hour_file = date_dir / f"audit_{event.timestamp.strftime('%H')}.jsonl"
 
-            with open(hour_file, 'a') as f:
+            with open(hour_file, "a") as f:
                 json.dump(event.to_dict(), f)
-                f.write('\n')
+                f.write("\n")
 
             return True
         except Exception as e:
@@ -224,158 +229,130 @@ class ComplianceChecker:
         # GDPR rules
         self.rules[ComplianceFramework.GDPR] = [
             {
-                'name': 'data_retention',
-                'description': 'Data must not be retained beyond necessary period',
-                'applies_to': ['data_access', 'prediction_request'],
-                'validation': self._validate_data_retention
+                "name": "data_retention",
+                "description": "Data must not be retained beyond necessary period",
+                "applies_to": ["data_access", "prediction_request"],
+                "validation": self._validate_data_retention,
             },
             {
-                'name': 'consent_tracking',
-                'description': 'User consent must be tracked for data processing',
-                'applies_to': ['data_access', 'model_deployment'],
-                'validation': self._validate_consent
+                "name": "consent_tracking",
+                "description": "User consent must be tracked for data processing",
+                "applies_to": ["data_access", "model_deployment"],
+                "validation": self._validate_consent,
             },
             {
-                'name': 'right_to_explanation',
-                'description': 'ML predictions must be explainable',
-                'applies_to': ['model_deployment', 'prediction_request'],
-                'validation': self._validate_explainability
-            }
+                "name": "right_to_explanation",
+                "description": "ML predictions must be explainable",
+                "applies_to": ["model_deployment", "prediction_request"],
+                "validation": self._validate_explainability,
+            },
         ]
 
         # SOC2 rules
         self.rules[ComplianceFramework.SOC2] = [
             {
-                'name': 'access_control',
-                'description': 'Access must be properly authorized',
-                'applies_to': ['model_registration', 'model_deployment', 'data_access'],
-                'validation': self._validate_access_control
+                "name": "access_control",
+                "description": "Access must be properly authorized",
+                "applies_to": ["model_registration", "model_deployment", "data_access"],
+                "validation": self._validate_access_control,
             },
             {
-                'name': 'change_management',
-                'description': 'Changes must follow approval process',
-                'applies_to': ['model_promotion', 'model_deployment'],
-                'validation': self._validate_change_management
-            }
+                "name": "change_management",
+                "description": "Changes must follow approval process",
+                "applies_to": ["model_promotion", "model_deployment"],
+                "validation": self._validate_change_management,
+            },
         ]
 
-    def check_compliance(
-        self,
-        event: AuditEvent,
-        frameworks: List[ComplianceFramework]
-    ) -> Dict[str, Any]:
+    def check_compliance(self, event: AuditEvent, frameworks: List[ComplianceFramework]) -> Dict[str, Any]:
         """
         Check event against compliance frameworks
 
         Returns compliance validation results
         """
-        results = {
-            'compliant': True,
-            'violations': [],
-            'warnings': [],
-            'framework_results': {}
-        }
+        results = {"compliant": True, "violations": [], "warnings": [], "framework_results": {}}
 
         for framework in frameworks:
             framework_result = self._check_framework_compliance(event, framework)
-            results['framework_results'][framework.value] = framework_result
+            results["framework_results"][framework.value] = framework_result
 
-            if not framework_result['compliant']:
-                results['compliant'] = False
-                results['violations'].extend(framework_result['violations'])
+            if not framework_result["compliant"]:
+                results["compliant"] = False
+                results["violations"].extend(framework_result["violations"])
 
-            results['warnings'].extend(framework_result.get('warnings', []))
+            results["warnings"].extend(framework_result.get("warnings", []))
 
         return results
 
-    def _check_framework_compliance(
-        self,
-        event: AuditEvent,
-        framework: ComplianceFramework
-    ) -> Dict[str, Any]:
+    def _check_framework_compliance(self, event: AuditEvent, framework: ComplianceFramework) -> Dict[str, Any]:
         """Check compliance for specific framework"""
-        result = {
-            'framework': framework.value,
-            'compliant': True,
-            'violations': [],
-            'warnings': []
-        }
+        result = {"framework": framework.value, "compliant": True, "violations": [], "warnings": []}
 
         if framework not in self.rules:
-            result['warnings'].append(f"No rules defined for {framework.value}")
+            result["warnings"].append(f"No rules defined for {framework.value}")
             return result
 
         for rule in self.rules[framework]:
-            if event.event_type.value in rule['applies_to']:
+            if event.event_type.value in rule["applies_to"]:
                 try:
-                    rule_result = rule['validation'](event, rule)
-                    if not rule_result['compliant']:
-                        result['compliant'] = False
-                        result['violations'].append({
-                            'rule': rule['name'],
-                            'description': rule['description'],
-                            'details': rule_result.get('details', '')
-                        })
+                    rule_result = rule["validation"](event, rule)
+                    if not rule_result["compliant"]:
+                        result["compliant"] = False
+                        result["violations"].append(
+                            {
+                                "rule": rule["name"],
+                                "description": rule["description"],
+                                "details": rule_result.get("details", ""),
+                            }
+                        )
                 except Exception as e:
-                    result['warnings'].append(f"Rule validation failed for {rule['name']}: {e}")
+                    result["warnings"].append(f"Rule validation failed for {rule['name']}: {e}")
 
         return result
 
     def _validate_data_retention(self, event: AuditEvent, rule: Dict[str, Any]) -> Dict[str, Any]:
         """Validate data retention compliance"""
         # Example validation - in practice, this would check against data retention policies
-        retention_period_days = event.metadata.get('retention_period_days', 0)
+        retention_period_days = event.metadata.get("retention_period_days", 0)
         max_retention_days = 365  # Example limit
 
         if retention_period_days > max_retention_days:
             return {
-                'compliant': False,
-                'details': f"Retention period {retention_period_days} days exceeds limit {max_retention_days}"
+                "compliant": False,
+                "details": f"Retention period {retention_period_days} days exceeds limit {max_retention_days}",
             }
 
-        return {'compliant': True}
+        return {"compliant": True}
 
     def _validate_consent(self, event: AuditEvent, rule: Dict[str, Any]) -> Dict[str, Any]:
         """Validate consent tracking"""
-        consent_id = event.metadata.get('consent_id')
+        consent_id = event.metadata.get("consent_id")
         if not consent_id:
-            return {
-                'compliant': False,
-                'details': "Missing consent tracking for data processing"
-            }
+            return {"compliant": False, "details": "Missing consent tracking for data processing"}
 
-        return {'compliant': True}
+        return {"compliant": True}
 
     def _validate_explainability(self, event: AuditEvent, rule: Dict[str, Any]) -> Dict[str, Any]:
         """Validate model explainability"""
-        explainable = event.metadata.get('explainable', False)
+        explainable = event.metadata.get("explainable", False)
         if not explainable:
-            return {
-                'compliant': False,
-                'details': "Model predictions must be explainable"
-            }
+            return {"compliant": False, "details": "Model predictions must be explainable"}
 
-        return {'compliant': True}
+        return {"compliant": True}
 
     def _validate_access_control(self, event: AuditEvent, rule: Dict[str, Any]) -> Dict[str, Any]:
         """Validate access control"""
-        if event.actor_type == 'human' and not event.metadata.get('authenticated'):
-            return {
-                'compliant': False,
-                'details': "Human actor must be authenticated"
-            }
+        if event.actor_type == "human" and not event.metadata.get("authenticated"):
+            return {"compliant": False, "details": "Human actor must be authenticated"}
 
-        return {'compliant': True}
+        return {"compliant": True}
 
     def _validate_change_management(self, event: AuditEvent, rule: Dict[str, Any]) -> Dict[str, Any]:
         """Validate change management process"""
         if event.approval_required and not event.approved_by:
-            return {
-                'compliant': False,
-                'details': "Change requires approval but none provided"
-            }
+            return {"compliant": False, "details": "Change requires approval but none provided"}
 
-        return {'compliant': True}
+        return {"compliant": True}
 
 
 class GovernanceEngine:
@@ -388,26 +365,18 @@ class GovernanceEngine:
     def __init__(
         self,
         event_handlers: Optional[List[AuditEventHandler]] = None,
-        compliance_frameworks: Optional[List[ComplianceFramework]] = None
+        compliance_frameworks: Optional[List[ComplianceFramework]] = None,
     ):
         """Initialize governance engine"""
         self.event_handlers = event_handlers or [FileAuditHandler()]
-        self.compliance_frameworks = compliance_frameworks or [
-            ComplianceFramework.GDPR,
-            ComplianceFramework.SOC2
-        ]
+        self.compliance_frameworks = compliance_frameworks or [ComplianceFramework.GDPR, ComplianceFramework.SOC2]
 
         self.compliance_checker = ComplianceChecker()
         self.lineage_graph: Dict[str, LineageNode] = {}
         self.audit_cache: List[AuditEvent] = []
 
         # Statistics
-        self.stats = {
-            'total_events': 0,
-            'events_by_type': {},
-            'compliance_violations': 0,
-            'high_risk_events': 0
-        }
+        self.stats = {"total_events": 0, "events_by_type": {}, "compliance_violations": 0, "high_risk_events": 0}
 
     async def record_event(
         self,
@@ -418,7 +387,7 @@ class GovernanceEngine:
         resource_id: str = "",
         action: str = "",
         description: str = "",
-        **kwargs
+        **kwargs,
     ) -> AuditEvent:
         """
         Record a new audit event
@@ -447,17 +416,15 @@ class GovernanceEngine:
             resource_id=resource_id,
             action=action,
             description=description,
-            **kwargs
+            **kwargs,
         )
 
         # Check compliance
-        compliance_result = self.compliance_checker.check_compliance(
-            event, self.compliance_frameworks
-        )
+        compliance_result = self.compliance_checker.check_compliance(event, self.compliance_frameworks)
 
-        if not compliance_result['compliant']:
+        if not compliance_result["compliant"]:
             event.risk_level = RiskLevel.HIGH
-            self.stats['compliance_violations'] += 1
+            self.stats["compliance_violations"] += 1
             logger.warning(f"Compliance violation detected: {compliance_result['violations']}")
 
         # Update statistics
@@ -482,15 +449,13 @@ class GovernanceEngine:
 
     def _update_statistics(self, event: AuditEvent) -> None:
         """Update governance statistics"""
-        self.stats['total_events'] += 1
+        self.stats["total_events"] += 1
 
         event_type_str = event.event_type.value
-        self.stats['events_by_type'][event_type_str] = (
-            self.stats['events_by_type'].get(event_type_str, 0) + 1
-        )
+        self.stats["events_by_type"][event_type_str] = self.stats["events_by_type"].get(event_type_str, 0) + 1
 
         if event.risk_level in [RiskLevel.HIGH, RiskLevel.CRITICAL]:
-            self.stats['high_risk_events'] += 1
+            self.stats["high_risk_events"] += 1
 
     def add_lineage_node(
         self,
@@ -498,22 +463,24 @@ class GovernanceEngine:
         node_type: str,
         name: str,
         version: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> LineageNode:
         """Add node to lineage graph"""
         node = LineageNode(node_id, node_type, name, version, metadata)
         self.lineage_graph[node_id] = node
 
         # Record lineage event
-        asyncio.create_task(self.record_event(
-            event_type=EventType.MODEL_REGISTRATION if node_type == 'model' else EventType.DATA_ACCESS,
-            actor_id="system",
-            resource_type=node_type,
-            resource_id=node_id,
-            action="create_lineage_node",
-            description=f"Added {node_type} {name} to lineage graph",
-            metadata=metadata or {}
-        ))
+        asyncio.create_task(
+            self.record_event(
+                event_type=EventType.MODEL_REGISTRATION if node_type == "model" else EventType.DATA_ACCESS,
+                actor_id="system",
+                resource_type=node_type,
+                resource_id=node_id,
+                action="create_lineage_node",
+                description=f"Added {node_type} {name} to lineage graph",
+                metadata=metadata or {},
+            )
+        )
 
         return node
 
@@ -579,7 +546,7 @@ class GovernanceEngine:
         start_time: Optional[datetime] = None,
         end_time: Optional[datetime] = None,
         risk_level: Optional[RiskLevel] = None,
-        limit: int = 100
+        limit: int = 100,
     ) -> List[AuditEvent]:
         """Query audit events with filters"""
         results = []
@@ -606,67 +573,55 @@ class GovernanceEngine:
 
         return results
 
-    def generate_compliance_report(
-        self,
-        time_period: timedelta = timedelta(days=30)
-    ) -> Dict[str, Any]:
+    def generate_compliance_report(self, time_period: timedelta = timedelta(days=30)) -> Dict[str, Any]:
         """Generate compliance report"""
         start_time = datetime.utcnow() - time_period
         recent_events = self.query_audit_events(start_time=start_time)
 
         report = {
-            'report_period': {
-                'start_time': start_time.isoformat(),
-                'end_time': datetime.utcnow().isoformat(),
-                'duration_days': time_period.days
+            "report_period": {
+                "start_time": start_time.isoformat(),
+                "end_time": datetime.utcnow().isoformat(),
+                "duration_days": time_period.days,
             },
-            'summary': {
-                'total_events': len(recent_events),
-                'compliance_violations': 0,
-                'high_risk_events': 0
-            },
-            'violations_by_framework': {},
-            'event_types': {},
-            'recommendations': []
+            "summary": {"total_events": len(recent_events), "compliance_violations": 0, "high_risk_events": 0},
+            "violations_by_framework": {},
+            "event_types": {},
+            "recommendations": [],
         }
 
         # Analyze events
         for event in recent_events:
             # Count event types
             event_type = event.event_type.value
-            report['event_types'][event_type] = report['event_types'].get(event_type, 0) + 1
+            report["event_types"][event_type] = report["event_types"].get(event_type, 0) + 1
 
             # Count risk levels
             if event.risk_level in [RiskLevel.HIGH, RiskLevel.CRITICAL]:
-                report['summary']['high_risk_events'] += 1
+                report["summary"]["high_risk_events"] += 1
 
         # Add recommendations
-        if report['summary']['high_risk_events'] > 10:
-            report['recommendations'].append(
+        if report["summary"]["high_risk_events"] > 10:
+            report["recommendations"].append(
                 "High number of high-risk events detected. Review access controls and approval processes."
             )
 
-        if report['summary']['compliance_violations'] > 0:
-            report['recommendations'].append(
-                "Compliance violations detected. Review and update compliance procedures."
-            )
+        if report["summary"]["compliance_violations"] > 0:
+            report["recommendations"].append("Compliance violations detected. Review and update compliance procedures.")
 
         return report
 
     def get_governance_dashboard(self) -> Dict[str, Any]:
         """Get governance dashboard data"""
-        recent_events = self.query_audit_events(
-            start_time=datetime.utcnow() - timedelta(hours=24),
-            limit=50
-        )
+        recent_events = self.query_audit_events(start_time=datetime.utcnow() - timedelta(hours=24), limit=50)
 
         return {
-            'timestamp': datetime.utcnow().isoformat(),
-            'statistics': self.stats.copy(),
-            'recent_events': [event.to_dict() for event in recent_events[:10]],
-            'lineage_nodes': len(self.lineage_graph),
-            'compliance_frameworks': [f.value for f in self.compliance_frameworks],
-            'risk_distribution': self._calculate_risk_distribution(recent_events)
+            "timestamp": datetime.utcnow().isoformat(),
+            "statistics": self.stats.copy(),
+            "recent_events": [event.to_dict() for event in recent_events[:10]],
+            "lineage_nodes": len(self.lineage_graph),
+            "compliance_frameworks": [f.value for f in self.compliance_frameworks],
+            "risk_distribution": self._calculate_risk_distribution(recent_events),
         }
 
     def _calculate_risk_distribution(self, events: List[AuditEvent]) -> Dict[str, int]:
@@ -684,11 +639,7 @@ async def create_rag_governance_system():
     """Create governance system for RAG models"""
     # Initialize governance engine
     governance = GovernanceEngine(
-        compliance_frameworks=[
-            ComplianceFramework.GDPR,
-            ComplianceFramework.SOC2,
-            ComplianceFramework.ISO27001
-        ]
+        compliance_frameworks=[ComplianceFramework.GDPR, ComplianceFramework.SOC2, ComplianceFramework.ISO27001]
     )
 
     # Add lineage nodes for RAG system
@@ -697,11 +648,7 @@ async def create_rag_governance_system():
         node_type="model",
         name="text-embedding-3-large",
         version="1.0.0",
-        metadata={
-            "model_type": "embedding",
-            "parameters": 3072,
-            "context_length": 8192
-        }
+        metadata={"model_type": "embedding", "parameters": 3072, "context_length": 8192},
     )
 
     vector_store = governance.add_lineage_node(
@@ -709,18 +656,11 @@ async def create_rag_governance_system():
         node_type="dataset",
         name="rag-vector-store",
         version="1.0",
-        metadata={
-            "storage_type": "chromadb",
-            "document_count": 10000,
-            "embedding_dimension": 3072
-        }
+        metadata={"storage_type": "chromadb", "document_count": 10000, "embedding_dimension": 3072},
     )
 
     # Add relationship
-    governance.add_lineage_relationship(
-        parent_id=embedding_model.node_id,
-        child_id=vector_store.node_id
-    )
+    governance.add_lineage_relationship(parent_id=embedding_model.node_id, child_id=vector_store.node_id)
 
     # Record model deployment event
     await governance.record_event(
@@ -739,8 +679,8 @@ async def create_rag_governance_system():
             "deployment_type": "canary",
             "traffic_percentage": 5.0,
             "explainable": True,
-            "authenticated": True
-        }
+            "authenticated": True,
+        },
     )
 
     return governance

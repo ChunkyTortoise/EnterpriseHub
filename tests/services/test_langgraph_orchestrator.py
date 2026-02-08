@@ -10,24 +10,26 @@ Covers:
 """
 
 import os
+
 os.environ.setdefault("STRIPE_SECRET_KEY", "sk_test_fake_for_testing")
 os.environ.setdefault("STRIPE_WEBHOOK_SECRET", "whsec_test_fake")
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock
 from dataclasses import dataclass
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from ghl_real_estate_ai.services.langgraph_orchestrator import (
     LeadQualificationOrchestrator,
     LeadType,
-    QualificationStage,
     QualificationResult,
+    QualificationStage,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_orchestrator(behavioral_detector=None):
     return LeadQualificationOrchestrator(
@@ -54,6 +56,7 @@ class FakeAnalysis:
 # Classification Tests
 # ---------------------------------------------------------------------------
 
+
 class TestLeadClassification:
     """Leads are classified by tag first, then by keyword intent."""
 
@@ -61,7 +64,8 @@ class TestLeadClassification:
     async def test_seller_tag_classification(self):
         orch = _make_orchestrator()
         result = await orch.process(
-            contact_id="c1", location_id="loc1",
+            contact_id="c1",
+            location_id="loc1",
             message="Hello",
             contact_tags=["Needs Qualifying"],
             contact_info={"first_name": "Maria"},
@@ -72,7 +76,8 @@ class TestLeadClassification:
     async def test_buyer_tag_classification(self):
         orch = _make_orchestrator()
         result = await orch.process(
-            contact_id="c2", location_id="loc1",
+            contact_id="c2",
+            location_id="loc1",
             message="Hello",
             contact_tags=["Buyer-Lead"],
             contact_info={"first_name": "Carlos"},
@@ -83,7 +88,8 @@ class TestLeadClassification:
     async def test_keyword_seller_fallback(self):
         orch = _make_orchestrator()
         result = await orch.process(
-            contact_id="c3", location_id="loc1",
+            contact_id="c3",
+            location_id="loc1",
             message="I want to sell my house",
             contact_tags=[],
             contact_info={},
@@ -94,7 +100,8 @@ class TestLeadClassification:
     async def test_keyword_buyer_fallback(self):
         orch = _make_orchestrator()
         result = await orch.process(
-            contact_id="c4", location_id="loc1",
+            contact_id="c4",
+            location_id="loc1",
             message="I'm looking for a 3 bedroom house to buy",
             contact_tags=[],
             contact_info={},
@@ -105,7 +112,8 @@ class TestLeadClassification:
     async def test_general_fallback(self):
         orch = _make_orchestrator()
         result = await orch.process(
-            contact_id="c5", location_id="loc1",
+            contact_id="c5",
+            location_id="loc1",
             message="Hi there",
             contact_tags=[],
             contact_info={},
@@ -117,7 +125,8 @@ class TestLeadClassification:
         """Even if message says 'buy', Needs Qualifying tag → seller."""
         orch = _make_orchestrator()
         result = await orch.process(
-            contact_id="c6", location_id="loc1",
+            contact_id="c6",
+            location_id="loc1",
             message="I want to buy a house",
             contact_tags=["Needs Qualifying"],
             contact_info={},
@@ -129,6 +138,7 @@ class TestLeadClassification:
 # Seller Qualification Tests
 # ---------------------------------------------------------------------------
 
+
 class TestSellerQualification:
     """Seller temperature is based on questions answered in conversation history."""
 
@@ -136,15 +146,18 @@ class TestSellerQualification:
     async def test_hot_seller_all_questions(self):
         orch = _make_orchestrator()
         history = [
-            {"seller_preferences": {
-                "motivation": "relocating",
-                "timeline_acceptable": True,
-                "property_condition": "move-in ready",
-                "price_expectation": "650000",
-            }}
+            {
+                "seller_preferences": {
+                    "motivation": "relocating",
+                    "timeline_acceptable": True,
+                    "property_condition": "move-in ready",
+                    "price_expectation": "650000",
+                }
+            }
         ]
         result = await orch.process(
-            contact_id="c10", location_id="loc1",
+            contact_id="c10",
+            location_id="loc1",
             message="$650k works",
             contact_tags=["Needs Qualifying"],
             contact_info={},
@@ -159,15 +172,18 @@ class TestSellerQualification:
     async def test_warm_seller_three_questions(self):
         orch = _make_orchestrator()
         history = [
-            {"seller_preferences": {
-                "motivation": "downsizing",
-                "timeline_acceptable": True,
-                "property_condition": "needs work",
-                "price_expectation": None,
-            }}
+            {
+                "seller_preferences": {
+                    "motivation": "downsizing",
+                    "timeline_acceptable": True,
+                    "property_condition": "needs work",
+                    "price_expectation": None,
+                }
+            }
         ]
         result = await orch.process(
-            contact_id="c11", location_id="loc1",
+            contact_id="c11",
+            location_id="loc1",
             message="I'm not sure on price yet",
             contact_tags=["Needs Qualifying"],
             contact_info={},
@@ -180,7 +196,8 @@ class TestSellerQualification:
     async def test_cold_seller_few_questions(self):
         orch = _make_orchestrator()
         result = await orch.process(
-            contact_id="c12", location_id="loc1",
+            contact_id="c12",
+            location_id="loc1",
             message="Hello",
             contact_tags=["Needs Qualifying"],
             contact_info={},
@@ -194,6 +211,7 @@ class TestSellerQualification:
 # Buyer Qualification Tests
 # ---------------------------------------------------------------------------
 
+
 class TestBuyerQualification:
     """Buyer temperature is based on financial readiness + buying motivation."""
 
@@ -204,7 +222,8 @@ class TestBuyerQualification:
             {"financial_readiness_score": 80, "buying_motivation_score": 75},
         ]
         result = await orch.process(
-            contact_id="c20", location_id="loc1",
+            contact_id="c20",
+            location_id="loc1",
             message="Ready to buy",
             contact_tags=["Buyer-Lead"],
             contact_info={},
@@ -221,7 +240,8 @@ class TestBuyerQualification:
             {"financial_readiness_score": 55, "buying_motivation_score": 50},
         ]
         result = await orch.process(
-            contact_id="c21", location_id="loc1",
+            contact_id="c21",
+            location_id="loc1",
             message="Looking around",
             contact_tags=["Buyer-Lead"],
             contact_info={},
@@ -233,7 +253,8 @@ class TestBuyerQualification:
     async def test_cold_buyer(self):
         orch = _make_orchestrator()
         result = await orch.process(
-            contact_id="c22", location_id="loc1",
+            contact_id="c22",
+            location_id="loc1",
             message="Hi",
             contact_tags=["Buyer-Lead"],
             contact_info={},
@@ -247,6 +268,7 @@ class TestBuyerQualification:
 # Behavioral Integration Tests
 # ---------------------------------------------------------------------------
 
+
 class TestBehavioralIntegration:
     """Behavioral detector signals integrate into scoring."""
 
@@ -254,11 +276,13 @@ class TestBehavioralIntegration:
     async def test_behavioral_boost_warm_to_hot(self):
         """High composite score upgrades warm → hot."""
         detector = MagicMock()
-        detector.analyze_message = AsyncMock(return_value=FakeAnalysis(
-            composite_score=0.85,
-            urgency_score=0.9,
-            commitment_score=0.8,
-        ))
+        detector.analyze_message = AsyncMock(
+            return_value=FakeAnalysis(
+                composite_score=0.85,
+                urgency_score=0.9,
+                commitment_score=0.8,
+            )
+        )
         orch = _make_orchestrator(behavioral_detector=detector)
 
         # Buyer with warm scores
@@ -266,7 +290,8 @@ class TestBehavioralIntegration:
             {"financial_readiness_score": 55, "buying_motivation_score": 50},
         ]
         result = await orch.process(
-            contact_id="c30", location_id="loc1",
+            contact_id="c30",
+            location_id="loc1",
             message="I need to move quickly",
             contact_tags=["Buyer-Lead"],
             contact_info={},
@@ -283,7 +308,8 @@ class TestBehavioralIntegration:
         orch = _make_orchestrator(behavioral_detector=detector)
 
         result = await orch.process(
-            contact_id="c31", location_id="loc1",
+            contact_id="c31",
+            location_id="loc1",
             message="Hello",
             contact_tags=["Buyer-Lead"],
             contact_info={},
@@ -296,6 +322,7 @@ class TestBehavioralIntegration:
 # Compliance Tests
 # ---------------------------------------------------------------------------
 
+
 class TestComplianceGate:
     """Deactivation tags should still allow the pipeline to complete (no crash)."""
 
@@ -304,7 +331,8 @@ class TestComplianceGate:
         """Deactivation tags don't crash the pipeline but mark compliance_passed=False internally."""
         orch = _make_orchestrator()
         result = await orch.process(
-            contact_id="c40", location_id="loc1",
+            contact_id="c40",
+            location_id="loc1",
             message="Hello",
             contact_tags=["Needs Qualifying", "AI-Off"],
             contact_info={},
@@ -317,6 +345,7 @@ class TestComplianceGate:
 # Error Handling Tests
 # ---------------------------------------------------------------------------
 
+
 class TestErrorHandling:
     """Orchestrator handles errors gracefully."""
 
@@ -324,7 +353,8 @@ class TestErrorHandling:
     async def test_result_always_returned(self):
         orch = _make_orchestrator()
         result = await orch.process(
-            contact_id="c50", location_id="loc1",
+            contact_id="c50",
+            location_id="loc1",
             message="Test",
             contact_tags=[],
             contact_info={},
@@ -336,7 +366,8 @@ class TestErrorHandling:
     async def test_empty_message(self):
         orch = _make_orchestrator()
         result = await orch.process(
-            contact_id="c51", location_id="loc1",
+            contact_id="c51",
+            location_id="loc1",
             message="",
             contact_tags=[],
             contact_info={},

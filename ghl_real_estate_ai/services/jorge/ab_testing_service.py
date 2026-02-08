@@ -45,13 +45,15 @@ class ExperimentStatus(str, Enum):
     COMPLETED = "completed"
 
 
-VALID_OUTCOMES = frozenset({
-    "response",
-    "engagement",
-    "conversion",
-    "handoff_success",
-    "appointment_booked",
-})
+VALID_OUTCOMES = frozenset(
+    {
+        "response",
+        "engagement",
+        "conversion",
+        "handoff_success",
+        "appointment_booked",
+    }
+)
 
 
 @dataclass
@@ -105,10 +107,10 @@ class ABTestingService:
     """
 
     # ── Pre-built experiment identifiers ──────────────────────────────
-    RESPONSE_TONE_EXPERIMENT = "response_tone"        # formal vs casual vs empathetic
-    FOLLOWUP_TIMING_EXPERIMENT = "followup_timing"    # 1hr vs 4hr vs 24hr
-    CTA_STYLE_EXPERIMENT = "cta_style"                # direct vs soft vs question
-    GREETING_EXPERIMENT = "greeting_style"            # name vs title vs casual
+    RESPONSE_TONE_EXPERIMENT = "response_tone"  # formal vs casual vs empathetic
+    FOLLOWUP_TIMING_EXPERIMENT = "followup_timing"  # 1hr vs 4hr vs 24hr
+    CTA_STYLE_EXPERIMENT = "cta_style"  # direct vs soft vs question
+    GREETING_EXPERIMENT = "greeting_style"  # name vs title vs casual
 
     # ── Singleton ─────────────────────────────────────────────────────
     _instance: Optional["ABTestingService"] = None
@@ -173,6 +175,7 @@ class ABTestingService:
                 split_raw = exp_detail.get("default_traffic_split")
                 if isinstance(split_raw, str):
                     import json
+
                     split_raw = json.loads(split_raw)
 
                 if split_raw and isinstance(split_raw, dict):
@@ -261,20 +264,14 @@ class ABTestingService:
             traffic_split = {v: equal_share for v in variants}
         else:
             if set(traffic_split.keys()) != set(variants):
-                raise ValueError(
-                    "traffic_split keys must match variant names exactly"
-                )
+                raise ValueError("traffic_split keys must match variant names exactly")
             total = sum(traffic_split.values())
             if not math.isclose(total, 1.0, abs_tol=1e-6):
-                raise ValueError(
-                    f"traffic_split must sum to 1.0, got {total:.6f}"
-                )
+                raise ValueError(f"traffic_split must sum to 1.0, got {total:.6f}")
 
         with self._data_lock:
             if experiment_id in self._experiments:
-                raise ValueError(
-                    f"Experiment '{experiment_id}' already exists"
-                )
+                raise ValueError(f"Experiment '{experiment_id}' already exists")
 
             experiment = _Experiment(
                 experiment_id=experiment_id,
@@ -287,10 +284,7 @@ class ABTestingService:
             )
             self._experiments[experiment_id] = experiment
 
-        logger.info(
-            f"Created experiment '{experiment_id}' with variants "
-            f"{variants} and split {traffic_split}"
-        )
+        logger.info(f"Created experiment '{experiment_id}' with variants {variants} and split {traffic_split}")
         return {
             "experiment_id": experiment_id,
             "variants": variants,
@@ -315,10 +309,7 @@ class ABTestingService:
             experiment.status = ExperimentStatus.COMPLETED
             duration_hours = (time.time() - experiment.created_at) / 3600
 
-        logger.info(
-            f"Deactivated experiment '{experiment_id}' "
-            f"after {duration_hours:.1f} hours"
-        )
+        logger.info(f"Deactivated experiment '{experiment_id}' after {duration_hours:.1f} hours")
         return {
             "experiment_id": experiment_id,
             "status": ExperimentStatus.COMPLETED.value,
@@ -335,24 +326,22 @@ class ABTestingService:
             results = []
             for exp in self._experiments.values():
                 if exp.status == ExperimentStatus.ACTIVE:
-                    total_assigned = sum(
-                        len(contacts) for contacts in exp.assignments.values()
+                    total_assigned = sum(len(contacts) for contacts in exp.assignments.values())
+                    results.append(
+                        {
+                            "experiment_id": exp.experiment_id,
+                            "variants": exp.variants,
+                            "traffic_split": exp.traffic_split,
+                            "status": exp.status.value,
+                            "total_assignments": total_assigned,
+                            "created_at": exp.created_at,
+                        }
                     )
-                    results.append({
-                        "experiment_id": exp.experiment_id,
-                        "variants": exp.variants,
-                        "traffic_split": exp.traffic_split,
-                        "status": exp.status.value,
-                        "total_assignments": total_assigned,
-                        "created_at": exp.created_at,
-                    })
             return results
 
     # ── Variant Assignment ────────────────────────────────────────────
 
-    async def get_variant(
-        self, experiment_id: str, contact_id: str
-    ) -> str:
+    async def get_variant(self, experiment_id: str, contact_id: str) -> str:
         """Deterministically assign a contact to a variant.
 
         Uses a SHA-256 hash of ``contact_id + experiment_id`` mapped onto
@@ -372,13 +361,12 @@ class ABTestingService:
         with self._data_lock:
             experiment = self._get_experiment(experiment_id)
             if experiment.status != ExperimentStatus.ACTIVE:
-                raise ValueError(
-                    f"Experiment '{experiment_id}' is not active "
-                    f"(status={experiment.status.value})"
-                )
+                raise ValueError(f"Experiment '{experiment_id}' is not active (status={experiment.status.value})")
 
             variant = self._hash_assign(
-                contact_id, experiment_id, experiment.variants,
+                contact_id,
+                experiment_id,
+                experiment.variants,
                 experiment.traffic_split,
             )
 
@@ -387,12 +375,13 @@ class ABTestingService:
             if is_new:
                 experiment.assignments[variant].append(contact_id)
 
-            bucket_value = int(
-                hashlib.sha256(
-                    f"{contact_id}:{experiment_id}".encode()
-                ).hexdigest()[:8],
-                16,
-            ) / 0xFFFFFFFF
+            bucket_value = (
+                int(
+                    hashlib.sha256(f"{contact_id}:{experiment_id}".encode()).hexdigest()[:8],
+                    16,
+                )
+                / 0xFFFFFFFF
+            )
 
         # Write-through to DB (outside lock, fire-and-forget on error)
         if is_new and self._repository is not None:
@@ -405,8 +394,7 @@ class ABTestingService:
                 )
             except Exception as exc:
                 logger.debug(
-                    "DB write-through failed for assignment "
-                    "(experiment=%s, contact=%s): %s",
+                    "DB write-through failed for assignment (experiment=%s, contact=%s): %s",
                     experiment_id,
                     contact_id,
                     exc,
@@ -441,29 +429,24 @@ class ABTestingService:
             ValueError: On invalid variant or outcome.
         """
         if outcome not in VALID_OUTCOMES:
-            raise ValueError(
-                f"Invalid outcome '{outcome}'. "
-                f"Must be one of: {sorted(VALID_OUTCOMES)}"
-            )
+            raise ValueError(f"Invalid outcome '{outcome}'. Must be one of: {sorted(VALID_OUTCOMES)}")
 
         with self._data_lock:
             experiment = self._get_experiment(experiment_id)
             if variant not in experiment.variants:
-                raise ValueError(
-                    f"Unknown variant '{variant}' for experiment "
-                    f"'{experiment_id}'"
-                )
+                raise ValueError(f"Unknown variant '{variant}' for experiment '{experiment_id}'")
 
-            experiment.outcomes[variant].append({
-                "contact_id": contact_id,
-                "outcome": outcome,
-                "value": value,
-                "timestamp": time.time(),
-            })
+            experiment.outcomes[variant].append(
+                {
+                    "contact_id": contact_id,
+                    "outcome": outcome,
+                    "value": value,
+                    "timestamp": time.time(),
+                }
+            )
 
         logger.debug(
-            f"Recorded outcome '{outcome}' (value={value}) for "
-            f"variant '{variant}' in experiment '{experiment_id}'"
+            f"Recorded outcome '{outcome}' (value={value}) for variant '{variant}' in experiment '{experiment_id}'"
         )
 
         # Write-through to DB (fire-and-forget on error)
@@ -478,8 +461,7 @@ class ABTestingService:
                 )
             except Exception as exc:
                 logger.debug(
-                    "DB write-through failed for outcome "
-                    "(experiment=%s, contact=%s): %s",
+                    "DB write-through failed for outcome (experiment=%s, contact=%s): %s",
                     experiment_id,
                     contact_id,
                     exc,
@@ -527,31 +509,27 @@ class ABTestingService:
                 rate = conversions / impressions if impressions > 0 else 0.0
                 ci = self._wilson_confidence_interval(conversions, impressions)
 
-                variant_stats.append(VariantStats(
-                    variant=v,
-                    impressions=impressions,
-                    conversions=conversions,
-                    total_value=total_value,
-                    conversion_rate=round(rate, 4),
-                    confidence_interval=(round(ci[0], 4), round(ci[1], 4)),
-                ))
+                variant_stats.append(
+                    VariantStats(
+                        variant=v,
+                        impressions=impressions,
+                        conversions=conversions,
+                        total_value=total_value,
+                        conversion_rate=round(rate, 4),
+                        confidence_interval=(round(ci[0], 4), round(ci[1], 4)),
+                    )
+                )
 
             total_impressions = sum(vs.impressions for vs in variant_stats)
             total_conversions = sum(vs.conversions for vs in variant_stats)
 
             # Significance between top two variants by conversion rate
-            sorted_stats = sorted(
-                variant_stats, key=lambda s: s.conversion_rate, reverse=True
-            )
+            sorted_stats = sorted(variant_stats, key=lambda s: s.conversion_rate, reverse=True)
             p_value = None
             is_sig = False
             winner = None
 
-            if (
-                len(sorted_stats) >= 2
-                and sorted_stats[0].impressions > 0
-                and sorted_stats[1].impressions > 0
-            ):
+            if len(sorted_stats) >= 2 and sorted_stats[0].impressions > 0 and sorted_stats[1].impressions > 0:
                 p_value = self._two_proportion_z_test(
                     sorted_stats[0].conversions,
                     sorted_stats[0].impressions,
@@ -577,9 +555,7 @@ class ABTestingService:
             duration_hours=round(duration_hours, 2),
         )
 
-    def is_significant(
-        self, experiment_id: str, threshold: float = 0.95
-    ) -> bool:
+    def is_significant(self, experiment_id: str, threshold: float = 0.95) -> bool:
         """Check whether an experiment has reached statistical significance.
 
         Args:
@@ -608,8 +584,10 @@ class ABTestingService:
 
             rates.sort(key=lambda t: t[1] / t[2], reverse=True)
             p_value = self._two_proportion_z_test(
-                rates[0][1], rates[0][2],
-                rates[1][1], rates[1][2],
+                rates[0][1],
+                rates[0][2],
+                rates[1][1],
+                rates[1][2],
             )
 
         return p_value < alpha
@@ -631,9 +609,7 @@ class ABTestingService:
         traffic_split: Dict[str, float],
     ) -> str:
         """Map a contact deterministically to a variant via hash bucketing."""
-        digest = hashlib.sha256(
-            f"{contact_id}:{experiment_id}".encode()
-        ).hexdigest()
+        digest = hashlib.sha256(f"{contact_id}:{experiment_id}".encode()).hexdigest()
         bucket = int(digest[:8], 16) / 0xFFFFFFFF  # normalise to [0, 1]
 
         cumulative = 0.0
@@ -646,9 +622,7 @@ class ABTestingService:
         return variants[-1]
 
     @staticmethod
-    def _wilson_confidence_interval(
-        successes: int, trials: int, z: float = 1.96
-    ) -> tuple:
+    def _wilson_confidence_interval(successes: int, trials: int, z: float = 1.96) -> tuple:
         """Wilson score interval for a binomial proportion.
 
         Returns (lower, upper) bounds.  When trials == 0 returns (0, 0).
@@ -660,18 +634,14 @@ class ABTestingService:
         z2 = z * z
         denominator = 1 + z2 / trials
         centre = p_hat + z2 / (2 * trials)
-        spread = z * math.sqrt(
-            (p_hat * (1 - p_hat) + z2 / (4 * trials)) / trials
-        )
+        spread = z * math.sqrt((p_hat * (1 - p_hat) + z2 / (4 * trials)) / trials)
 
         lower = max(0.0, (centre - spread) / denominator)
         upper = min(1.0, (centre + spread) / denominator)
         return (lower, upper)
 
     @staticmethod
-    def _two_proportion_z_test(
-        k1: int, n1: int, k2: int, n2: int
-    ) -> float:
+    def _two_proportion_z_test(k1: int, n1: int, k2: int, n2: int) -> float:
         """Two-proportion z-test returning a two-sided p-value.
 
         Uses the normal approximation to the binomial.

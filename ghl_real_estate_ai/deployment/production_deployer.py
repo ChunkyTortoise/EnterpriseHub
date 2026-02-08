@@ -21,28 +21,25 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Callable
+from typing import Any, Callable, Dict, List, Optional
 
 import aiohttp
 import asyncpg
 import redis.asyncio as redis
 from pydantic import BaseModel
 
-
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('deployment.log'),
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("deployment.log"), logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
 
 
 class DeploymentStatus(Enum):
     """Deployment status tracking"""
+
     PENDING = "pending"
     VALIDATING = "validating"
     DEPLOYING = "deploying"
@@ -55,6 +52,7 @@ class DeploymentStatus(Enum):
 
 class HealthCheckStatus(Enum):
     """Health check status"""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
@@ -63,6 +61,7 @@ class HealthCheckStatus(Enum):
 @dataclass
 class DeploymentConfig:
     """Deployment configuration"""
+
     service_name: str = "service6_lead_engine"
     version: str = "2.0.0"
     environment: str = "production"
@@ -74,13 +73,13 @@ class DeploymentConfig:
 
     # Health checking
     health_check_interval: int = 30  # seconds
-    health_check_timeout: int = 10   # seconds
+    health_check_timeout: int = 10  # seconds
     max_unhealthy_duration: int = 300  # 5 minutes
 
     # Performance thresholds
     max_response_time: float = 500.0  # ms
-    min_success_rate: float = 99.0    # %
-    max_error_rate: float = 1.0       # %
+    min_success_rate: float = 99.0  # %
+    max_error_rate: float = 1.0  # %
 
     # Rollback configuration
     auto_rollback: bool = True
@@ -100,19 +99,12 @@ class HealthCheck:
         try:
             # Initialize Redis connection
             self.redis_client = redis.Redis(
-                host='localhost',
-                port=6379,
-                decode_responses=True,
-                socket_timeout=5.0,
-                socket_connect_timeout=5.0
+                host="localhost", port=6379, decode_responses=True, socket_timeout=5.0, socket_connect_timeout=5.0
             )
 
             # Initialize database connection pool
             self.db_pool = await asyncpg.create_pool(
-                "postgresql://localhost:5432/ghl_real_estate",
-                min_size=2,
-                max_size=5,
-                command_timeout=10.0
+                "postgresql://localhost:5432/ghl_real_estate", min_size=2, max_size=5, command_timeout=10.0
             )
 
             logger.info("Health check connections initialized successfully")
@@ -124,10 +116,10 @@ class HealthCheck:
     async def check_api_endpoints(self) -> Dict[str, Any]:
         """Check critical API endpoints"""
         endpoints = {
-            '/health': {'timeout': 5.0, 'critical': True},
-            '/api/v1/leads/score': {'timeout': 10.0, 'critical': True},
-            '/api/v1/voice/analyze': {'timeout': 15.0, 'critical': True},
-            '/api/v1/analytics/predict': {'timeout': 20.0, 'critical': False}
+            "/health": {"timeout": 5.0, "critical": True},
+            "/api/v1/leads/score": {"timeout": 10.0, "critical": True},
+            "/api/v1/voice/analyze": {"timeout": 15.0, "critical": True},
+            "/api/v1/analytics/predict": {"timeout": 20.0, "critical": False},
         }
 
         results = {}
@@ -138,32 +130,31 @@ class HealthCheck:
                 try:
                     start_time = time.time()
                     async with session.get(
-                        f"{base_url}{endpoint}",
-                        timeout=aiohttp.ClientTimeout(total=config['timeout'])
+                        f"{base_url}{endpoint}", timeout=aiohttp.ClientTimeout(total=config["timeout"])
                     ) as response:
                         response_time = (time.time() - start_time) * 1000
 
                         results[endpoint] = {
-                            'status': 'healthy' if response.status == 200 else 'unhealthy',
-                            'response_time': response_time,
-                            'status_code': response.status,
-                            'critical': config['critical'],
-                            'timestamp': datetime.utcnow().isoformat()
+                            "status": "healthy" if response.status == 200 else "unhealthy",
+                            "response_time": response_time,
+                            "status_code": response.status,
+                            "critical": config["critical"],
+                            "timestamp": datetime.utcnow().isoformat(),
                         }
 
                 except asyncio.TimeoutError:
                     results[endpoint] = {
-                        'status': 'unhealthy',
-                        'error': 'timeout',
-                        'critical': config['critical'],
-                        'timestamp': datetime.utcnow().isoformat()
+                        "status": "unhealthy",
+                        "error": "timeout",
+                        "critical": config["critical"],
+                        "timestamp": datetime.utcnow().isoformat(),
                     }
                 except Exception as e:
                     results[endpoint] = {
-                        'status': 'unhealthy',
-                        'error': str(e),
-                        'critical': config['critical'],
-                        'timestamp': datetime.utcnow().isoformat()
+                        "status": "unhealthy",
+                        "error": str(e),
+                        "critical": config["critical"],
+                        "timestamp": datetime.utcnow().isoformat(),
                     }
 
         return results
@@ -193,21 +184,17 @@ class HealthCheck:
             response_time = (time.time() - start_time) * 1000
 
             return {
-                'status': 'healthy',
-                'response_time': response_time,
-                'recent_leads': lead_count,
-                'recent_scores': recent_scores,
-                'pool_size': self.db_pool.get_size(),
-                'timestamp': datetime.utcnow().isoformat()
+                "status": "healthy",
+                "response_time": response_time,
+                "recent_leads": lead_count,
+                "recent_scores": recent_scores,
+                "pool_size": self.db_pool.get_size(),
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
         except Exception as e:
             logger.error(f"Database health check failed: {e}")
-            return {
-                'status': 'unhealthy',
-                'error': str(e),
-                'timestamp': datetime.utcnow().isoformat()
-            }
+            return {"status": "unhealthy", "error": str(e), "timestamp": datetime.utcnow().isoformat()}
 
     async def check_redis_health(self) -> Dict[str, Any]:
         """Check Redis connectivity and performance"""
@@ -226,28 +213,24 @@ class HealthCheck:
             response_time = (time.time() - start_time) * 1000
 
             return {
-                'status': 'healthy',
-                'response_time': response_time,
-                'memory_usage': info.get('used_memory_human', 'unknown'),
-                'connected_clients': info.get('connected_clients', 0),
-                'cache_hit_ratio': await self._calculate_cache_hit_ratio(),
-                'timestamp': datetime.utcnow().isoformat()
+                "status": "healthy",
+                "response_time": response_time,
+                "memory_usage": info.get("used_memory_human", "unknown"),
+                "connected_clients": info.get("connected_clients", 0),
+                "cache_hit_ratio": await self._calculate_cache_hit_ratio(),
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
         except Exception as e:
             logger.error(f"Redis health check failed: {e}")
-            return {
-                'status': 'unhealthy',
-                'error': str(e),
-                'timestamp': datetime.utcnow().isoformat()
-            }
+            return {"status": "unhealthy", "error": str(e), "timestamp": datetime.utcnow().isoformat()}
 
     async def _calculate_cache_hit_ratio(self) -> float:
         """Calculate cache hit ratio"""
         try:
             info = await self.redis_client.info()
-            hits = info.get('keyspace_hits', 0)
-            misses = info.get('keyspace_misses', 0)
+            hits = info.get("keyspace_hits", 0)
+            misses = info.get("keyspace_misses", 0)
 
             if hits + misses == 0:
                 return 0.0
@@ -267,10 +250,10 @@ class HealthCheck:
             start_time = time.time()
 
             test_lead_data = {
-                'email': 'test@example.com',
-                'phone': '+1234567890',
-                'source': 'website',
-                'engagement_score': 75.0
+                "email": "test@example.com",
+                "phone": "+1234567890",
+                "source": "website",
+                "engagement_score": 75.0,
             }
 
             # This would call the actual ML scoring endpoint
@@ -279,17 +262,17 @@ class HealthCheck:
 
             response_time = (time.time() - start_time) * 1000
 
-            results['ml_lead_scoring'] = {
-                'status': 'healthy' if response_time < 100 else 'degraded',
-                'response_time': response_time,
-                'timestamp': datetime.utcnow().isoformat()
+            results["ml_lead_scoring"] = {
+                "status": "healthy" if response_time < 100 else "degraded",
+                "response_time": response_time,
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
         except Exception as e:
-            results['ml_lead_scoring'] = {
-                'status': 'unhealthy',
-                'error': str(e),
-                'timestamp': datetime.utcnow().isoformat()
+            results["ml_lead_scoring"] = {
+                "status": "unhealthy",
+                "error": str(e),
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
         # Check Voice AI Integration
@@ -301,18 +284,14 @@ class HealthCheck:
 
             response_time = (time.time() - start_time) * 1000
 
-            results['voice_ai'] = {
-                'status': 'healthy' if response_time < 200 else 'degraded',
-                'response_time': response_time,
-                'timestamp': datetime.utcnow().isoformat()
+            results["voice_ai"] = {
+                "status": "healthy" if response_time < 200 else "degraded",
+                "response_time": response_time,
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
         except Exception as e:
-            results['voice_ai'] = {
-                'status': 'unhealthy',
-                'error': str(e),
-                'timestamp': datetime.utcnow().isoformat()
-            }
+            results["voice_ai"] = {"status": "unhealthy", "error": str(e), "timestamp": datetime.utcnow().isoformat()}
 
         # Check Predictive Analytics Engine
         try:
@@ -323,17 +302,17 @@ class HealthCheck:
 
             response_time = (time.time() - start_time) * 1000
 
-            results['predictive_analytics'] = {
-                'status': 'healthy' if response_time < 300 else 'degraded',
-                'response_time': response_time,
-                'timestamp': datetime.utcnow().isoformat()
+            results["predictive_analytics"] = {
+                "status": "healthy" if response_time < 300 else "degraded",
+                "response_time": response_time,
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
         except Exception as e:
-            results['predictive_analytics'] = {
-                'status': 'unhealthy',
-                'error': str(e),
-                'timestamp': datetime.utcnow().isoformat()
+            results["predictive_analytics"] = {
+                "status": "unhealthy",
+                "error": str(e),
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
         return results
@@ -350,7 +329,7 @@ class HealthCheck:
             self.check_database_health(),
             self.check_redis_health(),
             self.check_ai_services_health(),
-            return_exceptions=True
+            return_exceptions=True,
         )
 
         total_time = (time.time() - start_time) * 1000
@@ -362,41 +341,40 @@ class HealthCheck:
         # Check API endpoints
         if isinstance(api_check, dict):
             for endpoint, result in api_check.items():
-                if result.get('status') == 'unhealthy' and result.get('critical'):
+                if result.get("status") == "unhealthy" and result.get("critical"):
                     overall_status = HealthCheckStatus.UNHEALTHY
                     critical_failures.append(f"Critical API endpoint {endpoint} unhealthy")
 
         # Check database
-        if isinstance(db_check, dict) and db_check.get('status') == 'unhealthy':
+        if isinstance(db_check, dict) and db_check.get("status") == "unhealthy":
             overall_status = HealthCheckStatus.UNHEALTHY
             critical_failures.append("Database connectivity failed")
 
         # Check Redis
-        if isinstance(redis_check, dict) and redis_check.get('status') == 'unhealthy':
+        if isinstance(redis_check, dict) and redis_check.get("status") == "unhealthy":
             if overall_status != HealthCheckStatus.UNHEALTHY:
                 overall_status = HealthCheckStatus.DEGRADED
 
         # Check AI services
         if isinstance(ai_check, dict):
             unhealthy_ai_services = sum(
-                1 for service_result in ai_check.values()
-                if service_result.get('status') == 'unhealthy'
+                1 for service_result in ai_check.values() if service_result.get("status") == "unhealthy"
             )
             if unhealthy_ai_services > 1:  # More than 1 AI service down
                 overall_status = HealthCheckStatus.UNHEALTHY
                 critical_failures.append(f"{unhealthy_ai_services} AI services unhealthy")
 
         health_report = {
-            'overall_status': overall_status.value,
-            'timestamp': datetime.utcnow().isoformat(),
-            'total_check_time': total_time,
-            'critical_failures': critical_failures,
-            'components': {
-                'api_endpoints': api_check if isinstance(api_check, dict) else {'error': str(api_check)},
-                'database': db_check if isinstance(db_check, dict) else {'error': str(db_check)},
-                'redis': redis_check if isinstance(redis_check, dict) else {'error': str(redis_check)},
-                'ai_services': ai_check if isinstance(ai_check, dict) else {'error': str(ai_check)}
-            }
+            "overall_status": overall_status.value,
+            "timestamp": datetime.utcnow().isoformat(),
+            "total_check_time": total_time,
+            "critical_failures": critical_failures,
+            "components": {
+                "api_endpoints": api_check if isinstance(api_check, dict) else {"error": str(api_check)},
+                "database": db_check if isinstance(db_check, dict) else {"error": str(db_check)},
+                "redis": redis_check if isinstance(redis_check, dict) else {"error": str(redis_check)},
+                "ai_services": ai_check if isinstance(ai_check, dict) else {"error": str(ai_check)},
+            },
         }
 
         logger.info(f"Health check completed in {total_time:.2f}ms - Status: {overall_status.value}")
@@ -442,34 +420,34 @@ class PerformanceMonitor:
         # Simulate metrics collection
         # In production, these would come from actual monitoring systems
         metrics = {
-            'timestamp': timestamp.isoformat(),
-            'response_times': {
-                'lead_scoring': 85.0,  # ms
-                'voice_ai': 150.0,     # ms
-                'predictive_analytics': 200.0,  # ms
-                'api_avg': 145.0       # ms
+            "timestamp": timestamp.isoformat(),
+            "response_times": {
+                "lead_scoring": 85.0,  # ms
+                "voice_ai": 150.0,  # ms
+                "predictive_analytics": 200.0,  # ms
+                "api_avg": 145.0,  # ms
             },
-            'throughput': {
-                'requests_per_second': 120.0,
-                'leads_processed_per_hour': 1200,
-                'successful_requests': 99.2  # %
+            "throughput": {
+                "requests_per_second": 120.0,
+                "leads_processed_per_hour": 1200,
+                "successful_requests": 99.2,  # %
             },
-            'resource_utilization': {
-                'cpu_usage': 65.0,    # %
-                'memory_usage': 78.0,  # %
-                'disk_io': 45.0       # %
+            "resource_utilization": {
+                "cpu_usage": 65.0,  # %
+                "memory_usage": 78.0,  # %
+                "disk_io": 45.0,  # %
             },
-            'error_rates': {
-                'total_errors': 0.8,  # %
-                'ml_scoring_errors': 0.1,  # %
-                'voice_ai_errors': 0.2,   # %
-                'api_errors': 0.5         # %
+            "error_rates": {
+                "total_errors": 0.8,  # %
+                "ml_scoring_errors": 0.1,  # %
+                "voice_ai_errors": 0.2,  # %
+                "api_errors": 0.5,  # %
             },
-            'business_metrics': {
-                'lead_conversion_rate': 24.5,  # %
-                'average_lead_score': 72.3,
-                'voice_analysis_accuracy': 94.8  # %
-            }
+            "business_metrics": {
+                "lead_conversion_rate": 24.5,  # %
+                "average_lead_score": 72.3,
+                "voice_analysis_accuracy": 94.8,  # %
+            },
         }
 
         return metrics
@@ -479,38 +457,44 @@ class PerformanceMonitor:
         alerts = []
 
         # Check response times
-        avg_response_time = metrics['response_times']['api_avg']
+        avg_response_time = metrics["response_times"]["api_avg"]
         if avg_response_time > self.config.max_response_time:
-            alerts.append({
-                'level': 'warning',
-                'message': f"Average response time {avg_response_time}ms exceeds threshold {self.config.max_response_time}ms",
-                'metric': 'response_time',
-                'value': avg_response_time
-            })
+            alerts.append(
+                {
+                    "level": "warning",
+                    "message": f"Average response time {avg_response_time}ms exceeds threshold {self.config.max_response_time}ms",
+                    "metric": "response_time",
+                    "value": avg_response_time,
+                }
+            )
 
         # Check success rate
-        success_rate = metrics['throughput']['successful_requests']
+        success_rate = metrics["throughput"]["successful_requests"]
         if success_rate < self.config.min_success_rate:
-            alerts.append({
-                'level': 'critical',
-                'message': f"Success rate {success_rate}% below threshold {self.config.min_success_rate}%",
-                'metric': 'success_rate',
-                'value': success_rate
-            })
+            alerts.append(
+                {
+                    "level": "critical",
+                    "message": f"Success rate {success_rate}% below threshold {self.config.min_success_rate}%",
+                    "metric": "success_rate",
+                    "value": success_rate,
+                }
+            )
 
         # Check error rate
-        error_rate = metrics['error_rates']['total_errors']
+        error_rate = metrics["error_rates"]["total_errors"]
         if error_rate > self.config.max_error_rate:
-            alerts.append({
-                'level': 'critical',
-                'message': f"Error rate {error_rate}% exceeds threshold {self.config.max_error_rate}%",
-                'metric': 'error_rate',
-                'value': error_rate
-            })
+            alerts.append(
+                {
+                    "level": "critical",
+                    "message": f"Error rate {error_rate}% exceeds threshold {self.config.max_error_rate}%",
+                    "metric": "error_rate",
+                    "value": error_rate,
+                }
+            )
 
         # Log alerts
         for alert in alerts:
-            if alert['level'] == 'critical':
+            if alert["level"] == "critical":
                 logger.error(f"CRITICAL ALERT: {alert['message']}")
             else:
                 logger.warning(f"WARNING: {alert['message']}")
@@ -525,8 +509,9 @@ class PerformanceMonitor:
         cutoff = datetime.utcnow() - timedelta(minutes=minutes)
 
         return [
-            metric for metric in self.metrics
-            if datetime.fromisoformat(metric['timestamp'].replace('Z', '+00:00')) > cutoff
+            metric
+            for metric in self.metrics
+            if datetime.fromisoformat(metric["timestamp"].replace("Z", "+00:00")) > cutoff
         ]
 
 
@@ -601,7 +586,7 @@ class DeploymentOrchestrator:
         # Check current system health
         health_report = await self.health_checker.perform_comprehensive_health_check()
 
-        if health_report['overall_status'] == HealthCheckStatus.UNHEALTHY.value:
+        if health_report["overall_status"] == HealthCheckStatus.UNHEALTHY.value:
             logger.error("System is currently unhealthy, aborting deployment")
             return False
 
@@ -611,7 +596,7 @@ class DeploymentOrchestrator:
             "Environment variables configured",
             "SSL certificates valid",
             "Load balancer configured",
-            "Monitoring dashboards operational"
+            "Monitoring dashboards operational",
         ]
 
         for prerequisite in prerequisites:
@@ -649,7 +634,7 @@ class DeploymentOrchestrator:
             "Configuring load balancer",
             "Enabling new service endpoints",
             "Warming up caches",
-            "Validating service connectivity"
+            "Validating service connectivity",
         ]
 
         for i, step in enumerate(deployment_steps, 1):
@@ -661,7 +646,7 @@ class DeploymentOrchestrator:
             # Check health during deployment
             if i % 2 == 0:  # Check every other step
                 health_report = await self.health_checker.perform_comprehensive_health_check()
-                if health_report['overall_status'] == HealthCheckStatus.UNHEALTHY.value:
+                if health_report["overall_status"] == HealthCheckStatus.UNHEALTHY.value:
                     logger.error(f"Health check failed during step: {step}")
                     return False
 
@@ -673,26 +658,24 @@ class DeploymentOrchestrator:
         logger.info("Starting post-deployment monitoring...")
 
         # Start performance monitoring in background
-        monitoring_task = asyncio.create_task(
-            self.performance_monitor.start_monitoring()
-        )
+        monitoring_task = asyncio.create_task(self.performance_monitor.start_monitoring())
 
         try:
             # Monitor for 5 minutes
             monitoring_duration = 300  # 5 minutes
-            check_interval = 30        # 30 seconds
+            check_interval = 30  # 30 seconds
             checks_passed = 0
             required_checks = monitoring_duration // check_interval
 
             for i in range(required_checks):
-                logger.info(f"Post-deployment check {i+1}/{required_checks}")
+                logger.info(f"Post-deployment check {i + 1}/{required_checks}")
 
                 # Perform health check
                 health_report = await self.health_checker.perform_comprehensive_health_check()
 
-                if health_report['overall_status'] == HealthCheckStatus.HEALTHY.value:
+                if health_report["overall_status"] == HealthCheckStatus.HEALTHY.value:
                     checks_passed += 1
-                elif health_report['overall_status'] == HealthCheckStatus.UNHEALTHY.value:
+                elif health_report["overall_status"] == HealthCheckStatus.UNHEALTHY.value:
                     logger.error("System became unhealthy during monitoring period")
                     return False
 
@@ -702,7 +685,7 @@ class DeploymentOrchestrator:
                     latest_metrics = recent_metrics[-1]
 
                     # Validate performance thresholds
-                    if latest_metrics['response_times']['api_avg'] > self.config.max_response_time * 1.5:
+                    if latest_metrics["response_times"]["api_avg"] > self.config.max_response_time * 1.5:
                         logger.error("Response times significantly degraded")
                         return False
 
@@ -736,7 +719,7 @@ class DeploymentOrchestrator:
                 "Updating load balancer configuration",
                 "Validating rollback completion",
                 "Clearing caches",
-                "Verifying system health"
+                "Verifying system health",
             ]
 
             for i, step in enumerate(rollback_steps, 1):
@@ -746,7 +729,7 @@ class DeploymentOrchestrator:
             # Verify rollback success
             health_report = await self.health_checker.perform_comprehensive_health_check()
 
-            if health_report['overall_status'] in [HealthCheckStatus.HEALTHY.value, HealthCheckStatus.DEGRADED.value]:
+            if health_report["overall_status"] in [HealthCheckStatus.HEALTHY.value, HealthCheckStatus.DEGRADED.value]:
                 self.status = DeploymentStatus.ROLLED_BACK
                 logger.info("✅ Rollback completed successfully")
                 return True
@@ -765,14 +748,14 @@ class DeploymentOrchestrator:
             runtime = (datetime.utcnow() - self.deployment_start_time).total_seconds()
 
         return {
-            'service': self.config.service_name,
-            'version': self.config.version,
-            'status': self.status.value,
-            'deployment_start': self.deployment_start_time.isoformat() if self.deployment_start_time else None,
-            'runtime_seconds': runtime,
-            'rollback_point': self.rollback_point,
-            'auto_rollback_enabled': self.config.auto_rollback,
-            'timestamp': datetime.utcnow().isoformat()
+            "service": self.config.service_name,
+            "version": self.config.version,
+            "status": self.status.value,
+            "deployment_start": self.deployment_start_time.isoformat() if self.deployment_start_time else None,
+            "runtime_seconds": runtime,
+            "rollback_point": self.rollback_point,
+            "auto_rollback_enabled": self.config.auto_rollback,
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
 
@@ -785,8 +768,8 @@ async def main():
         environment="production",
         strategy="rolling",
         max_response_time=500.0,  # ms
-        min_success_rate=99.0,    # %
-        auto_rollback=True
+        min_success_rate=99.0,  # %
+        auto_rollback=True,
     )
 
     # Create and execute deployment
@@ -829,5 +812,6 @@ async def main():
 
 if __name__ == "__main__":
     import sys
+
     exit_code = asyncio.run(main())
     sys.exit(exit_code)

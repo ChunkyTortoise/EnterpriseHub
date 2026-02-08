@@ -103,9 +103,7 @@ class MetricsCollector:
         self._buffer_size = 100  # Flush to disk every 100 metrics
         logger.info(f"Metrics collector initialized at {self.storage_dir}")
 
-    def _get_metrics_file(
-        self, location_id: str, date_str: Optional[str] = None
-    ) -> Path:
+    def _get_metrics_file(self, location_id: str, date_str: Optional[str] = None) -> Path:
         """Get metrics file path for a location and date."""
         if not date_str:
             date_str = datetime.utcnow().strftime("%Y-%m-%d")
@@ -169,24 +167,25 @@ class MetricsCollector:
 
         # Calculate conversation duration
         from datetime import timezone
+
         created_at = context.get("created_at")
         if created_at:
             try:
                 if isinstance(created_at, str):
                     # Handle possible ISO formats with 'Z' or offsets
                     try:
-                        if created_at.endswith('Z'):
-                            created_at = created_at[:-1] + '+00:00'
+                        if created_at.endswith("Z"):
+                            created_at = created_at[:-1] + "+00:00"
                         created_dt = datetime.fromisoformat(created_at)
                     except ValueError:
                         created_dt = datetime.now(timezone.utc)
                 else:
                     created_dt = created_at
-                
+
                 # Ensure created_dt is aware
                 if created_dt.tzinfo is None:
                     created_dt = created_dt.replace(tzinfo=timezone.utc)
-                    
+
                 duration = (datetime.now(timezone.utc) - created_dt).total_seconds()
             except Exception as e:
                 logger.warning(f"Duration calculation failed: {e}")
@@ -207,9 +206,9 @@ class MetricsCollector:
                     "conversation_history": context.get("conversation_history", [])
                     + [{"content": message, "role": "user"}],
                     "extracted_preferences": context.get("extracted_preferences", {}),
-                    "created_at": context.get("created_at")
+                    "created_at": context.get("created_at"),
                 },
-                location=location_id
+                location=location_id,
             )
             conversion_probability = predictive_result_inner.closing_probability
 
@@ -236,23 +235,24 @@ class MetricsCollector:
             tone_score=tone_score,
             is_returning_lead=context.get("is_returning_lead", False),
             pathway=context.get("extracted_preferences", {}).get("pathway"),
-            experiment_id=(
-                experiment_data.get("experiment_id") if experiment_data else None
-            ),
+            experiment_id=(experiment_data.get("experiment_id") if experiment_data else None),
             variant=experiment_data.get("variant") if experiment_data else None,
         )
 
         # Include predictive details in data if available
         if predictive_result:
             from dataclasses import asdict
+
             metrics_dict = asdict(metrics)
             metrics_dict["predictive_score"] = asdict(predictive_result)
             # Handle non-serializable fields in nested dict
-            if hasattr(predictive_result.priority_level, 'value'):
+            if hasattr(predictive_result.priority_level, "value"):
                 metrics_dict["predictive_score"]["priority_level"] = predictive_result.priority_level.value
             if isinstance(metrics_dict["predictive_score"].get("last_updated"), datetime):
-                metrics_dict["predictive_score"]["last_updated"] = metrics_dict["predictive_score"]["last_updated"].isoformat()
-            
+                metrics_dict["predictive_score"]["last_updated"] = metrics_dict["predictive_score"][
+                    "last_updated"
+                ].isoformat()
+
             # Add to buffer as dict for rich JSONL storage
             self._buffer.append(metrics_dict)
         else:
@@ -265,9 +265,7 @@ class MetricsCollector:
         # Log performance
         collection_time_ms = (time.time() - start_time) * 1000
         if collection_time_ms > 50:
-            logger.warning(
-                f"Metrics collection took {collection_time_ms:.2f}ms (target: <50ms)"
-            )
+            logger.warning(f"Metrics collection took {collection_time_ms:.2f}ms (target: <50ms)")
 
         return metrics
 
@@ -316,10 +314,7 @@ class MetricsCollector:
             keywords.append("location")
 
         # Timeline
-        if any(
-            word in message_lower
-            for word in ["when", "timeline", "soon", "asap", "urgent"]
-        ):
+        if any(word in message_lower for word in ["when", "timeline", "soon", "asap", "urgent"]):
             keywords.append("timeline")
 
         # Property type
@@ -327,17 +322,11 @@ class MetricsCollector:
             keywords.append("property_specs")
 
         # Financing
-        if any(
-            word in message_lower
-            for word in ["mortgage", "financing", "pre-approved", "cash"]
-        ):
+        if any(word in message_lower for word in ["mortgage", "financing", "pre-approved", "cash"]):
             keywords.append("financing")
 
         # Appointment
-        if any(
-            word in message_lower
-            for word in ["appointment", "viewing", "tour", "schedule", "meet"]
-        ):
+        if any(word in message_lower for word in ["appointment", "viewing", "tour", "schedule", "meet"]):
             keywords.append("appointment")
 
         return keywords
@@ -348,29 +337,19 @@ class MetricsCollector:
         message_lower = message.lower()
 
         # Seller topics
-        if any(
-            word in message_lower for word in ["sell", "selling", "list", "listing"]
-        ):
+        if any(word in message_lower for word in ["sell", "selling", "list", "listing"]):
             topics.append("seller")
 
         # Buyer topics
-        if any(
-            word in message_lower
-            for word in ["buy", "buying", "purchase", "looking for"]
-        ):
+        if any(word in message_lower for word in ["buy", "buying", "purchase", "looking for"]):
             topics.append("buyer")
 
         # Wholesale
-        if any(
-            word in message_lower
-            for word in ["as-is", "fast sale", "cash offer", "quick"]
-        ):
+        if any(word in message_lower for word in ["as-is", "fast sale", "cash offer", "quick"]):
             topics.append("wholesale")
 
         # Investment
-        if any(
-            word in message_lower for word in ["investment", "rental", "flip", "roi"]
-        ):
+        if any(word in message_lower for word in ["investment", "rental", "flip", "roi"]):
             topics.append("investment")
 
         return topics
@@ -478,9 +457,7 @@ class ConversionTracker:
         Returns:
             ConversionFunnel with calculated metrics
         """
-        metrics = await self.metrics_collector.get_metrics(
-            location_id, start_date, end_date
-        )
+        metrics = await self.metrics_collector.get_metrics(location_id, start_date, end_date)
 
         if not metrics:
             return ConversionFunnel()
@@ -513,14 +490,9 @@ class ConversionTracker:
                 contacts_by_stage["appointment"].add(contact_id)
 
             # Track when they became hot
-            if (
-                classification == "hot"
-                and contact_progression[contact_id]["became_hot"] is None
-            ):
+            if classification == "hot" and contact_progression[contact_id]["became_hot"] is None:
                 contact_progression[contact_id]["became_hot"] = metric.timestamp
-                contact_progression[contact_id][
-                    "message_count_to_hot"
-                ] = metric.message_count
+                contact_progression[contact_id]["message_count_to_hot"] = metric.message_count
 
         # Calculate counts
         funnel = ConversionFunnel(
@@ -535,15 +507,11 @@ class ConversionTracker:
 
         if total_leads > 0:
             funnel.cold_to_warm_rate = len(contacts_by_stage["warm"]) / total_leads
-            funnel.warm_to_hot_rate = len(contacts_by_stage["hot"]) / max(
-                len(contacts_by_stage["warm"]), 1
+            funnel.warm_to_hot_rate = len(contacts_by_stage["hot"]) / max(len(contacts_by_stage["warm"]), 1)
+            funnel.hot_to_appointment_rate = len(contacts_by_stage["appointment"]) / max(
+                len(contacts_by_stage["hot"]), 1
             )
-            funnel.hot_to_appointment_rate = len(
-                contacts_by_stage["appointment"]
-            ) / max(len(contacts_by_stage["hot"]), 1)
-            funnel.overall_conversion_rate = (
-                len(contacts_by_stage["appointment"]) / total_leads
-            )
+            funnel.overall_conversion_rate = len(contacts_by_stage["appointment"]) / total_leads
 
         # Calculate average time and messages to hot
         times_to_hot = []
@@ -593,9 +561,7 @@ class ResponseTimeAnalyzer:
                 }
             }
         """
-        metrics = await self.metrics_collector.get_metrics(
-            location_id, start_date, end_date
-        )
+        metrics = await self.metrics_collector.get_metrics(location_id, start_date, end_date)
 
         if not metrics:
             return {"error": "No metrics found"}
@@ -605,9 +571,7 @@ class ResponseTimeAnalyzer:
         times_by_classification = defaultdict(list)
 
         for metric in metrics:
-            times_by_classification[metric.classification].append(
-                metric.response_time_ms
-            )
+            times_by_classification[metric.classification].append(metric.response_time_ms)
 
         # Calculate overall statistics
         result = {
@@ -661,9 +625,7 @@ class ComplianceMonitor:
                 "violations": List[Dict]
             }
         """
-        metrics = await self.metrics_collector.get_metrics(
-            location_id, start_date, end_date
-        )
+        metrics = await self.metrics_collector.get_metrics(location_id, start_date, end_date)
 
         if not metrics:
             return {"error": "No metrics found"}
@@ -728,9 +690,7 @@ class TopicDistributionAnalyzer:
                 }
             }
         """
-        metrics = await self.metrics_collector.get_metrics(
-            location_id, start_date, end_date
-        )
+        metrics = await self.metrics_collector.get_metrics(location_id, start_date, end_date)
 
         if not metrics:
             return {"error": "No metrics found"}
@@ -754,14 +714,10 @@ class TopicDistributionAnalyzer:
 
         # Calculate percentages
         keywords = {
-            keyword: {"count": count, "percentage": (count / total) * 100}
-            for keyword, count in keyword_counts.items()
+            keyword: {"count": count, "percentage": (count / total) * 100} for keyword, count in keyword_counts.items()
         }
 
-        topics = {
-            topic: {"count": count, "percentage": (count / total) * 100}
-            for topic, count in topic_counts.items()
-        }
+        topics = {topic: {"count": count, "percentage": (count / total) * 100} for topic, count in topic_counts.items()}
 
         return {
             "keywords": keywords,
@@ -833,9 +789,9 @@ class AnalyticsEngine:
                     "conversation_history": context.get("conversation_history", [])
                     + [{"content": message, "role": "user"}],
                     "extracted_preferences": context.get("extracted_preferences", {}),
-                    "created_at": context.get("created_at")
+                    "created_at": context.get("created_at"),
                 },
-                location=location_id
+                location=location_id,
             )
 
         return await self.metrics_collector.record_conversation_event(
@@ -849,7 +805,7 @@ class AnalyticsEngine:
             context=context,
             appointment_scheduled=appointment_scheduled,
             experiment_data=experiment_data,
-            predictive_result=predictive_result
+            predictive_result=predictive_result,
         )
 
     async def get_conversion_funnel(
@@ -859,9 +815,7 @@ class AnalyticsEngine:
         end_date: Optional[str] = None,
     ) -> ConversionFunnel:
         """Get conversion funnel metrics."""
-        return await self.conversion_tracker.calculate_funnel(
-            location_id, start_date, end_date
-        )
+        return await self.conversion_tracker.calculate_funnel(location_id, start_date, end_date)
 
     async def analyze_response_times(
         self,
@@ -870,9 +824,7 @@ class AnalyticsEngine:
         end_date: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Analyze response times."""
-        return await self.response_time_analyzer.analyze_response_times(
-            location_id, start_date, end_date
-        )
+        return await self.response_time_analyzer.analyze_response_times(location_id, start_date, end_date)
 
     async def check_compliance(
         self,
@@ -881,9 +833,7 @@ class AnalyticsEngine:
         end_date: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Check SMS compliance."""
-        return await self.compliance_monitor.check_compliance(
-            location_id, start_date, end_date
-        )
+        return await self.compliance_monitor.check_compliance(location_id, start_date, end_date)
 
     async def analyze_topics(
         self,
@@ -892,9 +842,7 @@ class AnalyticsEngine:
         end_date: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Analyze topic distribution."""
-        return await self.topic_analyzer.analyze_topics(
-            location_id, start_date, end_date
-        )
+        return await self.topic_analyzer.analyze_topics(location_id, start_date, end_date)
 
     async def get_comprehensive_report(
         self,
@@ -922,12 +870,8 @@ class AnalyticsEngine:
                 ed = datetime.strptime(end_date, "%Y-%m-%d")
                 days = (ed - sd).days + 1
 
-            executive_summary = self.executive_dashboard.get_executive_summary(
-                location_id, days=days
-            )
-            revenue_report = self.revenue_attribution.get_full_attribution_report(
-                location_id
-            )
+            executive_summary = self.executive_dashboard.get_executive_summary(location_id, days=days)
+            revenue_report = self.revenue_attribution.get_full_attribution_report(location_id)
         except Exception as e:
             logger.error(f"Failed to get executive or revenue reports: {e}")
             executive_summary = {}

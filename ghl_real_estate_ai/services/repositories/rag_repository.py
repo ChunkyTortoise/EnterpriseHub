@@ -7,23 +7,30 @@ Provides AI-powered property matching based on natural language queries.
 
 import asyncio
 import json
-from typing import Dict, List, Optional, Any, Union
 from datetime import datetime, timedelta
-import numpy as np
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
+
+import numpy as np
 
 try:
     # Optional dependencies for embeddings
+    import faiss
     import openai
     from sentence_transformers import SentenceTransformer
-    import faiss
+
     HAS_EMBEDDINGS = True
 except ImportError:
     HAS_EMBEDDINGS = False
 
 from .interfaces import (
-    IPropertyRepository, PropertyQuery, RepositoryResult, RepositoryMetadata,
-    RepositoryError, QueryOperator, SortOrder
+    IPropertyRepository,
+    PropertyQuery,
+    QueryOperator,
+    RepositoryError,
+    RepositoryMetadata,
+    RepositoryResult,
+    SortOrder,
 )
 
 
@@ -56,7 +63,7 @@ class RAGPropertyRepository(IPropertyRepository):
         if not HAS_EMBEDDINGS:
             raise RepositoryError(
                 "RAG repository requires optional dependencies: sentence-transformers, faiss-cpu, openai",
-                repository_type="rag"
+                repository_type="rag",
             )
 
         # Configuration
@@ -97,11 +104,7 @@ class RAGPropertyRepository(IPropertyRepository):
             return True
 
         except Exception as e:
-            raise RepositoryError(
-                f"Failed to connect to RAG repository: {e}",
-                repository_type="rag",
-                original_error=e
-            )
+            raise RepositoryError(f"Failed to connect to RAG repository: {e}", repository_type="rag", original_error=e)
 
     async def disconnect(self):
         """Clean up resources"""
@@ -124,7 +127,7 @@ class RAGPropertyRepository(IPropertyRepository):
             "indexed_properties": len(self.property_documents),
             "vector_dimension": self.document_embeddings.shape[1] if self.document_embeddings is not None else 0,
             "last_indexed": self._last_indexed.isoformat() if self._last_indexed else None,
-            "issues": []
+            "issues": [],
         }
 
         # Check embedding model
@@ -182,7 +185,7 @@ class RAGPropertyRepository(IPropertyRepository):
                 source=self.name,
                 query_time_ms=execution_time,
                 cache_hit=False,  # RAG is always computed
-                total_scanned=len(self.property_documents)
+                total_scanned=len(self.property_documents),
             )
 
             return RepositoryResult(
@@ -190,14 +193,11 @@ class RAGPropertyRepository(IPropertyRepository):
                 total_count=total_count,
                 pagination=query.pagination,
                 metadata=metadata,
-                execution_time_ms=execution_time
+                execution_time_ms=execution_time,
             )
 
         except Exception as e:
-            return RepositoryResult(
-                success=False,
-                errors=[f"RAG search failed: {str(e)}"]
-            )
+            return RepositoryResult(success=False, errors=[f"RAG search failed: {str(e)}"])
 
     async def get_property_by_id(self, property_id: str) -> Optional[Dict[str, Any]]:
         """Get property by ID"""
@@ -214,9 +214,17 @@ class RAGPropertyRepository(IPropertyRepository):
     def get_supported_filters(self) -> List[str]:
         """Get supported filter fields"""
         return [
-            "id", "address", "price", "bedrooms", "bathrooms", "sqft",
-            "property_type", "neighborhood", "amenities", "description",
-            "semantic_query"
+            "id",
+            "address",
+            "price",
+            "bedrooms",
+            "bathrooms",
+            "sqft",
+            "property_type",
+            "neighborhood",
+            "amenities",
+            "description",
+            "semantic_query",
         ]
 
     def get_performance_metrics(self) -> Dict[str, Any]:
@@ -228,7 +236,7 @@ class RAGPropertyRepository(IPropertyRepository):
             "indexed_properties": len(self.property_documents),
             "vector_dimension": self.document_embeddings.shape[1] if self.document_embeddings is not None else 0,
             "last_indexed": self._last_indexed.isoformat() if self._last_indexed else None,
-            "similarity_threshold": self.similarity_threshold
+            "similarity_threshold": self.similarity_threshold,
         }
 
     # Private methods
@@ -252,6 +260,7 @@ class RAGPropertyRepository(IPropertyRepository):
 
             # Load FAISS index
             import faiss
+
             faiss_path = index_path / "properties.faiss"
             if faiss_path.exists():
                 self.vector_index = faiss.read_index(str(faiss_path))
@@ -259,7 +268,7 @@ class RAGPropertyRepository(IPropertyRepository):
             # Load property documents
             docs_path = index_path / "documents.json"
             if docs_path.exists():
-                with open(docs_path, 'r') as f:
+                with open(docs_path, "r") as f:
                     self.property_documents = json.load(f)
 
             # Load embeddings
@@ -270,13 +279,11 @@ class RAGPropertyRepository(IPropertyRepository):
             # Load metadata
             meta_path = index_path / "metadata.json"
             if meta_path.exists():
-                with open(meta_path, 'r') as f:
+                with open(meta_path, "r") as f:
                     metadata = json.load(f)
                     self._last_indexed = datetime.fromisoformat(metadata["last_indexed"])
 
-            return (self.vector_index is not None and
-                   self.property_documents and
-                   self.document_embeddings is not None)
+            return self.vector_index is not None and self.property_documents and self.document_embeddings is not None
 
         except Exception as e:
             print(f"Failed to load existing index: {e}")
@@ -296,6 +303,7 @@ class RAGPropertyRepository(IPropertyRepository):
 
         # Create FAISS index
         import faiss
+
         dimension = embeddings.shape[1]
         self.vector_index = faiss.IndexFlatIP(dimension)  # Inner product (cosine similarity)
 
@@ -319,7 +327,7 @@ class RAGPropertyRepository(IPropertyRepository):
                 if not path_obj.exists():
                     continue
 
-                with open(path_obj, 'r') as f:
+                with open(path_obj, "r") as f:
                     data = json.load(f)
 
                 # Extract properties from various JSON structures
@@ -416,13 +424,10 @@ class RAGPropertyRepository(IPropertyRepository):
         # Process in batches to avoid rate limits
         batch_size = 100
         for i in range(0, len(texts), batch_size):
-            batch = texts[i:i + batch_size]
+            batch = texts[i : i + batch_size]
 
             try:
-                response = await openai.Embedding.acreate(
-                    model="text-embedding-ada-002",
-                    input=batch
-                )
+                response = await openai.Embedding.acreate(model="text-embedding-ada-002", input=batch)
 
                 batch_embeddings = [item["embedding"] for item in response["data"]]
                 embeddings.extend(batch_embeddings)
@@ -439,9 +444,7 @@ class RAGPropertyRepository(IPropertyRepository):
         """Generate embeddings using local model"""
         # Run in executor to avoid blocking
         loop = asyncio.get_event_loop()
-        embeddings = await loop.run_in_executor(
-            None, self.embedding_model.encode, texts
-        )
+        embeddings = await loop.run_in_executor(None, self.embedding_model.encode, texts)
         return embeddings.astype(np.float32)
 
     async def _semantic_search(self, query_text: str, query: PropertyQuery) -> List[Dict[str, Any]]:
@@ -454,6 +457,7 @@ class RAGPropertyRepository(IPropertyRepository):
 
         # Normalize for cosine similarity
         import faiss
+
         faiss.normalize_L2(query_embedding)
 
         # Search vector index
@@ -488,8 +492,9 @@ class RAGPropertyRepository(IPropertyRepository):
             filtered = [p for p in filtered if p.get("bedrooms", 0) >= query.min_bedrooms]
 
         if query.property_types:
-            filtered = [p for p in filtered if p.get("property_type", "").lower() in
-                       [pt.lower() for pt in query.property_types]]
+            filtered = [
+                p for p in filtered if p.get("property_type", "").lower() in [pt.lower() for pt in query.property_types]
+            ]
 
         # Add traditional search metadata
         for prop in filtered:
@@ -500,6 +505,7 @@ class RAGPropertyRepository(IPropertyRepository):
 
     async def _sort_results(self, results: List[Dict[str, Any]], query: PropertyQuery) -> List[Dict[str, Any]]:
         """Sort results with semantic score priority"""
+
         def sort_key(prop: Dict[str, Any]):
             # Prioritize semantic results by similarity score
             if "_similarity_score" in prop:
@@ -549,11 +555,12 @@ class RAGPropertyRepository(IPropertyRepository):
             # Save FAISS index
             if self.vector_index:
                 import faiss
+
                 faiss.write_index(self.vector_index, str(index_path / "properties.faiss"))
 
             # Save property documents
             if self.property_documents:
-                with open(index_path / "documents.json", 'w') as f:
+                with open(index_path / "documents.json", "w") as f:
                     json.dump(self.property_documents, f, default=str)
 
             # Save embeddings
@@ -564,9 +571,9 @@ class RAGPropertyRepository(IPropertyRepository):
             metadata = {
                 "last_indexed": self._last_indexed.isoformat() if self._last_indexed else None,
                 "property_count": len(self.property_documents),
-                "embedding_model": self.embedding_model_name
+                "embedding_model": self.embedding_model_name,
             }
-            with open(index_path / "metadata.json", 'w') as f:
+            with open(index_path / "metadata.json", "w") as f:
                 json.dump(metadata, f)
 
         except Exception as e:

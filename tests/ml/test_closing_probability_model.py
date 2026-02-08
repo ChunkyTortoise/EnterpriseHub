@@ -2,22 +2,19 @@
 Tests for closing probability ML model.
 """
 
-import pytest
 import asyncio
-import tempfile
-import shutil
 import os
+import shutil
+import tempfile
 from datetime import datetime, timedelta
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 import numpy as np
 import pandas as pd
+import pytest
 from sklearn.metrics import accuracy_score
 
-from ghl_real_estate_ai.ml.closing_probability_model import (
-    ClosingProbabilityModel,
-    ModelPrediction,
-    ModelMetrics
-)
+from ghl_real_estate_ai.ml.closing_probability_model import ClosingProbabilityModel, ModelMetrics, ModelPrediction
 
 
 class TestClosingProbabilityModel:
@@ -48,15 +45,11 @@ class TestClosingProbabilityModel:
         # Generate realistic targets based on features
         # Higher qualification and engagement should lead to higher closing rates
         qualification_scores = features[:, 12]  # qualification_completeness
-        engagement_scores = features[:, 5]      # engagement_score
-        urgency_scores = features[:, 4]         # urgency_score
+        engagement_scores = features[:, 5]  # engagement_score
+        urgency_scores = features[:, 4]  # urgency_score
 
         # Create closing probability based on realistic patterns
-        closing_probs = (
-            qualification_scores * 0.4 +
-            engagement_scores * 0.3 +
-            urgency_scores * 0.3
-        )
+        closing_probs = qualification_scores * 0.4 + engagement_scores * 0.3 + urgency_scores * 0.3
         # Add some noise
         closing_probs += np.random.normal(0, 0.1, n_samples)
         closing_probs = np.clip(closing_probs, 0, 1)
@@ -66,13 +59,29 @@ class TestClosingProbabilityModel:
 
         # Create feature names
         feature_names = [
-            "message_count_norm", "avg_response_time_norm", "conversation_duration_norm",
-            "sentiment_norm", "urgency_score", "engagement_score", "question_frequency",
-            "price_mentions_norm", "urgency_signals_norm", "location_specificity",
-            "budget_market_ratio", "budget_confidence", "qualification_completeness",
-            "message_variance_norm", "response_consistency", "weekend_activity",
-            "late_night_activity", "inventory_level", "days_on_market_norm",
-            "price_trend_norm", "seasonal_factor", "competition_level", "interest_rate_norm"
+            "message_count_norm",
+            "avg_response_time_norm",
+            "conversation_duration_norm",
+            "sentiment_norm",
+            "urgency_score",
+            "engagement_score",
+            "question_frequency",
+            "price_mentions_norm",
+            "urgency_signals_norm",
+            "location_specificity",
+            "budget_market_ratio",
+            "budget_confidence",
+            "qualification_completeness",
+            "message_variance_norm",
+            "response_consistency",
+            "weekend_activity",
+            "late_night_activity",
+            "inventory_level",
+            "days_on_market_norm",
+            "price_trend_norm",
+            "seasonal_factor",
+            "competition_level",
+            "interest_rate_norm",
         ]
 
         # Create DataFrame
@@ -89,15 +98,15 @@ class TestClosingProbabilityModel:
                 {"role": "user", "text": "I'm looking for a 3-bedroom house"},
                 {"role": "assistant", "text": "I can help you with that!"},
                 {"role": "user", "text": "My budget is $500,000 and I need to move quickly"},
-                {"role": "assistant", "text": "Great! Let me find some options for you."}
+                {"role": "assistant", "text": "Great! Let me find some options for you."},
             ],
             "extracted_preferences": {
                 "budget": "$500,000",
                 "bedrooms": "3",
                 "timeline": "quickly",
-                "location": "suburbs"
+                "location": "suburbs",
             },
-            "created_at": datetime.now().isoformat()
+            "created_at": datetime.now().isoformat(),
         }
 
     @pytest.mark.asyncio
@@ -154,10 +163,7 @@ class TestClosingProbabilityModel:
 
     @pytest.mark.asyncio
     async def test_predict_closing_probability_with_trained_model(
-        self,
-        ml_model,
-        sample_training_data,
-        mock_conversation_context
+        self, ml_model, sample_training_data, mock_conversation_context
     ):
         """Test prediction with trained model."""
         # Train model first
@@ -175,11 +181,7 @@ class TestClosingProbabilityModel:
         assert isinstance(prediction.positive_signals, list)
 
     @pytest.mark.asyncio
-    async def test_predict_closing_probability_without_trained_model(
-        self,
-        ml_model,
-        mock_conversation_context
-    ):
+    async def test_predict_closing_probability_without_trained_model(self, ml_model, mock_conversation_context):
         """Test prediction without trained model (baseline)."""
         prediction = await ml_model.predict_closing_probability(mock_conversation_context)
 
@@ -210,6 +212,7 @@ class TestClosingProbabilityModel:
 
         # Mock conversation features
         from ghl_real_estate_ai.ml.feature_engineering import ConversationFeatures
+
         conv_features = ConversationFeatures(
             message_count=10,
             avg_response_time=300.0,
@@ -228,7 +231,7 @@ class TestClosingProbabilityModel:
             message_length_variance=500.0,
             response_consistency=0.8,
             weekend_activity=False,
-            late_night_activity=False
+            late_night_activity=False,
         )
 
         risk_factors, positive_signals = await ml_model._analyze_prediction_factors(
@@ -279,10 +282,7 @@ class TestClosingProbabilityModel:
         num_samples = 100
         positive_rate = 0.3
 
-        data = ml_model.generate_synthetic_training_data(
-            num_samples=num_samples,
-            positive_rate=positive_rate
-        )
+        data = ml_model.generate_synthetic_training_data(num_samples=num_samples, positive_rate=positive_rate)
 
         assert isinstance(data, pd.DataFrame)
         assert len(data) == num_samples
@@ -298,12 +298,7 @@ class TestClosingProbabilityModel:
             assert feature in data.columns
 
     @pytest.mark.asyncio
-    async def test_feature_vector_mismatch_handling(
-        self,
-        ml_model,
-        sample_training_data,
-        mock_conversation_context
-    ):
+    async def test_feature_vector_mismatch_handling(self, ml_model, sample_training_data, mock_conversation_context):
         """Test handling of feature vector size mismatch."""
         # Train model with sample data
         await ml_model.train_model(sample_training_data)
@@ -311,14 +306,15 @@ class TestClosingProbabilityModel:
         # Mock feature engineer to return wrong number of features
         with patch.object(
             ml_model.feature_engineer,
-            'create_feature_vector',
-            return_value=np.array([0.5] * 10)  # Wrong size (should be 23)
+            "create_feature_vector",
+            return_value=np.array([0.5] * 10),  # Wrong size (should be 23)
         ):
             prediction = await ml_model.predict_closing_probability(mock_conversation_context)
 
             # Should fall back to baseline
-            assert "Limited historical data" in prediction.risk_factors or \
-                   "Model not trained" in prediction.risk_factors
+            assert (
+                "Limited historical data" in prediction.risk_factors or "Model not trained" in prediction.risk_factors
+            )
 
     @pytest.mark.asyncio
     async def test_prediction_caching(self, ml_model, mock_conversation_context):
@@ -337,10 +333,7 @@ class TestClosingProbabilityModel:
     async def test_model_training_with_imbalanced_data(self, ml_model):
         """Test model training with imbalanced dataset."""
         # Create highly imbalanced dataset (90% negative, 10% positive)
-        imbalanced_data = ml_model.generate_synthetic_training_data(
-            num_samples=200,
-            positive_rate=0.1
-        )
+        imbalanced_data = ml_model.generate_synthetic_training_data(num_samples=200, positive_rate=0.1)
 
         metrics = await ml_model.train_model(imbalanced_data)
 
@@ -369,7 +362,7 @@ class TestClosingProbabilityModel:
         await ml_model.train_model(sample_training_data)
 
         # Mock os.path.exists to simulate permission error
-        with patch('os.path.exists', side_effect=PermissionError("Permission denied")):
+        with patch("os.path.exists", side_effect=PermissionError("Permission denied")):
             # Should handle gracefully
             load_success = await ml_model._load_model()
             assert load_success is False
@@ -378,10 +371,7 @@ class TestClosingProbabilityModel:
     async def test_cross_validation_performance(self, ml_model, sample_training_data):
         """Test model performance with cross-validation patterns."""
         # Use larger dataset for more reliable cross-validation
-        large_dataset = ml_model.generate_synthetic_training_data(
-            num_samples=500,
-            positive_rate=0.25
-        )
+        large_dataset = ml_model.generate_synthetic_training_data(num_samples=500, positive_rate=0.25)
 
         metrics = await ml_model.train_model(large_dataset, validation_split=0.3)
 
@@ -394,6 +384,7 @@ class TestClosingProbabilityModel:
         """Test that feature importance is properly calculated."""
         # Use synchronous approach for this test
         import asyncio
+
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 

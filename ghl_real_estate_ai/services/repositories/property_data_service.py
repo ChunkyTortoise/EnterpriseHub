@@ -6,30 +6,38 @@ Provides unified property data access with intelligent repository selection.
 """
 
 import asyncio
-from typing import Dict, List, Optional, Any, Union
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
 try:
     from .interfaces import (
-        IPropertyRepository, PropertyQuery, RepositoryResult, RepositoryError,
-        QueryOperator, SortOrder
+        IPropertyRepository,
+        PropertyQuery,
+        QueryOperator,
+        RepositoryError,
+        RepositoryResult,
+        SortOrder,
     )
-    from .query_builder import PropertyQueryBuilder, FluentPropertyQuery
-    from .repository_factory import RepositoryFactory, ConfiguredFactories
     from .json_repository import JsonPropertyRepository
     from .mls_repository import MLSAPIRepository
+    from .query_builder import FluentPropertyQuery, PropertyQueryBuilder
     from .rag_repository import RAGPropertyRepository
+    from .repository_factory import ConfiguredFactories, RepositoryFactory
 except ImportError:
     from interfaces import (
-        IPropertyRepository, PropertyQuery, RepositoryResult, RepositoryError,
-        QueryOperator, SortOrder
+        IPropertyRepository,
+        PropertyQuery,
+        QueryOperator,
+        RepositoryError,
+        RepositoryResult,
+        SortOrder,
     )
-    from query_builder import PropertyQueryBuilder, FluentPropertyQuery
-    from repository_factory import RepositoryFactory, ConfiguredFactories
     from json_repository import JsonPropertyRepository
     from mls_repository import MLSAPIRepository
+    from query_builder import FluentPropertyQuery, PropertyQueryBuilder
     from rag_repository import RAGPropertyRepository
+    from repository_factory import ConfiguredFactories, RepositoryFactory
 
 
 class PropertyDataService:
@@ -70,7 +78,7 @@ class PropertyDataService:
             "successful_queries": 0,
             "failed_queries": 0,
             "repository_stats": {},
-            "average_response_time": 0.0
+            "average_response_time": 0.0,
         }
 
         # Factory for creating repositories
@@ -101,7 +109,7 @@ class PropertyDataService:
 
                 # Set primary repository (highest priority)
                 priority = repo_config.get("priority", 0)
-                if not self._primary_repository or priority > getattr(self._primary_repository, '_priority', 0):
+                if not self._primary_repository or priority > getattr(self._primary_repository, "_priority", 0):
                     self._primary_repository = repo
                     repo._priority = priority
 
@@ -115,8 +123,7 @@ class PropertyDataService:
         if not self._repositories:
             raise RepositoryError("No repositories successfully initialized")
 
-    async def find_properties(self, query: PropertyQuery,
-                            prefer_repository: Optional[str] = None) -> RepositoryResult:
+    async def find_properties(self, query: PropertyQuery, prefer_repository: Optional[str] = None) -> RepositoryResult:
         """
         Find properties with intelligent repository selection.
 
@@ -135,10 +142,7 @@ class PropertyDataService:
             selected_repos = self._select_repositories(query, prefer_repository)
 
             if not selected_repos:
-                return RepositoryResult(
-                    success=False,
-                    errors=["No suitable repositories available"]
-                )
+                return RepositoryResult(success=False, errors=["No suitable repositories available"])
 
             # Execute query based on strategy
             if self.fallback_strategy == "parallel":
@@ -156,13 +160,9 @@ class PropertyDataService:
 
         except Exception as e:
             self.performance_stats["failed_queries"] += 1
-            return RepositoryResult(
-                success=False,
-                errors=[f"Property search failed: {str(e)}"]
-            )
+            return RepositoryResult(success=False, errors=[f"Property search failed: {str(e)}"])
 
-    async def get_property_by_id(self, property_id: str,
-                               source_hint: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    async def get_property_by_id(self, property_id: str, source_hint: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """
         Get specific property by ID with repository selection.
 
@@ -214,8 +214,7 @@ class PropertyDataService:
         """Create new property query builder"""
         return PropertyQueryBuilder()
 
-    def semantic_search(self, query_text: str,
-                       similarity_threshold: float = 0.6) -> PropertyQueryBuilder:
+    def semantic_search(self, query_text: str, similarity_threshold: float = 0.6) -> PropertyQueryBuilder:
         """Create semantic search query"""
         return FluentPropertyQuery.semantic(query_text).cache_control(use_cache=True)
 
@@ -225,7 +224,7 @@ class PropertyDataService:
             "status": "healthy",
             "repositories": [],
             "performance": self.performance_stats.copy(),
-            "issues": []
+            "issues": [],
         }
 
         # Check each repository
@@ -239,11 +238,7 @@ class PropertyDataService:
                     service_health["issues"].append(f"Repository {repo.name}: {repo_health.get('status')}")
 
             except Exception as e:
-                service_health["repositories"].append({
-                    "name": repo.name,
-                    "status": "error",
-                    "error": str(e)
-                })
+                service_health["repositories"].append({"name": repo.name, "status": "error", "error": str(e)})
                 service_health["issues"].append(f"Repository {repo.name}: health check failed")
 
         # Overall status
@@ -257,10 +252,7 @@ class PropertyDataService:
 
     async def get_performance_metrics(self) -> Dict[str, Any]:
         """Get comprehensive performance metrics"""
-        metrics = {
-            "service_stats": self.performance_stats.copy(),
-            "repository_metrics": {}
-        }
+        metrics = {"service_stats": self.performance_stats.copy(), "repository_metrics": {}}
 
         for repo in self._repositories:
             try:
@@ -272,8 +264,9 @@ class PropertyDataService:
         return metrics
 
     # Integration methods for Strategy Pattern
-    def get_properties_for_scoring(self, lead_preferences: Dict[str, Any],
-                                  max_properties: int = 100) -> PropertyQueryBuilder:
+    def get_properties_for_scoring(
+        self, lead_preferences: Dict[str, Any], max_properties: int = 100
+    ) -> PropertyQueryBuilder:
         """
         Create optimized query for property scoring with Strategy Pattern.
 
@@ -314,11 +307,12 @@ class PropertyDataService:
             query_builder.filter_by_amenities(required=lead_preferences["must_haves"])
 
         # Optimize for scoring performance
-        return (query_builder
-                .sort_by("price", SortOrder.ASC)  # Start with lower prices
-                .paginate(page=1, limit=max_properties)
-                .include_metadata(True)
-                .cache_control(use_cache=True, cache_ttl_seconds=300))
+        return (
+            query_builder.sort_by("price", SortOrder.ASC)  # Start with lower prices
+            .paginate(page=1, limit=max_properties)
+            .include_metadata(True)
+            .cache_control(use_cache=True, cache_ttl_seconds=300)
+        )
 
     async def load_properties_for_strategy_pattern(self, lead_preferences: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
@@ -344,8 +338,9 @@ class PropertyDataService:
             return []
 
     # Private methods
-    def _select_repositories(self, query: PropertyQuery,
-                           prefer_repository: Optional[str] = None) -> List[IPropertyRepository]:
+    def _select_repositories(
+        self, query: PropertyQuery, prefer_repository: Optional[str] = None
+    ) -> List[IPropertyRepository]:
         """Select repositories based on query characteristics"""
         selected = []
 
@@ -376,15 +371,15 @@ class PropertyDataService:
                 selected.append(self._primary_repository)
             selected.extend(self._fallback_repositories)
 
-        return selected[:self.max_concurrent_repos]
+        return selected[: self.max_concurrent_repos]
 
-    async def _execute_single_query(self, repository: IPropertyRepository,
-                                   query: PropertyQuery) -> RepositoryResult:
+    async def _execute_single_query(self, repository: IPropertyRepository, query: PropertyQuery) -> RepositoryResult:
         """Execute query on single repository"""
         return await repository.find_properties(query)
 
-    async def _execute_cascade_query(self, repositories: List[IPropertyRepository],
-                                    query: PropertyQuery) -> RepositoryResult:
+    async def _execute_cascade_query(
+        self, repositories: List[IPropertyRepository], query: PropertyQuery
+    ) -> RepositoryResult:
         """Execute query with cascade fallback"""
         last_error = None
 
@@ -398,13 +393,11 @@ class PropertyDataService:
                 last_error = [str(e)]
 
         # All repositories failed
-        return RepositoryResult(
-            success=False,
-            errors=last_error or ["All repositories failed"]
-        )
+        return RepositoryResult(success=False, errors=last_error or ["All repositories failed"])
 
-    async def _execute_parallel_query(self, repositories: List[IPropertyRepository],
-                                     query: PropertyQuery) -> RepositoryResult:
+    async def _execute_parallel_query(
+        self, repositories: List[IPropertyRepository], query: PropertyQuery
+    ) -> RepositoryResult:
         """Execute query on multiple repositories in parallel"""
         tasks = [repo.find_properties(query) for repo in repositories]
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -437,7 +430,7 @@ class PropertyDataService:
             total_count=len(unique_properties),
             success=len(unique_properties) > 0,
             errors=all_errors,
-            warnings=["Results merged from multiple repositories"] if len(unique_properties) > 0 else []
+            warnings=["Results merged from multiple repositories"] if len(unique_properties) > 0 else [],
         )
 
     async def _create_repository_from_config(self, config: Dict[str, Any]) -> IPropertyRepository:
@@ -448,10 +441,7 @@ class PropertyDataService:
         cache_config = config.get("caching", {})
 
         return await self.factory.create(
-            repository_type=repo_type,
-            config=repo_config,
-            enable_caching=enable_caching,
-            cache_config=cache_config
+            repository_type=repo_type, config=repo_config, enable_caching=enable_caching, cache_config=cache_config
         )
 
     def _update_performance_stats(self, success: bool, execution_time_ms: float):
@@ -464,9 +454,7 @@ class PropertyDataService:
         # Update rolling average
         total = self.performance_stats["total_queries"]
         current_avg = self.performance_stats["average_response_time"]
-        self.performance_stats["average_response_time"] = (
-            (current_avg * (total - 1) + execution_time_ms) / total
-        )
+        self.performance_stats["average_response_time"] = (current_avg * (total - 1) + execution_time_ms) / total
 
 
 # Convenience factory functions for common configurations
@@ -482,43 +470,35 @@ class PropertyDataServiceFactory:
         if not json_files:
             raise RepositoryError(f"No JSON files found in {data_dir}")
 
-        config = {
-            "fallback_strategy": "cascade",
-            "performance_monitoring": True
-        }
+        config = {"fallback_strategy": "cascade", "performance_monitoring": True}
 
         service = PropertyDataService(config)
-        await service.initialize([
-            {
-                "name": "demo_json",
-                "type": "json",
-                "config": {
-                    "data_paths": [str(f) for f in json_files],
-                    "cache_ttl": 300,
-                    "auto_refresh": True,
-                    "normalize_data": True
-                },
-                "priority": 1,
-                "fallback": False,
-                "caching": {
-                    "enabled": True,
-                    "backend": "memory",
-                    "max_size": 500
+        await service.initialize(
+            [
+                {
+                    "name": "demo_json",
+                    "type": "json",
+                    "config": {
+                        "data_paths": [str(f) for f in json_files],
+                        "cache_ttl": 300,
+                        "auto_refresh": True,
+                        "normalize_data": True,
+                    },
+                    "priority": 1,
+                    "fallback": False,
+                    "caching": {"enabled": True, "backend": "memory", "max_size": 500},
                 }
-            }
-        ])
+            ]
+        )
 
         return service
 
     @staticmethod
-    async def create_production_service(mls_config: Dict[str, Any],
-                                      json_fallback_paths: List[str] = None) -> PropertyDataService:
+    async def create_production_service(
+        mls_config: Dict[str, Any], json_fallback_paths: List[str] = None
+    ) -> PropertyDataService:
         """Create production service with MLS primary and JSON fallback"""
-        config = {
-            "fallback_strategy": "cascade",
-            "performance_monitoring": True,
-            "max_concurrent_repos": 2
-        }
+        config = {"fallback_strategy": "cascade", "performance_monitoring": True, "max_concurrent_repos": 2}
 
         repos_config = [
             {
@@ -531,81 +511,73 @@ class PropertyDataServiceFactory:
                     "enabled": True,
                     "backend": "redis",
                     "redis_url": "redis://localhost:6379",
-                    "ttl": 1800  # 30 minutes
-                }
+                    "ttl": 1800,  # 30 minutes
+                },
             }
         ]
 
         if json_fallback_paths:
-            repos_config.append({
-                "name": "fallback_json",
-                "type": "json",
-                "config": {
-                    "data_paths": json_fallback_paths,
-                    "cache_ttl": 600,
-                    "auto_refresh": True
-                },
-                "priority": 0,
-                "fallback": True,
-                "caching": {
-                    "enabled": True,
-                    "backend": "memory",
-                    "max_size": 1000
+            repos_config.append(
+                {
+                    "name": "fallback_json",
+                    "type": "json",
+                    "config": {"data_paths": json_fallback_paths, "cache_ttl": 600, "auto_refresh": True},
+                    "priority": 0,
+                    "fallback": True,
+                    "caching": {"enabled": True, "backend": "memory", "max_size": 1000},
                 }
-            })
+            )
 
         service = PropertyDataService(config)
         await service.initialize(repos_config)
         return service
 
     @staticmethod
-    async def create_hybrid_service(json_paths: List[str], mls_config: Dict[str, Any] = None,
-                                  rag_config: Dict[str, Any] = None) -> PropertyDataService:
+    async def create_hybrid_service(
+        json_paths: List[str], mls_config: Dict[str, Any] = None, rag_config: Dict[str, Any] = None
+    ) -> PropertyDataService:
         """Create hybrid service with multiple repository types"""
-        config = {
-            "fallback_strategy": "parallel",
-            "performance_monitoring": True,
-            "max_concurrent_repos": 3
-        }
+        config = {"fallback_strategy": "parallel", "performance_monitoring": True, "max_concurrent_repos": 3}
 
         repos_config = []
 
         # JSON repository (always included)
-        repos_config.append({
-            "name": "json_data",
-            "type": "json",
-            "config": {
-                "data_paths": json_paths,
-                "cache_ttl": 300,
-                "auto_refresh": True,
-                "normalize_data": True
-            },
-            "priority": 1,
-            "fallback": True,
-            "caching": {"enabled": True, "backend": "memory"}
-        })
+        repos_config.append(
+            {
+                "name": "json_data",
+                "type": "json",
+                "config": {"data_paths": json_paths, "cache_ttl": 300, "auto_refresh": True, "normalize_data": True},
+                "priority": 1,
+                "fallback": True,
+                "caching": {"enabled": True, "backend": "memory"},
+            }
+        )
 
         # MLS repository (if configured)
         if mls_config:
-            repos_config.append({
-                "name": "mls_api",
-                "type": "mls",
-                "config": mls_config,
-                "priority": 2,
-                "fallback": True,
-                "caching": {"enabled": True, "backend": "memory"}
-            })
+            repos_config.append(
+                {
+                    "name": "mls_api",
+                    "type": "mls",
+                    "config": mls_config,
+                    "priority": 2,
+                    "fallback": True,
+                    "caching": {"enabled": True, "backend": "memory"},
+                }
+            )
 
         # RAG repository (if configured)
         if rag_config:
-            repos_config.append({
-                "name": "semantic_search",
-                "type": "rag",
-                "config": rag_config,
-                "priority": 3,
-                "fallback": True,
-                "caching": {"enabled": True, "backend": "memory"}
-            })
+            repos_config.append(
+                {
+                    "name": "semantic_search",
+                    "type": "rag",
+                    "config": rag_config,
+                    "priority": 3,
+                    "fallback": True,
+                    "caching": {"enabled": True, "backend": "memory"},
+                }
+            )
 
         service = PropertyDataService(config)
         await service.initialize(repos_config)

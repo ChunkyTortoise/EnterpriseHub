@@ -1,6 +1,7 @@
 """
 Verification script to test all demo components before deployment.
 """
+
 import os
 import sys
 from pathlib import Path
@@ -24,6 +25,7 @@ def verify_imports():
 
     try:
         from ghl_real_estate_ai.streamlit_demo.mock_services.mock_claude import MockClaudeService
+
         print("  ✅ MockClaudeService imported")
     except Exception as e:
         print(f"  ❌ MockClaudeService import failed: {e}")
@@ -31,6 +33,7 @@ def verify_imports():
 
     try:
         from ghl_real_estate_ai.streamlit_demo.mock_services.mock_rag import MockRAGService
+
         print("  ✅ MockRAGService imported")
     except Exception as e:
         print(f"  ❌ MockRAGService import failed: {e}")
@@ -38,6 +41,7 @@ def verify_imports():
 
     try:
         from ghl_real_estate_ai.services.lead_scorer import LeadScorer
+
         print("  ✅ LeadScorer imported")
     except Exception as e:
         print(f"  ❌ LeadScorer import failed: {e}")
@@ -52,6 +56,7 @@ def verify_mock_claude():
 
     try:
         from ghl_real_estate_ai.streamlit_demo.mock_services.mock_claude import MockClaudeService
+
         claude = MockClaudeService()
 
         # Test basic response
@@ -82,24 +87,21 @@ def verify_mock_rag():
 
     try:
         from ghl_real_estate_ai.streamlit_demo.mock_services.mock_rag import MockRAGService
+
         rag = MockRAGService()
 
         # Test property search
-        preferences = {
-            "budget": 400000,
-            "bedrooms": 3,
-            "location": "Hyde Park"
-        }
+        preferences = {"budget": 400000, "bedrooms": 3, "location": "Hyde Park"}
 
         results = rag.search_properties(preferences, top_k=3)
         assert len(results) > 0
         print(f"  ✅ Found {len(results)} properties")
 
         for i, prop in enumerate(results[:3]):
-            neighborhood = prop['address']['neighborhood']
-            price = prop['price']
-            match = prop['match_score']
-            print(f"     {i+1}. {neighborhood} - ${price:,} ({match:.0f}% match)")
+            neighborhood = prop["address"]["neighborhood"]
+            price = prop["price"]
+            match = prop["match_score"]
+            print(f"     {i + 1}. {neighborhood} - ${price:,} ({match:.0f}% match)")
 
         return True
     except Exception as e:
@@ -113,12 +115,13 @@ def verify_lead_scorer():
 
     try:
         from ghl_real_estate_ai.services.lead_scorer import LeadScorer
+
         scorer = LeadScorer()
 
         # Test cold lead
         cold_context = {
             "extracted_preferences": {},
-            "conversation_history": [{"role": "user", "content": "Looking for a house"}]
+            "conversation_history": [{"role": "user", "content": "Looking for a house"}],
         }
         cold_score = scorer.calculate(cold_context)
         print(f"  ✅ Cold lead score: {cold_score}")
@@ -126,24 +129,15 @@ def verify_lead_scorer():
         # Test warm lead
         warm_context = {
             "extracted_preferences": {"budget": 400000, "bedrooms": 3},
-            "conversation_history": [
-                {"role": "user", "content": "I have a budget of $400k and need 3 bedrooms"}
-            ]
+            "conversation_history": [{"role": "user", "content": "I have a budget of $400k and need 3 bedrooms"}],
         }
         warm_score = scorer.calculate(warm_context)
         print(f"  ✅ Warm lead score: {warm_score}")
 
         # Test hot lead
         hot_context = {
-            "extracted_preferences": {
-                "budget": 400000,
-                "bedrooms": 3,
-                "financing": "pre-approved",
-                "timeline": "ASAP"
-            },
-            "conversation_history": [
-                {"role": "user", "content": "I'm pre-approved for $400k, need 3 bedrooms ASAP"}
-            ]
+            "extracted_preferences": {"budget": 400000, "bedrooms": 3, "financing": "pre-approved", "timeline": "ASAP"},
+            "conversation_history": [{"role": "user", "content": "I'm pre-approved for $400k, need 3 bedrooms ASAP"}],
         }
         hot_score = scorer.calculate(hot_context)
         print(f"  ✅ Hot lead score: {hot_score}")
@@ -169,9 +163,10 @@ def verify_data_files():
         print(f"  ✅ Property listings found")
 
         import json
-        with open(property_file, 'r') as f:
+
+        with open(property_file, "r") as f:
             data = json.load(f)
-            count = len(data.get('listings', []))
+            count = len(data.get("listings", []))
             print(f"     {count} properties available")
         return True
     else:

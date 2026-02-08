@@ -4,58 +4,68 @@ Tests for Enterprise Intelligence Hub Component.
 Ensures reliability for C-suite engagement and high-ticket consulting demonstrations.
 """
 
-import pytest
-import streamlit as st
-import pandas as pd
-import numpy as np
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
+import numpy as np
+import pandas as pd
+import pytest
+import streamlit as st
+
 from ghl_real_estate_ai.streamlit_demo.components.enterprise_intelligence_hub import (
+    CompetitiveIntelligence,
     EnterpriseIntelligenceHub,
     ExecutiveKPI,
-    CompetitiveIntelligence,
     PredictiveAlert,
+    render_competitive_intelligence_dashboard,
     render_enterprise_intelligence_hub,
     render_executive_header,
-    render_strategic_overview,
     render_executive_kpi_card,
+    render_mobile_command_center,
     render_performance_intelligence,
     render_predictive_analytics_executive,
-    render_competitive_intelligence_dashboard,
     render_roi_attribution_executive,
-    render_mobile_command_center
+    render_strategic_overview,
 )
-
 
 # ============================================================================
 # Test Fixtures
 # ============================================================================
 
+
 @pytest.fixture
 def mock_streamlit():
     """Mock Streamlit components for testing."""
-    with patch('streamlit.set_page_config'), \
-         patch('streamlit.markdown'), \
-         patch('streamlit.columns'), \
-         patch('streamlit.tabs'), \
-         patch('streamlit.metric'), \
-         patch('streamlit.button'), \
-         patch('streamlit.plotly_chart'), \
-         patch('streamlit.dataframe'), \
-         patch('streamlit.success'), \
-         patch('streamlit.info'), \
-         patch('streamlit.warning'):
+    with (
+        patch("streamlit.set_page_config"),
+        patch("streamlit.markdown"),
+        patch("streamlit.columns"),
+        patch("streamlit.tabs"),
+        patch("streamlit.metric"),
+        patch("streamlit.button"),
+        patch("streamlit.plotly_chart"),
+        patch("streamlit.dataframe"),
+        patch("streamlit.success"),
+        patch("streamlit.info"),
+        patch("streamlit.warning"),
+    ):
         yield
 
 
 @pytest.fixture
 def intelligence_hub():
     """Create intelligence hub instance for testing."""
-    with patch('ghl_real_estate_ai.streamlit_demo.components.enterprise_intelligence_hub.get_strategic_claude_consultant', return_value=AsyncMock()), \
-         patch('ghl_real_estate_ai.streamlit_demo.components.enterprise_intelligence_hub.get_enterprise_tenant_service', return_value=AsyncMock()):
-        
+    with (
+        patch(
+            "ghl_real_estate_ai.streamlit_demo.components.enterprise_intelligence_hub.get_strategic_claude_consultant",
+            return_value=AsyncMock(),
+        ),
+        patch(
+            "ghl_real_estate_ai.streamlit_demo.components.enterprise_intelligence_hub.get_enterprise_tenant_service",
+            return_value=AsyncMock(),
+        ),
+    ):
         hub = EnterpriseIntelligenceHub(tenant_id="test_tenant")
         return hub
 
@@ -73,7 +83,7 @@ def sample_executive_kpi():
         impact_level="critical",
         strategic_significance="Core revenue growth driver",
         ai_insight="Revenue growth accelerating 12.4% month-over-month",
-        recommended_action="Accelerate high-value lead acquisition"
+        recommended_action="Accelerate high-value lead acquisition",
     )
 
 
@@ -87,7 +97,7 @@ def sample_competitive_intelligence():
         key_differentiators=["Brand recognition", "Large sales team"],
         threats=["Price competition", "Established relationships"],
         opportunities=["Slow AI adoption", "Legacy technology stack"],
-        strategic_response="Leverage AI advantage for superior customer experience"
+        strategic_response="Leverage AI advantage for superior customer experience",
     )
 
 
@@ -102,13 +112,14 @@ def sample_predictive_alert():
         probability=0.32,
         time_to_impact="6 weeks",
         recommended_response="Accelerate deal closure in luxury segment",
-        business_context="Market seasonality affecting conversion rates"
+        business_context="Market seasonality affecting conversion rates",
     )
 
 
 # ============================================================================
 # Data Model Tests
 # ============================================================================
+
 
 def test_executive_kpi_model(sample_executive_kpi):
     """Test ExecutiveKPI data model."""
@@ -145,20 +156,21 @@ def test_predictive_alert_model(sample_predictive_alert):
 # EnterpriseIntelligenceHub Class Tests
 # ============================================================================
 
+
 def test_intelligence_hub_initialization(intelligence_hub):
     """Test proper initialization of EnterpriseIntelligenceHub."""
     assert intelligence_hub is not None
     assert intelligence_hub.tenant_id == "test_tenant"
-    assert hasattr(intelligence_hub, 'executive_kpis')
-    assert hasattr(intelligence_hub, 'competitive_landscape')
-    assert hasattr(intelligence_hub, 'predictive_alerts')
+    assert hasattr(intelligence_hub, "executive_kpis")
+    assert hasattr(intelligence_hub, "competitive_landscape")
+    assert hasattr(intelligence_hub, "predictive_alerts")
 
 
 def test_demo_data_quality(intelligence_hub):
     """Test quality of demonstration data for executive showcase."""
     # Executive KPIs validation
     assert len(intelligence_hub.executive_kpis) >= 4
-    
+
     for kpi in intelligence_hub.executive_kpis:
         assert isinstance(kpi, ExecutiveKPI)
         assert kpi.current_value > 0
@@ -168,10 +180,10 @@ def test_demo_data_quality(intelligence_hub):
         assert len(kpi.strategic_significance) > 20  # Substantial content
         assert len(kpi.ai_insight) > 20  # Substantial AI insight
         assert len(kpi.recommended_action) > 15  # Actionable recommendation
-    
+
     # Competitive landscape validation
     assert len(intelligence_hub.competitive_landscape) >= 2
-    
+
     for competitor in intelligence_hub.competitive_landscape:
         assert isinstance(competitor, CompetitiveIntelligence)
         assert competitor.market_share > 0
@@ -180,10 +192,10 @@ def test_demo_data_quality(intelligence_hub):
         assert len(competitor.threats) >= 2
         assert len(competitor.opportunities) >= 2
         assert len(competitor.strategic_response) > 30  # Strategic depth
-    
+
     # Predictive alerts validation
     assert len(intelligence_hub.predictive_alerts) >= 2
-    
+
     for alert in intelligence_hub.predictive_alerts:
         assert isinstance(alert, PredictiveAlert)
         assert alert.severity in ["critical", "warning", "info"]
@@ -198,11 +210,11 @@ def test_executive_value_demonstration(intelligence_hub):
     if revenue_kpis:
         for kpi in revenue_kpis:
             assert kpi.current_value >= 1000000  # Minimum $1M scale for enterprise
-    
+
     # Should have critical KPIs for executive attention
     critical_kpis = [kpi for kpi in intelligence_hub.executive_kpis if kpi.impact_level == "critical"]
     assert len(critical_kpis) >= 2  # Multiple critical metrics
-    
+
     # Competitive analysis should show strategic depth
     total_competitor_revenue = sum(comp.revenue_estimate for comp in intelligence_hub.competitive_landscape)
     assert total_competitor_revenue > 500000000  # Substantial market
@@ -221,6 +233,7 @@ async def test_intelligence_hub_initialization_async(intelligence_hub):
 # Render Function Tests
 # ============================================================================
 
+
 def test_render_enterprise_intelligence_hub(mock_streamlit):
     """Test main render function executes without errors."""
     try:
@@ -233,9 +246,9 @@ def test_render_enterprise_intelligence_hub(mock_streamlit):
 
 def test_render_executive_header(mock_streamlit, intelligence_hub):
     """Test executive header rendering."""
-    with patch('datetime.datetime') as mock_datetime:
+    with patch("datetime.datetime") as mock_datetime:
         mock_datetime.now.return_value.strftime.return_value = "January 17, 2026 at 02:30 PM"
-        
+
         try:
             render_executive_header(intelligence_hub)
             assert True
@@ -263,12 +276,10 @@ def test_render_executive_kpi_card(mock_streamlit, sample_executive_kpi):
 
 def test_render_performance_intelligence(mock_streamlit, intelligence_hub):
     """Test performance intelligence dashboard rendering."""
-    with patch('pandas.date_range'), \
-         patch('plotly.graph_objects.Figure') as mock_fig:
-        
+    with patch("pandas.date_range"), patch("plotly.graph_objects.Figure") as mock_fig:
         mock_fig.return_value.update_layout = Mock()
         mock_fig.return_value.add_trace = Mock()
-        
+
         try:
             render_performance_intelligence(intelligence_hub)
             assert True
@@ -278,15 +289,16 @@ def test_render_performance_intelligence(mock_streamlit, intelligence_hub):
 
 def test_render_predictive_analytics_executive(mock_streamlit, intelligence_hub):
     """Test predictive analytics rendering."""
-    with patch('pandas.date_range'), \
-         patch('plotly.graph_objects.Figure') as mock_fig, \
-         patch('plotly.subplots.make_subplots') as mock_subplots:
-        
+    with (
+        patch("pandas.date_range"),
+        patch("plotly.graph_objects.Figure") as mock_fig,
+        patch("plotly.subplots.make_subplots") as mock_subplots,
+    ):
         mock_fig.return_value.update_layout = Mock()
         mock_fig.return_value.add_trace = Mock()
         mock_subplots.return_value.update_layout = Mock()
         mock_subplots.return_value.add_trace = Mock()
-        
+
         try:
             render_predictive_analytics_executive(intelligence_hub)
             assert True
@@ -296,10 +308,10 @@ def test_render_predictive_analytics_executive(mock_streamlit, intelligence_hub)
 
 def test_render_competitive_intelligence_dashboard(mock_streamlit, intelligence_hub):
     """Test competitive intelligence dashboard rendering."""
-    with patch('plotly.graph_objects.Figure') as mock_fig:
+    with patch("plotly.graph_objects.Figure") as mock_fig:
         mock_fig.return_value.update_layout = Mock()
         mock_fig.return_value.add_trace = Mock()
-        
+
         try:
             render_competitive_intelligence_dashboard(intelligence_hub)
             assert True
@@ -309,13 +321,11 @@ def test_render_competitive_intelligence_dashboard(mock_streamlit, intelligence_
 
 def test_render_roi_attribution_executive(mock_streamlit, intelligence_hub):
     """Test ROI attribution dashboard rendering."""
-    with patch('plotly.graph_objects.Figure') as mock_fig, \
-         patch('plotly.subplots.make_subplots') as mock_subplots:
-        
+    with patch("plotly.graph_objects.Figure") as mock_fig, patch("plotly.subplots.make_subplots") as mock_subplots:
         mock_fig.return_value.update_layout = Mock()
         mock_subplots.return_value.update_layout = Mock()
         mock_subplots.return_value.add_trace = Mock()
-        
+
         try:
             render_roi_attribution_executive(intelligence_hub)
             assert True
@@ -325,13 +335,10 @@ def test_render_roi_attribution_executive(mock_streamlit, intelligence_hub):
 
 def test_render_mobile_command_center(mock_streamlit, intelligence_hub):
     """Test mobile command center rendering."""
-    with patch('plotly.graph_objects.Figure') as mock_fig, \
-         patch('numpy.cumsum'), \
-         patch('numpy.random.normal'):
-        
+    with patch("plotly.graph_objects.Figure") as mock_fig, patch("numpy.cumsum"), patch("numpy.random.normal"):
         mock_fig.return_value.update_layout = Mock()
         mock_fig.return_value.add_trace = Mock()
-        
+
         try:
             render_mobile_command_center(intelligence_hub)
             assert True
@@ -343,20 +350,21 @@ def test_render_mobile_command_center(mock_streamlit, intelligence_hub):
 # Business Logic Tests
 # ============================================================================
 
+
 def test_kpi_calculations(intelligence_hub):
     """Test KPI calculation logic and business metrics."""
     for kpi in intelligence_hub.executive_kpis:
         # Test percentage change calculation
         if kpi.previous_period > 0:
             pct_change = ((kpi.current_value - kpi.previous_period) / kpi.previous_period) * 100
-            
+
             # Trend should align with percentage change
             if pct_change > 5:
                 assert kpi.trend == "up"
             elif pct_change < -5:
                 assert kpi.trend == "down"
             # "stable" trend acceptable for small changes
-        
+
         # Target progress calculation
         if kpi.target_value > 0:
             pct_to_target = ((kpi.current_value - kpi.target_value) / kpi.target_value) * 100
@@ -367,18 +375,18 @@ def test_kpi_calculations(intelligence_hub):
 def test_competitive_analysis_quality(intelligence_hub):
     """Test quality of competitive analysis for executive decision making."""
     total_market_share = sum(comp.market_share for comp in intelligence_hub.competitive_landscape)
-    
+
     # Market analysis should be comprehensive
     assert len(intelligence_hub.competitive_landscape) >= 2  # Multiple competitors analyzed
-    
+
     for competitor in intelligence_hub.competitive_landscape:
         # Strategic insights should be substantial
         assert len(competitor.strategic_response) > 50  # Strategic depth
-        
+
         # Should identify both threats and opportunities
         assert len(competitor.threats) >= 1
         assert len(competitor.opportunities) >= 1
-        
+
         # Revenue estimates should be reasonable
         assert competitor.revenue_estimate > 0
         assert competitor.market_share > 0
@@ -389,16 +397,16 @@ def test_predictive_alerts_business_value(intelligence_hub):
     for alert in intelligence_hub.predictive_alerts:
         # Alerts should have specific business context
         assert len(alert.business_context) > 20  # Substantial context
-        
+
         # Recommendations should be actionable
         assert len(alert.recommended_response) > 30  # Actionable detail
-        
+
         # Probability should be realistic
         assert 0.0 <= alert.probability <= 1.0
-        
+
         # Time to impact should be specified
         assert len(alert.time_to_impact) > 0
-        
+
         # Should specify predicted business impact
         assert len(alert.predicted_impact) > 0
 
@@ -407,12 +415,12 @@ def test_c_suite_relevance(intelligence_hub):
     """Test that content is appropriate for C-suite audience."""
     # KPIs should be strategic, not operational
     strategic_kpis = ["revenue", "market", "customer", "growth", "profit"]
-    
+
     for kpi in intelligence_hub.executive_kpis:
         kpi_name_lower = kpi.name.lower()
         is_strategic = any(strategic_term in kpi_name_lower for strategic_term in strategic_kpis)
         assert is_strategic or kpi.impact_level in ["critical", "high"]  # Should be strategic or high impact
-    
+
     # Recommendations should be strategic level
     # This is validated through the substantial content requirements in other tests
 
@@ -421,6 +429,7 @@ def test_c_suite_relevance(intelligence_hub):
 # User Experience Tests
 # ============================================================================
 
+
 def test_mobile_responsiveness(intelligence_hub):
     """Test mobile optimization features."""
     # Mobile command center should have simplified metrics
@@ -428,12 +437,12 @@ def test_mobile_responsiveness(intelligence_hub):
         {"name": "Today's Revenue", "value": "$89.5K", "change": "+12%", "status": "good"},
         {"name": "Pipeline Health", "value": "92%", "change": "+5%", "status": "good"},
         {"name": "Active Alerts", "value": "2", "change": "-1", "status": "warning"},
-        {"name": "Team Performance", "value": "94%", "change": "+3%", "status": "good"}
+        {"name": "Team Performance", "value": "94%", "change": "+3%", "status": "good"},
     ]
-    
+
     # Should have exactly 4 critical metrics for mobile
     assert len(critical_metrics) == 4
-    
+
     # Each metric should have required fields
     for metric in critical_metrics:
         assert "name" in metric
@@ -448,11 +457,11 @@ def test_visual_hierarchy(intelligence_hub):
     # Critical KPIs should be prominently featured
     critical_kpis = [kpi for kpi in intelligence_hub.executive_kpis if kpi.impact_level == "critical"]
     assert len(critical_kpis) >= 2  # Multiple critical items for executive attention
-    
+
     # Alerts should be properly prioritized
     critical_alerts = [alert for alert in intelligence_hub.predictive_alerts if alert.severity == "critical"]
     warning_alerts = [alert for alert in intelligence_hub.predictive_alerts if alert.severity == "warning"]
-    
+
     # Should have clear severity levels
     total_alerts = len(critical_alerts) + len(warning_alerts)
     assert total_alerts >= 1  # At least some alerts for executive attention
@@ -462,19 +471,20 @@ def test_visual_hierarchy(intelligence_hub):
 # Performance Tests
 # ============================================================================
 
+
 def test_data_loading_performance(intelligence_hub):
     """Test that demo data loads quickly for responsive UX."""
     import time
-    
+
     start_time = time.time()
-    
+
     # Simulate accessing all demo data
     _ = intelligence_hub.executive_kpis
     _ = intelligence_hub.competitive_landscape
     _ = intelligence_hub.predictive_alerts
-    
+
     loading_time = time.time() - start_time
-    
+
     # Should load demo data quickly
     assert loading_time < 0.1  # Less than 100ms for demo data
 
@@ -482,20 +492,20 @@ def test_data_loading_performance(intelligence_hub):
 def test_rendering_performance(mock_streamlit, intelligence_hub):
     """Test that rendering performs well for executive demos."""
     import time
-    
+
     start_time = time.time()
-    
-    with patch('plotly.graph_objects.Figure') as mock_fig:
+
+    with patch("plotly.graph_objects.Figure") as mock_fig:
         mock_fig.return_value.update_layout = Mock()
         mock_fig.return_value.add_trace = Mock()
-        
+
         # Test key rendering functions
         render_executive_header(intelligence_hub)
         render_strategic_overview(intelligence_hub)
         render_executive_kpi_card(intelligence_hub.executive_kpis[0])
-    
+
     rendering_time = time.time() - start_time
-    
+
     # Should render quickly for smooth executive experience
     assert rendering_time < 1.0  # Less than 1 second
 
@@ -504,6 +514,7 @@ def test_rendering_performance(mock_streamlit, intelligence_hub):
 # Error Handling Tests
 # ============================================================================
 
+
 def test_missing_data_handling(mock_streamlit):
     """Test handling of missing or incomplete data."""
     # Create hub with minimal data
@@ -511,7 +522,7 @@ def test_missing_data_handling(mock_streamlit):
     hub.executive_kpis = []  # Empty KPIs
     hub.competitive_landscape = []  # Empty competitive data
     hub.predictive_alerts = []  # No alerts
-    
+
     # Should handle gracefully without crashing
     try:
         render_strategic_overview(hub)
@@ -534,9 +545,9 @@ def test_invalid_kpi_data(mock_streamlit):
         impact_level="invalid",  # Invalid impact
         strategic_significance="",  # Empty
         ai_insight="",  # Empty
-        recommended_action=""  # Empty
+        recommended_action="",  # Empty
     )
-    
+
     # Should handle gracefully
     try:
         render_executive_kpi_card(invalid_kpi)
@@ -549,17 +560,25 @@ def test_invalid_kpi_data(mock_streamlit):
 # Integration Tests
 # ============================================================================
 
+
 def test_end_to_end_executive_dashboard(mock_streamlit):
     """Test complete end-to-end executive dashboard rendering."""
-    with patch('ghl_real_estate_ai.streamlit_demo.components.enterprise_intelligence_hub.get_strategic_claude_consultant', return_value=AsyncMock()), \
-         patch('ghl_real_estate_ai.streamlit_demo.components.enterprise_intelligence_hub.get_enterprise_tenant_service', return_value=AsyncMock()), \
-         patch('plotly.graph_objects.Figure') as mock_fig, \
-         patch('plotly.express.scatter'), \
-         patch('plotly.subplots.make_subplots'):
-        
+    with (
+        patch(
+            "ghl_real_estate_ai.streamlit_demo.components.enterprise_intelligence_hub.get_strategic_claude_consultant",
+            return_value=AsyncMock(),
+        ),
+        patch(
+            "ghl_real_estate_ai.streamlit_demo.components.enterprise_intelligence_hub.get_enterprise_tenant_service",
+            return_value=AsyncMock(),
+        ),
+        patch("plotly.graph_objects.Figure") as mock_fig,
+        patch("plotly.express.scatter"),
+        patch("plotly.subplots.make_subplots"),
+    ):
         mock_fig.return_value.update_layout = Mock()
         mock_fig.return_value.add_trace = Mock()
-        
+
         try:
             # Full dashboard render
             render_enterprise_intelligence_hub("test_tenant")
@@ -572,27 +591,30 @@ def test_end_to_end_executive_dashboard(mock_streamlit):
 # Business Value Tests
 # ============================================================================
 
+
 def test_consulting_value_demonstration(intelligence_hub):
     """Test that dashboard demonstrates sufficient value for $25K-$100K consulting."""
-    
+
     # Should demonstrate substantial business scale
     revenue_values = []
     for kpi in intelligence_hub.executive_kpis:
         if kpi.unit == "USD" and kpi.current_value > 1000000:  # Million+ scale
             revenue_values.append(kpi.current_value)
-    
+
     assert len(revenue_values) > 0  # Should have enterprise-scale revenue metrics
-    
+
     # Should show strategic competitive intelligence
     total_market_analysis = sum(comp.revenue_estimate for comp in intelligence_hub.competitive_landscape)
     assert total_market_analysis > 500000000  # Should analyze $500M+ market
-    
+
     # Should provide AI-powered insights
     ai_insights = [kpi.ai_insight for kpi in intelligence_hub.executive_kpis if len(kpi.ai_insight) > 30]
     assert len(ai_insights) >= 3  # Multiple sophisticated AI insights
-    
+
     # Should provide strategic recommendations
-    strategic_actions = [kpi.recommended_action for kpi in intelligence_hub.executive_kpis if len(kpi.recommended_action) > 20]
+    strategic_actions = [
+        kpi.recommended_action for kpi in intelligence_hub.executive_kpis if len(kpi.recommended_action) > 20
+    ]
     assert len(strategic_actions) >= 3  # Multiple actionable strategic recommendations
 
 

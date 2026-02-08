@@ -5,12 +5,16 @@ real agent handlers, including validation gating, conditional execution,
 dynamic branching, and error recovery patterns.
 """
 
+from datetime import datetime, timedelta
 from typing import Any, Dict
 
+import numpy as np
+import pandas as pd
 import pytest
 
 from utils.agent_handlers import AGENT_HANDLERS
 from utils.agent_registry import ALL_AGENTS
+from utils.exceptions import InvalidTickerError
 from utils.orchestrator import (
     AgentRegistry,
     AgentStatus,
@@ -22,39 +26,38 @@ from utils.orchestrator import (
 )
 
 
-import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
-
-from utils.exceptions import InvalidTickerError
-
 @pytest.fixture(autouse=True)
 def mock_data_loader(monkeypatch):
     """Mock data loader to avoid real API calls in integration tests."""
+
     def mock_get_stock_data(ticker, period="1y", interval="1d"):
         if "INVALID" in ticker.upper():
             raise InvalidTickerError(ticker, f"No data available for '{ticker}'")
-            
+
         # Return enough data for indicators (need at least 20-50 rows)
         days = 100
         dates = pd.date_range(end=datetime.now(), periods=days, freq="D")
-        return pd.DataFrame({
-            "Open": np.random.uniform(100, 110, days),
-            "High": np.random.uniform(110, 120, days),
-            "Low": np.random.uniform(90, 100, days),
-            "Close": np.random.uniform(100, 110, days),
-            "Volume": np.random.randint(1000000, 5000000, days)
-        }, index=dates)
-    
+        return pd.DataFrame(
+            {
+                "Open": np.random.uniform(100, 110, days),
+                "High": np.random.uniform(110, 120, days),
+                "Low": np.random.uniform(90, 100, days),
+                "Close": np.random.uniform(100, 110, days),
+                "Volume": np.random.randint(1000000, 5000000, days),
+            },
+            index=dates,
+        )
+
     def mock_get_news(ticker):
         return [{"title": "Test News", "publisher": "Test Source", "link": "https://example.com"}]
-    
+
     def mock_get_company_info(ticker):
         return {"longName": "Test Company", "sector": "Technology", "marketCap": 1e12}
 
     monkeypatch.setattr("utils.agent_handlers.get_stock_data", mock_get_stock_data)
     monkeypatch.setattr("utils.agent_handlers.get_news", mock_get_news)
     monkeypatch.setattr("utils.agent_handlers.get_company_info", mock_get_company_info)
+
 
 # ============================================================================
 # Fixtures
@@ -200,9 +203,7 @@ def error_recovery_workflow() -> Workflow:
 class TestCompleteWorkflowExecution:
     """Tests for end-to-end workflow execution."""
 
-    def test_simple_workflow_success(
-        self, orchestrator: Orchestrator, simple_workflow: Workflow
-    ) -> None:
+    def test_simple_workflow_success(self, orchestrator: Orchestrator, simple_workflow: Workflow) -> None:
         """Test simple 2-stage workflow completes successfully."""
         inputs = {"ticker": "AAPL", "period": "1mo"}
 
@@ -215,9 +216,7 @@ class TestCompleteWorkflowExecution:
         assert result.agent_results["data"].status == AgentStatus.SUCCESS
         assert result.agent_results["tech"].status == AgentStatus.SUCCESS
 
-    def test_complex_workflow_parallel_execution(
-        self, orchestrator: Orchestrator, complex_workflow: Workflow
-    ) -> None:
+    def test_complex_workflow_parallel_execution(self, orchestrator: Orchestrator, complex_workflow: Workflow) -> None:
         """Test complex workflow with parallel stages (tech + sentiment)."""
         inputs = {"ticker": "NVDA", "period": "1mo"}
 
@@ -230,9 +229,7 @@ class TestCompleteWorkflowExecution:
             assert stage_id in result.agent_results
             assert result.agent_results[stage_id].status == AgentStatus.SUCCESS
 
-    def test_workflow_context_passing(
-        self, orchestrator: Orchestrator, simple_workflow: Workflow
-    ) -> None:
+    def test_workflow_context_passing(self, orchestrator: Orchestrator, simple_workflow: Workflow) -> None:
         """Test that outputs from one stage are accessible to next stage."""
         inputs = {"ticker": "MSFT", "period": "1mo"}
 
@@ -245,9 +242,7 @@ class TestCompleteWorkflowExecution:
         # Tech stage should produce signal
         assert "signal" in result.agent_results["tech"].outputs
 
-    def test_workflow_execution_time_tracking(
-        self, orchestrator: Orchestrator, simple_workflow: Workflow
-    ) -> None:
+    def test_workflow_execution_time_tracking(self, orchestrator: Orchestrator, simple_workflow: Workflow) -> None:
         """Test that execution times are tracked for each stage."""
         inputs = {"ticker": "GOOGL", "period": "1mo"}
 
@@ -256,9 +251,7 @@ class TestCompleteWorkflowExecution:
         for stage_id, stage_result in result.agent_results.items():
             assert stage_result.execution_time >= 0.0
         # Total workflow time should be sum of stage times
-        assert result.execution_time >= sum(
-            sr.execution_time for sr in result.agent_results.values()
-        )
+        assert result.execution_time >= sum(sr.execution_time for sr in result.agent_results.values())
 
 
 # ============================================================================
@@ -284,9 +277,7 @@ class TestValidationGating:
         data_result = result.agent_results["data"]
         assert data_result.outputs.get("quality_score", 0.0) >= 0.5
 
-    def test_validation_fails_workflow_halts(
-        self, orchestrator: Orchestrator, agent_registry: AgentRegistry
-    ) -> None:
+    def test_validation_fails_workflow_halts(self, orchestrator: Orchestrator, agent_registry: AgentRegistry) -> None:
         """Test workflow halts when validation fails and action is HALT."""
 
         def always_fail_validator(context: Dict[str, Any]) -> bool:
@@ -326,9 +317,7 @@ class TestValidationGating:
 class TestConditionalExecution:
     """Tests for conditional stage execution and skipping."""
 
-    def test_condition_met_stage_executes(
-        self, orchestrator: Orchestrator, agent_registry: AgentRegistry
-    ) -> None:
+    def test_condition_met_stage_executes(self, orchestrator: Orchestrator, agent_registry: AgentRegistry) -> None:
         """Test stage executes when condition is met."""
         condition_met = False
 
@@ -390,9 +379,7 @@ class TestConditionalExecution:
 class TestDynamicBranching:
     """Tests for dynamic workflow branching based on data quality."""
 
-    def test_high_quality_path_selection(
-        self, orchestrator: Orchestrator, agent_registry: AgentRegistry
-    ) -> None:
+    def test_high_quality_path_selection(self, orchestrator: Orchestrator, agent_registry: AgentRegistry) -> None:
         """Test workflow takes high-quality path when data quality is good."""
 
         def is_high_quality(context: Dict[str, Any]) -> bool:
@@ -490,9 +477,7 @@ class TestErrorRecovery:
             # Either is acceptable for this test
             pass
 
-    def test_dependency_failure_propagation(
-        self, orchestrator: Orchestrator, agent_registry: AgentRegistry
-    ) -> None:
+    def test_dependency_failure_propagation(self, orchestrator: Orchestrator, agent_registry: AgentRegistry) -> None:
         """Test that stage failures propagate to dependent stages."""
         workflow = Workflow(
             workflow_id="dependency_propagation_test",
@@ -537,9 +522,7 @@ class TestErrorRecovery:
 class TestWorkflowStateManagement:
     """Tests for workflow state tracking and management."""
 
-    def test_workflow_result_structure(
-        self, orchestrator: Orchestrator, simple_workflow: Workflow
-    ) -> None:
+    def test_workflow_result_structure(self, orchestrator: Orchestrator, simple_workflow: Workflow) -> None:
         """Test WorkflowResult contains all expected fields."""
         inputs = {"ticker": "AAPL", "period": "1mo"}
 
@@ -553,9 +536,7 @@ class TestWorkflowStateManagement:
         assert hasattr(result, "error")
         assert hasattr(result, "execution_time")
 
-    def test_stage_execution_order(
-        self, orchestrator: Orchestrator, complex_workflow: Workflow
-    ) -> None:
+    def test_stage_execution_order(self, orchestrator: Orchestrator, complex_workflow: Workflow) -> None:
         """Test stages execute in correct dependency order."""
         inputs = {"ticker": "NVDA", "period": "1mo"}
 
@@ -575,9 +556,7 @@ class TestWorkflowStateManagement:
         assert tech_time <= synth_time
         assert sent_time <= synth_time
 
-    def test_workflow_outputs_aggregation(
-        self, orchestrator: Orchestrator, complex_workflow: Workflow
-    ) -> None:
+    def test_workflow_outputs_aggregation(self, orchestrator: Orchestrator, complex_workflow: Workflow) -> None:
         """Test workflow aggregates outputs from all stages."""
         inputs = {"ticker": "MSFT", "period": "1mo"}
 

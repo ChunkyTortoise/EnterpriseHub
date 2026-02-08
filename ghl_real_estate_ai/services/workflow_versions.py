@@ -66,9 +66,7 @@ class WorkflowVersionControl:
 
         return version_id
 
-    def get_version(
-        self, workflow_id: str, version_number: int
-    ) -> Optional[Dict[str, Any]]:
+    def get_version(self, workflow_id: str, version_number: int) -> Optional[Dict[str, Any]]:
         """Get specific version"""
         if workflow_id not in self.versions:
             return None
@@ -101,9 +99,7 @@ class WorkflowVersionControl:
             for v in self.versions[workflow_id]
         ]
 
-    def rollback(
-        self, workflow_id: str, version_number: int
-    ) -> Optional[Dict[str, Any]]:
+    def rollback(self, workflow_id: str, version_number: int) -> Optional[Dict[str, Any]]:
         """
         Rollback to previous version
 
@@ -111,22 +107,16 @@ class WorkflowVersionControl:
         """
         old_version = self.get_version(workflow_id, version_number)
         if not old_version:
-            logger.error(
-                f"Version {version_number} not found for workflow {workflow_id}"
-            )
+            logger.error(f"Version {version_number} not found for workflow {workflow_id}")
             return None
 
         # Create new version with old data
-        new_version_id = self.save_version(
-            workflow_id, old_version["data"], f"Rolled back to version {version_number}"
-        )
+        new_version_id = self.save_version(workflow_id, old_version["data"], f"Rolled back to version {version_number}")
 
         logger.info(f"Rolled back workflow {workflow_id} to version {version_number}")
         return self.get_latest_version(workflow_id)
 
-    def compare_versions(
-        self, workflow_id: str, version1: int, version2: int
-    ) -> Dict[str, Any]:
+    def compare_versions(self, workflow_id: str, version1: int, version2: int) -> Dict[str, Any]:
         """Compare two versions"""
         v1 = self.get_version(workflow_id, version1)
         v2 = self.get_version(workflow_id, version2)
@@ -142,9 +132,7 @@ class WorkflowVersionControl:
 
         return differences
 
-    def create_ab_variant(
-        self, workflow_id: str, variant_name: str, changes: Dict[str, Any]
-    ) -> str:
+    def create_ab_variant(self, workflow_id: str, variant_name: str, changes: Dict[str, Any]) -> str:
         """
         Create A/B test variant
 
@@ -201,7 +189,5 @@ if __name__ == "__main__":
     print(f"\n↩️  Rolled back to v1")
 
     # Create A/B variant
-    variant_id = vc.create_ab_variant(
-        "wf_001", "variant_a", {"steps": [{"action": "wait"}]}
-    )
+    variant_id = vc.create_ab_variant("wf_001", "variant_a", {"steps": [{"action": "wait"}]})
     print(f"🧪 Created A/B variant: {variant_id}")

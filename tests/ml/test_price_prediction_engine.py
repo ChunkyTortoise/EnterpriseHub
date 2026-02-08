@@ -12,23 +12,24 @@ Test coverage:
 - Performance benchmarks
 """
 
-import pytest
 import asyncio
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
+
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, AsyncMock
-from typing import Dict, List, Any
+import pytest
 
 from ghl_real_estate_ai.ml.price_prediction_engine import (
-    PricePredictionEngine,
     EnsemblePricePredictor,
-    PredictionFeatures,
-    PricePredictionResult,
     ModelMetrics,
-    PredictionTimeframe,
     ModelType,
-    get_price_prediction_engine
+    PredictionFeatures,
+    PredictionTimeframe,
+    PricePredictionEngine,
+    PricePredictionResult,
+    get_price_prediction_engine,
 )
 
 
@@ -42,27 +43,31 @@ class TestEnsemblePricePredictor:
         n_samples = 500
 
         data = {
-            'bedrooms': np.random.choice([2, 3, 4, 5], n_samples, p=[0.2, 0.4, 0.3, 0.1]),
-            'bathrooms': np.random.uniform(1, 4, n_samples),
-            'square_footage': np.random.normal(2000, 800, n_samples),
-            'lot_size': np.random.uniform(0.1, 2.0, n_samples),
-            'year_built': np.random.randint(1950, 2023, n_samples),
-            'garage_spaces': np.random.choice([0, 1, 2, 3], n_samples, p=[0.1, 0.3, 0.5, 0.1]),
-            'walk_score': np.random.randint(20, 100, n_samples),
-            'school_rating': np.random.uniform(3, 10, n_samples),
-            'crime_score': np.random.randint(10, 90, n_samples),
-            'property_type': np.random.choice(['single_family', 'condo', 'townhome'], n_samples, p=[0.7, 0.2, 0.1]),
-            'property_condition': np.random.choice(['excellent', 'good', 'fair', 'poor'], n_samples, p=[0.3, 0.5, 0.15, 0.05]),
+            "bedrooms": np.random.choice([2, 3, 4, 5], n_samples, p=[0.2, 0.4, 0.3, 0.1]),
+            "bathrooms": np.random.uniform(1, 4, n_samples),
+            "square_footage": np.random.normal(2000, 800, n_samples),
+            "lot_size": np.random.uniform(0.1, 2.0, n_samples),
+            "year_built": np.random.randint(1950, 2023, n_samples),
+            "garage_spaces": np.random.choice([0, 1, 2, 3], n_samples, p=[0.1, 0.3, 0.5, 0.1]),
+            "walk_score": np.random.randint(20, 100, n_samples),
+            "school_rating": np.random.uniform(3, 10, n_samples),
+            "crime_score": np.random.randint(10, 90, n_samples),
+            "property_type": np.random.choice(["single_family", "condo", "townhome"], n_samples, p=[0.7, 0.2, 0.1]),
+            "property_condition": np.random.choice(
+                ["excellent", "good", "fair", "poor"], n_samples, p=[0.3, 0.5, 0.15, 0.05]
+            ),
         }
 
         df = pd.DataFrame(data)
 
         # Calculate realistic price based on features
-        df['price'] = (
-            df['square_footage'] * 350 *  # Base price per sqft
-            (1 + np.random.normal(0, 0.1, n_samples)) *  # Add noise
-            (df['school_rating'] / 10) * 1.1 *  # School adjustment
-            np.where(df['year_built'] > 2000, 1.1, 0.95)  # Age adjustment
+        df["price"] = (
+            df["square_footage"]
+            * 350  # Base price per sqft
+            * (1 + np.random.normal(0, 0.1, n_samples))  # Add noise
+            * (df["school_rating"] / 10)
+            * 1.1  # School adjustment
+            * np.where(df["year_built"] > 2000, 1.1, 0.95)  # Age adjustment
         )
 
         return df
@@ -70,26 +75,30 @@ class TestEnsemblePricePredictor:
     @pytest.fixture
     def sample_prediction_features(self):
         """Create sample prediction features."""
-        return pd.DataFrame([{
-            'bedrooms': 3,
-            'bathrooms': 2.5,
-            'square_footage': 2200,
-            'lot_size': 0.3,
-            'year_built': 2015,
-            'garage_spaces': 2,
-            'walk_score': 75,
-            'school_rating': 8.5,
-            'crime_score': 20,
-            'property_type': 'single_family',
-            'property_condition': 'good'
-        }])
+        return pd.DataFrame(
+            [
+                {
+                    "bedrooms": 3,
+                    "bathrooms": 2.5,
+                    "square_footage": 2200,
+                    "lot_size": 0.3,
+                    "year_built": 2015,
+                    "garage_spaces": 2,
+                    "walk_score": 75,
+                    "school_rating": 8.5,
+                    "crime_score": 20,
+                    "property_type": "single_family",
+                    "property_condition": "good",
+                }
+            ]
+        )
 
     def test_ensemble_model_initialization(self):
         """Test ensemble model initialization."""
         model = EnsemblePricePredictor()
 
-        assert hasattr(model, 'models')
-        assert hasattr(model, 'ensemble_weights')
+        assert hasattr(model, "models")
+        assert hasattr(model, "ensemble_weights")
         assert len(model.models) == 3  # RF, GB, ElasticNet
         assert not model.is_fitted
 
@@ -97,22 +106,22 @@ class TestEnsemblePricePredictor:
         """Test model fitting with training data."""
         model = EnsemblePricePredictor()
 
-        X = sample_training_data.drop(columns=['price'])
-        y = sample_training_data['price']
+        X = sample_training_data.drop(columns=["price"])
+        y = sample_training_data["price"]
 
         # Fit the model
         model.fit(X, y)
 
         assert model.is_fitted
-        assert hasattr(model, 'scalers')
-        assert hasattr(model, 'label_encoders')
+        assert hasattr(model, "scalers")
+        assert hasattr(model, "label_encoders")
 
     def test_model_prediction(self, sample_training_data, sample_prediction_features):
         """Test model prediction functionality."""
         model = EnsemblePricePredictor()
 
-        X = sample_training_data.drop(columns=['price'])
-        y = sample_training_data['price']
+        X = sample_training_data.drop(columns=["price"])
+        y = sample_training_data["price"]
 
         # Fit and predict
         model.fit(X, y)
@@ -126,8 +135,8 @@ class TestEnsemblePricePredictor:
         """Test prediction with uncertainty estimation."""
         model = EnsemblePricePredictor()
 
-        X = sample_training_data.drop(columns=['price'])
-        y = sample_training_data['price']
+        X = sample_training_data.drop(columns=["price"])
+        y = sample_training_data["price"]
 
         model.fit(X, y)
         predictions, uncertainty = model.predict_with_uncertainty(sample_prediction_features)
@@ -140,8 +149,8 @@ class TestEnsemblePricePredictor:
         """Test feature importance extraction."""
         model = EnsemblePricePredictor()
 
-        X = sample_training_data.drop(columns=['price'])
-        y = sample_training_data['price']
+        X = sample_training_data.drop(columns=["price"])
+        y = sample_training_data["price"]
 
         model.fit(X, y)
         importance = model.get_feature_importance()
@@ -153,24 +162,28 @@ class TestEnsemblePricePredictor:
         """Test handling of missing data in predictions."""
         model = EnsemblePricePredictor()
 
-        X = sample_training_data.drop(columns=['price'])
-        y = sample_training_data['price']
+        X = sample_training_data.drop(columns=["price"])
+        y = sample_training_data["price"]
         model.fit(X, y)
 
         # Create test data with missing values
-        test_data = pd.DataFrame([{
-            'bedrooms': 3,
-            'bathrooms': None,  # Missing value
-            'square_footage': 2200,
-            'lot_size': 0.3,
-            'year_built': 2015,
-            'garage_spaces': 2,
-            'walk_score': 75,
-            'school_rating': 8.5,
-            'crime_score': 20,
-            'property_type': 'single_family',
-            'property_condition': 'good'
-        }])
+        test_data = pd.DataFrame(
+            [
+                {
+                    "bedrooms": 3,
+                    "bathrooms": None,  # Missing value
+                    "square_footage": 2200,
+                    "lot_size": 0.3,
+                    "year_built": 2015,
+                    "garage_spaces": 2,
+                    "walk_score": 75,
+                    "school_rating": 8.5,
+                    "crime_score": 20,
+                    "property_type": "single_family",
+                    "property_condition": "good",
+                }
+            ]
+        )
 
         # Should handle missing data gracefully
         predictions = model.predict(test_data)
@@ -181,24 +194,28 @@ class TestEnsemblePricePredictor:
         """Test handling of categorical features."""
         model = EnsemblePricePredictor()
 
-        X = sample_training_data.drop(columns=['price'])
-        y = sample_training_data['price']
+        X = sample_training_data.drop(columns=["price"])
+        y = sample_training_data["price"]
         model.fit(X, y)
 
         # Test with new categorical values
-        test_data = pd.DataFrame([{
-            'bedrooms': 4,
-            'bathrooms': 3.0,
-            'square_footage': 2500,
-            'lot_size': 0.4,
-            'year_built': 2018,
-            'garage_spaces': 2,
-            'walk_score': 80,
-            'school_rating': 9.0,
-            'crime_score': 15,
-            'property_type': 'townhome',  # Different from training
-            'property_condition': 'excellent'
-        }])
+        test_data = pd.DataFrame(
+            [
+                {
+                    "bedrooms": 4,
+                    "bathrooms": 3.0,
+                    "square_footage": 2500,
+                    "lot_size": 0.4,
+                    "year_built": 2018,
+                    "garage_spaces": 2,
+                    "walk_score": 80,
+                    "school_rating": 9.0,
+                    "crime_score": 15,
+                    "property_type": "townhome",  # Different from training
+                    "property_condition": "excellent",
+                }
+            ]
+        )
 
         predictions = model.predict(test_data)
         assert len(predictions) == 1
@@ -215,10 +232,11 @@ class TestPricePredictionEngine:
         engine.cache = AsyncMock()
 
         # Mock model loading
-        with patch.object(engine, '_load_models', new_callable=AsyncMock), \
-             patch.object(engine, '_train_initial_models', new_callable=AsyncMock), \
-             patch.object(engine, '_validate_models', new_callable=AsyncMock):
-
+        with (
+            patch.object(engine, "_load_models", new_callable=AsyncMock),
+            patch.object(engine, "_train_initial_models", new_callable=AsyncMock),
+            patch.object(engine, "_validate_models", new_callable=AsyncMock),
+        ):
             await engine.initialize()
 
         return engine
@@ -258,7 +276,7 @@ class TestPricePredictionEngine:
             comps_median_price=745000.0,
             comps_price_per_sqft=348.0,
             comps_count=12,
-            comps_days_old_avg=25
+            comps_days_old_avg=25,
         )
 
     @pytest.mark.asyncio
@@ -268,10 +286,11 @@ class TestPricePredictionEngine:
         engine.cache = AsyncMock()
 
         # Mock dependencies
-        with patch.object(engine, '_load_models', new_callable=AsyncMock), \
-             patch.object(engine, '_train_initial_models', new_callable=AsyncMock), \
-             patch.object(engine, '_validate_models', new_callable=AsyncMock):
-
+        with (
+            patch.object(engine, "_load_models", new_callable=AsyncMock),
+            patch.object(engine, "_train_initial_models", new_callable=AsyncMock),
+            patch.object(engine, "_validate_models", new_callable=AsyncMock),
+        ):
             await engine.initialize()
 
             assert engine.is_initialized
@@ -287,7 +306,7 @@ class TestPricePredictionEngine:
             "prediction_confidence": 0.92,
             "timeframe_predictions": {"1m": 785000.0, "3m": 795000.0},
             "model_used": "ensemble",
-            "prediction_date": datetime.now()
+            "prediction_date": datetime.now(),
         }
 
         engine.cache.get.return_value = cached_result
@@ -313,11 +332,12 @@ class TestPricePredictionEngine:
         engine.models["ensemble"] = mock_model
 
         # Mock helper methods
-        with patch.object(engine, '_get_model_for_timeframe', return_value=mock_model), \
-             patch.object(engine, '_generate_multi_timeframe_predictions', return_value={"1m": 785000.0}), \
-             patch.object(engine, '_find_comparable_properties', return_value=[]), \
-             patch.object(engine, '_calculate_prediction_confidence', return_value=0.94):
-
+        with (
+            patch.object(engine, "_get_model_for_timeframe", return_value=mock_model),
+            patch.object(engine, "_generate_multi_timeframe_predictions", return_value={"1m": 785000.0}),
+            patch.object(engine, "_find_comparable_properties", return_value=[]),
+            patch.object(engine, "_calculate_prediction_confidence", return_value=0.94),
+        ):
             result = await engine.predict_price(sample_features, include_uncertainty=True)
 
             assert isinstance(result, PricePredictionResult)
@@ -332,7 +352,7 @@ class TestPricePredictionEngine:
         features_list = [sample_features for _ in range(5)]
 
         # Mock individual predictions
-        with patch.object(engine, 'predict_price') as mock_predict:
+        with patch.object(engine, "predict_price") as mock_predict:
             mock_result = PricePredictionResult(
                 property_id=None,
                 predicted_price=780000.0,
@@ -347,7 +367,7 @@ class TestPricePredictionEngine:
                 neighborhood_context={},
                 prediction_date=datetime.now(),
                 data_freshness=datetime.now(),
-                model_version="2.1.0"
+                model_version="2.1.0",
             )
 
             mock_predict.return_value = mock_result
@@ -361,13 +381,15 @@ class TestPricePredictionEngine:
     async def test_model_evaluation(self, engine):
         """Test model performance evaluation."""
         # Create test data
-        test_data = pd.DataFrame({
-            'square_footage': [2000, 2200, 1800],
-            'bedrooms': [3, 4, 2],
-            'bathrooms': [2.5, 3.0, 2.0],
-            'year_built': [2010, 2015, 2005],
-            'price': [650000, 780000, 580000]
-        })
+        test_data = pd.DataFrame(
+            {
+                "square_footage": [2000, 2200, 1800],
+                "bedrooms": [3, 4, 2],
+                "bathrooms": [2.5, 3.0, 2.0],
+                "year_built": [2010, 2015, 2005],
+                "price": [650000, 780000, 580000],
+            }
+        )
 
         # Mock model
         mock_model = Mock()
@@ -387,16 +409,18 @@ class TestPricePredictionEngine:
     async def test_model_retraining(self, engine):
         """Test model retraining functionality."""
         # Create training data
-        training_data = pd.DataFrame({
-            'square_footage': np.random.normal(2000, 500, 100),
-            'bedrooms': np.random.choice([2, 3, 4], 100),
-            'bathrooms': np.random.uniform(1.5, 3.5, 100),
-            'year_built': np.random.randint(1990, 2023, 100),
-            'price': np.random.normal(700000, 150000, 100)
-        })
+        training_data = pd.DataFrame(
+            {
+                "square_footage": np.random.normal(2000, 500, 100),
+                "bedrooms": np.random.choice([2, 3, 4], 100),
+                "bathrooms": np.random.uniform(1.5, 3.5, 100),
+                "year_built": np.random.randint(1990, 2023, 100),
+                "price": np.random.normal(700000, 150000, 100),
+            }
+        )
 
         # Mock model operations
-        with patch.object(engine, '_save_models', new_callable=AsyncMock):
+        with patch.object(engine, "_save_models", new_callable=AsyncMock):
             await engine.retrain_models(training_data)
 
             # Should have attempted to retrain
@@ -409,7 +433,7 @@ class TestPricePredictionEngine:
             PredictionTimeframe.ONE_MONTH,
             PredictionTimeframe.THREE_MONTHS,
             PredictionTimeframe.SIX_MONTHS,
-            PredictionTimeframe.TWELVE_MONTHS
+            PredictionTimeframe.TWELVE_MONTHS,
         ]
 
         # Mock model
@@ -420,10 +444,11 @@ class TestPricePredictionEngine:
 
         engine.cache.get.return_value = None
 
-        with patch.object(engine, '_get_model_for_timeframe', return_value=mock_model), \
-             patch.object(engine, '_find_comparable_properties', return_value=[]), \
-             patch.object(engine, '_calculate_prediction_confidence', return_value=0.95):
-
+        with (
+            patch.object(engine, "_get_model_for_timeframe", return_value=mock_model),
+            patch.object(engine, "_find_comparable_properties", return_value=[]),
+            patch.object(engine, "_calculate_prediction_confidence", return_value=0.95),
+        ):
             for timeframe in timeframes:
                 result = await engine.predict_price(sample_features, timeframe)
 
@@ -447,7 +472,7 @@ class TestPricePredictionEngine:
             prediction_confidence=0.96,
             feature_importance={},
             cross_val_scores=[0.94, 0.96, 0.95],
-            last_evaluated=datetime.now()
+            last_evaluated=datetime.now(),
         )
 
         confidence = engine._calculate_prediction_confidence(mock_model, feature_df)
@@ -473,8 +498,8 @@ class TestPricePredictionEngine:
 
         assert isinstance(feature_df, pd.DataFrame)
         assert len(feature_df) == 1
-        assert feature_df.iloc[0]['bedrooms'] == 3
-        assert feature_df.iloc[0]['square_footage'] == 2200
+        assert feature_df.iloc[0]["bedrooms"] == 3
+        assert feature_df.iloc[0]["square_footage"] == 2200
 
     @pytest.mark.asyncio
     async def test_error_handling(self, engine, sample_features):
@@ -486,7 +511,7 @@ class TestPricePredictionEngine:
         engine.models["ensemble"] = mock_model
         engine.cache.get.return_value = None
 
-        with patch.object(engine, '_get_model_for_timeframe', return_value=mock_model):
+        with patch.object(engine, "_get_model_for_timeframe", return_value=mock_model):
             with pytest.raises(Exception):
                 await engine.predict_price(sample_features)
 
@@ -501,10 +526,11 @@ class TestPricePredictionEngine:
 
         engine.cache.get.return_value = None
 
-        with patch.object(engine, '_get_model_for_timeframe', return_value=mock_model), \
-             patch.object(engine, '_find_comparable_properties', return_value=[]), \
-             patch.object(engine, '_calculate_prediction_confidence', return_value=0.95):
-
+        with (
+            patch.object(engine, "_get_model_for_timeframe", return_value=mock_model),
+            patch.object(engine, "_find_comparable_properties", return_value=[]),
+            patch.object(engine, "_calculate_prediction_confidence", return_value=0.95),
+        ):
             start_time = datetime.now()
             result = await engine.predict_price(sample_features)
             execution_time = (datetime.now() - start_time).total_seconds()
@@ -526,7 +552,7 @@ class TestPricePredictionEngine:
             prediction_confidence=0.957,
             feature_importance={"square_footage": 0.4, "neighborhood": 0.3},
             cross_val_scores=[0.95, 0.96, 0.955, 0.958, 0.952],
-            last_evaluated=datetime.now()
+            last_evaluated=datetime.now(),
         )
 
         engine.model_metrics["ensemble"] = high_accuracy_metrics
@@ -543,23 +569,45 @@ class TestPricePredictionEngine:
     async def test_feature_completeness_impact(self, engine):
         """Test impact of feature completeness on confidence."""
         # Complete features
-        complete_features = pd.DataFrame([{
-            'bedrooms': 3, 'bathrooms': 2.5, 'square_footage': 2200,
-            'lot_size': 0.3, 'year_built': 2015, 'walk_score': 75
-        }])
+        complete_features = pd.DataFrame(
+            [
+                {
+                    "bedrooms": 3,
+                    "bathrooms": 2.5,
+                    "square_footage": 2200,
+                    "lot_size": 0.3,
+                    "year_built": 2015,
+                    "walk_score": 75,
+                }
+            ]
+        )
 
         # Incomplete features (missing data)
-        incomplete_features = pd.DataFrame([{
-            'bedrooms': 3, 'bathrooms': None, 'square_footage': 2200,
-            'lot_size': None, 'year_built': 2015, 'walk_score': None
-        }])
+        incomplete_features = pd.DataFrame(
+            [
+                {
+                    "bedrooms": 3,
+                    "bathrooms": None,
+                    "square_footage": 2200,
+                    "lot_size": None,
+                    "year_built": 2015,
+                    "walk_score": None,
+                }
+            ]
+        )
 
         # Mock base confidence
         mock_model = Mock()
         engine.model_metrics["ensemble"] = ModelMetrics(
-            accuracy=0.9, mape=0.1, rmse=30000, mae=25000, r2_score=0.85,
-            prediction_confidence=0.9, feature_importance={}, cross_val_scores=[],
-            last_evaluated=datetime.now()
+            accuracy=0.9,
+            mape=0.1,
+            rmse=30000,
+            mae=25000,
+            r2_score=0.85,
+            prediction_confidence=0.9,
+            feature_importance={},
+            cross_val_scores=[],
+            last_evaluated=datetime.now(),
         )
 
         confidence_complete = engine._calculate_prediction_confidence(mock_model, complete_features)
@@ -575,17 +623,10 @@ class TestPricePredictionEngine:
 
         # Mock comparable properties
         mock_comparables = [
-            {
-                "address": "123 Test St",
-                "price": 760000,
-                "beds": 3,
-                "baths": 2.5,
-                "sqft": 2100,
-                "days_ago_sold": 30
-            }
+            {"address": "123 Test St", "price": 760000, "beds": 3, "baths": 2.5, "sqft": 2100, "days_ago_sold": 30}
         ]
 
-        with patch.object(engine, '_find_comparable_properties', return_value=mock_comparables):
+        with patch.object(engine, "_find_comparable_properties", return_value=mock_comparables):
             comparables = await engine._find_comparable_properties(sample_features)
 
             assert len(comparables) > 0

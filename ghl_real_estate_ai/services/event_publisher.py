@@ -14,49 +14,52 @@ Features:
 """
 
 import asyncio
-import time
-from typing import Dict, Any, Optional, List, Callable
-from datetime import datetime, timezone, timedelta
-from dataclasses import dataclass
 import json
+import time
+from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+from typing import Any, Callable, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.websocket_server import get_websocket_manager, RealTimeEvent, EventType
-from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.auth_service import UserRole
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.websocket_server import EventType, RealTimeEvent, get_websocket_manager
 
 logger = get_logger(__name__)
+
 
 @dataclass
 class EventMetrics:
     """Event publishing metrics."""
+
     total_events_published: int = 0
     events_by_type: Dict[str, int] = None
     last_event_time: Optional[datetime] = None
     average_processing_time_ms: float = 0.0
     failed_publishes: int = 0
-    
+
     def __post_init__(self):
         if self.events_by_type is None:
             self.events_by_type = {}
 
+
 class EventPublisher:
     """
     Real-Time Event Publisher Service.
-    
-    Monitors data changes and publishes real-time events to connected 
+
+    Monitors data changes and publishes real-time events to connected
     WebSocket clients. Provides intelligent batching, filtering, and
     performance optimization.
     """
-    
+
     def __init__(self):
         self.websocket_manager = get_websocket_manager()
         self.cache_service = get_cache_service()
         self.metrics = EventMetrics()
-        
+
         # 🚀 ENHANCED EVENT BATCHING CONFIGURATION (Phase 8+ Optimization)
         self.batch_interval = 0.01  # 10ms micro-batching (vs 500ms previous)
-        self.max_batch_size = 50    # Increased capacity for enterprise throughput
+        self.max_batch_size = 50  # Increased capacity for enterprise throughput
         self._event_batch = []
         self._batch_timer = None
 
@@ -68,7 +71,7 @@ class EventPublisher:
         self._latency_measurements = []
         self._events_under_10ms = 0
         self._total_events_processed = 0
-        
+
         logger.info("Event Publisher initialized")
 
     async def start(self):
@@ -90,11 +93,11 @@ class EventPublisher:
         action: str = "updated",
         user_id: Optional[int] = None,
         location_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish lead update event.
-        
+
         Args:
             lead_id: Lead identifier
             lead_data: Lead data that was updated
@@ -111,14 +114,14 @@ class EventPublisher:
                 "lead_data": lead_data,
                 "updated_fields": list(lead_data.keys()),
                 "summary": f"Lead {action}: {lead_data.get('name', 'Unknown')}",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
             location_id=location_id,
-            priority="high" if action in ["created", "qualified", "hot"] else "normal"
+            priority="high" if action in ["created", "qualified", "hot"] else "normal",
         )
-        
+
         await self._publish_event(event)
         logger.info(f"Published lead update event: {lead_id} ({action})")
 
@@ -130,11 +133,11 @@ class EventPublisher:
         message: Optional[str] = None,
         user_id: Optional[int] = None,
         location_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish conversation stage update event.
-        
+
         Args:
             conversation_id: Conversation identifier
             lead_id: Associated lead ID
@@ -153,14 +156,14 @@ class EventPublisher:
                 "message_preview": message[:100] + "..." if message and len(message) > 100 else message,
                 "stage_progression": self._get_stage_progression(stage),
                 "summary": f"Conversation moved to {stage}",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
             location_id=location_id,
-            priority="high" if stage in ["Q4", "hot", "ready"] else "normal"
+            priority="high" if stage in ["Q4", "hot", "ready"] else "normal",
         )
-        
+
         await self._publish_event(event)
         logger.info(f"Published conversation update: {conversation_id} -> {stage}")
 
@@ -171,9 +174,9 @@ class EventPublisher:
             "Q2": {"progress": 50, "next": "Q3", "description": "Budgeting & Timeline"},
             "Q3": {"progress": 75, "next": "Q4", "description": "Property Search"},
             "Q4": {"progress": 90, "next": "closing", "description": "Ready to Sell"},
-            "closing": {"progress": 100, "next": None, "description": "Deal Closing"}
+            "closing": {"progress": 100, "next": None, "description": "Deal Closing"},
         }
-        
+
         return stage_map.get(stage, {"progress": 0, "next": None, "description": "Unknown"})
 
     async def publish_commission_update(
@@ -183,11 +186,11 @@ class EventPublisher:
         pipeline_status: str,
         user_id: Optional[int] = None,
         location_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish commission pipeline update event.
-        
+
         Args:
             deal_id: Deal identifier
             commission_amount: Commission amount
@@ -205,14 +208,14 @@ class EventPublisher:
                 "formatted_amount": f"${commission_amount:,.2f}",
                 "impact": "positive" if commission_amount > 0 else "neutral",
                 "summary": f"Commission {pipeline_status}: ${commission_amount:,.2f}",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
             location_id=location_id,
-            priority="high" if commission_amount > 10000 else "normal"
+            priority="high" if commission_amount > 10000 else "normal",
         )
-        
+
         await self._publish_event(event)
         logger.info(f"Published commission update: {deal_id} - ${commission_amount:,.2f} ({pipeline_status})")
 
@@ -223,11 +226,11 @@ class EventPublisher:
         severity: str = "info",
         details: Optional[Dict[str, Any]] = None,
         target_roles: Optional[List[UserRole]] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish system alert event.
-        
+
         Args:
             alert_type: Type of alert (performance, error, maintenance, etc.)
             message: Alert message
@@ -245,18 +248,18 @@ class EventPublisher:
                 "details": details or {},
                 "action_required": severity in ["error", "critical"],
                 "summary": f"{severity.upper()}: {message}",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
-            priority="critical" if severity == "critical" else "high" if severity == "error" else "normal"
+            priority="critical" if severity == "critical" else "high" if severity == "error" else "normal",
         )
-        
+
         # Target specific roles if specified
         if target_roles:
             await self.websocket_manager.broadcast_event(event, target_roles=set(target_roles))
         else:
             await self._publish_event(event)
-            
+
         logger.info(f"Published system alert: {alert_type} ({severity}) - {message}")
 
     async def publish_performance_update(
@@ -266,11 +269,11 @@ class EventPublisher:
         metric_unit: str = "",
         comparison: Optional[Dict[str, Any]] = None,
         user_id: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish performance metric update event.
-        
+
         Args:
             metric_name: Name of the metric
             metric_value: Current metric value
@@ -289,13 +292,13 @@ class EventPublisher:
                 "comparison": comparison or {},
                 "trend": self._calculate_trend(comparison) if comparison else "neutral",
                 "summary": f"{metric_name}: {metric_value:.2f}{metric_unit}",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
-            priority="low"
+            priority="low",
         )
-        
+
         await self._publish_event(event)
         logger.debug(f"Published performance update: {metric_name} = {metric_value}{metric_unit}")
 
@@ -304,12 +307,12 @@ class EventPublisher:
         if "previous_value" in comparison and "current_value" in comparison:
             prev = comparison["previous_value"]
             curr = comparison["current_value"]
-            
+
             if curr > prev * 1.05:  # 5% increase threshold
                 return "up"
             elif curr < prev * 0.95:  # 5% decrease threshold
                 return "down"
-                
+
         return "stable"
 
     async def publish_dashboard_refresh(
@@ -318,11 +321,11 @@ class EventPublisher:
         data: Dict[str, Any],
         user_id: Optional[int] = None,
         location_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish dashboard component refresh event.
-        
+
         Args:
             component: Dashboard component to refresh
             data: Updated component data
@@ -338,14 +341,14 @@ class EventPublisher:
                 "cache_key": f"dashboard:{component}:{location_id or 'global'}",
                 "last_updated": datetime.now(timezone.utc).isoformat(),
                 "summary": f"Dashboard component refreshed: {component}",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
             location_id=location_id,
-            priority="normal"
+            priority="normal",
         )
-        
+
         await self._publish_event(event)
         logger.debug(f"Published dashboard refresh: {component}")
 
@@ -355,11 +358,11 @@ class EventPublisher:
         user_id: int,
         details: Optional[Dict[str, Any]] = None,
         target_roles: Optional[List[UserRole]] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish user activity event.
-        
+
         Args:
             action: Activity action (login, logout, view_dashboard, etc.)
             user_id: User ID performing action
@@ -375,13 +378,13 @@ class EventPublisher:
                 "details": details or {},
                 "session_info": await self._get_session_info(user_id),
                 "summary": f"User activity: {action}",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
-            priority="low"
+            priority="low",
         )
-        
+
         # Default to admin-only notifications for user activity
         target_roles = target_roles or [UserRole.ADMIN]
         await self.websocket_manager.broadcast_event(event, target_roles=set(target_roles))
@@ -390,10 +393,7 @@ class EventPublisher:
     async def _get_session_info(self, user_id: int) -> Dict[str, Any]:
         """Get session information for user activity events."""
         # This could be enhanced to include more session details
-        return {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "user_id": user_id
-        }
+        return {"timestamp": datetime.now(timezone.utc).isoformat(), "user_id": user_id}
 
     async def publish_property_alert(
         self,
@@ -406,7 +406,7 @@ class EventPublisher:
         match_reasoning: Optional[Dict[str, Any]] = None,
         user_id: Optional[int] = None,
         location_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish property alert event for real-time property matching.
@@ -424,11 +424,11 @@ class EventPublisher:
             **kwargs: Additional event data
         """
         # Extract key property details for quick access
-        property_address = property_data.get('address', 'Unknown Address')
-        property_price = property_data.get('price', 0)
-        property_bedrooms = property_data.get('bedrooms', 0)
-        property_bathrooms = property_data.get('bathrooms', 0)
-        property_sqft = property_data.get('sqft', 0)
+        property_address = property_data.get("address", "Unknown Address")
+        property_price = property_data.get("price", 0)
+        property_bedrooms = property_data.get("bedrooms", 0)
+        property_bathrooms = property_data.get("bathrooms", 0)
+        property_sqft = property_data.get("sqft", 0)
 
         # Determine priority based on match score and alert type
         priority = "high" if match_score >= 85 or alert_type == "price_drop" else "normal"
@@ -443,7 +443,6 @@ class EventPublisher:
                 "property_id": property_id,
                 "match_score": round(match_score, 2),
                 "alert_type": alert_type,
-
                 # Property summary for quick display
                 "property_summary": {
                     "address": property_address,
@@ -452,31 +451,32 @@ class EventPublisher:
                     "bedrooms": property_bedrooms,
                     "bathrooms": property_bathrooms,
                     "sqft": property_sqft,
-                    "formatted_sqft": f"{property_sqft:,} sq ft" if property_sqft else "Size not listed"
+                    "formatted_sqft": f"{property_sqft:,} sq ft" if property_sqft else "Size not listed",
                 },
-
                 # Full property data for detailed view
                 "property_data": property_data,
                 "match_reasoning": match_reasoning or {},
-
                 # Alert metadata
                 "alert_priority": priority,
                 "requires_action": match_score >= 90,
                 "expires_at": (datetime.now(timezone.utc).timestamp() + 86400),  # 24 hours from now
-
                 # Human-readable summary
                 "summary": f"New {alert_type.replace('_', ' ').title()}: {property_address} ({match_score:.0f}% match)",
-                "notification_text": f"Found a {match_score:.0f}% match! {property_address} - ${property_price:,.0f}" if property_price else f"Found a {match_score:.0f}% match! {property_address}",
-                **kwargs
+                "notification_text": f"Found a {match_score:.0f}% match! {property_address} - ${property_price:,.0f}"
+                if property_price
+                else f"Found a {match_score:.0f}% match! {property_address}",
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
             location_id=location_id,
-            priority=priority
+            priority=priority,
         )
 
         await self._publish_event(event)
-        logger.info(f"Published property alert: {alert_type} for lead {lead_id} - {property_address} ({match_score:.1f}% match)")
+        logger.info(
+            f"Published property alert: {alert_type} for lead {lead_id} - {property_address} ({match_score:.1f}% match)"
+        )
 
     # Jorge Bot Ecosystem Event Publishers
 
@@ -489,7 +489,7 @@ class EventPublisher:
         processing_time_ms: Optional[float] = None,
         user_id: Optional[int] = None,
         location_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish bot status update event.
@@ -514,12 +514,12 @@ class EventPublisher:
                 "processing_time_ms": processing_time_ms,
                 "last_activity": datetime.now(timezone.utc).isoformat(),
                 "summary": f"{bot_type.replace('-', ' ').title()} bot {status}",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
             location_id=location_id,
-            priority="high" if status == "error" else "normal"
+            priority="high" if status == "error" else "normal",
         )
 
         await self._publish_event(event)
@@ -535,7 +535,7 @@ class EventPublisher:
         next_action: Optional[str] = None,
         user_id: Optional[int] = None,
         location_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish Jorge seller bot qualification progress event.
@@ -566,16 +566,18 @@ class EventPublisher:
                 "next_action": next_action,
                 "qualification_stage": f"Q{current_question}" if current_question <= 4 else "Complete",
                 "summary": f"Jorge qualification {progress_percentage:.0f}% complete - {seller_temperature} seller",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
             location_id=location_id,
-            priority="high" if seller_temperature == "hot" else "normal"
+            priority="high" if seller_temperature == "hot" else "normal",
         )
 
         await self._publish_event(event)
-        logger.info(f"Published Jorge qualification progress: {progress_percentage:.0f}% ({seller_temperature} - contact: {contact_id})")
+        logger.info(
+            f"Published Jorge qualification progress: {progress_percentage:.0f}% ({seller_temperature} - contact: {contact_id})"
+        )
 
     async def publish_lead_bot_sequence_update(
         self,
@@ -587,7 +589,7 @@ class EventPublisher:
         message_sent: Optional[str] = None,
         user_id: Optional[int] = None,
         location_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish lead bot 3-7-30 sequence progress event.
@@ -611,19 +613,23 @@ class EventPublisher:
                 "action_type": action_type,
                 "success": success,
                 "next_action_date": next_action_date,
-                "message_preview": message_sent[:100] + "..." if message_sent and len(message_sent) > 100 else message_sent,
+                "message_preview": message_sent[:100] + "..."
+                if message_sent and len(message_sent) > 100
+                else message_sent,
                 "sequence_progress": self._calculate_sequence_progress(sequence_day),
                 "summary": f"Day {sequence_day} sequence {action_type} - {'Success' if success else 'Failed'}",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
             location_id=location_id,
-            priority="high" if not success else "normal"
+            priority="high" if not success else "normal",
         )
 
         await self._publish_event(event)
-        logger.info(f"Published lead bot sequence: Day {sequence_day} {action_type} ({'success' if success else 'failed'} - contact: {contact_id})")
+        logger.info(
+            f"Published lead bot sequence: Day {sequence_day} {action_type} ({'success' if success else 'failed'} - contact: {contact_id})"
+        )
 
     async def publish_intent_analysis_complete(
         self,
@@ -636,7 +642,7 @@ class EventPublisher:
         recommendations: Optional[List[str]] = None,
         user_id: Optional[int] = None,
         location_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish intent decoder analysis completion event.
@@ -663,18 +669,24 @@ class EventPublisher:
                 "frs_score": round(frs_score, 1) if frs_score else None,
                 "pcs_score": round(pcs_score, 1) if pcs_score else None,
                 "recommendations": recommendations or [],
-                "performance_tier": "excellent" if processing_time_ms < 50 else "good" if processing_time_ms < 100 else "acceptable",
+                "performance_tier": "excellent"
+                if processing_time_ms < 50
+                else "good"
+                if processing_time_ms < 100
+                else "acceptable",
                 "summary": f"Intent analysis complete - {intent_category} ({confidence_score:.1%} confidence)",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
             location_id=location_id,
-            priority="normal"
+            priority="normal",
         )
 
         await self._publish_event(event)
-        logger.info(f"Published intent analysis: {intent_category} ({confidence_score:.1%} - {processing_time_ms:.1f}ms - contact: {contact_id})")
+        logger.info(
+            f"Published intent analysis: {intent_category} ({confidence_score:.1%} - {processing_time_ms:.1f}ms - contact: {contact_id})"
+        )
 
     async def publish_bot_handoff_request(
         self,
@@ -687,7 +699,7 @@ class EventPublisher:
         urgency: str = "normal",
         user_id: Optional[int] = None,
         location_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish bot handoff coordination event.
@@ -706,7 +718,7 @@ class EventPublisher:
         """
         if context_transfer is None:
             context_transfer = {}
-            
+
         event = RealTimeEvent(
             event_type=EventType.BOT_HANDOFF_REQUEST,
             data={
@@ -717,12 +729,12 @@ class EventPublisher:
                 "handoff_reason": handoff_reason,
                 "context_transfer": context_transfer,
                 "urgency": urgency,
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
             location_id=location_id,
-            priority="high" if urgency == "immediate" else "normal"
+            priority="high" if urgency == "immediate" else "normal",
         )
 
     async def publish_system_health_update(
@@ -733,7 +745,7 @@ class EventPublisher:
         error_message: Optional[str] = None,
         additional_metrics: Optional[Dict[str, Any]] = None,
         location_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish system component health update event.
@@ -758,11 +770,11 @@ class EventPublisher:
                 "metrics": additional_metrics or {},
                 "checked_at": datetime.now(timezone.utc).isoformat(),
                 "summary": f"{component.replace('_', ' ').title()}: {status} ({response_time_ms:.0f}ms)",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             location_id=location_id,
-            priority="critical" if status == "down" else "high" if status == "degraded" else "low"
+            priority="critical" if status == "down" else "high" if status == "degraded" else "low",
         )
 
         await self._publish_event(event)
@@ -779,7 +791,7 @@ class EventPublisher:
         confidence_level: float,
         user_id: Optional[int] = None,
         location_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """Publish buyer intent analysis results."""
         event = RealTimeEvent(
@@ -791,12 +803,12 @@ class EventPublisher:
                 "urgency_score": urgency_score,
                 "confidence_level": confidence_level,
                 "analysis_timestamp": datetime.now(timezone.utc).isoformat(),
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
             location_id=location_id,
-            priority="high" if buyer_temperature in ["hot", "warm"] else "normal"
+            priority="high" if buyer_temperature in ["hot", "warm"] else "normal",
         )
 
         await self._publish_event(event)
@@ -812,7 +824,7 @@ class EventPublisher:
         properties_matched: int = 0,
         user_id: Optional[int] = None,
         location_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """Publish buyer qualification progress (mirrors jorge_qualification_progress)."""
         event = RealTimeEvent(
@@ -826,16 +838,18 @@ class EventPublisher:
                 "properties_matched": properties_matched,
                 "overall_score": (financial_readiness_score + motivation_score) / 2,
                 "progress_timestamp": datetime.now(timezone.utc).isoformat(),
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
             location_id=location_id,
-            priority="high" if qualification_status == "qualified" else "normal"
+            priority="high" if qualification_status == "qualified" else "normal",
         )
 
         await self._publish_event(event)
-        logger.info(f"Published buyer qualification progress: {qualification_status} ({current_step} - contact: {contact_id})")
+        logger.info(
+            f"Published buyer qualification progress: {qualification_status} ({current_step} - contact: {contact_id})"
+        )
 
     async def publish_buyer_qualification_complete(
         self,
@@ -845,7 +859,7 @@ class EventPublisher:
         properties_matched: int,
         user_id: Optional[int] = None,
         location_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """Publish buyer qualification completion."""
         event = RealTimeEvent(
@@ -857,16 +871,18 @@ class EventPublisher:
                 "properties_matched": properties_matched,
                 "completion_timestamp": datetime.now(timezone.utc).isoformat(),
                 "next_action": "property_search" if qualification_status == "qualified" else "nurture",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
             location_id=location_id,
-            priority="high" if qualification_status == "qualified" else "normal"
+            priority="high" if qualification_status == "qualified" else "normal",
         )
 
         await self._publish_event(event)
-        logger.info(f"Published buyer qualification complete: {qualification_status} (score: {final_score} - contact: {contact_id})")
+        logger.info(
+            f"Published buyer qualification complete: {qualification_status} (score: {final_score} - contact: {contact_id})"
+        )
 
     async def publish_buyer_follow_up_scheduled(
         self,
@@ -875,7 +891,7 @@ class EventPublisher:
         scheduled_hours: int,
         user_id: Optional[int] = None,
         location_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """Publish buyer follow-up scheduling."""
         event = RealTimeEvent(
@@ -886,12 +902,12 @@ class EventPublisher:
                 "scheduled_hours": scheduled_hours,
                 "scheduled_for": (datetime.now(timezone.utc) + timedelta(hours=scheduled_hours)).isoformat(),
                 "schedule_timestamp": datetime.now(timezone.utc).isoformat(),
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
             location_id=location_id,
-            priority="normal"
+            priority="normal",
         )
 
         await self._publish_event(event)
@@ -904,7 +920,7 @@ class EventPublisher:
         match_criteria: Dict[str, Any],
         user_id: Optional[int] = None,
         location_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """Publish property matching results."""
         event = RealTimeEvent(
@@ -914,12 +930,12 @@ class EventPublisher:
                 "properties_matched": properties_matched,
                 "match_criteria": match_criteria,
                 "match_timestamp": datetime.now(timezone.utc).isoformat(),
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
             location_id=location_id,
-            priority="high" if properties_matched > 0 else "normal"
+            priority="high" if properties_matched > 0 else "normal",
         )
 
         await self._publish_event(event)
@@ -934,7 +950,7 @@ class EventPublisher:
         reason: str,
         additional_data: Optional[Dict] = None,
         location_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """Publish SMS compliance events for audit trail."""
         event = RealTimeEvent(
@@ -945,15 +961,17 @@ class EventPublisher:
                 "reason": reason,
                 "additional_data": additional_data or {},
                 "compliance_timestamp": datetime.now(timezone.utc).isoformat(),
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             location_id=location_id,
-            priority="critical"  # Compliance events are always critical
+            priority="critical",  # Compliance events are always critical
         )
 
         await self._publish_event(event)
-        logger.info(f"Published SMS compliance event: {event_type} - {reason} (phone: ***{phone_number[-4:] if phone_number else '****'})")
+        logger.info(
+            f"Published SMS compliance event: {event_type} - {reason} (phone: ***{phone_number[-4:] if phone_number else '****'})"
+        )
 
     async def publish_sms_opt_out_processed(
         self,
@@ -961,7 +979,7 @@ class EventPublisher:
         opt_out_method: str,
         message_content: Optional[str] = None,
         location_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """Publish SMS opt-out processing confirmation."""
         event = RealTimeEvent(
@@ -969,17 +987,21 @@ class EventPublisher:
             data={
                 "phone_number_suffix": phone_number[-4:] if phone_number else "****",
                 "opt_out_method": opt_out_method,
-                "message_content": message_content[:100] + "..." if message_content and len(message_content) > 100 else message_content,
+                "message_content": message_content[:100] + "..."
+                if message_content and len(message_content) > 100
+                else message_content,
                 "processed_timestamp": datetime.now(timezone.utc).isoformat(),
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             location_id=location_id,
-            priority="high"
+            priority="high",
         )
 
         await self._publish_event(event)
-        logger.info(f"Published SMS opt-out processed: {opt_out_method} (phone: ***{phone_number[-4:] if phone_number else '****'})")
+        logger.info(
+            f"Published SMS opt-out processed: {opt_out_method} (phone: ***{phone_number[-4:] if phone_number else '****'})"
+        )
 
     async def publish_sms_frequency_limit_hit(
         self,
@@ -988,7 +1010,7 @@ class EventPublisher:
         current_count: int,
         limit_value: int,
         location_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """Publish SMS frequency limit violations."""
         event = RealTimeEvent(
@@ -999,15 +1021,17 @@ class EventPublisher:
                 "current_count": current_count,
                 "limit_value": limit_value,
                 "limit_hit_timestamp": datetime.now(timezone.utc).isoformat(),
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             location_id=location_id,
-            priority="high"
+            priority="high",
         )
 
         await self._publish_event(event)
-        logger.info(f"Published SMS frequency limit hit: {limit_type} {current_count}/{limit_value} (phone: ***{phone_number[-4:] if phone_number else '****'})")
+        logger.info(
+            f"Published SMS frequency limit hit: {limit_type} {current_count}/{limit_value} (phone: ***{phone_number[-4:] if phone_number else '****'})"
+        )
 
     # === AI CONCIERGE EVENT PUBLISHERS ===
 
@@ -1024,7 +1048,7 @@ class EventPublisher:
         context_data: Optional[Dict[str, Any]] = None,
         user_id: Optional[int] = None,
         location_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish proactive conversation insight event.
@@ -1058,16 +1082,18 @@ class EventPublisher:
                 "requires_action": priority_level in ["high", "critical"],
                 "expires_at": (datetime.now(timezone.utc).timestamp() + 3600),  # 1 hour expiry
                 "summary": f"AI Insight: {title} ({confidence_score:.1%} confidence)",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
             location_id=location_id,
-            priority="critical" if priority_level == "critical" else "high" if priority_level == "high" else "normal"
+            priority="critical" if priority_level == "critical" else "high" if priority_level == "high" else "normal",
         )
 
         await self._publish_event(event)
-        logger.info(f"Published proactive insight: {insight_type} - {title} ({confidence_score:.1%} confidence - contact: {contact_id})")
+        logger.info(
+            f"Published proactive insight: {insight_type} - {title} ({confidence_score:.1%} confidence - contact: {contact_id})"
+        )
 
     async def publish_strategy_recommendation(
         self,
@@ -1082,7 +1108,7 @@ class EventPublisher:
         urgency: str = "normal",
         user_id: Optional[int] = None,
         location_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish AI strategy recommendation event.
@@ -1103,7 +1129,7 @@ class EventPublisher:
         """
         if implementation_steps is None:
             implementation_steps = []
-            
+
         event = RealTimeEvent(
             event_type=EventType.STRATEGY_RECOMMENDATION,
             data={
@@ -1119,16 +1145,18 @@ class EventPublisher:
                 "requires_immediate_action": urgency == "immediate",
                 "estimated_implementation_time": len(implementation_steps) * 5,  # 5 min per step estimate
                 "summary": f"Strategy: {strategy_type.title()} ({confidence_score:.1%} confidence)",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
             location_id=location_id,
-            priority="critical" if urgency == "immediate" else "high" if urgency == "high" else "normal"
+            priority="critical" if urgency == "immediate" else "high" if urgency == "high" else "normal",
         )
 
         await self._publish_event(event)
-        logger.info(f"Published strategy recommendation: {strategy_type} - {urgency} urgency ({confidence_score:.1%} confidence - contact: {contact_id})")
+        logger.info(
+            f"Published strategy recommendation: {strategy_type} - {urgency} urgency ({confidence_score:.1%} confidence - contact: {contact_id})"
+        )
 
     async def publish_coaching_opportunity(
         self,
@@ -1143,7 +1171,7 @@ class EventPublisher:
         resources: Optional[List[Dict[str, str]]] = None,
         user_id: Optional[int] = None,
         location_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish AI coaching opportunity event.
@@ -1177,19 +1205,21 @@ class EventPublisher:
                 "difficulty_level": difficulty_level,
                 "estimated_time_minutes": estimated_time_minutes,
                 "resources": resources or [],
-                "skill_development_focus": coaching_area.replace('_', ' ').title(),
+                "skill_development_focus": coaching_area.replace("_", " ").title(),
                 "completion_tracking_enabled": True,
                 "summary": f"Coaching: {coaching_area.replace('_', ' ').title()} ({difficulty_level}, {estimated_time_minutes}min)",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
             location_id=location_id,
-            priority=priority
+            priority=priority,
         )
 
         await self._publish_event(event)
-        logger.info(f"Published coaching opportunity: {coaching_area} - {difficulty_level} level ({estimated_time_minutes}min - contact: {contact_id})")
+        logger.info(
+            f"Published coaching opportunity: {coaching_area} - {difficulty_level} level ({estimated_time_minutes}min - contact: {contact_id})"
+        )
 
     async def publish_ai_concierge_status_update(
         self,
@@ -1200,7 +1230,7 @@ class EventPublisher:
         processing_time_ms: float,
         performance_metrics: Optional[Dict[str, Any]] = None,
         location_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish AI Concierge service status update.
@@ -1227,15 +1257,17 @@ class EventPublisher:
                 "efficiency_score": self._calculate_concierge_efficiency(processing_time_ms, active_insights),
                 "status_timestamp": datetime.now(timezone.utc).isoformat(),
                 "summary": f"AI Concierge: {status} - {active_insights} insights, {monitoring_contacts} contacts",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             location_id=location_id,
-            priority="high" if status == "error" else "low"
+            priority="high" if status == "error" else "low",
         )
 
         await self._publish_event(event)
-        logger.info(f"Published AI Concierge status: {status} - {active_insights} insights, {monitoring_contacts} contacts")
+        logger.info(
+            f"Published AI Concierge status: {status} - {active_insights} insights, {monitoring_contacts} contacts"
+        )
 
     def _calculate_concierge_efficiency(self, processing_time_ms: float, active_insights: int) -> float:
         """Calculate AI Concierge efficiency score."""
@@ -1250,19 +1282,14 @@ class EventPublisher:
         progress_map = {
             3: {"progress": 33, "next_day": 7, "description": "Day 3 Follow-up"},
             7: {"progress": 67, "next_day": 30, "description": "Day 7 Call"},
-            30: {"progress": 100, "next_day": None, "description": "Day 30 Final Touch"}
+            30: {"progress": 100, "next_day": None, "description": "Day 30 Final Touch"},
         }
 
         return progress_map.get(sequence_day, {"progress": 0, "next_day": None, "description": "Unknown"})
 
     def _calculate_health_score(self, status: str, response_time_ms: float) -> float:
         """Calculate component health score based on status and response time."""
-        status_scores = {
-            "healthy": 1.0,
-            "degraded": 0.6,
-            "recovering": 0.4,
-            "down": 0.0
-        }
+        status_scores = {"healthy": 1.0, "degraded": 0.6, "recovering": 0.4, "down": 0.0}
 
         base_score = status_scores.get(status, 0.5)
 
@@ -1295,13 +1322,12 @@ class EventPublisher:
 
         try:
             # Add processing timestamp for latency tracking
-            event.data['_processing_start'] = start_time
+            event.data["_processing_start"] = start_time
 
             # 🚀 CRITICAL EVENT BYPASS (<1ms target)
-            if (self.critical_bypass and
-                (event.priority == "critical" or
-                 event.event_type in {EventType.SYSTEM_ALERT, EventType.SMS_COMPLIANCE})):
-
+            if self.critical_bypass and (
+                event.priority == "critical" or event.event_type in {EventType.SYSTEM_ALERT, EventType.SMS_COMPLIANCE}
+            ):
                 # Immediate processing - no batching
                 await self.websocket_manager.publish_event(event)
                 await self._track_event_latency(event, start_time, 1, target_ms=1.0)
@@ -1312,9 +1338,9 @@ class EventPublisher:
 
             # Enhanced batch processing criteria
             should_process_immediately = (
-                len(self._event_batch) >= self.max_batch_size or
-                event.priority == "high" or
-                (time.perf_counter() - start_time) > self.batch_interval
+                len(self._event_batch) >= self.max_batch_size
+                or event.priority == "high"
+                or (time.perf_counter() - start_time) > self.batch_interval
             )
 
             if should_process_immediately:
@@ -1345,8 +1371,7 @@ class EventPublisher:
             # Alert on high latency
             if processing_time_ms > 15:  # 15ms warning threshold
                 logger.warning(
-                    f"⚠️ High event latency: {processing_time_ms:.2f}ms for {event.event_type.value} "
-                    f"(target: <10ms)"
+                    f"⚠️ High event latency: {processing_time_ms:.2f}ms for {event.event_type.value} (target: <10ms)"
                 )
 
             # Track events by type
@@ -1381,37 +1406,39 @@ class EventPublisher:
         """Process the current batch of events."""
         if not self._event_batch:
             return
-            
+
         # Cancel existing timer
         if self._batch_timer:
             self._batch_timer.cancel()
             self._batch_timer = None
-        
+
         # Process events
         batch = self._event_batch.copy()
         self._event_batch.clear()
-        
+
         # Group events by priority for processing order
         critical_events = [e for e in batch if e.priority == "critical"]
         high_events = [e for e in batch if e.priority == "high"]
         normal_events = [e for e in batch if e.priority in ["normal", "low"]]
-        
+
         # Process critical events first
         for event in critical_events:
             await self.websocket_manager.publish_event(event)
-            
+
         # Process high priority events
         for event in high_events:
             await self.websocket_manager.publish_event(event)
-            
+
         # Batch process normal priority events
         if normal_events:
             # For normal events, we can potentially aggregate similar events
             aggregated_events = self._aggregate_similar_events(normal_events)
             for event in aggregated_events:
                 await self.websocket_manager.publish_event(event)
-        
-        logger.debug(f"Processed event batch: {len(batch)} events ({len(critical_events)} critical, {len(high_events)} high, {len(normal_events)} normal)")
+
+        logger.debug(
+            f"Processed event batch: {len(batch)} events ({len(critical_events)} critical, {len(high_events)} high, {len(normal_events)} normal)"
+        )
 
     async def _process_event_batch_optimized(self):
         """OPTIMIZED: Process event batch with priority lanes and concurrent publishing."""
@@ -1440,18 +1467,12 @@ class EventPublisher:
 
         # Concurrent processing for high and normal priority events
         if high_events:
-            await asyncio.gather(*[
-                self.websocket_manager.publish_event(event)
-                for event in high_events
-            ])
+            await asyncio.gather(*[self.websocket_manager.publish_event(event) for event in high_events])
 
         # Apply intelligent aggregation for normal events to reduce volume
         if normal_events:
             aggregated_events = self._aggregate_similar_events_optimized(normal_events)
-            await asyncio.gather(*[
-                self.websocket_manager.publish_event(event)
-                for event in aggregated_events
-            ])
+            await asyncio.gather(*[self.websocket_manager.publish_event(event) for event in aggregated_events])
 
         # Track latency for all events in batch
         for event in batch:
@@ -1481,8 +1502,11 @@ class EventPublisher:
 
         for event in events:
             # Events that can be aggregated to reduce volume
-            if event.event_type in {EventType.DASHBOARD_REFRESH, EventType.PERFORMANCE_UPDATE,
-                                    EventType.AI_CONCIERGE_STATUS}:
+            if event.event_type in {
+                EventType.DASHBOARD_REFRESH,
+                EventType.PERFORMANCE_UPDATE,
+                EventType.AI_CONCIERGE_STATUS,
+            }:
                 key = f"{event.event_type.value}_{event.user_id}_{event.location_id}"
 
                 if key not in aggregable_groups:
@@ -1501,17 +1525,17 @@ class EventPublisher:
                 aggregated_event = RealTimeEvent(
                     event_type=base_event.event_type,
                     data={
-                        'aggregated_events': len(group_events),
-                        'time_span_ms': (
-                            max(e.timestamp for e in group_events) -
-                            min(e.timestamp for e in group_events)
-                        ).total_seconds() * 1000,
-                        'combined_data': [e.data for e in group_events]
+                        "aggregated_events": len(group_events),
+                        "time_span_ms": (
+                            max(e.timestamp for e in group_events) - min(e.timestamp for e in group_events)
+                        ).total_seconds()
+                        * 1000,
+                        "combined_data": [e.data for e in group_events],
                     },
                     timestamp=max(e.timestamp for e in group_events),
                     user_id=base_event.user_id,
                     location_id=base_event.location_id,
-                    priority=base_event.priority
+                    priority=base_event.priority,
                 )
                 result_events.append(aggregated_event)
             else:
@@ -1519,11 +1543,12 @@ class EventPublisher:
 
         return result_events
 
-    async def _track_event_latency(self, event: RealTimeEvent, processing_start: float,
-                                   batch_size: int, target_ms: float):
+    async def _track_event_latency(
+        self, event: RealTimeEvent, processing_start: float, batch_size: int, target_ms: float
+    ):
         """Track individual event latency for performance optimization."""
         processing_end = time.perf_counter()
-        event_start = event.data.get('_processing_start', processing_start)
+        event_start = event.data.get("_processing_start", processing_start)
 
         # Calculate end-to-end latency
         latency_ms = (processing_end - event_start) * 1000
@@ -1531,12 +1556,12 @@ class EventPublisher:
 
         # Store measurement
         measurement = {
-            'event_type': event.event_type.value,
-            'priority': event.priority,
-            'latency_ms': latency_ms,
-            'target_met': target_met,
-            'batch_size': batch_size,
-            'timestamp': datetime.now(timezone.utc)
+            "event_type": event.event_type.value,
+            "priority": event.priority,
+            "latency_ms": latency_ms,
+            "target_met": target_met,
+            "batch_size": batch_size,
+            "timestamp": datetime.now(timezone.utc),
         }
 
         self._latency_measurements.append(measurement)
@@ -1553,8 +1578,8 @@ class EventPublisher:
             )
 
         # Clean up processing timestamp
-        if '_processing_start' in event.data:
-            del event.data['_processing_start']
+        if "_processing_start" in event.data:
+            del event.data["_processing_start"]
 
     def _aggregate_similar_events(self, events: List[RealTimeEvent]) -> List[RealTimeEvent]:
         """
@@ -1566,38 +1591,37 @@ class EventPublisher:
     async def create_decorator(self, event_type: EventType, **event_kwargs):
         """
         Create a decorator for automatically publishing events from function calls.
-        
+
         Args:
             event_type: Type of event to publish
             **event_kwargs: Additional event data
-            
+
         Returns:
             Decorator function
         """
+
         def decorator(func: Callable):
             async def wrapper(*args, **kwargs):
                 # Call original function
                 result = await func(*args, **kwargs) if asyncio.iscoroutinefunction(func) else func(*args, **kwargs)
-                
+
                 # Extract event data from function result or arguments
                 event_data = {
                     "function": func.__name__,
                     "result": result if isinstance(result, dict) else {"value": result},
-                    **event_kwargs
+                    **event_kwargs,
                 }
-                
+
                 # Create and publish event
                 event = RealTimeEvent(
-                    event_type=event_type,
-                    data=event_data,
-                    timestamp=datetime.now(timezone.utc),
-                    priority="normal"
+                    event_type=event_type, data=event_data, timestamp=datetime.now(timezone.utc), priority="normal"
                 )
-                
+
                 await self._publish_event(event)
                 return result
-                
+
             return wrapper
+
         return decorator
 
     def get_metrics(self) -> Dict[str, Any]:
@@ -1609,7 +1633,7 @@ class EventPublisher:
             "average_processing_time_ms": round(self.metrics.average_processing_time_ms, 3),
             "failed_publishes": self.metrics.failed_publishes,
             "batch_queue_size": len(self._event_batch),
-            "websocket_metrics": self.websocket_manager.get_metrics()
+            "websocket_metrics": self.websocket_manager.get_metrics(),
         }
 
         # 📊 ENHANCED OPTIMIZATION METRICS
@@ -1627,19 +1651,23 @@ class EventPublisher:
 
             # Recent latency statistics
             if self._latency_measurements:
-                recent_latencies = [m['latency_ms'] for m in self._latency_measurements[-100:]]
-                optimization_metrics.update({
-                    "recent_avg_latency_ms": round(sum(recent_latencies) / len(recent_latencies), 3),
-                    "recent_max_latency_ms": round(max(recent_latencies), 3),
-                    "recent_min_latency_ms": round(min(recent_latencies), 3),
-                })
+                recent_latencies = [m["latency_ms"] for m in self._latency_measurements[-100:]]
+                optimization_metrics.update(
+                    {
+                        "recent_avg_latency_ms": round(sum(recent_latencies) / len(recent_latencies), 3),
+                        "recent_max_latency_ms": round(max(recent_latencies), 3),
+                        "recent_min_latency_ms": round(min(recent_latencies), 3),
+                    }
+                )
 
                 # Calculate percentiles
                 sorted_latencies = sorted(recent_latencies)
-                optimization_metrics.update({
-                    "p95_latency_ms": round(sorted_latencies[int(len(sorted_latencies) * 0.95)], 3),
-                    "p99_latency_ms": round(sorted_latencies[int(len(sorted_latencies) * 0.99)], 3),
-                })
+                optimization_metrics.update(
+                    {
+                        "p95_latency_ms": round(sorted_latencies[int(len(sorted_latencies) * 0.95)], 3),
+                        "p99_latency_ms": round(sorted_latencies[int(len(sorted_latencies) * 0.99)], 3),
+                    }
+                )
 
             base_metrics["optimization_metrics"] = optimization_metrics
 
@@ -1648,10 +1676,7 @@ class EventPublisher:
     def get_performance_summary(self) -> Dict[str, Any]:
         """Get performance summary for optimization monitoring."""
         if self._total_events_processed == 0:
-            return {
-                "status": "no_data",
-                "message": "No events processed yet - performance data unavailable"
-            }
+            return {"status": "no_data", "message": "No events processed yet - performance data unavailable"}
 
         compliance_10ms = (self._events_under_10ms / self._total_events_processed) * 100
 
@@ -1665,8 +1690,8 @@ class EventPublisher:
             "batch_configuration": {
                 "interval_ms": self.batch_interval * 1000,
                 "max_batch_size": self.max_batch_size,
-                "critical_bypass_enabled": self.critical_bypass
-            }
+                "critical_bypass_enabled": self.critical_bypass,
+            },
         }
 
     def _get_performance_grade(self, compliance_percentage: float) -> str:
@@ -1693,11 +1718,11 @@ class EventPublisher:
         processing_time_ms: float,
         questions_answered: int,
         qualification_complete: bool,
-        **kwargs
+        **kwargs,
     ):
         """Publish event after Jorge Seller Bot processes a message."""
         event = RealTimeEvent(
-            event_type=EventType.BOT_STATUS_UPDATE, # Use existing type or create new
+            event_type=EventType.BOT_STATUS_UPDATE,  # Use existing type or create new
             data={
                 "contact_id": contact_id,
                 "message_preview": message_content[:50],
@@ -1707,10 +1732,10 @@ class EventPublisher:
                 "questions_answered": questions_answered,
                 "qualification_complete": qualification_complete,
                 "summary": f"Jorge processed message: {seller_temperature} (Q: {questions_answered})",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
-            priority="normal"
+            priority="normal",
         )
         await self._publish_event(event)
 
@@ -1728,7 +1753,7 @@ class EventPublisher:
         next_actions: List[Dict[str, Any]] = None,
         prediction_latency_ms: float = 0.0,
         user_id: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish behavioral prediction completion event.
@@ -1737,7 +1762,7 @@ class EventPublisher:
         """
         if next_actions is None:
             next_actions = []
-            
+
         event = RealTimeEvent(
             event_type=EventType.BEHAVIORAL_PREDICTION_COMPLETE,
             data={
@@ -1750,16 +1775,18 @@ class EventPublisher:
                 "performance_grade": self._calculate_performance_grade(prediction_latency_ms),
                 "urgency_level": "high" if churn_risk_score > 70 else "normal",
                 "summary": f"Behavioral prediction: {behavior_category} (churn risk: {churn_risk_score:.0f}%)",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
             location_id=location_id,
-            priority="high" if churn_risk_score > 70 else "normal"
+            priority="high" if churn_risk_score > 70 else "normal",
         )
 
         await self._publish_event(event)
-        logger.info(f"Published behavioral prediction: {lead_id} ({behavior_category}, {churn_risk_score:.0f}% churn risk)")
+        logger.info(
+            f"Published behavioral prediction: {lead_id} ({behavior_category}, {churn_risk_score:.0f}% churn risk)"
+        )
 
     async def publish_churn_risk_alert(
         self,
@@ -1770,7 +1797,7 @@ class EventPublisher:
         prevention_strategies: List[str],
         urgency: str = "high",
         user_id: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish high churn risk alert for immediate action.
@@ -1789,12 +1816,12 @@ class EventPublisher:
                 "escalation_level": self._calculate_churn_escalation_level(churn_risk_score),
                 "time_sensitive": True,
                 "summary": f"Churn Risk Alert: {churn_risk_score:.0f}% - {len(risk_factors)} factors identified",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             location_id=location_id,
             user_id=user_id,
-            priority="critical" if churn_risk_score > 80 else "high"
+            priority="critical" if churn_risk_score > 80 else "high",
         )
 
         await self._publish_event(event)
@@ -1809,7 +1836,7 @@ class EventPublisher:
         change_reason: str,
         confidence: float,
         user_id: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish behavior category change notification.
@@ -1822,7 +1849,7 @@ class EventPublisher:
             ("low_engagement", "moderately_engaged"),
             ("moderately_engaged", "highly_engaged"),
             ("churning", "low_engagement"),
-            ("churning", "moderately_engaged")
+            ("churning", "moderately_engaged"),
         ]
 
         change_type = "improvement" if (previous_category, new_category) in positive_changes else "decline"
@@ -1839,12 +1866,12 @@ class EventPublisher:
                 "significant_change": confidence > 0.8,
                 "requires_action": change_type == "decline",
                 "summary": f"Behavior change: {previous_category} → {new_category} ({change_type})",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             location_id=location_id,
             user_id=user_id,
-            priority="high" if change_type == "decline" else "normal"
+            priority="high" if change_type == "decline" else "normal",
         )
 
         await self._publish_event(event)
@@ -1860,7 +1887,7 @@ class EventPublisher:
         projected_score: float,
         time_window_hours: int,
         user_id: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish engagement trend change notification.
@@ -1880,12 +1907,12 @@ class EventPublisher:
                 "significant_change": abs(velocity) > 0.5,
                 "needs_intervention": trend_direction == "decreasing" and velocity < -0.3,
                 "summary": f"Engagement trend: {trend_direction} ({current_score:.0f}% → {projected_score:.0f}%)",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             location_id=location_id,
             user_id=user_id,
-            priority="high" if trend_direction == "decreasing" else "normal"
+            priority="high" if trend_direction == "decreasing" else "normal",
         )
 
         await self._publish_event(event)
@@ -1899,7 +1926,7 @@ class EventPublisher:
         contact_channel: str,
         probability_success: float,
         user_id: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish optimal contact window recommendation.
@@ -1919,12 +1946,12 @@ class EventPublisher:
                 "confidence_level": contact_window.get("confidence", 0.7),
                 "time_sensitive": probability_success > 0.8,
                 "summary": f"Optimal contact: {contact_window.get('start')}-{contact_window.get('end')} via {contact_channel} ({probability_success:.1%} success)",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             location_id=location_id,
             user_id=user_id,
-            priority="high" if probability_success > 0.8 else "normal"
+            priority="high" if probability_success > 0.8 else "normal",
         )
 
         await self._publish_event(event)
@@ -1938,7 +1965,7 @@ class EventPublisher:
         prediction_accuracy: float,
         model_version: str = "v1.0",
         user_id: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Publish feedback recording event for learning loop.
@@ -1956,12 +1983,12 @@ class EventPublisher:
                 "learning_value": "high" if prediction_accuracy < 0.7 else "medium",
                 "contributes_to_improvement": prediction_accuracy != 1.0,  # Perfect predictions don't teach much
                 "summary": f"Feedback recorded: {feedback_type} ({prediction_accuracy:.1%} accuracy)",
-                **kwargs
+                **kwargs,
             },
             timestamp=datetime.now(timezone.utc),
             location_id=location_id,
             user_id=user_id,
-            priority="low"  # Feedback is informational, not urgent
+            priority="low",  # Feedback is informational, not urgent
         )
 
         await self._publish_event(event)
@@ -1982,7 +2009,7 @@ class EventPublisher:
         rank: int,
         presentation_strategy: str,
         reasoning: str,
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
     ) -> None:
         """
         Publish property match generation event with behavioral enhancement.
@@ -2017,16 +2044,18 @@ class EventPublisher:
                     "is_top_match": rank <= 3,
                     "high_confidence": match_score >= 0.8 and behavioral_fit >= 75.0,
                     "recommended_action": "schedule_showing" if engagement_prediction > 0.7 else "send_info",
-                    "match_timestamp": datetime.now(timezone.utc).isoformat()
+                    "match_timestamp": datetime.now(timezone.utc).isoformat(),
                 },
                 timestamp=datetime.now(timezone.utc),
                 location_id=location_id,
                 user_id=user_id,
-                priority="high" if rank <= 3 else "normal"
+                priority="high" if rank <= 3 else "normal",
             )
 
             await self._publish_event(event)
-            logger.debug(f"Property match generated: {property_id} for {lead_id} (rank #{rank}, {match_score:.1%} score)")
+            logger.debug(
+                f"Property match generated: {property_id} for {lead_id} (rank #{rank}, {match_score:.1%} score)"
+            )
 
         except Exception as e:
             logger.error(f"Failed to publish property match generated event: {e}")
@@ -2038,7 +2067,7 @@ class EventPublisher:
         update_type: str,
         affected_leads: List[str],
         inventory_change: str,
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
     ) -> None:
         """
         Publish property inventory update event.
@@ -2063,16 +2092,18 @@ class EventPublisher:
                     "inventory_change": inventory_change,
                     "requires_reanalysis": update_type in ["new_listings", "price_change"],
                     "priority_update": len(affected_leads) > 10,
-                    "update_timestamp": datetime.now(timezone.utc).isoformat()
+                    "update_timestamp": datetime.now(timezone.utc).isoformat(),
                 },
                 timestamp=datetime.now(timezone.utc),
                 location_id=location_id,
                 user_id=user_id,
-                priority="high" if len(affected_leads) > 10 else "normal"
+                priority="high" if len(affected_leads) > 10 else "normal",
             )
 
             await self._publish_event(event)
-            logger.debug(f"Property inventory update: {len(property_ids)} properties, {len(affected_leads)} leads affected")
+            logger.debug(
+                f"Property inventory update: {len(property_ids)} properties, {len(affected_leads)} leads affected"
+            )
 
         except Exception as e:
             logger.error(f"Failed to publish property inventory update event: {e}")
@@ -2086,7 +2117,7 @@ class EventPublisher:
         new_score: float,
         behavioral_factors: Dict[str, Any],
         recommendations: List[str],
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
     ) -> None:
         """
         Publish behavioral match improvement event.
@@ -2117,12 +2148,12 @@ class EventPublisher:
                     "recommendations": recommendations,
                     "significant_improvement": improvement_magnitude >= 0.2,
                     "suggested_actions": recommendations[:3],  # Top 3 recommendations
-                    "improvement_timestamp": datetime.now(timezone.utc).isoformat()
+                    "improvement_timestamp": datetime.now(timezone.utc).isoformat(),
                 },
                 timestamp=datetime.now(timezone.utc),
                 location_id=location_id,
                 user_id=user_id,
-                priority="high" if improvement_magnitude >= 0.3 else "normal"
+                priority="high" if improvement_magnitude >= 0.3 else "normal",
             )
 
             await self._publish_event(event)
@@ -2144,7 +2175,7 @@ class EventPublisher:
         confidence: float,
         context: str,
         suggested_responses: List[str],
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
     ) -> None:
         """
         Publish objection detection event.
@@ -2175,12 +2206,12 @@ class EventPublisher:
                     "response_urgency": "immediate" if severity == "high" else "within_24h",
                     "objection_category": self._categorize_objection(objection_type),
                     "coaching_opportunity": severity in ["medium", "high"],
-                    "detection_timestamp": datetime.now(timezone.utc).isoformat()
+                    "detection_timestamp": datetime.now(timezone.utc).isoformat(),
                 },
                 timestamp=datetime.now(timezone.utc),
                 location_id=location_id,
                 user_id=user_id,
-                priority=severity_priority
+                priority=severity_priority,
             )
 
             await self._publish_event(event)
@@ -2197,7 +2228,7 @@ class EventPublisher:
         trend: str,
         risk_level: str,
         recommendations: List[str],
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
     ) -> None:
         """
         Publish sentiment warning event.
@@ -2225,12 +2256,12 @@ class EventPublisher:
                     "suggested_timeline": "immediate" if risk_level == "high" else "within_24h",
                     "escalation_needed": current_sentiment <= -0.5 and trend == "declining",
                     "recovery_potential": current_sentiment > -0.3,
-                    "warning_timestamp": datetime.now(timezone.utc).isoformat()
+                    "warning_timestamp": datetime.now(timezone.utc).isoformat(),
                 },
                 timestamp=datetime.now(timezone.utc),
                 location_id=location_id,
                 user_id=user_id,
-                priority="critical" if risk_level == "high" else "high"
+                priority="critical" if risk_level == "high" else "high",
             )
 
             await self._publish_event(event)
@@ -2248,7 +2279,7 @@ class EventPublisher:
         confidence: float,
         action_items: List[str],
         processing_time_ms: float,
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
     ) -> None:
         """
         Publish conversation insight generation event.
@@ -2280,12 +2311,12 @@ class EventPublisher:
                     "actionable_items_count": len(action_items),
                     "requires_follow_up": len(action_items) > 0,
                     "insight_priority": "high" if confidence >= 0.8 else "normal",
-                    "insight_timestamp": datetime.now(timezone.utc).isoformat()
+                    "insight_timestamp": datetime.now(timezone.utc).isoformat(),
                 },
                 timestamp=datetime.now(timezone.utc),
                 location_id=location_id,
                 user_id=user_id,
-                priority="high" if confidence >= 0.8 else "normal"
+                priority="high" if confidence >= 0.8 else "normal",
             )
 
             await self._publish_event(event)
@@ -2307,7 +2338,7 @@ class EventPublisher:
         learning_latency_ms: float,
         preferences_updated: List[str],
         profile_completeness: float,
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
     ) -> None:
         """
         Publish preference learning completion event.
@@ -2340,12 +2371,12 @@ class EventPublisher:
                     "significant_learning": signals_processed >= 5,
                     "high_completeness": profile_completeness >= 0.8,
                     "learning_efficiency": round(len(preferences_updated) / max(signals_processed, 1), 2),
-                    "learning_timestamp": datetime.now(timezone.utc).isoformat()
+                    "learning_timestamp": datetime.now(timezone.utc).isoformat(),
                 },
                 timestamp=datetime.now(timezone.utc),
                 location_id=location_id,
                 user_id=user_id,
-                priority="normal"
+                priority="normal",
             )
 
             await self._publish_event(event)
@@ -2364,7 +2395,7 @@ class EventPublisher:
         new_value: Any,
         drift_direction: str,
         confidence: float,
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
     ) -> None:
         """
         Publish preference drift detection event.
@@ -2398,12 +2429,12 @@ class EventPublisher:
                     "preference_category": self._categorize_preference_name(preference_name),
                     "impact_level": "high" if preference_name in ["budget", "location", "bedrooms"] else "medium",
                     "adaptation_needed": drift_magnitude >= 0.3,
-                    "drift_timestamp": datetime.now(timezone.utc).isoformat()
+                    "drift_timestamp": datetime.now(timezone.utc).isoformat(),
                 },
                 timestamp=datetime.now(timezone.utc),
                 location_id=location_id,
                 user_id=user_id,
-                priority="high" if drift_magnitude >= 0.5 else "normal"
+                priority="high" if drift_magnitude >= 0.5 else "normal",
             )
 
             await self._publish_event(event)
@@ -2420,7 +2451,7 @@ class EventPublisher:
         updated_preferences: List[str],
         profile_completeness: float,
         confidence_improvement: float,
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
     ) -> None:
         """
         Publish preference profile update event.
@@ -2449,12 +2480,12 @@ class EventPublisher:
                     "high_completeness": profile_completeness >= 0.8,
                     "profile_ready_for_matching": profile_completeness >= 0.6,
                     "confidence_increased": confidence_improvement > 0,
-                    "update_timestamp": datetime.now(timezone.utc).isoformat()
+                    "update_timestamp": datetime.now(timezone.utc).isoformat(),
                 },
                 timestamp=datetime.now(timezone.utc),
                 location_id=location_id,
                 user_id=user_id,
-                priority="normal"
+                priority="normal",
             )
 
             await self._publish_event(event)
@@ -2599,8 +2630,10 @@ class EventPublisher:
         else:
             return "F (Failed)"
 
+
 # Global event publisher instance
 _event_publisher = None
+
 
 def get_event_publisher() -> EventPublisher:
     """Get singleton event publisher instance."""
@@ -2609,135 +2642,229 @@ def get_event_publisher() -> EventPublisher:
         _event_publisher = EventPublisher()
     return _event_publisher
 
+
 # Convenience functions for common event publishing
 async def publish_lead_update(lead_id: str, lead_data: Dict[str, Any], action: str = "updated", **kwargs):
     """Convenience function to publish lead update."""
     publisher = get_event_publisher()
     await publisher.publish_lead_update(lead_id, lead_data, action, **kwargs)
 
+
 async def publish_conversation_update(conversation_id: str, lead_id: str, stage: str, **kwargs):
     """Convenience function to publish conversation update."""
     publisher = get_event_publisher()
     await publisher.publish_conversation_update(conversation_id, lead_id, stage, **kwargs)
+
 
 async def publish_commission_update(deal_id: str, commission_amount: float, pipeline_status: str, **kwargs):
     """Convenience function to publish commission update."""
     publisher = get_event_publisher()
     await publisher.publish_commission_update(deal_id, commission_amount, pipeline_status, **kwargs)
 
+
 async def publish_system_alert(alert_type: str, message: str, severity: str = "info", **kwargs):
     """Convenience function to publish system alert."""
     publisher = get_event_publisher()
     await publisher.publish_system_alert(alert_type, message, severity, **kwargs)
+
 
 async def publish_performance_update(metric_name: str, metric_value: float, **kwargs):
     """Convenience function to publish performance update."""
     publisher = get_event_publisher()
     await publisher.publish_performance_update(metric_name, metric_value, **kwargs)
 
+
 async def publish_dashboard_refresh(component: str, data: Dict[str, Any], **kwargs):
     """Convenience function to publish dashboard refresh."""
     publisher = get_event_publisher()
     await publisher.publish_dashboard_refresh(component, data, **kwargs)
 
-async def publish_property_alert(alert_id: str, lead_id: str, property_id: str, match_score: float,
-                                alert_type: str, property_data: Dict[str, Any], **kwargs):
+
+async def publish_property_alert(
+    alert_id: str,
+    lead_id: str,
+    property_id: str,
+    match_score: float,
+    alert_type: str,
+    property_data: Dict[str, Any],
+    **kwargs,
+):
     """Convenience function to publish property alert."""
     publisher = get_event_publisher()
-    await publisher.publish_property_alert(alert_id, lead_id, property_id, match_score,
-                                         alert_type, property_data, **kwargs)
+    await publisher.publish_property_alert(
+        alert_id, lead_id, property_id, match_score, alert_type, property_data, **kwargs
+    )
+
 
 # Jorge Bot Ecosystem Convenience Functions
+
 
 async def publish_bot_status_update(bot_type: str, contact_id: str, status: str, **kwargs):
     """Convenience function to publish bot status update."""
     publisher = get_event_publisher()
     await publisher.publish_bot_status_update(bot_type, contact_id, status, **kwargs)
 
-async def publish_jorge_qualification_progress(contact_id: str, current_question: int,
-                                             questions_answered: int, seller_temperature: str, **kwargs):
+
+async def publish_jorge_qualification_progress(
+    contact_id: str, current_question: int, questions_answered: int, seller_temperature: str, **kwargs
+):
     """Convenience function to publish Jorge qualification progress."""
     publisher = get_event_publisher()
-    await publisher.publish_jorge_qualification_progress(contact_id, current_question,
-                                                       questions_answered, seller_temperature, **kwargs)
+    await publisher.publish_jorge_qualification_progress(
+        contact_id, current_question, questions_answered, seller_temperature, **kwargs
+    )
 
-async def publish_lead_bot_sequence_update(contact_id: str, sequence_day: int,
-                                         action_type: str, success: bool, **kwargs):
+
+async def publish_lead_bot_sequence_update(
+    contact_id: str, sequence_day: int, action_type: str, success: bool, **kwargs
+):
     """Convenience function to publish lead bot sequence update."""
     publisher = get_event_publisher()
     await publisher.publish_lead_bot_sequence_update(contact_id, sequence_day, action_type, success, **kwargs)
 
-async def publish_intent_analysis_complete(contact_id: str, processing_time_ms: float,
-                                         confidence_score: float, intent_category: str, **kwargs):
+
+async def publish_intent_analysis_complete(
+    contact_id: str, processing_time_ms: float, confidence_score: float, intent_category: str, **kwargs
+):
     """Convenience function to publish intent analysis completion."""
     publisher = get_event_publisher()
-    await publisher.publish_intent_analysis_complete(contact_id, processing_time_ms,
-                                                   confidence_score, intent_category, **kwargs)
+    await publisher.publish_intent_analysis_complete(
+        contact_id, processing_time_ms, confidence_score, intent_category, **kwargs
+    )
 
-async def publish_bot_handoff_request(handoff_id: str, from_bot: str, to_bot: str,
-                                    contact_id: str, handoff_reason: str, context_transfer: Dict[str, Any], **kwargs):
+
+async def publish_bot_handoff_request(
+    handoff_id: str,
+    from_bot: str,
+    to_bot: str,
+    contact_id: str,
+    handoff_reason: str,
+    context_transfer: Dict[str, Any],
+    **kwargs,
+):
     """Convenience function to publish bot handoff request."""
     publisher = get_event_publisher()
-    await publisher.publish_bot_handoff_request(handoff_id, from_bot, to_bot, contact_id,
-                                              handoff_reason, context_transfer, **kwargs)
+    await publisher.publish_bot_handoff_request(
+        handoff_id, from_bot, to_bot, contact_id, handoff_reason, context_transfer, **kwargs
+    )
+
 
 async def publish_system_health_update(component: str, status: str, response_time_ms: float, **kwargs):
     """Convenience function to publish system health update."""
     publisher = get_event_publisher()
     await publisher.publish_system_health_update(component, status, response_time_ms, **kwargs)
 
-async def publish_seller_bot_message_processed(contact_id: str, message_content: str,
-                                             bot_response: str, seller_temperature: str,
-                                             processing_time_ms: float, questions_answered: int,
-                                             qualification_complete: bool, **kwargs):
+
+async def publish_seller_bot_message_processed(
+    contact_id: str,
+    message_content: str,
+    bot_response: str,
+    seller_temperature: str,
+    processing_time_ms: float,
+    questions_answered: int,
+    qualification_complete: bool,
+    **kwargs,
+):
     """Convenience function to publish seller bot message processed."""
     publisher = get_event_publisher()
     await publisher.publish_seller_bot_message_processed(
-        contact_id, message_content, bot_response, seller_temperature,
-        processing_time_ms, questions_answered, qualification_complete, **kwargs
+        contact_id,
+        message_content,
+        bot_response,
+        seller_temperature,
+        processing_time_ms,
+        questions_answered,
+        qualification_complete,
+        **kwargs,
     )
+
 
 # AI Concierge Convenience Functions
 
-async def publish_proactive_insight(insight_id: str, contact_id: str, insight_type: str,
-                                  confidence_score: float, title: str, description: str,
-                                  suggested_actions: List[str], **kwargs):
+
+async def publish_proactive_insight(
+    insight_id: str,
+    contact_id: str,
+    insight_type: str,
+    confidence_score: float,
+    title: str,
+    description: str,
+    suggested_actions: List[str],
+    **kwargs,
+):
     """Convenience function to publish proactive insight."""
     publisher = get_event_publisher()
-    await publisher.publish_proactive_insight(insight_id, contact_id, insight_type,
-                                            confidence_score, title, description,
-                                            suggested_actions, **kwargs)
+    await publisher.publish_proactive_insight(
+        insight_id, contact_id, insight_type, confidence_score, title, description, suggested_actions, **kwargs
+    )
 
-async def publish_strategy_recommendation(recommendation_id: str, contact_id: str, strategy_type: str,
-                                        recommendation_text: str, reasoning: str, confidence_score: float,
-                                        expected_impact: str, implementation_steps: List[str], **kwargs):
+
+async def publish_strategy_recommendation(
+    recommendation_id: str,
+    contact_id: str,
+    strategy_type: str,
+    recommendation_text: str,
+    reasoning: str,
+    confidence_score: float,
+    expected_impact: str,
+    implementation_steps: List[str],
+    **kwargs,
+):
     """Convenience function to publish strategy recommendation."""
     publisher = get_event_publisher()
-    await publisher.publish_strategy_recommendation(recommendation_id, contact_id, strategy_type,
-                                                  recommendation_text, reasoning, confidence_score,
-                                                  expected_impact, implementation_steps, **kwargs)
+    await publisher.publish_strategy_recommendation(
+        recommendation_id,
+        contact_id,
+        strategy_type,
+        recommendation_text,
+        reasoning,
+        confidence_score,
+        expected_impact,
+        implementation_steps,
+        **kwargs,
+    )
 
-async def publish_coaching_opportunity(opportunity_id: str, contact_id: str, coaching_area: str,
-                                     opportunity_description: str, suggested_approach: str,
-                                     learning_objectives: List[str], difficulty_level: str,
-                                     estimated_time_minutes: int, **kwargs):
+
+async def publish_coaching_opportunity(
+    opportunity_id: str,
+    contact_id: str,
+    coaching_area: str,
+    opportunity_description: str,
+    suggested_approach: str,
+    learning_objectives: List[str],
+    difficulty_level: str,
+    estimated_time_minutes: int,
+    **kwargs,
+):
     """Convenience function to publish coaching opportunity."""
     publisher = get_event_publisher()
-    await publisher.publish_coaching_opportunity(opportunity_id, contact_id, coaching_area,
-                                               opportunity_description, suggested_approach,
-                                               learning_objectives, difficulty_level,
-                                               estimated_time_minutes, **kwargs)
+    await publisher.publish_coaching_opportunity(
+        opportunity_id,
+        contact_id,
+        coaching_area,
+        opportunity_description,
+        suggested_approach,
+        learning_objectives,
+        difficulty_level,
+        estimated_time_minutes,
+        **kwargs,
+    )
 
-async def publish_ai_concierge_status_update(concierge_id: str, status: str, active_insights: int,
-                                           monitoring_contacts: int, processing_time_ms: float, **kwargs):
+
+async def publish_ai_concierge_status_update(
+    concierge_id: str, status: str, active_insights: int, monitoring_contacts: int, processing_time_ms: float, **kwargs
+):
     """Convenience function to publish AI Concierge status update."""
     publisher = get_event_publisher()
-    await publisher.publish_ai_concierge_status_update(concierge_id, status, active_insights,
-                                                     monitoring_contacts, processing_time_ms, **kwargs)
+    await publisher.publish_ai_concierge_status_update(
+        concierge_id, status, active_insights, monitoring_contacts, processing_time_ms, **kwargs
+    )
+
 
 # ============================================================================
 # Phase 2.1: Behavioral Prediction Convenience Functions
 # ============================================================================
+
 
 async def publish_behavioral_prediction_complete(
     lead_id: str,
@@ -2747,14 +2874,21 @@ async def publish_behavioral_prediction_complete(
     engagement_score: float,
     next_actions: List[Dict[str, Any]],
     prediction_latency_ms: float,
-    **kwargs
+    **kwargs,
 ):
     """Convenience function to publish behavioral prediction completion."""
     publisher = get_event_publisher()
     await publisher.publish_behavioral_prediction_complete(
-        lead_id, location_id, behavior_category, churn_risk_score,
-        engagement_score, next_actions, prediction_latency_ms, **kwargs
+        lead_id,
+        location_id,
+        behavior_category,
+        churn_risk_score,
+        engagement_score,
+        next_actions,
+        prediction_latency_ms,
+        **kwargs,
     )
+
 
 async def publish_churn_risk_alert(
     lead_id: str,
@@ -2763,14 +2897,14 @@ async def publish_churn_risk_alert(
     risk_factors: List[str],
     prevention_strategies: List[str],
     urgency: str = "high",
-    **kwargs
+    **kwargs,
 ):
     """Convenience function to publish churn risk alert."""
     publisher = get_event_publisher()
     await publisher.publish_churn_risk_alert(
-        lead_id, location_id, churn_risk_score, risk_factors,
-        prevention_strategies, urgency, **kwargs
+        lead_id, location_id, churn_risk_score, risk_factors, prevention_strategies, urgency, **kwargs
     )
+
 
 async def publish_behavior_category_change(
     lead_id: str,
@@ -2779,14 +2913,14 @@ async def publish_behavior_category_change(
     new_category: str,
     change_reason: str,
     confidence: float,
-    **kwargs
+    **kwargs,
 ):
     """Convenience function to publish behavior category change."""
     publisher = get_event_publisher()
     await publisher.publish_behavior_category_change(
-        lead_id, location_id, previous_category, new_category,
-        change_reason, confidence, **kwargs
+        lead_id, location_id, previous_category, new_category, change_reason, confidence, **kwargs
     )
+
 
 async def publish_engagement_trend_change(
     lead_id: str,
@@ -2796,14 +2930,14 @@ async def publish_engagement_trend_change(
     current_score: float,
     projected_score: float,
     time_window_hours: int,
-    **kwargs
+    **kwargs,
 ):
     """Convenience function to publish engagement trend change."""
     publisher = get_event_publisher()
     await publisher.publish_engagement_trend_change(
-        lead_id, location_id, trend_direction, velocity,
-        current_score, projected_score, time_window_hours, **kwargs
+        lead_id, location_id, trend_direction, velocity, current_score, projected_score, time_window_hours, **kwargs
     )
+
 
 async def publish_optimal_contact_window(
     lead_id: str,
@@ -2811,14 +2945,14 @@ async def publish_optimal_contact_window(
     contact_window: Dict[str, Any],
     contact_channel: str,
     probability_success: float,
-    **kwargs
+    **kwargs,
 ):
     """Convenience function to publish optimal contact window."""
     publisher = get_event_publisher()
     await publisher.publish_optimal_contact_window(
-        lead_id, location_id, contact_window, contact_channel,
-        probability_success, **kwargs
+        lead_id, location_id, contact_window, contact_channel, probability_success, **kwargs
     )
+
 
 async def publish_behavioral_feedback_recorded(
     lead_id: str,
@@ -2826,18 +2960,19 @@ async def publish_behavioral_feedback_recorded(
     feedback_type: str,
     prediction_accuracy: float,
     model_version: str = "v1.0",
-    **kwargs
+    **kwargs,
 ):
     """Convenience function to publish behavioral feedback recording."""
     publisher = get_event_publisher()
     await publisher.publish_behavioral_feedback_recorded(
-        lead_id, location_id, feedback_type, prediction_accuracy,
-        model_version, **kwargs
+        lead_id, location_id, feedback_type, prediction_accuracy, model_version, **kwargs
     )
+
 
 # ============================================================================
 # Phase 2 Intelligence Layer Convenience Functions
 # ============================================================================
+
 
 async def publish_property_match_generated(
     lead_id: str,
@@ -2849,14 +2984,23 @@ async def publish_property_match_generated(
     rank: int,
     presentation_strategy: str,
     reasoning: str,
-    **kwargs
+    **kwargs,
 ):
     """Convenience function to publish property match generation."""
     publisher = get_event_publisher()
     await publisher.publish_property_match_generated(
-        lead_id, location_id, property_id, match_score, behavioral_fit,
-        engagement_prediction, rank, presentation_strategy, reasoning, **kwargs
+        lead_id,
+        location_id,
+        property_id,
+        match_score,
+        behavioral_fit,
+        engagement_prediction,
+        rank,
+        presentation_strategy,
+        reasoning,
+        **kwargs,
     )
+
 
 async def publish_property_inventory_update(
     location_id: str,
@@ -2864,14 +3008,14 @@ async def publish_property_inventory_update(
     update_type: str,
     affected_leads: List[str],
     inventory_change: str,
-    **kwargs
+    **kwargs,
 ):
     """Convenience function to publish property inventory update."""
     publisher = get_event_publisher()
     await publisher.publish_property_inventory_update(
-        location_id, property_ids, update_type, affected_leads,
-        inventory_change, **kwargs
+        location_id, property_ids, update_type, affected_leads, inventory_change, **kwargs
     )
+
 
 async def publish_behavioral_match_improvement(
     lead_id: str,
@@ -2881,14 +3025,14 @@ async def publish_behavioral_match_improvement(
     new_score: float,
     behavioral_factors: Dict[str, Any],
     recommendations: List[str],
-    **kwargs
+    **kwargs,
 ):
     """Convenience function to publish behavioral match improvement."""
     publisher = get_event_publisher()
     await publisher.publish_behavioral_match_improvement(
-        lead_id, location_id, improvement_type, old_score, new_score,
-        behavioral_factors, recommendations, **kwargs
+        lead_id, location_id, improvement_type, old_score, new_score, behavioral_factors, recommendations, **kwargs
     )
+
 
 async def publish_objection_detected(
     lead_id: str,
@@ -2898,14 +3042,14 @@ async def publish_objection_detected(
     confidence: float,
     context: str,
     suggested_responses: List[str],
-    **kwargs
+    **kwargs,
 ):
     """Convenience function to publish objection detection."""
     publisher = get_event_publisher()
     await publisher.publish_objection_detected(
-        lead_id, location_id, objection_type, severity, confidence,
-        context, suggested_responses, **kwargs
+        lead_id, location_id, objection_type, severity, confidence, context, suggested_responses, **kwargs
     )
+
 
 async def publish_sentiment_warning(
     lead_id: str,
@@ -2914,14 +3058,14 @@ async def publish_sentiment_warning(
     trend: str,
     risk_level: str,
     recommendations: List[str],
-    **kwargs
+    **kwargs,
 ):
     """Convenience function to publish sentiment warning."""
     publisher = get_event_publisher()
     await publisher.publish_sentiment_warning(
-        lead_id, location_id, current_sentiment, trend, risk_level,
-        recommendations, **kwargs
+        lead_id, location_id, current_sentiment, trend, risk_level, recommendations, **kwargs
     )
+
 
 async def publish_conversation_insight_generated(
     lead_id: str,
@@ -2931,14 +3075,14 @@ async def publish_conversation_insight_generated(
     confidence: float,
     action_items: List[str],
     processing_time_ms: float,
-    **kwargs
+    **kwargs,
 ):
     """Convenience function to publish conversation insight generation."""
     publisher = get_event_publisher()
     await publisher.publish_conversation_insight_generated(
-        lead_id, location_id, insight_type, insight_summary, confidence,
-        action_items, processing_time_ms, **kwargs
+        lead_id, location_id, insight_type, insight_summary, confidence, action_items, processing_time_ms, **kwargs
     )
+
 
 async def publish_preference_learning_complete(
     client_id: str,
@@ -2948,14 +3092,21 @@ async def publish_preference_learning_complete(
     learning_latency_ms: float,
     preferences_updated: List[str],
     profile_completeness: float,
-    **kwargs
+    **kwargs,
 ):
     """Convenience function to publish preference learning completion."""
     publisher = get_event_publisher()
     await publisher.publish_preference_learning_complete(
-        client_id, location_id, learning_source, signals_processed,
-        learning_latency_ms, preferences_updated, profile_completeness, **kwargs
+        client_id,
+        location_id,
+        learning_source,
+        signals_processed,
+        learning_latency_ms,
+        preferences_updated,
+        profile_completeness,
+        **kwargs,
     )
+
 
 async def publish_preference_drift_detected(
     client_id: str,
@@ -2966,14 +3117,22 @@ async def publish_preference_drift_detected(
     new_value: Any,
     drift_direction: str,
     confidence: float,
-    **kwargs
+    **kwargs,
 ):
     """Convenience function to publish preference drift detection."""
     publisher = get_event_publisher()
     await publisher.publish_preference_drift_detected(
-        client_id, location_id, preference_name, drift_magnitude,
-        old_value, new_value, drift_direction, confidence, **kwargs
+        client_id,
+        location_id,
+        preference_name,
+        drift_magnitude,
+        old_value,
+        new_value,
+        drift_direction,
+        confidence,
+        **kwargs,
     )
+
 
 async def publish_preference_profile_updated(
     client_id: str,
@@ -2982,11 +3141,10 @@ async def publish_preference_profile_updated(
     updated_preferences: List[str],
     profile_completeness: float,
     confidence_improvement: float,
-    **kwargs
+    **kwargs,
 ):
     """Convenience function to publish preference profile update."""
     publisher = get_event_publisher()
     await publisher.publish_preference_profile_updated(
-        client_id, location_id, update_type, updated_preferences,
-        profile_completeness, confidence_improvement, **kwargs
+        client_id, location_id, update_type, updated_preferences, profile_completeness, confidence_improvement, **kwargs
     )

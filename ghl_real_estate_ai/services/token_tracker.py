@@ -5,13 +5,15 @@ Tracks token usage, cost savings, and efficiency improvements.
 
 import asyncio
 import json
-import redis.asyncio as redis
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
+
+import redis.asyncio as redis
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
+
 
 class TokenTracker:
     """
@@ -36,15 +38,17 @@ class TokenTracker:
                 self._redis = None
         return self._redis
 
-    async def record_usage(self,
-                          task_id: str,
-                          tokens_used: int,
-                          task_type: str,
-                          user_id: str,
-                          model: str,
-                          approach: str = "progressive",
-                          skill_name: Optional[str] = None,
-                          confidence: Optional[float] = None):
+    async def record_usage(
+        self,
+        task_id: str,
+        tokens_used: int,
+        task_type: str,
+        user_id: str,
+        model: str,
+        approach: str = "progressive",
+        skill_name: Optional[str] = None,
+        confidence: Optional[float] = None,
+    ):
         """
         Record detailed token usage for analysis
 
@@ -74,16 +78,12 @@ class TokenTracker:
             "skill_name": skill_name,
             "confidence": confidence,
             "timestamp": datetime.now().isoformat(),
-            "cost_estimate": self._calculate_cost(tokens_used, model)
+            "cost_estimate": self._calculate_cost(tokens_used, model),
         }
 
         try:
             # Store detailed record (keep for 7 days)
-            await redis_client.set(
-                f"token_usage:{task_id}",
-                json.dumps(usage_data),
-                ex=86400 * 7
-            )
+            await redis_client.set(f"token_usage:{task_id}", json.dumps(usage_data), ex=86400 * 7)
 
             # Update daily aggregates
             date_key = datetime.now().strftime("%Y-%m-%d")
@@ -115,7 +115,7 @@ class TokenTracker:
         pricing = {
             "claude-opus": {"input": 15.00 / 1_000_000, "output": 75.00 / 1_000_000},
             "claude-sonnet": {"input": 3.00 / 1_000_000, "output": 15.00 / 1_000_000},
-            "claude-haiku": {"input": 0.25 / 1_000_000, "output": 1.25 / 1_000_000}
+            "claude-haiku": {"input": 0.25 / 1_000_000, "output": 1.25 / 1_000_000},
         }
 
         # Default to sonnet pricing
@@ -129,8 +129,7 @@ class TokenTracker:
         input_tokens = int(tokens * 0.8)
         output_tokens = int(tokens * 0.2)
 
-        cost = (input_tokens * pricing[model_key]["input"] +
-                output_tokens * pricing[model_key]["output"])
+        cost = input_tokens * pricing[model_key]["input"] + output_tokens * pricing[model_key]["output"]
 
         return cost
 
@@ -155,7 +154,7 @@ class TokenTracker:
             "daily_trends": [],
             "summary": {},
             "skill_breakdown": {},
-            "recommendations": []
+            "recommendations": [],
         }
 
         total_current_tokens = 0
@@ -188,12 +187,14 @@ class TokenTracker:
                     "current_interactions": current_interactions,
                     "progressive_interactions": progressive_interactions,
                     "current_cost": current_cost,
-                    "progressive_cost": progressive_cost
+                    "progressive_cost": progressive_cost,
                 }
 
                 # Calculate efficiency metrics
                 if current_tokens > 0:
-                    day_report["token_reduction_percent"] = ((current_tokens - progressive_tokens) / current_tokens) * 100
+                    day_report["token_reduction_percent"] = (
+                        (current_tokens - progressive_tokens) / current_tokens
+                    ) * 100
                     day_report["cost_reduction_percent"] = ((current_cost - progressive_cost) / current_cost) * 100
                 else:
                     day_report["token_reduction_percent"] = 0
@@ -221,13 +222,18 @@ class TokenTracker:
             report["summary"] = {
                 "total_current_tokens": total_current_tokens,
                 "total_progressive_tokens": total_progressive_tokens,
-                "overall_token_reduction": ((total_current_tokens - total_progressive_tokens) / total_current_tokens) * 100,
+                "overall_token_reduction": ((total_current_tokens - total_progressive_tokens) / total_current_tokens)
+                * 100,
                 "total_current_cost": total_current_cost,
                 "total_progressive_cost": total_progressive_cost,
                 "overall_cost_reduction": ((total_current_cost - total_progressive_cost) / total_current_cost) * 100,
                 "cost_savings": total_current_cost - total_progressive_cost,
-                "projected_monthly_savings": (total_current_cost - total_progressive_cost) * (30 / days) if days > 0 else 0,
-                "projected_annual_savings": (total_current_cost - total_progressive_cost) * (365 / days) if days > 0 else 0
+                "projected_monthly_savings": (total_current_cost - total_progressive_cost) * (30 / days)
+                if days > 0
+                else 0,
+                "projected_annual_savings": (total_current_cost - total_progressive_cost) * (365 / days)
+                if days > 0
+                else 0,
             }
 
             # Validation against research predictions
@@ -237,7 +243,7 @@ class TokenTracker:
             report["summary"]["research_validation"] = {
                 "predicted_reduction": research_prediction,
                 "actual_reduction": actual_reduction,
-                "accuracy": min(100, (actual_reduction / research_prediction) * 100) if research_prediction > 0 else 0
+                "accuracy": min(100, (actual_reduction / research_prediction) * 100) if research_prediction > 0 else 0,
             }
 
         # Get skill-specific breakdown
@@ -276,11 +282,7 @@ class TokenTracker:
                     tokens = int(await redis_client.get(key) or 0)
 
                     if skill_name not in skill_stats:
-                        skill_stats[skill_name] = {
-                            "total_tokens": 0,
-                            "usage_days": 0,
-                            "avg_daily_tokens": 0
-                        }
+                        skill_stats[skill_name] = {"total_tokens": 0, "usage_days": 0, "avg_daily_tokens": 0}
 
                     skill_stats[skill_name]["total_tokens"] += tokens
                     if tokens > 0:
@@ -311,9 +313,13 @@ class TokenTracker:
 
         # Token efficiency recommendations
         if token_reduction > 60:
-            recommendations.append(f"✅ Excellent token reduction ({token_reduction:.1f}%) - consider scaling to other bots")
+            recommendations.append(
+                f"✅ Excellent token reduction ({token_reduction:.1f}%) - consider scaling to other bots"
+            )
         elif token_reduction > 40:
-            recommendations.append(f"⚠️ Moderate token reduction ({token_reduction:.1f}%) - investigate skill selection logic")
+            recommendations.append(
+                f"⚠️ Moderate token reduction ({token_reduction:.1f}%) - investigate skill selection logic"
+            )
         else:
             recommendations.append(f"❌ Low token reduction ({token_reduction:.1f}%) - review skill implementation")
 
@@ -334,7 +340,9 @@ class TokenTracker:
         # Operational recommendations
         monthly_savings = summary.get("projected_monthly_savings", 0)
         if monthly_savings > 100:
-            recommendations.append(f"🚀 Scale to all bots immediately - projected monthly savings: ${monthly_savings:.2f}")
+            recommendations.append(
+                f"🚀 Scale to all bots immediately - projected monthly savings: ${monthly_savings:.2f}"
+            )
 
         return recommendations
 
@@ -371,18 +379,24 @@ class TokenTracker:
                     "progressive_interactions_today": progressive_interactions_today,
                     "current_interactions_today": current_interactions_today,
                     "efficiency_percent": efficiency,
-                    "avg_tokens_progressive": progressive_tokens_today / progressive_interactions_today if progressive_interactions_today > 0 else 0,
-                    "avg_tokens_current": current_tokens_today / current_interactions_today if current_interactions_today > 0 else 0
+                    "avg_tokens_progressive": progressive_tokens_today / progressive_interactions_today
+                    if progressive_interactions_today > 0
+                    else 0,
+                    "avg_tokens_current": current_tokens_today / current_interactions_today
+                    if current_interactions_today > 0
+                    else 0,
                 },
-                "status": "operational" if efficiency > 0 else "insufficient_data"
+                "status": "operational" if efficiency > 0 else "insufficient_data",
             }
 
         except Exception as e:
             logger.error(f"Error generating realtime dashboard: {e}")
             return {"error": str(e)}
 
+
 # Global instance for easy import
 _token_tracker = None
+
 
 def get_token_tracker() -> TokenTracker:
     """Get singleton token tracker instance"""

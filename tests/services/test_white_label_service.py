@@ -5,21 +5,22 @@ Comprehensive testing for enterprise white-label capabilities
 supporting $25K-$100K consulting engagements.
 """
 
-import pytest
 import asyncio
 import json
-import tempfile
 import shutil
-from pathlib import Path
+import tempfile
 from datetime import datetime
-from unittest.mock import patch, MagicMock
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from ghl_real_estate_ai.services.white_label_service import (
-    WhiteLabelService,
     BrandingConfig,
     BrandingTier,
+    IntegrationMarketplace,
+    WhiteLabelService,
     WorkflowTemplate,
-    IntegrationMarketplace
 )
 
 
@@ -55,7 +56,7 @@ class TestWhiteLabelService:
             primary_color="#6D28D9",
             secondary_color="#4C1D95",
             accent_color="#10B981",
-            tier=BrandingTier.PROFESSIONAL
+            tier=BrandingTier.PROFESSIONAL,
         )
 
     @pytest.fixture
@@ -67,15 +68,11 @@ class TestWhiteLabelService:
             description="Test workflow for demonstration",
             category="Test",
             trigger_type="webhook",
-            actions=[
-                {"type": "test_action", "parameters": {"param1": "value1"}}
-            ],
-            conditions=[
-                {"field": "test_field", "operator": "equals", "value": "test_value"}
-            ],
+            actions=[{"type": "test_action", "parameters": {"param1": "value1"}}],
+            conditions=[{"field": "test_field", "operator": "equals", "value": "test_value"}],
             customizable_fields=["param1"],
             consulting_tier=BrandingTier.BASIC,
-            estimated_value="Test value"
+            estimated_value="Test value",
         )
 
     @pytest.mark.asyncio
@@ -93,7 +90,7 @@ class TestWhiteLabelService:
         assert len(brand_files) == 1
 
         # Verify content
-        with open(brand_files[0], 'r') as f:
+        with open(brand_files[0], "r") as f:
             saved_data = json.load(f)
 
         assert saved_data["brand_id"] == brand_id
@@ -132,10 +129,7 @@ class TestWhiteLabelService:
         brand_id = await temp_service.create_brand_config(tenant_id, sample_branding_config)
 
         # Update brand
-        updates = {
-            "company_name": "Updated Company Name",
-            "primary_color": "#FF0000"
-        }
+        updates = {"company_name": "Updated Company Name", "primary_color": "#FF0000"}
 
         success = await temp_service.update_brand_config(brand_id, updates)
         assert success is True
@@ -159,7 +153,7 @@ class TestWhiteLabelService:
             logo_url="https://example.com/logo.png",
             tier=BrandingTier.BASIC,
             custom_css="body { background: red; }",  # Not allowed in Basic
-            custom_domain="test.com"  # Not allowed in Basic
+            custom_domain="test.com",  # Not allowed in Basic
         )
 
         with pytest.raises(ValueError, match="Custom CSS not available in Basic tier"):
@@ -173,7 +167,7 @@ class TestWhiteLabelService:
             company_name="Test Company",
             logo_url="https://example.com/logo.png",
             tier=BrandingTier.PROFESSIONAL,
-            custom_css=large_css  # Too large for Professional
+            custom_css=large_css,  # Too large for Professional
         )
 
         with pytest.raises(ValueError, match="Custom CSS limited to 5KB in Professional tier"):
@@ -188,7 +182,7 @@ class TestWhiteLabelService:
             logo_url="https://example.com/logo.png",
             tier=BrandingTier.ENTERPRISE,
             custom_css=large_css,
-            custom_domain="enterprise.com"
+            custom_domain="enterprise.com",
         )
 
         # Should not raise any validation errors
@@ -202,7 +196,7 @@ class TestWhiteLabelService:
         template_file = temp_service.templates_dir / "workflow_test_workflow.json"
         assert template_file.exists()
 
-        with open(template_file, 'r') as f:
+        with open(template_file, "r") as f:
             saved_template = json.load(f)
 
         assert saved_template["template_id"] == "test_workflow"
@@ -336,7 +330,7 @@ class TestWhiteLabelService:
             assert theme_file.exists()
 
             # Verify CSS content
-            with open(theme_file, 'r') as f:
+            with open(theme_file, "r") as f:
                 css_content = f.read()
 
             assert "--primary-color: #6D28D9;" in css_content
@@ -364,7 +358,7 @@ class TestWhiteLabelService:
             required_credentials=["api_key"],
             supported_features=["feature1"],
             consulting_tier=BrandingTier.PROFESSIONAL,
-            implementation_complexity="moderate"
+            implementation_complexity="moderate",
         )
 
         temp_service._save_integration_config(professional_integration)
@@ -383,7 +377,7 @@ class TestWhiteLabelService:
         """Test that service initialization creates required directories."""
         with tempfile.TemporaryDirectory() as temp_dir:
             # Mock Path.mkdir to verify it's called
-            with patch('pathlib.Path.mkdir') as mock_mkdir:
+            with patch("pathlib.Path.mkdir") as mock_mkdir:
                 service = WhiteLabelService()
 
                 # Verify directories were created
@@ -410,10 +404,7 @@ class TestWhiteLabelService:
     def test_branding_config_dataclass_validation(self):
         """Test BrandingConfig dataclass validation and defaults."""
         # Test minimal config
-        config = BrandingConfig(
-            company_name="Test Company",
-            logo_url="https://example.com/logo.png"
-        )
+        config = BrandingConfig(company_name="Test Company", logo_url="https://example.com/logo.png")
 
         assert config.primary_color == "#6D28D9"  # Default
         assert config.tier == BrandingTier.BASIC  # Default
@@ -432,7 +423,7 @@ class TestWhiteLabelService:
             conditions=[{"field": "test_field", "operator": "equals", "value": "test"}],
             customizable_fields=["field1"],
             consulting_tier=BrandingTier.BASIC,
-            estimated_value="Test value"
+            estimated_value="Test value",
         )
 
         assert template.template_id == "test_id"
@@ -452,7 +443,7 @@ class TestWhiteLabelService:
             required_credentials=["api_key"],
             supported_features=["feature1", "feature2"],
             consulting_tier=BrandingTier.PROFESSIONAL,
-            implementation_complexity="moderate"
+            implementation_complexity="moderate",
         )
 
         assert integration.integration_id == "test_integration"
@@ -471,11 +462,8 @@ class TestWhiteLabelService:
     async def test_error_handling_in_brand_creation(self, temp_service):
         """Test error handling during brand creation."""
         # Mock file operations to raise an exception
-        with patch('builtins.open', side_effect=IOError("Disk full")):
-            config = BrandingConfig(
-                company_name="Test Company",
-                logo_url="https://example.com/logo.png"
-            )
+        with patch("builtins.open", side_effect=IOError("Disk full")):
+            config = BrandingConfig(company_name="Test Company", logo_url="https://example.com/logo.png")
 
             with pytest.raises(IOError):
                 await temp_service.create_brand_config("tenant_123", config)

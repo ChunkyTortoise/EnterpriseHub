@@ -15,5 +15,5 @@ HOOKS = {
     "sensei_hook": "hooks.real_estate.SenseiHook",
     # Security
     "security_sentry": "hooks.security.SecuritySentry",
-    "edge_case_generator": "hooks.security.EdgeCaseGenerator"
+    "edge_case_generator": "hooks.security.EdgeCaseGenerator",
 }

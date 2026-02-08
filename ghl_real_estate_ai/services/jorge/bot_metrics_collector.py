@@ -95,10 +95,7 @@ class BotMetricsCollector:
             ValueError: If bot_type is not recognized.
         """
         if bot_type not in VALID_BOT_TYPES:
-            raise ValueError(
-                f"Invalid bot_type '{bot_type}'. "
-                f"Must be one of: {sorted(VALID_BOT_TYPES)}"
-            )
+            raise ValueError(f"Invalid bot_type '{bot_type}'. Must be one of: {sorted(VALID_BOT_TYPES)}")
 
         interaction = _BotInteraction(
             bot_type=bot_type,
@@ -113,7 +110,10 @@ class BotMetricsCollector:
 
         logger.debug(
             "Recorded %s bot interaction: %sms, success=%s, cache_hit=%s",
-            bot_type, duration_ms, success, cache_hit,
+            bot_type,
+            duration_ms,
+            success,
+            cache_hit,
         )
 
     def record_handoff(
@@ -144,14 +144,15 @@ class BotMetricsCollector:
 
         logger.debug(
             "Recorded handoff %s->%s: %sms, success=%s",
-            source, target, duration_ms, success,
+            source,
+            target,
+            duration_ms,
+            success,
         )
 
     # ── Summaries ─────────────────────────────────────────────────────
 
-    def get_bot_summary(
-        self, bot_type: str, window_minutes: int = 60
-    ) -> Dict[str, Any]:
+    def get_bot_summary(self, bot_type: str, window_minutes: int = 60) -> Dict[str, Any]:
         """Get aggregated metrics for a specific bot type.
 
         Args:
@@ -166,24 +167,16 @@ class BotMetricsCollector:
             ValueError: If bot_type is not recognized.
         """
         if bot_type not in VALID_BOT_TYPES:
-            raise ValueError(
-                f"Invalid bot_type '{bot_type}'. "
-                f"Must be one of: {sorted(VALID_BOT_TYPES)}"
-            )
+            raise ValueError(f"Invalid bot_type '{bot_type}'. Must be one of: {sorted(VALID_BOT_TYPES)}")
 
         cutoff = time.time() - (window_minutes * 60)
 
         with self._data_lock:
-            relevant = [
-                i for i in self._interactions
-                if i.bot_type == bot_type and i.timestamp >= cutoff
-            ]
+            relevant = [i for i in self._interactions if i.bot_type == bot_type and i.timestamp >= cutoff]
 
         return self._compute_interaction_summary(relevant)
 
-    def get_system_summary(
-        self, window_minutes: int = 60
-    ) -> Dict[str, Any]:
+    def get_system_summary(self, window_minutes: int = 60) -> Dict[str, Any]:
         """Get aggregated metrics across all bots.
 
         Args:
@@ -195,22 +188,13 @@ class BotMetricsCollector:
         cutoff = time.time() - (window_minutes * 60)
 
         with self._data_lock:
-            all_interactions = [
-                i for i in self._interactions
-                if i.timestamp >= cutoff
-            ]
-            all_handoffs = [
-                h for h in self._handoffs
-                if h.timestamp >= cutoff
-            ]
+            all_interactions = [i for i in self._interactions if i.timestamp >= cutoff]
+            all_handoffs = [h for h in self._handoffs if h.timestamp >= cutoff]
 
         # Per-bot breakdown
         bots: Dict[str, Dict[str, Any]] = {}
         for bot_type in VALID_BOT_TYPES:
-            bot_interactions = [
-                i for i in all_interactions
-                if i.bot_type == bot_type
-            ]
+            bot_interactions = [i for i in all_interactions if i.bot_type == bot_type]
             bots[bot_type] = self._compute_interaction_summary(bot_interactions)
 
         # Handoff summary
@@ -220,22 +204,12 @@ class BotMetricsCollector:
 
         handoff_summary = {
             "total_handoffs": handoff_total,
-            "success_rate": (
-                round(handoff_successes / handoff_total, 4)
-                if handoff_total > 0 else 0.0
-            ),
-            "failure_rate": (
-                round(1.0 - handoff_successes / handoff_total, 4)
-                if handoff_total > 0 else 0.0
-            ),
+            "success_rate": (round(handoff_successes / handoff_total, 4) if handoff_total > 0 else 0.0),
+            "failure_rate": (round(1.0 - handoff_successes / handoff_total, 4) if handoff_total > 0 else 0.0),
             "avg_duration_ms": (
-                round(sum(handoff_durations) / len(handoff_durations), 2)
-                if handoff_durations else 0.0
+                round(sum(handoff_durations) / len(handoff_durations), 2) if handoff_durations else 0.0
             ),
-            "p95_duration_ms": (
-                self._percentile(handoff_durations, 95)
-                if handoff_durations else 0.0
-            ),
+            "p95_duration_ms": (self._percentile(handoff_durations, 95) if handoff_durations else 0.0),
         }
 
         # Overall totals
@@ -280,12 +254,8 @@ class BotMetricsCollector:
 
         # Handoff metrics
         handoff = system["handoffs"]
-        alerting_service.record_metric(
-            "handoff.response_time_p95", handoff["p95_duration_ms"]
-        )
-        alerting_service.record_metric(
-            "handoff.failure_rate", handoff["failure_rate"]
-        )
+        alerting_service.record_metric("handoff.response_time_p95", handoff["p95_duration_ms"])
+        alerting_service.record_metric("handoff.failure_rate", handoff["failure_rate"])
 
         logger.info("Fed %d metrics to AlertingService", 7)
 

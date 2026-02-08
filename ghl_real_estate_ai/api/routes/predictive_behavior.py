@@ -22,31 +22,31 @@ Architecture Integration:
 - Database: PostgreSQL behavioral prediction tables
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, Path
-from fastapi.responses import JSONResponse
-from typing import List, Optional, Dict, Any, Union
-from datetime import datetime, timezone, timedelta
 import logging
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional, Union
 
-from ghl_real_estate_ai.api.dependencies import (
-    get_current_user, get_location_context, validate_rate_limit
-)
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Query
+from fastapi.responses import JSONResponse
+
+from ghl_real_estate_ai.api.dependencies import get_current_user, get_location_context, validate_rate_limit
 from ghl_real_estate_ai.api.schemas.predictive_behavior import (
-    BehavioralPredictionRequest,
-    BehavioralPredictionResponse,
+    AnalyticsSummaryResponse,
     BatchPredictionRequest,
     BatchPredictionResponse,
+    BehavioralPredictionRequest,
+    BehavioralPredictionResponse,
     BehavioralTrendRequest,
     BehavioralTrendResponse,
     FeedbackRequest,
     FeedbackResponse,
-    AnalyticsSummaryResponse,
-    HealthCheckResponse
-)
-from ghl_real_estate_ai.services.predictive_lead_behavior_service import (
-    get_predictive_behavior_service, BehavioralPrediction
+    HealthCheckResponse,
 )
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.predictive_lead_behavior_service import (
+    BehavioralPrediction,
+    get_predictive_behavior_service,
+)
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/api/v1/behavior", tags=["Predictive Behavior"])
@@ -55,12 +55,13 @@ router = APIRouter(prefix="/api/v1/behavior", tags=["Predictive Behavior"])
 # Prediction Endpoints
 # ============================================================================
 
+
 @router.post("/{location_id}/predict", response_model=BehavioralPredictionResponse)
 async def predict_lead_behavior(
     location_id: str = Path(..., description="Location/tenant identifier"),
     request: BehavioralPredictionRequest = ...,
     current_user: Dict = Depends(get_current_user),
-    _rate_limit: None = Depends(validate_rate_limit)
+    _rate_limit: None = Depends(validate_rate_limit),
 ):
     """
     Generate behavioral prediction for a single lead.
@@ -87,7 +88,7 @@ async def predict_lead_behavior(
             lead_id=request.lead_id,
             location_id=location_id,
             conversation_history=request.conversation_history,
-            force_refresh=request.force_refresh
+            force_refresh=request.force_refresh,
         )
 
         processing_time_ms = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
@@ -98,7 +99,7 @@ async def predict_lead_behavior(
             latency_ms=processing_time_ms,
             cached=processing_time_ms < 5,  # Cached if <5ms
             location_id=location_id,
-            timestamp=datetime.now(timezone.utc).isoformat()
+            timestamp=datetime.now(timezone.utc).isoformat(),
         )
 
     except Exception as e:
@@ -111,16 +112,17 @@ async def predict_lead_behavior(
                 "error": "Prediction failed",
                 "message": str(e),
                 "lead_id": request.lead_id,
-                "processing_time_ms": processing_time_ms
-            }
+                "processing_time_ms": processing_time_ms,
+            },
         )
+
 
 @router.post("/{location_id}/predict/batch", response_model=BatchPredictionResponse)
 async def predict_batch_behaviors(
     location_id: str = Path(..., description="Location/tenant identifier"),
     request: BatchPredictionRequest = ...,
     background_tasks: BackgroundTasks = ...,
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
 ):
     """
     Batch behavioral predictions for multiple leads.
@@ -134,16 +136,10 @@ async def predict_batch_behaviors(
     try:
         # Validate batch size
         if len(request.lead_ids) > 100:
-            raise HTTPException(
-                status_code=400,
-                detail="Batch size limited to 100 leads per request"
-            )
+            raise HTTPException(status_code=400, detail="Batch size limited to 100 leads per request")
 
         if len(request.lead_ids) == 0:
-            raise HTTPException(
-                status_code=400,
-                detail="At least one lead_id is required"
-            )
+            raise HTTPException(status_code=400, detail="At least one lead_id is required")
 
         logger.info(f"Batch prediction request: {len(request.lead_ids)} leads in {location_id}")
 
@@ -158,7 +154,7 @@ async def predict_batch_behaviors(
             location_id,
             job_id,
             request.batch_size,
-            request.force_refresh
+            request.force_refresh,
         )
 
         return BatchPredictionResponse(
@@ -169,24 +165,22 @@ async def predict_batch_behaviors(
             status="processing",
             estimated_completion_seconds=len(request.lead_ids) * 0.05,  # 50ms per lead estimate
             location_id=location_id,
-            created_at=datetime.now(timezone.utc).isoformat()
+            created_at=datetime.now(timezone.utc).isoformat(),
         )
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Batch prediction setup failed: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to setup batch processing: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to setup batch processing: {str(e)}")
+
 
 @router.get("/{location_id}/prediction/{lead_id}", response_model=BehavioralPredictionResponse)
 async def get_lead_prediction(
     location_id: str = Path(..., description="Location/tenant identifier"),
     lead_id: str = Path(..., description="Lead identifier"),
     current_user: Dict = Depends(get_current_user),
-    force_refresh: bool = Query(False, description="Force refresh cached prediction")
+    force_refresh: bool = Query(False, description="Force refresh cached prediction"),
 ):
     """
     Get existing behavioral prediction for a lead.
@@ -197,9 +191,7 @@ async def get_lead_prediction(
         service = get_predictive_behavior_service()
 
         prediction = await service.predict_behavior(
-            lead_id=lead_id,
-            location_id=location_id,
-            force_refresh=force_refresh
+            lead_id=lead_id, location_id=location_id, force_refresh=force_refresh
         )
 
         return BehavioralPredictionResponse(
@@ -208,25 +200,24 @@ async def get_lead_prediction(
             latency_ms=prediction.prediction_latency_ms,
             cached=not force_refresh,
             location_id=location_id,
-            timestamp=datetime.now(timezone.utc).isoformat()
+            timestamp=datetime.now(timezone.utc).isoformat(),
         )
 
     except Exception as e:
         logger.error(f"Get prediction failed for {lead_id}: {e}")
-        raise HTTPException(
-            status_code=404,
-            detail=f"Prediction not found for lead {lead_id}"
-        )
+        raise HTTPException(status_code=404, detail=f"Prediction not found for lead {lead_id}")
+
 
 # ============================================================================
 # Trend Analysis Endpoints
 # ============================================================================
 
+
 @router.post("/{location_id}/trends", response_model=BehavioralTrendResponse)
 async def analyze_behavioral_trends(
     location_id: str = Path(..., description="Location/tenant identifier"),
     request: BehavioralTrendRequest = ...,
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
 ):
     """
     Analyze behavioral trends across leads in location.
@@ -241,7 +232,7 @@ async def analyze_behavioral_trends(
             location_id=location_id,
             trend_type=request.trend_type,
             time_window_hours=request.time_window_hours,
-            cohort_segment=request.cohort_segment
+            cohort_segment=request.cohort_segment,
         )
 
         return BehavioralTrendResponse(
@@ -250,15 +241,13 @@ async def analyze_behavioral_trends(
             time_window_hours=request.time_window_hours,
             trends=trends,
             location_id=location_id,
-            analyzed_at=datetime.now(timezone.utc).isoformat()
+            analyzed_at=datetime.now(timezone.utc).isoformat(),
         )
 
     except Exception as e:
         logger.error(f"Trend analysis failed: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Trend analysis failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Trend analysis failed: {str(e)}")
+
 
 @router.get("/{location_id}/trends/{trend_type}", response_model=BehavioralTrendResponse)
 async def get_behavioral_trends(
@@ -266,7 +255,7 @@ async def get_behavioral_trends(
     trend_type: str = Path(..., description="Trend type: engagement, churn, conversion"),
     time_window_hours: int = Query(default=168, ge=1, le=720, description="Analysis window (max 30 days)"),
     cohort_segment: Optional[str] = Query(None, description="Optional cohort segment filter"),
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
 ):
     """
     Get behavioral trend analysis for specific trend type.
@@ -282,8 +271,7 @@ async def get_behavioral_trends(
         valid_trends = ["engagement", "churn", "conversion", "response_rate"]
         if trend_type not in valid_trends:
             raise HTTPException(
-                status_code=400,
-                detail=f"Invalid trend type '{trend_type}'. Valid options: {valid_trends}"
+                status_code=400, detail=f"Invalid trend type '{trend_type}'. Valid options: {valid_trends}"
             )
 
         service = get_predictive_behavior_service()
@@ -292,7 +280,7 @@ async def get_behavioral_trends(
             location_id=location_id,
             trend_type=trend_type,
             time_window_hours=time_window_hours,
-            cohort_segment=cohort_segment
+            cohort_segment=cohort_segment,
         )
 
         return BehavioralTrendResponse(
@@ -301,27 +289,26 @@ async def get_behavioral_trends(
             time_window_hours=time_window_hours,
             trends=trends,
             location_id=location_id,
-            analyzed_at=datetime.now(timezone.utc).isoformat()
+            analyzed_at=datetime.now(timezone.utc).isoformat(),
         )
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Get trends failed for {trend_type}: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get trends: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get trends: {str(e)}")
+
 
 # ============================================================================
 # Learning Feedback Endpoints
 # ============================================================================
 
+
 @router.post("/{location_id}/feedback", response_model=FeedbackResponse, status_code=201)
 async def submit_behavioral_feedback(
     location_id: str = Path(..., description="Location/tenant identifier"),
     request: FeedbackRequest = ...,
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
 ):
     """
     Submit feedback on prediction accuracy for learning loop.
@@ -338,7 +325,7 @@ async def submit_behavioral_feedback(
             prediction_id=request.prediction_id,
             predicted_action=request.predicted_action,
             actual_action=request.actual_action,
-            context=request.context
+            context=request.context,
         )
 
         return FeedbackResponse(
@@ -347,22 +334,20 @@ async def submit_behavioral_feedback(
             feedback_id=feedback_result.get("feedback_id") if feedback_result else None,
             prediction_accuracy=feedback_result.get("accuracy") if feedback_result else None,
             location_id=location_id,
-            recorded_at=datetime.now(timezone.utc).isoformat()
+            recorded_at=datetime.now(timezone.utc).isoformat(),
         )
 
     except Exception as e:
         logger.error(f"Feedback recording failed: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to record feedback: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to record feedback: {str(e)}")
+
 
 @router.get("/{location_id}/feedback/accuracy", response_model=AnalyticsSummaryResponse)
 async def get_prediction_accuracy(
     location_id: str = Path(..., description="Location/tenant identifier"),
     time_window_hours: int = Query(default=168, ge=24, le=720, description="Analysis window"),
     model_version: Optional[str] = Query(None, description="Filter by model version"),
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
 ):
     """
     Get prediction accuracy metrics for the learning system.
@@ -377,9 +362,7 @@ async def get_prediction_accuracy(
         service = get_predictive_behavior_service()
 
         accuracy_analytics = await service.get_accuracy_analytics(
-            location_id=location_id,
-            time_window_hours=time_window_hours,
-            model_version=model_version
+            location_id=location_id, time_window_hours=time_window_hours, model_version=model_version
         )
 
         return AnalyticsSummaryResponse(
@@ -388,26 +371,25 @@ async def get_prediction_accuracy(
             time_window_hours=time_window_hours,
             location_id=location_id,
             data=accuracy_analytics,
-            generated_at=datetime.now(timezone.utc).isoformat()
+            generated_at=datetime.now(timezone.utc).isoformat(),
         )
 
     except Exception as e:
         logger.error(f"Accuracy analytics failed: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get accuracy analytics: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get accuracy analytics: {str(e)}")
+
 
 # ============================================================================
 # Analytics & Summary Endpoints
 # ============================================================================
+
 
 @router.get("/{location_id}/analytics/summary", response_model=AnalyticsSummaryResponse)
 async def get_behavioral_analytics_summary(
     location_id: str = Path(..., description="Location/tenant identifier"),
     time_window_hours: int = Query(default=168, ge=24, le=720, description="Analysis window"),
     behavior_category: Optional[str] = Query(None, description="Filter by behavior category"),
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
 ):
     """
     Get comprehensive behavioral analytics summary.
@@ -425,9 +407,7 @@ async def get_behavioral_analytics_summary(
         service = get_predictive_behavior_service()
 
         summary = await service.get_analytics_summary(
-            location_id=location_id,
-            time_window_hours=time_window_hours,
-            behavior_category=behavior_category
+            location_id=location_id, time_window_hours=time_window_hours, behavior_category=behavior_category
         )
 
         return AnalyticsSummaryResponse(
@@ -436,21 +416,19 @@ async def get_behavioral_analytics_summary(
             time_window_hours=time_window_hours,
             location_id=location_id,
             data=summary,
-            generated_at=datetime.now(timezone.utc).isoformat()
+            generated_at=datetime.now(timezone.utc).isoformat(),
         )
 
     except Exception as e:
         logger.error(f"Analytics summary failed: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get analytics summary: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get analytics summary: {str(e)}")
+
 
 @router.get("/{location_id}/analytics/performance", response_model=AnalyticsSummaryResponse)
 async def get_model_performance_metrics(
     location_id: str = Path(..., description="Location/tenant identifier"),
     time_window_hours: int = Query(default=168, ge=24, le=720),
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
 ):
     """
     Get model performance metrics for monitoring.
@@ -473,7 +451,7 @@ async def get_model_performance_metrics(
             "time_window_hours": time_window_hours,
             "model_version": "v1.0",
             "uptime_percentage": 99.9,  # Would be calculated from health checks
-            "error_rate": 0.001  # Would be calculated from error tracking
+            "error_rate": 0.001,  # Would be calculated from error tracking
         }
 
         return AnalyticsSummaryResponse(
@@ -482,19 +460,18 @@ async def get_model_performance_metrics(
             time_window_hours=time_window_hours,
             location_id=location_id,
             data=performance_metrics,
-            generated_at=datetime.now(timezone.utc).isoformat()
+            generated_at=datetime.now(timezone.utc).isoformat(),
         )
 
     except Exception as e:
         logger.error(f"Performance metrics failed: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get performance metrics: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get performance metrics: {str(e)}")
+
 
 # ============================================================================
 # Health & Monitoring Endpoints
 # ============================================================================
+
 
 @router.get("/health", response_model=HealthCheckResponse)
 async def health_check():
@@ -525,14 +502,11 @@ async def health_check():
             "cache_status": "operational",
             "database_status": "connected",
             "event_publishing": "operational",
-            "last_health_check": datetime.now(timezone.utc).isoformat()
+            "last_health_check": datetime.now(timezone.utc).isoformat(),
         }
 
         return HealthCheckResponse(
-            success=True,
-            status="healthy",
-            data=health_data,
-            timestamp=datetime.now(timezone.utc).isoformat()
+            success=True, status="healthy", data=health_data, timestamp=datetime.now(timezone.utc).isoformat()
         )
 
     except Exception as e:
@@ -542,25 +516,18 @@ async def health_check():
         return HealthCheckResponse(
             success=False,
             status="unhealthy",
-            data={
-                "error": str(e),
-                "service_status": "degraded",
-                "last_error": datetime.now(timezone.utc).isoformat()
-            },
-            timestamp=datetime.now(timezone.utc).isoformat()
+            data={"error": str(e), "service_status": "degraded", "last_error": datetime.now(timezone.utc).isoformat()},
+            timestamp=datetime.now(timezone.utc).isoformat(),
         )
+
 
 # ============================================================================
 # Background Task Functions
 # ============================================================================
 
+
 async def process_batch_predictions(
-    service,
-    lead_ids: List[str],
-    location_id: str,
-    job_id: str,
-    batch_size: int = 10,
-    force_refresh: bool = False
+    service, lead_ids: List[str], location_id: str, job_id: str, batch_size: int = 10, force_refresh: bool = False
 ):
     """
     Background task for processing batch predictions.
@@ -576,28 +543,23 @@ async def process_batch_predictions(
 
         # Process in smaller batches
         for i in range(0, len(lead_ids), batch_size):
-            batch = lead_ids[i:i + batch_size]
+            batch = lead_ids[i : i + batch_size]
 
             for lead_id in batch:
                 try:
                     prediction = await service.predict_behavior(
-                        lead_id=lead_id,
-                        location_id=location_id,
-                        force_refresh=force_refresh
+                        lead_id=lead_id, location_id=location_id, force_refresh=force_refresh
                     )
                     results[lead_id] = {
                         "success": True,
                         "behavior_category": prediction.behavior_category.value,
                         "churn_risk_score": prediction.churn_risk_score,
-                        "prediction_latency_ms": prediction.prediction_latency_ms
+                        "prediction_latency_ms": prediction.prediction_latency_ms,
                     }
 
                 except Exception as e:
                     logger.error(f"Batch prediction failed for {lead_id}: {e}")
-                    results[lead_id] = {
-                        "success": False,
-                        "error": str(e)
-                    }
+                    results[lead_id] = {"success": False, "error": str(e)}
 
                 processed_count += 1
 

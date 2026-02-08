@@ -21,20 +21,20 @@ Architecture Notes:
 """
 
 import json
-import pytest
 from dataclasses import dataclass
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from ghl_real_estate_ai.services.compliance_guard import (
     ComplianceGuard,
     ComplianceStatus,
 )
 
-
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def guard():
@@ -49,11 +49,7 @@ def guard():
 def llm_passed_response():
     """Mock LLM response that returns PASSED."""
     resp = MagicMock()
-    resp.content = json.dumps({
-        "status": "passed",
-        "reason": "No compliance issues detected.",
-        "violations": []
-    })
+    resp.content = json.dumps({"status": "passed", "reason": "No compliance issues detected.", "violations": []})
     return resp
 
 
@@ -61,11 +57,13 @@ def llm_passed_response():
 def llm_blocked_response():
     """Mock LLM response that returns BLOCKED."""
     resp = MagicMock()
-    resp.content = json.dumps({
-        "status": "blocked",
-        "reason": "Steering detected based on neighborhood demographics.",
-        "violations": ["steering_demographic"]
-    })
+    resp.content = json.dumps(
+        {
+            "status": "blocked",
+            "reason": "Steering detected based on neighborhood demographics.",
+            "violations": ["steering_demographic"],
+        }
+    )
     return resp
 
 
@@ -73,11 +71,13 @@ def llm_blocked_response():
 def llm_flagged_response():
     """Mock LLM response that returns FLAGGED."""
     resp = MagicMock()
-    resp.content = json.dumps({
-        "status": "flagged",
-        "reason": "Potential implicit bias detected -- flagged for human review.",
-        "violations": ["implicit_bias"]
-    })
+    resp.content = json.dumps(
+        {
+            "status": "flagged",
+            "reason": "Potential implicit bias detected -- flagged for human review.",
+            "violations": ["implicit_bias"],
+        }
+    )
     return resp
 
 
@@ -91,6 +91,7 @@ LEAD_FALLBACK = "Thanks for reaching out! I'd love to help. What are you looking
 # 1. STEERING DETECTION
 # =========================================================================
 
+
 @pytest.mark.compliance
 @pytest.mark.asyncio
 class TestSteeringDetection:
@@ -100,18 +101,14 @@ class TestSteeringDetection:
         """'Families like yours' implies demographic profiling."""
         guard.llm_client.agenerate.return_value = llm_blocked_response
         msg = "You'd love Etiwanda, lots of families like yours there"
-        status, reason, violations = await guard.audit_message(
-            msg, contact_context={"mode": "buyer"}
-        )
+        status, reason, violations = await guard.audit_message(msg, contact_context={"mode": "buyer"})
         assert status in (ComplianceStatus.BLOCKED, ComplianceStatus.FLAGGED)
 
     async def test_steering_not_best_fit_lifestyle(self, guard, llm_blocked_response):
         """'Not the best fit for your lifestyle' is veiled steering."""
         guard.llm_client.agenerate.return_value = llm_blocked_response
         msg = "That area might not be the best fit for your lifestyle"
-        status, reason, violations = await guard.audit_message(
-            msg, contact_context={"mode": "buyer"}
-        )
+        status, reason, violations = await guard.audit_message(msg, contact_context={"mode": "buyer"})
         assert status in (ComplianceStatus.BLOCKED, ComplianceStatus.FLAGGED)
 
     async def test_steering_schools_without_kids(self, guard, llm_blocked_response):
@@ -127,33 +124,28 @@ class TestSteeringDetection:
         """Steering must be caught in seller mode too."""
         guard.llm_client.agenerate.return_value = llm_blocked_response
         msg = "Your neighborhood is popular with a certain type of buyer"
-        status, reason, violations = await guard.audit_message(
-            msg, contact_context={"mode": "seller"}
-        )
+        status, reason, violations = await guard.audit_message(msg, contact_context={"mode": "seller"})
         assert status in (ComplianceStatus.BLOCKED, ComplianceStatus.FLAGGED)
 
     async def test_steering_lead_mode(self, guard, llm_blocked_response):
         """Steering must be caught in lead qualification mode."""
         guard.llm_client.agenerate.return_value = llm_blocked_response
         msg = "Based on your background, you'd probably prefer the east side"
-        status, reason, violations = await guard.audit_message(
-            msg, contact_context={"mode": "lead"}
-        )
+        status, reason, violations = await guard.audit_message(msg, contact_context={"mode": "lead"})
         assert status in (ComplianceStatus.BLOCKED, ComplianceStatus.FLAGGED)
 
     async def test_steering_community_character(self, guard, llm_blocked_response):
         """'Character of the community' is a known steering code phrase."""
         guard.llm_client.agenerate.return_value = llm_blocked_response
         msg = "That neighborhood has a very specific character you should be aware of"
-        status, reason, violations = await guard.audit_message(
-            msg, contact_context={"mode": "buyer"}
-        )
+        status, reason, violations = await guard.audit_message(msg, contact_context={"mode": "buyer"})
         assert status in (ComplianceStatus.BLOCKED, ComplianceStatus.FLAGGED)
 
 
 # =========================================================================
 # 2. PROTECTED CLASS REFERENCES
 # =========================================================================
+
 
 @pytest.mark.compliance
 class TestProtectedClassReferences:
@@ -226,6 +218,7 @@ class TestProtectedClassReferences:
 # 3. REDLINING PATTERNS
 # =========================================================================
 
+
 @pytest.mark.compliance
 @pytest.mark.asyncio
 class TestRedliningPatterns:
@@ -235,36 +228,28 @@ class TestRedliningPatterns:
         """'We don't serve that area' is redlining."""
         guard.llm_client.agenerate.return_value = llm_blocked_response
         msg = "We don't serve that area"
-        status, reason, violations = await guard.audit_message(
-            msg, contact_context={"mode": "buyer"}
-        )
+        status, reason, violations = await guard.audit_message(msg, contact_context={"mode": "buyer"})
         assert status in (ComplianceStatus.BLOCKED, ComplianceStatus.FLAGGED)
 
     async def test_redlining_declining_values(self, guard, llm_blocked_response):
         """'Property values are declining in that neighborhood' can be redlining."""
         guard.llm_client.agenerate.return_value = llm_blocked_response
         msg = "Property values are declining in that neighborhood"
-        status, reason, violations = await guard.audit_message(
-            msg, contact_context={"mode": "buyer"}
-        )
+        status, reason, violations = await guard.audit_message(msg, contact_context={"mode": "buyer"})
         assert status in (ComplianceStatus.BLOCKED, ComplianceStatus.FLAGGED)
 
     async def test_redlining_avoid_zip_code(self, guard, llm_blocked_response):
         """'Avoid that zip code' is geographic discrimination."""
         guard.llm_client.agenerate.return_value = llm_blocked_response
         msg = "You might want to avoid that zip code"
-        status, reason, violations = await guard.audit_message(
-            msg, contact_context={"mode": "lead"}
-        )
+        status, reason, violations = await guard.audit_message(msg, contact_context={"mode": "lead"})
         assert status in (ComplianceStatus.BLOCKED, ComplianceStatus.FLAGGED)
 
     async def test_redlining_wrong_side_of_town(self, guard, llm_blocked_response):
         """'Wrong side of town' is a redlining signal."""
         guard.llm_client.agenerate.return_value = llm_blocked_response
         msg = "That's on the wrong side of town, I wouldn't recommend it"
-        status, reason, violations = await guard.audit_message(
-            msg, contact_context={"mode": "buyer"}
-        )
+        status, reason, violations = await guard.audit_message(msg, contact_context={"mode": "buyer"})
         assert status in (ComplianceStatus.BLOCKED, ComplianceStatus.FLAGGED)
 
     async def test_redlining_bad_area_pattern(self, guard):
@@ -285,6 +270,7 @@ class TestRedliningPatterns:
 # =========================================================================
 # 4. SAFE MESSAGES (NO FALSE POSITIVES)
 # =========================================================================
+
 
 @pytest.mark.compliance
 @pytest.mark.asyncio
@@ -358,6 +344,7 @@ class TestSafeMessages:
 # 5. FALLBACK MESSAGE VALIDATION
 # =========================================================================
 
+
 @pytest.mark.compliance
 @pytest.mark.asyncio
 class TestFallbackMessageValidation:
@@ -393,17 +380,13 @@ class TestFallbackMessageValidation:
         """Buyer fallback itself must pass compliance."""
         guard.llm_client.agenerate.return_value = llm_passed_response
         status, reason, violations = await guard.audit_message(BUYER_FALLBACK)
-        assert status == ComplianceStatus.PASSED, (
-            f"Buyer fallback failed compliance: {reason}, violations={violations}"
-        )
+        assert status == ComplianceStatus.PASSED, f"Buyer fallback failed compliance: {reason}, violations={violations}"
 
     async def test_lead_fallback_passes_compliance(self, guard, llm_passed_response):
         """Lead fallback itself must pass compliance."""
         guard.llm_client.agenerate.return_value = llm_passed_response
         status, reason, violations = await guard.audit_message(LEAD_FALLBACK)
-        assert status == ComplianceStatus.PASSED, (
-            f"Lead fallback failed compliance: {reason}, violations={violations}"
-        )
+        assert status == ComplianceStatus.PASSED, f"Lead fallback failed compliance: {reason}, violations={violations}"
 
     async def test_fallbacks_have_no_pattern_violations(self, guard):
         """All fallback messages must be clean at Tier 1 pattern level."""
@@ -413,14 +396,13 @@ class TestFallbackMessageValidation:
             ("lead", LEAD_FALLBACK),
         ]:
             violations = guard._check_patterns(fallback)
-            assert violations == [], (
-                f"{label} fallback has Tier 1 violations: {violations}"
-            )
+            assert violations == [], f"{label} fallback has Tier 1 violations: {violations}"
 
 
 # =========================================================================
 # 6. CCPA DATA HANDLING
 # =========================================================================
+
 
 @pytest.mark.compliance
 @pytest.mark.asyncio
@@ -442,9 +424,7 @@ class TestCCPADataHandling:
         """Compliance output must not contain phone numbers."""
         phone = "+19095551234"
         msg = "This is a bad area, watch out for those people"
-        status, reason, violations = await guard.audit_message(
-            msg, contact_context={"phone": phone, "mode": "buyer"}
-        )
+        status, reason, violations = await guard.audit_message(msg, contact_context={"phone": phone, "mode": "buyer"})
         assert phone not in reason
         for v in violations:
             assert phone not in v
@@ -453,9 +433,7 @@ class TestCCPADataHandling:
         """Compliance output must not contain email addresses."""
         email = "johndoe@example.com"
         msg = "lots of immigrant families in that neighborhood"
-        status, reason, violations = await guard.audit_message(
-            msg, contact_context={"email": email, "mode": "lead"}
-        )
+        status, reason, violations = await guard.audit_message(msg, contact_context={"email": email, "mode": "lead"})
         assert email not in reason
         for v in violations:
             assert email not in v
@@ -505,30 +483,58 @@ class TestCCPADataHandling:
 # 7. CAN-SPAM COMPLIANCE
 # =========================================================================
 
+
 @pytest.mark.compliance
 class TestCANSPAMCompliance:
     """Verify opt-out phrases are recognized and handled correctly."""
 
     OPT_OUT_PHRASES = [
-        "stop", "unsubscribe", "don't contact", "dont contact",
-        "remove me", "not interested", "no more", "opt out",
-        "leave me alone", "take me off", "no thanks",
+        "stop",
+        "unsubscribe",
+        "don't contact",
+        "dont contact",
+        "remove me",
+        "not interested",
+        "no more",
+        "opt out",
+        "leave me alone",
+        "take me off",
+        "no thanks",
     ]
 
-    @pytest.mark.parametrize("phrase", [
-        "stop", "unsubscribe", "don't contact", "dont contact",
-        "remove me", "not interested", "no more", "opt out",
-        "leave me alone", "take me off", "no thanks",
-    ])
+    @pytest.mark.parametrize(
+        "phrase",
+        [
+            "stop",
+            "unsubscribe",
+            "don't contact",
+            "dont contact",
+            "remove me",
+            "not interested",
+            "no more",
+            "opt out",
+            "leave me alone",
+            "take me off",
+            "no thanks",
+        ],
+    )
     def test_opt_out_phrase_detected(self, phrase):
         """Each opt-out phrase must be detected by the webhook opt-out logic."""
         msg_lower = phrase.lower().strip()
         assert any(p in msg_lower for p in self.OPT_OUT_PHRASES)
 
-    @pytest.mark.parametrize("phrase", [
-        "STOP", "Unsubscribe", "Don't Contact", "OPT OUT",
-        "LEAVE ME ALONE", "No Thanks", "REMOVE ME",
-    ])
+    @pytest.mark.parametrize(
+        "phrase",
+        [
+            "STOP",
+            "Unsubscribe",
+            "Don't Contact",
+            "OPT OUT",
+            "LEAVE ME ALONE",
+            "No Thanks",
+            "REMOVE ME",
+        ],
+    )
     def test_opt_out_case_insensitive(self, phrase):
         """Opt-out detection must be case-insensitive."""
         msg_lower = phrase.lower().strip()
@@ -544,9 +550,7 @@ class TestCANSPAMCompliance:
         ]
         for msg in messages:
             msg_lower = msg.lower().strip()
-            assert any(p in msg_lower for p in self.OPT_OUT_PHRASES), (
-                f"Opt-out not detected in: {msg!r}"
-            )
+            assert any(p in msg_lower for p in self.OPT_OUT_PHRASES), f"Opt-out not detected in: {msg!r}"
 
     def test_ai_off_tag_is_deactivation(self):
         """The 'AI-Off' tag must be in the standard deactivation tag list."""
@@ -580,6 +584,7 @@ class TestCANSPAMCompliance:
 # =========================================================================
 # BONUS: Input Length Guard and Edge Cases
 # =========================================================================
+
 
 @pytest.mark.compliance
 @pytest.mark.asyncio
@@ -627,6 +632,7 @@ class TestInputLengthGuard:
 # =========================================================================
 # BONUS: Multi-Tier Integration
 # =========================================================================
+
 
 @pytest.mark.compliance
 @pytest.mark.asyncio

@@ -20,17 +20,20 @@ Key Features:
 
 import asyncio
 import json
-from datetime import datetime, timedelta, date
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass, asdict
-from enum import Enum
 from collections import defaultdict
+from dataclasses import asdict, dataclass
+from datetime import date, datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.lead_source_tracker import (
-    LeadSource, SourceAttribution, SourcePerformance, LeadSourceTracker
+    LeadSource,
+    LeadSourceTracker,
+    SourceAttribution,
+    SourcePerformance,
 )
 
 logger = get_logger(__name__)
@@ -38,6 +41,7 @@ logger = get_logger(__name__)
 
 class ReportPeriod(str, Enum):
     """Reporting period options."""
+
     DAILY = "daily"
     WEEKLY = "weekly"
     MONTHLY = "monthly"
@@ -47,6 +51,7 @@ class ReportPeriod(str, Enum):
 
 class AlertType(str, Enum):
     """Alert types for performance monitoring."""
+
     ROI_DROP = "roi_drop"
     COST_SPIKE = "cost_spike"
     VOLUME_DROP = "volume_drop"
@@ -58,6 +63,7 @@ class AlertType(str, Enum):
 
 class AttributionModel(str, Enum):
     """Attribution model types."""
+
     FIRST_TOUCH = "first_touch"
     LAST_TOUCH = "last_touch"
     LINEAR = "linear"
@@ -190,11 +196,7 @@ class AttributionAnalytics:
         }
 
         # Minimum data requirements for analysis
-        self.min_data_requirements = {
-            "min_leads": 10,
-            "min_days": 7,
-            "min_conversions": 3
-        }
+        self.min_data_requirements = {"min_leads": 10, "min_days": 7, "min_conversions": 3}
 
         logger.info("AttributionAnalytics initialized with advanced analytics capabilities")
 
@@ -204,7 +206,7 @@ class AttributionAnalytics:
         end_date: Optional[datetime] = None,
         attribution_model: AttributionModel = AttributionModel.LAST_TOUCH,
         include_forecasts: bool = True,
-        include_cohorts: bool = True
+        include_cohorts: bool = True,
     ) -> AttributionReport:
         """
         Generate comprehensive attribution analysis report.
@@ -228,16 +230,10 @@ class AttributionAnalytics:
             logger.info(f"Generating attribution report for {start_date} to {end_date}")
 
             # Initialize report
-            report = AttributionReport(
-                period_start=start_date,
-                period_end=end_date,
-                generated_at=datetime.utcnow()
-            )
+            report = AttributionReport(period_start=start_date, period_end=end_date, generated_at=datetime.utcnow())
 
             # Get source performance data
-            source_performances = await self.source_tracker.get_all_source_performance(
-                start_date, end_date
-            )
+            source_performances = await self.source_tracker.get_all_source_performance(start_date, end_date)
             report.source_performance = source_performances
 
             # Calculate summary metrics
@@ -251,20 +247,14 @@ class AttributionAnalytics:
 
             # Generate cohort analysis
             if include_cohorts:
-                report.cohort_analysis = await self._generate_cohort_analysis(
-                    start_date, end_date
-                )
+                report.cohort_analysis = await self._generate_cohort_analysis(start_date, end_date)
 
             # Generate channel forecasts
             if include_forecasts:
-                report.channel_forecasts = await self._generate_channel_forecasts(
-                    source_performances
-                )
+                report.channel_forecasts = await self._generate_channel_forecasts(source_performances)
 
             # Generate active alerts
-            report.active_alerts = await self._generate_performance_alerts(
-                source_performances
-            )
+            report.active_alerts = await self._generate_performance_alerts(source_performances)
 
             # Generate optimization recommendations
             report.optimization_recommendations = await self._generate_optimization_recommendations(
@@ -272,9 +262,7 @@ class AttributionAnalytics:
             )
 
             # Attribution model comparison
-            report.attribution_comparison = await self._compare_attribution_models(
-                start_date, end_date
-            )
+            report.attribution_comparison = await self._compare_attribution_models(start_date, end_date)
 
             logger.info(
                 f"Attribution report generated: {report.total_leads} leads, "
@@ -294,14 +282,10 @@ class AttributionAnalytics:
             return AttributionReport(
                 period_start=start_date or datetime.utcnow() - timedelta(days=30),
                 period_end=end_date or datetime.utcnow(),
-                generated_at=datetime.utcnow()
+                generated_at=datetime.utcnow(),
             )
 
-    async def _generate_cohort_analysis(
-        self,
-        start_date: datetime,
-        end_date: datetime
-    ) -> List[CohortAnalysis]:
+    async def _generate_cohort_analysis(self, start_date: datetime, end_date: datetime) -> List[CohortAnalysis]:
         """Generate cohort analysis for lead sources."""
         try:
             cohorts = []
@@ -328,11 +312,7 @@ class AttributionAnalytics:
             logger.error(f"Error generating cohort analysis: {e}", exc_info=True)
             return []
 
-    async def _analyze_source_cohort(
-        self,
-        source: LeadSource,
-        cohort_date: date
-    ) -> Optional[CohortAnalysis]:
+    async def _analyze_source_cohort(self, source: LeadSource, cohort_date: date) -> Optional[CohortAnalysis]:
         """Analyze a specific source cohort."""
         try:
             # Get leads for this cohort
@@ -343,9 +323,7 @@ class AttributionAnalytics:
                 return None
 
             cohort = CohortAnalysis(
-                source=source,
-                cohort_date=cohort_date,
-                cohort_size=cohort_data.get("cohort_size", 0)
+                source=source, cohort_date=cohort_date, cohort_size=cohort_data.get("cohort_size", 0)
             )
 
             # Calculate conversion rates by time periods
@@ -370,10 +348,7 @@ class AttributionAnalytics:
             logger.error(f"Error analyzing cohort for {source}: {e}", exc_info=True)
             return None
 
-    async def _generate_channel_forecasts(
-        self,
-        source_performances: List[SourcePerformance]
-    ) -> List[ChannelForecast]:
+    async def _generate_channel_forecasts(self, source_performances: List[SourcePerformance]) -> List[ChannelForecast]:
         """Generate forecasts for each marketing channel."""
         try:
             forecasts = []
@@ -392,10 +367,7 @@ class AttributionAnalytics:
             logger.error(f"Error generating channel forecasts: {e}", exc_info=True)
             return []
 
-    async def _forecast_channel_performance(
-        self,
-        performance: SourcePerformance
-    ) -> Optional[ChannelForecast]:
+    async def _forecast_channel_performance(self, performance: SourcePerformance) -> Optional[ChannelForecast]:
         """Generate forecast for a single channel using simple trend analysis."""
         try:
             source = performance.source
@@ -447,7 +419,7 @@ class AttributionAnalytics:
                 revenue_lower_bound=predicted_revenue * (1 - confidence_range),
                 revenue_upper_bound=predicted_revenue * (1 + confidence_range),
                 model_accuracy=0.75,  # Estimated accuracy for simple trend model
-                data_points_used=len(historical_data)
+                data_points_used=len(historical_data),
             )
 
             return forecast
@@ -475,11 +447,7 @@ class AttributionAnalytics:
         trend = (n * xy_sum - x_sum * y_sum) / denominator
         return trend
 
-    async def _get_historical_data_points(
-        self,
-        source: LeadSource,
-        days: int = 60
-    ) -> List[Dict[str, float]]:
+    async def _get_historical_data_points(self, source: LeadSource, days: int = 60) -> List[Dict[str, float]]:
         """Get historical daily data points for a source."""
         try:
             data_points = []
@@ -493,20 +461,17 @@ class AttributionAnalytics:
                 daily_data = await self.cache.get(cache_key)
 
                 if daily_data:
-                    data_points.append({
-                        "date": current_date,
-                        "leads": daily_data.get("leads", 0),
-                        "revenue": daily_data.get("revenue", 0.0),
-                        "cost": daily_data.get("cost", 0.0)
-                    })
+                    data_points.append(
+                        {
+                            "date": current_date,
+                            "leads": daily_data.get("leads", 0),
+                            "revenue": daily_data.get("revenue", 0.0),
+                            "cost": daily_data.get("cost", 0.0),
+                        }
+                    )
                 else:
                     # Fill missing days with zeros
-                    data_points.append({
-                        "date": current_date,
-                        "leads": 0,
-                        "revenue": 0.0,
-                        "cost": 0.0
-                    })
+                    data_points.append({"date": current_date, "leads": 0, "revenue": 0.0, "cost": 0.0})
 
                 current_date += timedelta(days=1)
 
@@ -517,8 +482,7 @@ class AttributionAnalytics:
             return []
 
     async def _generate_performance_alerts(
-        self,
-        source_performances: List[SourcePerformance]
+        self, source_performances: List[SourcePerformance]
     ) -> List[PerformanceAlert]:
         """Generate performance alerts based on thresholds and trends."""
         try:
@@ -530,106 +494,127 @@ class AttributionAnalytics:
 
                 # Get previous period performance for comparison
                 previous_performance = await self._get_previous_period_performance(
-                    performance.source,
-                    performance.period_start,
-                    performance.period_end
+                    performance.source, performance.period_start, performance.period_end
                 )
 
                 if not previous_performance:
                     continue
 
                 # Check for ROI drops
-                roi_change = (performance.roi - previous_performance.roi) / abs(previous_performance.roi) if previous_performance.roi != 0 else 0
+                roi_change = (
+                    (performance.roi - previous_performance.roi) / abs(previous_performance.roi)
+                    if previous_performance.roi != 0
+                    else 0
+                )
                 if roi_change <= self.alert_thresholds[AlertType.ROI_DROP]:
-                    alerts.append(PerformanceAlert(
-                        alert_type=AlertType.ROI_DROP,
-                        source=performance.source,
-                        severity="high" if roi_change <= -0.30 else "medium",
-                        title=f"ROI Drop Alert - {performance.source.value}",
-                        description=f"ROI dropped {abs(roi_change)*100:.1f}% from {previous_performance.roi*100:.1f}% to {performance.roi*100:.1f}%",
-                        current_value=performance.roi,
-                        previous_value=previous_performance.roi,
-                        threshold=self.alert_thresholds[AlertType.ROI_DROP],
-                        change_percentage=roi_change,
-                        recommendations=[
-                            "Review recent campaign changes",
-                            "Analyze landing page performance",
-                            "Check for increased competition",
-                            "Consider pausing underperforming campaigns"
-                        ],
-                        created_at=datetime.utcnow(),
-                        expires_at=datetime.utcnow() + timedelta(days=7)
-                    ))
+                    alerts.append(
+                        PerformanceAlert(
+                            alert_type=AlertType.ROI_DROP,
+                            source=performance.source,
+                            severity="high" if roi_change <= -0.30 else "medium",
+                            title=f"ROI Drop Alert - {performance.source.value}",
+                            description=f"ROI dropped {abs(roi_change) * 100:.1f}% from {previous_performance.roi * 100:.1f}% to {performance.roi * 100:.1f}%",
+                            current_value=performance.roi,
+                            previous_value=previous_performance.roi,
+                            threshold=self.alert_thresholds[AlertType.ROI_DROP],
+                            change_percentage=roi_change,
+                            recommendations=[
+                                "Review recent campaign changes",
+                                "Analyze landing page performance",
+                                "Check for increased competition",
+                                "Consider pausing underperforming campaigns",
+                            ],
+                            created_at=datetime.utcnow(),
+                            expires_at=datetime.utcnow() + timedelta(days=7),
+                        )
+                    )
 
                 # Check for volume drops
-                volume_change = (performance.total_leads - previous_performance.total_leads) / previous_performance.total_leads if previous_performance.total_leads > 0 else 0
+                volume_change = (
+                    (performance.total_leads - previous_performance.total_leads) / previous_performance.total_leads
+                    if previous_performance.total_leads > 0
+                    else 0
+                )
                 if volume_change <= self.alert_thresholds[AlertType.VOLUME_DROP]:
-                    alerts.append(PerformanceAlert(
-                        alert_type=AlertType.VOLUME_DROP,
-                        source=performance.source,
-                        severity="high" if volume_change <= -0.40 else "medium",
-                        title=f"Volume Drop Alert - {performance.source.value}",
-                        description=f"Lead volume dropped {abs(volume_change)*100:.1f}% from {previous_performance.total_leads} to {performance.total_leads}",
-                        current_value=performance.total_leads,
-                        previous_value=previous_performance.total_leads,
-                        threshold=self.alert_thresholds[AlertType.VOLUME_DROP],
-                        change_percentage=volume_change,
-                        recommendations=[
-                            "Check campaign delivery and budgets",
-                            "Review audience targeting",
-                            "Analyze creative fatigue",
-                            "Consider expanding targeting"
-                        ],
-                        created_at=datetime.utcnow(),
-                        expires_at=datetime.utcnow() + timedelta(days=5)
-                    ))
+                    alerts.append(
+                        PerformanceAlert(
+                            alert_type=AlertType.VOLUME_DROP,
+                            source=performance.source,
+                            severity="high" if volume_change <= -0.40 else "medium",
+                            title=f"Volume Drop Alert - {performance.source.value}",
+                            description=f"Lead volume dropped {abs(volume_change) * 100:.1f}% from {previous_performance.total_leads} to {performance.total_leads}",
+                            current_value=performance.total_leads,
+                            previous_value=previous_performance.total_leads,
+                            threshold=self.alert_thresholds[AlertType.VOLUME_DROP],
+                            change_percentage=volume_change,
+                            recommendations=[
+                                "Check campaign delivery and budgets",
+                                "Review audience targeting",
+                                "Analyze creative fatigue",
+                                "Consider expanding targeting",
+                            ],
+                            created_at=datetime.utcnow(),
+                            expires_at=datetime.utcnow() + timedelta(days=5),
+                        )
+                    )
 
                 # Check for quality drops
-                quality_change = (performance.qualification_rate - previous_performance.qualification_rate) / previous_performance.qualification_rate if previous_performance.qualification_rate > 0 else 0
+                quality_change = (
+                    (performance.qualification_rate - previous_performance.qualification_rate)
+                    / previous_performance.qualification_rate
+                    if previous_performance.qualification_rate > 0
+                    else 0
+                )
                 if quality_change <= self.alert_thresholds[AlertType.QUALITY_DROP]:
-                    alerts.append(PerformanceAlert(
-                        alert_type=AlertType.QUALITY_DROP,
-                        source=performance.source,
-                        severity="medium",
-                        title=f"Quality Drop Alert - {performance.source.value}",
-                        description=f"Lead qualification rate dropped {abs(quality_change)*100:.1f}% from {previous_performance.qualification_rate*100:.1f}% to {performance.qualification_rate*100:.1f}%",
-                        current_value=performance.qualification_rate,
-                        previous_value=previous_performance.qualification_rate,
-                        threshold=self.alert_thresholds[AlertType.QUALITY_DROP],
-                        change_percentage=quality_change,
-                        recommendations=[
-                            "Review targeting criteria",
-                            "Analyze message match with landing pages",
-                            "Check for bot traffic",
-                            "Update lead qualification criteria"
-                        ],
-                        created_at=datetime.utcnow(),
-                        expires_at=datetime.utcnow() + timedelta(days=7)
-                    ))
+                    alerts.append(
+                        PerformanceAlert(
+                            alert_type=AlertType.QUALITY_DROP,
+                            source=performance.source,
+                            severity="medium",
+                            title=f"Quality Drop Alert - {performance.source.value}",
+                            description=f"Lead qualification rate dropped {abs(quality_change) * 100:.1f}% from {previous_performance.qualification_rate * 100:.1f}% to {performance.qualification_rate * 100:.1f}%",
+                            current_value=performance.qualification_rate,
+                            previous_value=previous_performance.qualification_rate,
+                            threshold=self.alert_thresholds[AlertType.QUALITY_DROP],
+                            change_percentage=quality_change,
+                            recommendations=[
+                                "Review targeting criteria",
+                                "Analyze message match with landing pages",
+                                "Check for bot traffic",
+                                "Update lead qualification criteria",
+                            ],
+                            created_at=datetime.utcnow(),
+                            expires_at=datetime.utcnow() + timedelta(days=7),
+                        )
+                    )
 
                 # Check for new top performers
-                if (performance.roi > 1.0 and  # ROI > 100%
-                    performance.total_leads >= 5 and  # Sufficient volume
-                    previous_performance.roi < 0.5):  # Previously poor performing
-                    alerts.append(PerformanceAlert(
-                        alert_type=AlertType.NEW_TOP_PERFORMER,
-                        source=performance.source,
-                        severity="low",
-                        title=f"New Top Performer - {performance.source.value}",
-                        description=f"Source improved from {previous_performance.roi*100:.1f}% to {performance.roi*100:.1f}% ROI",
-                        current_value=performance.roi,
-                        previous_value=previous_performance.roi,
-                        threshold=1.0,
-                        change_percentage=roi_change,
-                        recommendations=[
-                            "Scale up successful campaigns",
-                            "Analyze what changed",
-                            "Replicate success to other sources",
-                            "Increase budget allocation"
-                        ],
-                        created_at=datetime.utcnow(),
-                        expires_at=datetime.utcnow() + timedelta(days=14)
-                    ))
+                if (
+                    performance.roi > 1.0  # ROI > 100%
+                    and performance.total_leads >= 5  # Sufficient volume
+                    and previous_performance.roi < 0.5
+                ):  # Previously poor performing
+                    alerts.append(
+                        PerformanceAlert(
+                            alert_type=AlertType.NEW_TOP_PERFORMER,
+                            source=performance.source,
+                            severity="low",
+                            title=f"New Top Performer - {performance.source.value}",
+                            description=f"Source improved from {previous_performance.roi * 100:.1f}% to {performance.roi * 100:.1f}% ROI",
+                            current_value=performance.roi,
+                            previous_value=previous_performance.roi,
+                            threshold=1.0,
+                            change_percentage=roi_change,
+                            recommendations=[
+                                "Scale up successful campaigns",
+                                "Analyze what changed",
+                                "Replicate success to other sources",
+                                "Increase budget allocation",
+                            ],
+                            created_at=datetime.utcnow(),
+                            expires_at=datetime.utcnow() + timedelta(days=14),
+                        )
+                    )
 
             # Sort alerts by severity and creation time
             severity_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
@@ -642,10 +627,7 @@ class AttributionAnalytics:
             return []
 
     async def _get_previous_period_performance(
-        self,
-        source: LeadSource,
-        period_start: datetime,
-        period_end: datetime
+        self, source: LeadSource, period_start: datetime, period_end: datetime
     ) -> Optional[SourcePerformance]:
         """Get performance for the previous equivalent period."""
         try:
@@ -653,18 +635,14 @@ class AttributionAnalytics:
             previous_end = period_start
             previous_start = previous_end - period_length
 
-            return await self.source_tracker.get_source_performance(
-                source, previous_start, previous_end
-            )
+            return await self.source_tracker.get_source_performance(source, previous_start, previous_end)
 
         except Exception as e:
             logger.error(f"Error getting previous period performance: {e}", exc_info=True)
             return None
 
     async def _generate_optimization_recommendations(
-        self,
-        source_performances: List[SourcePerformance],
-        alerts: List[PerformanceAlert]
+        self, source_performances: List[SourcePerformance], alerts: List[PerformanceAlert]
     ) -> List[Dict[str, Any]]:
         """Generate optimization recommendations based on performance data."""
         try:
@@ -675,81 +653,95 @@ class AttributionAnalytics:
             low_roi_sources = [p for p in source_performances if p.roi < 0.2 and p.total_leads > 10]
 
             if high_roi_sources and low_roi_sources:
-                recommendations.append({
-                    "type": "budget_reallocation",
-                    "priority": "high",
-                    "title": "Reallocate Budget for Higher ROI",
-                    "description": f"Move budget from {len(low_roi_sources)} underperforming sources to {len(high_roi_sources)} high-ROI sources",
-                    "impact": "Could improve overall ROI by 25-50%",
-                    "sources_to_reduce": [p.source.value for p in low_roi_sources[:3]],
-                    "sources_to_increase": [p.source.value for p in high_roi_sources[:3]],
-                    "estimated_improvement": "25-50% ROI increase"
-                })
+                recommendations.append(
+                    {
+                        "type": "budget_reallocation",
+                        "priority": "high",
+                        "title": "Reallocate Budget for Higher ROI",
+                        "description": f"Move budget from {len(low_roi_sources)} underperforming sources to {len(high_roi_sources)} high-ROI sources",
+                        "impact": "Could improve overall ROI by 25-50%",
+                        "sources_to_reduce": [p.source.value for p in low_roi_sources[:3]],
+                        "sources_to_increase": [p.source.value for p in high_roi_sources[:3]],
+                        "estimated_improvement": "25-50% ROI increase",
+                    }
+                )
 
             # Quality improvement recommendations
-            high_volume_low_quality = [p for p in source_performances if p.total_leads > 20 and p.qualification_rate < 0.3]
+            high_volume_low_quality = [
+                p for p in source_performances if p.total_leads > 20 and p.qualification_rate < 0.3
+            ]
             if high_volume_low_quality:
-                recommendations.append({
-                    "type": "quality_improvement",
-                    "priority": "medium",
-                    "title": "Improve Lead Quality",
-                    "description": f"Focus on improving qualification rates for high-volume sources",
-                    "impact": "Increase qualified leads without increasing costs",
-                    "sources": [p.source.value for p in high_volume_low_quality],
-                    "actions": [
-                        "Refine targeting criteria",
-                        "Improve ad copy and landing pages",
-                        "Add qualification questions",
-                        "Review lead scoring criteria"
-                    ]
-                })
+                recommendations.append(
+                    {
+                        "type": "quality_improvement",
+                        "priority": "medium",
+                        "title": "Improve Lead Quality",
+                        "description": f"Focus on improving qualification rates for high-volume sources",
+                        "impact": "Increase qualified leads without increasing costs",
+                        "sources": [p.source.value for p in high_volume_low_quality],
+                        "actions": [
+                            "Refine targeting criteria",
+                            "Improve ad copy and landing pages",
+                            "Add qualification questions",
+                            "Review lead scoring criteria",
+                        ],
+                    }
+                )
 
             # Scale winners
-            scalable_winners = [p for p in source_performances if p.roi > 1.0 and p.total_leads < 20 and p.qualification_rate > 0.4]
+            scalable_winners = [
+                p for p in source_performances if p.roi > 1.0 and p.total_leads < 20 and p.qualification_rate > 0.4
+            ]
             if scalable_winners:
-                recommendations.append({
-                    "type": "scale_winners",
-                    "priority": "high",
-                    "title": "Scale High-Performing, Low-Volume Sources",
-                    "description": f"Increase investment in {len(scalable_winners)} profitable but low-volume sources",
-                    "sources": [p.source.value for p in scalable_winners],
-                    "estimated_impact": f"Could add {sum(p.total_leads * 3 for p in scalable_winners)} qualified leads per month"
-                })
+                recommendations.append(
+                    {
+                        "type": "scale_winners",
+                        "priority": "high",
+                        "title": "Scale High-Performing, Low-Volume Sources",
+                        "description": f"Increase investment in {len(scalable_winners)} profitable but low-volume sources",
+                        "sources": [p.source.value for p in scalable_winners],
+                        "estimated_impact": f"Could add {sum(p.total_leads * 3 for p in scalable_winners)} qualified leads per month",
+                    }
+                )
 
             # Attribution improvement
             unknown_source_volume = sum(p.total_leads for p in source_performances if p.source == LeadSource.UNKNOWN)
             if unknown_source_volume > 10:
-                recommendations.append({
-                    "type": "attribution_improvement",
-                    "priority": "medium",
-                    "title": "Improve Source Attribution",
-                    "description": f"{unknown_source_volume} leads have unknown source attribution",
-                    "actions": [
-                        "Implement UTM parameters on all campaigns",
-                        "Add hidden form fields for source tracking",
-                        "Use phone number tracking",
-                        "Improve referrer tracking"
-                    ],
-                    "impact": "Better optimization decisions with complete data"
-                })
+                recommendations.append(
+                    {
+                        "type": "attribution_improvement",
+                        "priority": "medium",
+                        "title": "Improve Source Attribution",
+                        "description": f"{unknown_source_volume} leads have unknown source attribution",
+                        "actions": [
+                            "Implement UTM parameters on all campaigns",
+                            "Add hidden form fields for source tracking",
+                            "Use phone number tracking",
+                            "Improve referrer tracking",
+                        ],
+                        "impact": "Better optimization decisions with complete data",
+                    }
+                )
 
             # Alert-based recommendations
             critical_alerts = [a for a in alerts if a.severity in ["critical", "high"]]
             if critical_alerts:
-                recommendations.append({
-                    "type": "urgent_action_required",
-                    "priority": "critical",
-                    "title": f"Address {len(critical_alerts)} Critical Performance Issues",
-                    "description": "Immediate action needed for underperforming sources",
-                    "alerts": [
-                        {
-                            "source": a.source.value,
-                            "issue": a.alert_type.value,
-                            "change": f"{a.change_percentage*100:.1f}%"
-                        }
-                        for a in critical_alerts[:5]
-                    ]
-                })
+                recommendations.append(
+                    {
+                        "type": "urgent_action_required",
+                        "priority": "critical",
+                        "title": f"Address {len(critical_alerts)} Critical Performance Issues",
+                        "description": "Immediate action needed for underperforming sources",
+                        "alerts": [
+                            {
+                                "source": a.source.value,
+                                "issue": a.alert_type.value,
+                                "change": f"{a.change_percentage * 100:.1f}%",
+                            }
+                            for a in critical_alerts[:5]
+                        ],
+                    }
+                )
 
             return recommendations
 
@@ -758,9 +750,7 @@ class AttributionAnalytics:
             return []
 
     async def _compare_attribution_models(
-        self,
-        start_date: datetime,
-        end_date: datetime
+        self, start_date: datetime, end_date: datetime
     ) -> Dict[str, Dict[str, float]]:
         """Compare different attribution models for revenue attribution."""
         try:
@@ -770,13 +760,11 @@ class AttributionAnalytics:
             comparison = {
                 AttributionModel.FIRST_TOUCH.value: {},
                 AttributionModel.LAST_TOUCH.value: {},
-                AttributionModel.LINEAR.value: {}
+                AttributionModel.LINEAR.value: {},
             }
 
             # Get all source performances (currently using last-touch)
-            source_performances = await self.source_tracker.get_all_source_performance(
-                start_date, end_date
-            )
+            source_performances = await self.source_tracker.get_all_source_performance(start_date, end_date)
 
             # Last touch attribution (current default)
             for performance in source_performances:
@@ -786,13 +774,17 @@ class AttributionAnalytics:
             for performance in source_performances:
                 # Referrals typically get more credit in first-touch
                 adjustment = 1.2 if "referral" in performance.source.value else 0.9
-                comparison[AttributionModel.FIRST_TOUCH.value][performance.source.value] = performance.total_revenue * adjustment
+                comparison[AttributionModel.FIRST_TOUCH.value][performance.source.value] = (
+                    performance.total_revenue * adjustment
+                )
 
             # Simulate linear attribution (would spread credit across touchpoints)
             for performance in source_performances:
                 # Linear typically reduces credit for last-touch sources
                 adjustment = 0.8
-                comparison[AttributionModel.LINEAR.value][performance.source.value] = performance.total_revenue * adjustment
+                comparison[AttributionModel.LINEAR.value][performance.source.value] = (
+                    performance.total_revenue * adjustment
+                )
 
             return comparison
 
@@ -801,12 +793,7 @@ class AttributionAnalytics:
             return {}
 
     async def track_daily_metrics(
-        self,
-        source: LeadSource,
-        leads: int,
-        revenue: float,
-        cost: float,
-        date: Optional[datetime] = None
+        self, source: LeadSource, leads: int, revenue: float, cost: float, date: Optional[datetime] = None
     ) -> None:
         """Track daily metrics for a source (called by webhook processor)."""
         try:
@@ -816,11 +803,7 @@ class AttributionAnalytics:
             cache_key = f"daily_source_data:{source.value}:{date.strftime('%Y%m%d')}"
 
             # Get existing data for the day
-            existing_data = await self.cache.get(cache_key) or {
-                "leads": 0,
-                "revenue": 0.0,
-                "cost": 0.0
-            }
+            existing_data = await self.cache.get(cache_key) or {"leads": 0, "revenue": 0.0, "cost": 0.0}
 
             # Add new data
             existing_data["leads"] += leads
@@ -835,61 +818,49 @@ class AttributionAnalytics:
         except Exception as e:
             logger.error(f"Error tracking daily metrics: {e}", exc_info=True)
 
-    async def get_weekly_summary(
-        self,
-        location_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+    async def get_weekly_summary(self, location_id: Optional[str] = None) -> Dict[str, Any]:
         """Generate weekly performance summary for Jorge's dashboard."""
         try:
             end_date = datetime.utcnow()
             start_date = end_date - timedelta(days=7)
 
             # Get this week's performance
-            current_performances = await self.source_tracker.get_all_source_performance(
-                start_date, end_date
-            )
+            current_performances = await self.source_tracker.get_all_source_performance(start_date, end_date)
 
             # Get previous week for comparison
             prev_end = start_date
             prev_start = prev_end - timedelta(days=7)
-            previous_performances = await self.source_tracker.get_all_source_performance(
-                prev_start, prev_end
-            )
+            previous_performances = await self.source_tracker.get_all_source_performance(prev_start, prev_end)
 
             # Create performance lookup
             prev_lookup = {p.source: p for p in previous_performances}
 
             # Calculate summary
             summary = {
-                "period": {
-                    "start": start_date.isoformat(),
-                    "end": end_date.isoformat()
-                },
+                "period": {"start": start_date.isoformat(), "end": end_date.isoformat()},
                 "totals": {
                     "leads": sum(p.total_leads for p in current_performances),
                     "qualified_leads": sum(p.qualified_leads for p in current_performances),
                     "revenue": sum(p.total_revenue for p in current_performances),
-                    "cost": sum(p.cost_per_lead * p.total_leads for p in current_performances)
+                    "cost": sum(p.cost_per_lead * p.total_leads for p in current_performances),
                 },
                 "top_sources": [],
                 "biggest_changes": [],
-                "alerts_count": len(await self._generate_performance_alerts(current_performances))
+                "alerts_count": len(await self._generate_performance_alerts(current_performances)),
             }
 
             # Calculate ROI
             if summary["totals"]["cost"] > 0:
-                summary["totals"]["roi"] = (summary["totals"]["revenue"] - summary["totals"]["cost"]) / summary["totals"]["cost"]
+                summary["totals"]["roi"] = (summary["totals"]["revenue"] - summary["totals"]["cost"]) / summary[
+                    "totals"
+                ]["cost"]
 
             # Top performing sources
             top_sources = sorted(current_performances, key=lambda p: p.roi, reverse=True)[:5]
             summary["top_sources"] = [
-                {
-                    "source": p.source.value,
-                    "leads": p.total_leads,
-                    "revenue": p.total_revenue,
-                    "roi": p.roi
-                }
-                for p in top_sources if p.roi > 0
+                {"source": p.source.value, "leads": p.total_leads, "revenue": p.total_revenue, "roi": p.roi}
+                for p in top_sources
+                if p.roi > 0
             ]
 
             # Biggest changes
@@ -900,12 +871,14 @@ class AttributionAnalytics:
                     lead_change = (current.total_leads - prev.total_leads) / prev.total_leads
                     roi_change = (current.roi - prev.roi) / abs(prev.roi) if prev.roi != 0 else 0
 
-                    changes.append({
-                        "source": current.source.value,
-                        "lead_change": lead_change,
-                        "roi_change": roi_change,
-                        "magnitude": abs(lead_change) + abs(roi_change)
-                    })
+                    changes.append(
+                        {
+                            "source": current.source.value,
+                            "lead_change": lead_change,
+                            "roi_change": roi_change,
+                            "magnitude": abs(lead_change) + abs(roi_change),
+                        }
+                    )
 
             # Sort by magnitude of change
             changes.sort(key=lambda c: c["magnitude"], reverse=True)
@@ -927,27 +900,27 @@ class AttributionAnalytics:
             months = []
 
             for i in range(6):
-                month_end = end_date.replace(day=1) - timedelta(days=i*30)
+                month_end = end_date.replace(day=1) - timedelta(days=i * 30)
                 month_start = month_end.replace(day=1)
                 months.append((month_start, month_end))
 
             # Analyze each month
             monthly_data = []
             for month_start, month_end in reversed(months):
-                performances = await self.source_tracker.get_all_source_performance(
-                    month_start, month_end
-                )
+                performances = await self.source_tracker.get_all_source_performance(month_start, month_end)
 
                 month_data = {
                     "month": month_start.strftime("%Y-%m"),
                     "total_leads": sum(p.total_leads for p in performances),
                     "total_revenue": sum(p.total_revenue for p in performances),
                     "total_cost": sum(p.cost_per_lead * p.total_leads for p in performances),
-                    "roi": 0.0
+                    "roi": 0.0,
                 }
 
                 if month_data["total_cost"] > 0:
-                    month_data["roi"] = (month_data["total_revenue"] - month_data["total_cost"]) / month_data["total_cost"]
+                    month_data["roi"] = (month_data["total_revenue"] - month_data["total_cost"]) / month_data[
+                        "total_cost"
+                    ]
 
                 monthly_data.append(month_data)
 
@@ -959,9 +932,13 @@ class AttributionAnalytics:
                 previous = monthly_data[-2]
 
                 trends["growth_rates"] = {
-                    "leads": (latest["total_leads"] - previous["total_leads"]) / previous["total_leads"] if previous["total_leads"] > 0 else 0,
-                    "revenue": (latest["total_revenue"] - previous["total_revenue"]) / previous["total_revenue"] if previous["total_revenue"] > 0 else 0,
-                    "roi": latest["roi"] - previous["roi"]
+                    "leads": (latest["total_leads"] - previous["total_leads"]) / previous["total_leads"]
+                    if previous["total_leads"] > 0
+                    else 0,
+                    "revenue": (latest["total_revenue"] - previous["total_revenue"]) / previous["total_revenue"]
+                    if previous["total_revenue"] > 0
+                    else 0,
+                    "roi": latest["roi"] - previous["roi"],
                 }
 
             return trends

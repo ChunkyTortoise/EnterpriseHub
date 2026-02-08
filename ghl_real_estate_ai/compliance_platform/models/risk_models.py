@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 
 class RiskCategory(str, Enum):
     """Risk categories aligned with EU AI Act and enterprise standards"""
+
     # Technical risks
     ALGORITHMIC_BIAS = "algorithmic_bias"
     MODEL_DRIFT = "model_drift"
@@ -51,6 +52,7 @@ class RiskCategory(str, Enum):
 
 class RiskIndicator(BaseModel):
     """Individual risk indicator with measurement"""
+
     indicator_id: str = Field(default_factory=lambda: str(uuid4()))
 
     # Classification
@@ -104,6 +106,7 @@ class RiskIndicator(BaseModel):
 
 class RiskMatrix(BaseModel):
     """Risk matrix for impact vs likelihood assessment"""
+
     matrix_id: str = Field(default_factory=lambda: str(uuid4()))
 
     # Matrix definition
@@ -111,12 +114,8 @@ class RiskMatrix(BaseModel):
     description: str
 
     # Dimensions
-    likelihood_levels: List[str] = Field(
-        default=["rare", "unlikely", "possible", "likely", "almost_certain"]
-    )
-    impact_levels: List[str] = Field(
-        default=["negligible", "minor", "moderate", "major", "catastrophic"]
-    )
+    likelihood_levels: List[str] = Field(default=["rare", "unlikely", "possible", "likely", "almost_certain"])
+    impact_levels: List[str] = Field(default=["negligible", "minor", "moderate", "major", "catastrophic"])
 
     # Risk scoring matrix (likelihood x impact -> risk level)
     # 5x5 matrix stored as dict for flexibility
@@ -153,9 +152,7 @@ class RiskMatrix(BaseModel):
         score = self.calculate_risk_score(likelihood, impact)
 
         for level, definition in sorted(
-            self.risk_level_definitions.items(),
-            key=lambda x: x[1]["min_score"],
-            reverse=True
+            self.risk_level_definitions.items(), key=lambda x: x[1]["min_score"], reverse=True
         ):
             if score >= definition["min_score"]:
                 return level
@@ -164,6 +161,7 @@ class RiskMatrix(BaseModel):
 
 class RiskTrend(BaseModel):
     """Historical risk trend data"""
+
     trend_id: str = Field(default_factory=lambda: str(uuid4()))
 
     # Identification
@@ -199,11 +197,13 @@ class RiskTrend(BaseModel):
 
     def add_data_point(self, score: float, status: str, timestamp: Optional[datetime] = None):
         """Add a new data point to the trend"""
-        self.data_points.append({
-            "timestamp": timestamp or datetime.now(timezone.utc),
-            "score": score,
-            "status": status,
-        })
+        self.data_points.append(
+            {
+                "timestamp": timestamp or datetime.now(timezone.utc),
+                "score": score,
+                "status": status,
+            }
+        )
         self._recalculate_statistics()
 
     def _recalculate_statistics(self):
@@ -220,7 +220,7 @@ class RiskTrend(BaseModel):
         if len(scores) > 1:
             mean = self.average_score
             variance = sum((s - mean) ** 2 for s in scores) / len(scores)
-            self.volatility = variance ** 0.5
+            self.volatility = variance**0.5
 
         # Determine trend direction
         if len(scores) >= 3:
@@ -241,6 +241,7 @@ class RiskTrend(BaseModel):
 
 class RiskMitigation(BaseModel):
     """Risk mitigation strategy and controls"""
+
     mitigation_id: str = Field(default_factory=lambda: str(uuid4()))
 
     # Target risk
@@ -291,6 +292,7 @@ class RiskMitigation(BaseModel):
 
 class RiskAppetite(BaseModel):
     """Organization's risk appetite configuration"""
+
     config_id: str = Field(default_factory=lambda: str(uuid4()))
 
     # Organization
@@ -330,10 +332,7 @@ class RiskAppetite(BaseModel):
 
     def is_within_appetite(self, category: str, risk_score: float) -> str:
         """Check if risk is within appetite"""
-        tolerance = self.category_tolerances.get(
-            category,
-            {"acceptable": 20, "tolerable": 40, "unacceptable": 60}
-        )
+        tolerance = self.category_tolerances.get(category, {"acceptable": 20, "tolerable": 40, "unacceptable": 60})
 
         if risk_score <= tolerance["acceptable"]:
             return "acceptable"

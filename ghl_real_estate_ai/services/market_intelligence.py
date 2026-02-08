@@ -3,16 +3,20 @@ Market Intelligence Tool - Financial Precision Engine.
 
 Provides real-time market comps and valuation adjustments for Jorge's ROI defense.
 """
+
 import logging
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
 from ghl_real_estate_ai.services.national_market_intelligence import get_national_market_intelligence
 
 logger = logging.getLogger(__name__)
+
 
 class MarketIntelligence:
     """
     Interface for pulling actual market comps and refined valuations.
     """
+
     def __init__(self):
         self.national_intel = get_national_market_intelligence()
 
@@ -31,8 +35,10 @@ class MarketIntelligence:
             return metrics.__dict__
         return {"error": "Location not found in registry"}
 
+
 # Singleton
 _market_intelligence = None
+
 
 def get_market_intelligence() -> MarketIntelligence:
     global _market_intelligence

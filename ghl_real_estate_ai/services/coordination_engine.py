@@ -13,22 +13,23 @@ Features:
 """
 
 import asyncio
-import time
-from typing import Dict, Any, Optional, List, Set
-from datetime import datetime, timezone, timedelta
-from dataclasses import dataclass, field
-from enum import Enum
 import json
+import time
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
+from enum import Enum
+from typing import Any, Dict, List, Optional, Set
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 
 logger = get_logger(__name__)
 
 
 class HandoffStatus(Enum):
     """Bot handoff status levels."""
+
     REQUESTED = "requested"
     ACCEPTED = "accepted"
     IN_PROGRESS = "in_progress"
@@ -39,6 +40,7 @@ class HandoffStatus(Enum):
 
 class CoachingUrgency(Enum):
     """Coaching delivery urgency levels."""
+
     IMMEDIATE = "immediate"
     NEXT_MESSAGE = "next_message"
     INFORMATIONAL = "informational"
@@ -47,6 +49,7 @@ class CoachingUrgency(Enum):
 @dataclass
 class BotSession:
     """Active bot session tracking."""
+
     session_id: str
     bot_type: str
     conversation_id: str
@@ -62,6 +65,7 @@ class BotSession:
 @dataclass
 class HandoffRequest:
     """Bot handoff request data."""
+
     handoff_id: str
     conversation_id: str
     from_bot: str
@@ -80,6 +84,7 @@ class HandoffRequest:
 @dataclass
 class CoachingRequest:
     """Real-time coaching request data."""
+
     coaching_id: str
     conversation_id: str
     coaching_type: str
@@ -124,7 +129,7 @@ class CoordinationEngine:
             "coaching_opportunities_detected": 0,
             "coaching_delivered": 0,
             "active_coordinations": 0,
-            "context_syncs": 0
+            "context_syncs": 0,
         }
 
         # Configuration
@@ -140,7 +145,7 @@ class CoordinationEngine:
         conversation_id: str,
         contact_id: str,
         location_id: str,
-        initial_context: Optional[Dict[str, Any]] = None
+        initial_context: Optional[Dict[str, Any]] = None,
     ) -> str:
         """Register a new bot session for coordination tracking."""
         session_id = f"{bot_type}_{conversation_id}_{int(time.time())}"
@@ -153,7 +158,7 @@ class CoordinationEngine:
             location_id=location_id,
             started_at=datetime.now(timezone.utc),
             last_activity=datetime.now(timezone.utc),
-            context_data=initial_context or {}
+            context_data=initial_context or {},
         )
 
         self.active_sessions[session_id] = session
@@ -165,17 +170,12 @@ class CoordinationEngine:
 
         # Emit session registration event
         await self.event_publisher.publish_bot_status_update(
-            bot_type=bot_type,
-            contact_id=contact_id,
-            status="active",
-            current_step="session_started"
+            bot_type=bot_type, contact_id=contact_id, status="active", current_step="session_started"
         )
 
-        await self._emit_coordination_status_update("session_registered", {
-            "session_id": session_id,
-            "bot_type": bot_type,
-            "conversation_id": conversation_id
-        })
+        await self._emit_coordination_status_update(
+            "session_registered", {"session_id": session_id, "bot_type": bot_type, "conversation_id": conversation_id}
+        )
 
         logger.info(f"Bot session registered: {session_id} ({bot_type})")
         return session_id
@@ -185,7 +185,7 @@ class CoordinationEngine:
         session_id: str,
         current_step: Optional[str] = None,
         context_update: Optional[Dict[str, Any]] = None,
-        performance_metrics: Optional[Dict[str, Any]] = None
+        performance_metrics: Optional[Dict[str, Any]] = None,
     ):
         """Update session activity and context."""
         if session_id not in self.active_sessions:
@@ -215,7 +215,7 @@ class CoordinationEngine:
         location_id: str,
         handoff_reason: str,
         context_transfer: Dict[str, Any],
-        urgency: str = "normal"
+        urgency: str = "normal",
     ) -> str:
         """Request a bot handoff with context transfer."""
         handoff_id = f"handoff_{int(time.time() * 1000)}_{conversation_id}"
@@ -230,7 +230,7 @@ class CoordinationEngine:
             handoff_reason=handoff_reason,
             urgency=urgency,
             context_transfer=context_transfer,
-            requested_at=datetime.now(timezone.utc)
+            requested_at=datetime.now(timezone.utc),
         )
 
         self.active_handoffs[handoff_id] = handoff_request
@@ -245,7 +245,7 @@ class CoordinationEngine:
             handoff_reason=handoff_reason,
             context_transfer=context_transfer,
             urgency=urgency,
-            location_id=location_id
+            location_id=location_id,
         )
 
         # Start handoff timeout monitoring
@@ -274,19 +274,14 @@ class CoordinationEngine:
                 "handoff_id": handoff_id,
                 "from_bot": handoff.from_bot,
                 "to_bot": handoff.to_bot,
-                "conversation_id": handoff.conversation_id
-            }
+                "conversation_id": handoff.conversation_id,
+            },
         )
 
         logger.info(f"Bot handoff accepted: {handoff_id}")
         return True
 
-    async def complete_bot_handoff(
-        self,
-        handoff_id: str,
-        success: bool,
-        error_message: Optional[str] = None
-    ) -> bool:
+    async def complete_bot_handoff(self, handoff_id: str, success: bool, error_message: Optional[str] = None) -> bool:
         """Complete a bot handoff."""
         if handoff_id not in self.active_handoffs:
             logger.warning(f"Attempt to complete unknown handoff: {handoff_id}")
@@ -302,9 +297,8 @@ class CoordinationEngine:
             self.metrics["successful_handoffs"] += 1
             handoff_time = (handoff.completed_at - handoff.requested_at).total_seconds() * 1000
             self.metrics["avg_handoff_time_ms"] = (
-                (self.metrics["avg_handoff_time_ms"] * (self.metrics["successful_handoffs"] - 1) + handoff_time) /
-                self.metrics["successful_handoffs"]
-            )
+                self.metrics["avg_handoff_time_ms"] * (self.metrics["successful_handoffs"] - 1) + handoff_time
+            ) / self.metrics["successful_handoffs"]
         else:
             self.metrics["failed_handoffs"] += 1
 
@@ -317,8 +311,8 @@ class CoordinationEngine:
                 "to_bot": handoff.to_bot,
                 "conversation_id": handoff.conversation_id,
                 "success": success,
-                "error_message": error_message
-            }
+                "error_message": error_message,
+            },
         )
 
         # Move to history
@@ -334,7 +328,7 @@ class CoordinationEngine:
         coaching_type: str,
         coaching_message: str,
         urgency: CoachingUrgency = CoachingUrgency.INFORMATIONAL,
-        target_bot: Optional[str] = None
+        target_bot: Optional[str] = None,
     ) -> str:
         """Detect and queue a coaching opportunity."""
         coaching_id = f"coaching_{int(time.time() * 1000)}_{conversation_id}"
@@ -345,7 +339,7 @@ class CoordinationEngine:
             coaching_type=coaching_type,
             coaching_message=coaching_message,
             urgency=urgency,
-            target_bot=target_bot
+            target_bot=target_bot,
         )
 
         # Queue coaching request
@@ -363,8 +357,8 @@ class CoordinationEngine:
                 "conversation_id": conversation_id,
                 "coaching_type": coaching_type,
                 "urgency": urgency.value,
-                "target_bot": target_bot
-            }
+                "target_bot": target_bot,
+            },
         )
 
         # Auto-deliver immediate coaching
@@ -404,16 +398,15 @@ class CoordinationEngine:
                 "coaching_id": coaching_id,
                 "conversation_id": conversation_id,
                 "coaching_type": coaching_request.coaching_type,
-                "coaching_message": coaching_request.coaching_message
-            }
+                "coaching_message": coaching_request.coaching_message,
+            },
         )
 
         # Move to history
         self.coaching_history.append(coaching_request)
         if conversation_id in self.pending_coaching:
             self.pending_coaching[conversation_id] = [
-                c for c in self.pending_coaching[conversation_id]
-                if c.coaching_id != coaching_id
+                c for c in self.pending_coaching[conversation_id] if c.coaching_id != coaching_id
             ]
 
         logger.info(f"Coaching delivered: {coaching_id}")
@@ -433,10 +426,7 @@ class CoordinationEngine:
                 session = self.active_sessions[session_id]
                 session.context_data.update(context_update)
                 session.last_activity = datetime.now(timezone.utc)
-                updated_sessions.append({
-                    "session_id": session_id,
-                    "bot_type": session.bot_type
-                })
+                updated_sessions.append({"session_id": session_id, "bot_type": session.bot_type})
 
         self.metrics["context_syncs"] += 1
 
@@ -447,8 +437,8 @@ class CoordinationEngine:
                 "conversation_id": conversation_id,
                 "context_update": context_update,
                 "updated_sessions": updated_sessions,
-                "sync_timestamp": datetime.now(timezone.utc).isoformat()
-            }
+                "sync_timestamp": datetime.now(timezone.utc).isoformat(),
+            },
         )
 
         logger.info(f"Context synchronized across {len(updated_sessions)} sessions for conversation {conversation_id}")
@@ -468,19 +458,21 @@ class CoordinationEngine:
         # Remove from conversation tracking
         if conversation_id in self.conversation_sessions:
             self.conversation_sessions[conversation_id] = [
-                sid for sid in self.conversation_sessions[conversation_id]
-                if sid != session_id
+                sid for sid in self.conversation_sessions[conversation_id] if sid != session_id
             ]
             if not self.conversation_sessions[conversation_id]:
                 del self.conversation_sessions[conversation_id]
 
         # Emit session deregistration event
-        await self._emit_coordination_status_update("session_deregistered", {
-            "session_id": session_id,
-            "bot_type": session.bot_type,
-            "conversation_id": conversation_id,
-            "session_duration": (datetime.now(timezone.utc) - session.started_at).total_seconds()
-        })
+        await self._emit_coordination_status_update(
+            "session_deregistered",
+            {
+                "session_id": session_id,
+                "bot_type": session.bot_type,
+                "conversation_id": conversation_id,
+                "session_duration": (datetime.now(timezone.utc) - session.started_at).total_seconds(),
+            },
+        )
 
         logger.info(f"Bot session deregistered: {session_id}")
 
@@ -494,7 +486,7 @@ class CoordinationEngine:
                 await self.complete_bot_handoff(
                     handoff_id,
                     success=False,
-                    error_message=f"Handoff timed out after {self.handoff_timeout_minutes} minutes"
+                    error_message=f"Handoff timed out after {self.handoff_timeout_minutes} minutes",
                 )
 
     async def _emit_coordination_event(self, event_type: str, data: Dict[str, Any]):
@@ -505,7 +497,7 @@ class CoordinationEngine:
             "BOT_HANDOFF_COMPLETED": "bot_handoff_completed",
             "COACHING_OPPORTUNITY_DETECTED": "coaching_opportunity_detected",
             "COACHING_ACCEPTED": "coaching_accepted",
-            "CONTEXT_SYNC_UPDATE": "context_sync_update"
+            "CONTEXT_SYNC_UPDATE": "context_sync_update",
         }
 
         websocket_event = event_mapping.get(event_type, event_type.lower())
@@ -517,11 +509,12 @@ class CoordinationEngine:
         """Emit coordination status update via WebSocket."""
         # Use the existing system alert for now - in production would have dedicated coordination events
         from ghl_real_estate_ai.services.event_publisher import publish_system_alert
+
         await publish_system_alert(
             alert_type="coordination_update",
             message=f"Coordination event: {status_type}",
             severity="info",
-            details=data
+            details=data,
         )
 
     def get_coordination_metrics(self) -> Dict[str, Any]:
@@ -534,12 +527,10 @@ class CoordinationEngine:
             "active_handoffs": len(self.active_handoffs),
             "pending_coaching": sum(len(coaching_list) for coaching_list in self.pending_coaching.values()),
             "conversation_count": len(self.conversation_sessions),
-            "handoff_success_rate": (
-                self.metrics["successful_handoffs"] / max(1, self.metrics["total_handoffs"])
-            ),
+            "handoff_success_rate": (self.metrics["successful_handoffs"] / max(1, self.metrics["total_handoffs"])),
             "coaching_delivery_rate": (
                 self.metrics["coaching_delivered"] / max(1, self.metrics["coaching_opportunities_detected"])
-            )
+            ),
         }
 
     def get_active_sessions(self) -> List[Dict[str, Any]]:
@@ -554,7 +545,7 @@ class CoordinationEngine:
                 "started_at": session.started_at.isoformat(),
                 "last_activity": session.last_activity.isoformat(),
                 "current_step": session.current_step,
-                "performance_metrics": session.performance_metrics
+                "performance_metrics": session.performance_metrics,
             }
             for session in self.active_sessions.values()
         ]
@@ -605,10 +596,21 @@ async def register_bot_session(bot_type: str, conversation_id: str, contact_id: 
     return await engine.register_bot_session(bot_type, conversation_id, contact_id, location_id, **kwargs)
 
 
-async def request_bot_handoff(conversation_id: str, from_bot: str, to_bot: str, contact_id: str, location_id: str, handoff_reason: str, context_transfer: Dict[str, Any], **kwargs) -> str:
+async def request_bot_handoff(
+    conversation_id: str,
+    from_bot: str,
+    to_bot: str,
+    contact_id: str,
+    location_id: str,
+    handoff_reason: str,
+    context_transfer: Dict[str, Any],
+    **kwargs,
+) -> str:
     """Request a bot handoff with context transfer."""
     engine = get_coordination_engine()
-    return await engine.request_bot_handoff(conversation_id, from_bot, to_bot, contact_id, location_id, handoff_reason, context_transfer, **kwargs)
+    return await engine.request_bot_handoff(
+        conversation_id, from_bot, to_bot, contact_id, location_id, handoff_reason, context_transfer, **kwargs
+    )
 
 
 async def detect_coaching_opportunity(conversation_id: str, coaching_type: str, coaching_message: str, **kwargs) -> str:

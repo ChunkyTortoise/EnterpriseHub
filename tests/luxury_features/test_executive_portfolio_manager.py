@@ -11,25 +11,26 @@ Tests cover:
 - Executive reporting
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, AsyncMock
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
+
 import pandas as pd
+import pytest
 
 try:
     from ghl_real_estate_ai.services.executive_portfolio_manager import (
         ExecutivePortfolioManager,
-        PortfolioProperty,
-        UHNWClient,
-        PortfolioAnalysis,
-        PropertyType,
         InvestmentStrategy,
+        PortfolioAnalysis,
+        PortfolioProperty,
         PropertyInvestmentMetrics,
+        PropertyType,
         TaxOptimization,
+        UHNWClient,
+        create_sample_portfolio,
         create_sample_uhnw_client,
-        create_sample_portfolio
     )
 except (ImportError, TypeError, AttributeError):
     pytest.skip("required imports unavailable", allow_module_level=True)
@@ -39,15 +40,17 @@ except (ImportError, TypeError, AttributeError):
 def portfolio_manager():
     """Initialize portfolio manager for testing"""
     with patch.multiple(
-        'ghl_real_estate_ai.services.executive_portfolio_manager',
+        "ghl_real_estate_ai.services.executive_portfolio_manager",
         CacheService=Mock(),
         ClaudeAssistant=Mock(),
         PropertyMatcher=Mock(),
-        LLMClient=Mock()
+        LLMClient=Mock(),
     ):
         manager = ExecutivePortfolioManager()
         # Mock Claude responses
-        manager.claude.generate_claude_response = AsyncMock(return_value="Strategic recommendation: Diversify into commercial real estate for balanced growth.")
+        manager.claude.generate_claude_response = AsyncMock(
+            return_value="Strategic recommendation: Diversify into commercial real estate for balanced growth."
+        )
         return manager
 
 
@@ -88,16 +91,16 @@ def luxury_property():
             appreciation_rate=0.095,
             rental_yield=0.045,
             risk_score=25.0,
-            liquidity_score=85.0
+            liquidity_score=85.0,
         ),
         tax_optimization=TaxOptimization(
             depreciation_benefit=152_880,  # 3.636% annual depreciation
             property_tax_deduction=50_400,  # 1.2% property tax
             mortgage_interest_deduction=126_000,  # 6% on 70% LTV
             opportunity_1031_exchange=True,
-            total_tax_savings=42_500
+            total_tax_savings=42_500,
         ),
-        total_return_lifetime=0.20  # 20% total return
+        total_return_lifetime=0.20,  # 20% total return
     )
 
 
@@ -172,14 +175,11 @@ class TestPortfolioAnalysis:
                 bedrooms=3,
                 bathrooms=2.5,
                 neighborhood=neighborhood,
-                zip_code=zip_code
+                zip_code=zip_code,
             )
-            for i, (neighborhood, zip_code) in enumerate([
-                ("West Lake Hills", "78746"),
-                ("Tarrytown", "78733"),
-                ("Zilker", "78704"),
-                ("Hyde Park", "78751")
-            ])
+            for i, (neighborhood, zip_code) in enumerate(
+                [("West Lake Hills", "78746"), ("Tarrytown", "78733"), ("Zilker", "78704"), ("Hyde Park", "78751")]
+            )
         ]
 
         diversification_score = portfolio_manager._calculate_geographic_diversification(diverse_properties)
@@ -200,7 +200,7 @@ class TestPortfolioAnalysis:
                 bedrooms=3,
                 bathrooms=2.5,
                 neighborhood="West Lake Hills",
-                zip_code="78746"
+                zip_code="78746",
             )
             for i in range(3)
         ]
@@ -224,14 +224,16 @@ class TestPortfolioAnalysis:
                 bedrooms=3,
                 bathrooms=2.5,
                 neighborhood="West Lake Hills",
-                zip_code="78746"
+                zip_code="78746",
             )
-            for i, prop_type in enumerate([
-                PropertyType.ESTATE,
-                PropertyType.LUXURY_CONDO,
-                PropertyType.INVESTMENT_PROPERTY,
-                PropertyType.VACATION_HOME
-            ])
+            for i, prop_type in enumerate(
+                [
+                    PropertyType.ESTATE,
+                    PropertyType.LUXURY_CONDO,
+                    PropertyType.INVESTMENT_PROPERTY,
+                    PropertyType.VACATION_HOME,
+                ]
+            )
         ]
 
         diversification_score = portfolio_manager._calculate_property_type_diversification(diverse_types)
@@ -276,7 +278,7 @@ class TestInvestmentAnalysis:
             bedrooms=2,
             bathrooms=2.0,
             neighborhood="",
-            zip_code=""
+            zip_code="",
         )
 
         # Mock Claude to fail
@@ -307,7 +309,7 @@ class TestTaxOptimization:
                 bedrooms=4,
                 bathrooms=3.0,
                 neighborhood="Austin",
-                zip_code="78704"
+                zip_code="78704",
             )
             for i in range(3)
         ]
@@ -335,7 +337,7 @@ class TestTaxOptimization:
                 bedrooms=4,
                 bathrooms=3.0,
                 neighborhood="Austin",
-                zip_code="78704"
+                zip_code="78704",
             )
         ]
 
@@ -349,7 +351,9 @@ class TestRecommendations:
     @pytest.mark.asyncio
     async def test_generate_strategic_recommendations(self, portfolio_manager, sample_uhnw_client, sample_portfolio):
         """Test strategic recommendation generation"""
-        recommendations = await portfolio_manager._generate_strategic_recommendations(sample_uhnw_client, sample_portfolio)
+        recommendations = await portfolio_manager._generate_strategic_recommendations(
+            sample_uhnw_client, sample_portfolio
+        )
 
         assert isinstance(recommendations, dict)
         assert "rebalancing" in recommendations
@@ -358,12 +362,16 @@ class TestRecommendations:
         assert all(isinstance(rec_list, list) for rec_list in recommendations.values())
 
     @pytest.mark.asyncio
-    async def test_generate_strategic_recommendations_fallback(self, portfolio_manager, sample_uhnw_client, sample_portfolio):
+    async def test_generate_strategic_recommendations_fallback(
+        self, portfolio_manager, sample_uhnw_client, sample_portfolio
+    ):
         """Test recommendation fallback when AI fails"""
         # Mock Claude to fail
         portfolio_manager.claude.generate_claude_response = AsyncMock(side_effect=Exception("AI unavailable"))
 
-        recommendations = await portfolio_manager._generate_strategic_recommendations(sample_uhnw_client, sample_portfolio)
+        recommendations = await portfolio_manager._generate_strategic_recommendations(
+            sample_uhnw_client, sample_portfolio
+        )
 
         # Should provide fallback recommendations
         assert isinstance(recommendations, dict)
@@ -381,7 +389,7 @@ class TestExecutiveReporting:
             total_portfolio_value=10_000_000,
             portfolio_irr=0.095,
             portfolio_roi_ytd=0.082,
-            total_tax_optimization=125_000
+            total_tax_optimization=125_000,
         )
 
         report = await portfolio_manager.generate_executive_report(sample_uhnw_client, analysis)
@@ -396,11 +404,7 @@ class TestExecutiveReporting:
         # Mock Claude to fail
         portfolio_manager.claude.generate_claude_response = AsyncMock(side_effect=Exception("AI unavailable"))
 
-        analysis = PortfolioAnalysis(
-            total_portfolio_value=5_000_000,
-            portfolio_irr=0.075,
-            portfolio_roi_ytd=0.065
-        )
+        analysis = PortfolioAnalysis(total_portfolio_value=5_000_000, portfolio_irr=0.075, portfolio_roi_ytd=0.065)
 
         report = await portfolio_manager.generate_executive_report(sample_uhnw_client, analysis)
 
@@ -417,9 +421,7 @@ class TestAcquisitionOpportunities:
     async def test_identify_acquisition_opportunities(self, portfolio_manager, sample_uhnw_client):
         """Test acquisition opportunity identification"""
         opportunities = await portfolio_manager.identify_acquisition_opportunities(
-            sample_uhnw_client,
-            target_budget=5_000_000,
-            strategy=InvestmentStrategy.BALANCED
+            sample_uhnw_client, target_budget=5_000_000, strategy=InvestmentStrategy.BALANCED
         )
 
         assert isinstance(opportunities, list)
@@ -432,9 +434,7 @@ class TestAcquisitionOpportunities:
     async def test_identify_acquisition_opportunities_growth_strategy(self, portfolio_manager, sample_uhnw_client):
         """Test acquisition opportunities with growth strategy"""
         opportunities = await portfolio_manager.identify_acquisition_opportunities(
-            sample_uhnw_client,
-            target_budget=3_000_000,
-            strategy=InvestmentStrategy.GROWTH
+            sample_uhnw_client, target_budget=3_000_000, strategy=InvestmentStrategy.GROWTH
         )
 
         assert isinstance(opportunities, list)
@@ -507,7 +507,7 @@ class TestDataValidation:
             bedrooms=0,
             bathrooms=0.0,
             neighborhood="",
-            zip_code=""
+            zip_code="",
         )
 
         invalid_portfolio = [invalid_property]
@@ -532,7 +532,7 @@ class TestDataValidation:
                 bedrooms=3,
                 bathrooms=2.0,
                 neighborhood="Austin",
-                zip_code="78704"
+                zip_code="78704",
             )
         ]
 
@@ -547,8 +547,8 @@ class TestIntegrationWithExistingSystems:
     @pytest.mark.asyncio
     async def test_integration_with_cache_service(self, portfolio_manager, sample_portfolio):
         """Test integration with cache service"""
-        with patch.object(portfolio_manager.cache, 'get', return_value=None):
-            with patch.object(portfolio_manager.cache, 'set', return_value=True):
+        with patch.object(portfolio_manager.cache, "get", return_value=None):
+            with patch.object(portfolio_manager.cache, "set", return_value=True):
                 updated_portfolio = await portfolio_manager.update_portfolio_valuations(sample_portfolio)
                 assert updated_portfolio is not None
 
@@ -556,8 +556,7 @@ class TestIntegrationWithExistingSystems:
     async def test_integration_with_property_matcher(self, portfolio_manager, sample_uhnw_client):
         """Test integration with property matcher service"""
         opportunities = await portfolio_manager.identify_acquisition_opportunities(
-            sample_uhnw_client,
-            target_budget=2_000_000
+            sample_uhnw_client, target_budget=2_000_000
         )
 
         # Should return opportunities even with mocked property matcher
@@ -601,7 +600,7 @@ class TestPerformance:
                 bedrooms=3 + (i % 3),
                 bathrooms=2.0 + (i % 2),
                 neighborhood="Test Neighborhood",
-                zip_code="78704"
+                zip_code="78704",
             )
             large_portfolio.append(property_data)
 

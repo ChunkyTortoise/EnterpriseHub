@@ -25,9 +25,7 @@ class AISmartSegmentationService:
         self.api_key = api_key
         self.segment_cache = {}
 
-    async def segment_leads(
-        self, leads: List[Dict[str, Any]], method: str = "behavioral"
-    ) -> Dict[str, Any]:
+    async def segment_leads(self, leads: List[Dict[str, Any]], method: str = "behavioral") -> Dict[str, Any]:
         """
         Segment leads using AI analysis
 
@@ -169,9 +167,7 @@ class AISmartSegmentationService:
                 "leads": leads_list,
                 "characteristics": self._get_segment_characteristics(name, leads_list),
                 "recommended_actions": self._get_recommended_actions(name),
-                "conversion_probability": self._calculate_segment_probability(
-                    leads_list
-                ),
+                "conversion_probability": self._calculate_segment_probability(leads_list),
             }
             for i, (name, leads_list) in enumerate(segments.items())
             if leads_list
@@ -185,17 +181,13 @@ class AISmartSegmentationService:
 
         return behavioral + demographic
 
-    def _get_segment_characteristics(
-        self, segment_name: str, leads: List[Dict]
-    ) -> Dict:
+    def _get_segment_characteristics(self, segment_name: str, leads: List[Dict]) -> Dict:
         """Calculate segment characteristics"""
         if not leads:
             return {}
 
         total_budget = sum(lead.get("budget", 0) for lead in leads)
-        avg_engagement = sum(lead.get("engagement_score", 0) for lead in leads) / len(
-            leads
-        )
+        avg_engagement = sum(lead.get("engagement_score", 0) for lead in leads) / len(leads)
         avg_score = sum(lead.get("lead_score", 0) for lead in leads) / len(leads)
 
         return {
@@ -316,9 +308,7 @@ class AISmartSegmentationService:
             },
             "most_engaged_segment": {
                 "name": most_engaged["name"],
-                "avg_engagement": most_engaged.get("characteristics", {}).get(
-                    "avg_engagement", 0
-                ),
+                "avg_engagement": most_engaged.get("characteristics", {}).get("avg_engagement", 0),
             },
             "recommendations": [
                 f"Focus on {largest_segment['name']} segment (largest)",

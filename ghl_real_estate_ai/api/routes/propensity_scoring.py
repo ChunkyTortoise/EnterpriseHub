@@ -7,13 +7,14 @@ for lead conversion prediction.
 
 import logging
 from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.xgboost_propensity_engine import (
     get_propensity_engine,
 )
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -26,6 +27,7 @@ router = APIRouter(
 # ---------------------------------------------------------------------------
 # Request / Response Models
 # ---------------------------------------------------------------------------
+
 
 class ScoreLeadRequest(BaseModel):
     contact_id: str = Field(..., description="Contact identifier")
@@ -60,12 +62,8 @@ class PropensityScoreResponse(BaseModel):
 
 
 class TrainModelRequest(BaseModel):
-    training_data: List[Dict[str, Any]] = Field(
-        ..., min_length=10, description="Training feature vectors"
-    )
-    labels: List[int] = Field(
-        ..., min_length=10, description="Binary labels (0=not converted, 1=converted)"
-    )
+    training_data: List[Dict[str, Any]] = Field(..., min_length=10, description="Training feature vectors")
+    labels: List[int] = Field(..., min_length=10, description="Binary labels (0=not converted, 1=converted)")
     validation_split: float = Field(0.2, ge=0.1, le=0.5)
 
 
@@ -109,6 +107,7 @@ class BatchScoreRequest(BaseModel):
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
 
 @router.post("/score", response_model=PropensityScoreResponse)
 async def score_lead(request: ScoreLeadRequest):
@@ -198,15 +197,17 @@ async def score_leads_batch(request: BatchScoreRequest):
                 conversation_context=lead.conversation_context,
                 behavioral_signals=lead.behavioral_signals,
             )
-            results.append({
-                "contact_id": result.contact_id,
-                "conversion_probability": result.conversion_probability,
-                "temperature": result.temperature,
-                "primary_event": result.primary_event.value if result.primary_event else None,
-                "recommended_approach": result.recommended_approach,
-                "predicted_timeline": result.predicted_timeline,
-                "scoring_latency_ms": result.scoring_latency_ms,
-            })
+            results.append(
+                {
+                    "contact_id": result.contact_id,
+                    "conversion_probability": result.conversion_probability,
+                    "temperature": result.temperature,
+                    "primary_event": result.primary_event.value if result.primary_event else None,
+                    "recommended_approach": result.recommended_approach,
+                    "predicted_timeline": result.predicted_timeline,
+                    "scoring_latency_ms": result.scoring_latency_ms,
+                }
+            )
         return {"results": results, "total": len(results)}
     except Exception as e:
         logger.error("Batch propensity scoring failed: %s", e)

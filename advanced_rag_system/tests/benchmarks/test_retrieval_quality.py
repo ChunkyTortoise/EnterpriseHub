@@ -7,22 +7,21 @@ Tests retrieval accuracy metrics according to targets:
 - NDCG@10: >0.85 target, >0.90 stretch
 """
 
-import pytest
 import asyncio
-import numpy as np
-from typing import List, Dict, Any, Set
-import sys
 import os
+import sys
+from typing import Any, Dict, List, Set
+
+import numpy as np
+import pytest
 
 # Add the project root to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
 
 try:
-    from ghl_real_estate_ai.core.rag_engine import VectorStore, SearchResult
-    from ai_ml_showcase.rag_excellence.advanced_rag_orchestrator import (
-        ProductionRAGOrchestrator,
-        HybridSearchPipeline
-    )
+    from ai_ml_showcase.rag_excellence.advanced_rag_orchestrator import HybridSearchPipeline, ProductionRAGOrchestrator
+
+    from ghl_real_estate_ai.core.rag_engine import SearchResult, VectorStore
 except ImportError:
     # Fallback mock classes for testing environment
     class SearchResult:
@@ -47,13 +46,15 @@ except ImportError:
                 # Make some results "relevant" based on simple heuristics
                 is_relevant = i < 3 or "important" in query.lower()
 
-                results.append(SearchResult(
-                    text=f"Document {i} content about {query}",
-                    source=f"source_{i}",
-                    id=f"doc_{i}",
-                    distance=0.1 * i,
-                    metadata={"relevant": is_relevant}
-                ))
+                results.append(
+                    SearchResult(
+                        text=f"Document {i} content about {query}",
+                        source=f"source_{i}",
+                        id=f"doc_{i}",
+                        distance=0.1 * i,
+                        metadata={"relevant": is_relevant},
+                    )
+                )
             return results
 
     VectorStore = MockVectorStore
@@ -74,53 +75,53 @@ class TestRetrievalQuality:
             {
                 "query": "What are the benefits of using vector databases?",
                 "relevant_docs": ["doc_0", "doc_1", "doc_2"],
-                "explanation": "Technical benefits of vector databases"
+                "explanation": "Technical benefits of vector databases",
             },
             {
                 "query": "How to implement semantic search?",
                 "relevant_docs": ["doc_1", "doc_3", "doc_4"],
-                "explanation": "Implementation guides for semantic search"
+                "explanation": "Implementation guides for semantic search",
             },
             {
                 "query": "What is an important consideration for RAG systems?",
                 "relevant_docs": ["doc_0", "doc_2", "doc_5"],
-                "explanation": "Important RAG considerations (keyword triggers relevance)"
+                "explanation": "Important RAG considerations (keyword triggers relevance)",
             },
             {
                 "query": "Explain embedding model training",
                 "relevant_docs": ["doc_2", "doc_4", "doc_6"],
-                "explanation": "Embedding model training procedures"
+                "explanation": "Embedding model training procedures",
             },
             {
                 "query": "Best practices for retrieval augmented generation",
                 "relevant_docs": ["doc_0", "doc_1", "doc_3", "doc_7"],
-                "explanation": "RAG best practices"
+                "explanation": "RAG best practices",
             },
             {
                 "query": "How does hybrid search improve accuracy?",
                 "relevant_docs": ["doc_1", "doc_5", "doc_8"],
-                "explanation": "Hybrid search accuracy improvements"
+                "explanation": "Hybrid search accuracy improvements",
             },
             {
                 "query": "What are important performance metrics?",
                 "relevant_docs": ["doc_0", "doc_3", "doc_9"],
-                "explanation": "Important performance metrics (keyword triggers relevance)"
+                "explanation": "Important performance metrics (keyword triggers relevance)",
             },
             {
                 "query": "Document chunking strategies for RAG",
                 "relevant_docs": ["doc_2", "doc_6", "doc_8"],
-                "explanation": "RAG document chunking strategies"
+                "explanation": "RAG document chunking strategies",
             },
             {
                 "query": "Important factors in vector similarity search",
                 "relevant_docs": ["doc_0", "doc_4", "doc_7"],
-                "explanation": "Important vector search factors (keyword triggers relevance)"
+                "explanation": "Important vector search factors (keyword triggers relevance)",
             },
             {
                 "query": "Quality evaluation methods for retrieval",
                 "relevant_docs": ["doc_1", "doc_5", "doc_9"],
-                "explanation": "Retrieval quality evaluation methods"
-            }
+                "explanation": "Retrieval quality evaluation methods",
+            },
         ]
 
     @pytest.fixture
@@ -130,28 +131,28 @@ class TestRetrievalQuality:
             {
                 "query": "Vector database fundamentals",
                 "relevance_scores": [3, 2, 1, 0, 0, 0, 0, 0, 0, 0],  # Decreasing relevance
-                "doc_ids": [f"doc_{i}" for i in range(10)]
+                "doc_ids": [f"doc_{i}" for i in range(10)],
             },
             {
                 "query": "Important machine learning concepts",
                 "relevance_scores": [3, 3, 2, 1, 1, 0, 0, 0, 0, 0],  # Important keyword boosts relevance
-                "doc_ids": [f"doc_{i}" for i in range(10)]
+                "doc_ids": [f"doc_{i}" for i in range(10)],
             },
             {
                 "query": "Semantic search implementation",
                 "relevance_scores": [2, 3, 1, 2, 0, 1, 0, 0, 0, 0],
-                "doc_ids": [f"doc_{i}" for i in range(10)]
+                "doc_ids": [f"doc_{i}" for i in range(10)],
             },
             {
                 "query": "Retrieval system optimization",
                 "relevance_scores": [3, 1, 2, 0, 1, 0, 1, 0, 0, 0],
-                "doc_ids": [f"doc_{i}" for i in range(10)]
+                "doc_ids": [f"doc_{i}" for i in range(10)],
             },
             {
                 "query": "Important performance considerations",
                 "relevance_scores": [3, 2, 3, 1, 0, 0, 0, 1, 0, 0],  # Important keyword pattern
-                "doc_ids": [f"doc_{i}" for i in range(10)]
-            }
+                "doc_ids": [f"doc_{i}" for i in range(10)],
+            },
         ]
 
     @pytest.mark.quality
@@ -203,14 +204,11 @@ class TestRetrievalQuality:
         print(f"  Recall@10 stretch goal (>95%): {'✅ MET' if recall_10_stretch else '⚠️  NOT MET'}")
 
         return {
-            'recall_at_5': mean_recall_5,
-            'recall_at_10': mean_recall_10,
-            'recall_5_stretch_met': recall_5_stretch,
-            'recall_10_stretch_met': recall_10_stretch,
-            'individual_scores': {
-                'recall_at_5': recalls_at_5,
-                'recall_at_10': recalls_at_10
-            }
+            "recall_at_5": mean_recall_5,
+            "recall_at_10": mean_recall_10,
+            "recall_5_stretch_met": recall_5_stretch,
+            "recall_10_stretch_met": recall_10_stretch,
+            "individual_scores": {"recall_at_5": recalls_at_5, "recall_at_10": recalls_at_10},
         }
 
     @pytest.mark.quality
@@ -242,13 +240,13 @@ class TestRetrievalQuality:
             # Calculate DCG (Discounted Cumulative Gain)
             dcg = 0
             for i, relevance in enumerate(result_relevances):
-                dcg += (2 ** relevance - 1) / np.log2(i + 2)
+                dcg += (2**relevance - 1) / np.log2(i + 2)
 
             # Calculate IDCG (Ideal DCG)
             ideal_relevances = sorted(item["relevance_scores"], reverse=True)
             idcg = 0
             for i, relevance in enumerate(ideal_relevances):
-                idcg += (2 ** relevance - 1) / np.log2(i + 2)
+                idcg += (2**relevance - 1) / np.log2(i + 2)
 
             # Calculate NDCG
             ndcg = dcg / idcg if idcg > 0 else 0
@@ -268,11 +266,7 @@ class TestRetrievalQuality:
         ndcg_stretch_met = mean_ndcg > 0.90
         print(f"  NDCG@10 stretch goal (>0.90): {'✅ MET' if ndcg_stretch_met else '⚠️  NOT MET'}")
 
-        return {
-            'ndcg_at_10': mean_ndcg,
-            'ndcg_stretch_met': ndcg_stretch_met,
-            'individual_scores': ndcg_scores
-        }
+        return {"ndcg_at_10": mean_ndcg, "ndcg_stretch_met": ndcg_stretch_met, "individual_scores": ndcg_scores}
 
     @pytest.mark.quality
     @pytest.mark.asyncio
@@ -310,10 +304,7 @@ class TestRetrievalQuality:
         assert mean_precision_5 > 0.3, f"Precision@5 {mean_precision_5:.3f} too low"
         assert mean_precision_10 > 0.25, f"Precision@10 {mean_precision_10:.3f} too low"
 
-        return {
-            'precision_at_5': mean_precision_5,
-            'precision_at_10': mean_precision_10
-        }
+        return {"precision_at_5": mean_precision_5, "precision_at_10": mean_precision_10}
 
     @pytest.mark.quality
     @pytest.mark.asyncio
@@ -345,7 +336,9 @@ class TestRetrievalQuality:
             if all_ids and relevant_ids:
                 precision_10 = len(all_ids & relevant_ids) / len(all_ids)
                 recall_10 = len(all_ids & relevant_ids) / len(relevant_ids)
-                f1_10 = 2 * (precision_10 * recall_10) / (precision_10 + recall_10) if (precision_10 + recall_10) > 0 else 0
+                f1_10 = (
+                    2 * (precision_10 * recall_10) / (precision_10 + recall_10) if (precision_10 + recall_10) > 0 else 0
+                )
             else:
                 f1_10 = 0
             f1_scores_at_10.append(f1_10)
@@ -361,10 +354,7 @@ class TestRetrievalQuality:
         assert mean_f1_5 > 0.5, f"F1@5 {mean_f1_5:.3f} below acceptable threshold"
         assert mean_f1_10 > 0.45, f"F1@10 {mean_f1_10:.3f} below acceptable threshold"
 
-        return {
-            'f1_at_5': mean_f1_5,
-            'f1_at_10': mean_f1_10
-        }
+        return {"f1_at_5": mean_f1_5, "f1_at_10": mean_f1_10}
 
     @pytest.mark.quality
     @pytest.mark.asyncio
@@ -379,7 +369,7 @@ class TestRetrievalQuality:
             "database optimization techniques",
             "web development frameworks",
             "data science methods",
-            "software engineering practices"
+            "software engineering practices",
         ]
 
         diversity_scores = []
@@ -401,10 +391,7 @@ class TestRetrievalQuality:
         # Should have reasonable diversity (not all from same source)
         assert mean_diversity > 0.5, f"Diversity {mean_diversity:.3f} too low - results too similar"
 
-        return {
-            'diversity_score': mean_diversity,
-            'individual_scores': diversity_scores
-        }
+        return {"diversity_score": mean_diversity, "individual_scores": diversity_scores}
 
 
 if __name__ == "__main__":

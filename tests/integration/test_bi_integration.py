@@ -16,23 +16,24 @@ Author: Claude Sonnet 4
 Date: 2026-01-25
 """
 
-import pytest
 import asyncio
 import json
 import time
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict
 from unittest.mock import AsyncMock, Mock, patch
-from typing import Dict, Any
 
-import websockets
 import httpx
+import pytest
+import websockets
 from fastapi.testclient import TestClient
 
 # Import the main FastAPI app
 from ghl_real_estate_ai.api.main import app
-from ghl_real_estate_ai.services.bi_websocket_server import get_bi_websocket_manager
 from ghl_real_estate_ai.services.bi_cache_service import get_bi_cache_service
 from ghl_real_estate_ai.services.bi_stream_processor import get_bi_stream_processor
+from ghl_real_estate_ai.services.bi_websocket_server import get_bi_websocket_manager
+
 
 class TestBIIntegration:
     """Test suite for BI backend integration."""
@@ -52,9 +53,9 @@ class TestBIIntegration:
 
         # Start services
         services = {
-            'websocket_manager': bi_websocket_manager,
-            'cache_service': bi_cache_service,
-            'stream_processor': bi_stream_processor
+            "websocket_manager": bi_websocket_manager,
+            "cache_service": bi_cache_service,
+            "stream_processor": bi_stream_processor,
         }
 
         # Start BI WebSocket manager
@@ -115,7 +116,7 @@ class TestBIIntegration:
     @pytest.mark.asyncio
     async def test_dashboard_websocket_connection(self, bi_services):
         """Test dashboard WebSocket connection."""
-        websocket_manager = bi_services['websocket_manager']
+        websocket_manager = bi_services["websocket_manager"]
 
         # Mock WebSocket connection
         mock_websocket = AsyncMock()
@@ -128,8 +129,8 @@ class TestBIIntegration:
             connection_id = await websocket_manager.connect_bi_client(
                 websocket=mock_websocket,
                 location_id="test_location",
-                channels=['dashboard', 'alerts'],
-                components=['executive_kpis', 'system_health']
+                channels=["dashboard", "alerts"],
+                components=["executive_kpis", "system_health"],
             )
 
             assert connection_id is not None
@@ -143,9 +144,7 @@ class TestBIIntegration:
 
             # Test message sending
             await websocket_manager.send_dashboard_update(
-                component="test_component",
-                data={"value": 123},
-                location_id="test_location"
+                component="test_component", data={"value": 123}, location_id="test_location"
             )
 
             # Verify WebSocket send was called
@@ -159,7 +158,7 @@ class TestBIIntegration:
     @pytest.mark.asyncio
     async def test_revenue_intelligence_websocket(self, bi_services):
         """Test revenue intelligence WebSocket connection."""
-        websocket_manager = bi_services['websocket_manager']
+        websocket_manager = bi_services["websocket_manager"]
 
         mock_websocket = AsyncMock()
         mock_websocket.accept = AsyncMock()
@@ -167,8 +166,8 @@ class TestBIIntegration:
         connection_id = await websocket_manager.connect_bi_client(
             websocket=mock_websocket,
             location_id="test_location",
-            channels=['revenue_intelligence', 'analytics'],
-            components=['revenue_forecasting', 'jorge_commission']
+            channels=["revenue_intelligence", "analytics"],
+            components=["revenue_forecasting", "jorge_commission"],
         )
 
         try:
@@ -177,12 +176,8 @@ class TestBIIntegration:
             # Test revenue analytics update
             await websocket_manager.send_analytics_update(
                 analytics_type="revenue_forecast",
-                data={
-                    "predicted_revenue": 25000,
-                    "jorge_commission": 1500,
-                    "confidence": 0.85
-                },
-                location_id="test_location"
+                data={"predicted_revenue": 25000, "jorge_commission": 1500, "confidence": 0.85},
+                location_id="test_location",
             )
 
             mock_websocket.send_text.assert_called()
@@ -193,7 +188,7 @@ class TestBIIntegration:
     @pytest.mark.asyncio
     async def test_bot_performance_websocket(self, bi_services):
         """Test bot performance WebSocket connection."""
-        websocket_manager = bi_services['websocket_manager']
+        websocket_manager = bi_services["websocket_manager"]
 
         mock_websocket = AsyncMock()
         mock_websocket.accept = AsyncMock()
@@ -201,8 +196,8 @@ class TestBIIntegration:
         connection_id = await websocket_manager.connect_bi_client(
             websocket=mock_websocket,
             location_id="test_location",
-            channels=['bot_performance', 'alerts'],
-            components=['jorge_seller_performance', 'bot_coordination']
+            channels=["bot_performance", "alerts"],
+            components=["jorge_seller_performance", "bot_coordination"],
         )
 
         try:
@@ -213,12 +208,8 @@ class TestBIIntegration:
                 alert_type="bot_performance",
                 severity="medium",
                 message="Jorge Seller Bot response time above threshold",
-                data={
-                    "bot_type": "jorge-seller",
-                    "response_time_ms": 85.2,
-                    "threshold_ms": 50
-                },
-                location_id="test_location"
+                data={"bot_type": "jorge-seller", "response_time_ms": 85.2, "threshold_ms": 50},
+                location_id="test_location",
             )
 
             mock_websocket.send_text.assert_called()
@@ -233,8 +224,8 @@ class TestBIIntegration:
     @pytest.mark.asyncio
     async def test_bi_service_integration(self, bi_services):
         """Test integration between BI services."""
-        websocket_manager = bi_services['websocket_manager']
-        cache_service = bi_services['cache_service']
+        websocket_manager = bi_services["websocket_manager"]
+        cache_service = bi_services["cache_service"]
 
         # Test WebSocket manager metrics
         metrics = websocket_manager.get_metrics()
@@ -255,7 +246,7 @@ class TestBIIntegration:
     @pytest.mark.asyncio
     async def test_real_time_event_flow(self, bi_services):
         """Test real-time event flow through BI services."""
-        websocket_manager = bi_services['websocket_manager']
+        websocket_manager = bi_services["websocket_manager"]
 
         # Mock WebSocket connection
         mock_websocket = AsyncMock()
@@ -265,8 +256,8 @@ class TestBIIntegration:
         connection_id = await websocket_manager.connect_bi_client(
             websocket=mock_websocket,
             location_id="test_location",
-            channels=['dashboard', 'analytics'],
-            components=['real_time_metrics']
+            channels=["dashboard", "analytics"],
+            components=["real_time_metrics"],
         )
 
         try:
@@ -277,15 +268,13 @@ class TestBIIntegration:
                     "leads_processed": 45,
                     "hot_leads": 12,
                     "jorge_commission_pipeline": 27500,
-                    "avg_response_time_ms": 42.3
+                    "avg_response_time_ms": 42.3,
                 },
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
             await websocket_manager.send_dashboard_update(
-                component="real_time_metrics",
-                data=test_event_data,
-                location_id="test_location"
+                component="real_time_metrics", data=test_event_data, location_id="test_location"
             )
 
             # Verify message was sent
@@ -306,7 +295,7 @@ class TestBIIntegration:
     @pytest.mark.asyncio
     async def test_concurrent_connections(self, bi_services):
         """Test handling multiple concurrent WebSocket connections."""
-        websocket_manager = bi_services['websocket_manager']
+        websocket_manager = bi_services["websocket_manager"]
 
         # Create multiple mock connections
         connections = []
@@ -318,8 +307,8 @@ class TestBIIntegration:
             connection_id = await websocket_manager.connect_bi_client(
                 websocket=mock_websocket,
                 location_id=f"location_{i}",
-                channels=['dashboard'],
-                components=[f'component_{i}']
+                channels=["dashboard"],
+                components=[f"component_{i}"],
             )
             connections.append((connection_id, mock_websocket))
 
@@ -331,7 +320,7 @@ class TestBIIntegration:
             await websocket_manager.send_dashboard_update(
                 component="global_update",
                 data={"message": "Broadcast test"},
-                location_id="location_0"  # Should only reach location_0
+                location_id="location_0",  # Should only reach location_0
             )
 
             # Verify only the matching location received the message
@@ -350,7 +339,7 @@ class TestBIIntegration:
     @pytest.mark.asyncio
     async def test_websocket_performance(self, bi_services):
         """Test WebSocket performance under load."""
-        websocket_manager = bi_services['websocket_manager']
+        websocket_manager = bi_services["websocket_manager"]
 
         mock_websocket = AsyncMock()
         mock_websocket.accept = AsyncMock()
@@ -359,8 +348,8 @@ class TestBIIntegration:
         connection_id = await websocket_manager.connect_bi_client(
             websocket=mock_websocket,
             location_id="perf_test_location",
-            channels=['dashboard'],
-            components=['performance_metrics']
+            channels=["dashboard"],
+            components=["performance_metrics"],
         )
 
         try:
@@ -372,7 +361,7 @@ class TestBIIntegration:
                 await websocket_manager.send_dashboard_update(
                     component="performance_metrics",
                     data={"message_id": i, "timestamp": time.time()},
-                    location_id="perf_test_location"
+                    location_id="perf_test_location",
                 )
 
             end_time = time.time()
@@ -395,7 +384,7 @@ class TestBIIntegration:
     @pytest.mark.asyncio
     async def test_websocket_error_handling(self, bi_services):
         """Test WebSocket error handling and recovery."""
-        websocket_manager = bi_services['websocket_manager']
+        websocket_manager = bi_services["websocket_manager"]
 
         # Mock WebSocket with send error
         mock_websocket = AsyncMock()
@@ -403,16 +392,13 @@ class TestBIIntegration:
         mock_websocket.send_text = AsyncMock(side_effect=Exception("Connection error"))
 
         connection_id = await websocket_manager.connect_bi_client(
-            websocket=mock_websocket,
-            location_id="error_test_location"
+            websocket=mock_websocket, location_id="error_test_location"
         )
 
         try:
             # Attempt to send message (should handle error gracefully)
             await websocket_manager.send_dashboard_update(
-                component="error_test",
-                data={"test": "error_handling"},
-                location_id="error_test_location"
+                component="error_test", data={"test": "error_handling"}, location_id="error_test_location"
             )
 
             # Verify connection quality was updated
@@ -444,6 +430,7 @@ class TestBIIntegration:
 # ========================================================================
 # INTEGRATION TEST RUNNER
 # ========================================================================
+
 
 async def run_integration_tests():
     """Run all BI integration tests."""
@@ -494,8 +481,8 @@ async def run_integration_tests():
         connection_id = await bi_websocket_manager.connect_bi_client(
             websocket=mock_websocket,
             location_id="integration_test",
-            channels=['dashboard'],
-            components=['test_component']
+            channels=["dashboard"],
+            components=["test_component"],
         )
 
         if connection_id:
@@ -512,7 +499,7 @@ async def run_integration_tests():
         await bi_websocket_manager.send_dashboard_update(
             component="integration_test",
             data={"test": "integration_success", "timestamp": datetime.now().isoformat()},
-            location_id="integration_test"
+            location_id="integration_test",
         )
         print("   ✅ Real-time messaging working")
     except Exception as e:

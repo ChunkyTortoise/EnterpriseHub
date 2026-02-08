@@ -7,14 +7,15 @@ and client presentation creation.
 
 import logging
 from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import HTMLResponse, PlainTextResponse
 from pydantic import BaseModel, Field
 
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.professional_export_engine import (
     get_export_engine,
 )
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -28,6 +29,7 @@ router = APIRouter(
 # Request / Response Models
 # ---------------------------------------------------------------------------
 
+
 class MarketReportRequest(BaseModel):
     neighborhood: str = Field(..., description="Neighborhood name")
     report_type: str = Field("monthly", description="Report type: monthly, weekly")
@@ -37,12 +39,8 @@ class MarketReportRequest(BaseModel):
 
 class CMAReportRequest(BaseModel):
     address: str = Field(..., description="Subject property address")
-    property_data: Dict[str, Any] = Field(
-        ..., description="Property details (bedrooms, bathrooms, sqft, etc.)"
-    )
-    comparables: List[Dict[str, Any]] = Field(
-        ..., min_length=1, description="Comparable properties"
-    )
+    property_data: Dict[str, Any] = Field(..., description="Property details (bedrooms, bathrooms, sqft, etc.)")
+    comparables: List[Dict[str, Any]] = Field(..., min_length=1, description="Comparable properties")
     format: str = Field("html", description="Output format: html, text")
 
 
@@ -52,9 +50,7 @@ class LeadExportRequest(BaseModel):
 
 class PresentationRequest(BaseModel):
     client_name: str = Field(..., description="Client name")
-    sections: List[Dict[str, str]] = Field(
-        ..., min_length=1, description="Presentation sections [{title, content}]"
-    )
+    sections: List[Dict[str, str]] = Field(..., min_length=1, description="Presentation sections [{title, content}]")
 
 
 class ExportResponse(BaseModel):
@@ -70,6 +66,7 @@ class ExportResponse(BaseModel):
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
 
 @router.post("/market-report", response_model=ExportResponse)
 async def generate_market_report(request: MarketReportRequest):

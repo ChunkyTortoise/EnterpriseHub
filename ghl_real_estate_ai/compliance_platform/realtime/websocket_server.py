@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 class AlertType(str, Enum):
     """Types of compliance alerts"""
+
     VIOLATION_DETECTED = "violation_detected"
     SCORE_CHANGED = "score_changed"
     RISK_LEVEL_CHANGED = "risk_level_changed"
@@ -38,6 +39,7 @@ class AlertType(str, Enum):
 
 class AlertSeverity(str, Enum):
     """Severity levels for alerts"""
+
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -47,6 +49,7 @@ class AlertSeverity(str, Enum):
 
 class ComplianceAlert(BaseModel):
     """Real-time compliance alert message"""
+
     id: str = Field(default_factory=lambda: str(uuid4()))
     alert_type: AlertType
     severity: AlertSeverity = AlertSeverity.MEDIUM
@@ -60,30 +63,31 @@ class ComplianceAlert(BaseModel):
     acknowledged: bool = False
     source: str = "compliance_engine"
 
-    model_config = ConfigDict(json_encoders={
-            datetime: lambda v: v.isoformat()
-        })
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
     def to_json(self) -> str:
         """Serialize alert to JSON string"""
-        return json.dumps({
-            "id": self.id,
-            "alert_type": self.alert_type.value,
-            "severity": self.severity.value,
-            "title": self.title,
-            "message": self.message,
-            "model_id": self.model_id,
-            "model_name": self.model_name,
-            "regulation": self.regulation,
-            "timestamp": self.timestamp.isoformat(),
-            "data": self.data,
-            "acknowledged": self.acknowledged,
-            "source": self.source,
-        })
+        return json.dumps(
+            {
+                "id": self.id,
+                "alert_type": self.alert_type.value,
+                "severity": self.severity.value,
+                "title": self.title,
+                "message": self.message,
+                "model_id": self.model_id,
+                "model_name": self.model_name,
+                "regulation": self.regulation,
+                "timestamp": self.timestamp.isoformat(),
+                "data": self.data,
+                "acknowledged": self.acknowledged,
+                "source": self.source,
+            }
+        )
 
 
 class SubscriptionRequest(BaseModel):
     """Client subscription preferences"""
+
     action: str = "subscribe"  # subscribe, unsubscribe
     alert_types: List[AlertType] = Field(default_factory=list)
     model_ids: List[str] = Field(default_factory=list)
@@ -109,12 +113,14 @@ class ClientConnection:
     def matches_alert(self, alert: ComplianceAlert) -> bool:
         """Check if this client should receive the given alert"""
         # If no subscriptions set, receive all alerts
-        if not any([
-            self.subscribed_alert_types,
-            self.subscribed_model_ids,
-            self.subscribed_severities,
-            self.subscribed_regulations,
-        ]):
+        if not any(
+            [
+                self.subscribed_alert_types,
+                self.subscribed_model_ids,
+                self.subscribed_severities,
+                self.subscribed_regulations,
+            ]
+        ):
             return True
 
         # Check alert type filter
@@ -253,19 +259,20 @@ class ConnectionManager:
                 self._connections[client_id] = connection
 
             logger.info(
-                "Client connected: client_id=%s, total_connections=%d",
-                client_id,
-                self.active_connections_count
+                "Client connected: client_id=%s, total_connections=%d", client_id, self.active_connections_count
             )
 
             # Send welcome message
-            await self._send_message(websocket, {
-                "type": "connection_established",
-                "client_id": client_id,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "heartbeat_interval": self._heartbeat_interval,
-                "message": "Connected to compliance alert stream",
-            })
+            await self._send_message(
+                websocket,
+                {
+                    "type": "connection_established",
+                    "client_id": client_id,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "heartbeat_interval": self._heartbeat_interval,
+                    "message": "Connected to compliance alert stream",
+                },
+            )
 
             return True
 
@@ -284,9 +291,7 @@ class ConnectionManager:
             self._connections[client_id].is_active = False
             del self._connections[client_id]
             logger.info(
-                "Client disconnected: client_id=%s, remaining_connections=%d",
-                client_id,
-                self.active_connections_count
+                "Client disconnected: client_id=%s, remaining_connections=%d", client_id, self.active_connections_count
             )
 
     async def _close_connection(self, client_id: str, reason: str = "Unknown") -> None:
@@ -344,16 +349,19 @@ class ConnectionManager:
                 "Client subscribed: client_id=%s, alert_types=%s, models=%s",
                 client_id,
                 [t.value for t in (alert_types or [])],
-                model_ids or []
+                model_ids or [],
             )
 
             # Confirm subscription
-            await self._send_message(connection.websocket, {
-                "type": "subscription_updated",
-                "action": "subscribe",
-                "subscriptions": connection.to_dict()["subscriptions"],
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            })
+            await self._send_message(
+                connection.websocket,
+                {
+                    "type": "subscription_updated",
+                    "action": "subscribe",
+                    "subscriptions": connection.to_dict()["subscriptions"],
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                },
+            )
 
             return True
 
@@ -401,7 +409,7 @@ class ConnectionManager:
         # Add to history
         self._alert_history.append(alert)
         if len(self._alert_history) > self._max_history_size:
-            self._alert_history = self._alert_history[-self._max_history_size:]
+            self._alert_history = self._alert_history[-self._max_history_size :]
 
         recipients = 0
         failed_clients: List[str] = []
@@ -413,17 +421,17 @@ class ConnectionManager:
 
                 if connection.matches_alert(alert):
                     try:
-                        await self._send_message(connection.websocket, {
-                            "type": "alert",
-                            "alert": json.loads(alert.to_json()),
-                        })
+                        await self._send_message(
+                            connection.websocket,
+                            {
+                                "type": "alert",
+                                "alert": json.loads(alert.to_json()),
+                            },
+                        )
                         connection.alerts_received += 1
                         recipients += 1
                     except Exception as e:
-                        logger.error(
-                            "Failed to send alert to client_id=%s: %s",
-                            client_id, e
-                        )
+                        logger.error("Failed to send alert to client_id=%s: %s", client_id, e)
                         failed_clients.append(client_id)
 
         # Clean up failed connections
@@ -431,8 +439,7 @@ class ConnectionManager:
             self.disconnect(client_id)
 
         logger.info(
-            "Alert broadcast: alert_id=%s, type=%s, recipients=%d",
-            alert.id, alert.alert_type.value, recipients
+            "Alert broadcast: alert_id=%s, type=%s, recipients=%d", alert.id, alert.alert_type.value, recipients
         )
 
         return recipients
@@ -458,10 +465,13 @@ class ConnectionManager:
                 return False
 
             try:
-                await self._send_message(connection.websocket, {
-                    "type": "alert",
-                    "alert": json.loads(alert.to_json()),
-                })
+                await self._send_message(
+                    connection.websocket,
+                    {
+                        "type": "alert",
+                        "alert": json.loads(alert.to_json()),
+                    },
+                )
                 connection.alerts_received += 1
                 return True
             except Exception as e:
@@ -604,11 +614,11 @@ def create_websocket_router() -> tuple[APIRouter, ConnectionManager]:
 
                 if action == "subscribe":
                     alert_types = [
-                        AlertType(t) for t in data.get("alert_types", [])
-                        if t in [at.value for at in AlertType]
+                        AlertType(t) for t in data.get("alert_types", []) if t in [at.value for at in AlertType]
                     ]
                     severities = [
-                        AlertSeverity(s) for s in data.get("severities", [])
+                        AlertSeverity(s)
+                        for s in data.get("severities", [])
                         if s in [sev.value for sev in AlertSeverity]
                     ]
                     await manager.subscribe(
@@ -621,8 +631,7 @@ def create_websocket_router() -> tuple[APIRouter, ConnectionManager]:
 
                 elif action == "unsubscribe":
                     alert_types = [
-                        AlertType(t) for t in data.get("alert_types", [])
-                        if t in [at.value for at in AlertType]
+                        AlertType(t) for t in data.get("alert_types", []) if t in [at.value for at in AlertType]
                     ]
                     await manager.unsubscribe(
                         client_id,
@@ -632,37 +641,45 @@ def create_websocket_router() -> tuple[APIRouter, ConnectionManager]:
 
                 elif action == "ping":
                     # Client ping, respond with pong
-                    await websocket.send_json({
-                        "type": "pong",
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
-                    })
+                    await websocket.send_json(
+                        {
+                            "type": "pong",
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                        }
+                    )
 
                 elif action == "status":
                     # Client requesting connection status
                     info = await manager.get_connection_info(client_id)
-                    await websocket.send_json({
-                        "type": "status",
-                        "connection": info,
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
-                    })
+                    await websocket.send_json(
+                        {
+                            "type": "status",
+                            "connection": info,
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                        }
+                    )
 
                 elif action == "history":
                     # Client requesting recent alerts
                     limit = min(data.get("limit", 10), 50)
                     history = await manager.get_recent_alerts(limit)
-                    await websocket.send_json({
-                        "type": "history",
-                        "alerts": history,
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
-                    })
+                    await websocket.send_json(
+                        {
+                            "type": "history",
+                            "alerts": history,
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                        }
+                    )
 
                 else:
                     # Unknown action
-                    await websocket.send_json({
-                        "type": "error",
-                        "message": f"Unknown action: {action}",
-                        "valid_actions": ["subscribe", "unsubscribe", "ping", "status", "history"],
-                    })
+                    await websocket.send_json(
+                        {
+                            "type": "error",
+                            "message": f"Unknown action: {action}",
+                            "valid_actions": ["subscribe", "unsubscribe", "ping", "status", "history"],
+                        }
+                    )
 
         except WebSocketDisconnect:
             logger.info("WebSocket disconnected: client_id=%s", client_id)

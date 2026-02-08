@@ -4,16 +4,16 @@ Creates thriving marketplace with revenue sharing and platform lock-in.
 Third-party developers extend platform value exponentially.
 """
 
-from typing import Dict, List, Optional, Any, Union
-from datetime import datetime, timedelta
-from decimal import Decimal
 import asyncio
-import uuid
 import hashlib
-from dataclasses import dataclass, asdict
-from enum import Enum
 import json
 import logging
+import uuid
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from decimal import Decimal
+from enum import Enum
+from typing import Any, Dict, List, Optional, Union
 
 from ..core.llm_client import LLMClient
 from ..services.cache_service import CacheService
@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 class AgentType(Enum):
     """Types of agents that can be deployed in the platform."""
+
     LEAD_PROCESSOR = "lead_processor"
     PROPERTY_ANALYZER = "property_analyzer"
     COMMUNICATION_HANDLER = "communication_handler"
@@ -36,6 +37,7 @@ class AgentType(Enum):
 
 class MarketplaceStatus(Enum):
     """Status of marketplace items."""
+
     PENDING_REVIEW = "pending_review"
     APPROVED = "approved"
     REJECTED = "rejected"
@@ -46,6 +48,7 @@ class MarketplaceStatus(Enum):
 @dataclass
 class DeveloperProfile:
     """Developer profile in the ecosystem."""
+
     developer_id: str
     name: str
     email: str
@@ -63,6 +66,7 @@ class DeveloperProfile:
 @dataclass
 class AgentConfiguration:
     """Configuration for a third-party agent."""
+
     agent_id: str
     name: str
     description: str
@@ -83,6 +87,7 @@ class AgentConfiguration:
 @dataclass
 class RevenueShare:
     """Revenue sharing configuration."""
+
     developer_id: str
     agent_id: str
     revenue_share_percentage: float
@@ -95,6 +100,7 @@ class RevenueShare:
 @dataclass
 class MarketplaceMetrics:
     """Comprehensive marketplace metrics."""
+
     total_developers: int
     total_agents: int
     total_installs: int
@@ -117,26 +123,23 @@ class DeveloperEcosystem:
     - Ecosystem lock-in effects
     """
 
-    def __init__(self,
-                 llm_client: LLMClient,
-                 cache_service: CacheService,
-                 database_service: DatabaseService):
+    def __init__(self, llm_client: LLMClient, cache_service: CacheService, database_service: DatabaseService):
         self.llm_client = llm_client
         self.cache = cache_service
         self.db = database_service
 
         # Revenue sharing tiers
         self.revenue_share_tiers = {
-            "standard": 0.30,    # 30% to developer, 70% to platform
-            "premium": 0.40,     # 40% to developer (high-quality developers)
-            "enterprise": 0.50   # 50% to developer (strategic partners)
+            "standard": 0.30,  # 30% to developer, 70% to platform
+            "premium": 0.40,  # 40% to developer (high-quality developers)
+            "enterprise": 0.50,  # 50% to developer (strategic partners)
         }
 
         # Platform fee structure
         self.platform_fees = {
             "listing_fee": Decimal("0"),  # Free listing to encourage participation
             "transaction_fee": Decimal("0.025"),  # 2.5% transaction fee
-            "featured_placement": Decimal("299.00")  # Monthly featured placement
+            "featured_placement": Decimal("299.00"),  # Monthly featured placement
         }
 
         logger.info("Developer Ecosystem initialized")
@@ -162,7 +165,7 @@ class DeveloperEcosystem:
             average_rating=0.0,
             created_at=datetime.utcnow(),
             api_key=api_key,
-            revenue_share_tier="standard"
+            revenue_share_tier="standard",
         )
 
         # Store in database
@@ -208,7 +211,7 @@ class DeveloperEcosystem:
             rating=0.0,
             status=MarketplaceStatus.PENDING_REVIEW,
             created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            updated_at=datetime.utcnow(),
         )
 
         # Deploy agent in sandbox for testing
@@ -230,7 +233,9 @@ class DeveloperEcosystem:
             raise RuntimeError(f"Agent deployment failed: {deployment_result['error']}")
 
     @enhanced_error_handler
-    async def marketplace_search(self, query: str, filters: Optional[Dict[str, Any]] = None) -> List[AgentConfiguration]:
+    async def marketplace_search(
+        self, query: str, filters: Optional[Dict[str, Any]] = None
+    ) -> List[AgentConfiguration]:
         """
         Search marketplace for agents and solutions.
 
@@ -257,18 +262,14 @@ class DeveloperEcosystem:
             matching_agents = await self._apply_agent_filters(matching_agents, filters)
 
         # Sort by relevance and rating
-        matching_agents.sort(
-            key=lambda a: (a.rating, a.installation_count),
-            reverse=True
-        )
+        matching_agents.sort(key=lambda a: (a.rating, a.installation_count), reverse=True)
 
         return matching_agents[:50]  # Return top 50 matches
 
     @enhanced_error_handler
-    async def install_agent(self,
-                           agent_id: str,
-                           customer_id: str,
-                           configuration: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def install_agent(
+        self, agent_id: str, customer_id: str, configuration: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Install an agent for a customer with revenue tracking."""
         logger.info(f"Installing agent {agent_id} for customer {customer_id}")
 
@@ -299,7 +300,7 @@ class DeveloperEcosystem:
                 "instance_id": deployment_result["instance_id"],
                 "agent_id": agent_id,
                 "customer_id": customer_id,
-                "installation_date": datetime.utcnow().isoformat()
+                "installation_date": datetime.utcnow().isoformat(),
             }
         else:
             raise RuntimeError(f"Agent installation failed: {deployment_result['error']}")
@@ -335,7 +336,7 @@ class DeveloperEcosystem:
             platform_revenue=revenue_data["platform_share"],
             average_agent_rating=average_rating,
             top_categories=top_categories,
-            growth_rate=growth_rate
+            growth_rate=growth_rate,
         )
 
     @enhanced_error_handler
@@ -362,33 +363,35 @@ class DeveloperEcosystem:
                     await self._update_revenue_share_payment(share, payment_result["transaction_id"])
 
                     total_paid += payment_amount
-                    payment_results.append({
-                        "developer_id": share.developer_id,
-                        "amount": payment_amount,
-                        "status": "success"
-                    })
+                    payment_results.append(
+                        {"developer_id": share.developer_id, "amount": payment_amount, "status": "success"}
+                    )
                 else:
-                    payment_results.append({
-                        "developer_id": share.developer_id,
-                        "amount": payment_amount,
-                        "status": "failed",
-                        "error": payment_result["error"]
-                    })
+                    payment_results.append(
+                        {
+                            "developer_id": share.developer_id,
+                            "amount": payment_amount,
+                            "status": "failed",
+                            "error": payment_result["error"],
+                        }
+                    )
 
             except Exception as e:
                 logger.error(f"Payment failed for developer {share.developer_id}: {e}")
-                payment_results.append({
-                    "developer_id": share.developer_id,
-                    "amount": share.monthly_revenue,
-                    "status": "error",
-                    "error": str(e)
-                })
+                payment_results.append(
+                    {
+                        "developer_id": share.developer_id,
+                        "amount": share.monthly_revenue,
+                        "status": "error",
+                        "error": str(e),
+                    }
+                )
 
         return {
             "total_payments": len(payment_results),
             "successful_payments": len([p for p in payment_results if p["status"] == "success"]),
             "total_amount_paid": total_paid,
-            "payment_details": payment_results
+            "payment_details": payment_results,
         }
 
     async def get_developer_analytics(self, developer_id: str) -> Dict[str, Any]:
@@ -407,7 +410,7 @@ class DeveloperEcosystem:
             "developer_profile": asdict(developer),
             "agent_performance": agent_performance,
             "revenue_analytics": revenue_analytics,
-            "recommendations": await self._generate_developer_recommendations(developer_id)
+            "recommendations": await self._generate_developer_recommendations(developer_id),
         }
 
     # Private implementation methods
@@ -437,11 +440,7 @@ class DeveloperEcosystem:
         if resource_reqs.get("memory", 0) > 1024:  # 1GB limit
             warnings.append("High memory requirement may affect approval")
 
-        return {
-            "valid": len(errors) == 0,
-            "errors": errors,
-            "warnings": warnings
-        }
+        return {"valid": len(errors) == 0, "errors": errors, "warnings": warnings}
 
     async def _validate_agent_security(self, code: str) -> List[str]:
         """Validate agent code for security issues."""
@@ -488,13 +487,10 @@ class DeveloperEcosystem:
             return {
                 "success": True,
                 "sandbox_url": f"https://sandbox.platform.com/agents/{agent.agent_id}",
-                "test_results": await self._run_agent_tests(agent, code)
+                "test_results": await self._run_agent_tests(agent, code),
             }
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     async def _run_agent_tests(self, agent: AgentConfiguration, code: str) -> Dict[str, Any]:
         """Run automated tests on the agent."""
@@ -503,7 +499,7 @@ class DeveloperEcosystem:
             "syntax_check": "passed",
             "security_scan": "passed",
             "performance_test": "passed",
-            "api_compatibility": "passed"
+            "api_compatibility": "passed",
         }
 
     def _generate_api_key(self, developer_id: str) -> str:
@@ -530,7 +526,7 @@ class DeveloperEcosystem:
             monthly_revenue=Decimal("0"),
             total_revenue=Decimal("0"),
             payment_status="pending",
-            last_payment_date=None
+            last_payment_date=None,
         )
 
         await self.cache.set(f"revenue_share_{agent.agent_id}", asdict(revenue_share), ttl=3600)
@@ -556,15 +552,19 @@ class DeveloperEcosystem:
         matching = []
 
         for agent in agents:
-            if (query_lower in agent.name.lower() or
-                query_lower in agent.description.lower() or
-                any(query_lower in cap.lower() for cap in agent.capabilities)):
+            if (
+                query_lower in agent.name.lower()
+                or query_lower in agent.description.lower()
+                or any(query_lower in cap.lower() for cap in agent.capabilities)
+            ):
                 matching.append(agent)
 
         return matching
 
     # Additional helper methods would be implemented here...
-    async def _apply_agent_filters(self, agents: List[AgentConfiguration], filters: Dict[str, Any]) -> List[AgentConfiguration]:
+    async def _apply_agent_filters(
+        self, agents: List[AgentConfiguration], filters: Dict[str, Any]
+    ) -> List[AgentConfiguration]:
         """Apply filters to agent list."""
         filtered = agents
 
@@ -588,14 +588,13 @@ class DeveloperEcosystem:
         # Check customer subscription, permissions, etc.
         pass
 
-    async def _deploy_agent_instance(self, agent: AgentConfiguration, customer_id: str, config: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _deploy_agent_instance(
+        self, agent: AgentConfiguration, customer_id: str, config: Optional[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Deploy agent instance for customer."""
         instance_id = str(uuid.uuid4())
 
-        return {
-            "success": True,
-            "instance_id": instance_id
-        }
+        return {"success": True, "instance_id": instance_id}
 
     async def _increment_installation_count(self, agent_id: str) -> None:
         """Increment installation count for agent."""
@@ -607,11 +606,7 @@ class DeveloperEcosystem:
         # Simplified payment processing
         amount = Decimal("99.00")  # Default price
 
-        return {
-            "success": True,
-            "amount": amount,
-            "transaction_id": str(uuid.uuid4())
-        }
+        return {"success": True, "amount": amount, "transaction_id": str(uuid.uuid4())}
 
     async def _record_revenue_share(self, agent: AgentConfiguration, amount: Decimal) -> None:
         """Record revenue share for developer."""
@@ -643,7 +638,7 @@ class DeveloperEcosystem:
         return {
             "monthly_revenue": Decimal("500000"),
             "developer_share": Decimal("175000"),
-            "platform_share": Decimal("325000")
+            "platform_share": Decimal("325000"),
         }
 
     async def _calculate_marketplace_growth_rate(self) -> float:
@@ -674,5 +669,5 @@ class DeveloperEcosystem:
         return [
             "Consider adding more agent categories",
             "Improve agent documentation for higher ratings",
-            "Explore enterprise-tier revenue sharing"
+            "Explore enterprise-tier revenue sharing",
         ]

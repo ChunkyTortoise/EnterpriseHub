@@ -44,14 +44,14 @@ Author: Claude Code Agent Swarm
 Created: 2026-01-17
 """
 
-import random
 import json
-import uuid
+import random
 import time
+import uuid
 from datetime import datetime, timedelta
-from typing import Dict, Any
+from typing import Any, Dict
 
-from locust import HttpUser, task, between, events
+from locust import HttpUser, between, events, task
 from locust.exception import RescheduleTask
 
 
@@ -74,10 +74,7 @@ class JorgePlatformUser(HttpUser):
         self.user_id = f"locust_user_{uuid.uuid4().hex[:8]}"
 
         # Simulate authentication (in production, would use real JWT)
-        self.auth_headers = {
-            "Authorization": f"Bearer test_token_{self.user_id}",
-            "Content-Type": "application/json"
-        }
+        self.auth_headers = {"Authorization": f"Bearer test_token_{self.user_id}", "Content-Type": "application/json"}
 
         # Track user metrics
         self.requests_made = 0
@@ -96,8 +93,8 @@ class JorgePlatformUser(HttpUser):
                 "budget": random.randint(200000, 2000000),
                 "timeline": random.choice(["immediate", "30_days", "60_days", "90_days"]),
                 "property_type": random.choice(["single_family", "condo", "multi_family", "commercial"]),
-                "location_preference": random.choice(["urban", "suburban", "rural"])
-            }
+                "location_preference": random.choice(["urban", "suburban", "rural"]),
+            },
         }
 
         with self.client.post(
@@ -105,7 +102,7 @@ class JorgePlatformUser(HttpUser):
             json=lead_data,
             headers=self.auth_headers,
             catch_response=True,
-            name="Pricing Calculate"
+            name="Pricing Calculate",
         ) as response:
             if response.status_code == 200:
                 try:
@@ -128,7 +125,7 @@ class JorgePlatformUser(HttpUser):
             f"/api/pricing/analytics/{self.location_id}?days={days}",
             headers=self.auth_headers,
             catch_response=True,
-            name="Pricing Analytics"
+            name="Pricing Analytics",
         ) as response:
             if response.status_code == 200:
                 try:
@@ -152,7 +149,7 @@ class JorgePlatformUser(HttpUser):
             f"/api/pricing/roi-report/{self.location_id}?days={days}&include_projections={include_projections}",
             headers=self.auth_headers,
             catch_response=True,
-            name="ROI Report"
+            name="ROI Report",
         ) as response:
             if response.status_code == 200:
                 try:
@@ -172,7 +169,7 @@ class JorgePlatformUser(HttpUser):
         calc_data = {
             "leads_per_month": random.randint(50, 500),
             "messages_per_lead": random.uniform(3.0, 15.0),
-            "human_hourly_rate": random.uniform(15.0, 50.0)
+            "human_hourly_rate": random.uniform(15.0, 50.0),
         }
 
         with self.client.post(
@@ -180,7 +177,7 @@ class JorgePlatformUser(HttpUser):
             json=calc_data,
             headers=self.auth_headers,
             catch_response=True,
-            name="Savings Calculator"
+            name="Savings Calculator",
         ) as response:
             if response.status_code == 200:
                 try:
@@ -201,7 +198,7 @@ class JorgePlatformUser(HttpUser):
             f"/api/pricing/human-vs-ai/{self.location_id}",
             headers=self.auth_headers,
             catch_response=True,
-            name="Human vs AI Comparison"
+            name="Human vs AI Comparison",
         ) as response:
             if response.status_code == 200:
                 try:
@@ -222,7 +219,7 @@ class JorgePlatformUser(HttpUser):
             f"/api/pricing/optimize/{self.location_id}",
             headers=self.auth_headers,
             catch_response=True,
-            name="Pricing Optimization"
+            name="Pricing Optimization",
         ) as response:
             if response.status_code == 200:
                 try:
@@ -239,11 +236,7 @@ class JorgePlatformUser(HttpUser):
     @task(1)  # 1% of requests - health check monitoring
     def health_check(self):
         """Check system health"""
-        with self.client.get(
-            "/api/pricing/health",
-            catch_response=True,
-            name="Health Check"
-        ) as response:
+        with self.client.get("/api/pricing/health", catch_response=True, name="Health Check") as response:
             if response.status_code == 200:
                 try:
                     result = response.json()
@@ -269,10 +262,7 @@ class PeakTrafficUser(HttpUser):
         """Initialize peak traffic user"""
         self.location_id = "3xt4qayAh35BlDLaUv7P"
         self.user_id = f"peak_user_{uuid.uuid4().hex[:8]}"
-        self.auth_headers = {
-            "Authorization": f"Bearer test_token_{self.user_id}",
-            "Content-Type": "application/json"
-        }
+        self.auth_headers = {"Authorization": f"Bearer test_token_{self.user_id}", "Content-Type": "application/json"}
 
     @task(60)
     def rapid_pricing_calculations(self):
@@ -289,24 +279,19 @@ class PeakTrafficUser(HttpUser):
                     "engagement_score": random.uniform(0.6, 1.0),
                     "source": "marketing_campaign",
                     "budget": random.randint(400000, 2000000),
-                    "timeline": "immediate"
-                }
+                    "timeline": "immediate",
+                },
             }
 
             self.client.post(
-                "/api/pricing/calculate",
-                json=lead_data,
-                headers=self.auth_headers,
-                name="Peak Pricing Calculate"
+                "/api/pricing/calculate", json=lead_data, headers=self.auth_headers, name="Peak Pricing Calculate"
             )
 
     @task(30)
     def analytics_monitoring(self):
         """Frequent analytics checks during peak"""
         self.client.get(
-            f"/api/pricing/analytics/{self.location_id}?days=7",
-            headers=self.auth_headers,
-            name="Peak Analytics"
+            f"/api/pricing/analytics/{self.location_id}?days=7", headers=self.auth_headers, name="Peak Analytics"
         )
 
     @task(10)
@@ -315,29 +300,30 @@ class PeakTrafficUser(HttpUser):
         self.client.get(
             f"/api/pricing/roi-report/{self.location_id}?days=30&include_projections=false",
             headers=self.auth_headers,
-            name="Peak ROI Quick Check"
+            name="Peak ROI Quick Check",
         )
 
 
 # Event handlers for custom metrics and reporting
 
+
 @events.test_start.add_listener
 def on_test_start(environment, **kwargs):
     """Called when load test starts"""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Jorge's Revenue Acceleration Platform - Load Test Starting")
-    print("="*80)
+    print("=" * 80)
     print(f"Target Host: {environment.host}")
     print(f"Start Time: {datetime.now().isoformat()}")
-    print("="*80 + "\n")
+    print("=" * 80 + "\n")
 
 
 @events.test_stop.add_listener
 def on_test_stop(environment, **kwargs):
     """Called when load test stops - generate summary report"""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Jorge's Revenue Acceleration Platform - Load Test Complete")
-    print("="*80)
+    print("=" * 80)
     print(f"End Time: {datetime.now().isoformat()}")
 
     stats = environment.stats
@@ -353,9 +339,9 @@ def on_test_stop(environment, **kwargs):
     print(f"RPS (Total): {stats.total.total_rps:.1f}")
     print(f"RPS (Current): {stats.total.current_rps:.1f}")
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Performance Assessment:")
-    print("="*80)
+    print("=" * 80)
 
     # Assess against targets
     p95 = stats.total.get_response_time_percentile(0.95)
@@ -373,9 +359,11 @@ def on_test_stop(environment, **kwargs):
     print("\nPerformance Targets:")
     print(f"  - P95 Response Time: {'✅' if p95 <= 100 else '❌'} {p95:.1f}ms (target: <100ms)")
     print(f"  - Error Rate: {'✅' if fail_rate <= 0.001 else '❌'} {fail_rate:.3%} (target: <0.1%)")
-    print(f"  - Throughput: {'✅' if stats.total.total_rps >= 166.67 else '❌'} {stats.total.total_rps:.1f} rps (target: >166.67 rps = 10,000/min)")
+    print(
+        f"  - Throughput: {'✅' if stats.total.total_rps >= 166.67 else '❌'} {stats.total.total_rps:.1f} rps (target: >166.67 rps = 10,000/min)"
+    )
 
-    print("="*80 + "\n")
+    print("=" * 80 + "\n")
 
 
 @events.request.add_listener
@@ -388,22 +376,26 @@ def on_request(request_type, name, response_time, response_length, exception, **
 # Custom user classes for different load profiles
 class SmokeTestUser(JorgePlatformUser):
     """Light load for smoke testing"""
+
     wait_time = between(2, 5)
     weight = 1
 
 
 class NormalLoadUser(JorgePlatformUser):
     """Normal business traffic"""
+
     wait_time = between(1, 3)
     weight = 7
 
 
 class PeakLoadUser(PeakTrafficUser):
     """Peak traffic simulation"""
+
     wait_time = between(0.5, 2)
     weight = 2
 
 
 if __name__ == "__main__":
     import os
+
     os.system("locust -f locustfile_jorge_platform.py --host=http://localhost:8000")

@@ -13,6 +13,7 @@ Critical Enhancements:
 """
 
 import asyncio
+import json
 import time
 import uuid
 from abc import ABC, abstractmethod
@@ -20,8 +21,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Callable, Union
-import json
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
@@ -30,14 +30,16 @@ logger = get_logger(__name__)
 
 class ErrorCategory(Enum):
     """Error categories for proper escalation and handling"""
-    TRANSIENT = "transient"          # Retry possible (network timeouts, rate limits)
-    PERMANENT = "permanent"          # No retry (validation errors, not found)
-    CRITICAL = "critical"            # Immediate escalation (security, data corruption)
-    DEGRADED = "degraded"           # Partial failure (some agents failed but others succeeded)
+
+    TRANSIENT = "transient"  # Retry possible (network timeouts, rate limits)
+    PERMANENT = "permanent"  # No retry (validation errors, not found)
+    CRITICAL = "critical"  # Immediate escalation (security, data corruption)
+    DEGRADED = "degraded"  # Partial failure (some agents failed but others succeeded)
 
 
 class ErrorSeverity(Enum):
     """Error severity levels for alerting and escalation"""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -48,6 +50,7 @@ class ErrorSeverity(Enum):
 @dataclass
 class ErrorContext:
     """Enhanced error context for detailed failure analysis"""
+
     error_id: str
     error_category: ErrorCategory
     severity: ErrorSeverity
@@ -77,20 +80,16 @@ class FailureEscalationManager:
             ErrorSeverity.CRITICAL: {
                 "immediate_notification": True,
                 "escalation_delay": 300,  # 5 minutes
-                "max_escalation_levels": 3
+                "max_escalation_levels": 3,
             },
             ErrorSeverity.EMERGENCY: {
                 "immediate_notification": True,
                 "escalation_delay": 180,  # 3 minutes
-                "max_escalation_levels": 5
-            }
+                "max_escalation_levels": 5,
+            },
         }
 
-    async def escalate_agent_system_failure(
-        self,
-        lead_id: str,
-        failed_agents: List[Dict[str, str]]
-    ):
+    async def escalate_agent_system_failure(self, lead_id: str, failed_agents: List[Dict[str, str]]):
         """Escalate when majority of agents fail for a lead"""
         incident_id = f"AGENT_SYSTEM_FAILURE_{uuid.uuid4().hex[:8]}"
 
@@ -105,8 +104,8 @@ class FailureEscalationManager:
             metadata={
                 "failed_agents": failed_agents,
                 "total_agents": 5,  # Assuming 5 agents in followup engine
-                "failure_rate": len(failed_agents) / 5
-            }
+                "failure_rate": len(failed_agents) / 5,
+            },
         )
 
         await self._create_incident(incident_id, error_context)
@@ -122,15 +121,11 @@ class FailureEscalationManager:
                 "incident_id": incident_id,
                 "lead_id": lead_id,
                 "failed_agents": failed_agents,
-                "error_context": error_context.__dict__
-            }
+                "error_context": error_context.__dict__,
+            },
         )
 
-    async def escalate_consensus_failure(
-        self,
-        lead_id: str,
-        failed_agents: List[Dict[str, str]]
-    ):
+    async def escalate_consensus_failure(self, lead_id: str, failed_agents: List[Dict[str, str]]):
         """Escalate when agent consensus building fails"""
         incident_id = f"CONSENSUS_FAILURE_{uuid.uuid4().hex[:8]}"
 
@@ -142,10 +137,7 @@ class FailureEscalationManager:
             operation="consensus_building",
             lead_id=lead_id,
             error_message="No valid agent recommendations available",
-            metadata={
-                "failed_agents": failed_agents,
-                "consensus_threshold": 0.7
-            }
+            metadata={"failed_agents": failed_agents, "consensus_threshold": 0.7},
         )
 
         await self._create_incident(incident_id, error_context)
@@ -155,11 +147,7 @@ class FailureEscalationManager:
 
         logger.error(
             f"CONSENSUS_FAILURE_ESCALATED: Agent consensus failure escalated",
-            extra={
-                "incident_id": incident_id,
-                "lead_id": lead_id,
-                "error_context": error_context.__dict__
-            }
+            extra={"incident_id": incident_id, "lead_id": lead_id, "error_context": error_context.__dict__},
         )
 
     async def _create_incident(self, incident_id: str, error_context: ErrorContext):
@@ -170,7 +158,7 @@ class FailureEscalationManager:
             "error_context": error_context,
             "status": "active",
             "escalation_level": 1,
-            "assigned_to": None
+            "assigned_to": None,
         }
 
         self.active_incidents[incident_id] = incident
@@ -180,17 +168,14 @@ class FailureEscalationManager:
         # In production, this would integrate with PagerDuty, Slack, etc.
         logger.critical(
             f"ON_CALL_NOTIFICATION: Notifying on-call engineer",
-            extra={
-                "error_context": error_context.__dict__,
-                "notification_channels": ["pagerduty", "slack", "email"]
-            }
+            extra={"error_context": error_context.__dict__, "notification_channels": ["pagerduty", "slack", "email"]},
         )
 
     async def _activate_degraded_mode(self, lead_id: str):
         """Activate degraded mode processing for lead"""
         logger.warning(
             f"DEGRADED_MODE_ACTIVATED: Switching to degraded mode for lead {lead_id}",
-            extra={"lead_id": lead_id, "mode": "degraded_processing"}
+            extra={"lead_id": lead_id, "mode": "degraded_processing"},
         )
 
     async def _queue_for_human_review(self, lead_id: str, error_context: ErrorContext):
@@ -200,8 +185,8 @@ class FailureEscalationManager:
             extra={
                 "lead_id": lead_id,
                 "reason": "agent_consensus_failure",
-                "priority": "high" if error_context.severity == ErrorSeverity.HIGH else "medium"
-            }
+                "priority": "high" if error_context.severity == ErrorSeverity.HIGH else "medium",
+            },
         )
 
     async def _log_for_forensic_analysis(self, error_context: ErrorContext):
@@ -210,15 +195,12 @@ class FailureEscalationManager:
             "timestamp": error_context.timestamp.isoformat(),
             "error_context": error_context.__dict__,
             "system_state": await self._capture_system_state(),
-            "correlation_events": await self._get_related_events(error_context.correlation_id)
+            "correlation_events": await self._get_related_events(error_context.correlation_id),
         }
 
         logger.info(
             f"FORENSIC_LOG: Detailed forensic data captured",
-            extra={
-                "forensic_data": forensic_data,
-                "error_id": error_context.error_id
-            }
+            extra={"forensic_data": forensic_data, "error_id": error_context.error_id},
         )
 
     async def _capture_system_state(self) -> Dict[str, Any]:
@@ -226,7 +208,7 @@ class FailureEscalationManager:
         return {
             "active_incidents": len(self.active_incidents),
             "timestamp": datetime.now().isoformat(),
-            "service_status": "degraded"  # This would be dynamic in production
+            "service_status": "degraded",  # This would be dynamic in production
         }
 
     async def _get_related_events(self, correlation_id: Optional[str]) -> List[Dict[str, Any]]:
@@ -242,18 +224,10 @@ class EnhancedAgentOrchestrationHandler:
 
     def __init__(self):
         self.escalation_manager = FailureEscalationManager()
-        self.retry_config = {
-            "max_retries": 3,
-            "base_delay": 1.0,
-            "exponential_backoff": True,
-            "jitter": True
-        }
+        self.retry_config = {"max_retries": 3, "base_delay": 1.0, "exponential_backoff": True, "jitter": True}
 
     async def handle_agent_recommendations(
-        self,
-        agent_tasks: List[Any],
-        lead_id: str,
-        agent_consensus_threshold: float = 0.7
+        self, agent_tasks: List[Any], lead_id: str, agent_consensus_threshold: float = 0.7
     ) -> List[Any]:
         """Enhanced agent recommendation handling with proper error categorization"""
 
@@ -266,12 +240,8 @@ class EnhancedAgentOrchestrationHandler:
 
             for i, rec in enumerate(agent_recommendations):
                 if isinstance(rec, Exception):
-                    agent_name = getattr(agent_tasks[i], '__name__', f'agent_{i}')
-                    failure_info = {
-                        "agent_name": agent_name,
-                        "error": str(rec),
-                        "error_type": type(rec).__name__
-                    }
+                    agent_name = getattr(agent_tasks[i], "__name__", f"agent_{i}")
+                    failure_info = {"agent_name": agent_name, "error": str(rec), "error_type": type(rec).__name__}
 
                     # Categorize the error
                     error_category = self._categorize_agent_error(rec)
@@ -285,8 +255,8 @@ class EnhancedAgentOrchestrationHandler:
                                 "lead_id": lead_id,
                                 "agent": agent_name,
                                 "error": str(rec),
-                                "category": error_category.value
-                            }
+                                "category": error_category.value,
+                            },
                         )
                     else:
                         failed_agents.append(failure_info)
@@ -298,11 +268,11 @@ class EnhancedAgentOrchestrationHandler:
                                 "agent": agent_name,
                                 "error": str(rec),
                                 "error_type": type(rec).__name__,
-                                "category": error_category.value
-                            }
+                                "category": error_category.value,
+                            },
                         )
 
-                elif hasattr(rec, 'confidence') and rec.confidence >= agent_consensus_threshold:
+                elif hasattr(rec, "confidence") and rec.confidence >= agent_consensus_threshold:
                     valid_recommendations.append(rec)
                 else:
                     logger.info(
@@ -310,9 +280,9 @@ class EnhancedAgentOrchestrationHandler:
                         extra={
                             "error_id": "LOW_CONFIDENCE_RECOMMENDATION_001",
                             "lead_id": lead_id,
-                            "confidence": getattr(rec, 'confidence', 0),
-                            "threshold": agent_consensus_threshold
-                        }
+                            "confidence": getattr(rec, "confidence", 0),
+                            "threshold": agent_consensus_threshold,
+                        },
                     )
 
             # Retry transient failures
@@ -322,8 +292,8 @@ class EnhancedAgentOrchestrationHandler:
                     extra={
                         "error_id": "RETRYING_TRANSIENT_FAILURES_001",
                         "lead_id": lead_id,
-                        "retry_count": len(transient_failures)
-                    }
+                        "retry_count": len(transient_failures),
+                    },
                 )
                 # In production, implement retry logic here
 
@@ -350,13 +320,12 @@ class EnhancedAgentOrchestrationHandler:
                     "error_id": "AGENT_ORCHESTRATION_FAILURE_001",
                     "lead_id": lead_id,
                     "error": str(e),
-                    "error_type": type(e).__name__
-                }
+                    "error_type": type(e).__name__,
+                },
             )
             # Escalate immediately for system-level failures
             await self.escalation_manager.escalate_agent_system_failure(
-                lead_id,
-                [{"agent_name": "system", "error": str(e), "error_type": type(e).__name__}]
+                lead_id, [{"agent_name": "system", "error": str(e), "error_type": type(e).__name__}]
             )
             raise
 
@@ -367,21 +336,33 @@ class EnhancedAgentOrchestrationHandler:
 
         # Transient errors that can be retried
         transient_indicators = [
-            'timeout', 'connection', 'network', 'rate limit', 'temporary',
-            'unavailable', 'overload', 'retry', 'throttle'
+            "timeout",
+            "connection",
+            "network",
+            "rate limit",
+            "temporary",
+            "unavailable",
+            "overload",
+            "retry",
+            "throttle",
         ]
 
         # Critical errors requiring immediate attention
         critical_indicators = [
-            'authentication', 'authorization', 'security', 'corruption',
-            'invalid key', 'access denied', 'forbidden'
+            "authentication",
+            "authorization",
+            "security",
+            "corruption",
+            "invalid key",
+            "access denied",
+            "forbidden",
         ]
 
         if any(indicator in error_message for indicator in critical_indicators):
             return ErrorCategory.CRITICAL
         elif any(indicator in error_message for indicator in transient_indicators):
             return ErrorCategory.TRANSIENT
-        elif error_type in ['ValidationError', 'ValueError', 'TypeError']:
+        elif error_type in ["ValidationError", "ValueError", "TypeError"]:
             return ErrorCategory.PERMANENT
         else:
             # Default to transient for unknown errors (allow retry)
@@ -393,19 +374,10 @@ class EnhancedLLMIntegrationHandler:
 
     def __init__(self):
         self.timeout_threshold = 30.0  # 30 seconds
-        self.retry_config = {
-            "max_retries": 3,
-            "base_delay": 2.0,
-            "timeout_retry_delay": 5.0
-        }
+        self.retry_config = {"max_retries": 3, "base_delay": 2.0, "timeout_retry_delay": 5.0}
 
     async def safe_llm_generate(
-        self,
-        llm_client: Any,
-        prompt: str,
-        max_tokens: int = 300,
-        temperature: float = 0.3,
-        operation_id: str = None
+        self, llm_client: Any, prompt: str, max_tokens: int = 300, temperature: float = 0.3, operation_id: str = None
     ) -> Optional[str]:
         """Safe LLM generation with timeout and error handling"""
 
@@ -415,15 +387,11 @@ class EnhancedLLMIntegrationHandler:
             try:
                 # Use asyncio.wait_for to enforce timeout
                 response = await asyncio.wait_for(
-                    llm_client.generate(
-                        prompt=prompt,
-                        max_tokens=max_tokens,
-                        temperature=temperature
-                    ),
-                    timeout=self.timeout_threshold
+                    llm_client.generate(prompt=prompt, max_tokens=max_tokens, temperature=temperature),
+                    timeout=self.timeout_threshold,
                 )
 
-                if hasattr(response, 'content') and response.content:
+                if hasattr(response, "content") and response.content:
                     return response.content
                 else:
                     logger.warning(
@@ -431,8 +399,8 @@ class EnhancedLLMIntegrationHandler:
                         extra={
                             "error_id": "LLM_EMPTY_RESPONSE_001",
                             "operation_id": operation_id,
-                            "attempt": attempt + 1
-                        }
+                            "attempt": attempt + 1,
+                        },
                     )
                     return "Standard response recommended due to LLM processing issue."
 
@@ -443,8 +411,8 @@ class EnhancedLLMIntegrationHandler:
                         "error_id": "LLM_TIMEOUT_001",
                         "operation_id": operation_id,
                         "attempt": attempt + 1,
-                        "timeout_seconds": self.timeout_threshold
-                    }
+                        "timeout_seconds": self.timeout_threshold,
+                    },
                 )
 
                 if attempt < self.retry_config["max_retries"] - 1:
@@ -465,8 +433,8 @@ class EnhancedLLMIntegrationHandler:
                         "attempt": attempt + 1,
                         "error": str(e),
                         "error_type": type(e).__name__,
-                        "category": error_category.value
-                    }
+                        "category": error_category.value,
+                    },
                 )
 
                 if error_category == ErrorCategory.PERMANENT or attempt >= self.retry_config["max_retries"] - 1:
@@ -474,7 +442,7 @@ class EnhancedLLMIntegrationHandler:
                     return "Standard response recommended due to processing limitations."
 
                 # Wait before retry for transient errors
-                await asyncio.sleep(self.retry_config["base_delay"] * (2 ** attempt))
+                await asyncio.sleep(self.retry_config["base_delay"] * (2**attempt))
 
         return "Standard response recommended due to service limitations."
 
@@ -482,11 +450,11 @@ class EnhancedLLMIntegrationHandler:
         """Categorize LLM errors for retry logic"""
         error_message = str(error).lower()
 
-        if 'rate limit' in error_message or 'quota' in error_message:
+        if "rate limit" in error_message or "quota" in error_message:
             return ErrorCategory.TRANSIENT
-        elif 'authentication' in error_message or 'api key' in error_message:
+        elif "authentication" in error_message or "api key" in error_message:
             return ErrorCategory.CRITICAL
-        elif 'invalid request' in error_message or 'bad request' in error_message:
+        elif "invalid request" in error_message or "bad request" in error_message:
             return ErrorCategory.PERMANENT
         else:
             return ErrorCategory.TRANSIENT
@@ -495,29 +463,20 @@ class EnhancedLLMIntegrationHandler:
 class StateConsistencyVerifier:
     """Verifies state consistency across agent systems to prevent silent failures"""
 
-    async def verify_agent_state_consistency(
-        self,
-        lead_id: str,
-        agents: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def verify_agent_state_consistency(self, lead_id: str, agents: Dict[str, Any]) -> Dict[str, Any]:
         """Verify all agents have consistent view of lead state"""
 
         try:
-            agent_states = await asyncio.gather(*[
-                self._get_agent_state(agent, lead_id)
-                for agent in agents.values()
-            ], return_exceptions=True)
+            agent_states = await asyncio.gather(
+                *[self._get_agent_state(agent, lead_id) for agent in agents.values()], return_exceptions=True
+            )
 
             inconsistencies = []
             valid_states = []
 
             for i, state in enumerate(agent_states):
                 if isinstance(state, Exception):
-                    inconsistencies.append({
-                        "agent_index": i,
-                        "error": str(state),
-                        "type": "access_failure"
-                    })
+                    inconsistencies.append({"agent_index": i, "error": str(state), "type": "access_failure"})
                 else:
                     valid_states.append(state)
 
@@ -533,8 +492,8 @@ class StateConsistencyVerifier:
                         "error_id": "AGENT_STATE_INCONSISTENCY_001",
                         "lead_id": lead_id,
                         "inconsistency_count": len(inconsistencies),
-                        "inconsistencies": inconsistencies
-                    }
+                        "inconsistencies": inconsistencies,
+                    },
                 )
 
                 await self._trigger_state_reconciliation(lead_id, inconsistencies)
@@ -543,17 +502,13 @@ class StateConsistencyVerifier:
                 "consistent": len(inconsistencies) == 0,
                 "inconsistencies": inconsistencies,
                 "valid_states_count": len(valid_states),
-                "total_agents": len(agents)
+                "total_agents": len(agents),
             }
 
         except Exception as e:
             logger.critical(
                 f"STATE_VERIFICATION_FAILURE: Failed to verify agent state consistency",
-                extra={
-                    "error_id": "STATE_VERIFICATION_FAILURE_001",
-                    "lead_id": lead_id,
-                    "error": str(e)
-                }
+                extra={"error_id": "STATE_VERIFICATION_FAILURE_001", "lead_id": lead_id, "error": str(e)},
             )
             raise
 
@@ -562,57 +517,48 @@ class StateConsistencyVerifier:
         # This would be implemented based on actual agent interface
         return {
             "lead_id": lead_id,
-            "agent_type": getattr(agent, 'agent_type', 'unknown'),
+            "agent_type": getattr(agent, "agent_type", "unknown"),
             "last_analysis": datetime.now(),
-            "confidence_level": 0.8
+            "confidence_level": 0.8,
         }
 
-    def _detect_data_inconsistencies(
-        self,
-        states: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+    def _detect_data_inconsistencies(self, states: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Detect inconsistencies in agent state data"""
         inconsistencies = []
 
         # Check for timestamp discrepancies
-        timestamps = [state.get('last_analysis') for state in states if state.get('last_analysis')]
+        timestamps = [state.get("last_analysis") for state in states if state.get("last_analysis")]
         if timestamps:
             max_time = max(timestamps)
             min_time = min(timestamps)
             time_diff = (max_time - min_time).total_seconds()
 
             if time_diff > 300:  # 5 minutes threshold
-                inconsistencies.append({
-                    "type": "timestamp_skew",
-                    "max_difference_seconds": time_diff,
-                    "threshold_seconds": 300
-                })
+                inconsistencies.append(
+                    {"type": "timestamp_skew", "max_difference_seconds": time_diff, "threshold_seconds": 300}
+                )
 
         return inconsistencies
 
-    async def _trigger_state_reconciliation(
-        self,
-        lead_id: str,
-        inconsistencies: List[Dict[str, Any]]
-    ):
+    async def _trigger_state_reconciliation(self, lead_id: str, inconsistencies: List[Dict[str, Any]]):
         """Trigger reconciliation process for inconsistent states"""
         logger.info(
             f"STATE_RECONCILIATION_TRIGGERED: Starting state reconciliation",
             extra={
                 "error_id": "STATE_RECONCILIATION_TRIGGERED_001",
                 "lead_id": lead_id,
-                "inconsistency_types": [inc.get('type') for inc in inconsistencies]
-            }
+                "inconsistency_types": [inc.get("type") for inc in inconsistencies],
+            },
         )
 
 
 # Export enhanced error handling components
 __all__ = [
-    'ErrorCategory',
-    'ErrorSeverity',
-    'ErrorContext',
-    'FailureEscalationManager',
-    'EnhancedAgentOrchestrationHandler',
-    'EnhancedLLMIntegrationHandler',
-    'StateConsistencyVerifier'
+    "ErrorCategory",
+    "ErrorSeverity",
+    "ErrorContext",
+    "FailureEscalationManager",
+    "EnhancedAgentOrchestrationHandler",
+    "EnhancedLLMIntegrationHandler",
+    "StateConsistencyVerifier",
 ]

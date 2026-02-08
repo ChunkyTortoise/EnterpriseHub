@@ -13,27 +13,31 @@ Author: Enhanced from research recommendations - January 2026
 import asyncio
 import json
 import re
+from abc import ABC, abstractmethod
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, asdict
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
+
 import aiohttp
 import numpy as np
-from abc import ABC, abstractmethod
 
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.services.sentiment_drift_engine import SentimentDriftEngine
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.services.economic_indicators_service import get_economic_indicators_service
-from ghl_real_estate_ai.services.sentiment_types import (
-    SentimentSignal, SentimentTriggerType, AlertPriority,
-    DataSourceInterface, MarketSentiment
-)
-from ghl_real_estate_ai.utils.json_utils import safe_json_dumps
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 # Import after sentiment_types to avoid circular dependency
 from ghl_real_estate_ai.services.san_bernardino_county_permits import get_san_bernardino_county_permit_service
+from ghl_real_estate_ai.services.sentiment_drift_engine import SentimentDriftEngine
+from ghl_real_estate_ai.services.sentiment_types import (
+    AlertPriority,
+    DataSourceInterface,
+    MarketSentiment,
+    SentimentSignal,
+    SentimentTriggerType,
+)
+from ghl_real_estate_ai.utils.json_utils import safe_json_dumps
 
 logger = get_logger(__name__)
 
@@ -41,37 +45,40 @@ logger = get_logger(__name__)
 @dataclass
 class MarketSentimentProfile:
     """Comprehensive sentiment profile for a geographic area."""
+
     location: str
-    overall_sentiment: float          # Composite sentiment score
-    trend_direction: str             # "improving", "stable", "declining"
-    velocity: float                  # Rate of sentiment change per day
+    overall_sentiment: float  # Composite sentiment score
+    trend_direction: str  # "improving", "stable", "declining"
+    velocity: float  # Rate of sentiment change per day
 
     # Individual signal categories
-    social_sentiment: float          # Social media and community discussions
-    permit_pressure: float           # Permit delays, denials, disputes
-    economic_stress: float           # Tax increases, insurance spikes, HOA issues
-    infrastructure_concerns: float   # Traffic, crime, development pressure
+    social_sentiment: float  # Social media and community discussions
+    permit_pressure: float  # Permit delays, denials, disputes
+    economic_stress: float  # Tax increases, insurance spikes, HOA issues
+    infrastructure_concerns: float  # Traffic, crime, development pressure
 
     # Predictive signals
-    seller_motivation_index: float   # 0-100, probability of motivated sellers emerging
-    optimal_outreach_window: str     # "immediate", "1-week", "2-weeks", "month+"
+    seller_motivation_index: float  # 0-100, probability of motivated sellers emerging
+    optimal_outreach_window: str  # "immediate", "1-week", "2-weeks", "month+"
 
     # Supporting data
     key_signals: List[SentimentSignal]
     confidence_score: float
     last_updated: datetime
 
+
 @dataclass
 class SentimentAlert:
     """Alert for high-priority sentiment changes requiring action."""
+
     alert_id: str
     priority: AlertPriority
     location: str
     trigger_type: SentimentTriggerType
     message: str
     recommended_action: str
-    target_audience: str    # Property owner profile to target
-    timing_window: str      # When to act
+    target_audience: str  # Property owner profile to target
+    timing_window: str  # When to act
     expected_lead_quality: float  # 0-100
     generated_at: datetime
 
@@ -86,29 +93,34 @@ class MockTwitterSentimentSource(DataSourceInterface):
 
         # Simulate some negative sentiment about traffic/development
         if "rancho cucamonga" in location.lower() or "91" in location:
-            signals.append(SentimentSignal(
-                source="twitter",
-                signal_type=SentimentTriggerType.INFRASTRUCTURE_CONCERN,
-                location=location,
-                sentiment_score=-45,
-                confidence=0.82,
-                raw_content="Traffic on I-10 getting worse every month... LA commute taking forever",
-                detected_at=datetime.now() - timedelta(hours=2),
-                urgency_multiplier=1.8
-            ))
+            signals.append(
+                SentimentSignal(
+                    source="twitter",
+                    signal_type=SentimentTriggerType.INFRASTRUCTURE_CONCERN,
+                    location=location,
+                    sentiment_score=-45,
+                    confidence=0.82,
+                    raw_content="Traffic on I-10 getting worse every month... LA commute taking forever",
+                    detected_at=datetime.now() - timedelta(hours=2),
+                    urgency_multiplier=1.8,
+                )
+            )
 
-            signals.append(SentimentSignal(
-                source="twitter",
-                signal_type=SentimentTriggerType.NEIGHBORHOOD_DECLINE,
-                location=location,
-                sentiment_score=-23,
-                confidence=0.67,
-                raw_content="New apartment complex going up next door, there goes the neighborhood feel",
-                detected_at=datetime.now() - timedelta(days=1),
-                urgency_multiplier=1.2
-            ))
+            signals.append(
+                SentimentSignal(
+                    source="twitter",
+                    signal_type=SentimentTriggerType.NEIGHBORHOOD_DECLINE,
+                    location=location,
+                    sentiment_score=-23,
+                    confidence=0.67,
+                    raw_content="New apartment complex going up next door, there goes the neighborhood feel",
+                    detected_at=datetime.now() - timedelta(days=1),
+                    urgency_multiplier=1.2,
+                )
+            )
 
         return signals
+
 
 class MockPermitDataSource(DataSourceInterface):
     """Mock permit data source - replace with Travis County/Williamson County APIs."""
@@ -119,18 +131,21 @@ class MockPermitDataSource(DataSourceInterface):
 
         # Simulate permit activity creating neighborhood uncertainty
         if "91737" in location or "east rancho" in location.lower():
-            signals.append(SentimentSignal(
-                source="permits",
-                signal_type=SentimentTriggerType.PERMIT_DISRUPTION,
-                location=location,
-                sentiment_score=-60,
-                confidence=0.95,
-                raw_content="12 commercial permits filed on Haven Ave, traffic study required",
-                detected_at=datetime.now() - timedelta(days=3),
-                urgency_multiplier=3.2  # High urgency - development pressure
-            ))
+            signals.append(
+                SentimentSignal(
+                    source="permits",
+                    signal_type=SentimentTriggerType.PERMIT_DISRUPTION,
+                    location=location,
+                    sentiment_score=-60,
+                    confidence=0.95,
+                    raw_content="12 commercial permits filed on Haven Ave, traffic study required",
+                    detected_at=datetime.now() - timedelta(days=3),
+                    urgency_multiplier=3.2,  # High urgency - development pressure
+                )
+            )
 
         return signals
+
 
 class MockNewsSource(DataSourceInterface):
     """Mock local news sentiment - replace with NewsAPI + Austin American-Statesman RSS."""
@@ -140,18 +155,21 @@ class MockNewsSource(DataSourceInterface):
         signals = []
 
         # Simulate economic stress signals
-        signals.append(SentimentSignal(
-            source="local_news",
-            signal_type=SentimentTriggerType.ECONOMIC_STRESS,
-            location=location,
-            sentiment_score=-35,
-            confidence=0.78,
-            raw_content="California homeowner insurance rates increase 15% due to wildfire risk",
-            detected_at=datetime.now() - timedelta(hours=6),
-            urgency_multiplier=2.1
-        ))
+        signals.append(
+            SentimentSignal(
+                source="local_news",
+                signal_type=SentimentTriggerType.ECONOMIC_STRESS,
+                location=location,
+                sentiment_score=-35,
+                confidence=0.78,
+                raw_content="California homeowner insurance rates increase 15% due to wildfire risk",
+                detected_at=datetime.now() - timedelta(hours=6),
+                urgency_multiplier=2.1,
+            )
+        )
 
         return signals
+
 
 class MockHOADataSource(DataSourceInterface):
     """Mock HOA/community data - replace with public records + community portals."""
@@ -161,19 +179,22 @@ class MockHOADataSource(DataSourceInterface):
         signals = []
 
         # Simulate HOA disputes and fees
-        if any(keyword in location.lower() for keyword in ['victoria', 'terra vista', '91737', '91739']):
-            signals.append(SentimentSignal(
-                source="hoa_records",
-                signal_type=SentimentTriggerType.ECONOMIC_STRESS,
-                location=location,
-                sentiment_score=-42,
-                confidence=0.89,
-                raw_content="HOA special assessment approved: $6,200 per property for earthquake retrofitting",
-                detected_at=datetime.now() - timedelta(days=2),
-                urgency_multiplier=2.8
-            ))
+        if any(keyword in location.lower() for keyword in ["victoria", "terra vista", "91737", "91739"]):
+            signals.append(
+                SentimentSignal(
+                    source="hoa_records",
+                    signal_type=SentimentTriggerType.ECONOMIC_STRESS,
+                    location=location,
+                    sentiment_score=-42,
+                    confidence=0.89,
+                    raw_content="HOA special assessment approved: $6,200 per property for earthquake retrofitting",
+                    detected_at=datetime.now() - timedelta(days=2),
+                    urgency_multiplier=2.8,
+                )
+            )
 
         return signals
+
 
 class MarketSentimentRadar:
     """
@@ -196,7 +217,7 @@ class MarketSentimentRadar:
         # Initialize data sources (mix of real and mock for progressive rollout)
         self.data_sources: List[DataSourceInterface] = [
             MockTwitterSentimentSource(),  # TODO: Replace with real Twitter Academic API
-            MockHOADataSource()             # TODO: Replace with real HOA/community data
+            MockHOADataSource(),  # TODO: Replace with real HOA/community data
         ]
 
         # Note: Real data sources are added dynamically to avoid blocking initialization
@@ -207,7 +228,7 @@ class MarketSentimentRadar:
             AlertPriority.CRITICAL: -70,  # Very negative sentiment
             AlertPriority.HIGH: -50,
             AlertPriority.MEDIUM: -30,
-            AlertPriority.LOW: -15
+            AlertPriority.LOW: -15,
         }
 
     async def analyze_market_sentiment(self, location: str, timeframe_days: int = 30) -> MarketSentimentProfile:
@@ -283,34 +304,36 @@ class MarketSentimentRadar:
                 optimal_outreach_window="month+",
                 key_signals=[],
                 confidence_score=0.3,
-                last_updated=datetime.now()
+                last_updated=datetime.now(),
             )
 
         # Categorize signals by type (updated to include real data sources)
-        social_signals = [s for s in signals if s.source in ['twitter', 'nextdoor', 'facebook']]
-        permit_signals = [s for s in signals if s.source in ['permits', 'san_bernardino_county_permits']]
-        economic_signals = [s for s in signals if s.source in ['local_news', 'economic_indicators'] or s.signal_type == SentimentTriggerType.ECONOMIC_STRESS]
+        social_signals = [s for s in signals if s.source in ["twitter", "nextdoor", "facebook"]]
+        permit_signals = [s for s in signals if s.source in ["permits", "san_bernardino_county_permits"]]
+        economic_signals = [
+            s
+            for s in signals
+            if s.source in ["local_news", "economic_indicators"]
+            or s.signal_type == SentimentTriggerType.ECONOMIC_STRESS
+        ]
         infrastructure_signals = [s for s in signals if s.signal_type == SentimentTriggerType.INFRASTRUCTURE_CONCERN]
 
         # Calculate category scores
         social_sentiment = self._calculate_category_sentiment(social_signals)
-        permit_pressure = abs(self._calculate_category_sentiment(permit_signals))  # Absolute value - pressure is always negative
+        permit_pressure = abs(
+            self._calculate_category_sentiment(permit_signals)
+        )  # Absolute value - pressure is always negative
         economic_stress = abs(self._calculate_category_sentiment(economic_signals))
         infrastructure_concerns = abs(self._calculate_category_sentiment(infrastructure_signals))
 
         # Calculate overall sentiment with weighted averages
-        weights = {
-            'social': 0.25,
-            'permit': 0.30,
-            'economic': 0.35,
-            'infrastructure': 0.10
-        }
+        weights = {"social": 0.25, "permit": 0.30, "economic": 0.35, "infrastructure": 0.10}
 
         overall_sentiment = (
-            social_sentiment * weights['social'] +
-            permit_pressure * weights['permit'] * -1 +  # Convert back to negative
-            economic_stress * weights['economic'] * -1 +
-            infrastructure_concerns * weights['infrastructure'] * -1
+            social_sentiment * weights["social"]
+            + permit_pressure * weights["permit"] * -1  # Convert back to negative
+            + economic_stress * weights["economic"] * -1
+            + infrastructure_concerns * weights["infrastructure"] * -1
         )
 
         # Calculate trend and velocity
@@ -356,7 +379,7 @@ class MarketSentimentRadar:
             optimal_outreach_window=optimal_window,
             key_signals=key_signals,
             confidence_score=confidence_score,
-            last_updated=datetime.now()
+            last_updated=datetime.now(),
         )
 
     def _calculate_category_sentiment(self, signals: List[SentimentSignal]) -> float:
@@ -378,28 +401,29 @@ class MarketSentimentRadar:
 
         return sum(weighted_scores) / sum(weights)
 
-    def _calculate_seller_motivation(self, overall_sentiment: float, permit_pressure: float,
-                                   economic_stress: float, infrastructure_concerns: float,
-                                   velocity: float) -> float:
+    def _calculate_seller_motivation(
+        self,
+        overall_sentiment: float,
+        permit_pressure: float,
+        economic_stress: float,
+        infrastructure_concerns: float,
+        velocity: float,
+    ) -> float:
         """Calculate probability of motivated sellers emerging (0-100)."""
 
         # Base motivation from negative sentiment
         base_motivation = max(0, -overall_sentiment * 0.8)  # Convert negative to positive motivation
 
         # Additional motivation from specific factors
-        permit_motivation = permit_pressure * 0.6    # Permit issues create urgency
-        economic_motivation = economic_stress * 0.9   # Financial pressure strongest motivator
+        permit_motivation = permit_pressure * 0.6  # Permit issues create urgency
+        economic_motivation = economic_stress * 0.9  # Financial pressure strongest motivator
         infrastructure_motivation = infrastructure_concerns * 0.4  # Infrastructure issues moderate motivator
 
         # Velocity bonus - rapid changes create urgency
         velocity_bonus = max(0, -velocity * 5)  # Negative velocity (declining sentiment) increases motivation
 
         total_motivation = (
-            base_motivation +
-            permit_motivation +
-            economic_motivation +
-            infrastructure_motivation +
-            velocity_bonus
+            base_motivation + permit_motivation + economic_motivation + infrastructure_motivation + velocity_bonus
         )
 
         # Baseline motivation (even in neutral areas, some people always want to sell)
@@ -407,8 +431,9 @@ class MarketSentimentRadar:
 
         return min(95, baseline + total_motivation)
 
-    def _calculate_optimal_window(self, motivation_index: float, velocity: float,
-                                signals: List[SentimentSignal]) -> str:
+    def _calculate_optimal_window(
+        self, motivation_index: float, velocity: float, signals: List[SentimentSignal]
+    ) -> str:
         """Determine optimal timing for outreach."""
 
         # Immediate action for critical situations
@@ -443,7 +468,12 @@ class MarketSentimentRadar:
                 logger.error(f"Error generating alert for {location}: {e}")
 
         # Sort by priority and motivation index
-        priority_order = {AlertPriority.CRITICAL: 4, AlertPriority.HIGH: 3, AlertPriority.MEDIUM: 2, AlertPriority.LOW: 1}
+        priority_order = {
+            AlertPriority.CRITICAL: 4,
+            AlertPriority.HIGH: 3,
+            AlertPriority.MEDIUM: 2,
+            AlertPriority.LOW: 1,
+        }
         alerts.sort(key=lambda a: (priority_order[a.priority], a.expected_lead_quality), reverse=True)
 
         return alerts
@@ -462,8 +492,9 @@ class MarketSentimentRadar:
 
         return None
 
-    async def _create_sentiment_alert(self, location: str, profile: MarketSentimentProfile,
-                                    priority: AlertPriority) -> SentimentAlert:
+    async def _create_sentiment_alert(
+        self, location: str, profile: MarketSentimentProfile, priority: AlertPriority
+    ) -> SentimentAlert:
         """Create detailed sentiment alert with AI-generated recommendations."""
 
         # Analyze key triggers
@@ -474,7 +505,9 @@ class MarketSentimentRadar:
                 main_triggers[trigger_type] = []
             main_triggers[trigger_type].append(signal)
 
-        primary_trigger = max(main_triggers.keys(), key=lambda k: len(main_triggers[k])) if main_triggers else "general_sentiment"
+        primary_trigger = (
+            max(main_triggers.keys(), key=lambda k: len(main_triggers[k])) if main_triggers else "general_sentiment"
+        )
 
         # Generate AI-powered message and recommendations
         prompt = f"""
@@ -498,10 +531,10 @@ class MarketSentimentRadar:
 
         try:
             ai_response = await self.claude.process_message(prompt)
-            message = ai_response.get('content', f"High seller motivation detected in {location}")
+            message = ai_response.get("content", f"High seller motivation detected in {location}")
 
             # Extract recommendation (simple parsing)
-            lines = message.split('\n')
+            lines = message.split("\n")
             alert_message = lines[0] if lines else message
             recommendation = lines[1] if len(lines) > 1 else "Contact property owners with market intelligence"
 
@@ -523,7 +556,7 @@ class MarketSentimentRadar:
             target_audience=target_audience,
             timing_window=profile.optimal_outreach_window,
             expected_lead_quality=min(100, profile.seller_motivation_index * 1.1),
-            generated_at=datetime.now()
+            generated_at=datetime.now(),
         )
 
     def _generate_target_audience(self, trigger_type: str, profile: MarketSentimentProfile) -> str:
@@ -540,7 +573,9 @@ class MarketSentimentRadar:
         else:
             return "Property owners in area experiencing market uncertainty"
 
-    async def get_location_recommendations(self, agent_territory: List[str], max_locations: int = 10) -> List[Dict[str, Any]]:
+    async def get_location_recommendations(
+        self, agent_territory: List[str], max_locations: int = 10
+    ) -> List[Dict[str, Any]]:
         """Get prioritized location recommendations for prospecting."""
 
         location_scores = []
@@ -551,30 +586,34 @@ class MarketSentimentRadar:
 
                 # Calculate prospecting score
                 prospecting_score = (
-                    profile.seller_motivation_index * 0.6 +
-                    min(50, abs(profile.velocity) * 10) * 0.3 +  # Velocity indicates change/urgency
-                    profile.confidence_score * 50 * 0.1
+                    profile.seller_motivation_index * 0.6
+                    + min(50, abs(profile.velocity) * 10) * 0.3  # Velocity indicates change/urgency
+                    + profile.confidence_score * 50 * 0.1
                 )
 
-                location_scores.append({
-                    'location': location,
-                    'prospecting_score': prospecting_score,
-                    'motivation_index': profile.seller_motivation_index,
-                    'trend': profile.trend_direction,
-                    'optimal_window': profile.optimal_outreach_window,
-                    'key_triggers': [s.signal_type.value for s in profile.key_signals[:2]],
-                    'confidence': profile.confidence_score
-                })
+                location_scores.append(
+                    {
+                        "location": location,
+                        "prospecting_score": prospecting_score,
+                        "motivation_index": profile.seller_motivation_index,
+                        "trend": profile.trend_direction,
+                        "optimal_window": profile.optimal_outreach_window,
+                        "key_triggers": [s.signal_type.value for s in profile.key_signals[:2]],
+                        "confidence": profile.confidence_score,
+                    }
+                )
 
             except Exception as e:
                 logger.error(f"Error analyzing {location}: {e}")
 
         # Sort by prospecting score and return top locations
-        location_scores.sort(key=lambda x: x['prospecting_score'], reverse=True)
+        location_scores.sort(key=lambda x: x["prospecting_score"], reverse=True)
         return location_scores[:max_locations]
+
 
 # Singleton instance
 _sentiment_radar = None
+
 
 async def get_market_sentiment_radar() -> MarketSentimentRadar:
     """Get singleton market sentiment radar instance."""

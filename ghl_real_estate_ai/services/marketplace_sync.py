@@ -25,9 +25,7 @@ class MarketplaceSync:
         self.sync_log = []
         self.context_cache = {}
 
-    def sync_template_to_marketplace(
-        self, template_data: Dict, publish: bool = False
-    ) -> Dict:
+    def sync_template_to_marketplace(self, template_data: Dict, publish: bool = False) -> Dict:
         """
         Sync a local template to the marketplace.
 
@@ -78,9 +76,7 @@ class MarketplaceSync:
             "listing_url": f"/marketplace/listing/{marketplace_listing['listing_id']}",
         }
 
-    def sync_marketplace_to_template(
-        self, listing_id: str, marketplace_data: Dict
-    ) -> Dict:
+    def sync_marketplace_to_template(self, listing_id: str, marketplace_data: Dict) -> Dict:
         """
         Import marketplace template to local Template Manager.
 
@@ -125,9 +121,7 @@ class MarketplaceSync:
             "installed": True,
         }
 
-    def share_context_between_services(
-        self, source_service: str, target_service: str, context_data: Dict
-    ) -> Dict:
+    def share_context_between_services(self, source_service: str, target_service: str, context_data: Dict) -> Dict:
         """
         Share context between different AI services.
 
@@ -155,9 +149,7 @@ class MarketplaceSync:
         self.context_cache[context_key] = enriched_context
 
         # Log context sharing
-        self._log_sync(
-            operation="context_share", template_id=context_key, status="success"
-        )
+        self._log_sync(operation="context_share", template_id=context_key, status="success")
 
         return {
             "success": True,
@@ -166,9 +158,7 @@ class MarketplaceSync:
             "expires_in_minutes": 60,
         }
 
-    def get_shared_context(
-        self, source_service: str, target_service: str
-    ) -> Optional[Dict]:
+    def get_shared_context(self, source_service: str, target_service: str) -> Optional[Dict]:
         """
         Retrieve shared context between services.
 
@@ -197,9 +187,7 @@ class MarketplaceSync:
 
         return context["data"]
 
-    def orchestrate_workflow(
-        self, workflow_name: str, services: List[str], lead_data: Dict
-    ) -> Dict:
+    def orchestrate_workflow(self, workflow_name: str, services: List[str], lead_data: Dict) -> Dict:
         """
         Orchestrate multi-service workflow.
 
@@ -331,9 +319,7 @@ class MarketplaceSync:
             "satisfied": satisfied,
             "missing": missing,
             "all_satisfied": len(missing) == 0,
-            "install_order": (
-                self._calculate_install_order(dependencies) if missing else []
-            ),
+            "install_order": (self._calculate_install_order(dependencies) if missing else []),
         }
 
     def _calculate_install_order(self, dependencies: List[str]) -> List[str]:
@@ -461,9 +447,7 @@ def create_workflow_combo(combo_name: str, lead_data: Dict) -> Dict:
     combo = WORKFLOW_COMBOS[combo_name]
     sync = MarketplaceSync()
 
-    result = sync.orchestrate_workflow(
-        workflow_name=combo_name, services=combo["services"], lead_data=lead_data
-    )
+    result = sync.orchestrate_workflow(workflow_name=combo_name, services=combo["services"], lead_data=lead_data)
 
     result["workflow_info"] = combo
 

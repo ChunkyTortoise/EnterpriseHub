@@ -6,13 +6,14 @@ Provides health check endpoints and manual trigger capabilities.
 """
 
 import asyncio
-from typing import Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, Optional
 
-from ghl_real_estate_ai.services.lead_sequence_scheduler import get_lead_scheduler, LeadSequenceScheduler
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.lead_sequence_scheduler import LeadSequenceScheduler, get_lead_scheduler
 
 logger = get_logger(__name__)
+
 
 class SchedulerStartupService:
     """
@@ -77,7 +78,7 @@ class SchedulerStartupService:
         This should be called during FastAPI app shutdown.
         """
         try:
-            if self.scheduler and hasattr(self.scheduler, 'scheduler') and self.scheduler.scheduler.running:
+            if self.scheduler and hasattr(self.scheduler, "scheduler") and self.scheduler.scheduler.running:
                 logger.info("Shutting down Lead Sequence Scheduler...")
                 self.scheduler.scheduler.shutdown(wait=True)
                 self.health_status = "stopped"
@@ -98,29 +99,33 @@ class SchedulerStartupService:
                 "status": self.health_status,
                 "started_at": self.started_at.isoformat() if self.started_at else None,
                 "last_error": self.last_error,
-                "scheduler_enabled": self.scheduler.enabled if self.scheduler else False
+                "scheduler_enabled": self.scheduler.enabled if self.scheduler else False,
             }
 
             # Add scheduler-specific details if available
-            if self.scheduler and hasattr(self.scheduler, 'scheduler'):
+            if self.scheduler and hasattr(self.scheduler, "scheduler"):
                 scheduler = self.scheduler.scheduler
-                status_info.update({
-                    "scheduler_running": scheduler.running if hasattr(scheduler, 'running') else False,
-                    "job_count": len(scheduler.get_jobs()) if hasattr(scheduler, 'get_jobs') else 0,
-                    "scheduler_state": str(scheduler.state) if hasattr(scheduler, 'state') else "unknown"
-                })
+                status_info.update(
+                    {
+                        "scheduler_running": scheduler.running if hasattr(scheduler, "running") else False,
+                        "job_count": len(scheduler.get_jobs()) if hasattr(scheduler, "get_jobs") else 0,
+                        "scheduler_state": str(scheduler.state) if hasattr(scheduler, "state") else "unknown",
+                    }
+                )
 
                 # Get active jobs info
-                if hasattr(scheduler, 'get_jobs'):
+                if hasattr(scheduler, "get_jobs"):
                     try:
                         jobs = scheduler.get_jobs()
                         job_info = []
                         for job in jobs[:10]:  # Limit to first 10 jobs
-                            job_info.append({
-                                "id": job.id,
-                                "next_run": job.next_run_time.isoformat() if job.next_run_time else None,
-                                "function": job.func.__name__ if hasattr(job.func, '__name__') else str(job.func)
-                            })
+                            job_info.append(
+                                {
+                                    "id": job.id,
+                                    "next_run": job.next_run_time.isoformat() if job.next_run_time else None,
+                                    "function": job.func.__name__ if hasattr(job.func, "__name__") else str(job.func),
+                                }
+                            )
                         status_info["active_jobs"] = job_info
                     except Exception as e:
                         logger.error(f"Error getting job details: {e}")
@@ -130,11 +135,7 @@ class SchedulerStartupService:
 
         except Exception as e:
             logger.error(f"Error getting health status: {e}")
-            return {
-                "status": "error",
-                "error": str(e),
-                "scheduler_enabled": False
-            }
+            return {"status": "error", "error": str(e), "scheduler_enabled": False}
 
     async def trigger_manual_test(self, lead_id: str = "test-lead-1") -> Dict[str, Any]:
         """
@@ -144,10 +145,7 @@ class SchedulerStartupService:
         """
         try:
             if not self.scheduler or not self.scheduler.enabled:
-                return {
-                    "success": False,
-                    "error": "Scheduler not available or not enabled"
-                }
+                return {"success": False, "error": "Scheduler not available or not enabled"}
 
             logger.info(f"Triggering manual test sequence for lead {lead_id}")
 
@@ -157,7 +155,7 @@ class SchedulerStartupService:
             result = await self.scheduler.schedule_sequence_start(
                 lead_id=lead_id,
                 sequence_day=SequenceDay.DAY_3,
-                delay_minutes=0  # Immediate execution
+                delay_minutes=0,  # Immediate execution
             )
 
             if result:
@@ -166,23 +164,17 @@ class SchedulerStartupService:
                     "success": True,
                     "message": f"Test sequence triggered for lead {lead_id}",
                     "lead_id": lead_id,
-                    "triggered_at": datetime.now().isoformat()
+                    "triggered_at": datetime.now().isoformat(),
                 }
             else:
                 error_msg = f"Failed to trigger test sequence for lead {lead_id}"
                 logger.error(error_msg)
-                return {
-                    "success": False,
-                    "error": error_msg
-                }
+                return {"success": False, "error": error_msg}
 
         except Exception as e:
             error_msg = f"Exception triggering manual test: {str(e)}"
             logger.error(error_msg)
-            return {
-                "success": False,
-                "error": error_msg
-            }
+            return {"success": False, "error": error_msg}
 
     async def get_scheduler_metrics(self) -> Dict[str, Any]:
         """
@@ -191,7 +183,7 @@ class SchedulerStartupService:
         Provides insights into scheduler operation for monitoring.
         """
         try:
-            if not self.scheduler or not hasattr(self.scheduler, 'scheduler'):
+            if not self.scheduler or not hasattr(self.scheduler, "scheduler"):
                 return {"error": "Scheduler not available"}
 
             scheduler = self.scheduler.scheduler
@@ -203,11 +195,11 @@ class SchedulerStartupService:
                 "total_jobs": 0,
                 "pending_jobs": 0,
                 "next_job_time": None,
-                "job_types": {}
+                "job_types": {},
             }
 
             # Job analysis
-            if hasattr(scheduler, 'get_jobs'):
+            if hasattr(scheduler, "get_jobs"):
                 jobs = scheduler.get_jobs()
                 metrics["total_jobs"] = len(jobs)
 
@@ -264,21 +256,15 @@ class SchedulerStartupService:
                 return {
                     "success": True,
                     "message": "Scheduler restarted successfully",
-                    "restarted_at": datetime.now().isoformat()
+                    "restarted_at": datetime.now().isoformat(),
                 }
             else:
-                return {
-                    "success": False,
-                    "error": self.last_error or "Unknown error during restart"
-                }
+                return {"success": False, "error": self.last_error or "Unknown error during restart"}
 
         except Exception as e:
             error_msg = f"Exception during scheduler restart: {str(e)}"
             logger.error(error_msg)
-            return {
-                "success": False,
-                "error": error_msg
-            }
+            return {"success": False, "error": error_msg}
 
     def is_healthy(self) -> bool:
         """Quick health check for load balancers"""
@@ -288,6 +274,7 @@ class SchedulerStartupService:
 # Singleton instance
 _scheduler_startup_service = None
 
+
 def get_scheduler_startup_service() -> SchedulerStartupService:
     """Get singleton SchedulerStartupService instance"""
     global _scheduler_startup_service
@@ -295,16 +282,19 @@ def get_scheduler_startup_service() -> SchedulerStartupService:
         _scheduler_startup_service = SchedulerStartupService()
     return _scheduler_startup_service
 
+
 # Convenience functions for FastAPI integration
 async def initialize_lead_scheduler() -> bool:
     """Initialize the lead scheduler (for FastAPI startup)"""
     service = get_scheduler_startup_service()
     return await service.initialize_scheduler()
 
+
 async def shutdown_lead_scheduler():
     """Shutdown the lead scheduler (for FastAPI shutdown)"""
     service = get_scheduler_startup_service()
     await service.shutdown_scheduler()
+
 
 def get_lead_scheduler_health() -> Dict[str, Any]:
     """Get scheduler health status (for health check endpoint)"""

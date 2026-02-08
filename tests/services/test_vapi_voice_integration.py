@@ -12,25 +12,27 @@ Covers:
 """
 
 import os
+
 os.environ.setdefault("STRIPE_SECRET_KEY", "sk_test_fake_for_testing")
 os.environ.setdefault("STRIPE_WEBHOOK_SECRET", "whsec_test_fake")
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock
 from dataclasses import dataclass
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from ghl_real_estate_ai.services.vapi_voice_integration import (
-    VapiVoiceIntelligence,
-    TranscriptSegment,
     CallEventResult,
-    TranscriptAnalysis,
     SpeakerRole,
+    TranscriptAnalysis,
+    TranscriptSegment,
+    VapiVoiceIntelligence,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class FakeBehavioralAnalysis:
@@ -50,11 +52,13 @@ class FakeBehavioralAnalysis:
 
 def _mock_detector(composite=0.5, commitment=0.6, urgency=0.5):
     detector = MagicMock()
-    detector.analyze_message = AsyncMock(return_value=FakeBehavioralAnalysis(
-        composite_score=composite,
-        commitment_score=commitment,
-        urgency_score=urgency,
-    ))
+    detector.analyze_message = AsyncMock(
+        return_value=FakeBehavioralAnalysis(
+            composite_score=composite,
+            commitment_score=commitment,
+            urgency_score=urgency,
+        )
+    )
     return detector
 
 
@@ -98,17 +102,19 @@ def _vapi_call_ended_payload(call_id="call_123", contact_id="c_123"):
 # Call Event Processing
 # ---------------------------------------------------------------------------
 
-class TestCallEventProcessing:
 
+class TestCallEventProcessing:
     @pytest.mark.asyncio
     async def test_call_started(self):
         vi = VapiVoiceIntelligence()
-        result = await vi.process_call_event({
-            "message": {
-                "type": "call-started",
-                "call": {"id": "call_1", "direction": "inbound", "customer": {"number": "+1234"}},
-            },
-        })
+        result = await vi.process_call_event(
+            {
+                "message": {
+                    "type": "call-started",
+                    "call": {"id": "call_1", "direction": "inbound", "customer": {"number": "+1234"}},
+                },
+            }
+        )
         assert result.success is True
         assert result.event_type == "call-started"
         assert "call_1" in vi._active_calls
@@ -129,12 +135,14 @@ class TestCallEventProcessing:
     @pytest.mark.asyncio
     async def test_call_failed(self):
         vi = VapiVoiceIntelligence()
-        result = await vi.process_call_event({
-            "message": {
-                "type": "call-failed",
-                "call": {"id": "call_fail", "status": "no_answer"},
-            },
-        })
+        result = await vi.process_call_event(
+            {
+                "message": {
+                    "type": "call-failed",
+                    "call": {"id": "call_fail", "status": "no_answer"},
+                },
+            }
+        )
         assert result.success is True
         assert "failed" in result.message.lower()
 
@@ -142,25 +150,31 @@ class TestCallEventProcessing:
     async def test_transcript_update(self):
         vi = VapiVoiceIntelligence()
         # First register the call
-        await vi.process_call_event({
-            "message": {"type": "call-started", "call": {"id": "call_t"}},
-        })
+        await vi.process_call_event(
+            {
+                "message": {"type": "call-started", "call": {"id": "call_t"}},
+            }
+        )
         # Then send transcript update
-        result = await vi.process_call_event({
-            "message": {"type": "conversation-update", "call": {"id": "call_t"}},
-            "transcript": [
-                {"role": "customer", "text": "I want to buy"},
-            ],
-        })
+        result = await vi.process_call_event(
+            {
+                "message": {"type": "conversation-update", "call": {"id": "call_t"}},
+                "transcript": [
+                    {"role": "customer", "text": "I want to buy"},
+                ],
+            }
+        )
         assert result.success is True
         assert vi._active_calls["call_t"].transcript_segments
 
     @pytest.mark.asyncio
     async def test_unknown_event_acknowledged(self):
         vi = VapiVoiceIntelligence()
-        result = await vi.process_call_event({
-            "message": {"type": "some-unknown-event", "call": {"id": "call_u"}},
-        })
+        result = await vi.process_call_event(
+            {
+                "message": {"type": "some-unknown-event", "call": {"id": "call_u"}},
+            }
+        )
         assert result.success is True
         assert "acknowledged" in result.message
 
@@ -169,8 +183,8 @@ class TestCallEventProcessing:
 # Transcript Analysis
 # ---------------------------------------------------------------------------
 
-class TestTranscriptAnalysis:
 
+class TestTranscriptAnalysis:
     @pytest.mark.asyncio
     async def test_hot_transcript(self):
         detector = _mock_detector(composite=0.75)
@@ -248,8 +262,8 @@ class TestTranscriptAnalysis:
 # Qualification Signal Extraction
 # ---------------------------------------------------------------------------
 
-class TestQualificationSignals:
 
+class TestQualificationSignals:
     @pytest.mark.asyncio
     async def test_budget_detected(self):
         vi = VapiVoiceIntelligence()
@@ -315,8 +329,8 @@ class TestQualificationSignals:
 # Full Qualification Pipeline
 # ---------------------------------------------------------------------------
 
-class TestFullPipeline:
 
+class TestFullPipeline:
     @pytest.mark.asyncio
     async def test_qualified_hot_lead(self):
         """Customer with budget + timeline + high composite = qualified hot lead."""

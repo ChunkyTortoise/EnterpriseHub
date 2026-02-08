@@ -25,9 +25,7 @@ class CampaignTracker:
             location_id: GHL Location ID for multi-tenant support
         """
         self.location_id = location_id
-        self.campaigns_dir = (
-            Path(__file__).parent.parent / "data" / "campaigns" / location_id
-        )
+        self.campaigns_dir = Path(__file__).parent.parent / "data" / "campaigns" / location_id
         self.campaigns_dir.mkdir(parents=True, exist_ok=True)
         self.campaigns_file = self.campaigns_dir / "campaigns.json"
         self.campaigns = self._load_campaigns()
@@ -84,8 +82,7 @@ class CampaignTracker:
             "end_date": end_date,
             "status": "active",
             "created_at": datetime.now().isoformat(),
-            "target_metrics": target_metrics
-            or {"target_leads": 100, "target_conversions": 10, "target_roi": 3.0},
+            "target_metrics": target_metrics or {"target_leads": 100, "target_conversions": 10, "target_roi": 3.0},
             "metadata": metadata or {},
             "performance": {
                 "impressions": 0,
@@ -116,9 +113,7 @@ class CampaignTracker:
 
         return campaign_id
 
-    def update_campaign_metrics(
-        self, campaign_id: str, metrics: Dict[str, Any], date: Optional[str] = None
-    ):
+    def update_campaign_metrics(self, campaign_id: str, metrics: Dict[str, Any], date: Optional[str] = None):
         """
         Update campaign performance metrics.
 
@@ -149,9 +144,7 @@ class CampaignTracker:
             perf["cost_per_conversion"] = campaign["budget"] / perf["conversions"]
 
         if perf["revenue_generated"] > 0:
-            perf["roi"] = (perf["revenue_generated"] - campaign["budget"]) / campaign[
-                "budget"
-            ]
+            perf["roi"] = (perf["revenue_generated"] - campaign["budget"]) / campaign["budget"]
 
         if perf["leads_generated"] > 0:
             perf["conversion_rate"] = perf["conversions"] / perf["leads_generated"]
@@ -217,11 +210,9 @@ class CampaignTracker:
             current = funnel[stages[i]]
             next_stage = funnel[stages[i + 1]]
             if current > 0:
-                funnel_rates[f"{stages[i]}_to_{stages[i+1]}"] = (
-                    next_stage / current
-                ) * 100
+                funnel_rates[f"{stages[i]}_to_{stages[i + 1]}"] = (next_stage / current) * 100
             else:
-                funnel_rates[f"{stages[i]}_to_{stages[i+1]}"] = 0.0
+                funnel_rates[f"{stages[i]}_to_{stages[i + 1]}"] = 0.0
 
         # Calculate overall funnel efficiency
         overall_efficiency = 0.0
@@ -236,11 +227,7 @@ class CampaignTracker:
             "roi_percentage": perf["roi"] * 100,
             "break_even_point": campaign["budget"],
             "profit_margin": (
-                (
-                    (perf["revenue_generated"] - campaign["budget"])
-                    / perf["revenue_generated"]
-                    * 100
-                )
+                ((perf["revenue_generated"] - campaign["budget"]) / perf["revenue_generated"] * 100)
                 if perf["revenue_generated"] > 0
                 else 0
             ),
@@ -252,26 +239,18 @@ class CampaignTracker:
             "leads_vs_target": {
                 "actual": perf["leads_generated"],
                 "target": targets.get("target_leads", 0),
-                "achievement_rate": (
-                    perf["leads_generated"] / targets.get("target_leads", 1)
-                )
-                * 100,
+                "achievement_rate": (perf["leads_generated"] / targets.get("target_leads", 1)) * 100,
             },
             "conversions_vs_target": {
                 "actual": perf["conversions"],
                 "target": targets.get("target_conversions", 0),
-                "achievement_rate": (
-                    perf["conversions"] / targets.get("target_conversions", 1)
-                )
-                * 100,
+                "achievement_rate": (perf["conversions"] / targets.get("target_conversions", 1)) * 100,
             },
             "roi_vs_target": {
                 "actual": perf["roi"],
                 "target": targets.get("target_roi", 0),
                 "achievement_rate": (
-                    (perf["roi"] / targets.get("target_roi", 1)) * 100
-                    if targets.get("target_roi", 0) > 0
-                    else 0
+                    (perf["roi"] / targets.get("target_roi", 1)) * 100 if targets.get("target_roi", 0) > 0 else 0
                 ),
             },
         }
@@ -329,9 +308,7 @@ class CampaignTracker:
 
         # Rank by different metrics
         rankings = {
-            "roi": sorted(
-                campaigns_data, key=lambda x: x["performance"]["roi"], reverse=True
-            ),
+            "roi": sorted(campaigns_data, key=lambda x: x["performance"]["roi"], reverse=True),
             "conversion_rate": sorted(
                 campaigns_data,
                 key=lambda x: x["performance"]["conversion_rate"],
@@ -364,15 +341,9 @@ class CampaignTracker:
             channel = camp["campaign_info"]["channel"]
             channel_stats[channel]["campaigns"] += 1
             channel_stats[channel]["total_budget"] += camp["campaign_info"]["budget"]
-            channel_stats[channel]["total_leads"] += camp["performance"][
-                "leads_generated"
-            ]
-            channel_stats[channel]["total_conversions"] += camp["performance"][
-                "conversions"
-            ]
-            channel_stats[channel]["total_revenue"] += camp["performance"][
-                "revenue_generated"
-            ]
+            channel_stats[channel]["total_leads"] += camp["performance"]["leads_generated"]
+            channel_stats[channel]["total_conversions"] += camp["performance"]["conversions"]
+            channel_stats[channel]["total_revenue"] += camp["performance"]["revenue_generated"]
             channel_stats[channel]["avg_roi"].append(camp["performance"]["roi"])
 
         # Calculate averages
@@ -396,7 +367,7 @@ class CampaignTracker:
             {
                 "type": "best_performer",
                 "priority": "high",
-                "message": f"Campaign '{best_roi_campaign['campaign_info']['name']}' has the highest ROI at {best_roi_campaign['performance']['roi']*100:.1f}%. Consider scaling this approach.",
+                "message": f"Campaign '{best_roi_campaign['campaign_info']['name']}' has the highest ROI at {best_roi_campaign['performance']['roi'] * 100:.1f}%. Consider scaling this approach.",
                 "action": "increase_budget",
             }
         )
@@ -452,21 +423,11 @@ class CampaignTracker:
             "channel_performance": dict(channel_stats),
             "recommendations": recommendations,
             "summary_stats": {
-                "total_budget": sum(
-                    c["campaign_info"]["budget"] for c in campaigns_data
-                ),
-                "total_leads": sum(
-                    c["performance"]["leads_generated"] for c in campaigns_data
-                ),
-                "total_revenue": sum(
-                    c["performance"]["revenue_generated"] for c in campaigns_data
-                ),
-                "avg_roi": statistics.mean(
-                    [c["performance"]["roi"] for c in campaigns_data]
-                ),
-                "avg_conversion_rate": statistics.mean(
-                    [c["performance"]["conversion_rate"] for c in campaigns_data]
-                ),
+                "total_budget": sum(c["campaign_info"]["budget"] for c in campaigns_data),
+                "total_leads": sum(c["performance"]["leads_generated"] for c in campaigns_data),
+                "total_revenue": sum(c["performance"]["revenue_generated"] for c in campaigns_data),
+                "avg_roi": statistics.mean([c["performance"]["roi"] for c in campaigns_data]),
+                "avg_conversion_rate": statistics.mean([c["performance"]["conversion_rate"] for c in campaigns_data]),
             },
         }
 
@@ -508,9 +469,7 @@ class CampaignTracker:
             if data["total_leads"] > 0:
                 data["avg_cpl"] = data["total_budget"] / data["total_leads"]
             if data["total_budget"] > 0:
-                data["avg_roi"] = (data["total_revenue"] - data["total_budget"]) / data[
-                    "total_budget"
-                ]
+                data["avg_roi"] = (data["total_revenue"] - data["total_budget"]) / data["total_budget"]
             data["campaign_count"] = len(data["campaigns"])
             data["campaigns"] = data["campaigns"][:5]  # Limit to top 5 for display
 

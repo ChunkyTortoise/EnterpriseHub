@@ -1,7 +1,8 @@
-import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import streamlit as st
+
 
 def render_property_valuation_engine():
     """AI-powered property valuation and CMA engine"""
@@ -28,31 +29,54 @@ def render_property_valuation_engine():
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        features = st.multiselect("Special Features", [
-            "Swimming Pool", "Fireplace", "Hardwood Floors", "Granite Counters",
-            "Updated Kitchen", "Master Suite", "Office/Study", "Basement",
-            "Deck/Patio", "Fenced Yard", "Workshop/Storage"
-        ])
+        features = st.multiselect(
+            "Special Features",
+            [
+                "Swimming Pool",
+                "Fireplace",
+                "Hardwood Floors",
+                "Granite Counters",
+                "Updated Kitchen",
+                "Master Suite",
+                "Office/Study",
+                "Basement",
+                "Deck/Patio",
+                "Fenced Yard",
+                "Workshop/Storage",
+            ],
+        )
 
     with col2:
-        condition = st.selectbox("Overall Condition", [
-            "Excellent - Move-in Ready",
-            "Good - Minor Updates Needed",
-            "Fair - Some Improvements Required",
-            "Needs Work - Major Renovations"
-        ])
+        condition = st.selectbox(
+            "Overall Condition",
+            [
+                "Excellent - Move-in Ready",
+                "Good - Minor Updates Needed",
+                "Fair - Some Improvements Required",
+                "Needs Work - Major Renovations",
+            ],
+        )
 
     with col3:
-        recent_updates = st.multiselect("Recent Updates (Last 5 Years)", [
-            "Roof Replacement", "HVAC System", "Windows", "Flooring",
-            "Kitchen Renovation", "Bathroom Remodel", "Paint Interior",
-            "Paint Exterior", "Appliances", "Landscaping"
-        ])
+        recent_updates = st.multiselect(
+            "Recent Updates (Last 5 Years)",
+            [
+                "Roof Replacement",
+                "HVAC System",
+                "Windows",
+                "Flooring",
+                "Kitchen Renovation",
+                "Bathroom Remodel",
+                "Paint Interior",
+                "Paint Exterior",
+                "Appliances",
+                "Landscaping",
+            ],
+        )
 
     # Market analysis
     if st.button("🔍 Generate Valuation Analysis", type="primary"):
         with st.spinner("Analyzing property value..."):
-
             # Main valuation results
             st.markdown("#### 🎯 Valuation Results")
 
@@ -67,9 +91,9 @@ def render_property_valuation_engine():
                 st.metric("📈 Market Position", "Strong", delta="Good timing to sell")
 
             # Valuation methodology tabs
-            tab1, tab2, tab3, tab4 = st.tabs([
-                "🏘️ Comparable Sales", "📊 Market Analysis", "🎯 Pricing Strategy", "📈 Value Drivers"
-            ])
+            tab1, tab2, tab3, tab4 = st.tabs(
+                ["🏘️ Comparable Sales", "📊 Market Analysis", "🎯 Pricing Strategy", "📈 Value Drivers"]
+            )
 
             with tab1:
                 st.markdown("##### Recent Comparable Sales")
@@ -83,7 +107,7 @@ def render_property_valuation_engine():
                         "baths": 2,
                         "sqft": 1920,
                         "price_per_sqft": "$258",
-                        "adjustments": "+$7,500"
+                        "adjustments": "+$7,500",
                     },
                     {
                         "address": "1156 Pine Avenue (0.3 mi)",
@@ -93,7 +117,7 @@ def render_property_valuation_engine():
                         "baths": 2.5,
                         "sqft": 1785,
                         "price_per_sqft": "$266",
-                        "adjustments": "-$2,200"
+                        "adjustments": "-$2,200",
                     },
                     {
                         "address": "1289 Elm Drive (0.4 mi)",
@@ -103,8 +127,8 @@ def render_property_valuation_engine():
                         "baths": 2,
                         "sqft": 1945,
                         "price_per_sqft": "$262",
-                        "adjustments": "+$5,100"
-                    }
+                        "adjustments": "+$5,100",
+                    },
                 ]
 
                 for comp in comps:
@@ -120,12 +144,15 @@ def render_property_valuation_engine():
                             st.markdown(f"**{comp['price_per_sqft']}**/sqft")
 
                         with col3:
-                            adjustment_color = "green" if "+" in comp['adjustments'] else "red"
-                            st.markdown(f"<span style='color: {adjustment_color};'>**{comp['adjustments']}**</span>", unsafe_allow_html=True)
+                            adjustment_color = "green" if "+" in comp["adjustments"] else "red"
+                            st.markdown(
+                                f"<span style='color: {adjustment_color};'>**{comp['adjustments']}**</span>",
+                                unsafe_allow_html=True,
+                            )
 
                         with col4:
-                            sold_val = int(comp['sold_price'].replace('$', '').replace(',', ''))
-                            adj_val = int(comp['adjustments'].replace('$', '').replace(',', '').replace('+', ''))
+                            sold_val = int(comp["sold_price"].replace("$", "").replace(",", ""))
+                            adj_val = int(comp["adjustments"].replace("$", "").replace(",", "").replace("+", ""))
                             st.markdown(f"**Adjusted**: ${sold_val + adj_val:,}")
 
                         st.markdown("---")
@@ -170,22 +197,22 @@ def render_property_valuation_engine():
                         "price": "$485,000",
                         "pros": "Quick sale, multiple offers likely",
                         "cons": "May leave money on table",
-                        "timeline": "5-10 days"
+                        "timeline": "5-10 days",
                     },
                     {
                         "strategy": "💰 Market Value Pricing",
                         "price": "$495,000",
                         "pros": "Full market value, good negotiating room",
                         "cons": "May take longer to sell",
-                        "timeline": "10-20 days"
+                        "timeline": "10-20 days",
                     },
                     {
                         "strategy": "🚀 Aspirational Pricing",
                         "price": "$510,000",
                         "pros": "Maximum return if market supports",
                         "cons": "Risk of sitting on market too long",
-                        "timeline": "20-45 days"
-                    }
+                        "timeline": "20-45 days",
+                    },
                 ]
 
                 for strategy in pricing_strategies:
@@ -197,7 +224,9 @@ def render_property_valuation_engine():
                         with col2:
                             st.markdown(f"**⏱️ Expected Timeline:** {strategy['timeline']}")
 
-                st.info("💡 **Recommendation:** Start with Market Value Pricing ($495,000) to maximize return while ensuring reasonable sale timeline.")
+                st.info(
+                    "💡 **Recommendation:** Start with Market Value Pricing ($495,000) to maximize return while ensuring reasonable sale timeline."
+                )
 
             with tab4:
                 st.markdown("##### Value Enhancement Opportunities")
@@ -208,35 +237,41 @@ def render_property_valuation_engine():
                         "cost": "$2,500",
                         "value_add": "$5,000",
                         "roi": "100%",
-                        "priority": "High"
+                        "priority": "High",
                     },
                     {
                         "improvement": "Kitchen Counter Update",
                         "cost": "$4,500",
                         "value_add": "$7,500",
                         "roi": "67%",
-                        "priority": "Medium"
+                        "priority": "Medium",
                     },
                     {
                         "improvement": "Landscape Enhancement",
                         "cost": "$1,500",
                         "value_add": "$3,500",
                         "roi": "133%",
-                        "priority": "High"
+                        "priority": "High",
                     },
                     {
                         "improvement": "Master Bath Update",
                         "cost": "$8,000",
                         "value_add": "$10,000",
                         "roi": "25%",
-                        "priority": "Low"
-                    }
+                        "priority": "Low",
+                    },
                 ]
 
                 st.markdown("**Recommended Pre-Sale Improvements:**")
 
                 for improvement in improvements:
-                    priority_color = "green" if improvement['priority'] == "High" else "orange" if improvement['priority'] == "Medium" else "red"
+                    priority_color = (
+                        "green"
+                        if improvement["priority"] == "High"
+                        else "orange"
+                        if improvement["priority"] == "Medium"
+                        else "red"
+                    )
 
                     with st.container():
                         col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 1, 1])
@@ -250,7 +285,10 @@ def render_property_valuation_engine():
                         with col4:
                             st.markdown(f"ROI: {improvement['roi']}")
                         with col5:
-                            st.markdown(f"<span style='color: {priority_color};'>**{improvement['priority']}**</span>", unsafe_allow_html=True)
+                            st.markdown(
+                                f"<span style='color: {priority_color};'>**{improvement['priority']}**</span>",
+                                unsafe_allow_html=True,
+                            )
 
                 st.markdown("**Total Investment:** $16,500 | **Total Value Add:** $26,000 | **Net Gain:** $9,500")
 

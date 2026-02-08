@@ -71,7 +71,7 @@ class TextPreprocessor:
             text = text.lower()
 
         # Tokenize (split on non-alphanumeric characters)
-        tokens = re.findall(r'\b[a-zA-Z]+\b', text)
+        tokens = re.findall(r"\b[a-zA-Z]+\b", text)
 
         # Filter tokens
         filtered_tokens = []
@@ -96,15 +96,77 @@ class TextPreprocessor:
         """
         # Common English stopwords
         return {
-            'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from',
-            'has', 'he', 'in', 'is', 'it', 'its', 'of', 'on', 'that', 'the',
-            'to', 'was', 'will', 'with', 'i', 'me', 'my', 'myself', 'we', 'our',
-            'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves',
-            'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'they',
-            'them', 'their', 'theirs', 'themselves', 'this', 'these', 'those',
-            'am', 'been', 'being', 'have', 'had', 'having', 'do', 'does', 'did',
-            'doing', 'would', 'could', 'should', 'ought', 'can', 'may', 'might',
-            'must', 'shall'
+            "a",
+            "an",
+            "and",
+            "are",
+            "as",
+            "at",
+            "be",
+            "by",
+            "for",
+            "from",
+            "has",
+            "he",
+            "in",
+            "is",
+            "it",
+            "its",
+            "of",
+            "on",
+            "that",
+            "the",
+            "to",
+            "was",
+            "will",
+            "with",
+            "i",
+            "me",
+            "my",
+            "myself",
+            "we",
+            "our",
+            "ours",
+            "ourselves",
+            "you",
+            "your",
+            "yours",
+            "yourself",
+            "yourselves",
+            "him",
+            "his",
+            "himself",
+            "she",
+            "her",
+            "hers",
+            "herself",
+            "they",
+            "them",
+            "their",
+            "theirs",
+            "themselves",
+            "this",
+            "these",
+            "those",
+            "am",
+            "been",
+            "being",
+            "have",
+            "had",
+            "having",
+            "do",
+            "does",
+            "did",
+            "doing",
+            "would",
+            "could",
+            "should",
+            "ought",
+            "can",
+            "may",
+            "might",
+            "must",
+            "shall",
         }
 
 
@@ -157,8 +219,7 @@ class BM25Index:
 
         except Exception as e:
             raise RetrievalError(
-                message=f"Failed to add documents to BM25 index: {str(e)}",
-                error_code="BM25_INDEX_ERROR"
+                message=f"Failed to add documents to BM25 index: {str(e)}", error_code="BM25_INDEX_ERROR"
             ) from e
 
     def search(self, query: str, top_k: Optional[int] = None) -> List[SearchResult]:
@@ -220,17 +281,14 @@ class BM25Index:
                         score=normalized_score,
                         rank=rank,
                         distance=1.0 - normalized_score,
-                        explanation=f"BM25 score: {score:.4f}, matched tokens: {len(query_tokens)}"
+                        explanation=f"BM25 score: {score:.4f}, matched tokens: {len(query_tokens)}",
                     )
                     results.append(result)
 
             return results
 
         except Exception as e:
-            raise RetrievalError(
-                message=f"BM25 search failed: {str(e)}",
-                error_code="BM25_SEARCH_ERROR"
-            ) from e
+            raise RetrievalError(message=f"BM25 search failed: {str(e)}", error_code="BM25_SEARCH_ERROR") from e
 
     def get_document_by_id(self, chunk_id: UUID) -> Optional[DocumentChunk]:
         """Retrieve a document chunk by its ID.
@@ -271,10 +329,6 @@ class BM25Index:
         """Rebuild the BM25 index with current corpus."""
         if self._corpus:
             # Create BM25 index with custom parameters
-            self._bm25 = BM25Okapi(
-                self._corpus,
-                k1=self.config.k1,
-                b=self.config.b
-            )
+            self._bm25 = BM25Okapi(self._corpus, k1=self.config.k1, b=self.config.b)
         else:
             self._bm25 = None

@@ -12,7 +12,7 @@ Enable via environment variables for progressive rollout.
 
 import os
 from dataclasses import dataclass, field
-from typing import Dict, Any
+from typing import Any, Dict
 
 
 def _env_bool(key: str, default: bool = False) -> bool:
@@ -28,6 +28,7 @@ def _env_bool(key: str, default: bool = False) -> bool:
 @dataclass
 class ProgressiveSkillsConfig:
     """Configuration for Progressive Skills Manager (68% token reduction)."""
+
     enabled: bool = False
     model: str = "claude-sonnet-4"
     skills_path: str = "skills/"
@@ -41,6 +42,7 @@ class ProgressiveSkillsConfig:
 @dataclass
 class AgentMeshConfig:
     """Configuration for Agent Mesh Coordinator (enterprise orchestration)."""
+
     enabled: bool = False
     max_agents: int = 10
     routing_strategy: str = "capability_based"
@@ -54,6 +56,7 @@ class AgentMeshConfig:
 @dataclass
 class MCPConfig:
     """Configuration for MCP Protocol Integration (external services)."""
+
     enabled: bool = False
     protocol_version: str = "2024-11-05"
     config_path: str = "mcp_config.json"
@@ -66,6 +69,7 @@ class MCPConfig:
 @dataclass
 class FeatureConfig:
     """Top-level feature configuration wrapping all sub-configs."""
+
     progressive_skills: ProgressiveSkillsConfig = field(default_factory=ProgressiveSkillsConfig)
     agent_mesh: AgentMeshConfig = field(default_factory=AgentMeshConfig)
     mcp: MCPConfig = field(default_factory=MCPConfig)

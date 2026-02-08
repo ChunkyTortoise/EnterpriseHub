@@ -13,26 +13,28 @@ This module provides:
 """
 
 import asyncio
-import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Set, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
-import json
-import hashlib
-import secrets
-from pathlib import Path
-import zipfile
 import csv
+import hashlib
+import json
+import logging
+import secrets
+import zipfile
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set, Tuple
 
-from ...services.claude_assistant import ClaudeAssistant
-from ...services.cache_service import CacheService
 from ...ghl_utils.jorge_config import JorgeConfig
+from ...services.cache_service import CacheService
+from ...services.claude_assistant import ClaudeAssistant
 
 logger = logging.getLogger(__name__)
 
+
 class AuditEventType(Enum):
     """Types of auditable events"""
+
     USER_AUTHENTICATION = "user_authentication"
     DATA_ACCESS = "data_access"
     DATA_MODIFICATION = "data_modification"
@@ -46,8 +48,10 @@ class AuditEventType(Enum):
     FINANCIAL_TRANSACTION = "financial_transaction"
     CLIENT_COMMUNICATION = "client_communication"
 
+
 class DocumentType(Enum):
     """Types of compliance documents"""
+
     POLICY_DOCUMENT = "policy_document"
     PROCEDURE_MANUAL = "procedure_manual"
     TRAINING_MATERIAL = "training_material"
@@ -59,16 +63,20 @@ class DocumentType(Enum):
     REGULATORY_FILING = "regulatory_filing"
     EVIDENCE_PACKAGE = "evidence_package"
 
+
 class AuditSeverity(Enum):
     """Audit event severity levels"""
+
     INFORMATIONAL = "informational"
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
     CRITICAL = "critical"
 
+
 class DocumentStatus(Enum):
     """Document lifecycle status"""
+
     DRAFT = "draft"
     UNDER_REVIEW = "under_review"
     APPROVED = "approved"
@@ -77,17 +85,21 @@ class DocumentStatus(Enum):
     EXPIRED = "expired"
     SUPERSEDED = "superseded"
 
+
 class RetentionStatus(Enum):
     """Document retention status"""
+
     ACTIVE = "active"
     RETENTION_PERIOD = "retention_period"
     LEGAL_HOLD = "legal_hold"
     ELIGIBLE_FOR_DESTRUCTION = "eligible_for_destruction"
     DESTROYED = "destroyed"
 
+
 @dataclass
 class AuditRecord:
     """Immutable audit record"""
+
     record_id: str
     event_type: AuditEventType
     severity: AuditSeverity
@@ -106,9 +118,11 @@ class AuditRecord:
     hash_signature: str = ""  # Tamper-proof hash
     previous_hash: str = ""  # Chain previous record
 
+
 @dataclass
 class ComplianceDocument:
     """Compliance document with metadata"""
+
     document_id: str
     document_type: DocumentType
     title: str
@@ -128,18 +142,22 @@ class ComplianceDocument:
     compliance_tags: List[str] = field(default_factory=list)
     access_log: List[Dict[str, Any]] = field(default_factory=list)
 
+
 @dataclass
 class AuditTrail:
     """Complete audit trail for a specific entity"""
+
     entity_id: str
     entity_type: str  # 'user', 'client', 'transaction', 'document'
     records: List[AuditRecord] = field(default_factory=list)
     created_at: datetime = field(default_factory=datetime.now)
     last_updated: datetime = field(default_factory=datetime.now)
 
+
 @dataclass
 class ComplianceReport:
     """Comprehensive compliance report"""
+
     report_id: str
     report_type: str
     reporting_period: Tuple[datetime, datetime]
@@ -155,9 +173,11 @@ class ComplianceReport:
     risk_level: str
     next_review_date: Optional[datetime] = None
 
+
 @dataclass
 class RegulatoryFiling:
     """Regulatory filing record"""
+
     filing_id: str
     regulation: str
     filing_type: str
@@ -168,6 +188,7 @@ class RegulatoryFiling:
     supporting_documents: List[str]
     submission_reference: Optional[str] = None
     response_received: Optional[Dict[str, Any]] = None
+
 
 class AuditDocumentationSystem:
     """
@@ -182,21 +203,21 @@ class AuditDocumentationSystem:
 
         # Audit configuration
         self.audit_config = {
-            'retention_period_years': 7,
-            'hash_algorithm': 'sha256',
-            'audit_buffer_size': 1000,
-            'auto_archive_threshold': 10000,
-            'tamper_check_frequency': 3600,  # 1 hour
-            'compression_enabled': True
+            "retention_period_years": 7,
+            "hash_algorithm": "sha256",
+            "audit_buffer_size": 1000,
+            "auto_archive_threshold": 10000,
+            "tamper_check_frequency": 3600,  # 1 hour
+            "compression_enabled": True,
         }
 
         # Document management configuration
         self.document_config = {
-            'document_storage_path': Path('compliance_documents'),
-            'version_control_enabled': True,
-            'automatic_backup': True,
-            'encryption_required': True,
-            'digital_signatures': True
+            "document_storage_path": Path("compliance_documents"),
+            "version_control_enabled": True,
+            "automatic_backup": True,
+            "encryption_required": True,
+            "digital_signatures": True,
         }
 
         # Audit storage
@@ -215,21 +236,21 @@ class AuditDocumentationSystem:
 
         # Jorge-specific audit requirements
         self.jorge_audit_framework = {
-            'confrontational_methodology_auditing': {
-                'client_interaction_logging': 'detailed_conversation_records',
-                'pressure_tactic_documentation': 'objective_rationale_required',
-                'client_response_tracking': 'satisfaction_correlation_analysis'
+            "confrontational_methodology_auditing": {
+                "client_interaction_logging": "detailed_conversation_records",
+                "pressure_tactic_documentation": "objective_rationale_required",
+                "client_response_tracking": "satisfaction_correlation_analysis",
             },
-            'commission_compliance_auditing': {
-                'rate_justification_tracking': 'value_proposition_documentation',
-                'competitive_analysis_records': 'market_rate_comparison_logs',
-                'client_education_evidence': 'informed_consent_verification'
+            "commission_compliance_auditing": {
+                "rate_justification_tracking": "value_proposition_documentation",
+                "competitive_analysis_records": "market_rate_comparison_logs",
+                "client_education_evidence": "informed_consent_verification",
             },
-            'predictive_intelligence_auditing': {
-                'model_decision_logging': 'explainable_ai_audit_trail',
-                'bias_detection_monitoring': 'fairness_metric_tracking',
-                'data_source_validation': 'input_quality_verification'
-            }
+            "predictive_intelligence_auditing": {
+                "model_decision_logging": "explainable_ai_audit_trail",
+                "bias_detection_monitoring": "fairness_metric_tracking",
+                "data_source_validation": "input_quality_verification",
+            },
         }
 
         # Initialize audit system
@@ -256,19 +277,21 @@ class AuditDocumentationSystem:
             logger.error(f"Audit system initialization failed: {str(e)}")
             raise
 
-    async def log_audit_event(self,
-                            event_type: AuditEventType,
-                            severity: AuditSeverity,
-                            user_id: Optional[str],
-                            session_id: Optional[str],
-                            ip_address: str,
-                            user_agent: str,
-                            action: str,
-                            resource: str,
-                            result: str,
-                            details: Dict[str, Any],
-                            data_before: Optional[Dict[str, Any]] = None,
-                            data_after: Optional[Dict[str, Any]] = None) -> AuditRecord:
+    async def log_audit_event(
+        self,
+        event_type: AuditEventType,
+        severity: AuditSeverity,
+        user_id: Optional[str],
+        session_id: Optional[str],
+        ip_address: str,
+        user_agent: str,
+        action: str,
+        resource: str,
+        result: str,
+        details: Dict[str, Any],
+        data_before: Optional[Dict[str, Any]] = None,
+        data_after: Optional[Dict[str, Any]] = None,
+    ) -> AuditRecord:
         """
         Log immutable audit event with tamper-proof chaining
         """
@@ -290,7 +313,7 @@ class AuditDocumentationSystem:
                 data_before=data_before,
                 data_after=data_after,
                 compliance_tags=self._determine_compliance_tags(event_type, action),
-                previous_hash=self.last_record_hash
+                previous_hash=self.last_record_hash,
             )
 
             # Calculate tamper-proof hash
@@ -318,12 +341,14 @@ class AuditDocumentationSystem:
             logger.error(f"Audit event logging failed: {str(e)}")
             raise
 
-    async def create_compliance_document(self,
-                                       document_type: DocumentType,
-                                       title: str,
-                                       content: str,
-                                       created_by: str,
-                                       metadata: Optional[Dict[str, Any]] = None) -> ComplianceDocument:
+    async def create_compliance_document(
+        self,
+        document_type: DocumentType,
+        title: str,
+        content: str,
+        created_by: str,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> ComplianceDocument:
         """
         Create new compliance document with version control
         """
@@ -344,7 +369,7 @@ class AuditDocumentationSystem:
                 document_id=document_id,
                 document_type=document_type,
                 title=title,
-                description=metadata.get('description', '') if metadata else '',
+                description=metadata.get("description", "") if metadata else "",
                 version="1.0",
                 status=DocumentStatus.DRAFT,
                 retention_status=RetentionStatus.ACTIVE,
@@ -352,7 +377,7 @@ class AuditDocumentationSystem:
                 file_path=str(file_path),
                 created_by=created_by,
                 created_at=datetime.now(),
-                compliance_tags=metadata.get('compliance_tags', []) if metadata else []
+                compliance_tags=metadata.get("compliance_tags", []) if metadata else [],
             )
 
             # Store document
@@ -369,7 +394,7 @@ class AuditDocumentationSystem:
                 "create_document",
                 document_id,
                 "success",
-                {"document_type": document_type.value, "title": title}
+                {"document_type": document_type.value, "title": title},
             )
 
             logger.info(f"Compliance document created: {document_id}")
@@ -379,11 +404,9 @@ class AuditDocumentationSystem:
             logger.error(f"Compliance document creation failed: {str(e)}")
             raise
 
-    async def generate_compliance_report(self,
-                                       report_type: str,
-                                       reporting_period: Tuple[datetime, datetime],
-                                       scope: List[str],
-                                       generated_by: str) -> ComplianceReport:
+    async def generate_compliance_report(
+        self, report_type: str, reporting_period: Tuple[datetime, datetime], scope: List[str], generated_by: str
+    ) -> ComplianceReport:
         """
         Generate comprehensive compliance report
         """
@@ -393,9 +416,9 @@ class AuditDocumentationSystem:
 
             # Filter audit records by period and scope
             filtered_records = [
-                record for record in self.audit_records
-                if start_date <= record.timestamp <= end_date
-                and any(tag in scope for tag in record.compliance_tags)
+                record
+                for record in self.audit_records
+                if start_date <= record.timestamp <= end_date and any(tag in scope for tag in record.compliance_tags)
             ]
 
             # Analyze findings
@@ -430,7 +453,7 @@ class AuditDocumentationSystem:
                 attachments=[],
                 compliance_score=compliance_score,
                 risk_level=risk_level,
-                next_review_date=end_date + timedelta(days=90)
+                next_review_date=end_date + timedelta(days=90),
             )
 
             # Store report
@@ -446,11 +469,9 @@ class AuditDocumentationSystem:
             logger.error(f"Compliance report generation failed: {str(e)}")
             raise
 
-    async def prepare_regulatory_filing(self,
-                                      regulation: str,
-                                      filing_type: str,
-                                      due_date: datetime,
-                                      filing_data: Dict[str, Any]) -> RegulatoryFiling:
+    async def prepare_regulatory_filing(
+        self, regulation: str, filing_type: str, due_date: datetime, filing_data: Dict[str, Any]
+    ) -> RegulatoryFiling:
         """
         Prepare regulatory filing with supporting documentation
         """
@@ -461,16 +482,12 @@ class AuditDocumentationSystem:
             filing_id = self._generate_filing_id()
 
             # Collect supporting documents
-            supporting_documents = await self._collect_supporting_documents(
-                regulation, filing_type, filing_data
-            )
+            supporting_documents = await self._collect_supporting_documents(regulation, filing_type, filing_data)
 
             # Validate filing completeness
-            validation_result = await self._validate_filing_completeness(
-                filing_type, filing_data, supporting_documents
-            )
+            validation_result = await self._validate_filing_completeness(filing_type, filing_data, supporting_documents)
 
-            if not validation_result['complete']:
+            if not validation_result["complete"]:
                 raise ValueError(f"Filing incomplete: {validation_result['missing_items']}")
 
             # Create filing record
@@ -481,7 +498,7 @@ class AuditDocumentationSystem:
                 due_date=due_date,
                 status="pending",
                 filing_content=filing_data,
-                supporting_documents=supporting_documents
+                supporting_documents=supporting_documents,
             )
 
             # Store filing
@@ -491,14 +508,14 @@ class AuditDocumentationSystem:
             await self.log_audit_event(
                 AuditEventType.SYSTEM_CONFIGURATION,
                 AuditSeverity.MEDIUM,
-                filing_data.get('prepared_by', 'system'),
+                filing_data.get("prepared_by", "system"),
                 None,
                 "system",
                 "regulatory_filing_system",
                 "prepare_filing",
                 filing_id,
                 "success",
-                {"regulation": regulation, "filing_type": filing_type}
+                {"regulation": regulation, "filing_type": filing_type},
             )
 
             logger.info(f"Regulatory filing prepared: {filing_id}")
@@ -508,9 +525,9 @@ class AuditDocumentationSystem:
             logger.error(f"Regulatory filing preparation failed: {str(e)}")
             raise
 
-    async def search_audit_records(self,
-                                 search_criteria: Dict[str, Any],
-                                 date_range: Optional[Tuple[datetime, datetime]] = None) -> List[AuditRecord]:
+    async def search_audit_records(
+        self, search_criteria: Dict[str, Any], date_range: Optional[Tuple[datetime, datetime]] = None
+    ) -> List[AuditRecord]:
         """
         Search audit records with comprehensive filtering
         """
@@ -558,12 +575,12 @@ class AuditDocumentationSystem:
             logger.info("Verifying audit chain integrity")
 
             integrity_result = {
-                'chain_valid': True,
-                'total_records': len(self.audit_records),
-                'verified_records': 0,
-                'tampering_detected': False,
-                'corrupted_records': [],
-                'last_verification': datetime.now().isoformat()
+                "chain_valid": True,
+                "total_records": len(self.audit_records),
+                "verified_records": 0,
+                "tampering_detected": False,
+                "corrupted_records": [],
+                "last_verification": datetime.now().isoformat(),
             }
 
             # Verify each record in chain
@@ -571,30 +588,28 @@ class AuditDocumentationSystem:
             for i, record in enumerate(self.audit_records):
                 # Verify hash chain
                 if record.previous_hash != previous_hash:
-                    integrity_result['chain_valid'] = False
-                    integrity_result['tampering_detected'] = True
-                    integrity_result['corrupted_records'].append({
-                        'record_id': record.record_id,
-                        'index': i,
-                        'issue': 'hash_chain_broken'
-                    })
+                    integrity_result["chain_valid"] = False
+                    integrity_result["tampering_detected"] = True
+                    integrity_result["corrupted_records"].append(
+                        {"record_id": record.record_id, "index": i, "issue": "hash_chain_broken"}
+                    )
 
                 # Verify record hash
                 calculated_hash = self._calculate_record_hash(record)
                 if calculated_hash != record.hash_signature:
-                    integrity_result['chain_valid'] = False
-                    integrity_result['tampering_detected'] = True
-                    integrity_result['corrupted_records'].append({
-                        'record_id': record.record_id,
-                        'index': i,
-                        'issue': 'record_hash_mismatch'
-                    })
+                    integrity_result["chain_valid"] = False
+                    integrity_result["tampering_detected"] = True
+                    integrity_result["corrupted_records"].append(
+                        {"record_id": record.record_id, "index": i, "issue": "record_hash_mismatch"}
+                    )
 
                 previous_hash = record.hash_signature
-                integrity_result['verified_records'] += 1
+                integrity_result["verified_records"] += 1
 
-            if integrity_result['tampering_detected']:
-                logger.critical(f"Audit chain tampering detected: {len(integrity_result['corrupted_records'])} corrupted records")
+            if integrity_result["tampering_detected"]:
+                logger.critical(
+                    f"Audit chain tampering detected: {len(integrity_result['corrupted_records'])} corrupted records"
+                )
                 await self._handle_audit_tampering(integrity_result)
 
             return integrity_result
@@ -603,10 +618,9 @@ class AuditDocumentationSystem:
             logger.error(f"Audit chain verification failed: {str(e)}")
             raise
 
-    async def export_audit_data(self,
-                              export_format: str,
-                              date_range: Tuple[datetime, datetime],
-                              filters: Optional[Dict[str, Any]] = None) -> str:
+    async def export_audit_data(
+        self, export_format: str, date_range: Tuple[datetime, datetime], filters: Optional[Dict[str, Any]] = None
+    ) -> str:
         """
         Export audit data for external analysis or compliance
         """
@@ -615,10 +629,7 @@ class AuditDocumentationSystem:
             logger.info(f"Exporting audit data: {export_format} ({start_date} to {end_date})")
 
             # Filter records by date range
-            filtered_records = [
-                record for record in self.audit_records
-                if start_date <= record.timestamp <= end_date
-            ]
+            filtered_records = [record for record in self.audit_records if start_date <= record.timestamp <= end_date]
 
             # Apply additional filters if provided
             if filters:
@@ -650,8 +661,8 @@ class AuditDocumentationSystem:
                 {
                     "format": export_format,
                     "date_range": f"{start_date.isoformat()} to {end_date.isoformat()}",
-                    "record_count": len(filtered_records)
-                }
+                    "record_count": len(filtered_records),
+                },
             )
 
             logger.info(f"Audit data exported: {export_path}")
@@ -706,9 +717,9 @@ class AuditDocumentationSystem:
 
     def _setup_document_storage(self):
         """Set up document storage directories"""
-        self.document_config['document_storage_path'].mkdir(parents=True, exist_ok=True)
-        (self.document_config['document_storage_path'] / 'active').mkdir(exist_ok=True)
-        (self.document_config['document_storage_path'] / 'archived').mkdir(exist_ok=True)
+        self.document_config["document_storage_path"].mkdir(parents=True, exist_ok=True)
+        (self.document_config["document_storage_path"] / "active").mkdir(exist_ok=True)
+        (self.document_config["document_storage_path"] / "archived").mkdir(exist_ok=True)
 
     def _initialize_audit_chain(self):
         """Initialize audit chain with genesis record"""
@@ -726,7 +737,7 @@ class AuditDocumentationSystem:
                 resource="audit_system",
                 result="success",
                 details={"message": "Audit chain initialized"},
-                previous_hash=""
+                previous_hash="",
             )
             genesis_record.hash_signature = self._calculate_record_hash(genesis_record)
             self.audit_records.append(genesis_record)
@@ -745,10 +756,7 @@ class AuditDocumentationSystem:
     async def _update_audit_trail(self, entity_id: str, entity_type: str, record: AuditRecord):
         """Update entity audit trail"""
         if entity_id not in self.audit_trails:
-            self.audit_trails[entity_id] = AuditTrail(
-                entity_id=entity_id,
-                entity_type=entity_type
-            )
+            self.audit_trails[entity_id] = AuditTrail(entity_id=entity_id, entity_type=entity_type)
 
         trail = self.audit_trails[entity_id]
         trail.records.append(record)
@@ -762,19 +770,19 @@ class AuditDocumentationSystem:
     async def _trigger_audit_alert(self, record: AuditRecord):
         """Trigger audit alert for high-severity events"""
         alert = {
-            'alert_id': f"alert_{secrets.token_hex(8)}",
-            'record_id': record.record_id,
-            'severity': record.severity.value,
-            'event_type': record.event_type.value,
-            'timestamp': record.timestamp.isoformat(),
-            'details': record.details
+            "alert_id": f"alert_{secrets.token_hex(8)}",
+            "record_id": record.record_id,
+            "severity": record.severity.value,
+            "event_type": record.event_type.value,
+            "timestamp": record.timestamp.isoformat(),
+            "details": record.details,
         }
         self.audit_alerts.append(alert)
 
     async def _save_document_content(self, document_id: str, content: str, document_type: DocumentType) -> Path:
         """Save document content to storage"""
-        file_path = self.document_config['document_storage_path'] / 'active' / f"{document_id}.txt"
-        file_path.write_text(content, encoding='utf-8')
+        file_path = self.document_config["document_storage_path"] / "active" / f"{document_id}.txt"
+        file_path.write_text(content, encoding="utf-8")
         return file_path
 
     async def _handle_audit_tampering(self, integrity_result: Dict[str, Any]):

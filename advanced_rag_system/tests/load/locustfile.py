@@ -14,11 +14,12 @@ Targets:
 - <1% error rate
 """
 
-from locust import HttpUser, task, between, events
-import random
 import json
+import random
 import time
-from typing import List, Dict
+from typing import Dict, List
+
+from locust import HttpUser, between, events, task
 
 
 class RAGUser(HttpUser):
@@ -42,7 +43,7 @@ class RAGUser(HttpUser):
                 "Explain the concept of retrieval-augmented generation",
                 "How do you implement context-aware search?",
                 "What are best practices for document chunking?",
-                "How to measure retrieval system accuracy?"
+                "How to measure retrieval system accuracy?",
             ],
             "business": [
                 "What are the cost implications of RAG systems?",
@@ -54,7 +55,7 @@ class RAGUser(HttpUser):
                 "What infrastructure is needed for production RAG?",
                 "How to monitor and maintain RAG systems?",
                 "What are common implementation challenges?",
-                "How to train teams on RAG technology?"
+                "How to train teams on RAG technology?",
             ],
             "operational": [
                 "How to monitor RAG system health?",
@@ -66,8 +67,8 @@ class RAGUser(HttpUser):
                 "How to optimize memory usage in retrieval?",
                 "What backup and recovery procedures are needed?",
                 "How to perform A/B testing on RAG systems?",
-                "What are security best practices for RAG?"
-            ]
+                "What are security best practices for RAG?",
+            ],
         }
 
         # Flatten all queries for random selection
@@ -81,13 +82,20 @@ class RAGUser(HttpUser):
             "Business guide covering {topic} with ROI analysis and strategic considerations.",
             "Operational handbook for {topic} with monitoring and maintenance procedures.",
             "Research findings on {topic} with experimental results and conclusions.",
-            "Tutorial content explaining {topic} with step-by-step instructions."
+            "Tutorial content explaining {topic} with step-by-step instructions.",
         ]
 
         self.topics = [
-            "vector databases", "machine learning", "data engineering",
-            "cloud computing", "system architecture", "performance optimization",
-            "security protocols", "API design", "data analytics", "automation"
+            "vector databases",
+            "machine learning",
+            "data engineering",
+            "cloud computing",
+            "system architecture",
+            "performance optimization",
+            "security protocols",
+            "API design",
+            "data analytics",
+            "automation",
         ]
 
         # Session-level metrics
@@ -106,16 +114,10 @@ class RAGUser(HttpUser):
 
         with self.client.post(
             "/query",
-            json={
-                "query": query,
-                "retrieval_config": {
-                    "top_k": 5,
-                    "retrieval_mode": "dense"
-                }
-            },
+            json={"query": query, "retrieval_config": {"top_k": 5, "retrieval_mode": "dense"}},
             headers={"Content-Type": "application/json"},
             catch_response=True,
-            name="query_basic"
+            name="query_basic",
         ) as response:
             self._validate_query_response(response, "basic")
             self.request_count += 1
@@ -138,12 +140,12 @@ class RAGUser(HttpUser):
                     "top_k": 10,
                     "retrieval_mode": "hybrid",
                     "rerank": True,
-                    "alpha": 0.7  # Dense/sparse balance
-                }
+                    "alpha": 0.7,  # Dense/sparse balance
+                },
             },
             headers={"Content-Type": "application/json"},
             catch_response=True,
-            name="query_hybrid"
+            name="query_hybrid",
         ) as response:
             self._validate_query_response(response, "hybrid")
             self.request_count += 1
@@ -162,17 +164,13 @@ class RAGUser(HttpUser):
             "/query/stream",
             json={
                 "query": query,
-                "generation_config": {
-                    "stream": True,
-                    "max_tokens": 500,
-                    "temperature": 0.7
-                },
-                "retrieval_config": {"top_k": 5}
+                "generation_config": {"stream": True, "max_tokens": 500, "temperature": 0.7},
+                "retrieval_config": {"top_k": 5},
             },
             headers={"Content-Type": "application/json"},
             catch_response=True,
             stream=True,
-            name="query_streaming"
+            name="query_streaming",
         ) as response:
             self._validate_streaming_response(response)
             self.request_count += 1
@@ -194,20 +192,24 @@ class RAGUser(HttpUser):
         with self.client.post(
             "/ingest",
             json={
-                "documents": [{
-                    "id": doc_id,
-                    "content": content,
-                    "metadata": {
-                        "source": "load_test",
-                        "category": random.choice(list(self.queries.keys())),
-                        "timestamp": time.time(),
-                        "user_session": self.environment.runner.user_id if hasattr(self.environment.runner, 'user_id') else "anonymous"
+                "documents": [
+                    {
+                        "id": doc_id,
+                        "content": content,
+                        "metadata": {
+                            "source": "load_test",
+                            "category": random.choice(list(self.queries.keys())),
+                            "timestamp": time.time(),
+                            "user_session": self.environment.runner.user_id
+                            if hasattr(self.environment.runner, "user_id")
+                            else "anonymous",
+                        },
                     }
-                }]
+                ]
             },
             headers={"Content-Type": "application/json"},
             catch_response=True,
-            name="ingest_document"
+            name="ingest_document",
         ) as response:
             self._validate_ingestion_response(response)
 
@@ -219,11 +221,7 @@ class RAGUser(HttpUser):
         Weight: 1 (monitoring task)
         Expected: <10ms response
         """
-        with self.client.get(
-            "/health",
-            catch_response=True,
-            name="health_check"
-        ) as response:
+        with self.client.get("/health", catch_response=True, name="health_check") as response:
             if response.status_code == 200:
                 try:
                     health_data = response.json()
@@ -248,13 +246,10 @@ class RAGUser(HttpUser):
 
         with self.client.post(
             "/query/batch",
-            json={
-                "queries": queries,
-                "retrieval_config": {"top_k": 3}
-            },
+            json={"queries": queries, "retrieval_config": {"top_k": 3}},
             headers={"Content-Type": "application/json"},
             catch_response=True,
-            name="batch_query"
+            name="batch_query",
         ) as response:
             if response.status_code == 200:
                 try:
@@ -312,8 +307,8 @@ class RAGUser(HttpUser):
         if response.status_code == 200:
             try:
                 # Check if response headers indicate streaming
-                content_type = response.headers.get('content-type', '')
-                if 'stream' not in content_type.lower():
+                content_type = response.headers.get("content-type", "")
+                if "stream" not in content_type.lower():
                     response.failure("Response not marked as streaming")
                     return
 
@@ -349,11 +344,13 @@ class RAGUser(HttpUser):
 # Load test scenarios
 class QuickLoadUser(RAGUser):
     """Lighter load for quick testing."""
+
     wait_time = between(2, 8)  # Slower request rate
 
 
 class HeavyLoadUser(RAGUser):
     """Heavy load simulation for stress testing."""
+
     wait_time = between(0.5, 2)  # Faster request rate
 
     # Increase frequency of resource-intensive tasks
@@ -376,7 +373,7 @@ def record_custom_metrics(request_type, name, response_time, response_length, re
     """Record custom performance metrics."""
     if exception is None and response:
         # Track response time percentiles by endpoint
-        if hasattr(events.Environment, 'stats'):
+        if hasattr(events.Environment, "stats"):
             pass  # Custom metrics would be implemented here
 
 
@@ -384,28 +381,13 @@ def record_custom_metrics(request_type, name, response_time, response_length, re
 def create_load_test_config():
     """Return configuration for different load test scenarios."""
     return {
-        "baseline": {
-            "users": 100,
-            "spawn_rate": 10,
-            "run_time": "5m",
-            "description": "Baseline load test - 100 users"
-        },
-        "stress": {
-            "users": 500,
-            "spawn_rate": 25,
-            "run_time": "10m",
-            "description": "Stress test - 500 users"
-        },
-        "spike": {
-            "users": 200,
-            "spawn_rate": 50,
-            "run_time": "2m",
-            "description": "Spike test - rapid user ramp"
-        },
+        "baseline": {"users": 100, "spawn_rate": 10, "run_time": "5m", "description": "Baseline load test - 100 users"},
+        "stress": {"users": 500, "spawn_rate": 25, "run_time": "10m", "description": "Stress test - 500 users"},
+        "spike": {"users": 200, "spawn_rate": 50, "run_time": "2m", "description": "Spike test - rapid user ramp"},
         "endurance": {
             "users": 150,
             "spawn_rate": 5,
             "run_time": "30m",
-            "description": "Endurance test - sustained load"
-        }
+            "description": "Endurance test - sustained load",
+        },
     }

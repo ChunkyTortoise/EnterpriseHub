@@ -158,14 +158,10 @@ class CommissionCalculator:
             created_date = datetime.now()
 
         # Calculate base commission
-        commission_data = self.calculate_commission(
-            property_price, commission_type, custom_rate
-        )
+        commission_data = self.calculate_commission(property_price, commission_type, custom_rate)
 
         # Calculate probability of closing based on stage
-        close_probability = self._calculate_close_probability(
-            current_stage, automation_features or []
-        )
+        close_probability = self._calculate_close_probability(current_stage, automation_features or [])
 
         # Project expected value
         expected_value = commission_data["net_commission"] * close_probability
@@ -185,16 +181,12 @@ class CommissionCalculator:
             "close_probability": round(close_probability * 100, 1),
             "expected_value": round(expected_value, 2),
             "automation_features": automation_features or [],
-            "automation_impact": self._calculate_automation_impact(
-                automation_features or []
-            ),
+            "automation_impact": self._calculate_automation_impact(automation_features or []),
             "updated_at": datetime.now().isoformat(),
         }
 
         # Add or update deal in tracker
-        existing_idx = next(
-            (i for i, d in enumerate(self.deals) if d["deal_id"] == deal_id), None
-        )
+        existing_idx = next((i for i, d in enumerate(self.deals) if d["deal_id"] == deal_id), None)
         if existing_idx is not None:
             self.deals[existing_idx] = deal
         else:
@@ -202,9 +194,7 @@ class CommissionCalculator:
 
         return deal
 
-    def _calculate_close_probability(
-        self, stage: DealStage, automation_features: List[str]
-    ) -> float:
+    def _calculate_close_probability(self, stage: DealStage, automation_features: List[str]) -> float:
         """Calculate probability of deal closing based on stage and automations."""
         base_probability = self.CONVERSION_RATES[stage]
 
@@ -245,9 +235,7 @@ class CommissionCalculator:
             Pipeline summary with totals and projections
         """
         if active_only:
-            deals = [
-                d for d in self.deals if d["current_stage"] not in ["closed", "lost"]
-            ]
+            deals = [d for d in self.deals if d["current_stage"] not in ["closed", "lost"]]
         else:
             deals = self.deals
 
@@ -267,16 +255,9 @@ class CommissionCalculator:
             if stage_deals:
                 by_stage[stage.value] = {
                     "count": len(stage_deals),
-                    "total_property_value": sum(
-                        d["property_price"] for d in stage_deals
-                    ),
-                    "expected_commission": sum(
-                        d["expected_value"] for d in stage_deals
-                    ),
-                    "close_probability_avg": sum(
-                        d["close_probability"] for d in stage_deals
-                    )
-                    / len(stage_deals),
+                    "total_property_value": sum(d["property_price"] for d in stage_deals),
+                    "expected_commission": sum(d["expected_value"] for d in stage_deals),
+                    "close_probability_avg": sum(d["close_probability"] for d in stage_deals) / len(stage_deals),
                 }
 
         # Calculate totals
@@ -333,16 +314,12 @@ class CommissionCalculator:
         for feature in all_features:
             feature_counts[feature] = feature_counts.get(feature, 0) + 1
 
-        top_features = sorted(feature_counts.items(), key=lambda x: x[1], reverse=True)[
-            :3
-        ]
+        top_features = sorted(feature_counts.items(), key=lambda x: x[1], reverse=True)[:3]
 
         return {
             "deals_using_automation": len(deals_with_automation),
             "estimated_revenue_increase": round(revenue_increase, 2),
-            "improvement_pct": round(
-                (revenue_increase / total_without * 100) if total_without > 0 else 0, 1
-            ),
+            "improvement_pct": round((revenue_increase / total_without * 100) if total_without > 0 else 0, 1),
             "top_features": [{"feature": f, "count": c} for f, c in top_features],
             "roi_note": f"Automation features increasing pipeline value by ${revenue_increase:,.0f}",
         }
@@ -357,18 +334,14 @@ class CommissionCalculator:
         Returns:
             Monthly projection data
         """
-        active_deals = [
-            d for d in self.deals if d["current_stage"] not in ["closed", "lost"]
-        ]
+        active_deals = [d for d in self.deals if d["current_stage"] not in ["closed", "lost"]]
 
         # Calculate average deal velocity (days to close)
         closed_deals = [d for d in self.deals if d["current_stage"] == "closed"]
         avg_days_to_close = 90  # Default
 
         if closed_deals:
-            avg_days_to_close = sum(d["days_in_pipeline"] for d in closed_deals) / len(
-                closed_deals
-            )
+            avg_days_to_close = sum(d["days_in_pipeline"] for d in closed_deals) / len(closed_deals)
 
         # Project closings by month
         monthly_projections = []
@@ -378,18 +351,14 @@ class CommissionCalculator:
             month_end = month_start + timedelta(days=30)
 
             # Simple projection: distribute expected value across avg close time
-            expected_monthly = sum(d["expected_value"] for d in active_deals) / (
-                avg_days_to_close / 30
-            )
+            expected_monthly = sum(d["expected_value"] for d in active_deals) / (avg_days_to_close / 30)
 
             monthly_projections.append(
                 {
                     "month": month,
                     "month_name": month_start.strftime("%B %Y"),
                     "projected_commission": round(expected_monthly, 2),
-                    "deals_expected": round(
-                        len(active_deals) * 0.1, 1
-                    ),  # Rough estimate
+                    "deals_expected": round(len(active_deals) * 0.1, 1),  # Rough estimate
                 }
             )
 
@@ -422,9 +391,7 @@ class CommissionCalculator:
         # Calculate ROI
         if revenue_increase > 0:
             roi_multiplier = revenue_increase / system_cost_annual
-            roi_percentage = (
-                (revenue_increase - system_cost_annual) / system_cost_annual * 100
-            )
+            roi_percentage = (revenue_increase - system_cost_annual) / system_cost_annual * 100
         else:
             roi_multiplier = 0
             roi_percentage = 0
@@ -442,11 +409,7 @@ class CommissionCalculator:
                         "improvement_pct": round((multiplier - 1.0) * 100, 1),
                         "deals_using": feature_data["count"],
                         "estimated_value": round(
-                            revenue_increase
-                            * (
-                                feature_data["count"]
-                                / automation_impact["deals_using_automation"]
-                            ),
+                            revenue_increase * (feature_data["count"] / automation_impact["deals_using_automation"]),
                             2,
                         ),
                     }
@@ -460,11 +423,7 @@ class CommissionCalculator:
             "roi_multiplier": round(roi_multiplier, 1),
             "roi_percentage": round(roi_percentage, 1),
             "payback_period_days": round(
-                (
-                    (system_cost_annual / revenue_increase * 365)
-                    if revenue_increase > 0
-                    else 999
-                ),
+                ((system_cost_annual / revenue_increase * 365) if revenue_increase > 0 else 999),
                 0,
             ),
             "feature_breakdown": feature_breakdown,
@@ -476,9 +435,7 @@ class CommissionCalculator:
 
 
 # Convenience functions
-def quick_commission(
-    property_price: float, commission_rate: float = 0.025, split: float = 0.80
-) -> float:
+def quick_commission(property_price: float, commission_rate: float = 0.025, split: float = 0.80) -> float:
     """
     Quick commission calculation.
 
@@ -491,9 +448,7 @@ def quick_commission(
         Net commission to agent
     """
     calc = CommissionCalculator(brokerage_split=split)
-    result = calc.calculate_commission(
-        property_price, CommissionType.BUYER_AGENT, custom_rate=commission_rate
-    )
+    result = calc.calculate_commission(property_price, CommissionType.BUYER_AGENT, custom_rate=commission_rate)
     return result["net_commission"]
 
 

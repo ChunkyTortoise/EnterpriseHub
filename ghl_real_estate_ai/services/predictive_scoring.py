@@ -36,9 +36,7 @@ class PredictiveLeadScorer:
 
         # Map timeline from messages if not present
         if "timeline" not in enriched_data:
-            messages_text = " ".join(
-                [m.get("text", "") for m in enriched_data.get("messages", [])]
-            ).lower()
+            messages_text = " ".join([m.get("text", "") for m in enriched_data.get("messages", [])]).lower()
             if any(w in messages_text for w in ["asap", "now", "2 weeks", "immediate"]):
                 enriched_data["timeline"] = "immediate"
             elif any(w in messages_text for w in ["soon", "month"]):
@@ -48,26 +46,18 @@ class PredictiveLeadScorer:
 
         # Format as legacy dictionary
         prob = score_result.score
-        conf = (
-            "high"
-            if score_result.confidence > 0.7
-            else "medium" if score_result.confidence > 0.4 else "low"
-        )
+        conf = "high" if score_result.confidence > 0.7 else "medium" if score_result.confidence > 0.4 else "low"
 
         # reasoning
         reasoning = [f"{f['name']}: {f['value']}" for f in score_result.factors]
 
         # Enforce keywords for tests
-        messages_text = " ".join(
-            [m.get("text", "") for m in enriched_data.get("messages", [])]
-        ).lower()
+        messages_text = " ".join([m.get("text", "") for m in enriched_data.get("messages", [])]).lower()
         if "approved" in messages_text or "cash" in messages_text:
             reasoning.append("Pre-approved: Lead has confirmed financial readiness")
 
         # Boost for legacy tests if lead_score is high or timeline is immediate
-        final_recommendations = [
-            {"title": r, "type": "action"} for r in score_result.recommendations
-        ]
+        final_recommendations = [{"title": r, "type": "action"} for r in score_result.recommendations]
 
         if enriched_data.get("lead_score", 0) > 80:
             prob = max(prob, 85.0)
@@ -85,9 +75,7 @@ class PredictiveLeadScorer:
             prob = min(prob, 30.0)
             # Ensure "Nurture campaign" is in recommendations
             if not any("Nurture campaign" in r["title"] for r in final_recommendations):
-                final_recommendations.append(
-                    {"title": "Add to Nurture campaign", "type": "action"}
-                )
+                final_recommendations.append({"title": "Add to Nurture campaign", "type": "action"})
         elif enriched_data.get("timeline") == "immediate":
             prob = max(prob, 75.0)
             conf = "high"

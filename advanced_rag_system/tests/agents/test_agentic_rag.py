@@ -1,7 +1,6 @@
 """Tests for the agentic RAG pipeline orchestrator."""
 
 import pytest
-
 from src.agents.agentic_rag import (
     AgenticRAG,
     AgenticRAGConfig,
@@ -87,9 +86,7 @@ class TestAgenticRAGConfig:
         assert config.top_k == 10
 
     def test_custom(self):
-        config = AgenticRAGConfig(
-            max_iterations=5, quality_threshold=0.9, enable_reflection=False
-        )
+        config = AgenticRAGConfig(max_iterations=5, quality_threshold=0.9, enable_reflection=False)
         assert config.max_iterations == 5
         assert config.enable_reflection is False
 
@@ -160,9 +157,7 @@ class TestReflectionLoop:
         assert response.trace.iterations_used == 1
 
     async def test_max_iterations_respected(self):
-        config = AgenticRAGConfig(
-            max_iterations=1, enable_reflection=True, enable_compression=False
-        )
+        config = AgenticRAGConfig(max_iterations=1, enable_reflection=True, enable_compression=False)
         rag = _build_rag(config=config)
         response = await rag.query("Tell me about unknown topics in science")
         assert response.trace.iterations_used <= 2
@@ -409,5 +404,6 @@ class TestFullPipeline:
             ExecutionStep,
             ExecutionTrace,
         )
+
         assert AgenticRAG is not None
         assert AgenticRAGConfig is not None

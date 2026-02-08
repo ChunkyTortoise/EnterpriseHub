@@ -11,47 +11,47 @@ These endpoints expose the advanced functionality through the dashboard interfac
 """
 
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
 from enum import Enum
+from typing import Any, Dict, List, Optional, Union
 
-from fastapi import APIRouter, HTTPException, Query, Body
-from pydantic import BaseModel, Field, ConfigDict
+from fastapi import APIRouter, Body, HTTPException, Query
+from pydantic import BaseModel, ConfigDict, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.voice_ai_handler import (
-    get_voice_ai_handler,
-    VoiceCallContext,
-    VoiceResponse,
-    CallType,
-    CallPriority,
-    ConversationStage,
-)
 from ghl_real_estate_ai.services.automated_marketing_engine import (
     AutomatedMarketingEngine,
     CampaignBrief,
-    GeneratedContent,
+    CampaignStatus,
     CampaignTrigger,
     ContentFormat,
-    CampaignStatus,
+    GeneratedContent,
 )
 from ghl_real_estate_ai.services.client_retention_engine import (
-    ClientRetentionEngine,
     ClientProfile,
+    ClientRetentionEngine,
     EngagementPlan,
     LifeEventType,
     ReferralOpportunity,
 )
+from ghl_real_estate_ai.services.jorge_advanced_integration import (
+    EventType,
+    IntegrationEvent,
+    JorgeAdvancedIntegration,
+)
 from ghl_real_estate_ai.services.market_prediction_engine import (
+    InvestmentAnalysis,
+    MarketOpportunity,
     MarketPredictionEngine,
     PredictionResult,
     TimeHorizon,
-    MarketOpportunity,
-    InvestmentAnalysis,
 )
-from ghl_real_estate_ai.services.jorge_advanced_integration import (
-    JorgeAdvancedIntegration,
-    IntegrationEvent,
-    EventType,
+from ghl_real_estate_ai.services.voice_ai_handler import (
+    CallPriority,
+    CallType,
+    ConversationStage,
+    VoiceCallContext,
+    VoiceResponse,
+    get_voice_ai_handler,
 )
 
 logger = get_logger(__name__)
@@ -60,9 +60,11 @@ router = APIRouter(prefix="/jorge-advanced", tags=["jorge-advanced"])
 
 # ================== REQUEST/RESPONSE MODELS ==================
 
+
 # Voice AI Models
 class VoiceCallStartRequest(BaseModel):
     """Request to start a voice AI call."""
+
     phone_number: str = Field(..., description="Caller's phone number")
     caller_name: Optional[str] = Field(None, description="Caller's name if known")
     call_type: Optional[CallType] = Field(CallType.NEW_LEAD, description="Type of call")
@@ -71,6 +73,7 @@ class VoiceCallStartRequest(BaseModel):
 
 class VoiceInputRequest(BaseModel):
     """Request to process voice input."""
+
     call_id: str = Field(..., description="Active call ID")
     speech_text: str = Field(..., description="Transcribed speech text")
     audio_confidence: float = Field(..., ge=0.0, le=1.0, description="Speech recognition confidence")
@@ -78,6 +81,7 @@ class VoiceInputRequest(BaseModel):
 
 class VoiceCallAnalytics(BaseModel):
     """Voice call analytics response."""
+
     call_id: str
     duration_seconds: int
     qualification_score: int
@@ -90,6 +94,7 @@ class VoiceCallAnalytics(BaseModel):
 # Marketing Campaign Models
 class CampaignCreationRequest(BaseModel):
     """Request to create automated marketing campaign."""
+
     trigger_type: CampaignTrigger
     target_audience: Dict[str, Any] = Field(..., description="Target audience criteria")
     campaign_objectives: List[str] = Field(..., description="Campaign objectives")
@@ -100,6 +105,7 @@ class CampaignCreationRequest(BaseModel):
 
 class CampaignPerformanceMetrics(BaseModel):
     """Campaign performance metrics."""
+
     campaign_id: str
     impressions: int
     clicks: int
@@ -114,6 +120,7 @@ class CampaignPerformanceMetrics(BaseModel):
 # Client Retention Models
 class ClientLifecycleUpdate(BaseModel):
     """Update client lifecycle information."""
+
     client_id: str
     life_event: LifeEventType
     event_context: Dict[str, Any]
@@ -122,6 +129,7 @@ class ClientLifecycleUpdate(BaseModel):
 
 class ReferralTracking(BaseModel):
     """Referral tracking information."""
+
     referrer_client_id: str
     referred_contact_info: Dict[str, str]
     referral_source: str
@@ -130,6 +138,7 @@ class ReferralTracking(BaseModel):
 
 class ClientEngagementSummary(BaseModel):
     """Client engagement summary."""
+
     client_id: str
     total_interactions: int
     last_interaction_date: datetime
@@ -142,6 +151,7 @@ class ClientEngagementSummary(BaseModel):
 # Market Prediction Models
 class MarketAnalysisRequest(BaseModel):
     """Request for market prediction analysis."""
+
     neighborhood: str = Field(..., description="Neighborhood to analyze")
     time_horizon: TimeHorizon = Field(..., description="Prediction time horizon")
     property_type: Optional[str] = Field(None, description="Property type filter")
@@ -150,6 +160,7 @@ class MarketAnalysisRequest(BaseModel):
 
 class InvestmentOpportunityRequest(BaseModel):
     """Request for investment opportunity analysis."""
+
     client_budget: float = Field(..., description="Client's investment budget")
     risk_tolerance: str = Field(..., description="Risk tolerance: low, medium, high")
     investment_goals: List[str] = Field(..., description="Investment objectives")
@@ -159,6 +170,7 @@ class InvestmentOpportunityRequest(BaseModel):
 # Integration Models
 class DashboardMetrics(BaseModel):
     """Unified dashboard metrics from all modules."""
+
     voice_ai: Dict[str, Any]
     marketing: Dict[str, Any]
     client_retention: Dict[str, Any]
@@ -169,6 +181,7 @@ class DashboardMetrics(BaseModel):
 
 class ModuleHealthStatus(BaseModel):
     """Health status of individual modules."""
+
     module_name: str
     status: str  # healthy, degraded, down
     last_check: datetime
@@ -177,6 +190,7 @@ class ModuleHealthStatus(BaseModel):
 
 
 # ================== VOICE AI ENDPOINTS ==================
+
 
 @router.post("/voice/start-call", response_model=Dict[str, str])
 async def start_voice_call(request: VoiceCallStartRequest):
@@ -189,24 +203,16 @@ async def start_voice_call(request: VoiceCallStartRequest):
         voice_handler = get_voice_ai_handler()
 
         context = await voice_handler.handle_incoming_call(
-            phone_number=request.phone_number,
-            caller_name=request.caller_name
+            phone_number=request.phone_number, caller_name=request.caller_name
         )
 
         logger.info(f"Started voice call {context.call_id} from {request.phone_number}")
 
-        return {
-            "call_id": context.call_id,
-            "status": "active",
-            "message": "Voice AI call started successfully"
-        }
+        return {"call_id": context.call_id, "status": "active", "message": "Voice AI call started successfully"}
 
     except Exception as e:
         logger.error(f"Error starting voice call: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to start voice call: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to start voice call: {str(e)}")
 
 
 @router.post("/voice/process-input", response_model=VoiceResponse)
@@ -220,19 +226,14 @@ async def process_voice_input(request: VoiceInputRequest):
         voice_handler = get_voice_ai_handler()
 
         response = await voice_handler.process_voice_input(
-            call_id=request.call_id,
-            speech_text=request.speech_text,
-            audio_confidence=request.audio_confidence
+            call_id=request.call_id, speech_text=request.speech_text, audio_confidence=request.audio_confidence
         )
 
         return response
 
     except Exception as e:
         logger.error(f"Error processing voice input: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to process voice input: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to process voice input: {str(e)}")
 
 
 @router.post("/voice/end-call/{call_id}", response_model=VoiceCallAnalytics)
@@ -254,21 +255,16 @@ async def end_voice_call(call_id: str):
             transfer_to_jorge=analytics["transfer_to_jorge"],
             lead_quality=analytics["lead_quality"],
             key_information=analytics.get("extracted_info", {}),
-            conversation_summary=analytics.get("summary", "")
+            conversation_summary=analytics.get("summary", ""),
         )
 
     except Exception as e:
         logger.error(f"Error ending voice call: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to end voice call: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to end voice call: {str(e)}")
 
 
 @router.get("/voice/analytics")
-async def get_voice_analytics(
-    days: int = Query(default=7, description="Number of days to analyze")
-):
+async def get_voice_analytics(days: int = Query(default=7, description="Number of days to analyze")):
     """
     Get voice AI system analytics.
 
@@ -278,21 +274,15 @@ async def get_voice_analytics(
         voice_handler = get_voice_ai_handler()
         analytics = await voice_handler.get_call_analytics()
 
-        return {
-            "period_days": days,
-            "analytics": analytics,
-            "generated_at": datetime.now().isoformat()
-        }
+        return {"period_days": days, "analytics": analytics, "generated_at": datetime.now().isoformat()}
 
     except Exception as e:
         logger.error(f"Error fetching voice analytics: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to fetch voice analytics: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to fetch voice analytics: {str(e)}")
 
 
 # ================== MARKETING AUTOMATION ENDPOINTS ==================
+
 
 @router.post("/marketing/create-campaign", response_model=CampaignBrief)
 async def create_automated_campaign(request: CampaignCreationRequest):
@@ -311,8 +301,8 @@ async def create_automated_campaign(request: CampaignCreationRequest):
                 "objectives": request.campaign_objectives,
                 "formats": [f.value for f in request.content_formats],
                 "budget_range": request.budget_range,
-                "timeline": request.timeline
-            }
+                "timeline": request.timeline,
+            },
         )
 
         logger.info(f"Created automated campaign {campaign.campaign_id}")
@@ -321,10 +311,7 @@ async def create_automated_campaign(request: CampaignCreationRequest):
 
     except Exception as e:
         logger.error(f"Error creating campaign: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to create campaign: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to create campaign: {str(e)}")
 
 
 @router.get("/marketing/campaigns/{campaign_id}/content")
@@ -348,10 +335,7 @@ async def get_campaign_content(campaign_id: str):
         raise
     except Exception as e:
         logger.error(f"Error fetching campaign content: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to fetch campaign content: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to fetch campaign content: {str(e)}")
 
 
 @router.get("/marketing/campaigns/{campaign_id}/performance")
@@ -378,24 +362,18 @@ async def get_campaign_performance(campaign_id: str):
             conversion_rate=performance.get("conversion_rate", 0.0),
             roi=performance.get("roi", 0.0),
             cost_per_lead=performance.get("cost_per_lead", 0.0),
-            lead_quality_score=performance.get("lead_quality_score", 0.0)
+            lead_quality_score=performance.get("lead_quality_score", 0.0),
         )
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error fetching campaign performance: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to fetch campaign performance: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to fetch campaign performance: {str(e)}")
 
 
 @router.post("/marketing/ab-test/{campaign_id}")
-async def start_ab_test(
-    campaign_id: str,
-    test_config: Dict[str, Any] = Body(...)
-):
+async def start_ab_test(campaign_id: str, test_config: Dict[str, Any] = Body(...)):
     """
     Start A/B test for campaign.
 
@@ -410,18 +388,16 @@ async def start_ab_test(
             "campaign_id": campaign_id,
             "test_id": test_id,
             "status": "active",
-            "message": "A/B test started successfully"
+            "message": "A/B test started successfully",
         }
 
     except Exception as e:
         logger.error(f"Error starting A/B test: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to start A/B test: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to start A/B test: {str(e)}")
 
 
 # ================== CLIENT RETENTION ENDPOINTS ==================
+
 
 @router.post("/retention/update-lifecycle")
 async def update_client_lifecycle(request: ClientLifecycleUpdate):
@@ -434,9 +410,7 @@ async def update_client_lifecycle(request: ClientLifecycleUpdate):
         retention_engine = ClientRetentionEngine()
 
         await retention_engine.detect_life_event(
-            client_id=request.client_id,
-            life_event=request.life_event,
-            context=request.event_context
+            client_id=request.client_id, life_event=request.life_event, context=request.event_context
         )
 
         logger.info(f"Updated lifecycle for client {request.client_id}: {request.life_event}")
@@ -445,15 +419,12 @@ async def update_client_lifecycle(request: ClientLifecycleUpdate):
             "client_id": request.client_id,
             "life_event": request.life_event.value,
             "status": "processed",
-            "message": "Lifecycle update processed successfully"
+            "message": "Lifecycle update processed successfully",
         }
 
     except Exception as e:
         logger.error(f"Error updating client lifecycle: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to update client lifecycle: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to update client lifecycle: {str(e)}")
 
 
 @router.post("/retention/track-referral")
@@ -469,7 +440,7 @@ async def track_referral(request: ReferralTracking):
         referral_id = await retention_engine.process_referral(
             referrer_id=request.referrer_client_id,
             referred_contact=request.referred_contact_info,
-            context=request.context
+            context=request.context,
         )
 
         logger.info(f"Tracked referral {referral_id} from client {request.referrer_client_id}")
@@ -478,15 +449,12 @@ async def track_referral(request: ReferralTracking):
             "referral_id": referral_id,
             "referrer_id": request.referrer_client_id,
             "status": "tracked",
-            "message": "Referral tracked successfully"
+            "message": "Referral tracked successfully",
         }
 
     except Exception as e:
         logger.error(f"Error tracking referral: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to track referral: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to track referral: {str(e)}")
 
 
 @router.get("/retention/client/{client_id}/engagement")
@@ -512,23 +480,18 @@ async def get_client_engagement(client_id: str):
             engagement_score=engagement["score"],
             referrals_made=profile.referrals_made,
             lifetime_value=profile.lifetime_value,
-            retention_probability=engagement["retention_probability"]
+            retention_probability=engagement["retention_probability"],
         )
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error fetching client engagement: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to fetch client engagement: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to fetch client engagement: {str(e)}")
 
 
 @router.get("/retention/analytics")
-async def get_retention_analytics(
-    days: int = Query(default=30, description="Number of days to analyze")
-):
+async def get_retention_analytics(days: int = Query(default=30, description="Number of days to analyze")):
     """
     Get retention system analytics.
 
@@ -538,21 +501,15 @@ async def get_retention_analytics(
         retention_engine = ClientRetentionEngine()
         analytics = await retention_engine.get_retention_analytics(days)
 
-        return {
-            "period_days": days,
-            "analytics": analytics,
-            "generated_at": datetime.now().isoformat()
-        }
+        return {"period_days": days, "analytics": analytics, "generated_at": datetime.now().isoformat()}
 
     except Exception as e:
         logger.error(f"Error fetching retention analytics: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to fetch retention analytics: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to fetch retention analytics: {str(e)}")
 
 
 # ================== MARKET PREDICTION ENDPOINTS ==================
+
 
 @router.post("/market/analyze", response_model=PredictionResult)
 async def analyze_market(request: MarketAnalysisRequest):
@@ -565,8 +522,7 @@ async def analyze_market(request: MarketAnalysisRequest):
         market_engine = MarketPredictionEngine()
 
         prediction = await market_engine.predict_price_appreciation(
-            neighborhood=request.neighborhood,
-            time_horizon=request.time_horizon
+            neighborhood=request.neighborhood, time_horizon=request.time_horizon
         )
 
         logger.info(f"Generated market analysis for {request.neighborhood}")
@@ -575,10 +531,7 @@ async def analyze_market(request: MarketAnalysisRequest):
 
     except Exception as e:
         logger.error(f"Error analyzing market: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to analyze market: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to analyze market: {str(e)}")
 
 
 @router.post("/market/investment-opportunities")
@@ -595,7 +548,7 @@ async def find_investment_opportunities(request: InvestmentOpportunityRequest):
             client_budget=request.client_budget,
             risk_tolerance=request.risk_tolerance,
             investment_goals=request.investment_goals,
-            time_horizon=request.time_horizon
+            time_horizon=request.time_horizon,
         )
 
         return {
@@ -605,22 +558,18 @@ async def find_investment_opportunities(request: InvestmentOpportunityRequest):
                 "budget": request.client_budget,
                 "risk_tolerance": request.risk_tolerance,
                 "goals": request.investment_goals,
-                "time_horizon": request.time_horizon.value
-            }
+                "time_horizon": request.time_horizon.value,
+            },
         }
 
     except Exception as e:
         logger.error(f"Error finding investment opportunities: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to find investment opportunities: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to find investment opportunities: {str(e)}")
 
 
 @router.get("/market/trends/{neighborhood}")
 async def get_market_trends(
-    neighborhood: str,
-    months: int = Query(default=12, description="Number of months of trend data")
+    neighborhood: str, months: int = Query(default=12, description="Number of months of trend data")
 ):
     """
     Get market trend data for neighborhood.
@@ -636,18 +585,16 @@ async def get_market_trends(
             "neighborhood": neighborhood,
             "period_months": months,
             "trends": trends,
-            "generated_at": datetime.now().isoformat()
+            "generated_at": datetime.now().isoformat(),
         }
 
     except Exception as e:
         logger.error(f"Error fetching market trends: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to fetch market trends: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to fetch market trends: {str(e)}")
 
 
 # ================== INTEGRATION & DASHBOARD ENDPOINTS ==================
+
 
 @router.get("/dashboard/metrics", response_model=DashboardMetrics)
 async def get_dashboard_metrics():
@@ -667,15 +614,12 @@ async def get_dashboard_metrics():
             client_retention=metrics.retention_stats,
             market_predictions=metrics.prediction_stats,
             integration_health=metrics.performance_summary,
-            last_updated=datetime.now()
+            last_updated=datetime.now(),
         )
 
     except Exception as e:
         logger.error(f"Error fetching dashboard metrics: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to fetch dashboard metrics: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to fetch dashboard metrics: {str(e)}")
 
 
 @router.get("/health/modules")
@@ -698,26 +642,20 @@ async def get_module_health():
                     status=module["status"],
                     last_check=datetime.now(),
                     performance_metrics=module.get("metrics", {}),
-                    issues=module.get("issues", [])
+                    issues=module.get("issues", []),
                 )
                 for module in health_status["modules"]
             ],
-            "last_check": datetime.now().isoformat()
+            "last_check": datetime.now().isoformat(),
         }
 
     except Exception as e:
         logger.error(f"Error checking module health: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to check module health: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to check module health: {str(e)}")
 
 
 @router.post("/integration/trigger-event")
-async def trigger_integration_event(
-    event_type: EventType,
-    event_data: Dict[str, Any] = Body(...)
-):
+async def trigger_integration_event(event_type: EventType, event_data: Dict[str, Any] = Body(...)):
     """
     Trigger cross-module integration event.
 
@@ -727,10 +665,7 @@ async def trigger_integration_event(
         integration_hub = JorgeAdvancedIntegration()
 
         event = IntegrationEvent(
-            event_type=event_type,
-            source_module="manual",
-            data=event_data,
-            timestamp=datetime.now()
+            event_type=event_type, source_module="manual", data=event_data, timestamp=datetime.now()
         )
 
         await integration_hub.handle_integration_event(event)
@@ -738,18 +673,16 @@ async def trigger_integration_event(
         return {
             "event_type": event_type.value,
             "status": "processed",
-            "message": "Integration event triggered successfully"
+            "message": "Integration event triggered successfully",
         }
 
     except Exception as e:
         logger.error(f"Error triggering integration event: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to trigger integration event: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to trigger integration event: {str(e)}")
 
 
 # ================== SYSTEM ENDPOINTS ==================
+
 
 @router.get("/health")
 async def advanced_features_health():
@@ -758,7 +691,7 @@ async def advanced_features_health():
         "status": "healthy",
         "service": "jorge-advanced-features",
         "modules": ["voice-ai", "marketing-automation", "client-retention", "market-prediction"],
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
 
 
@@ -769,22 +702,22 @@ async def get_configuration():
         "voice_ai": {
             "qualification_questions": 7,
             "supported_languages": ["en-US"],
-            "max_call_duration": 1800  # 30 minutes
+            "max_call_duration": 1800,  # 30 minutes
         },
         "marketing": {
             "supported_formats": ["email", "sms", "social_media", "direct_mail"],
             "ab_test_duration": 14,  # days
-            "min_audience_size": 50
+            "min_audience_size": 50,
         },
         "retention": {
             "lifecycle_stages": ["prospect", "client", "past_client", "referral_source"],
             "engagement_tracking_period": 365,  # days
-            "referral_reward_system": True
+            "referral_reward_system": True,
         },
         "market_prediction": {
             "prediction_horizons": ["3_months", "6_months", "1_year", "2_years"],
             "supported_markets": ["rancho_cucamonga", "inland_empire"],
-            "ml_model_version": "v2.1"
+            "ml_model_version": "v2.1",
         },
-        "last_updated": datetime.now().isoformat()
+        "last_updated": datetime.now().isoformat(),
     }

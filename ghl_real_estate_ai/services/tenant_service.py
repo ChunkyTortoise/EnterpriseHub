@@ -45,22 +45,18 @@ class TenantService:
                     config = json.load(f)
                     logger.info(
                         f"Loaded tenant config for location {location_id}",
-                        extra={
-                            "has_api_keys": "anthropic_api_key" in config,
-                            "is_registered": True
-                        }
+                        extra={"has_api_keys": "anthropic_api_key" in config, "is_registered": True},
                     )
                     return config
             except json.JSONDecodeError as e:
                 logger.error(
-                    f"Tenant config file corrupted for {location_id}: {e}",
-                    extra={"error_id": "TENANT_CONFIG_CORRUPT"}
+                    f"Tenant config file corrupted for {location_id}: {e}", extra={"error_id": "TENANT_CONFIG_CORRUPT"}
                 )
                 raise ValueError(f"Invalid tenant configuration for {location_id}")
             except Exception as e:
                 logger.error(
                     f"Failed to read tenant config for {location_id}: {e}",
-                    extra={"error_id": "TENANT_CONFIG_READ_ERROR"}
+                    extra={"error_id": "TENANT_CONFIG_READ_ERROR"},
                 )
                 raise ValueError(f"Cannot load tenant configuration")
 
@@ -74,8 +70,8 @@ class TenantService:
             extra={
                 "error_id": "TENANT_NOT_REGISTERED",
                 "location_id": location_id,
-                "primary_location": settings.ghl_location_id
-            }
+                "primary_location": settings.ghl_location_id,
+            },
         )
 
         # SECURITY: Return empty config instead of exposing credentials

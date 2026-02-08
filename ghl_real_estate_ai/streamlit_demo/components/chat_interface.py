@@ -1,14 +1,15 @@
-
 """
 Enhanced Chat Interface with Real Claude AI Integration
 Connects to the Claude Orchestrator via API for intelligent responses
 """
-import streamlit as st
-import requests
-import time
+
 import json
+import time
 from datetime import datetime
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
+
+import requests
+import streamlit as st
 
 
 def render_chat_interface(api_base_url: str = "http://localhost:8000/api"):
@@ -25,7 +26,8 @@ def render_chat_interface(api_base_url: str = "http://localhost:8000/api"):
     st.markdown("### 💬 Claude Intelligence Chat")
 
     # Enhanced CSS for production chat - Obsidian Edition
-    st.markdown("""
+    st.markdown(
+        """
 
         <style>
 
@@ -215,24 +217,25 @@ def render_chat_interface(api_base_url: str = "http://localhost:8000/api"):
 
         </style>
 
-        """, unsafe_allow_html=True)
-
-    
+        """,
+        unsafe_allow_html=True,
+    )
 
     # Initialize chat state
-    if 'chat_messages' not in st.session_state:
+    if "chat_messages" not in st.session_state:
         st.session_state.chat_messages = []
 
-    if 'conversation_id' not in st.session_state:
+    if "conversation_id" not in st.session_state:
         st.session_state.conversation_id = f"demo_user_{int(time.time())}"
 
     # Get current lead context
     contact_id = st.session_state.conversation_id
-    selected_lead = st.session_state.get('selected_lead_name', 'No lead selected')
-    market = st.session_state.get('current_market', 'Austin')
+    selected_lead = st.session_state.get("selected_lead_name", "No lead selected")
+    market = st.session_state.get("current_market", "Austin")
 
     # Chat header with context - Obsidian Command Edition
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div style='background: linear-gradient(135deg, #05070A 0%, #1E1B4B 100%);
                 padding: 1.25rem 1.5rem; border-radius: 12px; color: white; margin-bottom: 1.5rem;
                 display: flex; justify-content: space-between; align-items: center;
@@ -247,7 +250,9 @@ def render_chat_interface(api_base_url: str = "http://localhost:8000/api"):
             <div style='font-size: 1.5rem; font-weight: 700; color: #6366F1; font-family: "Space Grotesk", sans-serif;'>{len(st.session_state.chat_messages)}</div>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     # Render chat messages
     render_chat_messages()
@@ -261,7 +266,8 @@ def render_chat_messages():
 
     if not st.session_state.chat_messages:
         # Show welcome message - Obsidian Edition
-        st.markdown("""
+        st.markdown(
+            """
         <div style='text-align: center; padding: 3rem 2rem; color: #8B949E;'>
             <div style='font-size: 3.5rem; margin-bottom: 1.5rem; filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.3));'>💬</div>
             <h3 style='color: #FFFFFF; margin-bottom: 0.75rem; font-family: "Space Grotesk", sans-serif; text-transform: uppercase; letter-spacing: 0.05em;'>Neural Command Link</h3>
@@ -279,41 +285,46 @@ def render_chat_messages():
                 </div>
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
         return
 
     st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 
     for i, msg in enumerate(st.session_state.chat_messages):
-        is_ai = msg['role'] == 'assistant'
+        is_ai = msg["role"] == "assistant"
         bubble_class = "bubble-ai" if is_ai else "bubble-user"
-        agent_name = 'Claude' if is_ai else 'Jorge'
+        agent_name = "Claude" if is_ai else "Jorge"
 
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div style="display: flex; flex-direction: column; width: 100%; margin-bottom: 1rem;">
-            <div class="agent-info {'agent-name-ai' if is_ai else 'agent-name-user'}">
-                {f'🤖 {agent_name}' if is_ai else f'{agent_name} 👤'}
+            <div class="agent-info {"agent-name-ai" if is_ai else "agent-name-user"}">
+                {f"🤖 {agent_name}" if is_ai else f"{agent_name} 👤"}
                 <span style='font-size: 0.7rem; opacity: 0.7; margin-left: 8px;'>
-                    {msg.get('timestamp', datetime.now().strftime('%H:%M'))}
+                    {msg.get("timestamp", datetime.now().strftime("%H:%M"))}
                 </span>
             </div>
             <div class="chat-bubble {bubble_class}">
-                {msg['content']}
+                {msg["content"]}
 
-                {render_tool_executions(msg) if is_ai and msg.get('tool_executions') else ''}
-                {render_reasoning_section(msg) if is_ai and msg.get('reasoning') else ''}
-                {render_sources_section(msg) if is_ai and msg.get('sources') else ''}
-                {render_actions_section(msg) if is_ai and msg.get('recommended_actions') else ''}
+                {render_tool_executions(msg) if is_ai and msg.get("tool_executions") else ""}
+                {render_reasoning_section(msg) if is_ai and msg.get("reasoning") else ""}
+                {render_sources_section(msg) if is_ai and msg.get("sources") else ""}
+                {render_actions_section(msg) if is_ai and msg.get("recommended_actions") else ""}
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_tool_executions(msg: Dict[str, Any]) -> str:
     """Render the tool orchestration process (Phase 2 UI Bridge)"""
-    executions = msg.get('tool_executions', [])
+    executions = msg.get("tool_executions", [])
     if not executions:
         return ""
 
@@ -324,7 +335,7 @@ def render_tool_executions(msg: Dict[str, Any]) -> str:
                 tools_html += f"""
                 <div style="margin: 8px 0; padding: 8px; background: rgba(99, 102, 241, 0.1); border-radius: 6px; border: 1px solid rgba(99, 102, 241, 0.2);">
                     <div style="font-size: 0.7rem; color: #6366F1; font-weight: bold; text-transform: uppercase;">🛠️ Calling Tool</div>
-                    <div style="font-family: 'Space Mono', monospace; font-size: 0.8rem; margin: 4px 0;">{tc['name']}({json.dumps(tc['args'])})</div>
+                    <div style="font-family: 'Space Mono', monospace; font-size: 0.8rem; margin: 4px 0;">{tc["name"]}({json.dumps(tc["args"])})</div>
                 </div>
                 """
         elif "content" in step and "Tool Result" in str(step["content"]):
@@ -337,7 +348,7 @@ def render_tool_executions(msg: Dict[str, Any]) -> str:
                     res = str(block.get("content", ""))
                     if len(res) > 200:
                         res = res[:197] + "..."
-                    
+
                     tools_html += f"""
                     <div style="margin: 8px 0; padding: 8px; background: rgba(16, 185, 129, 0.05); border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.1);">
                         <div style="font-size: 0.7rem; color: #10b981; font-weight: bold; text-transform: uppercase;">📥 Result</div>
@@ -355,20 +366,20 @@ def render_tool_executions(msg: Dict[str, Any]) -> str:
 
 def render_reasoning_section(msg: Dict[str, Any]) -> str:
     """Render Claude's reasoning section"""
-    if not msg.get('reasoning'):
+    if not msg.get("reasoning"):
         return ""
 
     return f"""
     <div class="reasoning-section">
         <strong>🧠 Claude's Reasoning:</strong><br>
-        {msg['reasoning']}
+        {msg["reasoning"]}
     </div>
     """
 
 
 def render_sources_section(msg: Dict[str, Any]) -> str:
     """Render sources section"""
-    sources = msg.get('sources', [])
+    sources = msg.get("sources", [])
     if not sources:
         return ""
 
@@ -383,12 +394,16 @@ def render_sources_section(msg: Dict[str, Any]) -> str:
 
 def render_actions_section(msg: Dict[str, Any]) -> str:
     """Render recommended actions section - Obsidian Style"""
-    actions = msg.get('recommended_actions', [])
+    actions = msg.get("recommended_actions", [])
     if not actions:
         return ""
 
-    actions_html = "".join([f'<div style="margin: 6px 0; display: flex; align-items: center; gap: 8px;"><span style="color: #10b981; font-weight: bold;">✓</span> <span>{action.get("title", action) if isinstance(action, dict) else action}</span></div>'
-                               for action in actions])
+    actions_html = "".join(
+        [
+            f'<div style="margin: 6px 0; display: flex; align-items: center; gap: 8px;"><span style="color: #10b981; font-weight: bold;">✓</span> <span>{action.get("title", action) if isinstance(action, dict) else action}</span></div>'
+            for action in actions
+        ]
+    )
     return f"""
     <div style="background: rgba(16, 185, 129, 0.05); border-radius: 8px; padding: 1rem; margin-top: 1rem;
                 font-size: 0.85rem; color: #E6EDF3; border-left: 3px solid #10b981; border: 1px solid rgba(16, 185, 129, 0.1); border-left: 3px solid #10b981;">
@@ -407,17 +422,17 @@ def handle_chat_input(api_base_url: str, contact_id: str, selected_lead: str):
     with st.form(key="claude_chat_input_form", clear_on_submit=True):
         col_in, col_btn = st.columns([4, 1])
         with col_in:
-            user_input = st.text_input("Ask Claude about leads, scripts, or strategic insights...", placeholder="Ask Claude about leads, scripts, or strategic insights...", label_visibility="collapsed")
+            user_input = st.text_input(
+                "Ask Claude about leads, scripts, or strategic insights...",
+                placeholder="Ask Claude about leads, scripts, or strategic insights...",
+                label_visibility="collapsed",
+            )
         with col_btn:
             submit = st.form_submit_button("Ask ✨", use_container_width=True)
 
     if submit and user_input:
         # Add user message immediately
-        user_msg = {
-            "role": "user",
-            "content": user_input,
-            "timestamp": datetime.now().strftime("%H:%M")
-        }
+        user_msg = {"role": "user", "content": user_input, "timestamp": datetime.now().strftime("%H:%M")}
         st.session_state.chat_messages.append(user_msg)
 
         # Show thinking indicator
@@ -425,23 +440,20 @@ def handle_chat_input(api_base_url: str, contact_id: str, selected_lead: str):
             try:
                 # Call Claude API
                 response = call_claude_api(
-                    api_base_url=api_base_url,
-                    message=user_input,
-                    contact_id=contact_id,
-                    selected_lead=selected_lead
+                    api_base_url=api_base_url, message=user_input, contact_id=contact_id, selected_lead=selected_lead
                 )
 
-                if response and response.get('success'):
+                if response and response.get("success"):
                     # Add AI response
                     ai_msg = {
                         "role": "assistant",
-                        "content": response.get('message', 'No response received'),
-                        "reasoning": response.get('reasoning'),
-                        "sources": response.get('sources', []),
-                        "recommended_actions": response.get('recommended_actions', []),
-                        "tool_executions": response.get('tool_executions', []),
+                        "content": response.get("message", "No response received"),
+                        "reasoning": response.get("reasoning"),
+                        "sources": response.get("sources", []),
+                        "recommended_actions": response.get("recommended_actions", []),
+                        "tool_executions": response.get("tool_executions", []),
                         "timestamp": datetime.now().strftime("%H:%M"),
-                        "response_time_ms": response.get('response_time_ms', 0)
+                        "response_time_ms": response.get("response_time_ms", 0),
                     }
                     st.session_state.chat_messages.append(ai_msg)
 
@@ -453,7 +465,7 @@ def handle_chat_input(api_base_url: str, contact_id: str, selected_lead: str):
                     error_msg = {
                         "role": "assistant",
                         "content": f"⚠️ Sorry, I encountered an issue: {response.get('detail', 'Unknown error')}",
-                        "timestamp": datetime.now().strftime("%H:%M")
+                        "timestamp": datetime.now().strftime("%H:%M"),
                     }
                     st.session_state.chat_messages.append(error_msg)
                     st.error("Failed to get response from Claude")
@@ -463,7 +475,7 @@ def handle_chat_input(api_base_url: str, contact_id: str, selected_lead: str):
                 error_msg = {
                     "role": "assistant",
                     "content": f"🔌 Connection error: {str(e)}. Make sure the API server is running on {api_base_url}",
-                    "timestamp": datetime.now().strftime("%H:%M")
+                    "timestamp": datetime.now().strftime("%H:%M"),
                 }
                 st.session_state.chat_messages.append(error_msg)
                 st.error(f"Connection failed: {str(e)}")
@@ -481,7 +493,7 @@ def call_claude_api(api_base_url: str, message: str, contact_id: str, selected_l
         "selected_lead_name": selected_lead if selected_lead != "-- Select a Lead --" else None,
         "conversation_mode": "chat",
         "include_context": True,
-        "stream": False
+        "stream": False,
     }
 
     try:
@@ -489,7 +501,7 @@ def call_claude_api(api_base_url: str, message: str, contact_id: str, selected_l
             f"{api_base_url}/claude/query",
             json=payload,
             timeout=30,  # 30 second timeout
-            headers={"Content-Type": "application/json"}
+            headers={"Content-Type": "application/json"},
         )
 
         response.raise_for_status()
@@ -513,9 +525,9 @@ def simulate_typing():
     """Simulates a typing effect for better demo experience"""
     with st.empty():
         for i in range(3):
-            st.markdown(f"Claude is thinking{'.' * (i+1)}")
+            st.markdown(f"Claude is thinking{'.' * (i + 1)}")
             time.sleep(0.5)
 
 
 # Export main function
-__all__ = ['render_chat_interface', 'simulate_typing']
+__all__ = ["render_chat_interface", "simulate_typing"]

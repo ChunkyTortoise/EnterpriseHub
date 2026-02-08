@@ -10,42 +10,47 @@ This module provides:
 - Automated compliance reporting and documentation
 """
 
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, Set
-from datetime import datetime, timedelta
-from enum import Enum
-import logging
 import asyncio
 import json
+import logging
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Set
 
 logger = logging.getLogger(__name__)
 
+
 class PrivacyRegulation(Enum):
-    GDPR = "gdpr"                    # General Data Protection Regulation (EU)
-    CCPA = "ccpa"                    # California Consumer Privacy Act (US)
-    PIPEDA = "pipeda"                # Personal Information Protection and Electronic Documents Act (Canada)
-    LGPD = "lgpd"                    # Lei Geral de Proteção de Dados (Brazil)
-    PRIVACY_ACT = "privacy_act"      # Privacy Act (Australia)
-    APPI = "appi"                    # Act on Personal Information Protection (Japan)
-    POPI = "popi"                    # Protection of Personal Information Act (South Africa)
+    GDPR = "gdpr"  # General Data Protection Regulation (EU)
+    CCPA = "ccpa"  # California Consumer Privacy Act (US)
+    PIPEDA = "pipeda"  # Personal Information Protection and Electronic Documents Act (Canada)
+    LGPD = "lgpd"  # Lei Geral de Proteção de Dados (Brazil)
+    PRIVACY_ACT = "privacy_act"  # Privacy Act (Australia)
+    APPI = "appi"  # Act on Personal Information Protection (Japan)
+    POPI = "popi"  # Protection of Personal Information Act (South Africa)
+
 
 class DataCategory(Enum):
-    PERSONAL_DATA = "personal_data"           # Basic personal information
-    SENSITIVE_DATA = "sensitive_data"         # Sensitive personal information
-    FINANCIAL_DATA = "financial_data"         # Financial and payment information
-    PROPERTY_DATA = "property_data"           # Property and transaction data
-    BEHAVIORAL_DATA = "behavioral_data"       # Behavioral and preference data
-    TECHNICAL_DATA = "technical_data"         # Technical and device data
+    PERSONAL_DATA = "personal_data"  # Basic personal information
+    SENSITIVE_DATA = "sensitive_data"  # Sensitive personal information
+    FINANCIAL_DATA = "financial_data"  # Financial and payment information
+    PROPERTY_DATA = "property_data"  # Property and transaction data
+    BEHAVIORAL_DATA = "behavioral_data"  # Behavioral and preference data
+    TECHNICAL_DATA = "technical_data"  # Technical and device data
+
 
 class ConsentType(Enum):
-    EXPLICIT = "explicit"             # Explicit consent required
-    IMPLIED = "implied"              # Implied consent acceptable
-    OPT_OUT = "opt_out"             # Opt-out basis acceptable
+    EXPLICIT = "explicit"  # Explicit consent required
+    IMPLIED = "implied"  # Implied consent acceptable
+    OPT_OUT = "opt_out"  # Opt-out basis acceptable
     LEGITIMATE_INTEREST = "legitimate_interest"  # Legitimate interest basis
+
 
 @dataclass
 class RegulatoryRequirement:
     """Individual regulatory requirement specification"""
+
     regulation: PrivacyRegulation
     requirement_id: str
     title: str
@@ -58,9 +63,11 @@ class RegulatoryRequirement:
     penalty_range: str = "Variable"
     implementation_notes: str = ""
 
+
 @dataclass
 class ComplianceFramework:
     """Complete compliance framework for a jurisdiction"""
+
     jurisdiction: str
     country_code: str
     primary_regulations: List[PrivacyRegulation]
@@ -75,9 +82,11 @@ class ComplianceFramework:
     automated_decision_restrictions: bool
     last_updated: datetime = field(default_factory=datetime.now)
 
+
 @dataclass
 class ComplianceStatus:
     """Compliance status for a specific regulation/jurisdiction"""
+
     jurisdiction: str
     regulation: PrivacyRegulation
     overall_compliance_score: float  # 0.0 to 1.0
@@ -90,20 +99,23 @@ class ComplianceStatus:
     responsible_person: str = ""
     remediation_plan: List[str] = field(default_factory=list)
 
+
 @dataclass
 class DataProcessingActivity:
     """Data processing activity record for compliance tracking"""
+
     activity_id: str
     purpose: str
     data_categories: List[DataCategory]
     legal_basis: ConsentType
     data_subjects: List[str]  # Types of data subjects
-    recipients: List[str]     # Who receives the data
+    recipients: List[str]  # Who receives the data
     international_transfers: List[str]  # Countries data is transferred to
-    retention_period: int     # Days
+    retention_period: int  # Days
     security_measures: List[str]
     created_date: datetime = field(default_factory=datetime.now)
     last_updated: datetime = field(default_factory=datetime.now)
+
 
 class GlobalComplianceManager:
     """
@@ -130,7 +142,7 @@ class GlobalComplianceManager:
                 description="Must have valid lawful basis for all personal data processing",
                 data_categories=[DataCategory.PERSONAL_DATA, DataCategory.SENSITIVE_DATA],
                 consent_required=ConsentType.EXPLICIT,
-                implementation_notes="Consent must be freely given, specific, informed, and unambiguous"
+                implementation_notes="Consent must be freely given, specific, informed, and unambiguous",
             ),
             RegulatoryRequirement(
                 regulation=PrivacyRegulation.GDPR,
@@ -139,7 +151,7 @@ class GlobalComplianceManager:
                 description="Process only data necessary for specified purposes",
                 data_categories=[DataCategory.PERSONAL_DATA, DataCategory.BEHAVIORAL_DATA],
                 consent_required=ConsentType.LEGITIMATE_INTEREST,
-                implementation_notes="Regular review of data collection practices required"
+                implementation_notes="Regular review of data collection practices required",
             ),
             RegulatoryRequirement(
                 regulation=PrivacyRegulation.GDPR,
@@ -148,7 +160,7 @@ class GlobalComplianceManager:
                 description="Individuals can request deletion of personal data",
                 data_categories=[DataCategory.PERSONAL_DATA, DataCategory.SENSITIVE_DATA, DataCategory.BEHAVIORAL_DATA],
                 consent_required=ConsentType.EXPLICIT,
-                notification_requirements={"response_time": 30, "verification_required": True}
+                notification_requirements={"response_time": 30, "verification_required": True},
             ),
             RegulatoryRequirement(
                 regulation=PrivacyRegulation.GDPR,
@@ -157,8 +169,8 @@ class GlobalComplianceManager:
                 description="Must notify authorities within 72 hours of breach discovery",
                 data_categories=[DataCategory.PERSONAL_DATA, DataCategory.SENSITIVE_DATA, DataCategory.FINANCIAL_DATA],
                 consent_required=ConsentType.IMPLIED,
-                notification_requirements={"authority_notification": 72, "individual_notification": 72}
-            )
+                notification_requirements={"authority_notification": 72, "individual_notification": 72},
+            ),
         ]
 
         eu_framework = ComplianceFramework(
@@ -169,20 +181,20 @@ class GlobalComplianceManager:
             data_residency_rules={
                 "eu_data_stays_eu": True,
                 "adequacy_decisions": ["UK", "CA", "JP", "NZ"],
-                "sccs_required": True  # Standard Contractual Clauses
+                "sccs_required": True,  # Standard Contractual Clauses
             },
             cross_border_transfer_rules={
                 "adequacy_required": True,
                 "scc_acceptable": True,
                 "bcr_acceptable": True,
-                "certification_acceptable": True
+                "certification_acceptable": True,
             },
             breach_notification_timeline=72,
             dpo_requirements=True,
             consent_age_minimum=16,
             right_to_deletion=True,
             right_to_portability=True,
-            automated_decision_restrictions=True
+            automated_decision_restrictions=True,
         )
         self.compliance_frameworks["EU"] = eu_framework
 
@@ -195,7 +207,7 @@ class GlobalComplianceManager:
                 description="Consumers have right to know what personal info is collected",
                 data_categories=[DataCategory.PERSONAL_DATA, DataCategory.BEHAVIORAL_DATA],
                 consent_required=ConsentType.IMPLIED,
-                implementation_notes="Must provide clear privacy policy and disclosures"
+                implementation_notes="Must provide clear privacy policy and disclosures",
             ),
             RegulatoryRequirement(
                 regulation=PrivacyRegulation.CCPA,
@@ -204,7 +216,7 @@ class GlobalComplianceManager:
                 description="Consumers can request deletion of personal information",
                 data_categories=[DataCategory.PERSONAL_DATA, DataCategory.BEHAVIORAL_DATA],
                 consent_required=ConsentType.OPT_OUT,
-                notification_requirements={"response_time": 45, "verification_required": True}
+                notification_requirements={"response_time": 45, "verification_required": True},
             ),
             RegulatoryRequirement(
                 regulation=PrivacyRegulation.CCPA,
@@ -213,8 +225,8 @@ class GlobalComplianceManager:
                 description="Must provide opt-out mechanism for sale of personal info",
                 data_categories=[DataCategory.PERSONAL_DATA, DataCategory.BEHAVIORAL_DATA],
                 consent_required=ConsentType.OPT_OUT,
-                implementation_notes="Clear 'Do Not Sell My Personal Information' link required"
-            )
+                implementation_notes="Clear 'Do Not Sell My Personal Information' link required",
+            ),
         ]
 
         us_framework = ComplianceFramework(
@@ -222,21 +234,14 @@ class GlobalComplianceManager:
             country_code="US",
             primary_regulations=[PrivacyRegulation.CCPA],
             requirements=ccpa_requirements,
-            data_residency_rules={
-                "federal_requirements": False,
-                "state_variations": True,
-                "sector_specific": True
-            },
-            cross_border_transfer_rules={
-                "no_federal_restrictions": True,
-                "sector_specific_rules": True
-            },
+            data_residency_rules={"federal_requirements": False, "state_variations": True, "sector_specific": True},
+            cross_border_transfer_rules={"no_federal_restrictions": True, "sector_specific_rules": True},
             breach_notification_timeline=72,  # Varies by state
             dpo_requirements=False,
             consent_age_minimum=13,
             right_to_deletion=True,
             right_to_portability=True,
-            automated_decision_restrictions=False
+            automated_decision_restrictions=False,
         )
         self.compliance_frameworks["US"] = us_framework
 
@@ -249,7 +254,7 @@ class GlobalComplianceManager:
                 description="Consent must be meaningful and informed",
                 data_categories=[DataCategory.PERSONAL_DATA, DataCategory.SENSITIVE_DATA],
                 consent_required=ConsentType.EXPLICIT,
-                implementation_notes="Consent must be clear, understandable, and related to purpose"
+                implementation_notes="Consent must be clear, understandable, and related to purpose",
             ),
             RegulatoryRequirement(
                 regulation=PrivacyRegulation.PIPEDA,
@@ -258,7 +263,7 @@ class GlobalComplianceManager:
                 description="Personal info can only be used for stated purposes",
                 data_categories=[DataCategory.PERSONAL_DATA],
                 consent_required=ConsentType.EXPLICIT,
-                implementation_notes="Must identify purposes at time of collection"
+                implementation_notes="Must identify purposes at time of collection",
             ),
             RegulatoryRequirement(
                 regulation=PrivacyRegulation.PIPEDA,
@@ -267,8 +272,8 @@ class GlobalComplianceManager:
                 description="Must notify Commissioner and affected individuals",
                 data_categories=[DataCategory.PERSONAL_DATA, DataCategory.SENSITIVE_DATA],
                 consent_required=ConsentType.IMPLIED,
-                notification_requirements={"commissioner_notification": 72, "individual_notification": "ASAP"}
-            )
+                notification_requirements={"commissioner_notification": 72, "individual_notification": "ASAP"},
+            ),
         ]
 
         canada_framework = ComplianceFramework(
@@ -279,18 +284,15 @@ class GlobalComplianceManager:
             data_residency_rules={
                 "provincial_variations": True,
                 "federal_oversight": True,
-                "cross_border_allowed": True
+                "cross_border_allowed": True,
             },
-            cross_border_transfer_rules={
-                "adequate_protection_required": True,
-                "consent_may_be_required": True
-            },
+            cross_border_transfer_rules={"adequate_protection_required": True, "consent_may_be_required": True},
             breach_notification_timeline=72,
             dpo_requirements=False,
             consent_age_minimum=13,  # Provincial variations
             right_to_deletion=True,
             right_to_portability=True,
-            automated_decision_restrictions=False
+            automated_decision_restrictions=False,
         )
         self.compliance_frameworks["CA"] = canada_framework
 
@@ -338,7 +340,7 @@ class GlobalComplianceManager:
                 last_assessment=datetime.now(),
                 next_review_due=next_review,
                 responsible_person="Jorge's Compliance Team",
-                remediation_plan=self._generate_remediation_plan(critical_gaps, moderate_gaps)
+                remediation_plan=self._generate_remediation_plan(critical_gaps, moderate_gaps),
             )
 
             # Store status
@@ -401,10 +403,9 @@ class GlobalComplianceManager:
 
         return plan
 
-    async def validate_cross_border_transfer(self,
-                                           from_country: str,
-                                           to_country: str,
-                                           data_categories: List[DataCategory]) -> Dict[str, Any]:
+    async def validate_cross_border_transfer(
+        self, from_country: str, to_country: str, data_categories: List[DataCategory]
+    ) -> Dict[str, Any]:
         """
         Validate if cross-border data transfer is compliant
         """
@@ -414,7 +415,7 @@ class GlobalComplianceManager:
                 "requirements": [],
                 "safeguards_needed": [],
                 "additional_consent_required": False,
-                "adequacy_status": None
+                "adequacy_status": None,
             }
 
             # Check source country regulations
@@ -433,12 +434,14 @@ class GlobalComplianceManager:
                     validation_result["adequacy_status"] = "adequate"
                 else:
                     # Need additional safeguards
-                    validation_result["safeguards_needed"].extend([
-                        "Standard Contractual Clauses (SCCs)",
-                        "Binding Corporate Rules (BCRs)",
-                        "Certification schemes",
-                        "Transfer Impact Assessment (TIA)"
-                    ])
+                    validation_result["safeguards_needed"].extend(
+                        [
+                            "Standard Contractual Clauses (SCCs)",
+                            "Binding Corporate Rules (BCRs)",
+                            "Certification schemes",
+                            "Transfer Impact Assessment (TIA)",
+                        ]
+                    )
 
                     # Sensitive data requires additional consent
                     if DataCategory.SENSITIVE_DATA in data_categories:
@@ -464,13 +467,15 @@ class GlobalComplianceManager:
             logger.error(f"Failed to validate cross-border transfer: {str(e)}")
             return {"transfer_allowed": False, "error": str(e)}
 
-    async def record_data_processing_activity(self,
-                                            activity_id: str,
-                                            purpose: str,
-                                            data_categories: List[DataCategory],
-                                            legal_basis: ConsentType,
-                                            retention_days: int,
-                                            international_transfers: Optional[List[str]] = None) -> bool:
+    async def record_data_processing_activity(
+        self,
+        activity_id: str,
+        purpose: str,
+        data_categories: List[DataCategory],
+        legal_basis: ConsentType,
+        retention_days: int,
+        international_transfers: Optional[List[str]] = None,
+    ) -> bool:
         """
         Record data processing activity for compliance documentation
         """
@@ -488,8 +493,8 @@ class GlobalComplianceManager:
                     "Encryption at rest and in transit",
                     "Access controls and authentication",
                     "Regular security audits",
-                    "Data minimization practices"
-                ]
+                    "Data minimization practices",
+                ],
             )
 
             # Store activity record
@@ -515,10 +520,13 @@ class GlobalComplianceManager:
 
             # Identify high-risk processing activities
             high_risk_activities = [
-                activity for activity in self.processing_activities
-                if (DataCategory.SENSITIVE_DATA in activity.data_categories or
-                    len(activity.international_transfers) > 0 or
-                    activity.legal_basis == ConsentType.LEGITIMATE_INTEREST)
+                activity
+                for activity in self.processing_activities
+                if (
+                    DataCategory.SENSITIVE_DATA in activity.data_categories
+                    or len(activity.international_transfers) > 0
+                    or activity.legal_basis == ConsentType.LEGITIMATE_INTEREST
+                )
             ]
 
             # Risk assessment
@@ -530,8 +538,7 @@ class GlobalComplianceManager:
                 privacy_risks.append("High volume of sensitive data processing")
 
             if framework.automated_decision_restrictions and any(
-                "automated_decision" in activity.purpose.lower()
-                for activity in self.processing_activities
+                "automated_decision" in activity.purpose.lower() for activity in self.processing_activities
             ):
                 privacy_risks.append("Automated decision-making restrictions apply")
 
@@ -541,7 +548,7 @@ class GlobalComplianceManager:
                 "Regular compliance audits and assessments",
                 "Staff training on privacy regulations",
                 "Data breach response procedures",
-                "Consent management and tracking systems"
+                "Consent management and tracking systems",
             ]
 
             if framework.dpo_requirements:
@@ -560,8 +567,8 @@ class GlobalComplianceManager:
                     "primary_regulations": [reg.value for reg in framework.primary_regulations],
                     "dpo_required": framework.dpo_requirements,
                     "consent_age_minimum": framework.consent_age_minimum,
-                    "breach_notification_timeline": framework.breach_notification_timeline
-                }
+                    "breach_notification_timeline": framework.breach_notification_timeline,
+                },
             }
 
             return pia
@@ -590,7 +597,7 @@ class GlobalComplianceManager:
                 "critical_issues": [],
                 "upcoming_reviews": [],
                 "compliance_trends": [],
-                "regulatory_updates": []
+                "regulatory_updates": [],
             }
 
             # Assess each jurisdiction
@@ -602,40 +609,39 @@ class GlobalComplianceManager:
                     "compliant_requirements": status.compliant_requirements,
                     "total_requirements": status.total_requirements,
                     "critical_gaps": len(status.critical_gaps),
-                    "last_assessment": status.last_assessment.isoformat()
+                    "last_assessment": status.last_assessment.isoformat(),
                 }
 
                 # Collect critical issues
                 for gap in status.critical_gaps:
-                    dashboard_data["critical_issues"].append({
-                        "jurisdiction": jurisdiction,
-                        "issue": gap,
-                        "priority": "critical"
-                    })
+                    dashboard_data["critical_issues"].append(
+                        {"jurisdiction": jurisdiction, "issue": gap, "priority": "critical"}
+                    )
 
                 # Upcoming reviews
                 if status.next_review_due <= datetime.now() + timedelta(days=30):
-                    dashboard_data["upcoming_reviews"].append({
-                        "jurisdiction": jurisdiction,
-                        "due_date": status.next_review_due.isoformat(),
-                        "type": "compliance_assessment"
-                    })
+                    dashboard_data["upcoming_reviews"].append(
+                        {
+                            "jurisdiction": jurisdiction,
+                            "due_date": status.next_review_due.isoformat(),
+                            "type": "compliance_assessment",
+                        }
+                    )
 
             # Calculate global metrics
-            total_score = sum(
-                data["score"] for data in dashboard_data["overall_compliance"].values()
+            total_score = sum(data["score"] for data in dashboard_data["overall_compliance"].values())
+            avg_compliance = (
+                total_score / len(dashboard_data["overall_compliance"]) if dashboard_data["overall_compliance"] else 0
             )
-            avg_compliance = total_score / len(dashboard_data["overall_compliance"]) if dashboard_data["overall_compliance"] else 0
 
             dashboard_data["global_metrics"] = {
                 "average_compliance_score": round(avg_compliance, 2),
                 "total_critical_issues": len(dashboard_data["critical_issues"]),
                 "jurisdictions_compliant": sum(
-                    1 for data in dashboard_data["overall_compliance"].values()
-                    if data["score"] >= 0.8
+                    1 for data in dashboard_data["overall_compliance"].values() if data["score"] >= 0.8
                 ),
                 "data_processing_activities": len(self.processing_activities),
-                "last_updated": datetime.now().isoformat()
+                "last_updated": datetime.now().isoformat(),
             }
 
             return dashboard_data
@@ -643,6 +649,7 @@ class GlobalComplianceManager:
         except Exception as e:
             logger.error(f"Failed to generate global compliance dashboard: {str(e)}")
             return {"error": str(e)}
+
 
 # Global compliance manager instance
 global_compliance_manager = GlobalComplianceManager()

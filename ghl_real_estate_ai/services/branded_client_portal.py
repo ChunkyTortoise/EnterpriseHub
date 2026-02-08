@@ -250,9 +250,9 @@ def demo_client_portal():
     # Create portal
     portal = service.create_client_portal(client)
 
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     print("CLIENT PORTAL CREATED")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     print(f"Portal ID: {portal['portal_id']}")
     print(f"URL: {portal['url']}")
     print(f"Access Code: {portal['access_code']}")

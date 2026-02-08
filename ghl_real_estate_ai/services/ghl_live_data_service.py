@@ -13,20 +13,20 @@ import asyncio
 import json
 import os
 import time
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, AsyncGenerator
-from dataclasses import dataclass, asdict
 from enum import Enum
+from typing import Any, AsyncGenerator, Dict, List, Optional
 
-from ghl_real_estate_ai.services.ghl_service import GHLService
-from ghl_real_estate_ai.services.memory_service import MemoryService
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
 from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
 from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
-from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
-from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.ghl_service import GHLService
+from ghl_real_estate_ai.services.lead_scorer import LeadScorer
+from ghl_real_estate_ai.services.memory_service import MemoryService
 
 logger = get_logger(__name__)
 
@@ -34,9 +34,11 @@ logger = get_logger(__name__)
 # REAL DATA MODELS FOR TRACK 3
 # ============================================================================
 
+
 @dataclass
 class LiveLeadData:
     """Real lead data from GHL with enhanced context."""
+
     lead_id: str
     name: str
     email: str
@@ -76,9 +78,11 @@ class LiveLeadData:
         if self.objections_raised is None:
             self.objections_raised = []
 
+
 @dataclass
 class LiveBotMetrics:
     """Real bot performance data for omnipresent coordination."""
+
     bot_name: str
 
     # Performance Metrics
@@ -103,6 +107,7 @@ class LiveBotMetrics:
     def __post_init__(self):
         if self.last_activity is None:
             self.last_activity = datetime.now()
+
 
 @dataclass
 class LiveBusinessMetrics:
@@ -142,13 +147,13 @@ class LiveBusinessMetrics:
             self.last_updated = datetime.now()
         # Calculate 6% commission projection
         if self.total_pipeline_value and self.conversion_rate:
-            self.projected_monthly_commission = (
-                self.total_pipeline_value * self.conversion_rate * self.commission_rate
-            )
+            self.projected_monthly_commission = self.total_pipeline_value * self.conversion_rate * self.commission_rate
+
 
 @dataclass
 class LiveConversationContext:
     """Real-time conversation context for omnipresent intelligence."""
+
     conversation_id: str
     lead_id: str
     channel: str  # sms, email, call, in_person
@@ -177,9 +182,11 @@ class LiveConversationContext:
         if self.recent_messages is None:
             self.recent_messages = []
 
+
 # ============================================================================
 # LIVE DATA SERVICE - MAIN CLASS
 # ============================================================================
+
 
 class GHLLiveDataService:
     """
@@ -212,12 +219,7 @@ class GHLLiveDataService:
         self.business_refresh_interval = 600  # 10 minutes
 
         # Performance Tracking
-        self.last_sync_times = {
-            "leads": None,
-            "bots": None,
-            "business": None,
-            "conversations": None
-        }
+        self.last_sync_times = {"leads": None, "bots": None, "business": None, "conversations": None}
 
         logger.info("GHL Live Data Service initialized for Track 3 integration")
 
@@ -239,11 +241,7 @@ class GHLLiveDataService:
                 return [LiveLeadData(**lead) for lead in json.loads(cached_leads)]
 
             # Fetch raw leads from GHL
-            raw_leads = await self.ghl_service.get_contacts(
-                limit=limit,
-                sort_by="dateAdded",
-                sort_direction="desc"
-            )
+            raw_leads = await self.ghl_service.get_contacts(limit=limit, sort_by="dateAdded", sort_direction="desc")
 
             # Enhance with Jorge-specific intelligence
             enhanced_leads = []
@@ -253,8 +251,7 @@ class GHLLiveDataService:
 
             # Cache enhanced lead data
             cached_data = [asdict(lead) for lead in enhanced_leads]
-            await self.cache.set(cache_key, json.dumps(cached_data, default=str),
-                               ttl=self.lead_data_cache_ttl)
+            await self.cache.set(cache_key, json.dumps(cached_data, default=str), ttl=self.lead_data_cache_ttl)
 
             self.last_sync_times["leads"] = datetime.now()
 
@@ -289,12 +286,14 @@ class GHLLiveDataService:
             conversion_probability = 0.0
             try:
                 # Use existing lead scorer with enhanced data
-                scoring_result = self.lead_scorer.calculate_with_reasoning({
-                    "lead_id": lead_id,
-                    "jorge_score": jorge_score or 0,
-                    "conversation_data": conversation_data,
-                    "contact_info": raw_lead
-                })
+                scoring_result = self.lead_scorer.calculate_with_reasoning(
+                    {
+                        "lead_id": lead_id,
+                        "jorge_score": jorge_score or 0,
+                        "conversation_data": conversation_data,
+                        "contact_info": raw_lead,
+                    }
+                )
                 conversion_probability = scoring_result.get("ml_probability", 0.0)
             except Exception:
                 pass
@@ -317,7 +316,7 @@ class GHLLiveDataService:
                 sentiment_trend=conversation_data.get("sentiment", "neutral"),
                 objections_raised=conversation_data.get("objections", []),
                 estimated_commission=estimated_commission,
-                conversion_probability=conversion_probability
+                conversion_probability=conversion_probability,
             )
 
         except Exception as e:
@@ -331,7 +330,7 @@ class GHLLiveDataService:
                 status="unknown",
                 source="unknown",
                 created_at=datetime.now(),
-                last_activity=datetime.now()
+                last_activity=datetime.now(),
             )
 
     async def _get_jorge_custom_field(self, lead_id: str, field_name: str) -> Optional[Any]:
@@ -340,21 +339,21 @@ class GHLLiveDataService:
             # Map field names to GHL custom field IDs with environment variable support
             # Priority: 1. Environment Variable, 2. Config Class, 3. Standard Fallback
             from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
-            
+
             field_mapping = {
                 "jorge_lead_score": os.getenv("CUSTOM_FIELD_LEAD_SCORE", "lead_score"),
                 "temperature_classification": os.getenv("CUSTOM_FIELD_TEMPERATURE", "temperature"),
                 "frs_score": os.getenv("CUSTOM_FIELD_FRS_SCORE", "financial_readiness"),
                 "pcs_score": os.getenv("CUSTOM_FIELD_PCS_SCORE", "psychological_commitment"),
-                "stall_breaker_count": os.getenv("CUSTOM_FIELD_STALL_BREAKERS", "stall_breakers")
+                "stall_breaker_count": os.getenv("CUSTOM_FIELD_STALL_BREAKERS", "stall_breakers"),
             }
 
             ghl_field_id = field_mapping.get(field_name)
-            
+
             # If not found in our mapping, try the central config helper
             if not ghl_field_id:
                 ghl_field_id = JorgeSellerConfig.get_ghl_custom_field_id(field_name)
-                
+
             if not ghl_field_id:
                 return None
 
@@ -398,11 +397,13 @@ class GHLLiveDataService:
             messages = []
             for conv in conversations["conversations"]:
                 for msg in conv.get("messages", []):
-                    messages.append({
-                        "content": msg.get("body", ""),
-                        "direction": msg.get("direction", "unknown"),
-                        "timestamp": msg.get("dateAdded", "")
-                    })
+                    messages.append(
+                        {
+                            "content": msg.get("body", ""),
+                            "direction": msg.get("direction", "unknown"),
+                            "timestamp": msg.get("dateAdded", ""),
+                        }
+                    )
 
             # Extract intelligence
             summary = {
@@ -410,20 +411,24 @@ class GHLLiveDataService:
                 "last_message": messages[-1]["content"] if messages else "",
                 "sentiment": "neutral",
                 "objections": [],
-                "estimated_property_value": 0
+                "estimated_property_value": 0,
             }
 
             # Use intent decoder for intelligence if available
             try:
                 if messages:
-                    intent_result = await self.intent_decoder.analyze_conversation_intent(
-                        lead_id, messages
+                    intent_result = await self.intent_decoder.analyze_conversation_intent(lead_id, messages)
+                    summary.update(
+                        {
+                            "sentiment": intent_result.get("sentiment_analysis", {}).get(
+                                "overall_sentiment", "neutral"
+                            ),
+                            "objections": intent_result.get("objections_detected", []),
+                            "estimated_property_value": intent_result.get("property_context", {}).get(
+                                "estimated_value", 0
+                            ),
+                        }
                     )
-                    summary.update({
-                        "sentiment": intent_result.get("sentiment_analysis", {}).get("overall_sentiment", "neutral"),
-                        "objections": intent_result.get("objections_detected", []),
-                        "estimated_property_value": intent_result.get("property_context", {}).get("estimated_value", 0)
-                    })
             except Exception:
                 pass  # Intent analysis is enhancement, not critical
 
@@ -466,8 +471,7 @@ class GHLLiveDataService:
 
             # Cache metrics
             cached_data = [asdict(metrics) for metrics in bot_metrics]
-            await self.cache.set(cache_key, json.dumps(cached_data, default=str),
-                               ttl=self.bot_metrics_cache_ttl)
+            await self.cache.set(cache_key, json.dumps(cached_data, default=str), ttl=self.bot_metrics_cache_ttl)
 
             self.last_sync_times["bots"] = datetime.now()
 
@@ -481,8 +485,7 @@ class GHLLiveDataService:
         """Get Jorge Seller Bot specific metrics."""
         try:
             # Get performance data from bot's analytics
-            performance_data = await self.analytics.get_bot_performance("jorge_seller_bot",
-                                                                       days=1)
+            performance_data = await self.analytics.get_bot_performance("jorge_seller_bot", days=1)
 
             return LiveBotMetrics(
                 bot_name="jorge_seller_bot",
@@ -493,7 +496,7 @@ class GHLLiveDataService:
                 queue_length=performance_data.get("queue_length", 0),
                 capacity_utilization=performance_data.get("capacity_utilization", 0.65),
                 qualification_rate=performance_data.get("qualification_rate", 0.73),
-                status="active"
+                status="active",
             )
 
         except Exception as e:
@@ -508,7 +511,7 @@ class GHLLiveDataService:
                 queue_length=2,
                 capacity_utilization=0.65,
                 qualification_rate=0.73,
-                status="active"
+                status="active",
             )
 
     async def _get_lead_bot_metrics(self) -> LiveBotMetrics:
@@ -525,7 +528,7 @@ class GHLLiveDataService:
                 queue_length=performance_data.get("queue_length", 0),
                 capacity_utilization=performance_data.get("capacity_utilization", 0.45),
                 nurture_completion_rate=performance_data.get("nurture_completion_rate", 0.68),
-                status="active"
+                status="active",
             )
 
         except Exception as e:
@@ -539,7 +542,7 @@ class GHLLiveDataService:
                 queue_length=1,
                 capacity_utilization=0.45,
                 nurture_completion_rate=0.68,
-                status="active"
+                status="active",
             )
 
     async def _get_intent_decoder_metrics(self) -> LiveBotMetrics:
@@ -556,7 +559,7 @@ class GHLLiveDataService:
                 queue_length=performance_data.get("queue_length", 0),
                 capacity_utilization=performance_data.get("capacity_utilization", 0.80),
                 intent_accuracy=performance_data.get("intent_accuracy", 0.93),
-                status="active"
+                status="active",
             )
 
         except Exception as e:
@@ -570,7 +573,7 @@ class GHLLiveDataService:
                 queue_length=0,
                 capacity_utilization=0.80,
                 intent_accuracy=0.93,
-                status="active"
+                status="active",
             )
 
     # ========================================================================
@@ -594,8 +597,9 @@ class GHLLiveDataService:
             metrics = await self._calculate_business_intelligence()
 
             # Cache business metrics
-            await self.cache.set(cache_key, json.dumps(asdict(metrics), default=str),
-                               ttl=self.business_metrics_cache_ttl)
+            await self.cache.set(
+                cache_key, json.dumps(asdict(metrics), default=str), ttl=self.business_metrics_cache_ttl
+            )
 
             self.last_sync_times["business"] = datetime.now()
 
@@ -613,7 +617,7 @@ class GHLLiveDataService:
                 mtd_commission=42000,
                 conversion_rate=0.34,
                 avg_deal_size=485000,
-                commission_rate=0.06
+                commission_rate=0.06,
             )
 
     async def _calculate_business_intelligence(self) -> LiveBusinessMetrics:
@@ -632,7 +636,8 @@ class GHLLiveDataService:
 
             total_pipeline_value = sum(
                 (lead.estimated_commission or 0) / 0.06  # Convert commission back to property value
-                for lead in active_leads if lead.estimated_commission
+                for lead in active_leads
+                if lead.estimated_commission
             )
 
             # Get closed deals for MTD metrics
@@ -641,8 +646,7 @@ class GHLLiveDataService:
             mtd_commission = mtd_revenue * 0.06
 
             # Calculate conversion rate
-            total_leads_mtd = len([lead for lead in leads_data
-                                 if lead.created_at >= current_month_start])
+            total_leads_mtd = len([lead for lead in leads_data if lead.created_at >= current_month_start])
             conversion_rate = len(closed_deals) / total_leads_mtd if total_leads_mtd > 0 else 0.34
 
             # Get bot contribution metrics
@@ -662,7 +666,7 @@ class GHLLiveDataService:
                 bot_qualified_leads=bot_metrics.get("qualified_leads", 0),
                 bot_closed_deals=bot_metrics.get("closed_deals", 0),
                 market_share_estimate=0.035,  # This would be calculated from market data
-                competitive_position="strong"
+                competitive_position="strong",
             )
 
         except Exception as e:
@@ -680,10 +684,7 @@ class GHLLiveDataService:
             closed_contacts = await self.ghl_service.get_contacts(
                 limit=50,
                 tags=["closed_won"],
-                date_filter={
-                    "start": current_month_start.isoformat(),
-                    "end": datetime.now().isoformat()
-                }
+                date_filter={"start": current_month_start.isoformat(), "end": datetime.now().isoformat()},
             )
 
             deals = []
@@ -693,12 +694,14 @@ class GHLLiveDataService:
                 if not deal_value:
                     deal_value = 485000  # Default average
 
-                deals.append({
-                    "contact_id": contact["id"],
-                    "property_value": float(deal_value),
-                    "commission": float(deal_value) * 0.06,
-                    "close_date": contact.get("dateUpdated")
-                })
+                deals.append(
+                    {
+                        "contact_id": contact["id"],
+                        "property_value": float(deal_value),
+                        "commission": float(deal_value) * 0.06,
+                        "close_date": contact.get("dateUpdated"),
+                    }
+                )
 
             return deals
 
@@ -719,7 +722,7 @@ class GHLLiveDataService:
             return {
                 "generated_leads": int(total_interactions * 0.15),  # 15% of interactions generate leads
                 "qualified_leads": int(total_interactions * 0.08),  # 8% qualify
-                "closed_deals": int(total_interactions * 0.02)      # 2% close
+                "closed_deals": int(total_interactions * 0.02),  # 2% close
             }
 
         except Exception as e:
@@ -731,10 +734,7 @@ class GHLLiveDataService:
     # ========================================================================
 
     async def generate_omnipresent_context(
-        self,
-        current_page: str,
-        user_role: str = "agent",
-        session_id: str = None
+        self, current_page: str, user_role: str = "agent", session_id: str = None
     ) -> Dict[str, Any]:
         """
         Generate real-time platform context for Track 2 Omnipresent Concierge.
@@ -745,10 +745,8 @@ class GHLLiveDataService:
             leads_task = self.get_live_leads_context(limit=50)
             bots_task = self.get_live_bot_metrics()
             business_task = self.get_live_business_metrics()
-            
-            leads_data, bot_metrics, business_metrics = await asyncio.gather(
-                leads_task, bots_task, business_task
-            )
+
+            leads_data, bot_metrics, business_metrics = await asyncio.gather(leads_task, bots_task, business_task)
 
             # Convert to Track 2 PlatformContext format
             platform_context = {
@@ -757,7 +755,6 @@ class GHLLiveDataService:
                 "session_id": session_id or f"live_{int(time.time())}",
                 "device_type": "desktop",  # This would be detected client-side
                 "connection_quality": "good",
-
                 # Real Lead Data
                 "active_leads": [
                     {
@@ -770,11 +767,10 @@ class GHLLiveDataService:
                         "value": f"${(lead.estimated_commission or 0) / 0.06:,.0f}",
                         "commission": lead.estimated_commission or 0,
                         "probability": lead.conversion_probability or 0,
-                        "last_activity": lead.last_activity.isoformat() if lead.last_activity else None
+                        "last_activity": lead.last_activity.isoformat() if lead.last_activity else None,
                     }
                     for lead in leads_data[:20]  # Top 20 for context
                 ],
-
                 # Real Bot Status
                 "bot_statuses": {
                     bot.bot_name: {
@@ -786,12 +782,11 @@ class GHLLiveDataService:
                         "performance": {
                             "qualification_rate": bot.qualification_rate,
                             "nurture_completion_rate": bot.nurture_completion_rate,
-                            "intent_accuracy": bot.intent_accuracy
-                        }
+                            "intent_accuracy": bot.intent_accuracy,
+                        },
                     }
                     for bot in bot_metrics
                 },
-
                 # Real Business Metrics
                 "business_metrics": {
                     "pipeline_value": business_metrics.total_pipeline_value,
@@ -801,9 +796,8 @@ class GHLLiveDataService:
                     "mtd_revenue": business_metrics.mtd_revenue,
                     "mtd_commission": business_metrics.mtd_commission,
                     "avg_deal_size": business_metrics.avg_deal_size,
-                    "commission_rate": business_metrics.commission_rate
+                    "commission_rate": business_metrics.commission_rate,
                 },
-
                 # Commission Opportunities (Hot Leads)
                 "commission_opportunities": [
                     {
@@ -811,36 +805,34 @@ class GHLLiveDataService:
                         "lead_name": lead.name,
                         "estimated_commission": lead.estimated_commission or 0,
                         "probability": lead.conversion_probability or 0,
-                        "urgency": "high" if lead.temperature_classification == "hot" else "medium"
+                        "urgency": "high" if lead.temperature_classification == "hot" else "medium",
                     }
                     for lead in leads_data
                     if lead.temperature_classification == "hot" and lead.estimated_commission
                 ][:10],  # Top 10 opportunities
-
                 # Priority Actions (based on real data analysis)
                 "priority_actions": await self._generate_priority_actions(leads_data, bot_metrics),
-
                 # Jorge Preferences (learned from real data)
                 "jorge_preferences": await self._get_jorge_learned_preferences(),
-
                 # Market Conditions (would integrate with external APIs)
                 "market_conditions": {
                     "interest_rates": "stable",
                     "inventory_level": "low",
                     "demand_level": "high",
-                    "market_temperature": "hot"
+                    "market_temperature": "hot",
                 },
-
                 # Real-time Context
                 "location_context": {},
                 "user_activity": [],
                 "pending_notifications": [],
                 "deal_pipeline_state": {
                     "deals_in_closing": business_metrics.deals_in_closing,
-                    "hot_leads_needing_attention": len([l for l in leads_data if l.temperature_classification == "hot"]),
-                    "overdue_follow_ups": await self._count_overdue_followups(leads_data)
+                    "hot_leads_needing_attention": len(
+                        [l for l in leads_data if l.temperature_classification == "hot"]
+                    ),
+                    "overdue_follow_ups": await self._count_overdue_followups(leads_data),
                 },
-                "offline_capabilities": False
+                "offline_capabilities": False,
             }
 
             logger.info(f"Generated omnipresent context with {len(leads_data)} leads and {len(bot_metrics)} bots")
@@ -853,13 +845,11 @@ class GHLLiveDataService:
                 "current_page": current_page,
                 "user_role": user_role,
                 "session_id": session_id or f"fallback_{int(time.time())}",
-                "error": "Could not load live data, using fallback context"
+                "error": "Could not load live data, using fallback context",
             }
 
     async def _generate_priority_actions(
-        self,
-        leads_data: List[LiveLeadData],
-        bot_metrics: List[LiveBotMetrics]
+        self, leads_data: List[LiveLeadData], bot_metrics: List[LiveBotMetrics]
     ) -> List[Dict[str, Any]]:
         """Generate priority actions based on real data analysis."""
 
@@ -868,49 +858,56 @@ class GHLLiveDataService:
         try:
             # High-value leads needing attention
             high_value_leads = [
-                lead for lead in leads_data
-                if (lead.estimated_commission or 0) > 15000 and
-                   lead.temperature_classification in ["hot", "warm"]
+                lead
+                for lead in leads_data
+                if (lead.estimated_commission or 0) > 15000 and lead.temperature_classification in ["hot", "warm"]
             ]
 
             for lead in high_value_leads[:3]:  # Top 3
                 days_since_activity = (datetime.now() - lead.last_activity).days if lead.last_activity else 999
                 if days_since_activity > 2:
-                    actions.append({
-                        "type": "lead_attention",
-                        "urgency": "high" if days_since_activity > 5 else "medium",
-                        "description": f"{lead.name} (${lead.estimated_commission:,.0f} potential) - {days_since_activity} days inactive",
-                        "lead_id": lead.lead_id,
-                        "action": "immediate_follow_up"
-                    })
+                    actions.append(
+                        {
+                            "type": "lead_attention",
+                            "urgency": "high" if days_since_activity > 5 else "medium",
+                            "description": f"{lead.name} (${lead.estimated_commission:,.0f} potential) - {days_since_activity} days inactive",
+                            "lead_id": lead.lead_id,
+                            "action": "immediate_follow_up",
+                        }
+                    )
 
             # Bot coordination needs
             overloaded_bots = [bot for bot in bot_metrics if bot.capacity_utilization > 0.8]
             for bot in overloaded_bots:
-                actions.append({
-                    "type": "bot_coordination",
-                    "urgency": "medium",
-                    "description": f"{bot.bot_name} at {bot.capacity_utilization:.0%} capacity",
-                    "bot_name": bot.bot_name,
-                    "action": "load_balancing"
-                })
+                actions.append(
+                    {
+                        "type": "bot_coordination",
+                        "urgency": "medium",
+                        "description": f"{bot.bot_name} at {bot.capacity_utilization:.0%} capacity",
+                        "bot_name": bot.bot_name,
+                        "action": "load_balancing",
+                    }
+                )
 
             # Hot leads without recent interaction
             hot_leads_inactive = [
-                lead for lead in leads_data
-                if lead.temperature_classification == "hot" and
-                   lead.last_activity and
-                   (datetime.now() - lead.last_activity).days > 1
+                lead
+                for lead in leads_data
+                if lead.temperature_classification == "hot"
+                and lead.last_activity
+                and (datetime.now() - lead.last_activity).days > 1
             ]
 
             for lead in hot_leads_inactive[:2]:  # Top 2
-                actions.append({
-                    "type": "hot_lead_risk",
-                    "urgency": "urgent",
-                    "description": f"Hot lead {lead.name} inactive for {(datetime.now() - lead.last_activity).days} days",
-                    "lead_id": lead.lead_id,
-                    "action": "immediate_intervention"
-                })
+                actions.append(
+                    {
+                        "type": "hot_lead_risk",
+                        "urgency": "urgent",
+                        "description": f"Hot lead {lead.name} inactive for {(datetime.now() - lead.last_activity).days} days",
+                        "lead_id": lead.lead_id,
+                        "action": "immediate_intervention",
+                    }
+                )
 
             return actions[:5]  # Return top 5 priority actions
 
@@ -931,23 +928,23 @@ class GHLLiveDataService:
                     "financial_readiness": 0.35,
                     "timeline_urgency": 0.25,
                     "decision_authority": 0.20,
-                    "property_specificity": 0.20
+                    "property_specificity": 0.20,
                 },
                 "bot_handoff_preferences": {
                     "jorge_seller_threshold": 75,  # Lead score threshold for Jorge Seller Bot
                     "manual_intervention_threshold": 90,  # When Jorge should intervene personally
-                    "lead_bot_nurture_delay": 24  # Hours before starting nurture sequence
+                    "lead_bot_nurture_delay": 24,  # Hours before starting nurture sequence
                 },
                 "commission_priorities": {
                     "minimum_deal_size": 300000,  # Minimum property value to pursue
                     "high_value_threshold": 750000,  # Requires premium service
-                    "target_commission_rate": 0.06
+                    "target_commission_rate": 0.06,
                 },
                 "market_preferences": {
                     "target_areas": ["Austin", "Cedar Park", "Round Rock", "Lakeway"],
                     "property_types": ["single_family", "townhouse", "luxury_condo"],
-                    "avoid_fixer_uppers": True
-                }
+                    "avoid_fixer_uppers": True,
+                },
             }
 
         except Exception as e:
@@ -1029,9 +1026,7 @@ class GHLLiveDataService:
 
         # Trigger real-time conversation analysis
         if contact_id and message_content:
-            asyncio.create_task(
-                self._analyze_conversation_real_time(contact_id, message_content)
-            )
+            asyncio.create_task(self._analyze_conversation_real_time(contact_id, message_content))
 
     async def _analyze_new_lead_immediate(self, contact_id: str) -> None:
         """Immediate analysis for new leads."""
@@ -1054,9 +1049,7 @@ class GHLLiveDataService:
         try:
             # Quick intent analysis
             if self.intent_decoder:
-                intent_result = await self.intent_decoder.analyze_single_message(
-                    contact_id, message_content
-                )
+                intent_result = await self.intent_decoder.analyze_single_message(contact_id, message_content)
 
                 # Check for urgent scenarios
                 urgency_indicators = ["urgent", "today", "need asap", "leaving town", "other agent"]
@@ -1092,6 +1085,7 @@ class GHLLiveDataService:
 # ============================================================================
 
 _ghl_live_data_service_instance = None
+
 
 def get_ghl_live_data_service() -> GHLLiveDataService:
     """Get singleton GHL Live Data Service instance."""

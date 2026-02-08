@@ -18,31 +18,33 @@ Expected Savings:
 - Total potential: 63.5-90% depending on conversation patterns
 """
 
-import json
 import hashlib
-from typing import Dict, List, Optional, Any, Tuple
+import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 
 class CacheType(Enum):
     """Types of cacheable content with different TTL strategies."""
-    SYSTEM_PROMPT = "system_prompt"          # TTL: 5 minutes (Claude default)
-    USER_PREFERENCES = "user_preferences"    # TTL: 1 hour (stable user data)
-    MARKET_CONTEXT = "market_context"        # TTL: 4 hours (real estate market data)
-    CONVERSATION_CONTEXT = "conversation"    # TTL: 30 minutes (active conversations)
-    PROPERTY_DATA = "property_data"          # TTL: 2 hours (property listings)
+
+    SYSTEM_PROMPT = "system_prompt"  # TTL: 5 minutes (Claude default)
+    USER_PREFERENCES = "user_preferences"  # TTL: 1 hour (stable user data)
+    MARKET_CONTEXT = "market_context"  # TTL: 4 hours (real estate market data)
+    CONVERSATION_CONTEXT = "conversation"  # TTL: 30 minutes (active conversations)
+    PROPERTY_DATA = "property_data"  # TTL: 2 hours (property listings)
 
 
 @dataclass
 class CacheCandidate:
     """Represents content that can be cached."""
+
     content: str
     cache_type: CacheType
     token_count: int
@@ -55,6 +57,7 @@ class CacheCandidate:
 @dataclass
 class CachePerformance:
     """Cache performance metrics."""
+
     cache_hits: int = 0
     cache_misses: int = 0
     tokens_saved: int = 0
@@ -77,19 +80,19 @@ class EnhancedPromptCaching:
         """Initialize the enhanced caching service."""
         self.min_cache_tokens = 1024  # Anthropic recommendation
         self.cache_ttl_mapping = {
-            CacheType.SYSTEM_PROMPT: 5,      # Claude's default ephemeral cache
+            CacheType.SYSTEM_PROMPT: 5,  # Claude's default ephemeral cache
             CacheType.USER_PREFERENCES: 60,  # User data is stable
-            CacheType.MARKET_CONTEXT: 240,   # Market data changes slowly
+            CacheType.MARKET_CONTEXT: 240,  # Market data changes slowly
             CacheType.CONVERSATION_CONTEXT: 30,  # Active conversation window
-            CacheType.PROPERTY_DATA: 120     # Property listings update periodically
+            CacheType.PROPERTY_DATA: 120,  # Property listings update periodically
         }
 
         # Token cost calculations (per 1M tokens)
         self.token_costs = {
-            "input": 3.0,           # $3/1M input tokens (Claude Opus 4.1)
-            "output": 15.0,         # $15/1M output tokens
-            "cache_creation": 0.75, # 25% of input cost
-            "cache_read": 0.30      # 10% of input cost
+            "input": 3.0,  # $3/1M input tokens (Claude Opus 4.1)
+            "output": 15.0,  # $15/1M output tokens
+            "cache_creation": 0.75,  # 25% of input cost
+            "cache_read": 0.30,  # 10% of input cost
         }
 
     def count_tokens(self, text: str) -> int:
@@ -105,7 +108,7 @@ class EnhancedPromptCaching:
         key_data = {
             "content_hash": hashlib.md5(content.encode()).hexdigest(),
             "cache_type": cache_type.value,
-            "metadata": metadata
+            "metadata": metadata,
         }
 
         key_string = json.dumps(key_data, sort_keys=True)
@@ -117,7 +120,7 @@ class EnhancedPromptCaching:
         user_preferences: Dict[str, Any],
         market_context: str = "",
         conversation_history: List[Dict[str, Any]] = None,
-        location_id: str = "default"
+        location_id: str = "default",
     ) -> List[CacheCandidate]:
         """
         Analyze content to identify optimal caching opportunities.
@@ -137,15 +140,17 @@ class EnhancedPromptCaching:
         # 1. System Prompt Caching (EXISTING - enhance it)
         system_tokens = self.count_tokens(system_prompt)
         if system_tokens >= self.min_cache_tokens:
-            candidates.append(CacheCandidate(
-                content=system_prompt,
-                cache_type=CacheType.SYSTEM_PROMPT,
-                token_count=system_tokens,
-                cache_key=self.generate_cache_key(system_prompt, CacheType.SYSTEM_PROMPT),
-                should_cache=True,
-                ttl_minutes=self.cache_ttl_mapping[CacheType.SYSTEM_PROMPT],
-                metadata={"location_id": location_id}
-            ))
+            candidates.append(
+                CacheCandidate(
+                    content=system_prompt,
+                    cache_type=CacheType.SYSTEM_PROMPT,
+                    token_count=system_tokens,
+                    cache_key=self.generate_cache_key(system_prompt, CacheType.SYSTEM_PROMPT),
+                    should_cache=True,
+                    ttl_minutes=self.cache_ttl_mapping[CacheType.SYSTEM_PROMPT],
+                    metadata={"location_id": location_id},
+                )
+            )
 
         # 2. User Preferences Caching (NEW - high value)
         if user_preferences:
@@ -154,8 +159,9 @@ class EnhancedPromptCaching:
 
             # Cache if preferences are substantial enough
             if pref_tokens >= 100:  # Lower threshold for user data
-                candidates.append(CacheCandidate(
-                    content=f"""
+                candidates.append(
+                    CacheCandidate(
+                        content=f"""
 USER PREFERENCES (STABLE CONTEXT):
 {preferences_text}
 
@@ -163,24 +169,24 @@ This represents the user's established preferences for real estate searches.
 These preferences typically remain stable across conversation turns and can be
 cached for efficiency while maintaining personalization quality.
 """,
-                    cache_type=CacheType.USER_PREFERENCES,
-                    token_count=pref_tokens + 50,  # Account for wrapper text
-                    cache_key=self.generate_cache_key(preferences_text, CacheType.USER_PREFERENCES,
-                                                    {"location_id": location_id}),
-                    should_cache=True,
-                    ttl_minutes=self.cache_ttl_mapping[CacheType.USER_PREFERENCES],
-                    metadata={
-                        "location_id": location_id,
-                        "preference_keys": list(user_preferences.keys())
-                    }
-                ))
+                        cache_type=CacheType.USER_PREFERENCES,
+                        token_count=pref_tokens + 50,  # Account for wrapper text
+                        cache_key=self.generate_cache_key(
+                            preferences_text, CacheType.USER_PREFERENCES, {"location_id": location_id}
+                        ),
+                        should_cache=True,
+                        ttl_minutes=self.cache_ttl_mapping[CacheType.USER_PREFERENCES],
+                        metadata={"location_id": location_id, "preference_keys": list(user_preferences.keys())},
+                    )
+                )
 
         # 3. Market Context Caching (NEW - medium-high value)
         if market_context and len(market_context) > 500:
             market_tokens = self.count_tokens(market_context)
             if market_tokens >= 200:  # Cache substantial market context
-                candidates.append(CacheCandidate(
-                    content=f"""
+                candidates.append(
+                    CacheCandidate(
+                        content=f"""
 REAL ESTATE MARKET CONTEXT:
 {market_context}
 
@@ -188,51 +194,56 @@ This market context includes area information, pricing trends, and neighborhood
 data that remains relatively stable and can be reused across similar property
 searches in this market area.
 """,
-                    cache_type=CacheType.MARKET_CONTEXT,
-                    token_count=market_tokens + 30,
-                    cache_key=self.generate_cache_key(market_context, CacheType.MARKET_CONTEXT,
-                                                    {"location_id": location_id}),
-                    should_cache=True,
-                    ttl_minutes=self.cache_ttl_mapping[CacheType.MARKET_CONTEXT],
-                    metadata={"location_id": location_id}
-                ))
+                        cache_type=CacheType.MARKET_CONTEXT,
+                        token_count=market_tokens + 30,
+                        cache_key=self.generate_cache_key(
+                            market_context, CacheType.MARKET_CONTEXT, {"location_id": location_id}
+                        ),
+                        should_cache=True,
+                        ttl_minutes=self.cache_ttl_mapping[CacheType.MARKET_CONTEXT],
+                        metadata={"location_id": location_id},
+                    )
+                )
 
         # 4. Conversation Context Caching (NEW - for active conversations)
         if conversation_history and len(conversation_history) > 6:
             # Extract stable parts of conversation history for caching
             # Focus on preference-setting and context-establishing messages
             stable_messages = [
-                msg for msg in conversation_history[:-4]  # Don't cache most recent messages
+                msg
+                for msg in conversation_history[:-4]  # Don't cache most recent messages
                 if self._is_stable_conversation_content(msg)
             ]
 
             if stable_messages:
-                conv_context = "\\n".join([
-                    f"{msg['role']}: {msg['content'][:200]}"  # Truncate for efficiency
-                    for msg in stable_messages
-                ])
+                conv_context = "\\n".join(
+                    [
+                        f"{msg['role']}: {msg['content'][:200]}"  # Truncate for efficiency
+                        for msg in stable_messages
+                    ]
+                )
 
                 conv_tokens = self.count_tokens(conv_context)
                 if conv_tokens >= 300:
-                    candidates.append(CacheCandidate(
-                        content=f"""
+                    candidates.append(
+                        CacheCandidate(
+                            content=f"""
 CONVERSATION CONTEXT (STABLE HISTORY):
 {conv_context}
 
 This represents established conversation context that is unlikely to change
 and can be cached to reduce token costs on subsequent conversation turns.
 """,
-                        cache_type=CacheType.CONVERSATION_CONTEXT,
-                        token_count=conv_tokens + 20,
-                        cache_key=self.generate_cache_key(conv_context, CacheType.CONVERSATION_CONTEXT,
-                                                        {"location_id": location_id}),
-                        should_cache=True,
-                        ttl_minutes=self.cache_ttl_mapping[CacheType.CONVERSATION_CONTEXT],
-                        metadata={
-                            "location_id": location_id,
-                            "message_count": len(stable_messages)
-                        }
-                    ))
+                            cache_type=CacheType.CONVERSATION_CONTEXT,
+                            token_count=conv_tokens + 20,
+                            cache_key=self.generate_cache_key(
+                                conv_context, CacheType.CONVERSATION_CONTEXT, {"location_id": location_id}
+                            ),
+                            should_cache=True,
+                            ttl_minutes=self.cache_ttl_mapping[CacheType.CONVERSATION_CONTEXT],
+                            metadata={"location_id": location_id, "message_count": len(stable_messages)},
+                        )
+                    )
 
         return candidates
 
@@ -250,15 +261,31 @@ and can be cached to reduce token costs on subsequent conversation turns.
 
         # Messages that establish stable context
         stable_indicators = [
-            "budget", "price", "location", "bedroom", "bathroom",
-            "prefer", "looking for", "must have", "timeline",
-            "contact", "phone", "email", "name"
+            "budget",
+            "price",
+            "location",
+            "bedroom",
+            "bathroom",
+            "prefer",
+            "looking for",
+            "must have",
+            "timeline",
+            "contact",
+            "phone",
+            "email",
+            "name",
         ]
 
         # Don't cache very recent or ephemeral content
         ephemeral_indicators = [
-            "right now", "currently", "today", "this morning",
-            "just", "actually", "hold on", "wait"
+            "right now",
+            "currently",
+            "today",
+            "this morning",
+            "just",
+            "actually",
+            "hold on",
+            "wait",
         ]
 
         has_stable = any(indicator in content for indicator in stable_indicators)
@@ -267,10 +294,7 @@ and can be cached to reduce token costs on subsequent conversation turns.
         return has_stable and not has_ephemeral
 
     def build_cached_messages(
-        self,
-        cache_candidates: List[CacheCandidate],
-        conversation_history: List[Dict[str, Any]],
-        current_message: str
+        self, cache_candidates: List[CacheCandidate], conversation_history: List[Dict[str, Any]], current_message: str
     ) -> List[Dict[str, Any]]:
         """
         Build message list with appropriate cache control annotations.
@@ -288,31 +312,23 @@ and can be cached to reduce token costs on subsequent conversation turns.
         # Add cacheable content as separate message blocks with cache control
         for candidate in cache_candidates:
             if candidate.should_cache:
-                messages.append({
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": candidate.content,
-                            "cache_control": {"type": "ephemeral"}
-                        }
-                    ]
-                })
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": candidate.content, "cache_control": {"type": "ephemeral"}}
+                        ],
+                    }
+                )
 
         # Add regular conversation history (non-cached)
         for msg in conversation_history:
             # Skip messages that were already included in cached context
             if not self._message_included_in_cache(msg, cache_candidates):
-                messages.append({
-                    "role": msg["role"],
-                    "content": msg["content"]
-                })
+                messages.append({"role": msg["role"], "content": msg["content"]})
 
         # Add current message
-        messages.append({
-            "role": "user",
-            "content": current_message
-        })
+        messages.append({"role": "user", "content": current_message})
 
         return messages
 
@@ -329,9 +345,7 @@ and can be cached to reduce token costs on subsequent conversation turns.
         return False
 
     def calculate_cache_savings(
-        self,
-        cache_candidates: List[CacheCandidate],
-        is_cache_hit: bool = False
+        self, cache_candidates: List[CacheCandidate], is_cache_hit: bool = False
     ) -> Dict[str, Any]:
         """
         Calculate potential or actual savings from caching.
@@ -360,7 +374,7 @@ and can be cached to reduce token costs on subsequent conversation turns.
             "cost_saved_usd": cost_saved,
             "cache_candidates_count": len([c for c in cache_candidates if c.should_cache]),
             "potential_monthly_savings": cost_saved * 30 if cost_saved > 0 else 0,
-            "is_cache_hit": is_cache_hit
+            "is_cache_hit": is_cache_hit,
         }
 
     def generate_cache_report(self, performance_data: List[CachePerformance]) -> Dict[str, Any]:
@@ -391,19 +405,23 @@ and can be cached to reduce token costs on subsequent conversation turns.
                 "tokens_saved": total_tokens_saved,
                 "cost_saved_usd": total_cost_saved,
                 "projected_monthly_savings": total_cost_saved * 30,
-                "projected_annual_savings": total_cost_saved * 365
+                "projected_annual_savings": total_cost_saved * 365,
             },
             "cache_efficiency": {
                 "excellent": hit_rate >= 70,
                 "good": 50 <= hit_rate < 70,
                 "needs_improvement": hit_rate < 50,
-                "recommendation": self._get_cache_recommendation(hit_rate)
+                "recommendation": self._get_cache_recommendation(hit_rate),
             },
             "cost_analysis": {
                 "average_savings_per_hit": total_cost_saved / total_hits if total_hits > 0 else 0,
                 "roi_break_even_requests": 10 if total_cost_saved > 0 else None,
-                "cache_value_rating": "HIGH" if total_cost_saved > 5.0 else "MEDIUM" if total_cost_saved > 1.0 else "LOW"
-            }
+                "cache_value_rating": "HIGH"
+                if total_cost_saved > 5.0
+                else "MEDIUM"
+                if total_cost_saved > 1.0
+                else "LOW",
+            },
         }
 
     def _get_cache_recommendation(self, hit_rate: float) -> str:
@@ -428,7 +446,7 @@ def analyze_conversation_for_caching(
     conversation_history: List[Dict[str, Any]],
     extracted_preferences: Dict[str, Any],
     location_id: str = "default",
-    market_context: str = ""
+    market_context: str = "",
 ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
     """
     Convenience function to analyze conversation and prepare cached messages.
@@ -442,7 +460,7 @@ def analyze_conversation_for_caching(
         user_preferences=extracted_preferences,
         market_context=market_context,
         conversation_history=conversation_history,
-        location_id=location_id
+        location_id=location_id,
     )
 
     # Build messages with cache control
@@ -450,7 +468,7 @@ def analyze_conversation_for_caching(
     cached_messages = enhanced_cache_service.build_cached_messages(
         cache_candidates=candidates,
         conversation_history=conversation_history[:-1] if conversation_history else [],
-        current_message=current_message
+        current_message=current_message,
     )
 
     # Calculate potential savings

@@ -14,37 +14,44 @@ Architecture:
 - Automatic failover and recovery
 """
 
-import hashlib
 import asyncio
+import hashlib
 import logging
-from typing import Dict, List, Optional, Any, Union
+import time
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Dict, List, Optional, Union
+
 import asyncpg
 from asyncpg import Pool
-import time
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)
 
+
 class ShardRole(Enum):
     """Database shard role types"""
+
     MASTER = "master"
     REPLICA = "replica"
 
+
 class ShardStatus(Enum):
     """Shard health status"""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     DOWN = "down"
     RECOVERING = "recovering"
 
+
 @dataclass
 class ShardConfig:
     """Configuration for a database shard"""
+
     shard_id: int
     role: ShardRole
     host: str
@@ -61,9 +68,11 @@ class ShardConfig:
         """Generate PostgreSQL DSN for this shard"""
         return f"postgresql://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}"
 
+
 @dataclass
 class ShardCluster:
     """Cluster of shards (master + replicas)"""
+
     shard_id: int
     master: ShardConfig
     replicas: List[ShardConfig]
@@ -72,6 +81,7 @@ class ShardCluster:
     def healthy_replicas(self) -> List[ShardConfig]:
         """Get list of healthy replica shards"""
         return [replica for replica in self.replicas if replica.status == ShardStatus.HEALTHY]
+
 
 class DatabaseShardingService:
     """
@@ -103,9 +113,9 @@ class DatabaseShardingService:
         import os
 
         # Base database configuration
-        db_user = os.getenv('POSTGRES_USER', 'postgres')
-        db_password = os.getenv('POSTGRES_PASSWORD')
-        db_name = os.getenv('POSTGRES_DB', 'jorge_real_estate')
+        db_user = os.getenv("POSTGRES_USER", "postgres")
+        db_password = os.getenv("POSTGRES_PASSWORD")
+        db_name = os.getenv("POSTGRES_DB", "jorge_real_estate")
 
         # Define 4 shards with master + 2 replicas each
         shard_configs = [
@@ -113,22 +123,34 @@ class DatabaseShardingService:
             ShardCluster(
                 shard_id=0,
                 master=ShardConfig(
-                    shard_id=0, role=ShardRole.MASTER,
-                    host="postgres-master", port=5432,
-                    database=db_name, username=db_user, password=db_password
+                    shard_id=0,
+                    role=ShardRole.MASTER,
+                    host="postgres-master",
+                    port=5432,
+                    database=db_name,
+                    username=db_user,
+                    password=db_password,
                 ),
                 replicas=[
                     ShardConfig(
-                        shard_id=0, role=ShardRole.REPLICA,
-                        host="postgres-replica-1", port=5432,
-                        database=db_name, username=db_user, password=db_password
+                        shard_id=0,
+                        role=ShardRole.REPLICA,
+                        host="postgres-replica-1",
+                        port=5432,
+                        database=db_name,
+                        username=db_user,
+                        password=db_password,
                     ),
                     ShardConfig(
-                        shard_id=0, role=ShardRole.REPLICA,
-                        host="postgres-replica-2", port=5432,
-                        database=db_name, username=db_user, password=db_password
+                        shard_id=0,
+                        role=ShardRole.REPLICA,
+                        host="postgres-replica-2",
+                        port=5432,
+                        database=db_name,
+                        username=db_user,
+                        password=db_password,
                     ),
-                ]
+                ],
             ),
             # Additional shards would be configured similarly
             # For now, using single master with replicas for all shards
@@ -187,9 +209,9 @@ class DatabaseShardingService:
                 max_size=shard_config.max_connections,
                 command_timeout=60,
                 server_settings={
-                    'application_name': f'jorge_platform_shard_{shard_config.shard_id}_{shard_config.role.value}',
-                    'search_path': 'public',
-                }
+                    "application_name": f"jorge_platform_shard_{shard_config.shard_id}_{shard_config.role.value}",
+                    "search_path": "public",
+                },
             )
 
             self.connection_pools[pool_key] = pool
@@ -217,7 +239,7 @@ class DatabaseShardingService:
             return 0
 
         # Use MD5 hash for consistent shard selection
-        hash_value = hashlib.md5(location_id.encode('utf-8')).hexdigest()
+        hash_value = hashlib.md5(location_id.encode("utf-8")).hexdigest()
         return int(hash_value[:8], 16) % len(self.shard_clusters)
 
     async def get_read_connection(self, location_id: str) -> Pool:
@@ -288,13 +310,7 @@ class DatabaseShardingService:
             logger.error(f"Database connection error for location {location_id}: {e}")
             raise
 
-    async def execute_query(
-        self,
-        location_id: str,
-        query: str,
-        *args,
-        read_only: bool = False
-    ) -> Any:
+    async def execute_query(self, location_id: str, query: str, *args, read_only: bool = False) -> Any:
         """
         Execute a query with automatic shard routing
 
@@ -308,7 +324,7 @@ class DatabaseShardingService:
             Query result
         """
         async with self.get_connection(location_id, read_only=read_only) as conn:
-            if query.strip().upper().startswith(('SELECT', 'WITH')):
+            if query.strip().upper().startswith(("SELECT", "WITH")):
                 return await conn.fetch(query, *args)
             else:
                 return await conn.execute(query, *args)
@@ -376,7 +392,7 @@ class DatabaseShardingService:
             "healthy_masters": 0,
             "healthy_replicas": 0,
             "total_replicas": 0,
-            "shard_details": {}
+            "shard_details": {},
         }
 
         for shard_id, cluster in self.shard_clusters.items():
@@ -393,7 +409,7 @@ class DatabaseShardingService:
                 "master_status": cluster.master.status.value,
                 "healthy_replicas": f"{healthy_replicas}/{total_replicas}",
                 "master_host": cluster.master.host,
-                "replica_hosts": [r.host for r in cluster.replicas]
+                "replica_hosts": [r.host for r in cluster.replicas],
             }
 
         return status
@@ -410,12 +426,16 @@ class DatabaseShardingService:
             logger.info(f"Location {location_id} already on target shard {target_shard_id}")
             return
 
-        logger.warning(f"Data migration not yet implemented: {location_id} from shard {current_shard_id} to {target_shard_id}")
+        logger.warning(
+            f"Data migration not yet implemented: {location_id} from shard {current_shard_id} to {target_shard_id}"
+        )
         # TODO: Implement data migration logic
         raise NotImplementedError("Data migration between shards not yet implemented")
 
+
 # Global sharding service instance
 _sharding_service = None
+
 
 def get_sharding_service() -> DatabaseShardingService:
     """Get singleton database sharding service instance"""
@@ -423,6 +443,7 @@ def get_sharding_service() -> DatabaseShardingService:
     if _sharding_service is None:
         _sharding_service = DatabaseShardingService()
     return _sharding_service
+
 
 async def initialize_sharding_service():
     """Initialize the database sharding service"""

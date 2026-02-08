@@ -424,9 +424,7 @@ class ChromaVectorStore(VectorStore):
                 self._collection = self._client.get_or_create_collection(
                     name=self.config.collection_name,
                     metadata={
-                        "hnsw:space": self._map_distance_metric(
-                            self.config.distance_metric
-                        ),
+                        "hnsw:space": self._map_distance_metric(self.config.distance_metric),
                         "dimension": str(self.config.dimension),
                     },
                 )
@@ -526,9 +524,7 @@ class ChromaVectorStore(VectorStore):
 
         return metadata
 
-    def _build_where_clause(
-        self, filters: Optional[Dict[str, Any]]
-    ) -> Optional[Dict[str, Any]]:
+    def _build_where_clause(self, filters: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
         """Build ChromaDB where clause from filters.
 
         Args:

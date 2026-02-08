@@ -5,31 +5,32 @@ Tests the autonomous follow-up engine that uses multi-agent intelligence to auto
 nurture leads, optimize communication timing, personalize content, and maximize conversions.
 """
 
-import pytest
 import asyncio
-from datetime import datetime, timedelta
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
 from dataclasses import asdict
+from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pytest
 
 from ghl_real_estate_ai.services.autonomous_followup_engine import (
-    AutonomousFollowUpEngine,
-    get_autonomous_followup_engine,
-    FollowUpStatus,
-    FollowUpChannel,
-    FollowUpTask,
     AgentType,
-    FollowUpRecommendation,
-    FollowUpAgent,
-    TimingOptimizerAgent,
-    ContentPersonalizerAgent,
+    AutonomousFollowUpEngine,
     ChannelStrategistAgent,
-    ResponseAnalyzerAgent,
-    EscalationManagerAgent,
-    SentimentAnalystAgent,
-    ObjectionHandlerAgent,
+    ContentPersonalizerAgent,
     ConversionOptimizerAgent,
+    EscalationManagerAgent,
+    FollowUpAgent,
+    FollowUpChannel,
+    FollowUpRecommendation,
+    FollowUpStatus,
+    FollowUpTask,
     MarketContextAgent,
-    PerformanceTrackerAgent
+    ObjectionHandlerAgent,
+    PerformanceTrackerAgent,
+    ResponseAnalyzerAgent,
+    SentimentAnalystAgent,
+    TimingOptimizerAgent,
+    get_autonomous_followup_engine,
 )
 from ghl_real_estate_ai.services.behavioral_trigger_engine import IntentLevel
 
@@ -40,16 +41,19 @@ class TestAutonomousFollowUpEngine:
     @pytest.fixture
     def mock_dependencies(self):
         """Mock all external dependencies for the engine."""
-        with patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_behavioral_trigger_engine') as mock_behavioral, \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_cache_service') as mock_cache, \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_llm_client') as mock_llm, \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_lead_intelligence_swarm') as mock_swarm:
-
+        with (
+            patch(
+                "ghl_real_estate_ai.services.autonomous_followup_engine.get_behavioral_trigger_engine"
+            ) as mock_behavioral,
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_cache_service") as mock_cache,
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_llm_client") as mock_llm,
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_lead_intelligence_swarm") as mock_swarm,
+        ):
             yield {
-                'behavioral': mock_behavioral.return_value,
-                'cache': mock_cache.return_value,
-                'llm': mock_llm.return_value,
-                'swarm': mock_swarm.return_value
+                "behavioral": mock_behavioral.return_value,
+                "cache": mock_cache.return_value,
+                "llm": mock_llm.return_value,
+                "swarm": mock_swarm.return_value,
             }
 
     @pytest.fixture
@@ -70,7 +74,7 @@ class TestAutonomousFollowUpEngine:
             priority=1,
             status=FollowUpStatus.PENDING,
             metadata={},
-            created_at=datetime.now()
+            created_at=datetime.now(),
         )
 
     @pytest.fixture
@@ -84,48 +88,40 @@ class TestAutonomousFollowUpEngine:
             "created_at": datetime.now() - timedelta(days=10),
             "last_contact": datetime.now() - timedelta(hours=48),
             "status": "warm",
-
             "conversation_history": [
                 {
                     "timestamp": datetime.now() - timedelta(hours=72),
                     "message": "Interested in properties around $600K in north Austin",
                     "type": "inbound",
                     "channel": "email",
-                    "sentiment": "positive"
+                    "sentiment": "positive",
                 },
                 {
                     "timestamp": datetime.now() - timedelta(hours=49),
                     "message": "I have some great options to show you. When are you available?",
                     "type": "outbound",
-                    "channel": "email"
-                }
+                    "channel": "email",
+                },
             ],
-
             "behavioral_data": {
                 "response_time_avg_hours": 6,
                 "engagement_score": 0.72,
                 "preferred_contact_times": ["9-11am", "2-4pm"],
-                "channel_preferences": {
-                    "email": 0.8,
-                    "sms": 0.6,
-                    "phone": 0.4
-                },
+                "channel_preferences": {"email": 0.8, "sms": 0.6, "phone": 0.4},
                 "last_website_visit": datetime.now() - timedelta(hours=18),
                 "property_views_count": 8,
-                "saved_properties": 3
+                "saved_properties": 3,
             },
-
             "demographics": {
                 "age_range": "28-35",
                 "income_bracket": "medium_high",
                 "family_status": "young_professional",
                 "location": "North Austin, TX",
-                "buy_timeline": "3-6_months"
+                "buy_timeline": "3-6_months",
             },
-
             "current_sentiment": "interested_but_cautious",
             "objections": ["price_concerns", "location_uncertainty"],
-            "interests": ["modern_homes", "good_schools", "commute_friendly"]
+            "interests": ["modern_homes", "good_schools", "commute_friendly"],
         }
 
     @pytest.fixture
@@ -139,7 +135,7 @@ class TestAutonomousFollowUpEngine:
                 reasoning="Best historical response time for this lead profile",
                 optimal_timing=datetime.now() + timedelta(hours=24),
                 suggested_channel=FollowUpChannel.EMAIL,
-                metadata={}
+                metadata={},
             ),
             FollowUpRecommendation(
                 agent_type=AgentType.CONTENT_PERSONALIZER,
@@ -148,40 +144,40 @@ class TestAutonomousFollowUpEngine:
                 reasoning="Lead shows interest in family-oriented features",
                 suggested_channel=FollowUpChannel.EMAIL,
                 suggested_message="Personalized content about school districts and commute times",
-                metadata={"tone": "professional_friendly", "urgency": "moderate"}
+                metadata={"tone": "professional_friendly", "urgency": "moderate"},
             ),
             FollowUpRecommendation(
                 agent_type=AgentType.SENTIMENT_ANALYST,
                 confidence=0.79,
                 recommended_action="reassure_lead",
                 reasoning="Lead is engaged but needs reassurance",
-                metadata={"current_sentiment": "cautiously_optimistic", "engagement_level": "moderate_high"}
+                metadata={"current_sentiment": "cautiously_optimistic", "engagement_level": "moderate_high"},
             ),
         ]
 
     def test_engine_initialization(self, engine):
         """Test that the autonomous follow-up engine initializes correctly."""
         assert isinstance(engine, AutonomousFollowUpEngine)
-        assert hasattr(engine, 'behavioral_engine')
-        assert hasattr(engine, 'cache')
-        assert hasattr(engine, 'llm_client')
-        assert hasattr(engine, 'lead_intelligence_swarm')
+        assert hasattr(engine, "behavioral_engine")
+        assert hasattr(engine, "cache")
+        assert hasattr(engine, "llm_client")
+        assert hasattr(engine, "lead_intelligence_swarm")
 
         # Verify all specialized agents are initialized
-        assert hasattr(engine, 'timing_optimizer')
-        assert hasattr(engine, 'content_personalizer')
-        assert hasattr(engine, 'channel_strategist')
-        assert hasattr(engine, 'response_analyzer')
-        assert hasattr(engine, 'escalation_manager')
-        assert hasattr(engine, 'sentiment_analyst')
-        assert hasattr(engine, 'objection_handler')
-        assert hasattr(engine, 'conversion_optimizer')
-        assert hasattr(engine, 'market_context_agent')
-        assert hasattr(engine, 'performance_tracker')
+        assert hasattr(engine, "timing_optimizer")
+        assert hasattr(engine, "content_personalizer")
+        assert hasattr(engine, "channel_strategist")
+        assert hasattr(engine, "response_analyzer")
+        assert hasattr(engine, "escalation_manager")
+        assert hasattr(engine, "sentiment_analyst")
+        assert hasattr(engine, "objection_handler")
+        assert hasattr(engine, "conversion_optimizer")
+        assert hasattr(engine, "market_context_agent")
+        assert hasattr(engine, "performance_tracker")
 
         # Verify task management components
         assert isinstance(engine.pending_tasks, list)
-        assert hasattr(engine, 'task_lock')
+        assert hasattr(engine, "task_lock")
         assert engine.is_running is False
         assert engine.monitor_task is None
 
@@ -193,11 +189,12 @@ class TestAutonomousFollowUpEngine:
 
     def test_get_autonomous_followup_engine_singleton(self):
         """Test that the global engine function returns a singleton."""
-        with patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_behavioral_trigger_engine'), \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_cache_service'), \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_llm_client'), \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_lead_intelligence_swarm'):
-
+        with (
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_behavioral_trigger_engine"),
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_cache_service"),
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_llm_client"),
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_lead_intelligence_swarm"),
+        ):
             engine1 = get_autonomous_followup_engine()
             engine2 = get_autonomous_followup_engine()
             assert engine1 is engine2
@@ -206,7 +203,7 @@ class TestAutonomousFollowUpEngine:
     @pytest.mark.asyncio
     async def test_start_monitoring(self, engine):
         """Test starting the monitoring loop."""
-        with patch.object(engine, '_monitoring_loop', new_callable=AsyncMock) as mock_loop:
+        with patch.object(engine, "_monitoring_loop", new_callable=AsyncMock) as mock_loop:
             await engine.start_monitoring()
 
             assert engine.is_running is True
@@ -215,6 +212,7 @@ class TestAutonomousFollowUpEngine:
     @pytest.mark.asyncio
     async def test_stop_monitoring(self, engine):
         """Test stopping the monitoring loop."""
+
         # Create a real asyncio task that we can cancel
         async def dummy_loop():
             await asyncio.sleep(3600)
@@ -232,10 +230,11 @@ class TestAutonomousFollowUpEngine:
         """Test the core monitoring loop functionality."""
         engine.is_running = True
 
-        with patch.object(engine, 'monitor_and_respond', new_callable=AsyncMock) as mock_monitor, \
-             patch.object(engine, 'execute_pending_tasks', new_callable=AsyncMock) as mock_execute, \
-             patch('asyncio.sleep', new_callable=AsyncMock) as mock_sleep:
-
+        with (
+            patch.object(engine, "monitor_and_respond", new_callable=AsyncMock) as mock_monitor,
+            patch.object(engine, "execute_pending_tasks", new_callable=AsyncMock) as mock_execute,
+            patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
+        ):
             # Mock monitor_and_respond to stop after first iteration
             mock_monitor.side_effect = [None, Exception("Stop loop")]
 
@@ -253,11 +252,9 @@ class TestAutonomousFollowUpEngine:
     async def test_monitor_and_respond(self, engine):
         """Test monitoring and responding to lead activities."""
         # Mock behavioral engine returning high-intent leads
-        engine.behavioral_engine.get_high_intent_leads = AsyncMock(
-            return_value=["lead_1", "lead_2"]
-        )
+        engine.behavioral_engine.get_high_intent_leads = AsyncMock(return_value=["lead_1", "lead_2"])
 
-        with patch.object(engine, '_process_lead', new_callable=AsyncMock) as mock_process:
+        with patch.object(engine, "_process_lead", new_callable=AsyncMock) as mock_process:
             await engine.monitor_and_respond()
 
             # Verify leads were processed
@@ -273,8 +270,12 @@ class TestAutonomousFollowUpEngine:
         sample_follow_up_task.scheduled_time = datetime.now() - timedelta(minutes=1)
         engine.pending_tasks = [sample_follow_up_task]
 
-        with patch.object(engine, '_execute_task', new_callable=AsyncMock) as mock_execute, \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_database', new_callable=AsyncMock) as mock_db:
+        with (
+            patch.object(engine, "_execute_task", new_callable=AsyncMock) as mock_execute,
+            patch(
+                "ghl_real_estate_ai.services.autonomous_followup_engine.get_database", new_callable=AsyncMock
+            ) as mock_db,
+        ):
             # Mock database returning no tasks, so fallback to in-memory
             mock_db.return_value.get_pending_follow_up_tasks = AsyncMock(return_value=None)
 
@@ -290,17 +291,18 @@ class TestAutonomousFollowUpEngine:
         sample_follow_up_task.status = FollowUpStatus.SCHEDULED
         engine.pending_tasks = [sample_follow_up_task]
 
-        with patch.object(engine, '_send_email', new_callable=AsyncMock, return_value=True) as mock_send, \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_database', new_callable=AsyncMock) as mock_db:
+        with (
+            patch.object(engine, "_send_email", new_callable=AsyncMock, return_value=True) as mock_send,
+            patch(
+                "ghl_real_estate_ai.services.autonomous_followup_engine.get_database", new_callable=AsyncMock
+            ) as mock_db,
+        ):
             mock_db.return_value.update_follow_up_task = AsyncMock()
 
             await engine._execute_task(sample_follow_up_task)
 
             # Verify email was sent with contact_id and message
-            mock_send.assert_called_once_with(
-                sample_follow_up_task.contact_id,
-                sample_follow_up_task.message
-            )
+            mock_send.assert_called_once_with(sample_follow_up_task.contact_id, sample_follow_up_task.message)
 
             # Verify task status was updated to SENT
             assert sample_follow_up_task.status == FollowUpStatus.SENT
@@ -312,17 +314,18 @@ class TestAutonomousFollowUpEngine:
         sample_follow_up_task.status = FollowUpStatus.SCHEDULED
         engine.pending_tasks = [sample_follow_up_task]
 
-        with patch.object(engine, '_send_sms', new_callable=AsyncMock, return_value=True) as mock_send, \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_database', new_callable=AsyncMock) as mock_db:
+        with (
+            patch.object(engine, "_send_sms", new_callable=AsyncMock, return_value=True) as mock_send,
+            patch(
+                "ghl_real_estate_ai.services.autonomous_followup_engine.get_database", new_callable=AsyncMock
+            ) as mock_db,
+        ):
             mock_db.return_value.update_follow_up_task = AsyncMock()
 
             await engine._execute_task(sample_follow_up_task)
 
             # Verify SMS was sent with contact_id and message
-            mock_send.assert_called_once_with(
-                sample_follow_up_task.contact_id,
-                sample_follow_up_task.message
-            )
+            mock_send.assert_called_once_with(sample_follow_up_task.contact_id, sample_follow_up_task.message)
 
             # Verify task status was updated to SENT
             assert sample_follow_up_task.status == FollowUpStatus.SENT
@@ -334,8 +337,12 @@ class TestAutonomousFollowUpEngine:
         sample_follow_up_task.status = FollowUpStatus.SCHEDULED
         engine.pending_tasks = [sample_follow_up_task]
 
-        with patch.object(engine, '_initiate_call', new_callable=AsyncMock, return_value=True) as mock_call, \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_database', new_callable=AsyncMock) as mock_db:
+        with (
+            patch.object(engine, "_initiate_call", new_callable=AsyncMock, return_value=True) as mock_call,
+            patch(
+                "ghl_real_estate_ai.services.autonomous_followup_engine.get_database", new_callable=AsyncMock
+            ) as mock_db,
+        ):
             mock_db.return_value.update_follow_up_task = AsyncMock()
 
             await engine._execute_task(sample_follow_up_task)
@@ -353,17 +360,18 @@ class TestAutonomousFollowUpEngine:
         sample_follow_up_task.status = FollowUpStatus.SCHEDULED
         engine.pending_tasks = [sample_follow_up_task]
 
-        with patch.object(engine, '_send_email', new_callable=AsyncMock, return_value=False) as mock_send, \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_database', new_callable=AsyncMock) as mock_db:
+        with (
+            patch.object(engine, "_send_email", new_callable=AsyncMock, return_value=False) as mock_send,
+            patch(
+                "ghl_real_estate_ai.services.autonomous_followup_engine.get_database", new_callable=AsyncMock
+            ) as mock_db,
+        ):
             mock_db.return_value.update_follow_up_task = AsyncMock()
 
             await engine._execute_task(sample_follow_up_task)
 
             # Verify email send was attempted
-            mock_send.assert_called_once_with(
-                sample_follow_up_task.contact_id,
-                sample_follow_up_task.message
-            )
+            mock_send.assert_called_once_with(sample_follow_up_task.contact_id, sample_follow_up_task.message)
 
             # Verify task status was updated to FAILED
             assert sample_follow_up_task.status == FollowUpStatus.FAILED
@@ -375,17 +383,15 @@ class TestAutonomousFollowUpEngine:
         mock_swarm_analysis = MagicMock()
         mock_swarm_analysis.consensus.intent_level = IntentLevel.HOT
 
-        consensus = await engine._build_agent_consensus(
-            sample_agent_recommendations, mock_swarm_analysis
-        )
+        consensus = await engine._build_agent_consensus(sample_agent_recommendations, mock_swarm_analysis)
 
         # Verify consensus is a dict with expected keys
         assert isinstance(consensus, dict)
-        assert 'confidence' in consensus
-        assert 'timing' in consensus
-        assert 'message' in consensus
-        assert 'channel' in consensus
-        assert 'priority' in consensus
+        assert "confidence" in consensus
+        assert "timing" in consensus
+        assert "message" in consensus
+        assert "channel" in consensus
+        assert "priority" in consensus
 
     @pytest.mark.asyncio
     async def test_handle_escalation(self, engine):
@@ -418,14 +424,16 @@ class TestAutonomousFollowUpEngine:
         for rec in sample_agent_recommendations:
             agent_perf = engine.agent_performance.get(rec.agent_type)
             assert agent_perf is not None
-            assert agent_perf['total_recommendations'] >= 1
+            assert agent_perf["total_recommendations"] >= 1
 
     @pytest.mark.asyncio
     async def test_get_follow_up_history(self, engine):
         """Test retrieval of follow-up history."""
         lead_id = "lead_123"
 
-        with patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_database', new_callable=AsyncMock) as mock_db:
+        with patch(
+            "ghl_real_estate_ai.services.autonomous_followup_engine.get_database", new_callable=AsyncMock
+        ) as mock_db:
             mock_db.return_value.get_lead_follow_up_history = AsyncMock(return_value=[])
 
             history = await engine._get_follow_up_history(lead_id)
@@ -438,14 +446,18 @@ class TestAutonomousFollowUpEngine:
         """Test retrieval of response data."""
         lead_id = "lead_123"
 
-        with patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_database', new_callable=AsyncMock) as mock_db:
-            mock_db.return_value.get_lead_response_data = AsyncMock(return_value={
-                "responses": [],
-                "negative_sentiment": False,
-                "last_response_time": None,
-                "total_responses": 0,
-                "avg_sentiment": 0
-            })
+        with patch(
+            "ghl_real_estate_ai.services.autonomous_followup_engine.get_database", new_callable=AsyncMock
+        ) as mock_db:
+            mock_db.return_value.get_lead_response_data = AsyncMock(
+                return_value={
+                    "responses": [],
+                    "negative_sentiment": False,
+                    "last_response_time": None,
+                    "total_responses": 0,
+                    "avg_sentiment": 0,
+                }
+            )
 
             response_data = await engine._get_response_data(lead_id)
 
@@ -456,7 +468,9 @@ class TestAutonomousFollowUpEngine:
         """Test retrieval of comprehensive lead profile."""
         lead_id = "lead_789"
 
-        with patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_database', new_callable=AsyncMock) as mock_db:
+        with patch(
+            "ghl_real_estate_ai.services.autonomous_followup_engine.get_database", new_callable=AsyncMock
+        ) as mock_db:
             mock_db.return_value.get_lead_profile_data = AsyncMock(return_value=sample_lead_data)
 
             profile = await engine._get_lead_profile(lead_id)
@@ -484,9 +498,7 @@ class TestAutonomousFollowUpEngine:
         mock_response.content = "Hi! I noticed your interest in properties"
         engine.llm_client.generate.return_value = mock_response
 
-        message = await engine._generate_contextual_followup(
-            lead_id, mock_behavioral_score, activity_data
-        )
+        message = await engine._generate_contextual_followup(lead_id, mock_behavioral_score, activity_data)
 
         # Should return a string message
         assert isinstance(message, str)
@@ -497,7 +509,9 @@ class TestAutonomousFollowUpEngine:
         """Test retrieval of lead activity data."""
         lead_id = "lead_123"
 
-        with patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_database', new_callable=AsyncMock) as mock_db:
+        with patch(
+            "ghl_real_estate_ai.services.autonomous_followup_engine.get_database", new_callable=AsyncMock
+        ) as mock_db:
             mock_activity = {
                 "property_searches": [],
                 "email_interactions": [],
@@ -536,7 +550,7 @@ class TestAutonomousFollowUpEngine:
     @pytest.mark.asyncio
     async def test_send_email(self, engine):
         """Test email sending functionality."""
-        with patch('ghl_real_estate_ai.services.ghl_client.GHLClient') as mock_ghl:
+        with patch("ghl_real_estate_ai.services.ghl_client.GHLClient") as mock_ghl:
             mock_client = mock_ghl.return_value
             mock_client.send_message = AsyncMock(return_value=True)
 
@@ -547,7 +561,7 @@ class TestAutonomousFollowUpEngine:
     @pytest.mark.asyncio
     async def test_send_sms(self, engine):
         """Test SMS sending functionality."""
-        with patch('ghl_real_estate_ai.services.ghl_client.GHLClient') as mock_ghl:
+        with patch("ghl_real_estate_ai.services.ghl_client.GHLClient") as mock_ghl:
             mock_client = mock_ghl.return_value
             mock_client.send_message = AsyncMock(return_value=True)
 
@@ -558,21 +572,19 @@ class TestAutonomousFollowUpEngine:
     @pytest.mark.asyncio
     async def test_initiate_call(self, engine):
         """Test phone call initiation functionality."""
-        with patch('ghl_real_estate_ai.services.vapi_service.VapiService') as mock_vapi, \
-             patch.object(engine, '_get_lead_profile', new_callable=AsyncMock) as mock_profile, \
-             patch.object(engine, '_get_lead_activity', new_callable=AsyncMock) as mock_activity, \
-             patch('ghl_real_estate_ai.services.negotiation_drift_detector.get_drift_detector') as mock_detector:
-
+        with (
+            patch("ghl_real_estate_ai.services.vapi_service.VapiService") as mock_vapi,
+            patch.object(engine, "_get_lead_profile", new_callable=AsyncMock) as mock_profile,
+            patch.object(engine, "_get_lead_activity", new_callable=AsyncMock) as mock_activity,
+            patch("ghl_real_estate_ai.services.negotiation_drift_detector.get_drift_detector") as mock_detector,
+        ):
             mock_profile.return_value = {
-                'phone': '+1234567890',
-                'name': 'Test Lead',
-                'demographics': {'city': 'Austin'}
+                "phone": "+1234567890",
+                "name": "Test Lead",
+                "demographics": {"city": "Austin"},
             }
-            mock_activity.return_value = {'sms_responses': []}
-            mock_detector.return_value.analyze_drift.return_value = {
-                "drift_score": 0.5,
-                "recommendation": "maintain"
-            }
+            mock_activity.return_value = {"sms_responses": []}
+            mock_detector.return_value.analyze_drift.return_value = {"drift_score": 0.5, "recommendation": "maintain"}
             mock_vapi_instance = mock_vapi.return_value
             mock_vapi_instance.trigger_outbound_call.return_value = True
 
@@ -634,7 +646,7 @@ class TestFollowUpTask:
             priority=1,
             status=FollowUpStatus.PENDING,
             metadata={},
-            created_at=datetime.now()
+            created_at=datetime.now(),
         )
 
         assert task.task_id == "test_task"
@@ -685,7 +697,7 @@ class TestSpecializedAgents:
             "lead_data": {"lead_id": "test_lead", "last_contact": datetime.now() - timedelta(hours=24)},
             "follow_up_history": [],
             "response_data": {"avg_response_time_hours": 6},
-            "lead_profile": {"name": "Test Lead", "preferences": {"email": True}}
+            "lead_profile": {"name": "Test Lead", "preferences": {"email": True}},
         }
 
     def test_timing_optimizer_agent(self, sample_agent_data, mock_llm):
@@ -756,17 +768,18 @@ class TestAutonomousFollowUpIntegration:
     @pytest.mark.asyncio
     async def test_complete_autonomous_followup_workflow(self):
         """Test complete autonomous follow-up workflow from lead activity to task execution."""
-        with patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_behavioral_trigger_engine') as mock_behavioral, \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_cache_service') as mock_cache, \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_llm_client') as mock_llm, \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_lead_intelligence_swarm') as mock_swarm:
-
+        with (
+            patch(
+                "ghl_real_estate_ai.services.autonomous_followup_engine.get_behavioral_trigger_engine"
+            ) as mock_behavioral,
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_cache_service") as mock_cache,
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_llm_client") as mock_llm,
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_lead_intelligence_swarm") as mock_swarm,
+        ):
             # Setup mocks
             mock_behavioral_engine = Mock()
             mock_behavioral.return_value = mock_behavioral_engine
-            mock_behavioral_engine.get_high_intent_leads = AsyncMock(return_value=[
-                "lead_integration"
-            ])
+            mock_behavioral_engine.get_high_intent_leads = AsyncMock(return_value=["lead_integration"])
 
             mock_cache_service = Mock()
             mock_cache.return_value = mock_cache_service
@@ -791,26 +804,28 @@ class TestAutonomousFollowUpIntegration:
     @pytest.mark.asyncio
     async def test_multi_channel_follow_up_strategy(self):
         """Test multi-channel follow-up strategy optimization."""
-        with patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_behavioral_trigger_engine'), \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_cache_service'), \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_llm_client'), \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_lead_intelligence_swarm'):
-
+        with (
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_behavioral_trigger_engine"),
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_cache_service"),
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_llm_client"),
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_lead_intelligence_swarm"),
+        ):
             engine = AutonomousFollowUpEngine()
 
             # Verify engine can handle multi-channel configuration
-            assert hasattr(engine, 'channel_strategist')
-            assert hasattr(engine, 'timing_optimizer')
-            assert hasattr(engine, 'content_personalizer')
+            assert hasattr(engine, "channel_strategist")
+            assert hasattr(engine, "timing_optimizer")
+            assert hasattr(engine, "content_personalizer")
 
     @pytest.mark.asyncio
     async def test_performance_monitoring_and_optimization(self):
         """Test performance monitoring and optimization features."""
-        with patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_behavioral_trigger_engine'), \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_cache_service'), \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_llm_client'), \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_lead_intelligence_swarm'):
-
+        with (
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_behavioral_trigger_engine"),
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_cache_service"),
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_llm_client"),
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_lead_intelligence_swarm"),
+        ):
             engine = AutonomousFollowUpEngine()
 
             # Update performance metrics using the actual API
@@ -819,7 +834,7 @@ class TestAutonomousFollowUpIntegration:
                     agent_type=AgentType.TIMING_OPTIMIZER,
                     confidence=0.85,
                     recommended_action="Schedule follow-up",
-                    reasoning="Optimal timing detected"
+                    reasoning="Optimal timing detected",
                 ),
             ]
             await engine._update_agent_performance(recommendations)
@@ -835,11 +850,14 @@ class TestAutonomousFollowUpIntegration:
     @pytest.mark.asyncio
     async def test_error_handling_and_resilience(self):
         """Test error handling and system resilience."""
-        with patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_behavioral_trigger_engine') as mock_behavioral, \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_cache_service'), \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_llm_client'), \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_lead_intelligence_swarm'):
-
+        with (
+            patch(
+                "ghl_real_estate_ai.services.autonomous_followup_engine.get_behavioral_trigger_engine"
+            ) as mock_behavioral,
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_cache_service"),
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_llm_client"),
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_lead_intelligence_swarm"),
+        ):
             # Setup behavioral engine to fail
             mock_behavioral_engine = Mock()
             mock_behavioral.return_value = mock_behavioral_engine

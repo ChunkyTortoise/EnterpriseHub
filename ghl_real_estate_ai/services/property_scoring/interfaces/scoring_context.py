@@ -5,12 +5,13 @@ Standardized data structures for property scoring
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 
 class PropertyType(Enum):
     """Standardized property types"""
+
     SINGLE_FAMILY = "single_family"
     TOWNHOME = "townhome"
     CONDO = "condo"
@@ -20,6 +21,7 @@ class PropertyType(Enum):
 
 class PriorityLevel(Enum):
     """Lead preference priority levels"""
+
     MUST_HAVE = "must_have"
     HIGHLY_PREFERRED = "highly_preferred"
     PREFERRED = "preferred"
@@ -29,6 +31,7 @@ class PriorityLevel(Enum):
 @dataclass
 class LocationPreference:
     """Structured location preference"""
+
     primary_areas: List[str] = field(default_factory=list)
     secondary_areas: List[str] = field(default_factory=list)
     excluded_areas: List[str] = field(default_factory=list)
@@ -39,6 +42,7 @@ class LocationPreference:
 @dataclass
 class FeaturePreference:
     """Feature preference with priority"""
+
     feature: str
     priority: PriorityLevel
     specific_requirements: Dict[str, Any] = field(default_factory=dict)
@@ -47,6 +51,7 @@ class FeaturePreference:
 @dataclass
 class BudgetConstraints:
     """Detailed budget constraints"""
+
     max_budget: float
     comfortable_budget: Optional[float] = None
     absolute_max: Optional[float] = None
@@ -62,6 +67,7 @@ class LeadPreferences:
     This standardizes how lead preferences are represented across
     all scoring strategies
     """
+
     # Basic requirements
     budget_constraints: BudgetConstraints
     property_types: List[PropertyType] = field(default_factory=list)
@@ -92,61 +98,54 @@ class LeadPreferences:
     last_updated: Optional[datetime] = None
 
     @classmethod
-    def from_legacy_format(cls, legacy_prefs: Dict[str, Any]) -> 'LeadPreferences':
+    def from_legacy_format(cls, legacy_prefs: Dict[str, Any]) -> "LeadPreferences":
         """Convert from legacy preference format"""
-        budget = legacy_prefs.get('budget', 800000)
-        budget_constraints = BudgetConstraints(
-            max_budget=budget,
-            comfortable_budget=budget * 0.9
-        )
+        budget = legacy_prefs.get("budget", 800000)
+        budget_constraints = BudgetConstraints(max_budget=budget, comfortable_budget=budget * 0.9)
 
         # Convert property type
         property_types = []
-        legacy_type = legacy_prefs.get('property_type', '').lower()
-        if 'single family' in legacy_type:
+        legacy_type = legacy_prefs.get("property_type", "").lower()
+        if "single family" in legacy_type:
             property_types.append(PropertyType.SINGLE_FAMILY)
-        elif 'condo' in legacy_type:
+        elif "condo" in legacy_type:
             property_types.append(PropertyType.CONDO)
-        elif 'townhome' in legacy_type:
+        elif "townhome" in legacy_type:
             property_types.append(PropertyType.TOWNHOME)
 
         # Convert location
         location_pref = LocationPreference()
-        if legacy_prefs.get('location'):
-            location_pref.primary_areas = [legacy_prefs['location']]
+        if legacy_prefs.get("location"):
+            location_pref.primary_areas = [legacy_prefs["location"]]
 
         # Convert features
         feature_preferences = []
-        for must_have in legacy_prefs.get('must_haves', []):
-            feature_preferences.append(
-                FeaturePreference(must_have, PriorityLevel.MUST_HAVE)
-            )
-        for nice_to_have in legacy_prefs.get('nice_to_haves', []):
-            feature_preferences.append(
-                FeaturePreference(nice_to_have, PriorityLevel.NICE_TO_HAVE)
-            )
+        for must_have in legacy_prefs.get("must_haves", []):
+            feature_preferences.append(FeaturePreference(must_have, PriorityLevel.MUST_HAVE))
+        for nice_to_have in legacy_prefs.get("nice_to_haves", []):
+            feature_preferences.append(FeaturePreference(nice_to_have, PriorityLevel.NICE_TO_HAVE))
 
         return cls(
             budget_constraints=budget_constraints,
             property_types=property_types,
-            min_bedrooms=legacy_prefs.get('bedrooms'),
+            min_bedrooms=legacy_prefs.get("bedrooms"),
             location_preferences=location_pref,
-            feature_preferences=feature_preferences
+            feature_preferences=feature_preferences,
         )
 
     def to_legacy_format(self) -> Dict[str, Any]:
         """Convert to legacy format for backward compatibility"""
         return {
-            'budget': self.budget_constraints.max_budget,
-            'bedrooms': self.min_bedrooms,
-            'location': (self.location_preferences.primary_areas[0]
-                        if self.location_preferences.primary_areas else None),
-            'property_type': (self.property_types[0].value.replace('_', ' ')
-                            if self.property_types else ''),
-            'must_haves': [fp.feature for fp in self.feature_preferences
-                          if fp.priority == PriorityLevel.MUST_HAVE],
-            'nice_to_haves': [fp.feature for fp in self.feature_preferences
-                             if fp.priority == PriorityLevel.NICE_TO_HAVE]
+            "budget": self.budget_constraints.max_budget,
+            "bedrooms": self.min_bedrooms,
+            "location": (
+                self.location_preferences.primary_areas[0] if self.location_preferences.primary_areas else None
+            ),
+            "property_type": (self.property_types[0].value.replace("_", " ") if self.property_types else ""),
+            "must_haves": [fp.feature for fp in self.feature_preferences if fp.priority == PriorityLevel.MUST_HAVE],
+            "nice_to_haves": [
+                fp.feature for fp in self.feature_preferences if fp.priority == PriorityLevel.NICE_TO_HAVE
+            ],
         }
 
 
@@ -157,6 +156,7 @@ class ScoringContext:
 
     Provides additional context that may influence scoring decisions
     """
+
     # Market context
     market_conditions: Dict[str, Any] = field(default_factory=dict)
     comparative_properties: List[Dict[str, Any]] = field(default_factory=list)

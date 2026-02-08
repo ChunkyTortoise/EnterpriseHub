@@ -142,9 +142,7 @@ class TestScoreAnomalyDetection:
     async def test_detects_score_spike(self, detector: ComplianceAnomalyDetector):
         """Test detection of unusual score increase."""
         historical = [75.0, 76.0, 74.0, 75.0, 77.0, 73.0, 76.0]
-        anomaly = await detector.detect_score_anomaly(
-            "model_123", 95.0, historical
-        )
+        anomaly = await detector.detect_score_anomaly("model_123", 95.0, historical)
         assert anomaly is not None
         assert anomaly.anomaly_type == AnomalyType.SCORE_SPIKE
         assert anomaly.deviation is not None
@@ -154,9 +152,7 @@ class TestScoreAnomalyDetection:
     async def test_detects_score_drop(self, detector: ComplianceAnomalyDetector):
         """Test detection of unusual score decrease."""
         historical = [85.0, 86.0, 84.0, 85.0, 87.0, 83.0, 86.0]
-        anomaly = await detector.detect_score_anomaly(
-            "model_123", 50.0, historical
-        )
+        anomaly = await detector.detect_score_anomaly("model_123", 50.0, historical)
         assert anomaly is not None
         assert anomaly.anomaly_type == AnomalyType.SCORE_DROP
         assert anomaly.deviation is not None
@@ -166,18 +162,14 @@ class TestScoreAnomalyDetection:
     async def test_no_anomaly_for_normal_variance(self, detector: ComplianceAnomalyDetector):
         """Test no false positive for normal variance."""
         historical = [75.0, 76.0, 74.0, 75.0, 77.0, 73.0, 76.0]
-        anomaly = await detector.detect_score_anomaly(
-            "model_123", 78.0, historical
-        )
+        anomaly = await detector.detect_score_anomaly("model_123", 78.0, historical)
         assert anomaly is None
 
     @pytest.mark.asyncio
     async def test_insufficient_history(self, detector: ComplianceAnomalyDetector):
         """Test with insufficient history."""
         historical = [75.0, 76.0]
-        anomaly = await detector.detect_score_anomaly(
-            "model_123", 50.0, historical
-        )
+        anomaly = await detector.detect_score_anomaly("model_123", 50.0, historical)
         assert anomaly is None
 
 
@@ -193,9 +185,7 @@ class TestViolationSurgeDetection:
             {"severity": "medium", "violation_id": "v3"},
             {"severity": "high", "violation_id": "v4"},
         ]
-        anomaly = await detector.detect_violation_surge(
-            "model_123", violations, 1.0
-        )
+        anomaly = await detector.detect_violation_surge("model_123", violations, 1.0)
         assert anomaly is not None
         assert anomaly.anomaly_type == AnomalyType.VIOLATION_SURGE
         assert anomaly.actual_value == 4.0
@@ -204,9 +194,7 @@ class TestViolationSurgeDetection:
     async def test_no_surge_below_threshold(self, detector: ComplianceAnomalyDetector):
         """Test no false positive below threshold."""
         violations = [{"severity": "low", "violation_id": "v1"}]
-        anomaly = await detector.detect_violation_surge(
-            "model_123", violations, 1.0
-        )
+        anomaly = await detector.detect_violation_surge("model_123", violations, 1.0)
         assert anomaly is None
 
     @pytest.mark.asyncio
@@ -217,9 +205,7 @@ class TestViolationSurgeDetection:
             {"severity": "critical", "violation_id": "v2"},
             {"severity": "high", "violation_id": "v3"},
         ]
-        anomaly = await detector.detect_violation_surge(
-            "model_123", violations, 0.5
-        )
+        anomaly = await detector.detect_violation_surge("model_123", violations, 0.5)
         assert anomaly is not None
         assert anomaly.severity == AnomalySeverity.CRITICAL
 
@@ -244,9 +230,7 @@ class TestAssessmentGapDetection:
         assert anomaly is None
 
     @pytest.mark.asyncio
-    async def test_severity_escalation_with_gap_length(
-        self, detector: ComplianceAnomalyDetector, now: datetime
-    ):
+    async def test_severity_escalation_with_gap_length(self, detector: ComplianceAnomalyDetector, now: datetime):
         """Test severity increases with gap length."""
         # 30 days - low
         low_gap = now - timedelta(days=35)
@@ -282,9 +266,7 @@ class TestRiskEscalationDetection:
         assert anomaly.anomaly_type == AnomalyType.RISK_ESCALATION
 
     @pytest.mark.asyncio
-    async def test_no_escalation_stable_risk(
-        self, detector: ComplianceAnomalyDetector, now: datetime
-    ):
+    async def test_no_escalation_stable_risk(self, detector: ComplianceAnomalyDetector, now: datetime):
         """Test no false positive for stable risk."""
         risk_history = [
             {"risk_level": "limited", "timestamp": now - timedelta(days=3)},
@@ -296,9 +278,7 @@ class TestRiskEscalationDetection:
         assert anomaly is None
 
     @pytest.mark.asyncio
-    async def test_critical_severity_for_unacceptable(
-        self, detector: ComplianceAnomalyDetector, now: datetime
-    ):
+    async def test_critical_severity_for_unacceptable(self, detector: ComplianceAnomalyDetector, now: datetime):
         """Test critical severity when reaching unacceptable."""
         risk_history = [
             {"risk_level": "limited", "timestamp": now - timedelta(days=2)},
@@ -329,9 +309,7 @@ class TestRemediationStallDetection:
         assert anomaly.anomaly_type == AnomalyType.REMEDIATION_STALL
 
     @pytest.mark.asyncio
-    async def test_no_stall_active_remediation(
-        self, detector: ComplianceAnomalyDetector, now: datetime
-    ):
+    async def test_no_stall_active_remediation(self, detector: ComplianceAnomalyDetector, now: datetime):
         """Test no false positive for active remediation."""
         remediations = [
             {
@@ -345,9 +323,7 @@ class TestRemediationStallDetection:
         assert anomaly is None
 
     @pytest.mark.asyncio
-    async def test_ignores_completed(
-        self, detector: ComplianceAnomalyDetector, now: datetime
-    ):
+    async def test_ignores_completed(self, detector: ComplianceAnomalyDetector, now: datetime):
         """Test completed remediations are ignored."""
         remediations = [
             {
@@ -365,30 +341,22 @@ class TestPatternAnomalyDetection:
     """Tests for pattern anomaly detection."""
 
     @pytest.mark.asyncio
-    async def test_detects_outlier_pattern(
-        self, detector: ComplianceAnomalyDetector, now: datetime
-    ):
+    async def test_detects_outlier_pattern(self, detector: ComplianceAnomalyDetector, now: datetime):
         """Test detection of outlier in metric pattern."""
         values = [80.0, 82.0, 79.0, 81.0, 80.0, 78.0, 120.0]  # 120 is outlier
         timestamps = [now - timedelta(days=i) for i in range(len(values), 0, -1)]
 
-        anomaly = await detector.detect_pattern_anomaly(
-            "model_123", "fairness_score", values, timestamps
-        )
+        anomaly = await detector.detect_pattern_anomaly("model_123", "fairness_score", values, timestamps)
         assert anomaly is not None
         assert anomaly.anomaly_type == AnomalyType.UNUSUAL_PATTERN
 
     @pytest.mark.asyncio
-    async def test_no_anomaly_stable_pattern(
-        self, detector: ComplianceAnomalyDetector, now: datetime
-    ):
+    async def test_no_anomaly_stable_pattern(self, detector: ComplianceAnomalyDetector, now: datetime):
         """Test no false positive for stable pattern."""
         values = [80.0, 82.0, 79.0, 81.0, 80.0, 78.0, 81.0]
         timestamps = [now - timedelta(days=i) for i in range(len(values), 0, -1)]
 
-        anomaly = await detector.detect_pattern_anomaly(
-            "model_123", "fairness_score", values, timestamps
-        )
+        anomaly = await detector.detect_pattern_anomaly("model_123", "fairness_score", values, timestamps)
         assert anomaly is None
 
 
@@ -396,9 +364,7 @@ class TestComprehensiveDetection:
     """Tests for comprehensive anomaly detection."""
 
     @pytest.mark.asyncio
-    async def test_detect_multiple_anomalies(
-        self, detector: ComplianceAnomalyDetector, now: datetime
-    ):
+    async def test_detect_multiple_anomalies(self, detector: ComplianceAnomalyDetector, now: datetime):
         """Test detection of multiple anomalies."""
         current_metrics = {
             "compliance_score": 50.0,  # Low (anomaly)
@@ -444,9 +410,7 @@ class TestComprehensiveDetection:
             },
         ]
 
-        anomalies = await detector.detect_anomalies(
-            "model_123", current_metrics, historical_data
-        )
+        anomalies = await detector.detect_anomalies("model_123", current_metrics, historical_data)
 
         # Should detect at least score drop and assessment gap
         assert len(anomalies) >= 2
@@ -455,9 +419,7 @@ class TestComprehensiveDetection:
         assert AnomalyType.ASSESSMENT_GAP in anomaly_types
 
     @pytest.mark.asyncio
-    async def test_no_anomalies_healthy_system(
-        self, detector: ComplianceAnomalyDetector, now: datetime
-    ):
+    async def test_no_anomalies_healthy_system(self, detector: ComplianceAnomalyDetector, now: datetime):
         """Test no false positives for healthy system."""
         current_metrics = {
             "compliance_score": 87.0,
@@ -477,9 +439,7 @@ class TestComprehensiveDetection:
             for i in range(6)
         ]
 
-        anomalies = await detector.detect_anomalies(
-            "model_123", current_metrics, historical_data
-        )
+        anomalies = await detector.detect_anomalies("model_123", current_metrics, historical_data)
 
         assert len(anomalies) == 0
 
@@ -515,9 +475,7 @@ class TestConfigurationOptions:
     """Tests for configuration options."""
 
     @pytest.mark.asyncio
-    async def test_stricter_thresholds(
-        self, strict_detector: ComplianceAnomalyDetector, now: datetime
-    ):
+    async def test_stricter_thresholds(self, strict_detector: ComplianceAnomalyDetector, now: datetime):
         """Test stricter detection with custom config."""
         # With default config, this wouldn't trigger assessment gap
         last_assessment = now - timedelta(days=20)

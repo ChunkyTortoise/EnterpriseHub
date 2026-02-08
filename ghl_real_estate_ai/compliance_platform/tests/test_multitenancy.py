@@ -24,7 +24,6 @@ from uuid import uuid4
 
 import pytest
 
-
 # ============================================================================
 # MULTI-TENANCY MODELS (Mock implementations for testing)
 # ============================================================================
@@ -32,6 +31,7 @@ import pytest
 
 class SubscriptionTier(str, Enum):
     """Subscription tiers for multi-tenant organizations"""
+
     FREE = "free"
     STARTER = "starter"
     PROFESSIONAL = "professional"
@@ -41,6 +41,7 @@ class SubscriptionTier(str, Enum):
 
 class Permission(str, Enum):
     """Available permissions in the system"""
+
     # Model permissions
     MODEL_READ = "model:read"
     MODEL_WRITE = "model:write"
@@ -70,6 +71,7 @@ class Permission(str, Enum):
 
 class UserRole(str, Enum):
     """User roles with associated permissions"""
+
     VIEWER = "viewer"
     ANALYST = "analyst"
     COMPLIANCE_OFFICER = "compliance_officer"
@@ -290,11 +292,7 @@ class TenantToken:
         payload_json = json.dumps(payload)
         payload_b64 = base64.urlsafe_b64encode(payload_json.encode()).decode()
 
-        signature = hmac.new(
-            cls.SECRET_KEY.encode(),
-            payload_b64.encode(),
-            hashlib.sha256
-        ).hexdigest()
+        signature = hmac.new(cls.SECRET_KEY.encode(), payload_b64.encode(), hashlib.sha256).hexdigest()
 
         return f"{payload_b64}.{signature}"
 
@@ -309,11 +307,7 @@ class TenantToken:
             payload_b64, signature = parts
 
             # Verify signature
-            expected_sig = hmac.new(
-                cls.SECRET_KEY.encode(),
-                payload_b64.encode(),
-                hashlib.sha256
-            ).hexdigest()
+            expected_sig = hmac.new(cls.SECRET_KEY.encode(), payload_b64.encode(), hashlib.sha256).hexdigest()
 
             if not hmac.compare_digest(signature, expected_sig):
                 return None
@@ -385,10 +379,7 @@ class TenantIsolation:
 
     def filter_by_org(self, items: List[Any], org_id_attr: str = "org_id") -> List[Any]:
         """Filter items to only those belonging to current tenant"""
-        return [
-            item for item in items
-            if getattr(item, org_id_attr, None) == self.context.org_id
-        ]
+        return [item for item in items if getattr(item, org_id_attr, None) == self.context.org_id]
 
     def check_limit(self, resource_type: str, current_count: int) -> Tuple[bool, str]:
         """Check if a limit has been reached"""
@@ -416,11 +407,12 @@ class TenantIsolation:
 
 
 # Typing import for decorator
-from typing import Tuple, Union
+from typing import Tuple
 
 
 def require_permission(permission: Permission):
     """Decorator to require a specific permission"""
+
     def decorator(func: Callable):
         async def wrapper(*args, context: TenantContext = None, **kwargs):
             if context is None:
@@ -428,7 +420,9 @@ def require_permission(permission: Permission):
             if permission not in context.permissions:
                 raise PermissionError(f"Permission denied: {permission.value}")
             return await func(*args, context=context, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -451,11 +445,11 @@ def require_tier(minimum_tier: SubscriptionTier):
             required_tier_idx = tier_order.index(minimum_tier)
 
             if current_tier_idx < required_tier_idx:
-                raise PermissionError(
-                    f"Subscription tier {minimum_tier.value} or higher required"
-                )
+                raise PermissionError(f"Subscription tier {minimum_tier.value} or higher required")
             return await func(*args, context=context, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -890,6 +884,7 @@ class TestTenantIsolation:
         isolation: TenantIsolation,
     ):
         """Test filtering models by organization"""
+
         # Arrange
         class MockModel:
             def __init__(self, model_id: str, org_id: str):
@@ -926,6 +921,7 @@ class TestTenantIsolation:
         isolation: TenantIsolation,
     ):
         """Test filtering when all items belong to different org"""
+
         # Arrange
         class MockItem:
             def __init__(self, org_id: str):
@@ -945,6 +941,7 @@ class TestTenantIsolation:
         sample_tenant_context: TenantContext,
     ):
         """Test require_permission decorator allows authorized access"""
+
         # Arrange
         @require_permission(Permission.MODEL_READ)
         async def read_model(context: TenantContext = None):
@@ -986,6 +983,7 @@ class TestTenantIsolation:
         sample_tenant_context: TenantContext,
     ):
         """Test require_tier decorator allows sufficient tier"""
+
         # Arrange
         @require_tier(SubscriptionTier.STARTER)
         async def premium_feature(context: TenantContext = None):

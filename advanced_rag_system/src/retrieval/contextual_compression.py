@@ -319,7 +319,7 @@ class RelevanceScorer:
         query_words: set,
     ) -> List[Tuple[str, float]]:
         """Score individual segments (sentences) of content."""
-        sentences = re.split(r'[.!?]+', content)
+        sentences = re.split(r"[.!?]+", content)
         scores = []
 
         for sentence in sentences:
@@ -489,10 +489,7 @@ class TokenBudgetManager:
         per_doc = max(per_doc, self.min_per_document)
         per_doc = min(per_doc, self.max_per_document)
 
-        return [
-            per_doc if s >= threshold else self.min_per_document
-            for s in scores
-        ]
+        return [per_doc if s >= threshold else self.min_per_document for s in scores]
 
     def _greedy_allocation(
         self,
@@ -599,9 +596,7 @@ class ExtractiveCompressor:
                 min(len(sentences), idx + self.context_window + 1),
             ):
                 if ctx_idx not in selected_indices:
-                    ctx_sentence = self._get_sentence_at_index(
-                        document.content, ctx_idx
-                    )
+                    ctx_sentence = self._get_sentence_at_index(document.content, ctx_idx)
                     if ctx_sentence:
                         tokens = self.token_counter.count(ctx_sentence)
                         if current_tokens + tokens <= token_budget:
@@ -625,7 +620,7 @@ class ExtractiveCompressor:
 
     def _find_sentence_index(self, content: str, sentence: str) -> Optional[int]:
         """Find the index of a sentence in content."""
-        sentences = re.split(r'[.!?]+', content)
+        sentences = re.split(r"[.!?]+", content)
         for i, s in enumerate(sentences):
             if sentence.strip() in s.strip():
                 return i
@@ -633,14 +628,14 @@ class ExtractiveCompressor:
 
     def _get_sentence_at_index(self, content: str, index: int) -> Optional[str]:
         """Get sentence at specific index."""
-        sentences = re.split(r'[.!?]+', content)
+        sentences = re.split(r"[.!?]+", content)
         if 0 <= index < len(sentences):
             return sentences[index].strip()
         return None
 
     def _build_content(self, content: str, indices: List[int]) -> str:
         """Build compressed content from selected indices."""
-        sentences = re.split(r'[.!?]+', content)
+        sentences = re.split(r"[.!?]+", content)
         selected = [sentences[i].strip() for i in indices if i < len(sentences)]
         return ". ".join(selected) + "." if selected else ""
 
@@ -851,20 +846,14 @@ class ContextualCompressor:
         strategy = strategy or self.config.default_strategy
 
         # Score relevance
-        relevance_scores = await self.relevance_scorer.score_documents(
-            documents, query, ScoringMethod.KEYWORD
-        )
+        relevance_scores = await self.relevance_scorer.score_documents(documents, query, ScoringMethod.KEYWORD)
 
         # Calculate original token count
-        original_tokens = sum(
-            self.token_counter.count(doc.content) for doc in documents
-        )
+        original_tokens = sum(self.token_counter.count(doc.content) for doc in documents)
 
         # Allocate budget
         scores = [s.overall_score for s in relevance_scores]
-        allocations = self.budget_manager.allocate(
-            scores, self.config.allocation_strategy
-        )
+        allocations = self.budget_manager.allocate(scores, self.config.allocation_strategy)
 
         # Compress documents
         compressed_docs = []
@@ -873,9 +862,7 @@ class ContextualCompressor:
                 # Skip low-relevance documents
                 continue
 
-            compressed = await self._compress_document(
-                doc, score, query, budget, strategy
-            )
+            compressed = await self._compress_document(doc, score, query, budget, strategy)
             compressed_docs.append(compressed)
 
         # Calculate compressed token count
@@ -923,28 +910,20 @@ class ContextualCompressor:
     ) -> CompressedDocument:
         """Compress a single document."""
         if strategy == CompressionStrategy.EXTRACTIVE:
-            return await self.extractive.compress(
-                document, relevance_score, token_budget
-            )
+            return await self.extractive.compress(document, relevance_score, token_budget)
         elif strategy == CompressionStrategy.ABSTRACTIVE:
             return await self.abstractive.compress(document, query, token_budget)
         elif strategy == CompressionStrategy.HYBRID:
             # First extractive, then abstractive
-            extracted = await self.extractive.compress(
-                document, relevance_score, token_budget
-            )
+            extracted = await self.extractive.compress(document, relevance_score, token_budget)
             # Create temporary document for abstractive
             temp_doc = DocumentChunk(
                 document_id=document.document_id,
                 content=extracted.content,
             )
-            return await self.abstractive.compress(
-                temp_doc, query, token_budget
-            )
+            return await self.abstractive.compress(temp_doc, query, token_budget)
         else:
-            return await self.extractive.compress(
-                document, relevance_score, token_budget
-            )
+            return await self.extractive.compress(document, relevance_score, token_budget)
 
     def get_compression_stats(self) -> Dict[str, Any]:
         """Get compression statistics.

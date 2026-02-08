@@ -14,11 +14,11 @@ Features:
 import asyncio
 import json
 import time
-from dataclasses import dataclass, asdict
+import uuid
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Callable
-import uuid
+from typing import Any, Callable, Dict, List, Optional, Set
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
@@ -29,6 +29,7 @@ logger = get_logger(__name__)
 
 class AlertSeverity(Enum):
     """Alert severity levels"""
+
     WARNING = "warning"
     CRITICAL = "critical"
     EMERGENCY = "emergency"
@@ -36,6 +37,7 @@ class AlertSeverity(Enum):
 
 class AlertStatus(Enum):
     """Alert lifecycle status"""
+
     ACTIVE = "active"
     ACKNOWLEDGED = "acknowledged"
     RESOLVED = "resolved"
@@ -44,6 +46,7 @@ class AlertStatus(Enum):
 
 class AlertCategory(Enum):
     """Alert categories for organization"""
+
     PERFORMANCE = "performance"
     AVAILABILITY = "availability"
     SECURITY = "security"
@@ -54,6 +57,7 @@ class AlertCategory(Enum):
 @dataclass
 class AlertRule:
     """Alert rule definition"""
+
     rule_id: str
     name: str
     description: str
@@ -80,6 +84,7 @@ class AlertRule:
 @dataclass
 class Alert:
     """Active alert instance"""
+
     alert_id: str
     rule_id: str
     severity: AlertSeverity
@@ -109,11 +114,7 @@ class Alert:
 class NotificationChannel:
     """Base notification channel interface"""
 
-    async def send_notification(
-        self,
-        alert: Alert,
-        notification_type: str = "alert"
-    ) -> bool:
+    async def send_notification(self, alert: Alert, notification_type: str = "alert") -> bool:
         """Send notification via this channel"""
         raise NotImplementedError
 
@@ -124,11 +125,7 @@ class EmailNotificationChannel(NotificationChannel):
     def __init__(self, smtp_config: Dict[str, Any]):
         self.smtp_config = smtp_config
 
-    async def send_notification(
-        self,
-        alert: Alert,
-        notification_type: str = "alert"
-    ) -> bool:
+    async def send_notification(self, alert: Alert, notification_type: str = "alert") -> bool:
         """Send email notification"""
         try:
             # In production, integrate with actual email service
@@ -140,8 +137,8 @@ class EmailNotificationChannel(NotificationChannel):
                     "alert_id": alert.alert_id,
                     "severity": alert.severity.value,
                     "notification_type": notification_type,
-                    "recipient_count": len(self.smtp_config.get('recipients', []))
-                }
+                    "recipient_count": len(self.smtp_config.get("recipients", [])),
+                },
             )
 
             return True
@@ -149,10 +146,7 @@ class EmailNotificationChannel(NotificationChannel):
         except Exception as e:
             logger.error(
                 f"EMAIL_NOTIFICATION_FAILED: Failed to send email alert",
-                extra={
-                    "alert_id": alert.alert_id,
-                    "error": str(e)
-                }
+                extra={"alert_id": alert.alert_id, "error": str(e)},
             )
             return False
 
@@ -193,11 +187,7 @@ class SlackNotificationChannel(NotificationChannel):
     def __init__(self, webhook_url: str):
         self.webhook_url = webhook_url
 
-    async def send_notification(
-        self,
-        alert: Alert,
-        notification_type: str = "alert"
-    ) -> bool:
+    async def send_notification(self, alert: Alert, notification_type: str = "alert") -> bool:
         """Send Slack notification"""
         try:
             # In production, integrate with Slack API
@@ -208,8 +198,8 @@ class SlackNotificationChannel(NotificationChannel):
                 extra={
                     "alert_id": alert.alert_id,
                     "severity": alert.severity.value,
-                    "notification_type": notification_type
-                }
+                    "notification_type": notification_type,
+                },
             )
 
             return True
@@ -217,25 +207,22 @@ class SlackNotificationChannel(NotificationChannel):
         except Exception as e:
             logger.error(
                 f"SLACK_NOTIFICATION_FAILED: Failed to send Slack alert",
-                extra={
-                    "alert_id": alert.alert_id,
-                    "error": str(e)
-                }
+                extra={"alert_id": alert.alert_id, "error": str(e)},
             )
             return False
 
     def _generate_slack_payload(self, alert: Alert, notification_type: str) -> Dict[str, Any]:
         """Generate Slack payload for alert"""
         color_map = {
-            AlertSeverity.WARNING: "#FFA500",     # Orange
-            AlertSeverity.CRITICAL: "#FF4500",    # Red-Orange
-            AlertSeverity.EMERGENCY: "#DC143C"    # Crimson
+            AlertSeverity.WARNING: "#FFA500",  # Orange
+            AlertSeverity.CRITICAL: "#FF4500",  # Red-Orange
+            AlertSeverity.EMERGENCY: "#DC143C",  # Crimson
         }
 
         emoji_map = {
             AlertSeverity.WARNING: ":warning:",
             AlertSeverity.CRITICAL: ":rotating_light:",
-            AlertSeverity.EMERGENCY: ":fire:"
+            AlertSeverity.EMERGENCY: ":fire:",
         }
 
         return {
@@ -247,40 +234,24 @@ class SlackNotificationChannel(NotificationChannel):
                         {
                             "title": "Severity",
                             "value": f"{emoji_map.get(alert.severity, '')} {alert.severity.value.upper()}",
-                            "short": True
+                            "short": True,
                         },
-                        {
-                            "title": "Current Value",
-                            "value": str(alert.current_value),
-                            "short": True
-                        },
-                        {
-                            "title": "Threshold",
-                            "value": str(alert.threshold_value),
-                            "short": True
-                        },
-                        {
-                            "title": "Category",
-                            "value": alert.category.value,
-                            "short": True
-                        }
+                        {"title": "Current Value", "value": str(alert.current_value), "short": True},
+                        {"title": "Threshold", "value": str(alert.threshold_value), "short": True},
+                        {"title": "Category", "value": alert.category.value, "short": True},
                     ],
                     "actions": [
                         {
                             "type": "button",
                             "text": "Acknowledge",
-                            "url": f"https://service6-dashboard.example.com/alerts/{alert.alert_id}/acknowledge"
+                            "url": f"https://service6-dashboard.example.com/alerts/{alert.alert_id}/acknowledge",
                         },
-                        {
-                            "type": "button",
-                            "text": "View Dashboard",
-                            "url": "https://service6-dashboard.example.com"
-                        }
+                        {"type": "button", "text": "View Dashboard", "url": "https://service6-dashboard.example.com"},
                     ],
                     "footer": f"Alert ID: {alert.alert_id}",
-                    "ts": int(alert.first_occurred.timestamp())
+                    "ts": int(alert.first_occurred.timestamp()),
                 }
-            ]
+            ],
         }
 
 
@@ -290,11 +261,7 @@ class SMSNotificationChannel(NotificationChannel):
     def __init__(self, twilio_config: Dict[str, Any]):
         self.twilio_config = twilio_config
 
-    async def send_notification(
-        self,
-        alert: Alert,
-        notification_type: str = "alert"
-    ) -> bool:
+    async def send_notification(self, alert: Alert, notification_type: str = "alert") -> bool:
         """Send SMS notification"""
         try:
             # In production, integrate with Twilio API
@@ -305,8 +272,8 @@ class SMSNotificationChannel(NotificationChannel):
                 extra={
                     "alert_id": alert.alert_id,
                     "severity": alert.severity.value,
-                    "notification_type": notification_type
-                }
+                    "notification_type": notification_type,
+                },
             )
 
             return True
@@ -314,10 +281,7 @@ class SMSNotificationChannel(NotificationChannel):
         except Exception as e:
             logger.error(
                 f"SMS_NOTIFICATION_FAILED: Failed to send SMS alert",
-                extra={
-                    "alert_id": alert.alert_id,
-                    "error": str(e)
-                }
+                extra={"alert_id": alert.alert_id, "error": str(e)},
             )
             return False
 
@@ -376,7 +340,7 @@ class Service6AlertingEngine:
                 min_data_points=10,
                 escalation_delay=300,
                 notification_channels=["email", "slack"],
-                metadata={"runbook": "agent_failure_runbook.md"}
+                metadata={"runbook": "agent_failure_runbook.md"},
             ),
             AlertRule(
                 rule_id="consensus_timeout_rate",
@@ -394,8 +358,8 @@ class Service6AlertingEngine:
                 suggested_actions=[
                     "Check agent system load",
                     "Review consensus algorithm performance",
-                    "Scale agent infrastructure if needed"
-                ]
+                    "Scale agent infrastructure if needed",
+                ],
             ),
             AlertRule(
                 rule_id="database_connection_pool",
@@ -413,8 +377,8 @@ class Service6AlertingEngine:
                 suggested_actions=[
                     "Scale database connection pool",
                     "Check for connection leaks",
-                    "Review slow query log"
-                ]
+                    "Review slow query log",
+                ],
             ),
             AlertRule(
                 rule_id="lead_processing_backlog",
@@ -432,8 +396,8 @@ class Service6AlertingEngine:
                 suggested_actions=[
                     "Scale agent processing capacity",
                     "Check for stuck leads",
-                    "Review agent performance metrics"
-                ]
+                    "Review agent performance metrics",
+                ],
             ),
             AlertRule(
                 rule_id="revenue_impact",
@@ -451,9 +415,9 @@ class Service6AlertingEngine:
                 suggested_actions=[
                     "Immediately assess lead processing status",
                     "Check high-value lead routing",
-                    "Escalate to executive team"
-                ]
-            )
+                    "Escalate to executive team",
+                ],
+            ),
         ]
 
         for rule in default_rules:
@@ -463,16 +427,17 @@ class Service6AlertingEngine:
         """Initialize notification channels"""
         # In production, load from configuration
         self.notification_channels = {
-            "email": EmailNotificationChannel({
-                "smtp_server": "smtp.example.com",
-                "recipients": ["engineering@company.com", "oncall@company.com"]
-            }),
+            "email": EmailNotificationChannel(
+                {"smtp_server": "smtp.example.com", "recipients": ["engineering@company.com", "oncall@company.com"]}
+            ),
             "slack": SlackNotificationChannel("https://hooks.slack.com/services/..."),
-            "sms": SMSNotificationChannel({
-                "account_sid": "twilio_account_sid",
-                "auth_token": "twilio_auth_token",
-                "phone_numbers": ["+15551234567"]
-            })
+            "sms": SMSNotificationChannel(
+                {
+                    "account_sid": "twilio_account_sid",
+                    "auth_token": "twilio_auth_token",
+                    "phone_numbers": ["+15551234567"],
+                }
+            ),
         }
 
     async def _evaluation_worker(self):
@@ -499,17 +464,13 @@ class Service6AlertingEngine:
             except Exception as e:
                 logger.error(
                     f"RULE_EVALUATION_ERROR: Error evaluating rule {rule_id}: {e}",
-                    extra={"rule_id": rule_id, "error": str(e)}
+                    extra={"rule_id": rule_id, "error": str(e)},
                 )
 
     async def _evaluate_single_rule(self, rule: AlertRule):
         """Evaluate a single alert rule"""
         # Get recent metric values
-        metric_values = await self._get_metric_values(
-            rule.metric_name,
-            rule.evaluation_window,
-            rule.min_data_points
-        )
+        metric_values = await self._get_metric_values(rule.metric_name, rule.evaluation_window, rule.min_data_points)
 
         if len(metric_values) < rule.min_data_points:
             return  # Not enough data points
@@ -530,12 +491,7 @@ class Service6AlertingEngine:
             # Update existing alert
             await self._update_alert(existing_alert, current_value)
 
-    async def _get_metric_values(
-        self,
-        metric_name: str,
-        window_seconds: int,
-        min_points: int
-    ) -> List[float]:
+    async def _get_metric_values(self, metric_name: str, window_seconds: int, min_points: int) -> List[float]:
         """Get recent metric values for evaluation"""
         try:
             # In production, query metrics from cache/database
@@ -589,7 +545,7 @@ class Service6AlertingEngine:
             threshold_value=rule.threshold_value,
             first_occurred=datetime.now(),
             last_updated=datetime.now(),
-            suggested_actions=rule.metadata.get('suggested_actions', [])
+            suggested_actions=rule.metadata.get("suggested_actions", []),
         )
 
         self.active_alerts[alert_id] = alert
@@ -607,8 +563,8 @@ class Service6AlertingEngine:
                 "rule_id": rule.rule_id,
                 "severity": rule.severity.value,
                 "current_value": current_value,
-                "threshold": rule.threshold_value
-            }
+                "threshold": rule.threshold_value,
+            },
         )
 
     async def _resolve_alert(self, alert_id: str, resolved_by: str):
@@ -634,8 +590,8 @@ class Service6AlertingEngine:
             extra={
                 "alert_id": alert_id,
                 "resolved_by": resolved_by,
-                "duration_seconds": (alert.resolved_at - alert.first_occurred).total_seconds()
-            }
+                "duration_seconds": (alert.resolved_at - alert.first_occurred).total_seconds(),
+            },
         )
 
     async def _update_alert(self, alert: Alert, current_value: float):
@@ -646,12 +602,7 @@ class Service6AlertingEngine:
         # Store updated alert
         await self._store_alert(alert)
 
-    async def _send_notifications(
-        self,
-        alert: Alert,
-        channel_names: List[str],
-        notification_type: str = "alert"
-    ):
+    async def _send_notifications(self, alert: Alert, channel_names: List[str], notification_type: str = "alert"):
         """Send notifications via specified channels"""
         for channel_name in channel_names:
             if channel_name in self.notification_channels:
@@ -665,11 +616,7 @@ class Service6AlertingEngine:
                 except Exception as e:
                     logger.error(
                         f"NOTIFICATION_FAILED: Failed to send via {channel_name}",
-                        extra={
-                            "alert_id": alert.alert_id,
-                            "channel": channel_name,
-                            "error": str(e)
-                        }
+                        extra={"alert_id": alert.alert_id, "channel": channel_name, "error": str(e)},
                     )
 
     async def _store_alert(self, alert: Alert):
@@ -679,7 +626,8 @@ class Service6AlertingEngine:
 
         try:
             async with self.database_service.get_connection() as conn:
-                await conn.execute("""
+                await conn.execute(
+                    """
                     INSERT INTO alerts
                     (alert_id, rule_id, severity, category, status, title, description,
                      current_value, threshold_value, first_occurred, last_updated,
@@ -696,12 +644,24 @@ class Service6AlertingEngine:
                     escalation_level = EXCLUDED.escalation_level,
                     notification_count = EXCLUDED.notification_count
                 """,
-                alert.alert_id, alert.rule_id, alert.severity.value, alert.category.value,
-                alert.status.value, alert.title, alert.description, alert.current_value,
-                alert.threshold_value, alert.first_occurred, alert.last_updated,
-                alert.acknowledged_at, alert.acknowledged_by, alert.resolved_at,
-                alert.escalation_level, alert.notification_count,
-                json.dumps(alert.metadata), json.dumps(alert.suggested_actions)
+                    alert.alert_id,
+                    alert.rule_id,
+                    alert.severity.value,
+                    alert.category.value,
+                    alert.status.value,
+                    alert.title,
+                    alert.description,
+                    alert.current_value,
+                    alert.threshold_value,
+                    alert.first_occurred,
+                    alert.last_updated,
+                    alert.acknowledged_at,
+                    alert.acknowledged_by,
+                    alert.resolved_at,
+                    alert.escalation_level,
+                    alert.notification_count,
+                    json.dumps(alert.metadata),
+                    json.dumps(alert.suggested_actions),
                 )
 
         except Exception as e:
@@ -763,8 +723,8 @@ class Service6AlertingEngine:
             extra={
                 "alert_id": alert.alert_id,
                 "escalation_level": alert.escalation_level,
-                "severity": alert.severity.value
-            }
+                "severity": alert.severity.value,
+            },
         )
 
     async def acknowledge_alert(self, alert_id: str, acknowledged_by: str) -> bool:
@@ -781,11 +741,7 @@ class Service6AlertingEngine:
         await self._store_alert(alert)
 
         logger.info(
-            f"ALERT_ACKNOWLEDGED: Alert acknowledged",
-            extra={
-                "alert_id": alert_id,
-                "acknowledged_by": acknowledged_by
-            }
+            f"ALERT_ACKNOWLEDGED: Alert acknowledged", extra={"alert_id": alert_id, "acknowledged_by": acknowledged_by}
         )
 
         return True
@@ -793,18 +749,14 @@ class Service6AlertingEngine:
     def get_active_alerts(self) -> List[Alert]:
         """Get all active alerts"""
         return [
-            alert for alert in self.active_alerts.values()
+            alert
+            for alert in self.active_alerts.values()
             if alert.status in [AlertStatus.ACTIVE, AlertStatus.ACKNOWLEDGED]
         ]
 
     def get_alert_summary(self) -> Dict[str, int]:
         """Get summary of alerts by severity"""
-        summary = {
-            "warning": 0,
-            "critical": 0,
-            "emergency": 0,
-            "total": 0
-        }
+        summary = {"warning": 0, "critical": 0, "emergency": 0, "total": 0}
 
         for alert in self.get_active_alerts():
             summary[alert.severity.value] += 1
@@ -815,13 +767,13 @@ class Service6AlertingEngine:
 
 # Export alerting components
 __all__ = [
-    'AlertSeverity',
-    'AlertStatus',
-    'AlertCategory',
-    'AlertRule',
-    'Alert',
-    'Service6AlertingEngine',
-    'EmailNotificationChannel',
-    'SlackNotificationChannel',
-    'SMSNotificationChannel'
+    "AlertSeverity",
+    "AlertStatus",
+    "AlertCategory",
+    "AlertRule",
+    "Alert",
+    "Service6AlertingEngine",
+    "EmailNotificationChannel",
+    "SlackNotificationChannel",
+    "SMSNotificationChannel",
 ]

@@ -4,10 +4,12 @@ Bridges V2 Agents with GoHighLevel for lead retrieval and campaign triggering.
 """
 
 import logging
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
+
 from .ghl_client import GHLClient
 
 logger = logging.getLogger(__name__)
+
 
 class GHLIntegrationService:
     def __init__(self, ghl_client: Optional[GHLClient] = None):
@@ -24,7 +26,7 @@ class GHLIntegrationService:
                 "phone": "+155501001",
                 "preferences": ["luxury", "multifamily", "austin"],
                 "budget": 2000000,
-                "tags": ["Investor", "Hot Lead"]
+                "tags": ["Investor", "Hot Lead"],
             },
             {
                 "id": "contact_002",
@@ -34,7 +36,7 @@ class GHLIntegrationService:
                 "phone": "+155501002",
                 "preferences": ["distressed", "single-family", "san-antonio"],
                 "budget": 500000,
-                "tags": ["Flipper"]
+                "tags": ["Flipper"],
             },
             {
                 "id": "contact_003",
@@ -44,7 +46,7 @@ class GHLIntegrationService:
                 "phone": "+155501003",
                 "preferences": ["land", "development", "houston"],
                 "budget": 5000000,
-                "tags": ["Developer"]
+                "tags": ["Developer"],
             },
             {
                 "id": "contact_004",
@@ -54,8 +56,8 @@ class GHLIntegrationService:
                 "phone": "+155501004",
                 "preferences": ["residential", "modern", "austin"],
                 "budget": 450000,
-                "tags": ["First Time Buyer"]
-            }
+                "tags": ["First Time Buyer"],
+            },
         ]
 
     async def get_active_leads(self, limit: int = 50) -> List[Dict[str, Any]]:
@@ -72,11 +74,11 @@ class GHLIntegrationService:
     async def trigger_marketing_campaign(self, contact_id: str, campaign_data: Dict[str, Any]) -> bool:
         """Trigger a GHL workflow or send a message with marketing copy."""
         logger.info(f"Triggering GHL campaign for {contact_id}")
-        
+
         message = campaign_data.get("sms_copy") or campaign_data.get("email_body")
         if not message:
             return False
-            
+
         try:
             # In a real scenario, we might trigger a specific workflow
             # await self.client.trigger_workflow(contact_id, "marketing_automation_id")
@@ -86,5 +88,6 @@ class GHLIntegrationService:
         except Exception as e:
             logger.error(f"Failed to send GHL campaign: {e}")
             return False
+
 
 ghl_integration_service = GHLIntegrationService()

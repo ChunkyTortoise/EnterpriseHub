@@ -18,17 +18,25 @@ TARGET PERFORMANCE IMPROVEMENT:
 - Fallback handling: 30s timeout → 2-3ms parallel attempt
 - Batch operations: Improved utilization reduces N × 2ms → 1 × 3ms
 """
+
 import asyncio
-import time
 import logging
-from typing import Any, Optional, Dict, List
+import time
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.cache_service import CacheService, get_cache_service, RedisCache, MemoryCache, AbstractCache
-from ghl_real_estate_ai.services.performance_optimizer import get_performance_optimizer, FastSerializer
+from ghl_real_estate_ai.services.cache_service import (
+    AbstractCache,
+    CacheService,
+    MemoryCache,
+    RedisCache,
+    get_cache_service,
+)
+from ghl_real_estate_ai.services.performance_optimizer import FastSerializer, get_performance_optimizer
 
 logger = get_logger(__name__)
+
 
 class OptimizedRedisCache(RedisCache):
     """
@@ -50,10 +58,10 @@ class OptimizedRedisCache(RedisCache):
 
         # Enhanced metrics with serialization tracking
         self.optimization_metrics = {
-            'fast_serialization_ops': 0,
-            'pickle_fallbacks': 0,
-            'parallel_batch_ops': 0,
-            'total_optimization_time_saved_ms': 0.0
+            "fast_serialization_ops": 0,
+            "pickle_fallbacks": 0,
+            "parallel_batch_ops": 0,
+            "total_optimization_time_saved_ms": 0.0,
         }
 
         logger.info("OptimizedRedisCache initialized with FastSerializer and performance tracking")
@@ -61,7 +69,7 @@ class OptimizedRedisCache(RedisCache):
     async def get(self, key: str) -> Optional[Any]:
         """Optimized get with fast deserialization."""
         if not self.enabled:
-            self.metrics['misses'] += 1
+            self.metrics["misses"] += 1
             self.performance_optimizer.track_cache_operation(hit=False)
             return None
 
@@ -73,37 +81,38 @@ class OptimizedRedisCache(RedisCache):
                 # CRITICAL OPTIMIZATION: Use FastSerializer instead of pickle
                 try:
                     result = self.fast_serializer.deserialize(data)
-                    self.optimization_metrics['fast_serialization_ops'] += 1
+                    self.optimization_metrics["fast_serialization_ops"] += 1
 
                     # Estimate time saved vs pickle (5-10ms baseline)
                     deserialize_time = (time.time() - start_time) * 1000
                     estimated_pickle_time = 7.5  # Average pickle time
                     time_saved = max(0, estimated_pickle_time - deserialize_time)
-                    self.optimization_metrics['total_optimization_time_saved_ms'] += time_saved
+                    self.optimization_metrics["total_optimization_time_saved_ms"] += time_saved
 
                 except Exception as e:
                     # Fallback to pickle for legacy data
                     logger.debug(f"FastSerializer fallback for key {key}: {e}")
                     import pickle
-                    result = pickle.loads(data)
-                    self.optimization_metrics['pickle_fallbacks'] += 1
 
-                self.metrics['hits'] += 1
+                    result = pickle.loads(data)
+                    self.optimization_metrics["pickle_fallbacks"] += 1
+
+                self.metrics["hits"] += 1
                 self.performance_optimizer.track_cache_operation(hit=True)
                 return result
             else:
-                self.metrics['misses'] += 1
+                self.metrics["misses"] += 1
                 self.performance_optimizer.track_cache_operation(hit=False)
                 return None
 
         except Exception as e:
             logger.error(f"Optimized Redis get error for key {key}: {e}")
-            self.metrics['misses'] += 1
+            self.metrics["misses"] += 1
             self.performance_optimizer.track_cache_operation(hit=False)
             return None
         finally:
-            self.metrics['total_time_ms'] += (time.time() - start_time) * 1000
-            self.metrics['operation_count'] += 1
+            self.metrics["total_time_ms"] += (time.time() - start_time) * 1000
+            self.metrics["operation_count"] += 1
 
     async def set(self, key: str, value: Any, ttl: int = 300) -> bool:
         """Optimized set with fast serialization and payload optimization."""
@@ -115,37 +124,38 @@ class OptimizedRedisCache(RedisCache):
         try:
             # CRITICAL OPTIMIZATION 1: Optimize payload before serialization
             optimized_value = self.performance_optimizer.optimize_api_response(
-                value if isinstance(value, dict) else {'data': value}
+                value if isinstance(value, dict) else {"data": value}
             )
 
             # CRITICAL OPTIMIZATION 2: Use FastSerializer instead of pickle
             try:
                 data = self.fast_serializer.serialize(optimized_value)
-                self.optimization_metrics['fast_serialization_ops'] += 1
+                self.optimization_metrics["fast_serialization_ops"] += 1
 
                 # Estimate time saved vs pickle
                 serialize_time = (time.time() - start_time) * 1000
                 estimated_pickle_time = 8.5  # Average pickle time
                 time_saved = max(0, estimated_pickle_time - serialize_time)
-                self.optimization_metrics['total_optimization_time_saved_ms'] += time_saved
+                self.optimization_metrics["total_optimization_time_saved_ms"] += time_saved
 
             except Exception as e:
                 # Fallback to pickle for incompatible data
                 logger.debug(f"FastSerializer fallback for key {key}: {e}")
                 import pickle
+
                 data = pickle.dumps(optimized_value)
-                self.optimization_metrics['pickle_fallbacks'] += 1
+                self.optimization_metrics["pickle_fallbacks"] += 1
 
             await self.redis.set(key, data, ex=int(ttl))
-            self.metrics['sets'] += 1
+            self.metrics["sets"] += 1
             return True
 
         except Exception as e:
             logger.error(f"Optimized Redis set error for key {key}: {e}")
             return False
         finally:
-            self.metrics['total_time_ms'] += (time.time() - start_time) * 1000
-            self.metrics['operation_count'] += 1
+            self.metrics["total_time_ms"] += (time.time() - start_time) * 1000
+            self.metrics["operation_count"] += 1
 
     async def get_many(self, keys: list[str]) -> dict[str, Any]:
         """Optimized batch get with parallel deserialization."""
@@ -172,7 +182,8 @@ class OptimizedRedisCache(RedisCache):
                     except Exception as e:
                         logger.debug(f"FastSerializer fallback for key {key}: {e}")
                         import pickle
-                        self.optimization_metrics['pickle_fallbacks'] += 1
+
+                        self.optimization_metrics["pickle_fallbacks"] += 1
                         return key, pickle.loads(data)
                 return key, None
 
@@ -199,20 +210,20 @@ class OptimizedRedisCache(RedisCache):
                 output = {}
                 hits = 0
 
-            self.optimization_metrics['parallel_batch_ops'] += 1
-            self.optimization_metrics['fast_serialization_ops'] += hits
+            self.optimization_metrics["parallel_batch_ops"] += 1
+            self.optimization_metrics["fast_serialization_ops"] += hits
 
-            self.metrics['hits'] += hits
-            self.metrics['misses'] += len(keys) - hits
+            self.metrics["hits"] += hits
+            self.metrics["misses"] += len(keys) - hits
             return output
 
         except Exception as e:
             logger.error(f"Optimized Redis get_many error: {e}")
-            self.metrics['misses'] += len(keys)
+            self.metrics["misses"] += len(keys)
             return {}
         finally:
-            self.metrics['total_time_ms'] += (time.time() - start_time) * 1000
-            self.metrics['operation_count'] += len(keys)
+            self.metrics["total_time_ms"] += (time.time() - start_time) * 1000
+            self.metrics["operation_count"] += len(keys)
 
     async def set_many(self, items: dict[str, Any], ttl: int = 300) -> bool:
         """Optimized batch set with parallel serialization."""
@@ -227,7 +238,7 @@ class OptimizedRedisCache(RedisCache):
                 try:
                     # Optimize payload first
                     optimized_value = self.performance_optimizer.optimize_api_response(
-                        value if isinstance(value, dict) else {'data': value}
+                        value if isinstance(value, dict) else {"data": value}
                     )
 
                     # Fast serialize
@@ -236,6 +247,7 @@ class OptimizedRedisCache(RedisCache):
                 except Exception as e:
                     logger.debug(f"FastSerializer fallback for key {key}: {e}")
                     import pickle
+
                     data = pickle.dumps(value)
                     return key, data, True  # True = fallback used
 
@@ -263,13 +275,13 @@ class OptimizedRedisCache(RedisCache):
                 if used_fallback:
                     fallback_count += 1
                 else:
-                    self.optimization_metrics['fast_serialization_ops'] += 1
+                    self.optimization_metrics["fast_serialization_ops"] += 1
 
             if successful_items > 0:
                 await pipeline.execute()
-                self.optimization_metrics['parallel_batch_ops'] += 1
-                self.optimization_metrics['pickle_fallbacks'] += fallback_count
-                self.metrics['sets'] += successful_items
+                self.optimization_metrics["parallel_batch_ops"] += 1
+                self.optimization_metrics["pickle_fallbacks"] += fallback_count
+                self.metrics["sets"] += successful_items
                 return True
 
             return False
@@ -278,31 +290,37 @@ class OptimizedRedisCache(RedisCache):
             logger.error(f"Optimized Redis set_many error: {e}")
             return False
         finally:
-            self.metrics['total_time_ms'] += (time.time() - start_time) * 1000
-            self.metrics['operation_count'] += len(items)
+            self.metrics["total_time_ms"] += (time.time() - start_time) * 1000
+            self.metrics["operation_count"] += len(items)
 
     async def get_optimization_metrics(self) -> dict[str, Any]:
         """Get optimization-specific performance metrics."""
         base_metrics = await self.get_performance_metrics()
 
-        total_ops = self.optimization_metrics['fast_serialization_ops'] + self.optimization_metrics['pickle_fallbacks']
-        fast_serialization_rate = (self.optimization_metrics['fast_serialization_ops'] / total_ops * 100) if total_ops > 0 else 0
+        total_ops = self.optimization_metrics["fast_serialization_ops"] + self.optimization_metrics["pickle_fallbacks"]
+        fast_serialization_rate = (
+            (self.optimization_metrics["fast_serialization_ops"] / total_ops * 100) if total_ops > 0 else 0
+        )
 
         optimization_metrics = {
-            'optimization_summary': {
-                'fast_serialization_rate_percent': round(fast_serialization_rate, 2),
-                'total_time_saved_ms': round(self.optimization_metrics['total_optimization_time_saved_ms'], 2),
-                'parallel_batch_operations': self.optimization_metrics['parallel_batch_ops'],
-                'avg_time_saved_per_op_ms': round(
-                    self.optimization_metrics['total_optimization_time_saved_ms'] / total_ops, 3
-                ) if total_ops > 0 else 0
+            "optimization_summary": {
+                "fast_serialization_rate_percent": round(fast_serialization_rate, 2),
+                "total_time_saved_ms": round(self.optimization_metrics["total_optimization_time_saved_ms"], 2),
+                "parallel_batch_operations": self.optimization_metrics["parallel_batch_ops"],
+                "avg_time_saved_per_op_ms": round(
+                    self.optimization_metrics["total_optimization_time_saved_ms"] / total_ops, 3
+                )
+                if total_ops > 0
+                else 0,
             },
-            'serialization_breakdown': {
-                'fast_serialization_ops': self.optimization_metrics['fast_serialization_ops'],
-                'pickle_fallbacks': self.optimization_metrics['pickle_fallbacks'],
-                'fallback_rate_percent': round((self.optimization_metrics['pickle_fallbacks'] / total_ops * 100), 2) if total_ops > 0 else 0
+            "serialization_breakdown": {
+                "fast_serialization_ops": self.optimization_metrics["fast_serialization_ops"],
+                "pickle_fallbacks": self.optimization_metrics["pickle_fallbacks"],
+                "fallback_rate_percent": round((self.optimization_metrics["pickle_fallbacks"] / total_ops * 100), 2)
+                if total_ops > 0
+                else 0,
             },
-            'base_metrics': base_metrics
+            "base_metrics": base_metrics,
         }
 
         return optimization_metrics
@@ -320,23 +338,24 @@ class OptimizedCacheService(CacheService):
         """Initialize with optimized components."""
         self.backend: AbstractCache = None
         self.fallback_backend: AbstractCache = None
-        self.circuit_breaker = {'failures': 0, 'last_failure': 0, 'open': False}
+        self.circuit_breaker = {"failures": 0, "last_failure": 0, "open": False}
         self.performance_optimizer = get_performance_optimizer()
 
         # Performance tracking
         self.optimization_stats = {
-            'parallel_fallbacks': 0,
-            'sequential_fallbacks_avoided': 0,
-            'total_fallback_time_saved_ms': 0.0
+            "parallel_fallbacks": 0,
+            "sequential_fallbacks_avoided": 0,
+            "total_fallback_time_saved_ms": 0.0,
         }
 
         # Try Redis first if configured
-        if hasattr(self, '_get_redis_config') and self._get_redis_config():
+        if hasattr(self, "_get_redis_config") and self._get_redis_config():
             try:
                 from ghl_real_estate_ai.ghl_utils.config import settings
+
                 self.backend = OptimizedRedisCache(settings.redis_url, max_connections=50, min_connections=10)
 
-                if not getattr(self.backend, 'enabled', False):
+                if not getattr(self.backend, "enabled", False):
                     logger.warning("Redis configured but unavailable, falling back...")
                     self.backend = None
                 else:
@@ -350,6 +369,7 @@ class OptimizedCacheService(CacheService):
         # Fallback to FileCache for persistence in development
         if not self.backend:
             from ghl_real_estate_ai.services.cache_service import FileCache
+
             self.backend = FileCache()
             logger.info("Using FileCache as primary backend")
 
@@ -357,7 +377,8 @@ class OptimizedCacheService(CacheService):
         """Check if Redis is configured."""
         try:
             from ghl_real_estate_ai.ghl_utils.config import settings
-            return bool(getattr(settings, 'redis_url', None))
+
+            return bool(getattr(settings, "redis_url", None))
         except Exception:
             return False
 
@@ -369,35 +390,34 @@ class OptimizedCacheService(CacheService):
         Now attempts primary and fallback in parallel, returns fastest result.
         """
         # Reset circuit breaker if enough time has passed
-        if self.circuit_breaker['open'] and time.time() - self.circuit_breaker['last_failure'] > 30:
-            self.circuit_breaker['open'] = False
-            self.circuit_breaker['failures'] = 0
+        if self.circuit_breaker["open"] and time.time() - self.circuit_breaker["last_failure"] > 30:
+            self.circuit_breaker["open"] = False
+            self.circuit_breaker["failures"] = 0
             logger.info("Cache circuit breaker reset")
 
         # If circuit breaker is open, use fallback immediately
-        if self.circuit_breaker['open'] and self.fallback_backend:
+        if self.circuit_breaker["open"] and self.fallback_backend:
             return await getattr(self.fallback_backend, operation.__name__)(*args, **kwargs)
 
         start_time = time.time()
 
         try:
             # For critical operations, try both backends in parallel when appropriate
-            if (self.fallback_backend and
-                operation.__name__ in ['get', 'get_many'] and  # Read operations safe for parallel
-                not self.circuit_breaker['open']):
-
+            if (
+                self.fallback_backend
+                and operation.__name__ in ["get", "get_many"]  # Read operations safe for parallel
+                and not self.circuit_breaker["open"]
+            ):
                 # PARALLEL EXECUTION: Try both primary and fallback simultaneously
                 primary_task = asyncio.create_task(operation(*args, **kwargs))
-                fallback_task = asyncio.create_task(
-                    getattr(self.fallback_backend, operation.__name__)(*args, **kwargs)
-                )
+                fallback_task = asyncio.create_task(getattr(self.fallback_backend, operation.__name__)(*args, **kwargs))
 
                 try:
                     # Return the first successful result
                     done, pending = await asyncio.wait(
                         [primary_task, fallback_task],
                         timeout=2.0,  # 2 second timeout for parallel attempt
-                        return_when=asyncio.FIRST_COMPLETED
+                        return_when=asyncio.FIRST_COMPLETED,
                     )
 
                     # Cancel pending tasks
@@ -410,13 +430,15 @@ class OptimizedCacheService(CacheService):
                         # Track performance improvement
                         parallel_time = (time.time() - start_time) * 1000
                         estimated_sequential_time = 30000  # Assume 30s worst case for sequential fallback
-                        self.optimization_stats['total_fallback_time_saved_ms'] += max(0, estimated_sequential_time - parallel_time)
-                        self.optimization_stats['parallel_fallbacks'] += 1
+                        self.optimization_stats["total_fallback_time_saved_ms"] += max(
+                            0, estimated_sequential_time - parallel_time
+                        )
+                        self.optimization_stats["parallel_fallbacks"] += 1
 
                         return result
                     else:
                         # Both failed within timeout
-                        self.optimization_stats['sequential_fallbacks_avoided'] += 1
+                        self.optimization_stats["sequential_fallbacks_avoided"] += 1
                         return None
 
                 except Exception as parallel_error:
@@ -427,19 +449,19 @@ class OptimizedCacheService(CacheService):
             result = await operation(*args, **kwargs)
 
             # Reset failure counter on success
-            if self.circuit_breaker['failures'] > 0:
-                self.circuit_breaker['failures'] = 0
+            if self.circuit_breaker["failures"] > 0:
+                self.circuit_breaker["failures"] = 0
 
             return result
 
         except Exception as e:
             # Record failure and try fallback
-            self.circuit_breaker['failures'] += 1
-            self.circuit_breaker['last_failure'] = time.time()
+            self.circuit_breaker["failures"] += 1
+            self.circuit_breaker["last_failure"] = time.time()
 
             # Open circuit breaker after 3 failures
-            if self.circuit_breaker['failures'] >= 3:
-                self.circuit_breaker['open'] = True
+            if self.circuit_breaker["failures"] >= 3:
+                self.circuit_breaker["open"] = True
                 logger.warning("Cache circuit breaker opened due to repeated failures")
 
             logger.error(f"Cache operation {operation.__name__} failed: {e}")
@@ -466,7 +488,7 @@ class OptimizedCacheService(CacheService):
         result = await self._execute_with_parallel_fallback(self.backend.set, key, value, ttl)
 
         # Also set in fallback if primary succeeded and fallback exists
-        if result and self.fallback_backend and not self.circuit_breaker['open']:
+        if result and self.fallback_backend and not self.circuit_breaker["open"]:
             try:
                 await self.fallback_backend.set(key, value, ttl)
             except Exception:
@@ -481,9 +503,7 @@ class OptimizedCacheService(CacheService):
 
         # Use intelligent batching through performance optimizer
         return await self.performance_optimizer.batch_request(
-            "cache_get_many",
-            "get_many",
-            lambda: self._execute_with_parallel_fallback(self.backend.get_many, keys)
+            "cache_get_many", "get_many", lambda: self._execute_with_parallel_fallback(self.backend.get_many, keys)
         )
 
     async def set_many(self, items: Dict[str, Any], ttl: int = 300) -> bool:
@@ -503,7 +523,7 @@ class OptimizedCacheService(CacheService):
         return await self.performance_optimizer.batch_request(
             "cache_set_many",
             "set_many",
-            lambda: self._execute_with_parallel_fallback(self.backend.set_many, optimized_items, ttl)
+            lambda: self._execute_with_parallel_fallback(self.backend.set_many, optimized_items, ttl),
         )
 
     async def get_optimization_performance_report(self) -> Dict[str, Any]:
@@ -512,7 +532,7 @@ class OptimizedCacheService(CacheService):
 
         # Get backend-specific optimization metrics if available
         optimization_metrics = {}
-        if hasattr(self.backend, 'get_optimization_metrics'):
+        if hasattr(self.backend, "get_optimization_metrics"):
             try:
                 optimization_metrics = await self.backend.get_optimization_metrics()
             except Exception as e:
@@ -522,46 +542,48 @@ class OptimizedCacheService(CacheService):
         performance_report = await self.performance_optimizer.get_comprehensive_performance_report()
 
         return {
-            'cache_optimization_summary': {
-                'parallel_fallback_improvements': {
-                    'parallel_fallbacks_executed': self.optimization_stats['parallel_fallbacks'],
-                    'sequential_fallbacks_avoided': self.optimization_stats['sequential_fallbacks_avoided'],
-                    'total_time_saved_ms': round(self.optimization_stats['total_fallback_time_saved_ms'], 2),
-                    'avg_improvement_per_fallback_ms': round(
-                        self.optimization_stats['total_fallback_time_saved_ms'] /
-                        max(1, self.optimization_stats['parallel_fallbacks']), 2
-                    )
+            "cache_optimization_summary": {
+                "parallel_fallback_improvements": {
+                    "parallel_fallbacks_executed": self.optimization_stats["parallel_fallbacks"],
+                    "sequential_fallbacks_avoided": self.optimization_stats["sequential_fallbacks_avoided"],
+                    "total_time_saved_ms": round(self.optimization_stats["total_fallback_time_saved_ms"], 2),
+                    "avg_improvement_per_fallback_ms": round(
+                        self.optimization_stats["total_fallback_time_saved_ms"]
+                        / max(1, self.optimization_stats["parallel_fallbacks"]),
+                        2,
+                    ),
                 },
-                'backend_optimizations': optimization_metrics,
-                'overall_cache_performance': base_stats
+                "backend_optimizations": optimization_metrics,
+                "overall_cache_performance": base_stats,
             },
-            'performance_optimizer_integration': performance_report,
-            'optimization_recommendations': [
+            "performance_optimizer_integration": performance_report,
+            "optimization_recommendations": [
                 {
-                    'category': 'serialization',
-                    'recommendation': 'Ensure msgpack is installed for optimal cache serialization',
-                    'expected_improvement': '8-12ms per cache operation',
-                    'priority': 'HIGH'
+                    "category": "serialization",
+                    "recommendation": "Ensure msgpack is installed for optimal cache serialization",
+                    "expected_improvement": "8-12ms per cache operation",
+                    "priority": "HIGH",
                 },
                 {
-                    'category': 'batching',
-                    'recommendation': 'Use get_many/set_many for multiple cache operations',
-                    'expected_improvement': '40-60ms per batch',
-                    'priority': 'MEDIUM'
+                    "category": "batching",
+                    "recommendation": "Use get_many/set_many for multiple cache operations",
+                    "expected_improvement": "40-60ms per batch",
+                    "priority": "MEDIUM",
                 },
                 {
-                    'category': 'payload_optimization',
-                    'recommendation': 'Optimize payloads before caching to reduce memory usage',
-                    'expected_improvement': '2-5ms per large response + memory savings',
-                    'priority': 'MEDIUM'
-                }
+                    "category": "payload_optimization",
+                    "recommendation": "Optimize payloads before caching to reduce memory usage",
+                    "expected_improvement": "2-5ms per large response + memory savings",
+                    "priority": "MEDIUM",
+                },
             ],
-            'timestamp': datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
 
 # Global optimized cache service
 _optimized_cache_service = None
+
 
 def get_optimized_cache_service() -> OptimizedCacheService:
     """Get singleton optimized cache service instance."""
@@ -569,6 +591,7 @@ def get_optimized_cache_service() -> OptimizedCacheService:
     if _optimized_cache_service is None:
         _optimized_cache_service = OptimizedCacheService()
     return _optimized_cache_service
+
 
 def get_cache_service_with_optimizations() -> OptimizedCacheService:
     """Alias for getting optimized cache service."""

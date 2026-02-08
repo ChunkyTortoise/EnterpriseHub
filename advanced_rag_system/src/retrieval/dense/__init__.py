@@ -23,11 +23,11 @@ logger = logging.getLogger(__name__)
 # without working ChromaDB use MockDenseRetriever automatically.
 try:
     import chromadb  # noqa: F401 — triggers pydantic BaseSettings check
+
     from .dense_retriever import DenseRetriever
 except (ImportError, Exception) as e:
     logger.warning(
-        "Production DenseRetriever unavailable (ChromaDB dependency issue: %s). "
-        "Using MockDenseRetriever.",
+        "Production DenseRetriever unavailable (ChromaDB dependency issue: %s). Using MockDenseRetriever.",
         e,
     )
     DenseRetriever = MockDenseRetriever  # type: ignore[misc,assignment]

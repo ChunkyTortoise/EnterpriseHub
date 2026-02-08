@@ -20,26 +20,25 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Optional, Any, Tuple, Callable
-from ghl_real_estate_ai.services.agent_state_sync import sync_service
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import aiohttp
 from pydantic import BaseModel
 
+from ghl_real_estate_ai.services.agent_state_sync import sync_service
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('lead_intelligence_swarm.log'),
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("lead_intelligence_swarm.log"), logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
 
 
 class AgentType(Enum):
     """Specialized agent types for lead intelligence"""
+
     DEMOGRAPHIC_ANALYZER = "demographic_analyzer"
     BEHAVIORAL_PROFILER = "behavioral_profiler"
     INTENT_DETECTOR = "intent_detector"
@@ -55,6 +54,7 @@ class AgentType(Enum):
 
 class AgentStatus(Enum):
     """Agent operational status"""
+
     IDLE = "idle"
     ANALYZING = "analyzing"
     COLLABORATING = "collaborating"
@@ -65,15 +65,17 @@ class AgentStatus(Enum):
 
 class ConsensusLevel(Enum):
     """Consensus confidence levels"""
-    HIGH = "high"          # 80%+ agent agreement
-    MEDIUM = "medium"      # 60-79% agreement
-    LOW = "low"           # 40-59% agreement
+
+    HIGH = "high"  # 80%+ agent agreement
+    MEDIUM = "medium"  # 60-79% agreement
+    LOW = "low"  # 40-59% agreement
     CONFLICT = "conflict"  # <40% agreement
 
 
 @dataclass
 class AgentInsight:
     """Individual agent insight"""
+
     agent_type: AgentType
     confidence: float  # 0.0 - 1.0
     primary_finding: str
@@ -90,10 +92,11 @@ class AgentInsight:
 @dataclass
 class SwarmConsensus:
     """Multi-agent consensus result"""
+
     lead_id: str
     consensus_level: ConsensusLevel
     overall_score: float  # 0.0 - 100.0
-    confidence: float    # 0.0 - 1.0
+    confidence: float  # 0.0 - 1.0
     primary_recommendation: str
     action_priority: str  # immediate, high, medium, low
     agent_insights: List[AgentInsight]
@@ -115,7 +118,7 @@ class LeadIntelligenceAgent:
             "average_confidence": 0.0,
             "average_processing_time": 0.0,
             "accuracy_score": 1.0,
-            "last_learning_update": None
+            "last_learning_update": None,
         }
 
         # Agent-specific knowledge base
@@ -128,83 +131,86 @@ class LeadIntelligenceAgent:
             "version": "2.0.0",
             "last_updated": datetime.utcnow().isoformat(),
             "expertise_domain": self.agent_type.value,
-            "confidence_thresholds": {
-                "high": 0.85,
-                "medium": 0.65,
-                "low": 0.45
-            }
+            "confidence_thresholds": {"high": 0.85, "medium": 0.65, "low": 0.45},
         }
 
         # Add specialized knowledge based on agent type
         if self.agent_type == AgentType.DEMOGRAPHIC_ANALYZER:
-            base_knowledge.update({
-                "age_segments": {
-                    "gen_z": (18, 26),
-                    "millennial": (27, 42),
-                    "gen_x": (43, 58),
-                    "boomer": (59, 77)
-                },
-                "income_indicators": [
-                    "job_title", "company_size", "location", "education", "industry"
-                ],
-                "lifestyle_markers": [
-                    "social_media_activity", "purchase_patterns", "interests"
-                ]
-            })
+            base_knowledge.update(
+                {
+                    "age_segments": {"gen_z": (18, 26), "millennial": (27, 42), "gen_x": (43, 58), "boomer": (59, 77)},
+                    "income_indicators": ["job_title", "company_size", "location", "education", "industry"],
+                    "lifestyle_markers": ["social_media_activity", "purchase_patterns", "interests"],
+                }
+            )
 
         elif self.agent_type == AgentType.BEHAVIORAL_PROFILER:
-            base_knowledge.update({
-                "engagement_patterns": [
-                    "page_visit_frequency", "session_duration", "content_interaction",
-                    "email_open_rates", "response_times", "channel_preferences"
-                ],
-                "behavioral_indicators": {
-                    "high_intent": ["multiple_property_views", "mortgage_calculator_use", "contact_form_completion"],
-                    "price_sensitive": ["frequent_filter_use", "price_range_changes", "comparison_shopping"],
-                    "location_focused": ["map_interaction", "neighborhood_research", "school_district_searches"]
+            base_knowledge.update(
+                {
+                    "engagement_patterns": [
+                        "page_visit_frequency",
+                        "session_duration",
+                        "content_interaction",
+                        "email_open_rates",
+                        "response_times",
+                        "channel_preferences",
+                    ],
+                    "behavioral_indicators": {
+                        "high_intent": [
+                            "multiple_property_views",
+                            "mortgage_calculator_use",
+                            "contact_form_completion",
+                        ],
+                        "price_sensitive": ["frequent_filter_use", "price_range_changes", "comparison_shopping"],
+                        "location_focused": ["map_interaction", "neighborhood_research", "school_district_searches"],
+                    },
                 }
-            })
+            )
 
         elif self.agent_type == AgentType.INTENT_DETECTOR:
-            base_knowledge.update({
-                "purchase_signals": [
-                    "timeline_indicators", "financing_inquiries", "viewing_requests",
-                    "urgency_language", "decision_maker_involvement"
-                ],
-                "intent_levels": {
-                    "immediate": 0.9,     # Ready to buy within 30 days
-                    "near_term": 0.75,    # 1-6 months
-                    "exploratory": 0.5,   # 6+ months
-                    "passive": 0.25       # No clear timeline
+            base_knowledge.update(
+                {
+                    "purchase_signals": [
+                        "timeline_indicators",
+                        "financing_inquiries",
+                        "viewing_requests",
+                        "urgency_language",
+                        "decision_maker_involvement",
+                    ],
+                    "intent_levels": {
+                        "immediate": 0.9,  # Ready to buy within 30 days
+                        "near_term": 0.75,  # 1-6 months
+                        "exploratory": 0.5,  # 6+ months
+                        "passive": 0.25,  # No clear timeline
+                    },
                 }
-            })
+            )
 
         elif self.agent_type == AgentType.FINANCIAL_ASSESSOR:
-            base_knowledge.update({
-                "qualification_factors": [
-                    "credit_indicators", "income_stability", "debt_to_income",
-                    "down_payment_readiness", "employment_history"
-                ],
-                "risk_assessment": {
-                    "low_risk": 0.9,
-                    "moderate_risk": 0.7,
-                    "high_risk": 0.4
+            base_knowledge.update(
+                {
+                    "qualification_factors": [
+                        "credit_indicators",
+                        "income_stability",
+                        "debt_to_income",
+                        "down_payment_readiness",
+                        "employment_history",
+                    ],
+                    "risk_assessment": {"low_risk": 0.9, "moderate_risk": 0.7, "high_risk": 0.4},
                 }
-            })
+            )
 
         elif self.agent_type == AgentType.MARKET_ANALYST:
-            base_knowledge.update({
-                "market_monitoring": {
-                    "mls_feed_sync": True,
-                    "price_drop_threshold": 0.03,  # 3% drop triggers alert
-                    "competitor_analysis": True
-                },
-                "predator_mode": {
-                    "enabled": True,
-                    "alert_synergy": True,
-                    "defensive_drafting": True
+            base_knowledge.update(
+                {
+                    "market_monitoring": {
+                        "mls_feed_sync": True,
+                        "price_drop_threshold": 0.03,  # 3% drop triggers alert
+                        "competitor_analysis": True,
+                    },
+                    "predator_mode": {"enabled": True, "alert_synergy": True, "defensive_drafting": True},
                 }
-            })
+            )
 
         return base_knowledge
 
@@ -212,11 +218,11 @@ class LeadIntelligenceAgent:
         """Perform specialized analysis on lead data"""
         self.status = AgentStatus.ANALYZING
         start_time = asyncio.get_event_loop().time()
-        
+
         await sync_service.record_agent_thought(
             agent_id=self.agent_type.value,
             thought=f"Starting analysis for lead {lead_data.get('lead_id', 'N/A')}",
-            status="Analyzing"
+            status="Analyzing",
         )
 
         try:
@@ -228,22 +234,22 @@ class LeadIntelligenceAgent:
             self._update_performance_metrics(insight.confidence, processing_time)
 
             self.status = AgentStatus.IDLE
-            
+
             await sync_service.record_agent_thought(
                 agent_id=self.agent_type.value,
                 thought=f"Completed analysis for lead {lead_data.get('lead_id', 'N/A')}",
-                status="Success"
+                status="Success",
             )
             return insight
 
         except Exception as e:
             self.status = AgentStatus.ERROR
             logger.error(f"Agent {self.agent_type.value} analysis failed: {e}")
-            
+
             await sync_service.record_agent_thought(
                 agent_id=self.agent_type.value,
                 thought=f"Analysis failed for lead {lead_data.get('lead_id', 'N/A')}: {str(e)}",
-                status="Error"
+                status="Error",
             )
 
             # Return error insight
@@ -257,7 +263,7 @@ class LeadIntelligenceAgent:
                 opportunity_score=0.0,
                 urgency_level="low",
                 processing_time_ms=(asyncio.get_event_loop().time() - start_time) * 1000,
-                data_sources=[]
+                data_sources=[],
             )
 
     async def _perform_specialized_analysis(self, lead_data: Dict[str, Any]) -> AgentInsight:
@@ -275,7 +281,7 @@ class LeadIntelligenceAgent:
             opportunity_score=50.0,
             urgency_level="medium",
             processing_time_ms=100.0,
-            data_sources=["lead_data"]
+            data_sources=["lead_data"],
         )
 
     def _update_performance_metrics(self, confidence: float, processing_time: float):
@@ -285,11 +291,11 @@ class LeadIntelligenceAgent:
         # Update running averages
         count = self.performance_metrics["analyses_completed"]
         self.performance_metrics["average_confidence"] = (
-            (self.performance_metrics["average_confidence"] * (count - 1) + confidence) / count
-        )
+            self.performance_metrics["average_confidence"] * (count - 1) + confidence
+        ) / count
         self.performance_metrics["average_processing_time"] = (
-            (self.performance_metrics["average_processing_time"] * (count - 1) + processing_time) / count
-        )
+            self.performance_metrics["average_processing_time"] * (count - 1) + processing_time
+        ) / count
 
     async def learn_from_outcome(self, insight: AgentInsight, actual_outcome: Dict[str, Any]):
         """Learn from actual outcomes to improve future analysis"""
@@ -302,8 +308,8 @@ class LeadIntelligenceAgent:
         accuracy = 1.0 - abs(predicted_score - actual_score) / 100.0
 
         # Update accuracy metrics
-        self.performance_metrics["accuracy_score"] = (
-            (self.performance_metrics["accuracy_score"] * 0.9) + (accuracy * 0.1)
+        self.performance_metrics["accuracy_score"] = (self.performance_metrics["accuracy_score"] * 0.9) + (
+            accuracy * 0.1
         )
 
         # Store learning pattern
@@ -313,7 +319,7 @@ class LeadIntelligenceAgent:
             "actual_score": actual_score,
             "accuracy": accuracy,
             "lead_features": actual_outcome.get("lead_features", {}),
-            "insight_metadata": insight.metadata
+            "insight_metadata": insight.metadata,
         }
 
         self.learning_patterns.append(learning_pattern)
@@ -332,10 +338,13 @@ class DemographicAnalyzerAgent(LeadIntelligenceAgent):
     """Specialized agent for demographic analysis"""
 
     def __init__(self):
-        super().__init__(AgentType.DEMOGRAPHIC_ANALYZER, {
-            "focus_areas": ["age_segmentation", "income_estimation", "lifestyle_analysis"],
-            "data_sources": ["contact_info", "social_profiles", "behavioral_data"]
-        })
+        super().__init__(
+            AgentType.DEMOGRAPHIC_ANALYZER,
+            {
+                "focus_areas": ["age_segmentation", "income_estimation", "lifestyle_analysis"],
+                "data_sources": ["contact_info", "social_profiles", "behavioral_data"],
+            },
+        )
 
     async def _perform_specialized_analysis(self, lead_data: Dict[str, Any]) -> AgentInsight:
         """Analyze lead demographics and lifestyle indicators"""
@@ -363,7 +372,7 @@ class DemographicAnalyzerAgent(LeadIntelligenceAgent):
             f"Age segment: {age_segment}",
             f"Estimated income: {income_estimate}",
             f"Location market: {location}",
-            f"Professional level: {job_title}"
+            f"Professional level: {job_title}",
         ]
 
         recommendations = []
@@ -397,8 +406,8 @@ class DemographicAnalyzerAgent(LeadIntelligenceAgent):
             metadata={
                 "age_segment": age_segment,
                 "income_estimate": income_estimate,
-                "buying_power_score": buying_power_score
-            }
+                "buying_power_score": buying_power_score,
+            },
         )
 
     def _determine_age_segment(self, age: int) -> str:
@@ -454,12 +463,7 @@ class DemographicAnalyzerAgent(LeadIntelligenceAgent):
 
     def _assess_buying_power(self, income_estimate: str, age_segment: str, location: str) -> float:
         """Calculate overall buying power score"""
-        base_scores = {
-            "high": 85,
-            "medium-high": 70,
-            "medium": 55,
-            "low": 30
-        }
+        base_scores = {"high": 85, "medium-high": 70, "medium": 55, "low": 30}
 
         score = base_scores.get(income_estimate, 30)
 
@@ -467,7 +471,7 @@ class DemographicAnalyzerAgent(LeadIntelligenceAgent):
         if age_segment in ["millennial", "gen_x"]:
             score += 10  # Peak earning years
         elif age_segment == "boomer":
-            score += 5   # Established wealth
+            score += 5  # Established wealth
 
         # Location adjustments for market conditions
         # This would integrate with real market data
@@ -480,10 +484,13 @@ class BehavioralProfilerAgent(LeadIntelligenceAgent):
     """Specialized agent for behavioral pattern analysis"""
 
     def __init__(self):
-        super().__init__(AgentType.BEHAVIORAL_PROFILER, {
-            "focus_areas": ["engagement_patterns", "decision_style", "communication_preferences"],
-            "tracking_windows": ["7d", "30d", "90d"]
-        })
+        super().__init__(
+            AgentType.BEHAVIORAL_PROFILER,
+            {
+                "focus_areas": ["engagement_patterns", "decision_style", "communication_preferences"],
+                "tracking_windows": ["7d", "30d", "90d"],
+            },
+        )
 
     async def _perform_specialized_analysis(self, lead_data: Dict[str, Any]) -> AgentInsight:
         """Analyze behavioral patterns and engagement indicators"""
@@ -513,17 +520,17 @@ class BehavioralProfilerAgent(LeadIntelligenceAgent):
             f"Total page visits: {len(page_visits)}",
             f"Email engagement rate: {profile['email_engagement']:.1f}%",
             f"Decision style: {decision_style}",
-            f"Response time pattern: {profile['response_pattern']}"
+            f"Response time pattern: {profile['response_pattern']}",
         ]
 
         recommendations = []
-        if profile['type'] == "analytical":
+        if profile["type"] == "analytical":
             recommendations.append("Provide detailed market data and property analytics")
             recommendations.append("Schedule virtual tours with comprehensive information")
-        elif profile['type'] == "impulsive":
+        elif profile["type"] == "impulsive":
             recommendations.append("Create urgency with limited-time offers")
             recommendations.append("Schedule immediate viewing appointments")
-        elif profile['type'] == "cautious":
+        elif profile["type"] == "cautious":
             recommendations.append("Build trust through testimonials and references")
             recommendations.append("Provide step-by-step buying process guidance")
 
@@ -541,10 +548,10 @@ class BehavioralProfilerAgent(LeadIntelligenceAgent):
             recommendations=recommendations,
             risk_factors=risk_factors,
             opportunity_score=engagement_score,
-            urgency_level=profile['urgency_level'],
+            urgency_level=profile["urgency_level"],
             processing_time_ms=120.0,
             data_sources=["behavioral_tracking", "engagement_analytics", "decision_models"],
-            metadata=profile
+            metadata=profile,
         )
 
     def _calculate_engagement_score(self, page_visits: List, email_interactions: List) -> float:
@@ -571,9 +578,9 @@ class BehavioralProfilerAgent(LeadIntelligenceAgent):
         if unique_properties_viewed > 10:
             return "analytical"  # Views many properties, compares options
         elif unique_properties_viewed < 3:
-            return "impulsive"   # Quick decisions, few comparisons
+            return "impulsive"  # Quick decisions, few comparisons
         else:
-            return "cautious"    # Moderate research, careful consideration
+            return "cautious"  # Moderate research, careful consideration
 
     def _assess_urgency_indicators(self, response_times: List, page_visits: List) -> float:
         """Assess buyer urgency based on behavioral indicators"""
@@ -592,7 +599,9 @@ class BehavioralProfilerAgent(LeadIntelligenceAgent):
         else:
             return 25.0  # Low urgency
 
-    def _generate_behavioral_profile(self, engagement_score: float, decision_style: str, urgency_score: float) -> Dict[str, Any]:
+    def _generate_behavioral_profile(
+        self, engagement_score: float, decision_style: str, urgency_score: float
+    ) -> Dict[str, Any]:
         """Generate comprehensive behavioral profile"""
         # Determine engagement level
         if engagement_score >= 75:
@@ -627,7 +636,7 @@ class BehavioralProfilerAgent(LeadIntelligenceAgent):
             "urgency_level": urgency_level,
             "urgency_score": urgency_score,
             "email_engagement": min(engagement_score * 0.7, 100),  # Estimate email engagement
-            "response_pattern": response_pattern
+            "response_pattern": response_pattern,
         }
 
     def _is_recent(self, timestamp_str: str) -> bool:
@@ -646,10 +655,13 @@ class IntentDetectorAgent(LeadIntelligenceAgent):
     """Specialized agent for purchase intent detection"""
 
     def __init__(self):
-        super().__init__(AgentType.INTENT_DETECTOR, {
-            "intent_signals": ["urgency_language", "timeline_mentions", "financing_inquiries"],
-            "classification_model": "purchase_intent_v2.0"
-        })
+        super().__init__(
+            AgentType.INTENT_DETECTOR,
+            {
+                "intent_signals": ["urgency_language", "timeline_mentions", "financing_inquiries"],
+                "classification_model": "purchase_intent_v2.0",
+            },
+        )
 
     async def _perform_specialized_analysis(self, lead_data: Dict[str, Any]) -> AgentInsight:
         """Detect and analyze purchase intent signals"""
@@ -681,7 +693,7 @@ class IntentDetectorAgent(LeadIntelligenceAgent):
             f"Intent signals found: {len(intent_signals)}",
             f"Timeline urgency: {timeline_urgency}",
             f"Financing readiness: {financing_readiness}",
-            f"Overall intent score: {intent_score:.1f}/100"
+            f"Overall intent score: {intent_score:.1f}/100",
         ]
 
         recommendations = []
@@ -707,7 +719,9 @@ class IntentDetectorAgent(LeadIntelligenceAgent):
         if financing_readiness in ("planning", "unknown"):
             risk_factors.append("Financing concerns may delay purchase decision")
 
-        urgency_level = "critical" if intent_level == "immediate" else "high" if intent_level == "near_term" else "medium"
+        urgency_level = (
+            "critical" if intent_level == "immediate" else "high" if intent_level == "near_term" else "medium"
+        )
 
         return AgentInsight(
             agent_type=self.agent_type,
@@ -724,8 +738,8 @@ class IntentDetectorAgent(LeadIntelligenceAgent):
                 "intent_level": intent_level,
                 "intent_signals": intent_signals,
                 "timeline_urgency": timeline_urgency,
-                "financing_readiness": financing_readiness
-            }
+                "financing_readiness": financing_readiness,
+            },
         )
 
     def _extract_intent_signals(self, communications: List) -> List[str]:
@@ -734,15 +748,30 @@ class IntentDetectorAgent(LeadIntelligenceAgent):
         # In production, this would use sophisticated NLP models
 
         high_intent_phrases = [
-            "ready to buy", "looking to purchase", "need to move", "urgent",
-            "pre-approved", "cash buyer", "closing date", "when can we close",
-            "make an offer", "negotiate price", "inspection", "mortgage approved"
+            "ready to buy",
+            "looking to purchase",
+            "need to move",
+            "urgent",
+            "pre-approved",
+            "cash buyer",
+            "closing date",
+            "when can we close",
+            "make an offer",
+            "negotiate price",
+            "inspection",
+            "mortgage approved",
         ]
 
         medium_intent_phrases = [
-            "seriously considering", "planning to buy", "in the market",
-            "looking for a realtor", "mortgage pre-qualification", "down payment ready",
-            "timeline", "budget range", "financing options"
+            "seriously considering",
+            "planning to buy",
+            "in the market",
+            "looking for a realtor",
+            "mortgage pre-qualification",
+            "down payment ready",
+            "timeline",
+            "budget range",
+            "financing options",
         ]
 
         signals = []
@@ -765,14 +794,13 @@ class IntentDetectorAgent(LeadIntelligenceAgent):
             "immediate": ["asap", "immediately", "this week", "urgent", "right away"],
             "short_term": ["next month", "within 30 days", "by end of month", "soon"],
             "medium_term": ["2-3 months", "this quarter", "spring", "summer", "fall", "winter"],
-            "long_term": ["next year", "6 months", "eventually", "someday"]
+            "long_term": ["next year", "6 months", "eventually", "someday"],
         }
 
-        all_content = " ".join([
-            comm.get("content", "") for comm in communications
-        ] + [
-            form.get("message", "") for form in form_submissions
-        ]).lower()
+        all_content = " ".join(
+            [comm.get("content", "") for comm in communications]
+            + [form.get("message", "") for form in form_submissions]
+        ).lower()
 
         for urgency, indicators in timeline_indicators.items():
             if any(indicator in all_content for indicator in indicators):
@@ -786,14 +814,13 @@ class IntentDetectorAgent(LeadIntelligenceAgent):
             "ready": ["pre-approved", "cash buyer", "financing secured", "mortgage approved"],
             "in_progress": ["applying for mortgage", "pre-qualification", "credit check", "loan application"],
             "planning": ["need financing", "mortgage options", "lender recommendations", "down payment"],
-            "unknown": []
+            "unknown": [],
         }
 
-        all_content = " ".join([
-            comm.get("content", "") for comm in communications
-        ] + [
-            form.get("message", "") for form in form_submissions
-        ]).lower()
+        all_content = " ".join(
+            [comm.get("content", "") for comm in communications]
+            + [form.get("message", "") for form in form_submissions]
+        ).lower()
 
         for readiness, indicators in financing_indicators.items():
             if any(indicator in all_content for indicator in indicators):
@@ -801,7 +828,9 @@ class IntentDetectorAgent(LeadIntelligenceAgent):
 
         return "unknown"
 
-    def _calculate_intent_score(self, intent_signals: List[str], timeline_urgency: str, financing_readiness: str) -> float:
+    def _calculate_intent_score(
+        self, intent_signals: List[str], timeline_urgency: str, financing_readiness: str
+    ) -> float:
         """Calculate overall purchase intent score"""
         score = 0.0
 
@@ -818,17 +847,12 @@ class IntentDetectorAgent(LeadIntelligenceAgent):
             "short_term": 28.0,
             "medium_term": 18.0,
             "long_term": 8.0,
-            "unspecified": 15.0  # Medium default
+            "unspecified": 15.0,  # Medium default
         }
         score += urgency_scores.get(timeline_urgency, 15.0)
 
         # Financing readiness contribution (25% of total)
-        financing_scores = {
-            "ready": 25.0,
-            "in_progress": 20.0,
-            "planning": 12.0,
-            "unknown": 8.0
-        }
+        financing_scores = {"ready": 25.0, "in_progress": 20.0, "planning": 12.0, "unknown": 8.0}
         score += financing_scores.get(financing_readiness, 8.0)
 
         return min(100.0, score)
@@ -850,7 +874,7 @@ class IntentDetectorAgent(LeadIntelligenceAgent):
 class MarketAnalystAgent(LeadIntelligenceAgent):
     """
     Specialized agent for real-time market monitoring and "Predator Mode".
-    
+
     Features:
     - External MLS/Listing feed monitoring
     - "Alert Synergy": Price drop detection for swiped properties
@@ -858,10 +882,7 @@ class MarketAnalystAgent(LeadIntelligenceAgent):
     """
 
     def __init__(self):
-        super().__init__(AgentType.MARKET_ANALYST, {
-            "monitoring_active": True,
-            "predator_mode": True
-        })
+        super().__init__(AgentType.MARKET_ANALYST, {"monitoring_active": True, "predator_mode": True})
 
     async def _perform_specialized_analysis(self, lead_data: Dict[str, Any]) -> AgentInsight:
         """Monitor market changes relative to lead's swiped list"""
@@ -869,7 +890,7 @@ class MarketAnalystAgent(LeadIntelligenceAgent):
 
         swiped_list = lead_data.get("swiped_list", [])
         market_changes = await self._check_mls_for_changes(swiped_list)
-        
+
         alerts = []
         recommendations = []
         defensive_drafts = []
@@ -879,17 +900,21 @@ class MarketAnalystAgent(LeadIntelligenceAgent):
             if change["type"] == "price_drop":
                 alert_msg = f"PREDATOR ALERT: Property {change['property_id']} dropped in price by {change['amount']}%"
                 alerts.append(alert_msg)
-                
+
                 # Push to Redis for real-time WebSocket stream
                 await self._push_to_websocket_stream(change, lead_data)
-                
+
                 # Implement Alert Synergy
                 draft = await self._draft_defensive_comparison(change, lead_data)
                 defensive_drafts.append(draft)
                 recommendations.append(f"Send defensive comparison for {change['property_id']}")
                 opportunity_score = max(opportunity_score, 85.0)
 
-        primary_finding = f"Market Analyst: Found {len(alerts)} critical price updates for lead's interest list" if alerts else "No critical market changes detected for lead's interest list"
+        primary_finding = (
+            f"Market Analyst: Found {len(alerts)} critical price updates for lead's interest list"
+            if alerts
+            else "No critical market changes detected for lead's interest list"
+        )
 
         return AgentInsight(
             agent_type=self.agent_type,
@@ -902,15 +927,13 @@ class MarketAnalystAgent(LeadIntelligenceAgent):
             urgency_level="high" if alerts else "low",
             processing_time_ms=200.0,
             data_sources=["mls_feed", "swiped_list", "market_analytics"],
-            metadata={
-                "market_alerts": alerts,
-                "defensive_drafts": defensive_drafts
-            }
+            metadata={"market_alerts": alerts, "defensive_drafts": defensive_drafts},
         )
 
     async def _check_mls_for_changes(self, swiped_list: List[str]) -> List[Dict[str, Any]]:
         """Check for MLS changes using the simulated feed."""
         from ghl_real_estate_ai.services.simulated_mls_feed import get_simulated_mls
+
         mls = get_simulated_mls()
         return await mls.get_recent_changes(swiped_list)
 
@@ -918,8 +941,9 @@ class MarketAnalystAgent(LeadIntelligenceAgent):
         """Pushes a Predator Alert to the Redis-backed websocket gateway."""
         try:
             from ghl_real_estate_ai.services.realtime_config import get_aioredis_client
+
             redis = await get_aioredis_client()
-            
+
             if redis:
                 tenant_id = lead_data.get("tenant_id", "default_tenant")
                 alert_payload = {
@@ -931,14 +955,14 @@ class MarketAnalystAgent(LeadIntelligenceAgent):
                     "old_price": change["old_price"],
                     "new_price": change["new_price"],
                     "drop_amount": change["amount"],
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.utcnow().isoformat(),
                 }
-                
+
                 # Publish to tenant-specific and global alert channels
                 channel = f"alerts:{tenant_id}:predator"
                 await redis.publish(channel, json.dumps(alert_payload))
                 await redis.publish("alerts:global:predator", json.dumps(alert_payload))
-                
+
                 logger.info(f"Published Predator Alert to WebSocket gateway: {channel}")
         except Exception as e:
             logger.error(f"Failed to push alert to WebSocket gateway: {e}")
@@ -946,16 +970,21 @@ class MarketAnalystAgent(LeadIntelligenceAgent):
     async def _draft_defensive_comparison(self, change: Dict[str, Any], lead_data: Dict[str, Any]) -> str:
         """Draft a defensive comparison message for the human agent to send"""
         # Use Claude via Orchestrator if possible, otherwise mock
-        from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator, ClaudeTaskType, ClaudeRequest
+        from ghl_real_estate_ai.services.claude_orchestrator import (
+            ClaudeRequest,
+            ClaudeTaskType,
+            get_claude_orchestrator,
+        )
+
         orchestrator = get_claude_orchestrator()
-        
+
         prompt = f"""
         PREDATOR MODE: DEFENSIVE COMPARISON DRAFT
         
-        Property {change['property_id']} just dropped in price from ${change['old_price']} to ${change['new_price']}.
+        Property {change["property_id"]} just dropped in price from ${change["old_price"]} to ${change["new_price"]}.
         This property is in the lead's "Swiped List" (highly interested).
         
-        Lead Name: {lead_data.get('first_name', 'Client')}
+        Lead Name: {lead_data.get("first_name", "Client")}
         
         Draft a "Defensive Comparison" SMS/Email for the human agent to send.
         Goal: Acknowledge the price drop, but highlight WHY our recommended properties are still a better value, 
@@ -963,12 +992,10 @@ class MarketAnalystAgent(LeadIntelligenceAgent):
         
         Tone: Professional, expert, strategic.
         """
-        
+
         try:
             request = ClaudeRequest(
-                task_type=ClaudeTaskType.SCRIPT_GENERATION,
-                context={"task": "defensive_draft"},
-                prompt=prompt
+                task_type=ClaudeTaskType.SCRIPT_GENERATION, context={"task": "defensive_draft"}, prompt=prompt
             )
             response = await orchestrator.process_request(request)
             return response.content
@@ -980,40 +1007,45 @@ class NegotiationStrategistAgent(LeadIntelligenceAgent):
     """Specialized agent for negotiation strategy and tactical behavioral response"""
 
     def __init__(self):
-        super().__init__(AgentType.COMMUNICATION_OPTIMIZER, {
-            "focus_areas": ["negotiation_drift", "persona_adaptation", "tactical_triggers"],
-            "strategies": ["voss_labeling", "price_anchor_defense", "micro_commitment"]
-        })
+        super().__init__(
+            AgentType.COMMUNICATION_OPTIMIZER,
+            {
+                "focus_areas": ["negotiation_drift", "persona_adaptation", "tactical_triggers"],
+                "strategies": ["voss_labeling", "price_anchor_defense", "micro_commitment"],
+            },
+        )
         from ghl_real_estate_ai.services.jorge.jorge_tone_engine import JorgeToneEngine
+
         self.tone_engine = JorgeToneEngine()
         from ghl_real_estate_ai.agents.voss_negotiation_agent import get_voss_negotiation_agent
+
         self.voss_agent = get_voss_negotiation_agent()
 
     async def _perform_specialized_analysis(self, lead_data: Dict[str, Any]) -> AgentInsight:
         """Analyze negotiation stance and tactical opportunities"""
         await asyncio.sleep(0.1)
-        
+
         history = lead_data.get("conversation_history", [])
         drift = self.tone_engine.detect_negotiation_drift(history)
-        
+
         persona = lead_data.get("persona", "unknown")
-        
+
         recommendations = []
         voss_response = None
-        
+
         if drift.is_softening:
             recommendations.append("Trigger ROI Proforma - flexibility detected")
-            
+
             # Phase 3: Voss-Powered Closure Execution
             voss_result = await self.voss_agent.run_negotiation(
                 lead_id=lead_data.get("lead_id", "N/A"),
                 lead_name=lead_data.get("first_name", "there"),
                 address=lead_data.get("property_address", "your property"),
-                history=history
+                history=history,
             )
             voss_response = voss_result.get("generated_response")
             recommendations.append(f"Voss Closure: {voss_response}")
-        
+
         if persona == "loss_aversion":
             recommendations.append("Switch to 'Cost of Waiting' qualification branching")
         elif persona == "investor":
@@ -1030,8 +1062,9 @@ class NegotiationStrategistAgent(LeadIntelligenceAgent):
             urgency_level="high" if drift.is_softening else "medium",
             processing_time_ms=100.0,
             data_sources=["conversation_history", "tone_engine"],
-            metadata={"drift": drift.__dict__}
+            metadata={"drift": drift.__dict__},
         )
+
 
 class LeadIntelligenceSwarm:
     """Multi-agent orchestration system for comprehensive lead intelligence"""
@@ -1046,7 +1079,7 @@ class LeadIntelligenceSwarm:
             "analyses_completed": 0,
             "average_consensus_confidence": 0.0,
             "average_processing_time": 0.0,
-            "agent_agreement_rate": 0.0
+            "agent_agreement_rate": 0.0,
         }
 
         # Initialize specialized agents
@@ -1080,17 +1113,14 @@ class LeadIntelligenceSwarm:
         self.active_analyses[lead_id] = {
             "start_time": datetime.utcnow(),
             "status": "analyzing",
-            "agents_deployed": list(self.agents.keys())
+            "agents_deployed": list(self.agents.keys()),
         }
 
         try:
             # Deploy all agents in parallel for maximum efficiency
             agent_tasks = []
             for agent_type, agent in self.agents.items():
-                task = asyncio.create_task(
-                    agent.analyze_lead(lead_data),
-                    name=f"{agent_type.value}_analysis"
-                )
+                task = asyncio.create_task(agent.analyze_lead(lead_data), name=f"{agent_type.value}_analysis")
                 agent_tasks.append(task)
 
             # Wait for all agents to complete analysis
@@ -1117,10 +1147,12 @@ class LeadIntelligenceSwarm:
             # Clean up active analysis tracking
             self.active_analyses.pop(lead_id, None)
 
-            logger.info(f"🎯 Swarm analysis complete for lead {lead_id} - "
-                       f"Consensus: {consensus.consensus_level.value}, "
-                       f"Score: {consensus.overall_score:.1f}, "
-                       f"Time: {processing_time:.1f}ms")
+            logger.info(
+                f"🎯 Swarm analysis complete for lead {lead_id} - "
+                f"Consensus: {consensus.consensus_level.value}, "
+                f"Score: {consensus.overall_score:.1f}, "
+                f"Time: {processing_time:.1f}ms"
+            )
 
             return consensus
 
@@ -1176,7 +1208,7 @@ class LeadIntelligenceSwarm:
             conflicting_views=conflicting_views,
             consensus_rationale=consensus_rationale,
             processing_time_ms=0.0,  # Set by caller
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
 
     def _calculate_consensus_level(self, insights: List[AgentInsight]) -> ConsensusLevel:
@@ -1189,17 +1221,17 @@ class LeadIntelligenceSwarm:
 
         # Calculate variance in scores
         variance = sum((score - avg_score) ** 2 for score in scores) / len(scores)
-        std_deviation = variance ** 0.5
+        std_deviation = variance**0.5
 
         # Calculate agreement percentage based on standard deviation
         if std_deviation <= 10:
-            return ConsensusLevel.HIGH     # Scores within 10 points
+            return ConsensusLevel.HIGH  # Scores within 10 points
         elif std_deviation <= 20:
-            return ConsensusLevel.MEDIUM   # Scores within 20 points
+            return ConsensusLevel.MEDIUM  # Scores within 20 points
         elif std_deviation <= 30:
-            return ConsensusLevel.LOW      # Scores within 30 points
+            return ConsensusLevel.LOW  # Scores within 30 points
         else:
-            return ConsensusLevel.CONFLICT # High disagreement
+            return ConsensusLevel.CONFLICT  # High disagreement
 
     def _select_primary_recommendation(self, insights: List[AgentInsight]) -> str:
         """Select primary recommendation based on highest confidence agent"""
@@ -1231,13 +1263,13 @@ class LeadIntelligenceSwarm:
 
         # Compare opportunity scores for significant disagreements
         for i, insight1 in enumerate(insights):
-            for j, insight2 in enumerate(insights[i+1:], i+1):
+            for j, insight2 in enumerate(insights[i + 1 :], i + 1):
                 score_diff = abs(insight1.opportunity_score - insight2.opportunity_score)
 
                 if score_diff > 30:  # Significant disagreement threshold
                     conflict = (
                         insight1.agent_type.value,
-                        f"Score disagreement: {insight1.opportunity_score:.1f} vs {insight2.opportunity_score:.1f}"
+                        f"Score disagreement: {insight1.opportunity_score:.1f} vs {insight2.opportunity_score:.1f}",
                     )
                     conflicts.append(conflict)
 
@@ -1261,12 +1293,12 @@ class LeadIntelligenceSwarm:
 
         # Update running averages
         self.swarm_metrics["average_consensus_confidence"] = (
-            (self.swarm_metrics["average_consensus_confidence"] * (count - 1) + consensus.confidence) / count
-        )
+            self.swarm_metrics["average_consensus_confidence"] * (count - 1) + consensus.confidence
+        ) / count
 
         self.swarm_metrics["average_processing_time"] = (
-            (self.swarm_metrics["average_processing_time"] * (count - 1) + consensus.processing_time_ms) / count
-        )
+            self.swarm_metrics["average_processing_time"] * (count - 1) + consensus.processing_time_ms
+        ) / count
 
         # Calculate agreement rate (high consensus percentage)
         high_consensus_count = sum(1 for c in self.consensus_history if c.consensus_level == ConsensusLevel.HIGH)
@@ -1276,17 +1308,14 @@ class LeadIntelligenceSwarm:
         """Get current swarm operational status"""
         agent_status = {}
         for agent_type, agent in self.agents.items():
-            agent_status[agent_type.value] = {
-                "status": agent.status.value,
-                "performance": agent.performance_metrics
-            }
+            agent_status[agent_type.value] = {"status": agent.status.value, "performance": agent.performance_metrics}
 
         return {
             "swarm_metrics": self.swarm_metrics,
             "active_analyses": len(self.active_analyses),
             "agent_status": agent_status,
             "consensus_history_count": len(self.consensus_history),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     async def learn_from_outcomes(self, lead_id: str, actual_outcome: Dict[str, Any]):
@@ -1311,7 +1340,7 @@ class LeadIntelligenceSwarm:
                 learning_tasks.append(task)
 
         await asyncio.gather(*learning_tasks, return_exceptions=True)
-        
+
         # Phase 6: Dojo Learning - Record Winning Tactics
         if actual_outcome.get("is_conversion"):
             await self.record_winning_tactics(lead_id, lead_consensus, actual_outcome)
@@ -1325,19 +1354,18 @@ class LeadIntelligenceSwarm:
         and tactical triggers drove the 'Win'.
         """
         logger.info(f"🏆 Dojo: Recording winning tactics for deal {lead_id}")
-        
+
         winning_triggers = []
         for insight in consensus.agent_insights:
             if insight.confidence > 0.8 and insight.opportunity_score > 70:
-                winning_triggers.append({
-                    "agent": insight.agent_type.value,
-                    "finding": insight.primary_finding,
-                    "recommendation_used": True
-                })
-        
+                winning_triggers.append(
+                    {"agent": insight.agent_type.value, "finding": insight.primary_finding, "recommendation_used": True}
+                )
+
         # Send to Collective Learning Engine (Mock for Phase 6)
         try:
             from ghl_real_estate_ai.intelligence.collective_learning_engine import CollectiveLearningEngine
+
             # In production, we'd use the DI container to get the instance
             logger.info(f"🚀 Sharing {len(winning_triggers)} winning patterns with Collective Intelligence")
         except ImportError:
@@ -1359,12 +1387,16 @@ class LeadIntelligenceSwarm:
                     old_accuracy = agent.performance_metrics["accuracy_score"]
                     new_accuracy = (old_accuracy * 0.7) + (rating * 0.3)
                     agent.performance_metrics["accuracy_score"] = new_accuracy
-                    logger.info(f"🥋 Dojo RLHF: Adjusted {agent_id} weight. Accuracy: {old_accuracy:.2f} -> {new_accuracy:.2f}")
+                    logger.info(
+                        f"🥋 Dojo RLHF: Adjusted {agent_id} weight. Accuracy: {old_accuracy:.2f} -> {new_accuracy:.2f}"
+                    )
             except Exception as e:
                 logger.error(f"Failed to adjust agent weight: {e}")
 
+
 # Lazy initialization to avoid circular dependencies
 _lead_intelligence_swarm_instance = None
+
 
 def get_lead_intelligence_swarm() -> LeadIntelligenceSwarm:
     """Get the global lead intelligence swarm instance with lazy initialization."""
@@ -1373,11 +1405,14 @@ def get_lead_intelligence_swarm() -> LeadIntelligenceSwarm:
         _lead_intelligence_swarm_instance = LeadIntelligenceSwarm()
     return _lead_intelligence_swarm_instance
 
+
 # For backwards compatibility - use the factory function
 class _SwarmProxy:
     """Proxy object that delegates calls to the lazily initialized swarm."""
+
     def __getattr__(self, name):
         return getattr(get_lead_intelligence_swarm(), name)
+
 
 lead_intelligence_swarm = _SwarmProxy()
 
@@ -1394,31 +1429,26 @@ async def main():
         "page_visits": [
             {"timestamp": "2026-01-17T10:00:00Z", "property_id": "PROP_001"},
             {"timestamp": "2026-01-17T10:15:00Z", "property_id": "PROP_002"},
-            {"timestamp": "2026-01-17T10:30:00Z", "property_id": "PROP_001"}
+            {"timestamp": "2026-01-17T10:30:00Z", "property_id": "PROP_001"},
         ],
         "email_interactions": [
             {"timestamp": "2026-01-16T15:00:00Z", "type": "opened"},
-            {"timestamp": "2026-01-16T15:05:00Z", "type": "clicked"}
+            {"timestamp": "2026-01-16T15:05:00Z", "type": "clicked"},
         ],
         "communications": [
             {"content": "I'm looking to buy a house in the next 2-3 months. I'm pre-approved for a mortgage."},
-            {"content": "Can you send me information about properties in good school districts?"}
+            {"content": "Can you send me information about properties in good school districts?"},
         ],
-        "form_submissions": [
-            {"message": "Interested in scheduling a viewing", "timestamp": "2026-01-17T09:00:00Z"}
-        ],
+        "form_submissions": [{"message": "Interested in scheduling a viewing", "timestamp": "2026-01-17T09:00:00Z"}],
         "search_patterns": ["3 bedroom", "good schools", "commute to central_rc"],
-        "response_times": [2, 4, 1.5]  # hours
+        "response_times": [2, 4, 1.5],  # hours
     }
 
     try:
         logger.info("🚀 Starting Lead Intelligence Swarm Demonstration")
 
         # Analyze lead with multi-agent swarm
-        consensus = await lead_intelligence_swarm.analyze_lead_comprehensive(
-            sample_lead["lead_id"],
-            sample_lead
-        )
+        consensus = await lead_intelligence_swarm.analyze_lead_comprehensive(sample_lead["lead_id"], sample_lead)
 
         # Display results
         logger.info(f"🎯 SWARM ANALYSIS RESULTS:")

@@ -17,6 +17,7 @@ root_dir = services_dir.parent
 sys.path.insert(0, str(root_dir))
 sys.path.insert(0, str(services_dir))
 
+
 async def test_strategy_pattern_integration():
     """Test that Strategy Pattern integration works correctly"""
     print("🔧 Testing Repository Pattern + Strategy Pattern Integration...")
@@ -25,11 +26,12 @@ async def test_strategy_pattern_integration():
         # Test the imports first
         print("📦 Testing imports...")
         from strategy_integration import (
+            STRATEGY_PATTERN_AVAILABLE,
             RepositoryPropertyMatcher,
             create_repository_property_matcher,
             enhanced_generate_property_matches,
-            STRATEGY_PATTERN_AVAILABLE
         )
+
         print(f"✅ Strategy Pattern Available: {STRATEGY_PATTERN_AVAILABLE}")
 
         if not STRATEGY_PATTERN_AVAILABLE:
@@ -40,41 +42,34 @@ async def test_strategy_pattern_integration():
         print("\n🏗️  Testing repository property matcher creation...")
         data_sources_config = {
             "type": "demo",
-            "json_data_dir": "/Users/cave/enterprisehub/ghl_real_estate_ai/data/knowledge_base"
+            "json_data_dir": "/Users/cave/enterprisehub/ghl_real_estate_ai/data/knowledge_base",
         }
 
         # Test factory function
         matcher = await create_repository_property_matcher(
-            data_sources_config=data_sources_config,
-            strategy_name="enhanced",
-            fallback_strategy="basic"
+            data_sources_config=data_sources_config, strategy_name="enhanced", fallback_strategy="basic"
         )
         print("✅ Repository property matcher created successfully")
 
         # Test property scoring
         print("\n⚖️  Testing property scoring integration...")
         lead_preferences = {
-            'budget': 750000,
-            'location': 'Downtown',
-            'bedrooms': 3,
-            'bathrooms': 2,
-            'property_type': 'Single Family',
-            'must_haves': ['garage', 'yard'],
-            'nice_to_haves': ['pool', 'good_schools'],
-            'work_location': 'downtown',
-            'has_children': True,
-            'min_sqft': 1800
+            "budget": 750000,
+            "location": "Downtown",
+            "bedrooms": 3,
+            "bathrooms": 2,
+            "property_type": "Single Family",
+            "must_haves": ["garage", "yard"],
+            "nice_to_haves": ["pool", "good_schools"],
+            "work_location": "downtown",
+            "has_children": True,
+            "min_sqft": 1800,
         }
 
-        context = {
-            'lead_id': 'test_lead_123',
-            'agent_id': 'test_agent_456'
-        }
+        context = {"lead_id": "test_lead_123", "agent_id": "test_agent_456"}
 
         scored_properties = await matcher.score_properties_with_repository(
-            lead_preferences=lead_preferences,
-            context=context,
-            max_properties=10
+            lead_preferences=lead_preferences, context=context, max_properties=10
         )
 
         print(f"✅ Scored {len(scored_properties)} properties successfully")
@@ -82,7 +77,7 @@ async def test_strategy_pattern_integration():
         # Validate results
         if scored_properties:
             first_property = scored_properties[0]
-            required_fields = ['address', 'price', 'beds', 'baths', 'sqft', 'match_score']
+            required_fields = ["address", "price", "beds", "baths", "sqft", "match_score"]
 
             for field in required_fields:
                 if field not in first_property:
@@ -94,13 +89,10 @@ async def test_strategy_pattern_integration():
 
         # Test enhanced property match generation
         print("\n🎯 Testing enhanced property match generation...")
-        lead_context = {
-            'extracted_preferences': lead_preferences
-        }
+        lead_context = {"extracted_preferences": lead_preferences}
 
         matches = await enhanced_generate_property_matches(
-            lead_context=lead_context,
-            data_sources_config=data_sources_config
+            lead_context=lead_context, data_sources_config=data_sources_config
         )
 
         print(f"✅ Generated {len(matches)} enhanced property matches")
@@ -109,7 +101,7 @@ async def test_strategy_pattern_integration():
         print("\n📊 Testing performance metrics...")
         metrics = await matcher.get_performance_metrics()
 
-        if 'repository_metrics' in metrics and 'strategy_metrics' in metrics:
+        if "repository_metrics" in metrics and "strategy_metrics" in metrics:
             print("✅ Performance metrics collection working")
             print(f"   📈 Repository calls: {metrics.get('repository_metrics', {}).get('total_queries', 'N/A')}")
         else:
@@ -121,6 +113,7 @@ async def test_strategy_pattern_integration():
     except Exception as e:
         print(f"❌ Integration test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -132,19 +125,25 @@ async def test_import_paths():
     try:
         # Test direct Strategy Pattern imports
         from ghl_real_estate_ai.services.scoring import (
-            PropertyMatcherContext, ScoringContext, ScoringResult,
-            create_property_matcher, get_scoring_factory
+            PropertyMatcherContext,
+            ScoringContext,
+            ScoringResult,
+            create_property_matcher,
+            get_scoring_factory,
         )
+
         print("✅ Direct Strategy Pattern imports working")
 
         # Test Repository Pattern imports
-        from property_data_service import PropertyDataService, PropertyDataServiceFactory
         from interfaces import PropertyQuery, SortOrder
+        from property_data_service import PropertyDataService, PropertyDataServiceFactory
         from query_builder import PropertyQueryBuilder
+
         print("✅ Repository Pattern imports working")
 
         # Test strategy integration imports
         from strategy_integration import STRATEGY_PATTERN_AVAILABLE
+
         print(f"✅ Strategy integration available: {STRATEGY_PATTERN_AVAILABLE}")
 
         return True
@@ -164,12 +163,12 @@ async def main():
         print("\n💥 Import tests failed - stopping here")
         return
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
 
     # Test integration functionality
     integration_ok = await test_strategy_pattern_integration()
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
 
     if integration_ok:
         print("\n🎉 ALL TESTS PASSED - Repository + Strategy Pattern Integration is working!")

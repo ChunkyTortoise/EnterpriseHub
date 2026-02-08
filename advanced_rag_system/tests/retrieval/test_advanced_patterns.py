@@ -7,36 +7,35 @@ This module tests:
 - Integration with AdvancedHybridSearcher
 """
 
-import pytest
-from uuid import uuid4
 from datetime import datetime
 from typing import List
+from uuid import uuid4
 
+import pytest
+from src.core.types import DocumentChunk, Metadata, SearchResult
 from src.retrieval.advanced import (
-    # Self-querying
-    DecomposedQuery,
-    FilterOperator,
-    MetadataFilter,
-    QueryDecomposer,
-    QueryOperator,
-    SelfQueryingResult,
-    SelfQueryingSearcher,
-    SubQuery,
+    CompressedDocument,
     # Contextual compression
     CompressionConfig,
     CompressionResult,
     CompressionStrategy,
-    CompressedDocument,
     ContextualCompressor,
+    # Self-querying
+    DecomposedQuery,
     EnhancedSearcher,
     ExtractiveCompressor,
+    FilterOperator,
+    MetadataFilter,
+    QueryDecomposer,
+    QueryOperator,
     RelevanceScore,
     RelevanceScorer,
     ScoringMethod,
+    SelfQueryingResult,
+    SelfQueryingSearcher,
+    SubQuery,
     TokenCounter,
 )
-from src.core.types import DocumentChunk, Metadata, SearchResult
-
 
 # ============================================================================
 # Fixtures
@@ -142,6 +141,7 @@ def mock_search_results(sample_documents) -> List[SearchResult]:
 @pytest.fixture
 def mock_advanced_searcher(mock_search_results):
     """Create mock AdvancedHybridSearcher."""
+
     class MockAdvancedSearcher:
         def __init__(self, results):
             self.results = results
@@ -178,9 +178,7 @@ class TestQueryDecomposer:
     @pytest.mark.asyncio
     async def test_decompose_comparative_query(self, query_decomposer):
         """Test decomposition of comparative query."""
-        result = await query_decomposer.decompose(
-            "What are the differences between product A and product B"
-        )
+        result = await query_decomposer.decompose("What are the differences between product A and product B")
 
         assert result.has_decomposition()
         assert len(result.sub_queries) == 2
@@ -202,16 +200,12 @@ class TestQueryDecomposer:
 
         # Check year filter extraction
         year_filters = [f for f in result.metadata_filters if f.field == "year"]
-        assert len(year_filters) > 0 or any(
-            f.field == "year" for sq in result.sub_queries for f in sq.filters
-        )
+        assert len(year_filters) > 0 or any(f.field == "year" for sq in result.sub_queries for f in sq.filters)
 
     @pytest.mark.asyncio
     async def test_decompose_list_query(self, query_decomposer):
         """Test decomposition of list query."""
-        result = await query_decomposer.decompose(
-            "Find information about Python, JavaScript, and Rust"
-        )
+        result = await query_decomposer.decompose("Find information about Python, JavaScript, and Rust")
 
         assert result.has_decomposition()
         assert len(result.sub_queries) >= 2
@@ -438,9 +432,7 @@ class TestExtractiveCompressor:
         doc = DocumentChunk(
             document_id=uuid4(),
             content=(
-                "JavaScript is for web development. "
-                "Python is great for data science. "
-                "Java is used for enterprise."
+                "JavaScript is for web development. Python is great for data science. Java is used for enterprise."
             ),
         )
 
@@ -494,9 +486,9 @@ class TestContextualCompressor:
         long_doc = DocumentChunk(
             document_id=uuid4(),
             content=(
-                "Python is a programming language. " * 20 +
-                "It is easy to learn and use. " * 20 +
-                "Python has many libraries. " * 20
+                "Python is a programming language. " * 20
+                + "It is easy to learn and use. " * 20
+                + "Python has many libraries. " * 20
             ),
         )
 
@@ -611,9 +603,7 @@ class TestEnhancedSearcher:
             enable_compression=True,
         )
 
-        original_lengths = [
-            len(r.chunk.content) for r in await mock_advanced_searcher.search("test")
-        ]
+        original_lengths = [len(r.chunk.content) for r in await mock_advanced_searcher.search("test")]
 
         results, compression = await enhanced.search(
             "Python",
@@ -644,9 +634,7 @@ class TestAdvancedPatternsIntegration:
         )
 
         # Create enhanced searcher with compression
-        compressor = ContextualCompressor(
-            config=CompressionConfig(target_compression_ratio=0.5)
-        )
+        compressor = ContextualCompressor(config=CompressionConfig(target_compression_ratio=0.5))
         enhanced = EnhancedSearcher(
             base_searcher=mock_advanced_searcher,
             compressor=compressor,
@@ -654,9 +642,7 @@ class TestAdvancedPatternsIntegration:
         )
 
         # Execute complex query with decomposition
-        sq_result = await sq_searcher.search(
-            "What are the differences between Python and JavaScript"
-        )
+        sq_result = await sq_searcher.search("What are the differences between Python and JavaScript")
 
         assert sq_result.decomposed_query.has_decomposition()
 
@@ -688,22 +674,14 @@ class TestAdvancedPatternsIntegration:
 
         # Check metadata filters were extracted
         has_year_filter = any(
-            f.field == "year" and f.value == 2023
-            for sq in sq_result.decomposed_query.sub_queries
-            for f in sq.filters
-        ) or any(
-            f.field == "year" and f.value == 2023
-            for f in sq_result.decomposed_query.metadata_filters
-        )
+            f.field == "year" and f.value == 2023 for sq in sq_result.decomposed_query.sub_queries for f in sq.filters
+        ) or any(f.field == "year" and f.value == 2023 for f in sq_result.decomposed_query.metadata_filters)
 
         has_author_filter = any(
             f.field == "author" and f.value == "John"
             for sq in sq_result.decomposed_query.sub_queries
             for f in sq.filters
-        ) or any(
-            f.field == "author" and f.value == "John"
-            for f in sq_result.decomposed_query.metadata_filters
-        )
+        ) or any(f.field == "author" and f.value == "John" for f in sq_result.decomposed_query.metadata_filters)
 
         assert has_year_filter, "Year filter should be extracted"
         assert has_author_filter, "Author filter should be extracted"
@@ -716,9 +694,7 @@ class TestAdvancedPatternsIntegration:
             DocumentChunk(
                 document_id=uuid4(),
                 content=(
-                    f"Document {i} content. " * 50 +
-                    "Python is a great language. " * 50 +
-                    "It has many features. " * 50
+                    f"Document {i} content. " * 50 + "Python is a great language. " * 50 + "It has many features. " * 50
                 ),
             )
             for i in range(3)

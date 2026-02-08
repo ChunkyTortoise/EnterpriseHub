@@ -13,21 +13,33 @@ Provides endpoints for comprehensive business intelligence and forecasting:
 Supports real-time analytics with <2s response time SLA.
 """
 
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any, Dict, List, Optional, Union
 
-from fastapi import APIRouter, HTTPException, Query, Body, Depends
-from pydantic import BaseModel, Field, ConfigDict
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from pydantic import BaseModel, ConfigDict, Field
 
+from ghl_real_estate_ai.api.middleware.auth import User, get_current_user
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.jorge_analytics_service import JorgeAnalyticsService
 from ghl_real_estate_ai.models.analytics_models import (
-    RevenueForecast, FunnelAnalysis, LeadQualityTrend, LeadQualityMetrics,
-    MarketTimingInsight, GeographicAnalysis, SourceROI, CompetitiveIntel,
-    PerformanceSummary, ExecutiveSummary, PerformanceGoal, MetricCategory,
-    AnalyticsRequest, AnalyticsResponse, ForecastHorizon, TimeSeriesAnalysis
+    AnalyticsRequest,
+    AnalyticsResponse,
+    CompetitiveIntel,
+    ExecutiveSummary,
+    ForecastHorizon,
+    FunnelAnalysis,
+    GeographicAnalysis,
+    LeadQualityMetrics,
+    LeadQualityTrend,
+    MarketTimingInsight,
+    MetricCategory,
+    PerformanceGoal,
+    PerformanceSummary,
+    RevenueForecast,
+    SourceROI,
+    TimeSeriesAnalysis,
 )
-from ghl_real_estate_ai.api.middleware.auth import get_current_user, User
+from ghl_real_estate_ai.services.jorge_analytics_service import JorgeAnalyticsService
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/jorge/analytics", tags=["jorge-analytics"])
@@ -35,8 +47,10 @@ router = APIRouter(prefix="/jorge/analytics", tags=["jorge-analytics"])
 
 # ================== REQUEST/RESPONSE MODELS ==================
 
+
 class ForecastRequest(BaseModel):
     """Request for revenue forecasting."""
+
     horizon_days: int = Field(default=30, ge=1, le=365, description="Forecast horizon in days")
     confidence_level: float = Field(default=0.85, ge=0.5, le=0.99, description="Confidence level for intervals")
     include_seasonality: bool = Field(default=True, description="Include seasonal adjustments")
@@ -45,6 +59,7 @@ class ForecastRequest(BaseModel):
 
 class FunnelAnalysisRequest(BaseModel):
     """Request for conversion funnel analysis."""
+
     time_period_days: int = Field(default=30, ge=1, le=365, description="Analysis time window")
     segment_by: Optional[str] = Field(None, description="Segment analysis by field (source, agent, etc.)")
     include_optimization_suggestions: bool = Field(default=True, description="Include optimization recommendations")
@@ -52,6 +67,7 @@ class FunnelAnalysisRequest(BaseModel):
 
 class LeadQualityRequest(BaseModel):
     """Request for lead quality analysis."""
+
     time_period_days: int = Field(default=30, ge=1, le=365, description="Analysis time window")
     include_calibration: bool = Field(default=True, description="Include calibration analysis")
     include_trends: bool = Field(default=True, description="Include trend analysis")
@@ -60,6 +76,7 @@ class LeadQualityRequest(BaseModel):
 
 class GeographicAnalysisRequest(BaseModel):
     """Request for geographic performance analysis."""
+
     time_period_days: int = Field(default=30, ge=1, le=365, description="Analysis time window")
     zip_codes: Optional[List[str]] = Field(None, description="Specific ZIP codes to analyze")
     include_opportunity_analysis: bool = Field(default=True, description="Include expansion opportunities")
@@ -68,6 +85,7 @@ class GeographicAnalysisRequest(BaseModel):
 
 class PerformanceGoalRequest(BaseModel):
     """Request to create or update performance goal."""
+
     goal_name: str = Field(..., description="Goal name")
     goal_category: MetricCategory = Field(..., description="Goal category")
     metric_name: str = Field(..., description="Metric being tracked")
@@ -78,6 +96,7 @@ class PerformanceGoalRequest(BaseModel):
 
 class DashboardFilters(BaseModel):
     """Dashboard filtering options."""
+
     date_range_days: int = Field(default=30, ge=1, le=365, description="Date range for analysis")
     lead_sources: Optional[List[str]] = Field(None, description="Filter by lead sources")
     neighborhoods: Optional[List[str]] = Field(None, description="Filter by neighborhoods")
@@ -88,6 +107,7 @@ class DashboardFilters(BaseModel):
 
 class AlertThreshold(BaseModel):
     """Performance alert threshold configuration."""
+
     metric_name: str = Field(..., description="Metric to monitor")
     threshold_value: float = Field(..., description="Alert threshold")
     threshold_type: str = Field(..., description="above/below/equal")
@@ -96,6 +116,7 @@ class AlertThreshold(BaseModel):
 
 class AnalyticsSummaryResponse(BaseModel):
     """Quick analytics summary response."""
+
     period: str
     key_metrics: Dict[str, float]
     trends: Dict[str, str]  # up/down/stable
@@ -106,6 +127,7 @@ class AnalyticsSummaryResponse(BaseModel):
 
 # ================== DEPENDENCY INJECTION ==================
 
+
 def get_analytics_service() -> JorgeAnalyticsService:
     """Get analytics service instance."""
     return JorgeAnalyticsService()
@@ -113,11 +135,12 @@ def get_analytics_service() -> JorgeAnalyticsService:
 
 # ================== MAIN ANALYTICS ENDPOINTS ==================
 
+
 @router.get("/executive-summary", response_model=ExecutiveSummary)
 async def get_executive_summary(
     filters: DashboardFilters = Depends(),
     service: JorgeAnalyticsService = Depends(get_analytics_service),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Get comprehensive executive summary for Jorge's dashboard.
@@ -137,8 +160,10 @@ async def get_executive_summary(
             segment_filters={
                 "lead_sources": filters.lead_sources,
                 "neighborhoods": filters.neighborhoods,
-                "agent": filters.agent_filter
-            } if any([filters.lead_sources, filters.neighborhoods, filters.agent_filter]) else None
+                "agent": filters.agent_filter,
+            }
+            if any([filters.lead_sources, filters.neighborhoods, filters.agent_filter])
+            else None,
         )
 
         # Get comprehensive summary
@@ -156,7 +181,7 @@ async def get_executive_summary(
 async def generate_revenue_forecast(
     request: ForecastRequest,
     service: JorgeAnalyticsService = Depends(get_analytics_service),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Generate revenue forecast using time-series analysis.
@@ -168,8 +193,7 @@ async def generate_revenue_forecast(
         logger.info(f"Generating {request.horizon_days}-day revenue forecast")
 
         forecast = await service.get_revenue_forecast(
-            horizon_days=request.horizon_days,
-            confidence_level=request.confidence_level
+            horizon_days=request.horizon_days, confidence_level=request.confidence_level
         )
 
         logger.info(f"Forecast: ${forecast.forecasted_revenue:,.0f} with {forecast.confidence_level:.0%} confidence")
@@ -184,7 +208,7 @@ async def generate_revenue_forecast(
 async def analyze_conversion_funnel(
     request: FunnelAnalysisRequest,
     service: JorgeAnalyticsService = Depends(get_analytics_service),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Analyze conversion funnel performance with optimization insights.
@@ -197,7 +221,9 @@ async def analyze_conversion_funnel(
 
         analysis = await service.analyze_conversion_funnel(request.time_period_days)
 
-        logger.info(f"Funnel analysis: {analysis.overall_conversion_rate:.1%} conversion rate, bottleneck at {analysis.bottleneck_stage.value}")
+        logger.info(
+            f"Funnel analysis: {analysis.overall_conversion_rate:.1%} conversion rate, bottleneck at {analysis.bottleneck_stage.value}"
+        )
         return analysis
 
     except Exception as e:
@@ -209,7 +235,7 @@ async def analyze_conversion_funnel(
 async def analyze_lead_quality(
     request: LeadQualityRequest,
     service: JorgeAnalyticsService = Depends(get_analytics_service),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Analyze lead scoring quality and accuracy metrics.
@@ -222,7 +248,9 @@ async def analyze_lead_quality(
 
         metrics = await service.get_lead_quality_summary(request.time_period_days)
 
-        logger.info(f"Lead quality: {metrics.prediction_accuracy:.1%} accuracy, {metrics.total_leads_scored} leads analyzed")
+        logger.info(
+            f"Lead quality: {metrics.prediction_accuracy:.1%} accuracy, {metrics.total_leads_scored} leads analyzed"
+        )
         return metrics
 
     except Exception as e:
@@ -232,8 +260,7 @@ async def analyze_lead_quality(
 
 @router.get("/market-timing", response_model=MarketTimingInsight)
 async def get_market_timing_intelligence(
-    service: JorgeAnalyticsService = Depends(get_analytics_service),
-    current_user: User = Depends(get_current_user)
+    service: JorgeAnalyticsService = Depends(get_analytics_service), current_user: User = Depends(get_current_user)
 ):
     """
     Get market timing intelligence for Rancho Cucamonga.
@@ -258,7 +285,7 @@ async def get_market_timing_intelligence(
 async def analyze_geographic_performance(
     request: GeographicAnalysisRequest,
     service: JorgeAnalyticsService = Depends(get_analytics_service),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Analyze performance by geographic area.
@@ -283,7 +310,7 @@ async def analyze_geographic_performance(
 async def get_source_roi_analysis(
     time_period_days: int = Query(default=30, ge=1, le=365, description="Analysis time window"),
     service: JorgeAnalyticsService = Depends(get_analytics_service),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Get ROI analysis by lead source.
@@ -306,8 +333,7 @@ async def get_source_roi_analysis(
 
 @router.get("/competitive-intelligence", response_model=CompetitiveIntel)
 async def get_competitive_intelligence(
-    service: JorgeAnalyticsService = Depends(get_analytics_service),
-    current_user: User = Depends(get_current_user)
+    service: JorgeAnalyticsService = Depends(get_analytics_service), current_user: User = Depends(get_current_user)
 ):
     """
     Get competitive intelligence for Rancho Cucamonga market.
@@ -332,7 +358,7 @@ async def get_competitive_intelligence(
 async def get_performance_summary(
     time_period_days: int = Query(default=30, ge=1, le=365, description="Analysis time window"),
     service: JorgeAnalyticsService = Depends(get_analytics_service),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Get performance summary with trends and alerts.
@@ -345,7 +371,9 @@ async def get_performance_summary(
 
         summary = await service.get_performance_summary(time_period_days)
 
-        logger.info(f"Performance summary: ${summary.total_revenue:,.0f} revenue, {summary.total_conversions} conversions")
+        logger.info(
+            f"Performance summary: ${summary.total_revenue:,.0f} revenue, {summary.total_conversions} conversions"
+        )
         return summary
 
     except Exception as e:
@@ -355,11 +383,12 @@ async def get_performance_summary(
 
 # ================== QUICK ACCESS ENDPOINTS ==================
 
+
 @router.get("/quick-summary", response_model=AnalyticsSummaryResponse)
 async def get_quick_analytics_summary(
     days: int = Query(default=7, ge=1, le=90, description="Days to analyze"),
     service: JorgeAnalyticsService = Depends(get_analytics_service),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Get quick analytics summary for mobile/widget use.
@@ -376,16 +405,16 @@ async def get_quick_analytics_summary(
                 "revenue": performance.total_revenue,
                 "conversions": float(performance.total_conversions),
                 "conversion_rate": performance.avg_conversion_rate,
-                "scoring_accuracy": performance.lead_scoring_accuracy
+                "scoring_accuracy": performance.lead_scoring_accuracy,
             },
             trends={
                 "revenue": performance.revenue_trend,
                 "conversions": performance.conversion_trend,
-                "quality": performance.quality_trend
+                "quality": performance.quality_trend,
             },
             alerts=performance.performance_alerts[:3],  # Top 3 alerts
             top_opportunities=performance.improvement_opportunities[:3],  # Top 3 opportunities
-            generated_at=datetime.utcnow()
+            generated_at=datetime.utcnow(),
         )
 
     except Exception as e:
@@ -395,8 +424,7 @@ async def get_quick_analytics_summary(
 
 @router.get("/kpi-dashboard", response_model=Dict[str, Any])
 async def get_kpi_dashboard(
-    service: JorgeAnalyticsService = Depends(get_analytics_service),
-    current_user: User = Depends(get_current_user)
+    service: JorgeAnalyticsService = Depends(get_analytics_service), current_user: User = Depends(get_current_user)
 ):
     """
     Get KPI dashboard with real-time metrics.
@@ -413,25 +441,25 @@ async def get_kpi_dashboard(
                 "monthly_revenue": performance.total_revenue,
                 "monthly_conversions": performance.total_conversions,
                 "avg_conversion_rate": performance.avg_conversion_rate,
-                "lead_scoring_accuracy": performance.lead_scoring_accuracy
+                "lead_scoring_accuracy": performance.lead_scoring_accuracy,
             },
             "forecasts": {
                 "next_30_days_revenue": forecast.forecasted_revenue,
                 "predicted_conversions": forecast.predicted_conversions,
-                "confidence_level": forecast.confidence_level
+                "confidence_level": forecast.confidence_level,
             },
             "trends": {
                 "revenue": performance.revenue_trend,
                 "conversions": performance.conversion_trend,
-                "quality": performance.quality_trend
+                "quality": performance.quality_trend,
             },
             "goal_progress": {
                 "on_track": performance.goals_on_track,
                 "behind": performance.goals_behind,
-                "ahead": performance.goals_ahead
+                "ahead": performance.goals_ahead,
             },
             "alerts": performance.performance_alerts,
-            "last_updated": datetime.utcnow().isoformat()
+            "last_updated": datetime.utcnow().isoformat(),
         }
 
     except Exception as e:
@@ -441,11 +469,12 @@ async def get_kpi_dashboard(
 
 # ================== GOAL MANAGEMENT ==================
 
+
 @router.get("/goals", response_model=List[PerformanceGoal])
 async def list_performance_goals(
     category: Optional[MetricCategory] = Query(None, description="Filter by goal category"),
     active_only: bool = Query(default=True, description="Show only active goals"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     List performance goals with progress tracking.
@@ -465,7 +494,7 @@ async def list_performance_goals(
                 completion_percentage=90.0,
                 on_track=True,
                 assigned_to="Jorge",
-                priority="high"
+                priority="high",
             ),
             PerformanceGoal(
                 goal_name="Lead Scoring Accuracy",
@@ -479,8 +508,8 @@ async def list_performance_goals(
                 completion_percentage=75.0,
                 on_track=True,
                 assigned_to="Jorge",
-                priority="medium"
-            )
+                priority="medium",
+            ),
         ]
 
         if category:
@@ -494,10 +523,7 @@ async def list_performance_goals(
 
 
 @router.post("/goals", response_model=Dict[str, str])
-async def create_performance_goal(
-    goal: PerformanceGoalRequest,
-    current_user: User = Depends(get_current_user)
-):
+async def create_performance_goal(goal: PerformanceGoalRequest, current_user: User = Depends(get_current_user)):
     """
     Create a new performance goal.
     """
@@ -510,7 +536,7 @@ async def create_performance_goal(
         return {
             "goal_id": goal_id,
             "status": "created",
-            "message": f"Performance goal '{goal.goal_name}' created successfully"
+            "message": f"Performance goal '{goal.goal_name}' created successfully",
         }
 
     except Exception as e:
@@ -520,10 +546,9 @@ async def create_performance_goal(
 
 # ================== HEALTH & MONITORING ==================
 
+
 @router.get("/health", response_model=Dict[str, Any])
-async def analytics_health_check(
-    service: JorgeAnalyticsService = Depends(get_analytics_service)
-):
+async def analytics_health_check(service: JorgeAnalyticsService = Depends(get_analytics_service)):
     """
     Health check for analytics service.
     """
@@ -537,7 +562,7 @@ async def analytics_health_check(
             "database_connection": "available",
             "cache_service": "available",
             "forecasting_models": "loaded",
-            "response_time_ms": 0
+            "response_time_ms": 0,
         }
 
         # Measure response time
@@ -551,7 +576,7 @@ async def analytics_health_check(
             "checks": health_checks,
             "timestamp": datetime.utcnow().isoformat(),
             "sla_target_ms": 2000,
-            "performance": "within_target" if response_time < 2000 else "degraded"
+            "performance": "within_target" if response_time < 2000 else "degraded",
         }
 
     except Exception as e:
@@ -560,5 +585,5 @@ async def analytics_health_check(
             "status": "unhealthy",
             "service": "jorge-analytics",
             "error": str(e),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }

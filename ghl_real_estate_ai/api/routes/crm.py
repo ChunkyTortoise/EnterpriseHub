@@ -61,6 +61,7 @@ async def get_ghl_fields():
     """
     try:
         from ghl_real_estate_ai.services.ghl_client import GHLClient
+
         ghl = GHLClient()
         fields = await ghl.get_custom_fields()
         if not fields:

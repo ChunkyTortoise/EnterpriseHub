@@ -19,24 +19,21 @@ Date: 2026-01-24
 Purpose: Validate Track 3.1 implementation before Jorge bot integration
 """
 
-import asyncio
-import time
-import statistics
-import psutil
 import argparse
-from datetime import datetime, timedelta
-from typing import List, Dict, Any
-import sys
+import asyncio
 import os
+import statistics
+import sys
+import time
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
+
+import psutil
 
 # Add project root to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../"))
 
-from bots.shared.ml_analytics_engine import (
-    MLAnalyticsEngine,
-    MLPredictionRequest,
-    get_ml_analytics_engine
-)
+from bots.shared.ml_analytics_engine import MLAnalyticsEngine, MLPredictionRequest, get_ml_analytics_engine
 
 
 class Track3PerformanceValidator:
@@ -48,7 +45,7 @@ class Track3PerformanceValidator:
             "business_logic": {},
             "cache_efficiency": {},
             "memory_usage": {},
-            "integration_readiness": {}
+            "integration_readiness": {},
         }
 
     async def run_comprehensive_validation(self, detailed: bool = False, benchmark: bool = False) -> Dict[str, Any]:
@@ -94,27 +91,57 @@ class Track3PerformanceValidator:
                 "jorge_score": 4.8,
                 "created_at": (base_time - timedelta(hours=6)).isoformat(),
                 "messages": [
-                    {"sender": "agent", "content": "Hello! Looking for properties?", "timestamp": (base_time - timedelta(hours=6)).isoformat()},
-                    {"sender": "lead", "content": "Yes! Need to buy in 30 days. Pre-approved for $500k", "timestamp": (base_time - timedelta(hours=5, minutes=45)).isoformat()},
-                    {"sender": "agent", "content": "Perfect! What area?", "timestamp": (base_time - timedelta(hours=5, minutes=40)).isoformat()},
-                    {"sender": "lead", "content": "Austin central, 3+ bedrooms", "timestamp": (base_time - timedelta(hours=5, minutes=35)).isoformat()},
+                    {
+                        "sender": "agent",
+                        "content": "Hello! Looking for properties?",
+                        "timestamp": (base_time - timedelta(hours=6)).isoformat(),
+                    },
+                    {
+                        "sender": "lead",
+                        "content": "Yes! Need to buy in 30 days. Pre-approved for $500k",
+                        "timestamp": (base_time - timedelta(hours=5, minutes=45)).isoformat(),
+                    },
+                    {
+                        "sender": "agent",
+                        "content": "Perfect! What area?",
+                        "timestamp": (base_time - timedelta(hours=5, minutes=40)).isoformat(),
+                    },
+                    {
+                        "sender": "lead",
+                        "content": "Austin central, 3+ bedrooms",
+                        "timestamp": (base_time - timedelta(hours=5, minutes=35)).isoformat(),
+                    },
                 ],
-                "property_preferences": {"price_max": 500000, "bedrooms": 3, "timeline": "30_days"}
+                "property_preferences": {"price_max": 500000, "bedrooms": 3, "timeline": "30_days"},
             },
-
             "moderate_lead": {
                 "lead_id": "moderate_002",
                 "jorge_score": 3.2,
                 "created_at": (base_time - timedelta(days=2)).isoformat(),
                 "messages": [
-                    {"sender": "agent", "content": "Hi there!", "timestamp": (base_time - timedelta(days=2)).isoformat()},
-                    {"sender": "lead", "content": "Hi, maybe interested in buying", "timestamp": (base_time - timedelta(days=1, hours=12)).isoformat()},
-                    {"sender": "agent", "content": "What's your budget?", "timestamp": (base_time - timedelta(days=1)).isoformat()},
-                    {"sender": "lead", "content": "Not sure yet, still looking", "timestamp": (base_time - timedelta(hours=8)).isoformat()},
+                    {
+                        "sender": "agent",
+                        "content": "Hi there!",
+                        "timestamp": (base_time - timedelta(days=2)).isoformat(),
+                    },
+                    {
+                        "sender": "lead",
+                        "content": "Hi, maybe interested in buying",
+                        "timestamp": (base_time - timedelta(days=1, hours=12)).isoformat(),
+                    },
+                    {
+                        "sender": "agent",
+                        "content": "What's your budget?",
+                        "timestamp": (base_time - timedelta(days=1)).isoformat(),
+                    },
+                    {
+                        "sender": "lead",
+                        "content": "Not sure yet, still looking",
+                        "timestamp": (base_time - timedelta(hours=8)).isoformat(),
+                    },
                 ],
-                "property_preferences": {"price_max": 0, "timeline": "flexible"}
+                "property_preferences": {"price_max": 0, "timeline": "flexible"},
             },
-
             "low_quality_lead": {
                 "lead_id": "low_quality_003",
                 "jorge_score": 1.5,
@@ -123,21 +150,32 @@ class Track3PerformanceValidator:
                     {"sender": "agent", "content": "Hello!", "timestamp": (base_time - timedelta(days=7)).isoformat()},
                     {"sender": "lead", "content": "Hi", "timestamp": (base_time - timedelta(days=5)).isoformat()},
                 ],
-                "property_preferences": {}
+                "property_preferences": {},
             },
-
             "fast_responder": {
                 "lead_id": "fast_responder_004",
                 "jorge_score": 4.2,
                 "created_at": (base_time - timedelta(hours=3)).isoformat(),
                 "messages": [
                     {"sender": "agent", "content": "Hello!", "timestamp": (base_time - timedelta(hours=3)).isoformat()},
-                    {"sender": "lead", "content": "Hi there!", "timestamp": (base_time - timedelta(hours=2, minutes=58)).isoformat()},
-                    {"sender": "agent", "content": "Looking to buy?", "timestamp": (base_time - timedelta(hours=2, minutes=57)).isoformat()},
-                    {"sender": "lead", "content": "Yes definitely!", "timestamp": (base_time - timedelta(hours=2, minutes=55)).isoformat()},
+                    {
+                        "sender": "lead",
+                        "content": "Hi there!",
+                        "timestamp": (base_time - timedelta(hours=2, minutes=58)).isoformat(),
+                    },
+                    {
+                        "sender": "agent",
+                        "content": "Looking to buy?",
+                        "timestamp": (base_time - timedelta(hours=2, minutes=57)).isoformat(),
+                    },
+                    {
+                        "sender": "lead",
+                        "content": "Yes definitely!",
+                        "timestamp": (base_time - timedelta(hours=2, minutes=55)).isoformat(),
+                    },
                 ],
-                "property_preferences": {"timeline": "urgent"}
-            }
+                "property_preferences": {"timeline": "urgent"},
+            },
         }
 
     async def _validate_performance(self, engine: MLAnalyticsEngine, test_data: Dict, benchmark: bool = False) -> None:
@@ -146,11 +184,7 @@ class Track3PerformanceValidator:
         print("\n🏃‍♂️ Performance Validation")
         print("-" * 30)
 
-        performance_results = {
-            "journey_prediction": [],
-            "conversion_analysis": [],
-            "touchpoint_optimization": []
-        }
+        performance_results = {"journey_prediction": [], "conversion_analysis": [], "touchpoint_optimization": []}
 
         # Mock _fetch_lead_data to control test data
         original_fetch = engine._fetch_lead_data
@@ -209,7 +243,7 @@ class Track3PerformanceValidator:
                 "max_ms": max_time,
                 "p95_ms": p95_time,
                 "meets_target": max_time < 50.0,
-                "sample_count": len(times)
+                "sample_count": len(times),
             }
 
             status = "✅ PASS" if max_time < 50.0 else "❌ FAIL"
@@ -245,7 +279,8 @@ class Track3PerformanceValidator:
         # Validate correlations
         jorge_correlation = {
             "high_conversion_higher": high_journey.conversion_probability > low_journey.conversion_probability,
-            "high_stage_conversion_higher": high_conversion.stage_conversion_probability > low_conversion.stage_conversion_probability,
+            "high_stage_conversion_higher": high_conversion.stage_conversion_probability
+            > low_conversion.stage_conversion_probability,
             "velocity_reasonable": 0.0 <= high_journey.stage_progression_velocity <= 1.0,
         }
 
@@ -263,7 +298,7 @@ class Track3PerformanceValidator:
         response_pattern_valid = {
             "pattern_detected": touchpoints.response_pattern in ["fast", "moderate", "slow", "insufficient_data"],
             "channels_valid": all(0.0 <= pref <= 1.0 for pref in touchpoints.channel_preferences.values()),
-            "frequency_valid": touchpoints.contact_frequency_recommendation in ["aggressive", "moderate", "patient"]
+            "frequency_valid": touchpoints.contact_frequency_recommendation in ["aggressive", "moderate", "patient"],
         }
 
         business_results["response_pattern_analysis"] = response_pattern_valid
@@ -305,7 +340,7 @@ class Track3PerformanceValidator:
             "cache_miss_time_ms": cache_miss_time,
             "cache_hit_time_ms": cache_hit_time,
             "cache_speedup": cache_miss_time / cache_hit_time if cache_hit_time > 0 else 1,
-            "results_consistent": first_result.conversion_probability == second_result.conversion_probability
+            "results_consistent": first_result.conversion_probability == second_result.conversion_probability,
         }
 
         cache_results["journey_prediction"] = cache_efficiency
@@ -373,7 +408,7 @@ class Track3PerformanceValidator:
             "peak_mb": peak_memory,
             "memory_growth_mb": memory_growth,
             "memory_leak_detected": memory_growth > 50,  # Arbitrary threshold
-            "memory_samples": memory_samples
+            "memory_samples": memory_samples,
         }
 
         self.results["memory_usage"] = memory_results
@@ -404,22 +439,18 @@ class Track3PerformanceValidator:
         # Assess integration readiness criteria
         readiness_criteria = {
             "performance_meets_sla": all(
-                self.results["performance"][method]["meets_target"]
-                for method in self.results["performance"]
+                self.results["performance"][method]["meets_target"] for method in self.results["performance"]
             ),
-            "business_logic_valid": all(
-                all(checks.values()) for checks in self.results["business_logic"].values()
-            ),
+            "business_logic_valid": all(all(checks.values()) for checks in self.results["business_logic"].values()),
             "provides_actionable_insights": (
-                journey.conversion_probability > 0 and
-                conversion.optimal_action is not None and
-                len(touchpoints.optimal_touchpoints) > 0
+                journey.conversion_probability > 0
+                and conversion.optimal_action is not None
+                and len(touchpoints.optimal_touchpoints) > 0
             ),
             "handles_errors_gracefully": True,  # Validated in other tests
             "cache_efficiency_good": all(
-                cache_data["cache_speedup"] > 1.5
-                for cache_data in self.results["cache_efficiency"].values()
-            )
+                cache_data["cache_speedup"] > 1.5 for cache_data in self.results["cache_efficiency"].values()
+            ),
         }
 
         integration_results["readiness_criteria"] = readiness_criteria
@@ -427,7 +458,7 @@ class Track3PerformanceValidator:
             "conversion_probability": journey.conversion_probability,
             "urgency_score": conversion.urgency_score,
             "response_pattern": touchpoints.response_pattern,
-            "optimal_action": conversion.optimal_action
+            "optimal_action": conversion.optimal_action,
         }
 
         engine._fetch_lead_data = original_fetch
@@ -448,17 +479,12 @@ class Track3PerformanceValidator:
         print("=" * 60)
 
         # Performance summary
-        performance_pass = all(
-            method_data["meets_target"]
-            for method_data in self.results["performance"].values()
-        )
+        performance_pass = all(method_data["meets_target"] for method_data in self.results["performance"].values())
 
         print(f"Performance Target (<50ms): {'✅ PASS' if performance_pass else '❌ FAIL'}")
 
         # Business logic summary
-        business_logic_pass = all(
-            all(checks.values()) for checks in self.results["business_logic"].values()
-        )
+        business_logic_pass = all(all(checks.values()) for checks in self.results["business_logic"].values())
 
         print(f"Business Logic Validation: {'✅ PASS' if business_logic_pass else '❌ FAIL'}")
 
@@ -503,10 +529,7 @@ async def main():
     args = parser.parse_args()
 
     validator = Track3PerformanceValidator()
-    results = await validator.run_comprehensive_validation(
-        detailed=args.detailed,
-        benchmark=args.benchmark
-    )
+    results = await validator.run_comprehensive_validation(detailed=args.detailed, benchmark=args.benchmark)
 
     return results
 

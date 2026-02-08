@@ -13,11 +13,11 @@ Integrates:
 """
 
 import logging
-from typing import TypedDict, Optional, List, Dict, Any, Literal
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any, Dict, List, Literal, Optional, TypedDict
 
-from langgraph.graph import StateGraph, END
+from langgraph.graph import END, StateGraph
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Enums & Data Models
 # ---------------------------------------------------------------------------
+
 
 class LeadType(str, Enum):
     SELLER = "seller"
@@ -44,6 +45,7 @@ class QualificationStage(str, Enum):
 
 class OrchestratorState(TypedDict):
     """State passed through every node of the qualification graph."""
+
     contact_id: str
     location_id: str
     message: str
@@ -71,6 +73,7 @@ class OrchestratorState(TypedDict):
 @dataclass
 class QualificationResult:
     """Returned to the caller after the graph completes."""
+
     success: bool
     response_content: str
     actions: list
@@ -92,18 +95,32 @@ BUYER_TAGS = {"Buyer-Lead"}
 DEACTIVATION_TAGS = {"AI-Off", "Qualified", "Stop-Bot", "Seller-Qualified"}
 
 SELLER_INTENT_KEYWORDS = [
-    "sell", "selling", "list", "listing", "what's my home worth",
-    "home value", "cash offer", "downsize",
+    "sell",
+    "selling",
+    "list",
+    "listing",
+    "what's my home worth",
+    "home value",
+    "cash offer",
+    "downsize",
 ]
 BUYER_INTENT_KEYWORDS = [
-    "buy", "buying", "looking for", "house hunt", "bedroom",
-    "pre-approved", "mortgage", "move to", "relocate",
+    "buy",
+    "buying",
+    "looking for",
+    "house hunt",
+    "bedroom",
+    "pre-approved",
+    "mortgage",
+    "move to",
+    "relocate",
 ]
 
 
 # ---------------------------------------------------------------------------
 # Orchestrator
 # ---------------------------------------------------------------------------
+
 
 class LeadQualificationOrchestrator:
     """

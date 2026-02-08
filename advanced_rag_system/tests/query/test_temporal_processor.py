@@ -1,15 +1,15 @@
 """Tests for Temporal Processor module."""
 
-import pytest
 from datetime import datetime, timedelta
-import numpy as np
 
+import numpy as np
+import pytest
 from src.query.temporal_processor import (
-    TemporalProcessor,
+    RecencyBoostConfig,
     TemporalConstraint,
     TemporalConstraintType,
     TemporalContext,
-    RecencyBoostConfig,
+    TemporalProcessor,
     TimeAwareRetriever,
 )
 
@@ -86,10 +86,7 @@ class TestTemporalProcessor:
         context = processor.extract_temporal_context("Show listings from 01/15/2024")
 
         assert len(context.constraints) > 0
-        assert any(
-            c.constraint_type == TemporalConstraintType.ABSOLUTE_DATE
-            for c in context.constraints
-        )
+        assert any(c.constraint_type == TemporalConstraintType.ABSOLUTE_DATE for c in context.constraints)
 
     def test_extract_absolute_date_iso(self, processor):
         """Test extraction of ISO format dates."""
@@ -102,18 +99,14 @@ class TestTemporalProcessor:
         context = processor.extract_temporal_context("Show me houses listed last week")
 
         assert len(context.constraints) > 0
-        relative_constraints = [
-            c for c in context.constraints if c.constraint_type == TemporalConstraintType.RELATIVE
-        ]
+        relative_constraints = [c for c in context.constraints if c.constraint_type == TemporalConstraintType.RELATIVE]
         assert len(relative_constraints) > 0
 
     def test_extract_relative_days_ago(self, processor):
         """Test extraction of 'X days ago'."""
         context = processor.extract_temporal_context("Show listings from 5 days ago")
 
-        relative_constraints = [
-            c for c in context.constraints if c.constraint_type == TemporalConstraintType.RELATIVE
-        ]
+        relative_constraints = [c for c in context.constraints if c.constraint_type == TemporalConstraintType.RELATIVE]
         assert len(relative_constraints) > 0
 
         # Check date calculation
@@ -125,9 +118,7 @@ class TestTemporalProcessor:
         """Test extraction of recency indicators."""
         context = processor.extract_temporal_context("Show me recent listings")
 
-        recency_constraints = [
-            c for c in context.constraints if c.constraint_type == TemporalConstraintType.RECENCY
-        ]
+        recency_constraints = [c for c in context.constraints if c.constraint_type == TemporalConstraintType.RECENCY]
         assert len(recency_constraints) > 0
         assert context.recency_preference > 0.7
 
@@ -136,9 +127,7 @@ class TestTemporalProcessor:
         context = processor.extract_temporal_context("Show all historical data")
 
         historical_constraints = [
-            c
-            for c in context.constraints
-            if c.constraint_type == TemporalConstraintType.HISTORICAL
+            c for c in context.constraints if c.constraint_type == TemporalConstraintType.HISTORICAL
         ]
         assert len(historical_constraints) > 0
         assert context.recency_preference < 0.5
@@ -147,16 +136,12 @@ class TestTemporalProcessor:
         """Test extraction of seasonal references."""
         context = processor.extract_temporal_context("Show listings from summer 2023")
 
-        seasonal_constraints = [
-            c for c in context.constraints if c.constraint_type == TemporalConstraintType.SEASONAL
-        ]
+        seasonal_constraints = [c for c in context.constraints if c.constraint_type == TemporalConstraintType.SEASONAL]
         assert len(seasonal_constraints) > 0
 
     def test_extract_multiple_constraints(self, processor):
         """Test extraction of multiple constraints."""
-        context = processor.extract_temporal_context(
-            "Show me recent houses in Rancho Cucamonga listed last month"
-        )
+        context = processor.extract_temporal_context("Show me recent houses in Rancho Cucamonga listed last month")
 
         assert len(context.constraints) >= 2
         assert len(context.time_keywords) > 0

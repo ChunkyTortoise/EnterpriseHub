@@ -52,9 +52,7 @@ class DemoModeManager:
             "Ranch-style home with acreage",
         ]
 
-    def generate_demo_dataset(
-        self, num_conversations: int = 100, days_back: int = 30
-    ) -> Dict[str, Any]:
+    def generate_demo_dataset(self, num_conversations: int = 100, days_back: int = 30) -> Dict[str, Any]:
         """
         Generate complete demo dataset
 
@@ -84,9 +82,7 @@ class DemoModeManager:
             "trends": trends,
         }
 
-    def _generate_conversations(
-        self, count: int, days_back: int
-    ) -> List[Dict[str, Any]]:
+    def _generate_conversations(self, count: int, days_back: int) -> List[Dict[str, Any]]:
         """Generate realistic conversation data"""
         conversations = []
 
@@ -128,8 +124,8 @@ class DemoModeManager:
             )
 
             conversation = {
-                "conversation_id": f"conv_{i+1:04d}",
-                "contact_id": f"contact_{i+1:04d}",
+                "conversation_id": f"conv_{i + 1:04d}",
+                "contact_id": f"contact_{i + 1:04d}",
                 "name": random.choice(self.names),
                 "phone": random.choice(self.phone_numbers),
                 "timestamp": timestamp.isoformat(),
@@ -148,9 +144,7 @@ class DemoModeManager:
 
         return conversations
 
-    def _generate_messages(
-        self, count: int, classification: str
-    ) -> List[Dict[str, Any]]:
+    def _generate_messages(self, count: int, classification: str) -> List[Dict[str, Any]]:
         """Generate realistic message exchange"""
         hot_lead_messages = [
             "Hi, I'm interested in viewing properties this weekend",
@@ -187,12 +181,10 @@ class DemoModeManager:
         for i in range(min(count, len(pool))):
             messages.append(
                 {
-                    "message_id": f"msg_{i+1}",
+                    "message_id": f"msg_{i + 1}",
                     "text": pool[i] if i < len(pool) else "Thanks for the information",
                     "from": "contact" if i % 2 == 0 else "agent",
-                    "timestamp": (
-                        datetime.now() - timedelta(minutes=count - i)
-                    ).isoformat(),
+                    "timestamp": (datetime.now() - timedelta(minutes=count - i)).isoformat(),
                 }
             )
 
@@ -230,18 +222,14 @@ class DemoModeManager:
         appointments = len([c for c in conversations if c["appointment_set"]])
 
         response_times = [c["response_time_minutes"] for c in conversations]
-        avg_response = (
-            sum(response_times) / len(response_times) if response_times else 0
-        )
+        avg_response = sum(response_times) / len(response_times) if response_times else 0
 
         return {
             "total_conversations": total,
             "lead_distribution": {"hot": hot, "warm": warm, "cold": cold},
             "conversion": {
                 "appointments_set": appointments,
-                "conversion_rate": (
-                    round((appointments / total * 100), 1) if total > 0 else 0
-                ),
+                "conversion_rate": (round((appointments / total * 100), 1) if total > 0 else 0),
             },
             "response_time": {
                 "average_minutes": round(avg_response, 1),
@@ -331,6 +319,4 @@ class DemoScenario:
         scenario = cls.SCENARIOS[scenario_id]
         generator = DemoModeManager()
 
-        return generator.generate_demo_dataset(
-            num_conversations=scenario["conversations"], days_back=scenario["days"]
-        )
+        return generator.generate_demo_dataset(num_conversations=scenario["conversations"], days_back=scenario["days"])

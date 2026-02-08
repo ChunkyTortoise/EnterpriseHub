@@ -24,54 +24,53 @@ Author: EnterpriseHub AI
 Last Updated: 2026-01-09
 """
 
-import logging
 import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass, asdict
 import json
+import logging
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
+
+from .behavioral_triggers import BehavioralTriggerEngine
+from .churn_intervention_orchestrator import InterventionExecution, InterventionOrchestrator, InterventionStatus
 
 # Internal service imports
-from .churn_prediction_engine import (
-    ChurnPredictionEngine,
-    ChurnPrediction,
-    ChurnRiskTier
-)
-from .churn_intervention_orchestrator import (
-    InterventionOrchestrator,
-    InterventionExecution,
-    InterventionStatus
-)
-from .memory_service import MemoryService
-from .lead_lifecycle import LeadLifecycleTracker
-from .behavioral_triggers import BehavioralTriggerEngine
-from .lead_scorer import LeadScorer
-from .reengagement_engine import ReengagementEngine
+from .churn_prediction_engine import ChurnPrediction, ChurnPredictionEngine, ChurnRiskTier
 from .ghl_service import GHLService
+from .lead_lifecycle import LeadLifecycleTracker
+from .lead_scorer import LeadScorer
+from .memory_service import MemoryService
+from .reengagement_engine import ReengagementEngine
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class ChurnPredictionRequest:
     """Request structure for churn predictions"""
+
     lead_ids: List[str]
     force_refresh: bool = False
     include_recommendations: bool = True
     trigger_interventions: bool = True
 
+
 @dataclass
 class ChurnPredictionResponse:
     """Response structure for churn predictions"""
+
     predictions: Dict[str, ChurnPrediction]
     high_risk_leads: List[str]
     triggered_interventions: Dict[str, List[InterventionExecution]]
     processing_summary: Dict[str, Any]
     errors: List[str]
 
+
 @dataclass
 class ChurnSystemHealth:
     """System health status for churn prediction components"""
+
     prediction_engine_status: str
     intervention_orchestrator_status: str
     service_dependencies: Dict[str, str]
@@ -79,6 +78,7 @@ class ChurnSystemHealth:
     total_predictions_today: int
     intervention_success_rate: float
     system_alerts: List[str]
+
 
 class ChurnIntegrationService:
     """
@@ -88,14 +88,16 @@ class ChurnIntegrationService:
     managing the complexity of coordinating multiple underlying services.
     """
 
-    def __init__(self,
-                 memory_service: MemoryService,
-                 lifecycle_tracker: LeadLifecycleTracker,
-                 behavioral_engine: BehavioralTriggerEngine,
-                 lead_scorer: LeadScorer,
-                 reengagement_engine: ReengagementEngine,
-                 ghl_service: GHLService,
-                 model_path: Optional[str] = None):
+    def __init__(
+        self,
+        memory_service: MemoryService,
+        lifecycle_tracker: LeadLifecycleTracker,
+        behavioral_engine: BehavioralTriggerEngine,
+        lead_scorer: LeadScorer,
+        reengagement_engine: ReengagementEngine,
+        ghl_service: GHLService,
+        model_path: Optional[str] = None,
+    ):
 
         # Store service dependencies
         self.memory_service = memory_service
@@ -111,23 +113,21 @@ class ChurnIntegrationService:
             lifecycle_tracker=lifecycle_tracker,
             behavioral_engine=behavioral_engine,
             lead_scorer=lead_scorer,
-            model_path=model_path
+            model_path=model_path,
         )
 
         self.intervention_orchestrator = InterventionOrchestrator(
-            reengagement_engine=reengagement_engine,
-            memory_service=memory_service,
-            ghl_service=ghl_service
+            reengagement_engine=reengagement_engine, memory_service=memory_service, ghl_service=ghl_service
         )
 
         # Service configuration
         self.config = {
-            'batch_size': 50,  # Max leads per batch prediction
-            'prediction_cache_ttl_hours': 4,
-            'auto_intervention_enabled': True,
-            'critical_risk_threshold': 80.0,
-            'high_risk_threshold': 60.0,
-            'max_daily_predictions': 1000
+            "batch_size": 50,  # Max leads per batch prediction
+            "prediction_cache_ttl_hours": 4,
+            "auto_intervention_enabled": True,
+            "critical_risk_threshold": 80.0,
+            "high_risk_threshold": 60.0,
+            "max_daily_predictions": 1000,
         }
 
         # Runtime tracking
@@ -140,10 +140,10 @@ class ChurnIntegrationService:
             last_prediction_run=None,
             total_predictions_today=0,
             intervention_success_rate=0.0,
-            system_alerts=[]
+            system_alerts=[],
         )
 
-        self.logger = logging.getLogger(__name__ + '.ChurnIntegrationService')
+        self.logger = logging.getLogger(__name__ + ".ChurnIntegrationService")
         self.logger.info("ChurnIntegrationService initialized successfully")
 
     async def predict_churn_risk(self, request: ChurnPredictionRequest) -> ChurnPredictionResponse:
@@ -175,7 +175,7 @@ class ChurnIntegrationService:
                     all_predictions.update(batch_predictions)
 
                     # Trigger interventions if enabled
-                    if request.trigger_interventions and self.config['auto_intervention_enabled']:
+                    if request.trigger_interventions and self.config["auto_intervention_enabled"]:
                         batch_interventions = await self._trigger_interventions_for_batch(batch_predictions)
                         all_interventions.update(batch_interventions)
 
@@ -199,11 +199,13 @@ class ChurnIntegrationService:
                 high_risk_leads=high_risk_leads,
                 triggered_interventions=all_interventions,
                 processing_summary=processing_summary,
-                errors=errors
+                errors=errors,
             )
 
-            self.logger.info(f"Churn prediction completed: {len(all_predictions)} predictions, "
-                           f"{len(high_risk_leads)} high-risk leads identified")
+            self.logger.info(
+                f"Churn prediction completed: {len(all_predictions)} predictions, "
+                f"{len(high_risk_leads)} high-risk leads identified"
+            )
 
             return response
 
@@ -229,20 +231,20 @@ class ChurnIntegrationService:
             request = ChurnPredictionRequest(
                 lead_ids=active_leads[:100],  # Limit for performance
                 force_refresh=False,
-                trigger_interventions=False
+                trigger_interventions=False,
             )
 
             prediction_response = await self.predict_churn_risk(request)
 
             # Calculate dashboard metrics
             dashboard_data = {
-                'summary_metrics': await self._calculate_summary_metrics(prediction_response.predictions),
-                'risk_distribution': self._calculate_risk_distribution(prediction_response.predictions),
-                'trend_data': await self._get_trend_data(days_back),
-                'intervention_analytics': await self.intervention_orchestrator.get_intervention_analytics(days_back),
-                'high_priority_leads': self._get_high_priority_leads(prediction_response.predictions),
-                'system_health': asdict(self._system_health),
-                'last_updated': datetime.now().isoformat()
+                "summary_metrics": await self._calculate_summary_metrics(prediction_response.predictions),
+                "risk_distribution": self._calculate_risk_distribution(prediction_response.predictions),
+                "trend_data": await self._get_trend_data(days_back),
+                "intervention_analytics": await self.intervention_orchestrator.get_intervention_analytics(days_back),
+                "high_priority_leads": self._get_high_priority_leads(prediction_response.predictions),
+                "system_health": asdict(self._system_health),
+                "last_updated": datetime.now().isoformat(),
             }
 
             return dashboard_data
@@ -251,8 +253,9 @@ class ChurnIntegrationService:
             self.logger.error(f"Error generating dashboard data: {str(e)}")
             return self._create_dashboard_error_response(str(e))
 
-    async def execute_manual_intervention(self, lead_id: str, intervention_type: str,
-                                        urgency_override: Optional[str] = None) -> Dict[str, Any]:
+    async def execute_manual_intervention(
+        self, lead_id: str, intervention_type: str, urgency_override: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
         Manually trigger intervention for specific lead
 
@@ -269,15 +272,13 @@ class ChurnIntegrationService:
 
             # Get current churn prediction
             prediction_request = ChurnPredictionRequest(
-                lead_ids=[lead_id],
-                force_refresh=True,
-                trigger_interventions=False
+                lead_ids=[lead_id], force_refresh=True, trigger_interventions=False
             )
 
             prediction_response = await self.predict_churn_risk(prediction_request)
 
             if lead_id not in prediction_response.predictions:
-                return {'success': False, 'error': 'Could not generate prediction for lead'}
+                return {"success": False, "error": "Could not generate prediction for lead"}
 
             prediction = prediction_response.predictions[lead_id]
 
@@ -292,23 +293,25 @@ class ChurnIntegrationService:
                 intervention_type=intervention_type,
                 trigger_prediction=prediction,
                 scheduled_time=datetime.now(),
-                personalization_data=await self.intervention_orchestrator._prepare_personalization_data(lead_id, prediction)
+                personalization_data=await self.intervention_orchestrator._prepare_personalization_data(
+                    lead_id, prediction
+                ),
             )
 
             # Execute intervention
             success = await self.intervention_orchestrator._execute_intervention(intervention)
 
             result = {
-                'success': success,
-                'intervention_id': intervention.execution_id,
-                'lead_id': lead_id,
-                'intervention_type': intervention_type,
-                'executed_at': datetime.now().isoformat(),
-                'prediction_context': {
-                    'risk_score': prediction.risk_score_14d,
-                    'risk_tier': prediction.risk_tier.value,
-                    'confidence': prediction.confidence
-                }
+                "success": success,
+                "intervention_id": intervention.execution_id,
+                "lead_id": lead_id,
+                "intervention_type": intervention_type,
+                "executed_at": datetime.now().isoformat(),
+                "prediction_context": {
+                    "risk_score": prediction.risk_score_14d,
+                    "risk_tier": prediction.risk_tier.value,
+                    "confidence": prediction.confidence,
+                },
             }
 
             if success:
@@ -320,10 +323,11 @@ class ChurnIntegrationService:
 
         except Exception as e:
             self.logger.error(f"Error executing manual intervention: {str(e)}")
-            return {'success': False, 'error': str(e)}
+            return {"success": False, "error": str(e)}
 
-    async def update_churn_model_training_data(self, lead_id: str, actual_outcome: str,
-                                             outcome_date: datetime) -> Dict[str, bool]:
+    async def update_churn_model_training_data(
+        self, lead_id: str, actual_outcome: str, outcome_date: datetime
+    ) -> Dict[str, bool]:
         """
         Update model training data with actual churn outcomes
 
@@ -339,27 +343,27 @@ class ChurnIntegrationService:
             self.logger.info(f"Recording churn outcome: {lead_id} -> {actual_outcome}")
 
             # Convert outcome to boolean
-            actually_churned = actual_outcome.lower() == 'churned'
+            actually_churned = actual_outcome.lower() == "churned"
 
             # Update prediction engine training data
             await self.prediction_engine.update_model_training_data(lead_id, actually_churned)
 
             # Log for analytics
             training_update = {
-                'lead_id': lead_id,
-                'actual_outcome': actual_outcome,
-                'actually_churned': actually_churned,
-                'outcome_date': outcome_date.isoformat(),
-                'recorded_at': datetime.now().isoformat()
+                "lead_id": lead_id,
+                "actual_outcome": actual_outcome,
+                "actually_churned": actually_churned,
+                "outcome_date": outcome_date.isoformat(),
+                "recorded_at": datetime.now().isoformat(),
             }
 
             self.logger.info(f"Training data updated: {json.dumps(training_update)}")
 
-            return {'success': True, 'recorded_outcome': actually_churned}
+            return {"success": True, "recorded_outcome": actually_churned}
 
         except Exception as e:
             self.logger.error(f"Error updating training data: {str(e)}")
-            return {'success': False, 'error': str(e)}
+            return {"success": False, "error": str(e)}
 
     async def get_system_health(self) -> ChurnSystemHealth:
         """Get current system health status"""
@@ -369,35 +373,36 @@ class ChurnIntegrationService:
 
             # Test each service dependency
             services = [
-                ('memory_service', self.memory_service),
-                ('lifecycle_tracker', self.lifecycle_tracker),
-                ('behavioral_engine', self.behavioral_engine),
-                ('lead_scorer', self.lead_scorer),
-                ('reengagement_engine', self.reengagement_engine),
-                ('ghl_service', self.ghl_service)
+                ("memory_service", self.memory_service),
+                ("lifecycle_tracker", self.lifecycle_tracker),
+                ("behavioral_engine", self.behavioral_engine),
+                ("lead_scorer", self.lead_scorer),
+                ("reengagement_engine", self.reengagement_engine),
+                ("ghl_service", self.ghl_service),
             ]
 
             for service_name, service in services:
                 try:
                     # Basic health check (method availability)
-                    if hasattr(service, 'health_check'):
+                    if hasattr(service, "health_check"):
                         health = await service.health_check()
-                        service_health[service_name] = 'healthy' if health else 'unhealthy'
+                        service_health[service_name] = "healthy" if health else "unhealthy"
                     else:
-                        service_health[service_name] = 'available'
+                        service_health[service_name] = "available"
                 except Exception as e:
-                    service_health[service_name] = f'error: {str(e)[:50]}'
+                    service_health[service_name] = f"error: {str(e)[:50]}"
 
             # Update system health
             self._system_health.service_dependencies = service_health
 
             # Check for system alerts
             alerts = []
-            if self._daily_prediction_count > self.config['max_daily_predictions'] * 0.9:
+            if self._daily_prediction_count > self.config["max_daily_predictions"] * 0.9:
                 alerts.append("Approaching daily prediction limit")
 
-            unhealthy_services = [name for name, status in service_health.items()
-                                if 'error' in status or status == 'unhealthy']
+            unhealthy_services = [
+                name for name, status in service_health.items() if "error" in status or status == "unhealthy"
+            ]
             if unhealthy_services:
                 alerts.append(f"Service issues: {', '.join(unhealthy_services)}")
 
@@ -418,7 +423,7 @@ class ChurnIntegrationService:
             raise ValueError("Request exceeds maximum batch size of 200 leads")
 
         # Check daily limits
-        if self._daily_prediction_count + len(request.lead_ids) > self.config['max_daily_predictions']:
+        if self._daily_prediction_count + len(request.lead_ids) > self.config["max_daily_predictions"]:
             raise ValueError("Request would exceed daily prediction limit")
 
         # Reset daily counter if needed
@@ -429,8 +434,8 @@ class ChurnIntegrationService:
 
     def _batch_lead_ids(self, lead_ids: List[str]) -> List[List[str]]:
         """Split lead IDs into processing batches"""
-        batch_size = self.config['batch_size']
-        return [lead_ids[i:i + batch_size] for i in range(0, len(lead_ids), batch_size)]
+        batch_size = self.config["batch_size"]
+        return [lead_ids[i : i + batch_size] for i in range(0, len(lead_ids), batch_size)]
 
     async def _process_prediction_batch(self, lead_ids: List[str], force_refresh: bool) -> Dict[str, ChurnPrediction]:
         """Process churn predictions for a batch of leads"""
@@ -448,7 +453,9 @@ class ChurnIntegrationService:
 
         return predictions
 
-    async def _trigger_interventions_for_batch(self, predictions: Dict[str, ChurnPrediction]) -> Dict[str, List[InterventionExecution]]:
+    async def _trigger_interventions_for_batch(
+        self, predictions: Dict[str, ChurnPrediction]
+    ) -> Dict[str, List[InterventionExecution]]:
         """Trigger interventions for batch predictions"""
         try:
             return await self.intervention_orchestrator.process_churn_predictions(predictions)
@@ -461,8 +468,10 @@ class ChurnIntegrationService:
         high_risk_leads = []
 
         for lead_id, prediction in predictions.items():
-            if (prediction.risk_tier in [ChurnRiskTier.CRITICAL, ChurnRiskTier.HIGH] or
-                prediction.risk_score_14d >= self.config['high_risk_threshold']):
+            if (
+                prediction.risk_tier in [ChurnRiskTier.CRITICAL, ChurnRiskTier.HIGH]
+                or prediction.risk_score_14d >= self.config["high_risk_threshold"]
+            ):
                 high_risk_leads.append(lead_id)
 
         # Sort by risk score (descending)
@@ -470,14 +479,18 @@ class ChurnIntegrationService:
 
         return high_risk_leads
 
-    async def _generate_processing_summary(self, predictions: Dict[str, ChurnPrediction],
-                                         interventions: Dict[str, List[InterventionExecution]],
-                                         start_time: datetime, errors: List[str]) -> Dict[str, Any]:
+    async def _generate_processing_summary(
+        self,
+        predictions: Dict[str, ChurnPrediction],
+        interventions: Dict[str, List[InterventionExecution]],
+        start_time: datetime,
+        errors: List[str],
+    ) -> Dict[str, Any]:
         """Generate processing summary statistics"""
         processing_time = (datetime.now() - start_time).total_seconds()
 
         # Risk distribution
-        risk_counts = {'critical': 0, 'high': 0, 'medium': 0, 'low': 0}
+        risk_counts = {"critical": 0, "high": 0, "medium": 0, "low": 0}
         confidence_scores = []
 
         for prediction in predictions.values():
@@ -488,14 +501,16 @@ class ChurnIntegrationService:
         total_interventions = sum(len(intervention_list) for intervention_list in interventions.values())
 
         return {
-            'total_predictions': len(predictions),
-            'processing_time_seconds': processing_time,
-            'risk_distribution': risk_counts,
-            'average_confidence': sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0,
-            'total_interventions_triggered': total_interventions,
-            'leads_with_interventions': len(interventions),
-            'error_count': len(errors),
-            'success_rate': (len(predictions) / (len(predictions) + len(errors))) * 100 if (len(predictions) + len(errors)) > 0 else 0
+            "total_predictions": len(predictions),
+            "processing_time_seconds": processing_time,
+            "risk_distribution": risk_counts,
+            "average_confidence": sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0,
+            "total_interventions_triggered": total_interventions,
+            "leads_with_interventions": len(interventions),
+            "error_count": len(errors),
+            "success_rate": (len(predictions) / (len(predictions) + len(errors))) * 100
+            if (len(predictions) + len(errors)) > 0
+            else 0,
         }
 
     async def _update_system_health(self, predictions_processed: int, error_count: int):
@@ -514,7 +529,7 @@ class ChurnIntegrationService:
         # Update intervention success rate
         try:
             analytics = await self.intervention_orchestrator.get_intervention_analytics(1)
-            self._system_health.intervention_success_rate = analytics.get('success_rate', 0.0)
+            self._system_health.intervention_success_rate = analytics.get("success_rate", 0.0)
             self._system_health.intervention_orchestrator_status = "healthy"
         except Exception:
             self._system_health.intervention_orchestrator_status = "error"
@@ -524,7 +539,7 @@ class ChurnIntegrationService:
         try:
             # This would integrate with your lead management system
             # For demo, generating sample lead IDs
-            return [f'LEAD_{i:04d}' for i in range(1, 201)]
+            return [f"LEAD_{i:04d}" for i in range(1, 201)]
         except Exception as e:
             self.logger.error(f"Error getting active leads: {str(e)}")
             return []
@@ -532,7 +547,7 @@ class ChurnIntegrationService:
     async def _calculate_summary_metrics(self, predictions: Dict[str, ChurnPrediction]) -> Dict[str, Any]:
         """Calculate summary metrics for dashboard"""
         if not predictions:
-            return {'total_leads': 0, 'critical_risk': 0, 'high_risk': 0, 'average_risk': 0}
+            return {"total_leads": 0, "critical_risk": 0, "high_risk": 0, "average_risk": 0}
 
         total_leads = len(predictions)
         critical_risk = len([p for p in predictions.values() if p.risk_tier == ChurnRiskTier.CRITICAL])
@@ -540,16 +555,16 @@ class ChurnIntegrationService:
         average_risk = sum(p.risk_score_14d for p in predictions.values()) / total_leads
 
         return {
-            'total_leads': total_leads,
-            'critical_risk': critical_risk,
-            'high_risk': high_risk,
-            'average_risk': average_risk,
-            'churn_prevention_target': critical_risk + high_risk
+            "total_leads": total_leads,
+            "critical_risk": critical_risk,
+            "high_risk": high_risk,
+            "average_risk": average_risk,
+            "churn_prevention_target": critical_risk + high_risk,
         }
 
     def _calculate_risk_distribution(self, predictions: Dict[str, ChurnPrediction]) -> Dict[str, int]:
         """Calculate risk distribution for dashboard charts"""
-        distribution = {'critical': 0, 'high': 0, 'medium': 0, 'low': 0}
+        distribution = {"critical": 0, "high": 0, "medium": 0, "low": 0}
 
         for prediction in predictions.values():
             distribution[prediction.risk_tier.value] += 1
@@ -559,17 +574,13 @@ class ChurnIntegrationService:
     async def _get_trend_data(self, days_back: int) -> Dict[str, List]:
         """Get trend data for dashboard (sample implementation)"""
         # In production, this would query historical data
-        dates = [(datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(days_back, 0, -1)]
+        dates = [(datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(days_back, 0, -1)]
 
         # Sample trend data
         critical_trend = [np.random.randint(2, 8) for _ in dates]
         high_trend = [np.random.randint(5, 15) for _ in dates]
 
-        return {
-            'dates': dates,
-            'critical_risk_trend': critical_trend,
-            'high_risk_trend': high_trend
-        }
+        return {"dates": dates, "critical_risk_trend": critical_trend, "high_risk_trend": high_trend}
 
     def _get_high_priority_leads(self, predictions: Dict[str, ChurnPrediction]) -> List[Dict[str, Any]]:
         """Get high-priority leads for dashboard queue"""
@@ -577,18 +588,22 @@ class ChurnIntegrationService:
 
         for lead_id, prediction in predictions.items():
             if prediction.risk_tier in [ChurnRiskTier.CRITICAL, ChurnRiskTier.HIGH]:
-                high_priority.append({
-                    'lead_id': lead_id,
-                    'risk_score': prediction.risk_score_14d,
-                    'risk_tier': prediction.risk_tier.value,
-                    'confidence': prediction.confidence,
-                    'urgency': prediction.intervention_urgency,
-                    'top_risk_factor': prediction.top_risk_factors[0][0] if prediction.top_risk_factors else 'unknown',
-                    'recommendations': prediction.recommended_actions[:2]
-                })
+                high_priority.append(
+                    {
+                        "lead_id": lead_id,
+                        "risk_score": prediction.risk_score_14d,
+                        "risk_tier": prediction.risk_tier.value,
+                        "confidence": prediction.confidence,
+                        "urgency": prediction.intervention_urgency,
+                        "top_risk_factor": prediction.top_risk_factors[0][0]
+                        if prediction.top_risk_factors
+                        else "unknown",
+                        "recommendations": prediction.recommended_actions[:2],
+                    }
+                )
 
         # Sort by risk score
-        high_priority.sort(key=lambda x: x['risk_score'], reverse=True)
+        high_priority.sort(key=lambda x: x["risk_score"], reverse=True)
 
         return high_priority[:20]  # Top 20
 
@@ -598,17 +613,17 @@ class ChurnIntegrationService:
             predictions={},
             high_risk_leads=[],
             triggered_interventions={},
-            processing_summary={'error': error_message},
-            errors=[error_message]
+            processing_summary={"error": error_message},
+            errors=[error_message],
         )
 
     def _create_dashboard_error_response(self, error_message: str) -> Dict[str, Any]:
         """Create error response for dashboard data"""
         return {
-            'error': error_message,
-            'summary_metrics': {'total_leads': 0, 'critical_risk': 0, 'high_risk': 0, 'average_risk': 0},
-            'risk_distribution': {'critical': 0, 'high': 0, 'medium': 0, 'low': 0},
-            'last_updated': datetime.now().isoformat()
+            "error": error_message,
+            "summary_metrics": {"total_leads": 0, "critical_risk": 0, "high_risk": 0, "average_risk": 0},
+            "risk_distribution": {"critical": 0, "high": 0, "medium": 0, "low": 0},
+            "last_updated": datetime.now().isoformat(),
         }
 
     # Public API Methods for External Integration
@@ -616,11 +631,7 @@ class ChurnIntegrationService:
     async def predict_single_lead_churn(self, lead_id: str) -> Optional[ChurnPrediction]:
         """Simplified API for single lead prediction"""
         try:
-            request = ChurnPredictionRequest(
-                lead_ids=[lead_id],
-                force_refresh=False,
-                trigger_interventions=True
-            )
+            request = ChurnPredictionRequest(lead_ids=[lead_id], force_refresh=False, trigger_interventions=True)
 
             response = await self.predict_churn_risk(request)
             return response.predictions.get(lead_id)
@@ -636,29 +647,35 @@ class ChurnIntegrationService:
             active_interventions = self.intervention_orchestrator._active_interventions.get(lead_id, [])
 
             status = {
-                'lead_id': lead_id,
-                'active_interventions': len(active_interventions),
-                'pending_interventions': len([i for i in active_interventions if i.status == InterventionStatus.PENDING]),
-                'completed_interventions': len([i for i in active_interventions if i.status == InterventionStatus.COMPLETED]),
-                'last_intervention': None
+                "lead_id": lead_id,
+                "active_interventions": len(active_interventions),
+                "pending_interventions": len(
+                    [i for i in active_interventions if i.status == InterventionStatus.PENDING]
+                ),
+                "completed_interventions": len(
+                    [i for i in active_interventions if i.status == InterventionStatus.COMPLETED]
+                ),
+                "last_intervention": None,
             }
 
             if active_interventions:
                 latest = max(active_interventions, key=lambda x: x.scheduled_time)
-                status['last_intervention'] = {
-                    'type': latest.intervention_type.value,
-                    'status': latest.status.value,
-                    'scheduled_time': latest.scheduled_time.isoformat()
+                status["last_intervention"] = {
+                    "type": latest.intervention_type.value,
+                    "status": latest.status.value,
+                    "scheduled_time": latest.scheduled_time.isoformat(),
                 }
 
             return status
 
         except Exception as e:
             self.logger.error(f"Error getting intervention status: {str(e)}")
-            return {'lead_id': lead_id, 'error': str(e)}
+            return {"lead_id": lead_id, "error": str(e)}
+
 
 # Example usage and testing
 if __name__ == "__main__":
+
     async def test_integration_service():
         """Test the integration service"""
         from unittest.mock import AsyncMock
@@ -678,14 +695,12 @@ if __name__ == "__main__":
             behavioral_engine=behavioral_engine,
             lead_scorer=lead_scorer,
             reengagement_engine=reengagement_engine,
-            ghl_service=ghl_service
+            ghl_service=ghl_service,
         )
 
         # Test prediction request
         request = ChurnPredictionRequest(
-            lead_ids=['LEAD_001', 'LEAD_002', 'LEAD_003'],
-            force_refresh=True,
-            trigger_interventions=True
+            lead_ids=["LEAD_001", "LEAD_002", "LEAD_003"], force_refresh=True, trigger_interventions=True
         )
 
         response = await integration_service.predict_churn_risk(request)
@@ -701,5 +716,7 @@ if __name__ == "__main__":
         print(f"System Health: {health.prediction_engine_status}")
 
     import asyncio
+
     import numpy as np
+
     asyncio.run(test_integration_service())

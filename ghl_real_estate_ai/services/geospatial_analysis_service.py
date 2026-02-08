@@ -16,31 +16,33 @@ Accuracy: Sub-meter precision for location analysis
 """
 
 import asyncio
+import hashlib
 import json
 import logging
 import math
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple, Union
-from dataclasses import dataclass, asdict
-from enum import Enum
-import hashlib
+import pyproj
+import shapely.geometry as geom
 from geopy.distance import geodesic
 from geopy.geocoders import Nominatim
-import shapely.geometry as geom
 from shapely.ops import transform
-import pyproj
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)
 
 
 class TransportationType(Enum):
     """Transportation modes for accessibility analysis."""
+
     WALKING = "walking"
     DRIVING = "driving"
     TRANSIT = "transit"
@@ -49,6 +51,7 @@ class TransportationType(Enum):
 
 class AnalysisType(Enum):
     """Types of geospatial analysis."""
+
     MARKET_BOUNDARY = "market_boundary"
     PROPERTY_CLUSTERING = "property_clustering"
     ACCESSIBILITY_ANALYSIS = "accessibility_analysis"
@@ -60,6 +63,7 @@ class AnalysisType(Enum):
 @dataclass
 class GeographicPoint:
     """Geographic point with coordinates and metadata."""
+
     latitude: float
     longitude: float
     elevation: Optional[float] = None
@@ -70,7 +74,7 @@ class GeographicPoint:
         """Convert to coordinate tuple."""
         return (self.latitude, self.longitude)
 
-    def distance_to(self, other: 'GeographicPoint') -> float:
+    def distance_to(self, other: "GeographicPoint") -> float:
         """Calculate distance to another point in kilometers."""
         return geodesic(self.to_tuple(), other.to_tuple()).kilometers
 
@@ -78,6 +82,7 @@ class GeographicPoint:
 @dataclass
 class GeographicBoundary:
     """Geographic boundary definition."""
+
     boundary_id: str
     name: str
     boundary_type: str  # neighborhood, school_district, zip_code, etc.
@@ -90,6 +95,7 @@ class GeographicBoundary:
 @dataclass
 class AccessibilityScore:
     """Accessibility scoring for a location."""
+
     location: GeographicPoint
     walk_score: int  # 0-100
     transit_score: int  # 0-100
@@ -112,6 +118,7 @@ class AccessibilityScore:
 @dataclass
 class PropertyCluster:
     """Property cluster analysis result."""
+
     cluster_id: str
     cluster_type: str  # price, property_type, investment_grade
     center_point: GeographicPoint
@@ -125,6 +132,7 @@ class PropertyCluster:
 @dataclass
 class MarketBoundary:
     """Market boundary analysis result."""
+
     boundary_id: str
     name: str
     boundary_polygon: List[Tuple[float, float]]
@@ -153,6 +161,7 @@ class MarketBoundary:
 @dataclass
 class InvestmentHeatmap:
     """Investment opportunity heatmap data."""
+
     heatmap_id: str
     analysis_type: str
     grid_resolution: float  # km
@@ -221,9 +230,9 @@ class GeospatialAnalysisService:
             logger.error(f"Failed to initialize Geospatial Analysis Service: {e}")
             raise
 
-    async def analyze_market_boundaries(self,
-                                      properties: List[Dict[str, Any]],
-                                      clustering_method: str = "price_similarity") -> List[MarketBoundary]:
+    async def analyze_market_boundaries(
+        self, properties: List[Dict[str, Any]], clustering_method: str = "price_similarity"
+    ) -> List[MarketBoundary]:
         """
         Analyze and define market boundaries based on property characteristics.
 
@@ -254,9 +263,9 @@ class GeospatialAnalysisService:
             logger.error(f"Market boundary analysis failed: {e}")
             raise
 
-    async def calculate_accessibility_scores(self,
-                                           locations: List[GeographicPoint],
-                                           analysis_radius_km: float = 2.0) -> List[AccessibilityScore]:
+    async def calculate_accessibility_scores(
+        self, locations: List[GeographicPoint], analysis_radius_km: float = 2.0
+    ) -> List[AccessibilityScore]:
         """
         Calculate comprehensive accessibility scores for locations.
 
@@ -284,10 +293,9 @@ class GeospatialAnalysisService:
             logger.error(f"Accessibility analysis failed: {e}")
             raise
 
-    async def cluster_properties(self,
-                                properties: List[Dict[str, Any]],
-                                cluster_criteria: str = "investment_potential",
-                                max_clusters: int = 10) -> List[PropertyCluster]:
+    async def cluster_properties(
+        self, properties: List[Dict[str, Any]], cluster_criteria: str = "investment_potential", max_clusters: int = 10
+    ) -> List[PropertyCluster]:
         """
         Perform spatial clustering of properties based on criteria.
 
@@ -304,9 +312,7 @@ class GeospatialAnalysisService:
             return [PropertyCluster(**cluster) for cluster in cached]
 
         try:
-            clusters = await self._perform_property_clustering(
-                properties, cluster_criteria, max_clusters
-            )
+            clusters = await self._perform_property_clustering(properties, cluster_criteria, max_clusters)
 
             # Cache for 1 hour
             await self.cache.set(cache_key, [asdict(cluster) for cluster in clusters], ttl=3600)
@@ -318,10 +324,12 @@ class GeospatialAnalysisService:
             logger.error(f"Property clustering failed: {e}")
             raise
 
-    async def generate_investment_heatmap(self,
-                                        analysis_bounds: Tuple[float, float, float, float],
-                                        grid_resolution_km: float = 0.5,
-                                        scoring_factors: Optional[List[str]] = None) -> InvestmentHeatmap:
+    async def generate_investment_heatmap(
+        self,
+        analysis_bounds: Tuple[float, float, float, float],
+        grid_resolution_km: float = 0.5,
+        scoring_factors: Optional[List[str]] = None,
+    ) -> InvestmentHeatmap:
         """
         Generate investment opportunity heatmap for geographic area.
 
@@ -338,9 +346,7 @@ class GeospatialAnalysisService:
             return InvestmentHeatmap(**cached)
 
         try:
-            heatmap = await self._generate_investment_heatmap(
-                analysis_bounds, grid_resolution_km, scoring_factors
-            )
+            heatmap = await self._generate_investment_heatmap(analysis_bounds, grid_resolution_km, scoring_factors)
 
             # Cache for 4 hours (computationally expensive)
             await self.cache.set(cache_key, asdict(heatmap), ttl=14400)
@@ -352,10 +358,12 @@ class GeospatialAnalysisService:
             logger.error(f"Investment heatmap generation failed: {e}")
             raise
 
-    async def analyze_commute_patterns(self,
-                                     residential_locations: List[GeographicPoint],
-                                     employment_centers: List[GeographicPoint],
-                                     max_commute_time: int = 45) -> Dict[str, Any]:
+    async def analyze_commute_patterns(
+        self,
+        residential_locations: List[GeographicPoint],
+        employment_centers: List[GeographicPoint],
+        max_commute_time: int = 45,
+    ) -> Dict[str, Any]:
         """
         Analyze commute patterns and optimization opportunities.
 
@@ -364,16 +372,16 @@ class GeospatialAnalysisService:
             employment_centers: Major employment centers
             max_commute_time: Maximum acceptable commute time in minutes
         """
-        cache_key = f"commute_analysis:{hash(str(residential_locations))}:{hash(str(employment_centers))}:{max_commute_time}"
+        cache_key = (
+            f"commute_analysis:{hash(str(residential_locations))}:{hash(str(employment_centers))}:{max_commute_time}"
+        )
 
         cached = await self.cache.get(cache_key)
         if cached:
             return cached
 
         try:
-            analysis = await self._analyze_commute_patterns(
-                residential_locations, employment_centers, max_commute_time
-            )
+            analysis = await self._analyze_commute_patterns(residential_locations, employment_centers, max_commute_time)
 
             # Cache for 12 hours
             await self.cache.set(cache_key, analysis, ttl=43200)
@@ -384,10 +392,9 @@ class GeospatialAnalysisService:
             logger.error(f"Commute pattern analysis failed: {e}")
             raise
 
-    async def find_optimal_locations(self,
-                                   criteria: Dict[str, Any],
-                                   search_bounds: Tuple[float, float, float, float],
-                                   max_results: int = 20) -> List[Dict[str, Any]]:
+    async def find_optimal_locations(
+        self, criteria: Dict[str, Any], search_bounds: Tuple[float, float, float, float], max_results: int = 20
+    ) -> List[Dict[str, Any]]:
         """
         Find optimal locations based on multiple criteria.
 
@@ -459,9 +466,9 @@ class GeospatialAnalysisService:
             logger.error(f"Spatial operation validation failed: {e}")
             raise
 
-    async def _detect_market_boundaries(self,
-                                      properties: List[Dict[str, Any]],
-                                      clustering_method: str) -> List[MarketBoundary]:
+    async def _detect_market_boundaries(
+        self, properties: List[Dict[str, Any]], clustering_method: str
+    ) -> List[MarketBoundary]:
         """Detect market boundaries using spatial clustering."""
         if not properties:
             return []
@@ -472,15 +479,15 @@ class GeospatialAnalysisService:
             features = []
 
             for prop in properties:
-                if 'latitude' in prop and 'longitude' in prop:
-                    coords.append((prop['latitude'], prop['longitude']))
+                if "latitude" in prop and "longitude" in prop:
+                    coords.append((prop["latitude"], prop["longitude"]))
 
                     # Extract relevant features for clustering
                     feature_vector = [
-                        prop.get('price', 0),
-                        prop.get('price_per_sqft', 0),
-                        prop.get('bedrooms', 0),
-                        prop.get('year_built', 2000)
+                        prop.get("price", 0),
+                        prop.get("price_per_sqft", 0),
+                        prop.get("bedrooms", 0),
+                        prop.get("year_built", 2000),
                     ]
                     features.append(feature_vector)
 
@@ -499,35 +506,35 @@ class GeospatialAnalysisService:
             # Convert clusters to market boundaries
             boundaries = []
             for i, cluster in enumerate(clusters):
-                if len(cluster['coords']) < 3:
+                if len(cluster["coords"]) < 3:
                     continue
 
                 # Create boundary polygon (simplified convex hull)
-                boundary_coords = self._create_boundary_polygon(cluster['coords'])
-                center_point = self._calculate_centroid(cluster['coords'])
+                boundary_coords = self._create_boundary_polygon(cluster["coords"])
+                center_point = self._calculate_centroid(cluster["coords"])
 
                 # Calculate market characteristics
-                cluster_props = [properties[j] for j in cluster['indices']]
+                cluster_props = [properties[j] for j in cluster["indices"]]
                 market_stats = self._calculate_market_statistics(cluster_props)
 
                 boundary = MarketBoundary(
-                    boundary_id=f"market_{i+1}",
-                    name=f"Market Boundary {i+1}",
+                    boundary_id=f"market_{i + 1}",
+                    name=f"Market Boundary {i + 1}",
                     boundary_polygon=boundary_coords,
                     sub_markets=[],
-                    median_price=market_stats['median_price'],
-                    price_range=(market_stats['min_price'], market_stats['max_price']),
+                    median_price=market_stats["median_price"],
+                    price_range=(market_stats["min_price"], market_stats["max_price"]),
                     property_count=len(cluster_props),
-                    market_velocity=market_stats.get('velocity', 0.75),
-                    appreciation_rate=market_stats.get('appreciation', 8.5),
-                    population=market_stats.get('population', 15000),
-                    median_income=market_stats.get('median_income', 75000),
+                    market_velocity=market_stats.get("velocity", 0.75),
+                    appreciation_rate=market_stats.get("appreciation", 8.5),
+                    population=market_stats.get("population", 15000),
+                    median_income=market_stats.get("median_income", 75000),
                     age_distribution={"25-34": 0.3, "35-44": 0.25, "45-54": 0.2, "55+": 0.25},
                     education_levels={"bachelor_plus": 0.65, "high_school": 0.25, "other": 0.1},
-                    school_quality=market_stats.get('school_quality', 8.2),
-                    transportation_access=market_stats.get('transport_access', 7.5),
-                    amenity_density=market_stats.get('amenity_density', 8.0),
-                    development_pipeline=[]
+                    school_quality=market_stats.get("school_quality", 8.2),
+                    transportation_access=market_stats.get("transport_access", 7.5),
+                    amenity_density=market_stats.get("amenity_density", 8.0),
+                    development_pipeline=[],
                 )
 
                 boundaries.append(boundary)
@@ -538,9 +545,9 @@ class GeospatialAnalysisService:
             logger.error(f"Market boundary detection failed: {e}")
             return []
 
-    async def _calculate_accessibility_scores(self,
-                                            locations: List[GeographicPoint],
-                                            radius_km: float) -> List[AccessibilityScore]:
+    async def _calculate_accessibility_scores(
+        self, locations: List[GeographicPoint], radius_km: float
+    ) -> List[AccessibilityScore]:
         """Calculate detailed accessibility scores."""
         scores = []
 
@@ -568,7 +575,7 @@ class GeospatialAnalysisService:
                     "shopping": transit_score + np.random.randint(-15, 16),
                     "healthcare": 80 + np.random.randint(-20, 21),
                     "education": 85 + np.random.randint(-15, 16),
-                    "recreation": bike_score + np.random.randint(-10, 11)
+                    "recreation": bike_score + np.random.randint(-10, 11),
                 }
 
                 # Ensure scores are within bounds
@@ -582,15 +589,15 @@ class GeospatialAnalysisService:
                         "type": "rail",
                         "distance_m": 450,
                         "lines": ["Red", "Blue"],
-                        "frequency_min": 8
+                        "frequency_min": 8,
                     },
                     {
                         "name": "Bus Stop Central",
                         "type": "bus",
                         "distance_m": 180,
                         "lines": ["Route 1", "Route 15"],
-                        "frequency_min": 15
-                    }
+                        "frequency_min": 15,
+                    },
                 ]
 
                 # Commute scores to major employment centers
@@ -598,7 +605,7 @@ class GeospatialAnalysisService:
                     "downtown": 85.0 + np.random.uniform(-10, 10),
                     "tech_corridor": 78.0 + np.random.uniform(-15, 15),
                     "airport": 65.0 + np.random.uniform(-20, 20),
-                    "university": 90.0 + np.random.uniform(-5, 5)
+                    "university": 90.0 + np.random.uniform(-5, 5),
                 }
 
                 score = AccessibilityScore(
@@ -613,21 +620,17 @@ class GeospatialAnalysisService:
                         "bike_lanes_km": 12.5,
                         "protected_lanes_pct": 65,
                         "bike_share_stations": 8,
-                        "safety_rating": 7.8
+                        "safety_rating": 7.8,
                     },
                     walkability_factors={
                         "sidewalk_coverage": 0.92,
                         "intersection_density": 45,
                         "pedestrian_safety": 8.2,
-                        "street_connectivity": 0.78
+                        "street_connectivity": 0.78,
                     },
                     commute_scores=commute_scores,
-                    traffic_patterns={
-                        "peak_congestion": 0.65,
-                        "off_peak_speed": 35,
-                        "accident_rate": 0.025
-                    },
-                    calculated_at=datetime.now()
+                    traffic_patterns={"peak_congestion": 0.65, "off_peak_speed": 35, "accident_rate": 0.025},
+                    calculated_at=datetime.now(),
                 )
 
                 scores.append(score)
@@ -638,10 +641,9 @@ class GeospatialAnalysisService:
 
         return scores
 
-    async def _perform_property_clustering(self,
-                                         properties: List[Dict[str, Any]],
-                                         cluster_criteria: str,
-                                         max_clusters: int) -> List[PropertyCluster]:
+    async def _perform_property_clustering(
+        self, properties: List[Dict[str, Any]], cluster_criteria: str, max_clusters: int
+    ) -> List[PropertyCluster]:
         """Perform spatial clustering of properties."""
         if not properties:
             return []
@@ -652,27 +654,24 @@ class GeospatialAnalysisService:
             features = []
 
             for prop in properties:
-                if 'latitude' in prop and 'longitude' in prop:
-                    coords.append((prop['latitude'], prop['longitude']))
+                if "latitude" in prop and "longitude" in prop:
+                    coords.append((prop["latitude"], prop["longitude"]))
 
                     if cluster_criteria == "investment_potential":
                         feature_vector = [
-                            prop.get('roi_score', 50),
-                            prop.get('appreciation_potential', 50),
-                            prop.get('liquidity_score', 50),
-                            prop.get('risk_score', 50)
+                            prop.get("roi_score", 50),
+                            prop.get("appreciation_potential", 50),
+                            prop.get("liquidity_score", 50),
+                            prop.get("risk_score", 50),
                         ]
                     elif cluster_criteria == "price":
-                        feature_vector = [
-                            prop.get('price', 0),
-                            prop.get('price_per_sqft', 0)
-                        ]
+                        feature_vector = [prop.get("price", 0), prop.get("price_per_sqft", 0)]
                     else:  # property_characteristics
                         feature_vector = [
-                            prop.get('bedrooms', 0),
-                            prop.get('bathrooms', 0),
-                            prop.get('square_footage', 0),
-                            prop.get('year_built', 2000)
+                            prop.get("bedrooms", 0),
+                            prop.get("bathrooms", 0),
+                            prop.get("square_footage", 0),
+                            prop.get("year_built", 2000),
                         ]
 
                     features.append(feature_vector)
@@ -683,25 +682,25 @@ class GeospatialAnalysisService:
             # Convert to PropertyCluster objects
             property_clusters = []
             for i, cluster in enumerate(clusters):
-                if not cluster['coords']:
+                if not cluster["coords"]:
                     continue
 
-                center = self._calculate_centroid(cluster['coords'])
-                radius = self._calculate_cluster_radius(cluster['coords'], center)
+                center = self._calculate_centroid(cluster["coords"])
+                radius = self._calculate_cluster_radius(cluster["coords"], center)
 
                 # Calculate cluster characteristics
-                cluster_props = [properties[j] for j in cluster['indices']]
+                cluster_props = [properties[j] for j in cluster["indices"]]
                 characteristics = self._analyze_cluster_characteristics(cluster_props, cluster_criteria)
 
                 property_cluster = PropertyCluster(
-                    cluster_id=f"cluster_{i+1}",
+                    cluster_id=f"cluster_{i + 1}",
                     cluster_type=cluster_criteria,
                     center_point=GeographicPoint(center[0], center[1]),
                     radius_km=radius,
                     property_count=len(cluster_props),
                     cluster_characteristics=characteristics,
-                    similarity_score=cluster.get('similarity_score', 0.75),
-                    market_homogeneity=cluster.get('homogeneity', 0.68)
+                    similarity_score=cluster.get("similarity_score", 0.75),
+                    market_homogeneity=cluster.get("homogeneity", 0.68),
                 )
 
                 property_clusters.append(property_cluster)
@@ -712,10 +711,9 @@ class GeospatialAnalysisService:
             logger.error(f"Property clustering failed: {e}")
             return []
 
-    async def _generate_investment_heatmap(self,
-                                         bounds: Tuple[float, float, float, float],
-                                         grid_resolution_km: float,
-                                         scoring_factors: Optional[List[str]]) -> InvestmentHeatmap:
+    async def _generate_investment_heatmap(
+        self, bounds: Tuple[float, float, float, float], grid_resolution_km: float, scoring_factors: Optional[List[str]]
+    ) -> InvestmentHeatmap:
         """Generate investment opportunity heatmap."""
         try:
             min_lat, min_lng, max_lat, max_lng = bounds
@@ -744,24 +742,24 @@ class GeospatialAnalysisService:
                         "investment_score": cell_score["score"],
                         "risk_level": cell_score["risk"],
                         "opportunity_factors": cell_score["factors"],
-                        "confidence": cell_score["confidence"]
+                        "confidence": cell_score["confidence"],
                     }
 
                     grid_cells.append(cell_data)
 
                     # Identify hotspots and risk zones
                     if cell_score["score"] > 80:
-                        hotspots.append({
-                            **cell_data,
-                            "hotspot_type": "high_opportunity",
-                            "recommendation": "Prime investment target"
-                        })
+                        hotspots.append(
+                            {
+                                **cell_data,
+                                "hotspot_type": "high_opportunity",
+                                "recommendation": "Prime investment target",
+                            }
+                        )
                     elif cell_score["risk"] > 70:
-                        risk_zones.append({
-                            **cell_data,
-                            "risk_type": "high_risk",
-                            "warning": "Elevated investment risk"
-                        })
+                        risk_zones.append(
+                            {**cell_data, "risk_type": "high_risk", "warning": "Elevated investment risk"}
+                        )
 
                     lng += lng_step
                 lat += lat_step
@@ -774,13 +772,17 @@ class GeospatialAnalysisService:
                 grid_cells=grid_cells,
                 hotspots=hotspots,
                 risk_zones=risk_zones,
-                scoring_factors=scoring_factors or [
-                    "price_appreciation", "market_velocity", "development_pipeline",
-                    "demographic_trends", "infrastructure_quality"
+                scoring_factors=scoring_factors
+                or [
+                    "price_appreciation",
+                    "market_velocity",
+                    "development_pipeline",
+                    "demographic_trends",
+                    "infrastructure_quality",
                 ],
                 confidence_level=0.82,
                 data_freshness=datetime.now(),
-                generated_at=datetime.now()
+                generated_at=datetime.now(),
             )
 
             return heatmap
@@ -789,10 +791,12 @@ class GeospatialAnalysisService:
             logger.error(f"Investment heatmap generation failed: {e}")
             raise
 
-    async def _analyze_commute_patterns(self,
-                                      residential_locations: List[GeographicPoint],
-                                      employment_centers: List[GeographicPoint],
-                                      max_commute_time: int) -> Dict[str, Any]:
+    async def _analyze_commute_patterns(
+        self,
+        residential_locations: List[GeographicPoint],
+        employment_centers: List[GeographicPoint],
+        max_commute_time: int,
+    ) -> Dict[str, Any]:
         """Analyze commute patterns and accessibility."""
         try:
             commute_matrix = {}
@@ -807,9 +811,7 @@ class GeospatialAnalysisService:
                     employment_key = f"employment_{j}"
 
                     # Calculate commute metrics for different transportation modes
-                    commute_data = await self._calculate_commute_metrics(
-                        residence, employment, max_commute_time
-                    )
+                    commute_data = await self._calculate_commute_metrics(residence, employment, max_commute_time)
 
                     commute_matrix[residence_key][employment_key] = commute_data
 
@@ -821,17 +823,19 @@ class GeospatialAnalysisService:
 
                     # Identify optimization opportunities
                     if commute_data["best_option"]["time"] > max_commute_time * 1.2:
-                        optimization_opportunities.append({
-                            "residence": residence_key,
-                            "employment": employment_key,
-                            "current_commute": commute_data["best_option"]["time"],
-                            "improvement_potential": "High",
-                            "recommendations": [
-                                "Consider alternative transportation modes",
-                                "Evaluate relocation opportunities",
-                                "Explore remote work options"
-                            ]
-                        })
+                        optimization_opportunities.append(
+                            {
+                                "residence": residence_key,
+                                "employment": employment_key,
+                                "current_commute": commute_data["best_option"]["time"],
+                                "improvement_potential": "High",
+                                "recommendations": [
+                                    "Consider alternative transportation modes",
+                                    "Evaluate relocation opportunities",
+                                    "Explore remote work options",
+                                ],
+                            }
+                        )
 
             # Calculate overall patterns
             analysis_summary = self._summarize_commute_patterns(
@@ -843,17 +847,16 @@ class GeospatialAnalysisService:
                 "accessibility_scores": accessibility_scores,
                 "optimization_opportunities": optimization_opportunities,
                 "summary": analysis_summary,
-                "analysis_date": datetime.now().isoformat()
+                "analysis_date": datetime.now().isoformat(),
             }
 
         except Exception as e:
             logger.error(f"Commute pattern analysis failed: {e}")
             raise
 
-    async def _find_optimal_locations(self,
-                                    criteria: Dict[str, Any],
-                                    search_bounds: Tuple[float, float, float, float],
-                                    max_results: int) -> List[Dict[str, Any]]:
+    async def _find_optimal_locations(
+        self, criteria: Dict[str, Any], search_bounds: Tuple[float, float, float, float], max_results: int
+    ) -> List[Dict[str, Any]]:
         """Find optimal locations based on criteria."""
         try:
             min_lat, min_lng, max_lat, max_lng = search_bounds
@@ -871,14 +874,16 @@ class GeospatialAnalysisService:
                 score_data = await self._score_location_against_criteria(location, criteria)
 
                 if score_data["overall_score"] > criteria.get("min_score", 60):
-                    scored_locations.append({
-                        "location": location.to_tuple(),
-                        "overall_score": score_data["overall_score"],
-                        "criteria_scores": score_data["criteria_scores"],
-                        "strengths": score_data["strengths"],
-                        "weaknesses": score_data["weaknesses"],
-                        "recommendation": score_data["recommendation"]
-                    })
+                    scored_locations.append(
+                        {
+                            "location": location.to_tuple(),
+                            "overall_score": score_data["overall_score"],
+                            "criteria_scores": score_data["criteria_scores"],
+                            "strengths": score_data["strengths"],
+                            "weaknesses": score_data["weaknesses"],
+                            "recommendation": score_data["recommendation"],
+                        }
+                    )
 
             # Sort by overall score and return top results
             scored_locations.sort(key=lambda x: x["overall_score"], reverse=True)
@@ -891,8 +896,9 @@ class GeospatialAnalysisService:
 
     # Helper methods for spatial calculations
 
-    def _cluster_by_price_similarity(self, coords: List[Tuple[float, float]],
-                                   features: List[List[float]]) -> List[Dict[str, Any]]:
+    def _cluster_by_price_similarity(
+        self, coords: List[Tuple[float, float]], features: List[List[float]]
+    ) -> List[Dict[str, Any]]:
         """Cluster properties by price similarity."""
         # Simplified clustering implementation
         clusters = []
@@ -900,18 +906,14 @@ class GeospatialAnalysisService:
             return clusters
 
         # Create single cluster for demonstration
-        cluster = {
-            "coords": coords,
-            "indices": list(range(len(coords))),
-            "similarity_score": 0.85,
-            "homogeneity": 0.72
-        }
+        cluster = {"coords": coords, "indices": list(range(len(coords))), "similarity_score": 0.85, "homogeneity": 0.72}
         clusters.append(cluster)
 
         return clusters
 
-    def _cluster_by_property_characteristics(self, coords: List[Tuple[float, float]],
-                                           features: List[List[float]]) -> List[Dict[str, Any]]:
+    def _cluster_by_property_characteristics(
+        self, coords: List[Tuple[float, float]], features: List[List[float]]
+    ) -> List[Dict[str, Any]]:
         """Cluster properties by characteristics."""
         return self._cluster_by_price_similarity(coords, features)
 
@@ -919,19 +921,15 @@ class GeospatialAnalysisService:
         """Perform spatial clustering."""
         return [{"coords": coords, "indices": list(range(len(coords)))}]
 
-    def _simple_kmeans_clustering(self, coords: List[Tuple[float, float]],
-                                features: List[List[float]], k: int) -> List[Dict[str, Any]]:
+    def _simple_kmeans_clustering(
+        self, coords: List[Tuple[float, float]], features: List[List[float]], k: int
+    ) -> List[Dict[str, Any]]:
         """Simple k-means clustering implementation."""
         if len(coords) <= k:
             return [{"coords": coords, "indices": list(range(len(coords)))}]
 
         # Simplified single cluster for demonstration
-        return [{
-            "coords": coords,
-            "indices": list(range(len(coords))),
-            "similarity_score": 0.78,
-            "homogeneity": 0.65
-        }]
+        return [{"coords": coords, "indices": list(range(len(coords))), "similarity_score": 0.78, "homogeneity": 0.65}]
 
     def _create_boundary_polygon(self, coords: List[Tuple[float, float]]) -> List[Tuple[float, float]]:
         """Create boundary polygon from coordinates."""
@@ -952,8 +950,7 @@ class GeospatialAnalysisService:
 
         return (lat_sum / len(coords), lng_sum / len(coords))
 
-    def _calculate_cluster_radius(self, coords: List[Tuple[float, float]],
-                                center: Tuple[float, float]) -> float:
+    def _calculate_cluster_radius(self, coords: List[Tuple[float, float]], center: Tuple[float, float]) -> float:
         """Calculate cluster radius in kilometers."""
         if not coords:
             return 0.0
@@ -973,7 +970,7 @@ class GeospatialAnalysisService:
         if not properties:
             return {}
 
-        prices = [prop.get('price', 0) for prop in properties if prop.get('price')]
+        prices = [prop.get("price", 0) for prop in properties if prop.get("price")]
 
         if prices:
             return {
@@ -986,35 +983,35 @@ class GeospatialAnalysisService:
                 "median_income": 75000,
                 "school_quality": 8.2,
                 "transport_access": 7.5,
-                "amenity_density": 8.0
+                "amenity_density": 8.0,
             }
 
         return {}
 
-    def _analyze_cluster_characteristics(self, properties: List[Dict[str, Any]],
-                                       cluster_criteria: str) -> Dict[str, Any]:
+    def _analyze_cluster_characteristics(
+        self, properties: List[Dict[str, Any]], cluster_criteria: str
+    ) -> Dict[str, Any]:
         """Analyze characteristics of property cluster."""
         if not properties:
             return {}
 
-        characteristics = {
-            "property_count": len(properties),
-            "cluster_type": cluster_criteria
-        }
+        characteristics = {"property_count": len(properties), "cluster_type": cluster_criteria}
 
         if cluster_criteria == "investment_potential":
-            roi_scores = [prop.get('roi_score', 50) for prop in properties]
-            characteristics.update({
-                "average_roi": np.mean(roi_scores),
-                "roi_consistency": 1 - np.std(roi_scores) / 100,
-                "investment_grade": "A" if np.mean(roi_scores) > 80 else "B"
-            })
+            roi_scores = [prop.get("roi_score", 50) for prop in properties]
+            characteristics.update(
+                {
+                    "average_roi": np.mean(roi_scores),
+                    "roi_consistency": 1 - np.std(roi_scores) / 100,
+                    "investment_grade": "A" if np.mean(roi_scores) > 80 else "B",
+                }
+            )
 
         return characteristics
 
-    async def _calculate_cell_investment_score(self, lat: float, lng: float,
-                                             radius_km: float,
-                                             scoring_factors: Optional[List[str]]) -> Dict[str, Any]:
+    async def _calculate_cell_investment_score(
+        self, lat: float, lng: float, radius_km: float, scoring_factors: Optional[List[str]]
+    ) -> Dict[str, Any]:
         """Calculate investment score for grid cell."""
         # Simulate investment scoring
         base_score = 50 + np.random.uniform(-20, 30)
@@ -1025,7 +1022,7 @@ class GeospatialAnalysisService:
             "market_velocity": np.random.uniform(50, 85),
             "development_pipeline": np.random.uniform(30, 80),
             "demographic_trends": np.random.uniform(45, 85),
-            "infrastructure_quality": np.random.uniform(60, 90)
+            "infrastructure_quality": np.random.uniform(60, 90),
         }
 
         # Weight factors if specified
@@ -1038,12 +1035,12 @@ class GeospatialAnalysisService:
             "score": max(0, min(100, base_score)),
             "risk": max(0, min(100, risk_level)),
             "factors": factors,
-            "confidence": 0.82
+            "confidence": 0.82,
         }
 
-    async def _calculate_commute_metrics(self, residence: GeographicPoint,
-                                       employment: GeographicPoint,
-                                       max_time: int) -> Dict[str, Any]:
+    async def _calculate_commute_metrics(
+        self, residence: GeographicPoint, employment: GeographicPoint, max_time: int
+    ) -> Dict[str, Any]:
         """Calculate commute metrics between two points."""
         distance_km = residence.distance_to(employment)
 
@@ -1054,36 +1051,35 @@ class GeospatialAnalysisService:
                 "driving": {
                     "time": max(15, distance_km * 2.5),  # ~25 km/h average with traffic
                     "cost_monthly": 180,
-                    "reliability": 0.85
+                    "reliability": 0.85,
                 },
                 "transit": {
                     "time": max(25, distance_km * 4),  # ~15 km/h average with transfers
                     "cost_monthly": 120,
-                    "reliability": 0.78
+                    "reliability": 0.78,
                 },
                 "cycling": {
                     "time": max(30, distance_km * 3.5),  # ~17 km/h average
                     "cost_monthly": 25,
-                    "reliability": 0.65  # Weather dependent
-                }
-            }
+                    "reliability": 0.65,  # Weather dependent
+                },
+            },
         }
 
         # Find best option
-        best_mode = min(commute_data["transportation_modes"].items(),
-                       key=lambda x: x[1]["time"])
+        best_mode = min(commute_data["transportation_modes"].items(), key=lambda x: x[1]["time"])
 
         commute_data["best_option"] = {
             "mode": best_mode[0],
             "time": best_mode[1]["time"],
-            "feasible": best_mode[1]["time"] <= max_time
+            "feasible": best_mode[1]["time"] <= max_time,
         }
 
         return commute_data
 
-    def _calculate_location_accessibility(self, location: GeographicPoint,
-                                        employment_centers: List[GeographicPoint],
-                                        max_commute: int) -> float:
+    def _calculate_location_accessibility(
+        self, location: GeographicPoint, employment_centers: List[GeographicPoint], max_commute: int
+    ) -> float:
         """Calculate accessibility score for location."""
         accessible_centers = 0
 
@@ -1096,9 +1092,12 @@ class GeospatialAnalysisService:
 
         return (accessible_centers / len(employment_centers)) * 100 if employment_centers else 0
 
-    def _summarize_commute_patterns(self, commute_matrix: Dict[str, Any],
-                                  accessibility_scores: Dict[str, float],
-                                  optimization_opportunities: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _summarize_commute_patterns(
+        self,
+        commute_matrix: Dict[str, Any],
+        accessibility_scores: Dict[str, float],
+        optimization_opportunities: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
         """Summarize commute pattern analysis."""
         if not accessibility_scores:
             return {}
@@ -1113,17 +1112,18 @@ class GeospatialAnalysisService:
                 "excellent": sum(1 for score in accessibility_scores.values() if score > 80),
                 "good": sum(1 for score in accessibility_scores.values() if 60 < score <= 80),
                 "fair": sum(1 for score in accessibility_scores.values() if 40 < score <= 60),
-                "poor": sum(1 for score in accessibility_scores.values() if score <= 40)
+                "poor": sum(1 for score in accessibility_scores.values() if score <= 40),
             },
             "recommendations": [
                 "Focus development near high-accessibility areas",
                 "Improve transit connections to underserved locations",
-                "Consider remote work policies for high-commute positions"
-            ]
+                "Consider remote work policies for high-commute positions",
+            ],
         }
 
-    async def _score_location_against_criteria(self, location: GeographicPoint,
-                                             criteria: Dict[str, Any]) -> Dict[str, Any]:
+    async def _score_location_against_criteria(
+        self, location: GeographicPoint, criteria: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Score location against search criteria."""
         # Simulate scoring against various criteria
         criteria_scores = {}
@@ -1173,7 +1173,7 @@ class GeospatialAnalysisService:
             "criteria_scores": criteria_scores,
             "strengths": strengths,
             "weaknesses": weaknesses,
-            "recommendation": recommendation
+            "recommendation": recommendation,
         }
 
 

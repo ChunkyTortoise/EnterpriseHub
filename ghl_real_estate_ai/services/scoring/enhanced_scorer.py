@@ -5,12 +5,13 @@ Advanced rule-based scoring with sophisticated algorithms and multi-factor analy
 Balanced performance and accuracy for production real estate applications.
 """
 
-from typing import Dict, List, Any, Set
 import math
+from typing import Any, Dict, List, Set
+
 try:
-    from .property_scorer import PropertyScorer, ScoringResult, ConfidenceLevel
+    from .property_scorer import ConfidenceLevel, PropertyScorer, ScoringResult
 except ImportError:
-    from property_scorer import PropertyScorer, ScoringResult, ConfidenceLevel
+    from property_scorer import ConfidenceLevel, PropertyScorer, ScoringResult
 
 
 class EnhancedPropertyScorer(PropertyScorer):
@@ -29,42 +30,45 @@ class EnhancedPropertyScorer(PropertyScorer):
         """Initialize enhanced scorer with Austin market expertise"""
         # Austin-specific market knowledge
         self.premium_neighborhoods = {
-            'westlake', 'downtown', 'south congress', 'clarksville',
-            'tarrytown', 'rollingwood', 'barton hills'
+            "westlake",
+            "downtown",
+            "south congress",
+            "clarksville",
+            "tarrytown",
+            "rollingwood",
+            "barton hills",
         }
 
         self.tech_corridor_areas = {
-            'domain', 'arboretum', 'northwest hills', 'great hills',
-            'anderson mill', 'cedar park', 'round rock'
+            "domain",
+            "arboretum",
+            "northwest hills",
+            "great hills",
+            "anderson mill",
+            "cedar park",
+            "round rock",
         }
 
-        self.emerging_areas = {
-            'east austin', 'mueller', 'highland', 'cherrywood',
-            'govalle', 'windsor park'
-        }
+        self.emerging_areas = {"east austin", "mueller", "highland", "cherrywood", "govalle", "windsor park"}
 
         # Advanced scoring weights (15 factors)
         self.weights = {
-            'budget_alignment': 0.20,
-            'location_desirability': 0.15,
-            'commute_convenience': 0.12,
-            'neighborhood_trends': 0.10,
-            'property_condition': 0.08,
-            'size_optimization': 0.08,
-            'school_quality': 0.07,
-            'market_timing': 0.06,
-            'investment_potential': 0.05,
-            'lifestyle_amenities': 0.04,
-            'safety_score': 0.02,
-            'walkability': 0.02,
-            'future_development': 0.01
+            "budget_alignment": 0.20,
+            "location_desirability": 0.15,
+            "commute_convenience": 0.12,
+            "neighborhood_trends": 0.10,
+            "property_condition": 0.08,
+            "size_optimization": 0.08,
+            "school_quality": 0.07,
+            "market_timing": 0.06,
+            "investment_potential": 0.05,
+            "lifestyle_amenities": 0.04,
+            "safety_score": 0.02,
+            "walkability": 0.02,
+            "future_development": 0.01,
         }
 
-    def calculate_score(
-        self,
-        property_data: Dict[str, Any],
-        lead_preferences: Dict[str, Any]
-    ) -> ScoringResult:
+    def calculate_score(self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any]) -> ScoringResult:
         """
         Calculate enhanced property score using 15-factor algorithm.
 
@@ -84,15 +88,13 @@ class EnhancedPropertyScorer(PropertyScorer):
         )
 
         # Calculate component group scores for UI display
-        budget_score = factor_scores['budget_alignment'] * 100
+        budget_score = factor_scores["budget_alignment"] * 100
         location_score = self._calculate_location_group_score(factor_scores)
         feature_score = self._calculate_feature_group_score(factor_scores)
         market_score = self._calculate_market_group_score(factor_scores)
 
         # Generate sophisticated reasoning
-        reasoning = self._generate_enhanced_reasoning(
-            property_data, lead_preferences, factor_scores
-        )
+        reasoning = self._generate_enhanced_reasoning(property_data, lead_preferences, factor_scores)
 
         return ScoringResult(
             overall_score=round(overall_score, 1),
@@ -103,22 +105,18 @@ class EnhancedPropertyScorer(PropertyScorer):
             market_context=market_score,
             reasoning=reasoning,
             metadata={
-                'strategy': 'enhanced',
-                'factor_count': 15,
-                'factor_scores': {k: round(v * 100, 1) for k, v in factor_scores.items()},
-                'market_analysis': self._get_market_insights(property_data),
-                'processing_time': 'medium'
-            }
+                "strategy": "enhanced",
+                "factor_count": 15,
+                "factor_scores": {k: round(v * 100, 1) for k, v in factor_scores.items()},
+                "market_analysis": self._get_market_insights(property_data),
+                "processing_time": "medium",
+            },
         )
 
-    def validate_inputs(
-        self,
-        property_data: Dict[str, Any],
-        lead_preferences: Dict[str, Any]
-    ) -> bool:
+    def validate_inputs(self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any]) -> bool:
         """Enhanced input validation for sophisticated scoring"""
-        required_property = ['price', 'address']
-        required_preferences = ['budget', 'location']
+        required_property = ["price", "address"]
+        required_preferences = ["budget", "location"]
 
         # Check required fields
         for field in required_property:
@@ -130,7 +128,7 @@ class EnhancedPropertyScorer(PropertyScorer):
                 return False
 
         # Validate price is reasonable
-        price = property_data.get('price', 0)
+        price = property_data.get("price", 0)
         if price <= 0 or price > 50000000:  # Sanity check
             return False
 
@@ -139,39 +137,37 @@ class EnhancedPropertyScorer(PropertyScorer):
     def get_performance_characteristics(self) -> Dict[str, str]:
         """Performance metadata for enhanced scorer"""
         return {
-            'speed': 'medium',
-            'accuracy': 'high',
-            'complexity': 'medium_high',
-            'use_case': 'production_matching',
-            'throughput': '200-500_properties_per_second'
+            "speed": "medium",
+            "accuracy": "high",
+            "complexity": "medium_high",
+            "use_case": "production_matching",
+            "throughput": "200-500_properties_per_second",
         }
 
     def _calculate_all_factors(
-        self,
-        property_data: Dict[str, Any],
-        lead_preferences: Dict[str, Any]
+        self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any]
     ) -> Dict[str, float]:
         """Calculate all 15 scoring factors"""
         return {
-            'budget_alignment': self._factor_budget_alignment(property_data, lead_preferences),
-            'location_desirability': self._factor_location_desirability(property_data, lead_preferences),
-            'commute_convenience': self._factor_commute_convenience(property_data, lead_preferences),
-            'neighborhood_trends': self._factor_neighborhood_trends(property_data, lead_preferences),
-            'property_condition': self._factor_property_condition(property_data, lead_preferences),
-            'size_optimization': self._factor_size_optimization(property_data, lead_preferences),
-            'school_quality': self._factor_school_quality(property_data, lead_preferences),
-            'market_timing': self._factor_market_timing(property_data, lead_preferences),
-            'investment_potential': self._factor_investment_potential(property_data, lead_preferences),
-            'lifestyle_amenities': self._factor_lifestyle_amenities(property_data, lead_preferences),
-            'safety_score': self._factor_safety_score(property_data, lead_preferences),
-            'walkability': self._factor_walkability(property_data, lead_preferences),
-            'future_development': self._factor_future_development(property_data, lead_preferences)
+            "budget_alignment": self._factor_budget_alignment(property_data, lead_preferences),
+            "location_desirability": self._factor_location_desirability(property_data, lead_preferences),
+            "commute_convenience": self._factor_commute_convenience(property_data, lead_preferences),
+            "neighborhood_trends": self._factor_neighborhood_trends(property_data, lead_preferences),
+            "property_condition": self._factor_property_condition(property_data, lead_preferences),
+            "size_optimization": self._factor_size_optimization(property_data, lead_preferences),
+            "school_quality": self._factor_school_quality(property_data, lead_preferences),
+            "market_timing": self._factor_market_timing(property_data, lead_preferences),
+            "investment_potential": self._factor_investment_potential(property_data, lead_preferences),
+            "lifestyle_amenities": self._factor_lifestyle_amenities(property_data, lead_preferences),
+            "safety_score": self._factor_safety_score(property_data, lead_preferences),
+            "walkability": self._factor_walkability(property_data, lead_preferences),
+            "future_development": self._factor_future_development(property_data, lead_preferences),
         }
 
     def _factor_budget_alignment(self, property_data: Dict, lead_preferences: Dict) -> float:
         """Enhanced budget scoring with market context"""
-        price = property_data.get('price', 0)
-        budget = lead_preferences.get('budget', 1000000)
+        price = property_data.get("price", 0)
+        budget = lead_preferences.get("budget", 1000000)
 
         ratio = price / budget
 
@@ -189,11 +185,11 @@ class EnhancedPropertyScorer(PropertyScorer):
 
     def _factor_location_desirability(self, property_data: Dict, lead_preferences: Dict) -> float:
         """Advanced location scoring with neighborhood analysis"""
-        address = property_data.get('address', {})
+        address = property_data.get("address", {})
         if isinstance(address, str):
             neighborhood = address.lower()
         else:
-            neighborhood = address.get('neighborhood', '').lower()
+            neighborhood = address.get("neighborhood", "").lower()
 
         base_score = 0.6  # Default location score
 
@@ -208,7 +204,7 @@ class EnhancedPropertyScorer(PropertyScorer):
             base_score += 0.2
 
         # Preference matching
-        preferred_locations = lead_preferences.get('location', [])
+        preferred_locations = lead_preferences.get("location", [])
         if isinstance(preferred_locations, str):
             preferred_locations = [preferred_locations]
 
@@ -223,25 +219,25 @@ class EnhancedPropertyScorer(PropertyScorer):
     def _factor_commute_convenience(self, property_data: Dict, lead_preferences: Dict) -> float:
         """Commute analysis using Austin geography knowledge"""
         neighborhood = self._get_neighborhood_lower(property_data)
-        work_location = lead_preferences.get('work_location', '').lower()
+        work_location = lead_preferences.get("work_location", "").lower()
 
         # Default reasonable commute
         base_score = 0.7
 
         # Downtown workers
-        if 'downtown' in work_location:
-            if neighborhood in ['downtown', 'south congress', 'east austin', 'clarksville']:
+        if "downtown" in work_location:
+            if neighborhood in ["downtown", "south congress", "east austin", "clarksville"]:
                 base_score = 0.95  # Walking/biking distance
-            elif neighborhood in ['tarrytown', 'rollingwood', 'barton hills']:
+            elif neighborhood in ["tarrytown", "rollingwood", "barton hills"]:
                 base_score = 0.85  # Short drive
-            elif neighborhood in ['mueller', 'highland', 'cherrywood']:
+            elif neighborhood in ["mueller", "highland", "cherrywood"]:
                 base_score = 0.80  # Good transit options
 
         # Tech corridor workers
-        elif any(tech in work_location for tech in ['domain', 'arboretum', 'apple', 'google']):
-            if neighborhood in ['domain', 'arboretum', 'northwest hills']:
+        elif any(tech in work_location for tech in ["domain", "arboretum", "apple", "google"]):
+            if neighborhood in ["domain", "arboretum", "northwest hills"]:
                 base_score = 0.95  # Very close
-            elif neighborhood in ['cedar park', 'round rock', 'great hills']:
+            elif neighborhood in ["cedar park", "round rock", "great hills"]:
                 base_score = 0.85  # Reverse commute
 
         return base_score
@@ -251,9 +247,9 @@ class EnhancedPropertyScorer(PropertyScorer):
         neighborhood = self._get_neighborhood_lower(property_data)
 
         # Hot market areas (high growth/demand)
-        hot_markets = ['mueller', 'east austin', 'highland', 'south congress']
-        stable_markets = ['westlake', 'tarrytown', 'clarksville', 'downtown']
-        emerging_markets = ['govalle', 'windsor park', 'cherrywood']
+        hot_markets = ["mueller", "east austin", "highland", "south congress"]
+        stable_markets = ["westlake", "tarrytown", "clarksville", "downtown"]
+        emerging_markets = ["govalle", "windsor park", "cherrywood"]
 
         if any(hot in neighborhood for hot in hot_markets):
             return 0.9  # Strong appreciation
@@ -266,7 +262,7 @@ class EnhancedPropertyScorer(PropertyScorer):
 
     def _factor_property_condition(self, property_data: Dict, lead_preferences: Dict) -> float:
         """Property condition and age analysis"""
-        year_built = property_data.get('year_built', 2010)
+        year_built = property_data.get("year_built", 2010)
         current_year = 2024
         age = current_year - year_built
 
@@ -274,16 +270,16 @@ class EnhancedPropertyScorer(PropertyScorer):
         if age <= 3:
             base_score = 0.95  # New construction
         elif age <= 10:
-            base_score = 0.9   # Modern
+            base_score = 0.9  # Modern
         elif age <= 20:
-            base_score = 0.8   # Well-maintained era
+            base_score = 0.8  # Well-maintained era
         elif age <= 30:
             base_score = 0.75  # Established
         else:
             base_score = 0.65  # Character home, may need updates
 
         # Recent renovation bonus
-        if property_data.get('recently_renovated', False):
+        if property_data.get("recently_renovated", False):
             base_score = min(1.0, base_score + 0.15)
 
         return base_score
@@ -291,15 +287,15 @@ class EnhancedPropertyScorer(PropertyScorer):
     def _factor_size_optimization(self, property_data: Dict, lead_preferences: Dict) -> float:
         """Bedroom/bathroom/square footage optimization"""
         # Bedroom analysis
-        preferred_beds = lead_preferences.get('bedrooms', 3)
-        property_beds = property_data.get('bedrooms', property_data.get('beds', 3))
+        preferred_beds = lead_preferences.get("bedrooms", 3)
+        property_beds = property_data.get("bedrooms", property_data.get("beds", 3))
 
         bed_score = 1.0 - (abs(property_beds - preferred_beds) * 0.15)
         bed_score = max(0.4, bed_score)
 
         # Square footage analysis
-        sqft = property_data.get('sqft', property_data.get('square_feet', 2000))
-        preferred_sqft = lead_preferences.get('min_sqft', 1800)
+        sqft = property_data.get("sqft", property_data.get("square_feet", 2000))
+        preferred_sqft = lead_preferences.get("min_sqft", 1800)
 
         if sqft >= preferred_sqft:
             sqft_score = min(1.0, 0.8 + (sqft - preferred_sqft) / 1000 * 0.2)
@@ -311,15 +307,15 @@ class EnhancedPropertyScorer(PropertyScorer):
 
     def _factor_school_quality(self, property_data: Dict, lead_preferences: Dict) -> float:
         """School district quality (important for families)"""
-        has_children = lead_preferences.get('has_children', False)
+        has_children = lead_preferences.get("has_children", False)
         if not has_children:
             return 0.8  # Neutral score when not applicable
 
         neighborhood = self._get_neighborhood_lower(property_data)
 
         # Austin ISD highly-rated areas
-        excellent_schools = ['westlake', 'tarrytown', 'rollingwood', 'barton hills']
-        good_schools = ['mueller', 'highland', 'great hills', 'northwest hills']
+        excellent_schools = ["westlake", "tarrytown", "rollingwood", "barton hills"]
+        good_schools = ["mueller", "highland", "great hills", "northwest hills"]
 
         if any(excellent in neighborhood for excellent in excellent_schools):
             return 0.95
@@ -330,7 +326,7 @@ class EnhancedPropertyScorer(PropertyScorer):
 
     def _factor_market_timing(self, property_data: Dict, lead_preferences: Dict) -> float:
         """Market timing and listing freshness"""
-        days_on_market = property_data.get('days_on_market', 30)
+        days_on_market = property_data.get("days_on_market", 30)
 
         # Fresh listings are often priced right
         if days_on_market <= 7:
@@ -344,8 +340,8 @@ class EnhancedPropertyScorer(PropertyScorer):
 
     def _factor_investment_potential(self, property_data: Dict, lead_preferences: Dict) -> float:
         """Long-term investment and appreciation potential"""
-        price = property_data.get('price', 0)
-        sqft = property_data.get('sqft', property_data.get('square_feet', 2000))
+        price = property_data.get("price", 0)
+        sqft = property_data.get("sqft", property_data.get("square_feet", 2000))
 
         if sqft > 0:
             price_per_sqft = price / sqft
@@ -366,11 +362,11 @@ class EnhancedPropertyScorer(PropertyScorer):
         amenity_score = 0.6  # Base score
 
         # Property amenities
-        amenities = property_data.get('amenities', [])
+        amenities = property_data.get("amenities", [])
         if isinstance(amenities, str):
-            amenities = amenities.split(',')
+            amenities = amenities.split(",")
 
-        valuable_amenities = ['pool', 'garage', 'outdoor_space', 'updated_kitchen', 'hardwood_floors']
+        valuable_amenities = ["pool", "garage", "outdoor_space", "updated_kitchen", "hardwood_floors"]
 
         for amenity in valuable_amenities:
             if any(amenity.lower() in str(a).lower() for a in amenities):
@@ -383,8 +379,8 @@ class EnhancedPropertyScorer(PropertyScorer):
         neighborhood = self._get_neighborhood_lower(property_data)
 
         # Generally safe Austin areas
-        very_safe = ['westlake', 'rollingwood', 'tarrytown', 'great hills']
-        safe = ['mueller', 'domain', 'northwest hills', 'barton hills']
+        very_safe = ["westlake", "rollingwood", "tarrytown", "great hills"]
+        safe = ["mueller", "domain", "northwest hills", "barton hills"]
 
         if any(safe_area in neighborhood for safe_area in very_safe):
             return 0.95
@@ -398,7 +394,7 @@ class EnhancedPropertyScorer(PropertyScorer):
         neighborhood = self._get_neighborhood_lower(property_data)
 
         # Highly walkable Austin areas
-        walkable = ['downtown', 'south congress', 'east austin', 'clarksville']
+        walkable = ["downtown", "south congress", "east austin", "clarksville"]
 
         if any(walk_area in neighborhood for walk_area in walkable):
             return 0.9
@@ -410,7 +406,7 @@ class EnhancedPropertyScorer(PropertyScorer):
         neighborhood = self._get_neighborhood_lower(property_data)
 
         # Areas with planned development/transit
-        growth_areas = ['mueller', 'east austin', 'domain', 'highland']
+        growth_areas = ["mueller", "east austin", "domain", "highland"]
 
         if any(growth in neighborhood for growth in growth_areas):
             return 0.85
@@ -419,40 +415,24 @@ class EnhancedPropertyScorer(PropertyScorer):
 
     def _calculate_location_group_score(self, factor_scores: Dict[str, float]) -> float:
         """Group location-related factors for UI display"""
-        location_factors = [
-            'location_desirability',
-            'commute_convenience',
-            'neighborhood_trends',
-            'walkability'
-        ]
+        location_factors = ["location_desirability", "commute_convenience", "neighborhood_trends", "walkability"]
         scores = [factor_scores[factor] for factor in location_factors if factor in factor_scores]
         return (sum(scores) / len(scores)) * 100 if scores else 75
 
     def _calculate_feature_group_score(self, factor_scores: Dict[str, float]) -> float:
         """Group feature-related factors for UI display"""
-        feature_factors = [
-            'size_optimization',
-            'property_condition',
-            'lifestyle_amenities'
-        ]
+        feature_factors = ["size_optimization", "property_condition", "lifestyle_amenities"]
         scores = [factor_scores[factor] for factor in feature_factors if factor in factor_scores]
         return (sum(scores) / len(scores)) * 100 if scores else 75
 
     def _calculate_market_group_score(self, factor_scores: Dict[str, float]) -> float:
         """Group market-related factors for UI display"""
-        market_factors = [
-            'market_timing',
-            'investment_potential',
-            'future_development'
-        ]
+        market_factors = ["market_timing", "investment_potential", "future_development"]
         scores = [factor_scores[factor] for factor in market_factors if factor in factor_scores]
         return (sum(scores) / len(scores)) * 100 if scores else 75
 
     def _generate_enhanced_reasoning(
-        self,
-        property_data: Dict[str, Any],
-        lead_preferences: Dict[str, Any],
-        factor_scores: Dict[str, float]
+        self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any], factor_scores: Dict[str, float]
     ) -> List[str]:
         """Generate sophisticated reasoning based on factor analysis"""
         reasoning = []
@@ -461,9 +441,9 @@ class EnhancedPropertyScorer(PropertyScorer):
         sorted_factors = sorted(factor_scores.items(), key=lambda x: x[1], reverse=True)
 
         # Budget reasoning
-        budget_score = factor_scores['budget_alignment']
-        price = property_data.get('price', 0)
-        budget = lead_preferences.get('budget', 1000000)
+        budget_score = factor_scores["budget_alignment"]
+        price = property_data.get("price", 0)
+        budget = lead_preferences.get("budget", 1000000)
 
         if budget_score > 0.9:
             if price < budget:
@@ -476,13 +456,13 @@ class EnhancedPropertyScorer(PropertyScorer):
         # Top factor highlights
         top_factors = sorted_factors[:3]
         factor_messages = {
-            'location_desirability': "Prime location in highly desirable area",
-            'neighborhood_trends': "Strong neighborhood with positive market trends",
-            'property_condition': "Excellent condition with modern features",
-            'commute_convenience': "Convenient commute to your work location",
-            'school_quality': "Excellent school district for your family",
-            'investment_potential': "Strong investment potential and appreciation",
-            'lifestyle_amenities': "Outstanding amenities and lifestyle features"
+            "location_desirability": "Prime location in highly desirable area",
+            "neighborhood_trends": "Strong neighborhood with positive market trends",
+            "property_condition": "Excellent condition with modern features",
+            "commute_convenience": "Convenient commute to your work location",
+            "school_quality": "Excellent school district for your family",
+            "investment_potential": "Strong investment potential and appreciation",
+            "lifestyle_amenities": "Outstanding amenities and lifestyle features",
         }
 
         for factor, score in top_factors:
@@ -492,7 +472,7 @@ class EnhancedPropertyScorer(PropertyScorer):
                     break
 
         # Specific property highlights
-        sqft = property_data.get('sqft', property_data.get('square_feet', 0))
+        sqft = property_data.get("sqft", property_data.get("square_feet", 0))
         if sqft and len(reasoning) < 4:
             reasoning.append(f"Spacious {sqft:,} square feet of living space")
 
@@ -506,40 +486,36 @@ class EnhancedPropertyScorer(PropertyScorer):
         """Generate market analysis insights"""
         neighborhood = self._get_neighborhood_lower(property_data)
 
-        insights = {
-            'neighborhood_type': 'standard',
-            'market_trend': 'stable',
-            'investment_outlook': 'positive'
-        }
+        insights = {"neighborhood_type": "standard", "market_trend": "stable", "investment_outlook": "positive"}
 
         if any(premium in neighborhood for premium in self.premium_neighborhoods):
-            insights['neighborhood_type'] = 'premium'
-            insights['market_trend'] = 'strong'
-            insights['investment_outlook'] = 'excellent'
+            insights["neighborhood_type"] = "premium"
+            insights["market_trend"] = "strong"
+            insights["investment_outlook"] = "excellent"
         elif any(tech in neighborhood for tech in self.tech_corridor_areas):
-            insights['neighborhood_type'] = 'tech_corridor'
-            insights['market_trend'] = 'growing'
-            insights['investment_outlook'] = 'very_good'
+            insights["neighborhood_type"] = "tech_corridor"
+            insights["market_trend"] = "growing"
+            insights["investment_outlook"] = "very_good"
         elif any(emerging in neighborhood for emerging in self.emerging_areas):
-            insights['neighborhood_type'] = 'emerging'
-            insights['market_trend'] = 'hot'
-            insights['investment_outlook'] = 'high_growth'
+            insights["neighborhood_type"] = "emerging"
+            insights["market_trend"] = "hot"
+            insights["investment_outlook"] = "high_growth"
 
         return insights
 
     def _get_neighborhood_lower(self, property_data: Dict[str, Any]) -> str:
         """Extract neighborhood name in lowercase"""
-        address = property_data.get('address', {})
+        address = property_data.get("address", {})
         if isinstance(address, str):
             return address.lower()
-        return address.get('neighborhood', '').lower()
+        return address.get("neighborhood", "").lower()
 
     def _get_neighborhood_display(self, property_data: Dict[str, Any]) -> str:
         """Extract neighborhood name for display"""
-        address = property_data.get('address', {})
+        address = property_data.get("address", {})
         if isinstance(address, str):
             return address
-        return address.get('neighborhood', '')
+        return address.get("neighborhood", "")
 
     def _determine_confidence_with_factors(self, factor_scores: Dict[str, float]) -> ConfidenceLevel:
         """Determine confidence based on factor consistency"""

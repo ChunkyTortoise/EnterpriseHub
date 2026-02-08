@@ -19,30 +19,32 @@ Features:
 
 import asyncio
 import json
-import time
-from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Any, Optional, Set
-from urllib.parse import urlparse
-from dataclasses import dataclass, asdict
 import logging
+import time
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional, Set
+from urllib.parse import urlparse
 
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.jobstores.redis import RedisJobStore
-from apscheduler.executors.asyncio import AsyncIOExecutor
-from apscheduler.triggers.interval import IntervalTrigger
-from apscheduler.triggers.cron import CronTrigger
 import redis.asyncio as redis
+from apscheduler.executors.asyncio import AsyncIOExecutor
+from apscheduler.jobstores.redis import RedisJobStore
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.property_alert_engine import get_property_alert_engine, AlertType
-from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.property_alert_engine import AlertType, get_property_alert_engine
 
 logger = get_logger(__name__)
+
 
 @dataclass
 class PipelineMetrics:
     """Performance metrics for the scoring pipeline."""
+
     total_runs: int = 0
     successful_runs: int = 0
     failed_runs: int = 0
@@ -58,8 +60,9 @@ class PipelineMetrics:
         return {
             **asdict(self),
             "last_run_time": self.last_run_time.isoformat() if self.last_run_time else None,
-            "last_error_time": self.last_error_time.isoformat() if self.last_error_time else None
+            "last_error_time": self.last_error_time.isoformat() if self.last_error_time else None,
         }
+
 
 class PropertyScoringPipeline:
     """
@@ -88,16 +91,14 @@ class PropertyScoringPipeline:
         redis_port = parsed.port or 6379
         redis_password = parsed.password
         self.job_store_config = {
-            'default': RedisJobStore(
+            "default": RedisJobStore(
                 host=redis_host,
                 port=redis_port,
                 db=1,  # Use separate DB from cache
-                password=redis_password
+                password=redis_password,
             )
         }
-        self.executor_config = {
-            'default': AsyncIOExecutor()
-        }
+        self.executor_config = {"default": AsyncIOExecutor()}
 
         # Pipeline configuration
         self.scoring_interval_minutes = 15  # Run every 15 minutes
@@ -193,10 +194,10 @@ class PropertyScoringPipeline:
                         "id": job.id,
                         "name": job.name,
                         "next_run_time": job.next_run_time.isoformat() if job.next_run_time else None,
-                        "trigger": str(job.trigger)
+                        "trigger": str(job.trigger),
                     }
                     for job in jobs
-                ]
+                ],
             }
 
         return {
@@ -208,8 +209,8 @@ class PropertyScoringPipeline:
             "configuration": {
                 "scoring_interval_minutes": self.scoring_interval_minutes,
                 "batch_size": self.batch_size,
-                "max_concurrent_batches": self.max_concurrent_batches
-            }
+                "max_concurrent_batches": self.max_concurrent_batches,
+            },
         }
 
     # Private methods
@@ -229,16 +230,16 @@ class PropertyScoringPipeline:
         try:
             # Configure scheduler
             job_defaults = {
-                'coalesce': False,
-                'max_instances': 1,
-                'misfire_grace_time': 300  # 5 minutes grace period
+                "coalesce": False,
+                "max_instances": 1,
+                "misfire_grace_time": 300,  # 5 minutes grace period
             }
 
             self.scheduler = AsyncIOScheduler(
                 jobstores=self.job_store_config,
                 executors=self.executor_config,
                 job_defaults=job_defaults,
-                timezone='UTC'
+                timezone="UTC",
             )
 
             # Start scheduler
@@ -256,30 +257,30 @@ class PropertyScoringPipeline:
             self.scheduler.add_job(
                 func=self._run_property_scoring_job,
                 trigger=IntervalTrigger(minutes=self.scoring_interval_minutes),
-                id='property_scoring_main',
-                name='Property Scoring Pipeline',
+                id="property_scoring_main",
+                name="Property Scoring Pipeline",
                 replace_existing=True,
-                max_instances=1
+                max_instances=1,
             )
 
             # Cleanup job - daily at 2:00 AM UTC
             self.scheduler.add_job(
                 func=self._run_cleanup_job,
                 trigger=CronTrigger(hour=2, minute=0),
-                id='pipeline_cleanup',
-                name='Pipeline Data Cleanup',
+                id="pipeline_cleanup",
+                name="Pipeline Data Cleanup",
                 replace_existing=True,
-                max_instances=1
+                max_instances=1,
             )
 
             # Health check job - every 5 minutes
             self.scheduler.add_job(
                 func=self._run_health_check,
                 trigger=IntervalTrigger(minutes=5),
-                id='pipeline_health_check',
-                name='Pipeline Health Check',
+                id="pipeline_health_check",
+                name="Pipeline Health Check",
                 replace_existing=True,
-                max_instances=1
+                max_instances=1,
             )
 
             logger.info("Scheduled jobs created successfully")
@@ -327,7 +328,7 @@ class PropertyScoringPipeline:
                     logger.info("Shutdown requested during processing")
                     break
 
-                batch = properties_to_score[batch_start:batch_start + self.batch_size]
+                batch = properties_to_score[batch_start : batch_start + self.batch_size]
                 batch_alerts = await self._process_property_batch(batch, job_id)
 
                 total_alerts += batch_alerts
@@ -343,9 +344,7 @@ class PropertyScoringPipeline:
 
             # Calculate and update average run duration
             run_duration = (time.time() - start_time) * 1000
-            self.metrics.average_run_duration_ms = (
-                self.metrics.average_run_duration_ms * 0.9 + run_duration * 0.1
-            )
+            self.metrics.average_run_duration_ms = self.metrics.average_run_duration_ms * 0.9 + run_duration * 0.1
 
             # Update last processed timestamp
             await self._update_last_processed_timestamp()
@@ -355,7 +354,7 @@ class PropertyScoringPipeline:
                 "job_id": job_id,
                 "properties_processed": properties_processed,
                 "alerts_generated": total_alerts,
-                "duration_ms": run_duration
+                "duration_ms": run_duration,
             }
 
             logger.info(f"Property scoring job {job_id} completed: {result}")
@@ -372,7 +371,7 @@ class PropertyScoringPipeline:
                 "status": "failed",
                 "job_id": job_id,
                 "error": str(e),
-                "duration_ms": (time.time() - start_time) * 1000
+                "duration_ms": (time.time() - start_time) * 1000,
             }
 
         finally:
@@ -409,7 +408,7 @@ class PropertyScoringPipeline:
                 "zip_code": "78701",
                 "listing_date": datetime.now(timezone.utc).isoformat(),
                 "days_on_market": 1,
-                "updated_at": datetime.now(timezone.utc).isoformat()
+                "updated_at": datetime.now(timezone.utc).isoformat(),
             }
             for i in range(5)  # Sample 5 properties
         ]
@@ -434,8 +433,7 @@ class PropertyScoringPipeline:
             # Process properties concurrently within the batch
             tasks = [
                 self.property_alert_engine.evaluate_property_for_alerts(
-                    property_data=prop,
-                    alert_type=AlertType.NEW_MATCH
+                    property_data=prop, alert_type=AlertType.NEW_MATCH
                 )
                 for prop in properties
             ]
@@ -504,16 +502,12 @@ class PropertyScoringPipeline:
             return {
                 "status": "completed",
                 "items_cleaned": cleanup_count,
-                "duration_ms": (time.time() - start_time) * 1000
+                "duration_ms": (time.time() - start_time) * 1000,
             }
 
         except Exception as e:
             logger.error(f"Error in cleanup job: {e}", exc_info=True)
-            return {
-                "status": "failed",
-                "error": str(e),
-                "duration_ms": (time.time() - start_time) * 1000
-            }
+            return {"status": "failed", "error": str(e), "duration_ms": (time.time() - start_time) * 1000}
 
     async def _run_health_check(self) -> Dict[str, Any]:
         """
@@ -532,7 +526,7 @@ class PropertyScoringPipeline:
                 "redis_connected": False,
                 "scheduler_running": False,
                 "alert_engine_active": False,
-                "running_jobs_count": len(self.running_jobs)
+                "running_jobs_count": len(self.running_jobs),
             }
 
             # Check Redis connectivity
@@ -555,21 +549,19 @@ class PropertyScoringPipeline:
             await self.cache_service.set(
                 "pipeline:health_status",
                 health_status,
-                ttl=300  # 5 minutes
+                ttl=300,  # 5 minutes
             )
 
             return health_status
 
         except Exception as e:
             logger.error(f"Error in health check: {e}", exc_info=True)
-            return {
-                "status": "error",
-                "error": str(e),
-                "timestamp": datetime.now(timezone.utc).isoformat()
-            }
+            return {"status": "error", "error": str(e), "timestamp": datetime.now(timezone.utc).isoformat()}
+
 
 # Global singleton instance
 _property_scoring_pipeline = None
+
 
 async def get_property_scoring_pipeline() -> PropertyScoringPipeline:
     """Get singleton PropertyScoringPipeline instance."""
@@ -578,21 +570,25 @@ async def get_property_scoring_pipeline() -> PropertyScoringPipeline:
         _property_scoring_pipeline = PropertyScoringPipeline()
     return _property_scoring_pipeline
 
+
 # Management functions for external control
 async def start_property_scoring_pipeline():
     """Start the background property scoring pipeline."""
     pipeline = await get_property_scoring_pipeline()
     await pipeline.start()
 
+
 async def stop_property_scoring_pipeline():
     """Stop the background property scoring pipeline."""
     pipeline = await get_property_scoring_pipeline()
     await pipeline.stop()
 
+
 async def get_pipeline_status() -> Dict[str, Any]:
     """Get current pipeline status and metrics."""
     pipeline = await get_property_scoring_pipeline()
     return await pipeline.get_pipeline_status()
+
 
 async def force_run_property_scoring() -> Dict[str, Any]:
     """Force immediate property scoring run."""

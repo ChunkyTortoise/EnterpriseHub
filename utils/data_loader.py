@@ -20,7 +20,9 @@ logger = get_logger(__name__)
 
 
 @st.cache_data(ttl=300)  # Cache for 5 minutes
-def get_stock_data(ticker: str, period: str = "1y", interval: str = "1d", use_demo: bool = False) -> Optional[pd.DataFrame]:
+def get_stock_data(
+    ticker: str, period: str = "1y", interval: str = "1d", use_demo: bool = False
+) -> Optional[pd.DataFrame]:
     """
     Fetch stock data from Yahoo Finance with caching, or use demo data.
 
@@ -48,33 +50,35 @@ def get_stock_data(ticker: str, period: str = "1y", interval: str = "1d", use_de
         raise InvalidTickerError(ticker or "", "Ticker symbol cannot be empty")
 
     ticker = ticker.strip().upper()
-    
+
     # Demo data mode - load from JSON files
     if use_demo:
         try:
             import json
             from pathlib import Path
-            
+
             # Use absolute path relative to this file to ensure data is found
             base_dir = Path(__file__).parent.parent
             demo_file = base_dir / "data" / f"demo_{ticker.lower()}_data.json"
-            
+
             if demo_file.exists():
                 logger.info(f"Loading demo data for {ticker}")
-                with open(demo_file, 'r') as f:
+                with open(demo_file, "r") as f:
                     demo_data = json.load(f)
-                
+
                 # Convert to DataFrame
-                df = pd.DataFrame({
-                    'Open': demo_data['open'],
-                    'High': demo_data['high'],
-                    'Low': demo_data['low'],
-                    'Close': demo_data['close'],
-                    'Volume': demo_data['volume']
-                })
-                df.index = pd.to_datetime(demo_data['dates'])
-                df.index.name = 'Date'
-                
+                df = pd.DataFrame(
+                    {
+                        "Open": demo_data["open"],
+                        "High": demo_data["high"],
+                        "Low": demo_data["low"],
+                        "Close": demo_data["close"],
+                        "Volume": demo_data["volume"],
+                    }
+                )
+                df.index = pd.to_datetime(demo_data["dates"])
+                df.index.name = "Date"
+
                 logger.info(f"Successfully loaded demo data: {len(df)} rows for {ticker}")
                 return df
             else:
@@ -83,21 +87,17 @@ def get_stock_data(ticker: str, period: str = "1y", interval: str = "1d", use_de
         except Exception as e:
             logger.error(f"Error loading demo data: {e}, falling back to API")
             # Fall through to API call
-    
+
     logger.info(f"Fetching data for {ticker} (period={period}, interval={interval})")
 
     try:
         # Fetch data from Yahoo Finance
-        df = yf.download(
-            ticker, period=period, interval=interval, progress=False, show_errors=False
-        )
+        df = yf.download(ticker, period=period, interval=interval, progress=False, show_errors=False)
 
         # Check if data was returned
         if df.empty:
             logger.warning(f"No data returned for ticker: {ticker}")
-            raise InvalidTickerError(
-                ticker, f"No data available for '{ticker}'. Please check ticker symbol."
-            )
+            raise InvalidTickerError(ticker, f"No data available for '{ticker}'. Please check ticker symbol.")
 
         logger.info(f"Successfully fetched {len(df)} rows for {ticker}")
         return df
@@ -164,9 +164,7 @@ def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
         logger.debug("Calculated Bollinger Bands")
 
         # Calculate ATR (Average True Range) - 14-period
-        atr_indicator = ta.volatility.AverageTrueRange(
-            df["High"], df["Low"], df["Close"], window=14
-        )
+        atr_indicator = ta.volatility.AverageTrueRange(df["High"], df["Low"], df["Close"], window=14)
         df["ATR"] = atr_indicator.average_true_range()
         logger.debug("Calculated ATR")
 

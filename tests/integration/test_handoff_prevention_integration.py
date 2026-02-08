@@ -117,9 +117,7 @@ class TestHandoffPreventionIntegration:
             # manually if circular blocks them, to saturate the rate limit
             if actions[0].get("handoff_executed") is False:
                 # Force-record to fill the rate limit bucket
-                JorgeHandoffService._record_handoff(
-                    contact, decision.source_bot, decision.target_bot
-                )
+                JorgeHandoffService._record_handoff(contact, decision.source_bot, decision.target_bot)
 
         # 4th handoff should be rate-limited regardless of route
         decision4 = _decision("lead", "seller")
@@ -137,11 +135,13 @@ class TestHandoffPreventionIntegration:
         # Routes: lead->seller and buyer->seller alternating
         for i in range(10):
             src = "lead" if i % 2 == 0 else "buyer"
-            JorgeHandoffService._handoff_history.setdefault(contact, []).append({
-                "from": src,
-                "to": "seller",
-                "timestamp": time.time() - (i * 2000),  # spread across ~5.5 hours
-            })
+            JorgeHandoffService._handoff_history.setdefault(contact, []).append(
+                {
+                    "from": src,
+                    "to": "seller",
+                    "timestamp": time.time() - (i * 2000),  # spread across ~5.5 hours
+                }
+            )
 
         # 11th handoff uses a route NOT in history (seller->buyer) to
         # avoid circular detection — should hit the daily rate limit

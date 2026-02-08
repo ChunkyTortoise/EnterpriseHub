@@ -4,11 +4,12 @@ Provides the core intelligence tools for the Model Context Protocol server.
 """
 
 import logging
-from typing import List, Dict, Any, Optional
-from datetime import datetime, timedelta
 import random
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
+
 
 class MCPInfrastructureService:
     def __init__(self):
@@ -19,9 +20,17 @@ class MCPInfrastructureService:
         logger.info(f"MCP: Fetching lead history for {lead_id}")
         # Mocking 30 days of history
         return [
-            {"date": (datetime.now() - timedelta(days=2)).isoformat(), "type": "call", "summary": "Discussed interest rates"},
+            {
+                "date": (datetime.now() - timedelta(days=2)).isoformat(),
+                "type": "call",
+                "summary": "Discussed interest rates",
+            },
             {"date": (datetime.now() - timedelta(days=5)).isoformat(), "type": "sms", "summary": "Sent property link"},
-            {"date": (datetime.now() - timedelta(days=12)).isoformat(), "type": "email", "summary": "Introductory email"}
+            {
+                "date": (datetime.now() - timedelta(days=12)).isoformat(),
+                "type": "email",
+                "summary": "Introductory email",
+            },
         ]
 
     async def analyze_stall_pattern(self, lead_id: str) -> str:
@@ -30,7 +39,7 @@ class MCPInfrastructureService:
         history = await self.get_lead_history(lead_id)
         last_interaction = datetime.fromisoformat(history[0]["date"])
         delta = datetime.now() - last_interaction
-        
+
         if delta.days < 3:
             return "active"
         elif delta.days < 30:
@@ -44,7 +53,7 @@ class MCPInfrastructureService:
         # Mocking vector search results
         return [
             {"id": "DEAL_A", "value": property_value * 1.05, "status": "closed", "days_to_close": 45},
-            {"id": "DEAL_B", "value": property_value * 0.95, "status": "closed", "days_to_close": 32}
+            {"id": "DEAL_B", "value": property_value * 0.95, "status": "closed", "days_to_close": 32},
         ]
 
     async def predict_close_probability(self, property_id: str, lead_id: str) -> int:
@@ -66,10 +75,12 @@ class MCPInfrastructureService:
             "overall_win_rate": 0.68,
             "best_segment": "first_time_buyers",
             "worst_segment": "luxury_investors",
-            "avg_days_to_close": 38
+            "avg_days_to_close": 38,
         }
 
+
 _mcp_infra_service = None
+
 
 def get_mcp_infrastructure_service() -> MCPInfrastructureService:
     global _mcp_infra_service

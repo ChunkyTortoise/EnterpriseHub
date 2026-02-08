@@ -1,6 +1,8 @@
-from typing import TypedDict, List, Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional, TypedDict
+
 from ghl_real_estate_ai.models.lead_scoring import BuyerIntentProfile
+
 
 class BuyerBotState(TypedDict):
     """
@@ -24,7 +26,7 @@ class BuyerBotState(TypedDict):
     # Buyer-Specific Context
     budget_range: Optional[Dict[str, int]]  # {"min": 300000, "max": 450000}
     financing_status: str  # "pre_approved", "needs_approval", "cash", "unknown"
-    urgency_level: str     # "immediate", "3_months", "6_months", "browsing"
+    urgency_level: str  # "immediate", "3_months", "6_months", "browsing"
     property_preferences: Optional[Dict[str, Any]]
 
     # Contact info (optional, set at runtime)
@@ -44,7 +46,7 @@ class BuyerBotState(TypedDict):
 
     # Metrics
     financial_readiness_score: float  # 0-100
-    buying_motivation_score: float    # 0-100
+    buying_motivation_score: float  # 0-100
     buyer_temperature: Optional[str]
     is_qualified: bool
 

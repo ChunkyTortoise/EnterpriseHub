@@ -3,20 +3,21 @@ Comprehensive tests for Proactive Communication Engine.
 Tests cover multi-channel communication, AI-generated messaging, and GHL integration.
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timedelta
+from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, List, Any
+
+import pytest
 
 try:
     from ghl_real_estate_ai.services.proactive_communication_engine import (
-        ProactiveCommunicationEngine,
+        CommunicationMessage,
+        CommunicationTemplate,
         CommunicationType,
         MessageChannel,
         MessageStatus,
-        CommunicationMessage,
-        CommunicationTemplate
+        ProactiveCommunicationEngine,
     )
 except (ImportError, TypeError, AttributeError):
     pytest.skip("required imports unavailable", allow_module_level=True)
@@ -42,12 +43,9 @@ class TestCommunicationMessage:
             personalization_data={
                 "client_name": "John",
                 "property_address": "123 Main St",
-                "milestone": "inspection_completion"
+                "milestone": "inspection_completion",
             },
-            tracking_data={
-                "campaign_id": "milestone_updates",
-                "template_version": "v2.1"
-            }
+            tracking_data={"campaign_id": "milestone_updates", "template_version": "v2.1"},
         )
 
         assert message.id == "msg_001"
@@ -70,7 +68,7 @@ class TestCommunicationMessage:
             subject="Congratulations on Your Closing!",
             content="Welcome to homeownership!",
             scheduled_send_time=datetime.now(),
-            priority=5
+            priority=5,
         )
 
         message_dict = message.__dict__
@@ -92,11 +90,7 @@ class TestCommunicationTemplate:
             content_template="Hi {{client_name}}, great news! Your {{milestone_name}} has been completed for {{property_address}}. {{milestone_details}}",
             variables=["client_name", "milestone_name", "property_address", "milestone_details"],
             channels=[MessageChannel.EMAIL, MessageChannel.SMS],
-            metadata={
-                "version": "2.0",
-                "created_by": "ai_generation",
-                "approval_status": "approved"
-            }
+            metadata={"version": "2.0", "created_by": "ai_generation", "approval_status": "approved"},
         )
 
         assert template.id == "tmpl_001"
@@ -113,21 +107,21 @@ class TestProactiveCommunicationEngine:
     def mock_dependencies(self):
         """Create mock dependencies for communication engine."""
         return {
-            'cache_service': AsyncMock(),
-            'ghl_service': AsyncMock(),
-            'claude_service': AsyncMock(),
-            'email_service': AsyncMock(),
-            'sms_service': AsyncMock(),
-            'portal_service': AsyncMock()
+            "cache_service": AsyncMock(),
+            "ghl_service": AsyncMock(),
+            "claude_service": AsyncMock(),
+            "email_service": AsyncMock(),
+            "sms_service": AsyncMock(),
+            "portal_service": AsyncMock(),
         }
 
     @pytest.fixture
     def engine(self, mock_dependencies):
         """Create communication engine instance with mocked dependencies."""
         return ProactiveCommunicationEngine(
-            cache_service=mock_dependencies['cache_service'],
-            ghl_service=mock_dependencies['ghl_service'],
-            claude_service=mock_dependencies['claude_service']
+            cache_service=mock_dependencies["cache_service"],
+            ghl_service=mock_dependencies["ghl_service"],
+            claude_service=mock_dependencies["claude_service"],
         )
 
     @pytest.mark.asyncio
@@ -142,46 +136,43 @@ class TestProactiveCommunicationEngine:
                 "inspection_date": "2024-01-20",
                 "inspector_name": "Elite Inspections",
                 "overall_result": "no_major_issues",
-                "next_steps": ["review_report", "proceed_to_appraisal"]
+                "next_steps": ["review_report", "proceed_to_appraisal"],
             },
-            "property_data": {
-                "address": "123 Main Street, Austin, TX",
-                "price": 450000
-            },
+            "property_data": {"address": "123 Main Street, Austin, TX", "price": 450000},
             "client_data": {
                 "name": "John Doe",
                 "email": "john@example.com",
                 "phone": "(555) 123-4567",
-                "communication_preferences": ["email", "sms"]
-            }
+                "communication_preferences": ["email", "sms"],
+            },
         }
 
         # Mock AI-generated message content
-        mock_dependencies['claude_service'].generate_response.return_value = {
+        mock_dependencies["claude_service"].generate_response.return_value = {
             "personalized_message": {
                 "subject": "Great News! Your Home Inspection is Complete",
                 "content": "Hi John, excellent news about your inspection at 123 Main Street! Elite Inspections completed their thorough review and found no major issues. This is a significant milestone - you're one step closer to your dream home! Next, we'll schedule the appraisal. I'll keep you updated on our progress.",
                 "tone": "enthusiastic_professional",
-                "personalization_score": 0.89
+                "personalization_score": 0.89,
             }
         }
 
         # Mock multi-channel sending
-        mock_dependencies['email_service'].send_message.return_value = {
+        mock_dependencies["email_service"].send_message.return_value = {
             "success": True,
             "message_id": "email_msg_789",
-            "delivery_status": "sent"
+            "delivery_status": "sent",
         }
 
-        mock_dependencies['sms_service'].send_message.return_value = {
+        mock_dependencies["sms_service"].send_message.return_value = {
             "success": True,
             "message_id": "sms_msg_790",
-            "delivery_status": "sent"
+            "delivery_status": "sent",
         }
 
-        mock_dependencies['ghl_service'].update_contact_timeline.return_value = {
+        mock_dependencies["ghl_service"].update_contact_timeline.return_value = {
             "success": True,
-            "timeline_entry_id": "timeline_123"
+            "timeline_entry_id": "timeline_123",
         }
 
         result = await engine.send_milestone_update(milestone_data)
@@ -192,10 +183,10 @@ class TestProactiveCommunicationEngine:
         assert result["ai_personalization_score"] == 0.89
 
         # Verify service calls
-        mock_dependencies['claude_service'].generate_response.assert_called_once()
-        mock_dependencies['email_service'].send_message.assert_called_once()
-        mock_dependencies['sms_service'].send_message.assert_called_once()
-        mock_dependencies['ghl_service'].update_contact_timeline.assert_called_once()
+        mock_dependencies["claude_service"].generate_response.assert_called_once()
+        mock_dependencies["email_service"].send_message.assert_called_once()
+        mock_dependencies["sms_service"].send_message.assert_called_once()
+        mock_dependencies["ghl_service"].update_contact_timeline.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_send_celebration_message_success(self, engine, mock_dependencies):
@@ -209,43 +200,39 @@ class TestProactiveCommunicationEngine:
                 "closing_date": "2024-01-25",
                 "property_address": "456 Oak Street, Austin, TX",
                 "purchase_price": 525000,
-                "achievement": "first_time_homeowner"
+                "achievement": "first_time_homeowner",
             },
-            "client_data": {
-                "name": "Sarah Johnson",
-                "email": "sarah@example.com",
-                "phone": "(555) 987-6543"
-            },
+            "client_data": {"name": "Sarah Johnson", "email": "sarah@example.com", "phone": "(555) 987-6543"},
             "custom_message_elements": {
                 "include_gift_suggestion": True,
                 "include_maintenance_tips": True,
-                "include_community_welcome": True
-            }
+                "include_community_welcome": True,
+            },
         }
 
         # Mock AI-generated celebration content
-        mock_dependencies['claude_service'].generate_response.return_value = {
+        mock_dependencies["claude_service"].generate_response.return_value = {
             "celebration_message": {
                 "subject": "🎉 Welcome Home, Sarah! Congratulations!",
                 "content": "Sarah, what an incredible milestone! You've officially become a homeowner at 456 Oak Street! 🏡 As a first-time buyer, this achievement is extra special. I've prepared some helpful tips for your first 30 days and information about your new neighborhood. Congratulations on this amazing journey - you've earned this celebration!",
                 "tone": "celebratory_warm",
                 "includes_emojis": True,
                 "personalization_score": 0.95,
-                "celebration_elements": ["achievement_recognition", "community_info", "helpful_resources"]
+                "celebration_elements": ["achievement_recognition", "community_info", "helpful_resources"],
             }
         }
 
         # Mock celebration delivery
-        mock_dependencies['email_service'].send_celebration.return_value = {
+        mock_dependencies["email_service"].send_celebration.return_value = {
             "success": True,
             "message_id": "celebration_email_123",
-            "includes_attachments": True
+            "includes_attachments": True,
         }
 
-        mock_dependencies['portal_service'].create_welcome_package.return_value = {
+        mock_dependencies["portal_service"].create_welcome_package.return_value = {
             "success": True,
             "package_id": "welcome_pkg_456",
-            "package_url": "https://portal.example.com/welcome/456"
+            "package_url": "https://portal.example.com/welcome/456",
         }
 
         result = await engine.send_celebration_message(celebration_data)
@@ -256,7 +243,7 @@ class TestProactiveCommunicationEngine:
         assert result["welcome_package_created"] is True
 
         # Verify celebration-specific calls
-        mock_dependencies['portal_service'].create_welcome_package.assert_called_once()
+        mock_dependencies["portal_service"].create_welcome_package.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_send_issue_alert_success(self, engine, mock_dependencies):
@@ -271,49 +258,45 @@ class TestProactiveCommunicationEngine:
                 "description": "Additional documentation required by lender",
                 "required_action": "Provide 2023 tax returns and recent bank statements",
                 "deadline": "2024-01-22T17:00:00",
-                "impact": "May delay closing by 3-5 days if not resolved quickly"
+                "impact": "May delay closing by 3-5 days if not resolved quickly",
             },
             "resolution_steps": [
                 "Contact your CPA for 2023 tax returns",
                 "Download recent bank statements (last 2 months)",
-                "Upload documents to secure portal within 24 hours"
+                "Upload documents to secure portal within 24 hours",
             ],
-            "support_contact": {
-                "agent_name": "Mike Rodriguez",
-                "phone": "(555) 111-2222",
-                "email": "mike@realty.com"
-            }
+            "support_contact": {"agent_name": "Mike Rodriguez", "phone": "(555) 111-2222", "email": "mike@realty.com"},
         }
 
         # Mock AI-generated alert content
-        mock_dependencies['claude_service'].generate_response.return_value = {
+        mock_dependencies["claude_service"].generate_response.return_value = {
             "alert_message": {
                 "subject": "Action Required: Additional Documents Needed",
                 "content": "I need your help with something important for your closing. The lender requires your 2023 tax returns and recent bank statements. While this adds a step, it's completely normal and I'm here to guide you through it quickly. If we get these within 24 hours, we can stay on track. I've outlined exactly what you need below and I'm available to help.",
                 "tone": "urgent_but_reassuring",
                 "urgency_level": "high",
                 "action_oriented": True,
-                "personalization_score": 0.82
+                "personalization_score": 0.82,
             }
         }
 
         # Mock multi-channel alert delivery
-        mock_dependencies['email_service'].send_priority_message.return_value = {
+        mock_dependencies["email_service"].send_priority_message.return_value = {
             "success": True,
             "message_id": "priority_email_456",
-            "priority_flag": "high"
+            "priority_flag": "high",
         }
 
-        mock_dependencies['sms_service'].send_urgent_message.return_value = {
+        mock_dependencies["sms_service"].send_urgent_message.return_value = {
             "success": True,
             "message_id": "urgent_sms_789",
-            "delivery_confirmation": True
+            "delivery_confirmation": True,
         }
 
-        mock_dependencies['ghl_service'].create_task.return_value = {
+        mock_dependencies["ghl_service"].create_task.return_value = {
             "success": True,
             "task_id": "task_urgent_123",
-            "assigned_to": "agent"
+            "assigned_to": "agent",
         }
 
         result = await engine.send_issue_alert(alert_data)
@@ -324,9 +307,9 @@ class TestProactiveCommunicationEngine:
         assert result["follow_up_task_created"] is True
 
         # Verify urgent delivery methods
-        mock_dependencies['email_service'].send_priority_message.assert_called_once()
-        mock_dependencies['sms_service'].send_urgent_message.assert_called_once()
-        mock_dependencies['ghl_service'].create_task.assert_called_once()
+        mock_dependencies["email_service"].send_priority_message.assert_called_once()
+        mock_dependencies["sms_service"].send_urgent_message.assert_called_once()
+        mock_dependencies["ghl_service"].create_task.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_schedule_communication_success(self, engine, mock_dependencies):
@@ -342,35 +325,19 @@ class TestProactiveCommunicationEngine:
             "personalization_data": {
                 "client_name": "Robert Smith",
                 "property_address": "789 Pine Lane",
-                "closing_date": "2024-02-20"
-            }
+                "closing_date": "2024-02-20",
+            },
         }
 
         # Mock scheduled message creation
         scheduled_messages = [
-            {
-                "message_id": "scheduled_001",
-                "send_time": "2024-01-22T09:00:00",
-                "week": 1
-            },
-            {
-                "message_id": "scheduled_002",
-                "send_time": "2024-01-29T09:00:00",
-                "week": 2
-            },
-            {
-                "message_id": "scheduled_003",
-                "send_time": "2024-02-05T09:00:00",
-                "week": 3
-            },
-            {
-                "message_id": "scheduled_004",
-                "send_time": "2024-02-12T09:00:00",
-                "week": 4
-            }
+            {"message_id": "scheduled_001", "send_time": "2024-01-22T09:00:00", "week": 1},
+            {"message_id": "scheduled_002", "send_time": "2024-01-29T09:00:00", "week": 2},
+            {"message_id": "scheduled_003", "send_time": "2024-02-05T09:00:00", "week": 3},
+            {"message_id": "scheduled_004", "send_time": "2024-02-12T09:00:00", "week": 4},
         ]
 
-        mock_dependencies['cache_service'].set.return_value = True
+        mock_dependencies["cache_service"].set.return_value = True
 
         result = await engine.schedule_recurring_communication(schedule_data)
 
@@ -380,7 +347,7 @@ class TestProactiveCommunicationEngine:
         assert result["schedule_pattern"] == "weekly"
 
         # Verify scheduling storage
-        mock_dependencies['cache_service'].set.assert_called()
+        mock_dependencies["cache_service"].set.assert_called()
 
     @pytest.mark.asyncio
     async def test_process_scheduled_messages(self, engine, mock_dependencies):
@@ -399,7 +366,7 @@ class TestProactiveCommunicationEngine:
                 subject="Weekly Progress Update",
                 content="Your weekly update...",
                 scheduled_send_time=current_time - timedelta(minutes=5),  # Due
-                priority=5
+                priority=5,
             ),
             CommunicationMessage(
                 id="scheduled_future_002",
@@ -412,23 +379,17 @@ class TestProactiveCommunicationEngine:
                 subject="Upcoming Milestone",
                 content="Reminder about...",
                 scheduled_send_time=current_time + timedelta(hours=2),  # Future
-                priority=7
-            )
+                priority=7,
+            ),
         ]
 
-        mock_dependencies['cache_service'].get.return_value = pending_messages
+        mock_dependencies["cache_service"].get.return_value = pending_messages
 
         # Mock message sending for due message
-        mock_dependencies['email_service'].send_message.return_value = {
-            "success": True,
-            "message_id": "email_sent_123"
-        }
+        mock_dependencies["email_service"].send_message.return_value = {"success": True, "message_id": "email_sent_123"}
 
-        with patch.object(engine, '_send_message_via_channels') as mock_send:
-            mock_send.return_value = {
-                "success": True,
-                "channels_sent": ["email"]
-            }
+        with patch.object(engine, "_send_message_via_channels") as mock_send:
+            mock_send.return_value = {"success": True, "channels_sent": ["email"]}
 
             result = await engine.process_scheduled_messages()
 
@@ -449,26 +410,26 @@ class TestProactiveCommunicationEngine:
                     "first_time_buyer": True,
                     "communication_style": "detailed",
                     "concerns": ["timeline", "financing"],
-                    "personality": "analytical"
+                    "personality": "analytical",
                 },
                 "deal_context": {
                     "weeks_in_process": 3,
                     "milestones_completed": ["contract", "inspection", "appraisal"],
                     "next_milestone": "final_walkthrough",
-                    "closing_timeline": "on_track"
-                }
-            }
+                    "closing_timeline": "on_track",
+                },
+            },
         }
 
         # Mock AI personalization
-        mock_dependencies['claude_service'].generate_response.return_value = {
+        mock_dependencies["claude_service"].generate_response.return_value = {
             "personalized_content": {
                 "subject": "Great Progress Jennifer - Your Appraisal Results Are In!",
                 "content": "Jennifer, I have excellent news about your appraisal for 321 Maple Drive! The property appraised at value, which means your financing is secured and we're maintaining our timeline perfectly. I know you've been focused on staying on schedule, and I'm happy to confirm we're right on track. With the contract, inspection, and now appraisal complete, you're 75% of the way to your keys! Next up is the final walkthrough, which I'll coordinate for you. As a first-time buyer, you're doing amazingly well navigating this process.",
                 "personalization_score": 0.94,
                 "tone_match": "detailed_reassuring",
                 "addresses_concerns": ["timeline", "financing"],
-                "celebration_elements": ["progress_acknowledgment", "milestone_achievement"]
+                "celebration_elements": ["progress_acknowledgment", "milestone_achievement"],
             }
         }
 
@@ -485,7 +446,7 @@ class TestProactiveCommunicationEngine:
         analytics_request = {
             "deal_id": "deal_analytics",
             "time_period": "last_30_days",
-            "metrics": ["delivery_rate", "engagement_rate", "response_rate", "satisfaction_score"]
+            "metrics": ["delivery_rate", "engagement_rate", "response_rate", "satisfaction_score"],
         }
 
         # Mock analytics data
@@ -499,24 +460,18 @@ class TestProactiveCommunicationEngine:
                 "opened": 24,
                 "clicked": 18,
                 "open_rate": 82.8,
-                "click_rate": 62.1
+                "click_rate": 62.1,
             },
-            "sms_metrics": {
-                "sent": 15,
-                "delivered": 14,
-                "responses": 8,
-                "delivery_rate": 93.3,
-                "response_rate": 57.1
-            },
+            "sms_metrics": {"sent": 15, "delivered": 14, "responses": 8, "delivery_rate": 93.3, "response_rate": 57.1},
             "client_satisfaction": {
                 "average_rating": 4.6,
                 "feedback_count": 12,
                 "positive_feedback": 11,
-                "improvement_suggestions": 1
-            }
+                "improvement_suggestions": 1,
+            },
         }
 
-        mock_dependencies['cache_service'].get.return_value = mock_analytics
+        mock_dependencies["cache_service"].get.return_value = mock_analytics
 
         result = await engine.get_communication_analytics(analytics_request)
 
@@ -537,16 +492,16 @@ class TestProactiveCommunicationEngine:
             "variables": ["client_name", "days_to_closing", "property_address", "checklist_items", "closing_details"],
             "channels": ["email", "portal"],
             "approval_required": False,
-            "ai_enhancement": True
+            "ai_enhancement": True,
         }
 
         # Mock AI template enhancement
-        mock_dependencies['claude_service'].generate_response.return_value = {
+        mock_dependencies["claude_service"].generate_response.return_value = {
             "enhanced_template": {
                 "subject_template": "{{days_to_closing}} Days to Your Keys! 🗝️ Closing Prep for {{property_address}}",
                 "content_template": "Hi {{client_name}}, incredible - we're just {{days_to_closing}} days away from you getting the keys to {{property_address}}! 🏡 I've prepared your personalized closing checklist to ensure everything goes smoothly: {{checklist_items}}. {{closing_details}} Remember, I'm here every step of the way. Let's make this closing perfect!",
                 "enhancement_score": 0.87,
-                "improvements": ["added_excitement", "emoji_usage", "personal_commitment", "positive_framing"]
+                "improvements": ["added_excitement", "emoji_usage", "personal_commitment", "positive_framing"],
             }
         }
 
@@ -558,7 +513,7 @@ class TestProactiveCommunicationEngine:
         assert result["enhancement_score"] == 0.87
 
         # Verify template storage
-        mock_dependencies['cache_service'].set.assert_called()
+        mock_dependencies["cache_service"].set.assert_called()
 
     @pytest.mark.asyncio
     async def test_communication_preferences_management(self, engine, mock_dependencies):
@@ -571,22 +526,22 @@ class TestProactiveCommunicationEngine:
                 "time_restrictions": {
                     "no_contact_before": "08:00",
                     "no_contact_after": "20:00",
-                    "weekend_contact": False
+                    "weekend_contact": False,
                 },
                 "content_preferences": {
                     "tone": "professional",
                     "detail_level": "concise",
                     "emoji_usage": False,
-                    "language": "english"
+                    "language": "english",
                 },
                 "notification_types": {
                     "milestone_updates": True,
                     "issue_alerts": True,
                     "weekly_updates": False,
                     "celebration_messages": True,
-                    "marketing_messages": False
-                }
-            }
+                    "marketing_messages": False,
+                },
+            },
         }
 
         result = await engine.update_communication_preferences(preferences_data)
@@ -595,9 +550,8 @@ class TestProactiveCommunicationEngine:
         assert result["preferences_updated"] is True
 
         # Verify preferences storage
-        mock_dependencies['cache_service'].set.assert_called_with(
-            f"communication_preferences:{preferences_data['client_id']}",
-            preferences_data["preferences"]
+        mock_dependencies["cache_service"].set.assert_called_with(
+            f"communication_preferences:{preferences_data['client_id']}", preferences_data["preferences"]
         )
 
     @pytest.mark.asyncio
@@ -611,25 +565,25 @@ class TestProactiveCommunicationEngine:
             "situation_details": {
                 "reason": "last_minute_financing_denial",
                 "impact": "closing_cancelled_24h_before",
-                "required_actions": ["find_alternative_lender", "reschedule_closing", "negotiate_extension"]
+                "required_actions": ["find_alternative_lender", "reschedule_closing", "negotiate_extension"],
             },
             "immediate_contact_required": True,
-            "escalation_level": "manager"
+            "escalation_level": "manager",
         }
 
         # Mock emergency protocol activation
-        mock_dependencies['ghl_service'].activate_emergency_workflow.return_value = {
+        mock_dependencies["ghl_service"].activate_emergency_workflow.return_value = {
             "success": True,
             "emergency_id": "emergency_123",
             "manager_notified": True,
-            "escalation_timeline": "immediate"
+            "escalation_timeline": "immediate",
         }
 
         # Mock multi-party emergency communication
-        mock_dependencies['email_service'].send_emergency_broadcast.return_value = {
+        mock_dependencies["email_service"].send_emergency_broadcast.return_value = {
             "success": True,
             "messages_sent": 4,
-            "delivery_confirmations": 4
+            "delivery_confirmations": 4,
         }
 
         result = await engine.activate_emergency_communication_protocol(emergency_data)
@@ -654,13 +608,9 @@ class TestProactiveCommunicationEngine:
     def test_channel_optimization(self, engine):
         """Test communication channel optimization logic."""
         client_data = {
-            "communication_history": {
-                "email_open_rate": 45,
-                "sms_response_rate": 85,
-                "portal_usage": 20
-            },
+            "communication_history": {"email_open_rate": 45, "sms_response_rate": 85, "portal_usage": 20},
             "preferences": ["email", "sms"],
-            "urgency": "high"
+            "urgency": "high",
         }
 
         optimized_channels = engine._optimize_communication_channels(client_data)
@@ -675,9 +625,7 @@ class TestProactiveCommunicationEngine:
         message_type = CommunicationType.MILESTONE_UPDATE
         urgency = "standard"
 
-        optimal_time = engine._calculate_optimal_send_time(
-            client_timezone, message_type, urgency
-        )
+        optimal_time = engine._calculate_optimal_send_time(client_timezone, message_type, urgency)
 
         # Should return a reasonable business hour time
         assert 8 <= optimal_time.hour <= 18  # Business hours

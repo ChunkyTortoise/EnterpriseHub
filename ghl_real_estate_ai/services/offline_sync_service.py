@@ -11,38 +11,44 @@ Provides comprehensive offline data synchronization with:
 """
 
 import asyncio
+import hashlib
 import json
 import logging
-import hashlib
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Union, Tuple
-from enum import Enum
-from dataclasses import dataclass, asdict
 from collections import deque
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.ghl_service import GHLService
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+
 class SyncOperationType(Enum):
     """Types of sync operations."""
+
     CREATE = "create"
     UPDATE = "update"
     DELETE = "delete"
     BULK_UPDATE = "bulk_update"
 
+
 class ConflictResolutionStrategy(Enum):
     """Conflict resolution strategies."""
+
     SERVER_WINS = "server_wins"
     CLIENT_WINS = "client_wins"
     LATEST_TIMESTAMP = "latest_timestamp"
     MERGE_FIELDS = "merge_fields"
     MANUAL_RESOLUTION = "manual_resolution"
 
+
 class SyncStatus(Enum):
     """Sync operation status."""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     SUCCESS = "success"
@@ -50,9 +56,11 @@ class SyncStatus(Enum):
     FAILED = "failed"
     MANUAL_REQUIRED = "manual_required"
 
+
 @dataclass
 class SyncOperation:
     """Individual sync operation."""
+
     operation_id: str
     operation_type: SyncOperationType
     entity_type: str  # lead, property, note, etc.
@@ -64,9 +72,11 @@ class SyncOperation:
     retry_count: int = 0
     max_retries: int = 3
 
+
 @dataclass
 class SyncConflict:
     """Sync conflict information."""
+
     operation_id: str
     entity_type: str
     entity_id: str
@@ -77,15 +87,18 @@ class SyncConflict:
     resolved_data: Optional[Dict[str, Any]] = None
     requires_manual_resolution: bool = False
 
+
 @dataclass
 class SyncResult:
     """Result of sync operation."""
+
     operation_id: str
     status: SyncStatus
     error_message: Optional[str] = None
     server_timestamp: Optional[datetime] = None
     resolved_data: Optional[Dict[str, Any]] = None
     conflict: Optional[SyncConflict] = None
+
 
 class OfflineSyncService:
     """
@@ -98,11 +111,7 @@ class OfflineSyncService:
         self.sync_queues: Dict[str, deque] = {}  # device_id -> queue
         self.active_syncs: Dict[str, bool] = {}  # device_id -> is_syncing
 
-    async def queue_operation(
-        self,
-        device_id: str,
-        operation: SyncOperation
-    ) -> bool:
+    async def queue_operation(self, device_id: str, operation: SyncOperation) -> bool:
         """
         Queue an operation for offline sync.
         """
@@ -127,11 +136,7 @@ class OfflineSyncService:
             return False
 
     async def process_sync_queue(
-        self,
-        device_id: str,
-        location_id: str,
-        ghl_api_key: str,
-        batch_size: int = 10
+        self, device_id: str, location_id: str, ghl_api_key: str, batch_size: int = 10
     ) -> Dict[str, Any]:
         """
         Process pending sync operations for a device.
@@ -139,10 +144,7 @@ class OfflineSyncService:
         try:
             # Check if sync is already in progress
             if self.active_syncs.get(device_id, False):
-                return {
-                    "status": "in_progress",
-                    "message": "Sync already in progress for this device"
-                }
+                return {"status": "in_progress", "message": "Sync already in progress for this device"}
 
             self.active_syncs[device_id] = True
 
@@ -151,10 +153,7 @@ class OfflineSyncService:
 
             if device_id not in self.sync_queues or not self.sync_queues[device_id]:
                 self.active_syncs[device_id] = False
-                return {
-                    "status": "no_operations",
-                    "message": "No pending operations"
-                }
+                return {"status": "no_operations", "message": "No pending operations"}
 
             # Process operations in batches
             ghl_service = GHLService(ghl_api_key, location_id)
@@ -176,9 +175,7 @@ class OfflineSyncService:
 
                 except Exception as op_error:
                     error_result = SyncResult(
-                        operation_id=operation.operation_id,
-                        status=SyncStatus.FAILED,
-                        error_message=str(op_error)
+                        operation_id=operation.operation_id, status=SyncStatus.FAILED, error_message=str(op_error)
                     )
                     results.append(error_result)
                     logger.error(f"Operation failed: {operation.operation_id} - {op_error}")
@@ -194,9 +191,7 @@ class OfflineSyncService:
             self.active_syncs[device_id] = False
 
             # Get server updates since last sync
-            server_updates = await self._get_server_updates_since_last_sync(
-                device_id, location_id, ghl_service
-            )
+            server_updates = await self._get_server_updates_since_last_sync(device_id, location_id, ghl_service)
 
             return {
                 "status": "completed",
@@ -205,23 +200,20 @@ class OfflineSyncService:
                 "results": [asdict(r) for r in results],
                 "conflicts": [asdict(c) for c in conflicts],
                 "server_updates": server_updates,
-                "sync_timestamp": datetime.utcnow().isoformat()
+                "sync_timestamp": datetime.utcnow().isoformat(),
             }
 
         except Exception as e:
             self.active_syncs[device_id] = False
             logger.error(f"Sync processing failed: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
     async def resolve_conflict(
         self,
         device_id: str,
         conflict_id: str,
         resolution_data: Dict[str, Any],
-        strategy: ConflictResolutionStrategy = ConflictResolutionStrategy.MANUAL_RESOLUTION
+        strategy: ConflictResolutionStrategy = ConflictResolutionStrategy.MANUAL_RESOLUTION,
     ) -> Dict[str, Any]:
         """
         Resolve a sync conflict with provided resolution data.
@@ -232,10 +224,7 @@ class OfflineSyncService:
             conflict_data = await self.cache.get(conflict_key)
 
             if not conflict_data:
-                return {
-                    "success": False,
-                    "error": "Conflict not found"
-                }
+                return {"success": False, "error": "Conflict not found"}
 
             conflict = SyncConflict(**conflict_data)
 
@@ -268,22 +257,15 @@ class OfflineSyncService:
                 "success": True,
                 "conflict_id": conflict_id,
                 "resolution_strategy": strategy.value,
-                "resolved_data": resolved_data
+                "resolved_data": resolved_data,
             }
 
         except Exception as e:
             logger.error(f"Conflict resolution failed: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     async def get_delta_sync_data(
-        self,
-        device_id: str,
-        location_id: str,
-        last_sync_timestamp: datetime,
-        entity_types: List[str] = None
+        self, device_id: str, location_id: str, last_sync_timestamp: datetime, entity_types: List[str] = None
     ) -> Dict[str, Any]:
         """
         Get delta sync data since last sync timestamp.
@@ -297,23 +279,18 @@ class OfflineSyncService:
 
             for entity_type in entity_types:
                 # Get changes since last sync
-                changes = await self._get_entity_changes_since(
-                    location_id, entity_type, last_sync_timestamp
-                )
+                changes = await self._get_entity_changes_since(location_id, entity_type, last_sync_timestamp)
 
                 if changes:
                     delta_data[entity_type] = {
                         "created": changes.get("created", []),
                         "updated": changes.get("updated", []),
                         "deleted": changes.get("deleted", []),
-                        "total_changes": sum(len(changes.get(k, [])) for k in ["created", "updated", "deleted"])
+                        "total_changes": sum(len(changes.get(k, [])) for k in ["created", "updated", "deleted"]),
                     }
 
             # Calculate sync efficiency metrics
-            total_changes = sum(
-                data.get("total_changes", 0)
-                for data in delta_data.values()
-            )
+            total_changes = sum(data.get("total_changes", 0) for data in delta_data.values())
 
             return {
                 "device_id": device_id,
@@ -322,21 +299,14 @@ class OfflineSyncService:
                 "delta_data": delta_data,
                 "total_changes": total_changes,
                 "estimated_sync_time": self._estimate_sync_time(total_changes),
-                "compression_ratio": self._calculate_compression_ratio(delta_data)
+                "compression_ratio": self._calculate_compression_ratio(delta_data),
             }
 
         except Exception as e:
             logger.error(f"Delta sync data failed: {e}")
-            return {
-                "error": str(e),
-                "device_id": device_id
-            }
+            return {"error": str(e), "device_id": device_id}
 
-    async def validate_data_integrity(
-        self,
-        device_id: str,
-        entity_checksums: Dict[str, str]
-    ) -> Dict[str, Any]:
+    async def validate_data_integrity(self, device_id: str, entity_checksums: Dict[str, str]) -> Dict[str, Any]:
         """
         Validate data integrity using checksums.
         """
@@ -346,7 +316,7 @@ class OfflineSyncService:
                 "validation_timestamp": datetime.utcnow().isoformat(),
                 "entities_checked": 0,
                 "integrity_errors": [],
-                "suggestions": []
+                "suggestions": [],
             }
 
             for entity_id, client_checksum in entity_checksums.items():
@@ -356,34 +326,33 @@ class OfflineSyncService:
                 integrity_report["entities_checked"] += 1
 
                 if server_checksum != client_checksum:
-                    integrity_report["integrity_errors"].append({
-                        "entity_id": entity_id,
-                        "client_checksum": client_checksum,
-                        "server_checksum": server_checksum,
-                        "suggested_action": "resync_entity"
-                    })
+                    integrity_report["integrity_errors"].append(
+                        {
+                            "entity_id": entity_id,
+                            "client_checksum": client_checksum,
+                            "server_checksum": server_checksum,
+                            "suggested_action": "resync_entity",
+                        }
+                    )
 
             # Provide suggestions based on errors
             if integrity_report["integrity_errors"]:
                 integrity_report["suggestions"] = [
                     "Consider performing a full resync for entities with checksum mismatches",
                     "Check network connectivity during last sync",
-                    "Verify local data hasn't been corrupted"
+                    "Verify local data hasn't been corrupted",
                 ]
 
             return integrity_report
 
         except Exception as e:
             logger.error(f"Data integrity validation failed: {e}")
-            return {
-                "error": str(e),
-                "device_id": device_id
-            }
+            return {"error": str(e), "device_id": device_id}
 
     async def estimate_sync_requirements(
         self,
         device_id: str,
-        connection_quality: str = "good"  # poor, fair, good, excellent
+        connection_quality: str = "good",  # poor, fair, good, excellent
     ) -> Dict[str, Any]:
         """
         Estimate sync requirements and provide recommendations.
@@ -394,12 +363,7 @@ class OfflineSyncService:
             pending_ops = len(self.sync_queues.get(device_id, []))
 
             # Connection quality multipliers
-            quality_multipliers = {
-                "poor": 3.0,
-                "fair": 2.0,
-                "good": 1.0,
-                "excellent": 0.5
-            }
+            quality_multipliers = {"poor": 3.0, "fair": 2.0, "good": 1.0, "excellent": 0.5}
 
             base_time_per_op = 2  # seconds
             multiplier = quality_multipliers.get(connection_quality, 1.0)
@@ -424,15 +388,12 @@ class OfflineSyncService:
                 "connection_quality": connection_quality,
                 "recommendations": recommendations,
                 "should_sync_now": estimated_time < 60 and pending_ops < 20,
-                "battery_impact": "low" if pending_ops < 10 else "medium" if pending_ops < 50 else "high"
+                "battery_impact": "low" if pending_ops < 10 else "medium" if pending_ops < 50 else "high",
             }
 
         except Exception as e:
             logger.error(f"Sync requirements estimation failed: {e}")
-            return {
-                "error": str(e),
-                "device_id": device_id
-            }
+            return {"error": str(e), "device_id": device_id}
 
     async def _load_queue_from_cache(self, device_id: str):
         """Load sync queue from cache."""
@@ -450,11 +411,7 @@ class OfflineSyncService:
             logger.error(f"Failed to load queue from cache: {e}")
             self.sync_queues[device_id] = deque()
 
-    async def _process_operation(
-        self,
-        operation: SyncOperation,
-        ghl_service: GHLService
-    ) -> SyncResult:
+    async def _process_operation(self, operation: SyncOperation, ghl_service: GHLService) -> SyncResult:
         """Process a single sync operation."""
         try:
             # Check for conflicts first
@@ -462,9 +419,7 @@ class OfflineSyncService:
                 conflict = await self._detect_conflict(operation, ghl_service)
                 if conflict:
                     return SyncResult(
-                        operation_id=operation.operation_id,
-                        status=SyncStatus.CONFLICT,
-                        conflict=conflict
+                        operation_id=operation.operation_id, status=SyncStatus.CONFLICT, conflict=conflict
                     )
 
             # Execute operation
@@ -479,15 +434,13 @@ class OfflineSyncService:
 
             if success:
                 return SyncResult(
-                    operation_id=operation.operation_id,
-                    status=SyncStatus.SUCCESS,
-                    server_timestamp=datetime.utcnow()
+                    operation_id=operation.operation_id, status=SyncStatus.SUCCESS, server_timestamp=datetime.utcnow()
                 )
             else:
                 return SyncResult(
                     operation_id=operation.operation_id,
                     status=SyncStatus.FAILED,
-                    error_message="Operation execution failed"
+                    error_message="Operation execution failed",
                 )
 
         except Exception as e:
@@ -498,20 +451,16 @@ class OfflineSyncService:
                 return SyncResult(
                     operation_id=operation.operation_id,
                     status=SyncStatus.FAILED,
-                    error_message=f"Retry {operation.retry_count}/{operation.max_retries}: {str(e)}"
+                    error_message=f"Retry {operation.retry_count}/{operation.max_retries}: {str(e)}",
                 )
             else:
                 return SyncResult(
                     operation_id=operation.operation_id,
                     status=SyncStatus.FAILED,
-                    error_message=f"Max retries exceeded: {str(e)}"
+                    error_message=f"Max retries exceeded: {str(e)}",
                 )
 
-    async def _detect_conflict(
-        self,
-        operation: SyncOperation,
-        ghl_service: GHLService
-    ) -> Optional[SyncConflict]:
+    async def _detect_conflict(self, operation: SyncOperation, ghl_service: GHLService) -> Optional[SyncConflict]:
         """Detect if operation would cause a conflict."""
         try:
             # Get current server state
@@ -539,7 +488,7 @@ class OfflineSyncService:
                     server_data=server_data,
                     conflict_fields=conflict_fields,
                     resolution_strategy=ConflictResolutionStrategy.LATEST_TIMESTAMP,
-                    requires_manual_resolution=len(conflict_fields) > 3  # Arbitrary threshold
+                    requires_manual_resolution=len(conflict_fields) > 3,  # Arbitrary threshold
                 )
 
             return None
@@ -548,11 +497,7 @@ class OfflineSyncService:
             logger.error(f"Conflict detection failed: {e}")
             return None
 
-    async def _process_lead_operation(
-        self,
-        operation: SyncOperation,
-        ghl_service: GHLService
-    ) -> bool:
+    async def _process_lead_operation(self, operation: SyncOperation, ghl_service: GHLService) -> bool:
         """Process lead-specific sync operation."""
         try:
             if operation.operation_type == SyncOperationType.CREATE:
@@ -568,11 +513,7 @@ class OfflineSyncService:
             logger.error(f"Lead operation failed: {e}")
             return False
 
-    async def _process_property_operation(
-        self,
-        operation: SyncOperation,
-        ghl_service: GHLService
-    ) -> bool:
+    async def _process_property_operation(self, operation: SyncOperation, ghl_service: GHLService) -> bool:
         """Process property-specific sync operation."""
         try:
             # TODO: Implement property operations
@@ -582,11 +523,7 @@ class OfflineSyncService:
             logger.error(f"Property operation failed: {e}")
             return False
 
-    async def _process_note_operation(
-        self,
-        operation: SyncOperation,
-        ghl_service: GHLService
-    ) -> bool:
+    async def _process_note_operation(self, operation: SyncOperation, ghl_service: GHLService) -> bool:
         """Process note-specific sync operation."""
         try:
             # TODO: Implement note operations
@@ -601,11 +538,7 @@ class OfflineSyncService:
         data_str = json.dumps(data, sort_keys=True)
         return hashlib.sha256(data_str.encode()).hexdigest()
 
-    def _identify_conflict_fields(
-        self,
-        client_data: Dict[str, Any],
-        server_data: Dict[str, Any]
-    ) -> List[str]:
+    def _identify_conflict_fields(self, client_data: Dict[str, Any], server_data: Dict[str, Any]) -> List[str]:
         """Identify fields that have conflicts."""
         conflicts = []
         all_fields = set(client_data.keys()) | set(server_data.keys())
@@ -619,21 +552,14 @@ class OfflineSyncService:
 
         return conflicts
 
-    def _merge_conflict_fields(
-        self,
-        conflict: SyncConflict,
-        resolution_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _merge_conflict_fields(self, conflict: SyncConflict, resolution_data: Dict[str, Any]) -> Dict[str, Any]:
         """Merge conflict fields using provided resolution."""
         merged_data = conflict.server_data.copy()
         merged_data.update(resolution_data)
         return merged_data
 
     async def _get_server_updates_since_last_sync(
-        self,
-        device_id: str,
-        location_id: str,
-        ghl_service: GHLService
+        self, device_id: str, location_id: str, ghl_service: GHLService
     ) -> List[Dict[str, Any]]:
         """Get server updates since device's last sync."""
         try:
@@ -657,19 +583,12 @@ class OfflineSyncService:
             return []
 
     async def _get_entity_changes_since(
-        self,
-        location_id: str,
-        entity_type: str,
-        since: datetime
+        self, location_id: str, entity_type: str, since: datetime
     ) -> Dict[str, List[Dict[str, Any]]]:
         """Get entity changes since timestamp."""
         try:
             # TODO: Implement actual change tracking
-            return {
-                "created": [],
-                "updated": [],
-                "deleted": []
-            }
+            return {"created": [], "updated": [], "deleted": []}
 
         except Exception as e:
             logger.error(f"Failed to get entity changes: {e}")
@@ -693,10 +612,7 @@ class OfflineSyncService:
     def _calculate_compression_ratio(self, delta_data: Dict[str, Any]) -> float:
         """Calculate compression ratio for delta sync."""
         try:
-            total_changes = sum(
-                data.get("total_changes", 0)
-                for data in delta_data.values()
-            )
+            total_changes = sum(data.get("total_changes", 0) for data in delta_data.values())
 
             # Assume 1000 total entities for ratio calculation
             total_entities = 1000
@@ -707,8 +623,10 @@ class OfflineSyncService:
         except:
             return 0.5  # Default 50% compression
 
+
 # Global service instance
 _offline_sync_service = None
+
 
 def get_offline_sync_service() -> OfflineSyncService:
     """Get the global offline sync service instance."""

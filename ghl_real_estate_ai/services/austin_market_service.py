@@ -11,14 +11,14 @@ Provides comprehensive Austin Metropolitan Area real estate market data includin
 
 import asyncio
 import json
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass
-from enum import Enum
 import logging
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)
 
@@ -41,6 +41,7 @@ class MarketCondition(Enum):
 @dataclass
 class RanchoCucamongaNeighborhood:
     """Rancho Cucamonga neighborhood with comprehensive market data."""
+
     name: str
     zone: str  # Central RC, Alta Loma, Etiwanda, North RC, South RC
     median_price: float
@@ -58,6 +59,7 @@ class RanchoCucamongaNeighborhood:
 @dataclass
 class PropertyListing:
     """Austin Metropolitan Area MLS property listing."""
+
     mls_id: str
     address: str
     price: float
@@ -83,6 +85,7 @@ class PropertyListing:
 @dataclass
 class MarketMetrics:
     """Austin Metropolitan Area market performance metrics."""
+
     median_price: float
     average_days_on_market: int
     inventory_count: int
@@ -114,7 +117,7 @@ class AustinMarketService:
         self,
         neighborhood: Optional[str] = None,
         property_type: Optional[PropertyType] = None,
-        price_range: Optional[Tuple[float, float]] = None
+        price_range: Optional[Tuple[float, float]] = None,
     ) -> MarketMetrics:
         """Get real-time Austin Metropolitan Area market metrics with optional filtering."""
         cache_key = f"market_metrics:{neighborhood}:{property_type}:{price_range}"
@@ -134,11 +137,7 @@ class AustinMarketService:
 
         return metrics
 
-    async def search_properties(
-        self,
-        criteria: Dict[str, Any],
-        limit: int = 50
-    ) -> List[PropertyListing]:
+    async def search_properties(self, criteria: Dict[str, Any], limit: int = 50) -> List[PropertyListing]:
         """
         Search Austin Metropolitan Area MLS properties with comprehensive criteria.
 
@@ -205,9 +204,7 @@ class AustinMarketService:
         return district_info
 
     async def get_corporate_relocation_insights(
-        self,
-        employer: Optional[str] = None,
-        position_level: Optional[str] = None
+        self, employer: Optional[str] = None, position_level: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Get insights for corporate relocations to Austin Metropolitan Area.
@@ -227,11 +224,7 @@ class AustinMarketService:
 
         return insights
 
-    async def get_commute_analysis(
-        self,
-        property_coords: Tuple[float, float],
-        work_location: str
-    ) -> Dict[str, Any]:
+    async def get_commute_analysis(self, property_coords: Tuple[float, float], work_location: str) -> Dict[str, Any]:
         """Analyze commute times and routes from property to work location."""
         cache_key = f"commute:{property_coords}:{work_location}"
 
@@ -250,7 +243,7 @@ class AustinMarketService:
         self,
         transaction_type: str,  # "buy" or "sell"
         property_type: PropertyType,
-        neighborhood: Optional[str] = None
+        neighborhood: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Get market timing recommendations for Austin Metropolitan Area market."""
         current_metrics = await self.get_market_metrics(neighborhood, property_type)
@@ -260,7 +253,7 @@ class AustinMarketService:
             "market_condition": current_metrics.market_condition.value,
             "recommendations": [],
             "seasonal_factors": self._get_seasonal_factors(),
-            "urgency_level": "low"  # low, medium, high
+            "urgency_level": "low",  # low, medium, high
         }
 
         # Analyze market conditions for timing
@@ -281,8 +274,13 @@ class AustinMarketService:
                 "school_rating": 8.9,
                 "walkability_score": 45,
                 "logistics_healthcare_appeal": 75,
-                "amenities": ["Victoria Gardens", "Alta Loma Community Center", "Red Hill Country Club", "Luxury Homes"],
-                "demographics": {"age_median": 42, "income_median": 125000, "logistics_healthcare": 0.25}
+                "amenities": [
+                    "Victoria Gardens",
+                    "Alta Loma Community Center",
+                    "Red Hill Country Club",
+                    "Luxury Homes",
+                ],
+                "demographics": {"age_median": 42, "income_median": 125000, "logistics_healthcare": 0.25},
             },
             "etiwanda": {
                 "name": "Etiwanda",
@@ -292,7 +290,7 @@ class AustinMarketService:
                 "walkability_score": 55,
                 "logistics_healthcare_appeal": 90,
                 "amenities": ["Etiwanda Creek Park", "Top Schools", "Family Communities", "Day Creek Golf Course"],
-                "demographics": {"age_median": 38, "income_median": 115000, "logistics_healthcare": 0.35}
+                "demographics": {"age_median": 38, "income_median": 115000, "logistics_healthcare": 0.35},
             },
             "central_rc": {
                 "name": "Central Rancho Cucamonga",
@@ -302,7 +300,7 @@ class AustinMarketService:
                 "walkability_score": 65,
                 "logistics_healthcare_appeal": 85,
                 "amenities": ["Victoria Gardens Mall", "Central Park", "Restaurants", "Shopping Centers"],
-                "demographics": {"age_median": 35, "income_median": 95000, "logistics_healthcare": 0.30}
+                "demographics": {"age_median": 35, "income_median": 95000, "logistics_healthcare": 0.30},
             },
             "north_rc": {
                 "name": "North Rancho Cucamonga",
@@ -312,7 +310,7 @@ class AustinMarketService:
                 "walkability_score": 50,
                 "logistics_healthcare_appeal": 80,
                 "amenities": ["Lewis Family Playfields", "New Construction", "Commuter Friendly", "Family Oriented"],
-                "demographics": {"age_median": 36, "income_median": 105000, "logistics_healthcare": 0.28}
+                "demographics": {"age_median": 36, "income_median": 105000, "logistics_healthcare": 0.28},
             },
             "south_rc": {
                 "name": "South Rancho Cucamonga",
@@ -322,7 +320,7 @@ class AustinMarketService:
                 "walkability_score": 60,
                 "logistics_healthcare_appeal": 88,
                 "amenities": ["Cucamonga Peak Trail", "Historic Route 66", "Starter Homes", "Commuter Access"],
-                "demographics": {"age_median": 32, "income_median": 85000, "logistics_healthcare": 0.40}
+                "demographics": {"age_median": 32, "income_median": 85000, "logistics_healthcare": 0.40},
             },
             "victoria_gardens": {
                 "name": "Victoria Gardens Area",
@@ -332,7 +330,7 @@ class AustinMarketService:
                 "walkability_score": 75,
                 "logistics_healthcare_appeal": 82,
                 "amenities": ["Victoria Gardens Mall", "Dining", "Entertainment", "Shopping"],
-                "demographics": {"age_median": 34, "income_median": 98000, "logistics_healthcare": 0.32}
+                "demographics": {"age_median": 34, "income_median": 98000, "logistics_healthcare": 0.32},
             },
             "terra_vista": {
                 "name": "Terra Vista",
@@ -342,7 +340,7 @@ class AustinMarketService:
                 "walkability_score": 40,
                 "logistics_healthcare_appeal": 70,
                 "amenities": ["Luxury Homes", "Golf Course Views", "Gated Communities", "Mountain Views"],
-                "demographics": {"age_median": 45, "income_median": 165000, "logistics_healthcare": 0.20}
+                "demographics": {"age_median": 45, "income_median": 165000, "logistics_healthcare": 0.20},
             },
             "day_creek": {
                 "name": "Day Creek",
@@ -352,8 +350,8 @@ class AustinMarketService:
                 "walkability_score": 55,
                 "logistics_healthcare_appeal": 85,
                 "amenities": ["Day Creek Golf Course", "Family Neighborhoods", "Parks", "Schools"],
-                "demographics": {"age_median": 37, "income_median": 108000, "logistics_healthcare": 0.30}
-            }
+                "demographics": {"age_median": 37, "income_median": 108000, "logistics_healthcare": 0.30},
+            },
         }
 
     def _load_corporate_headquarters(self) -> Dict[str, Dict[str, Any]]:
@@ -366,7 +364,7 @@ class AustinMarketService:
                 "employees": 12000,
                 "expansion_plans": "Continued logistics expansion",
                 "avg_salary": 85000,
-                "preferred_neighborhoods": ["South RC", "Central RC", "Etiwanda", "North RC"]
+                "preferred_neighborhoods": ["South RC", "Central RC", "Etiwanda", "North RC"],
             },
             "kaiser_permanente": {
                 "name": "Kaiser Permanente",
@@ -375,7 +373,7 @@ class AustinMarketService:
                 "employees": 8500,
                 "expansion_plans": "Healthcare expansion across IE",
                 "avg_salary": 95000,
-                "preferred_neighborhoods": ["Central RC", "Etiwanda", "Alta Loma", "Victoria Gardens"]
+                "preferred_neighborhoods": ["Central RC", "Etiwanda", "Alta Loma", "Victoria Gardens"],
             },
             "fedex": {
                 "name": "FedEx Ground",
@@ -384,7 +382,7 @@ class AustinMarketService:
                 "employees": 5000,
                 "expansion_plans": "Logistics hub expansion",
                 "avg_salary": 75000,
-                "preferred_neighborhoods": ["South RC", "Central RC", "North RC", "Day Creek"]
+                "preferred_neighborhoods": ["South RC", "Central RC", "North RC", "Day Creek"],
             },
             "ups": {
                 "name": "UPS Logistics",
@@ -393,7 +391,7 @@ class AustinMarketService:
                 "employees": 4500,
                 "expansion_plans": "Distribution center growth",
                 "avg_salary": 78000,
-                "preferred_neighborhoods": ["Central RC", "South RC", "Victoria Gardens", "Day Creek"]
+                "preferred_neighborhoods": ["Central RC", "South RC", "Victoria Gardens", "Day Creek"],
             },
             "san_antonio_regional": {
                 "name": "San Antonio Regional Hospital",
@@ -402,7 +400,7 @@ class AustinMarketService:
                 "employees": 3500,
                 "expansion_plans": "Healthcare services expansion",
                 "avg_salary": 85000,
-                "preferred_neighborhoods": ["Etiwanda", "Alta Loma", "Central RC", "Terra Vista"]
+                "preferred_neighborhoods": ["Etiwanda", "Alta Loma", "Central RC", "Terra Vista"],
             },
             "chino_valley_medical": {
                 "name": "Chino Valley Medical Center",
@@ -411,15 +409,15 @@ class AustinMarketService:
                 "employees": 2800,
                 "expansion_plans": "Regional healthcare expansion",
                 "avg_salary": 90000,
-                "preferred_neighborhoods": ["Chino Hills", "South RC", "Central RC", "Day Creek"]
-            }
+                "preferred_neighborhoods": ["Chino Hills", "South RC", "Central RC", "Day Creek"],
+            },
         }
 
     async def _fetch_market_metrics(
         self,
         neighborhood: Optional[str],
         property_type: Optional[PropertyType],
-        price_range: Optional[Tuple[float, float]]
+        price_range: Optional[Tuple[float, float]],
     ) -> MarketMetrics:
         """Fetch real-time market metrics from MLS and market data sources."""
         # Simulate MLS API call - in production, integrate with actual MLS
@@ -437,7 +435,7 @@ class AustinMarketService:
             "closed_sales_30d": 975,
             "pending_sales": 750,
             "absorption_rate": 82.3,
-            "market_condition": MarketCondition.BALANCED
+            "market_condition": MarketCondition.BALANCED,
         }
 
         # Adjust based on neighborhood
@@ -453,7 +451,7 @@ class AustinMarketService:
                 PropertyType.CONDO: {"median_price": 0.75, "average_days_on_market": 1.2},
                 PropertyType.TOWNHOME: {"median_price": 0.85, "average_days_on_market": 0.9},
                 PropertyType.LAND: {"median_price": 0.4, "average_days_on_market": 2.5},
-                PropertyType.MULTI_FAMILY: {"median_price": 1.8, "average_days_on_market": 1.8}
+                PropertyType.MULTI_FAMILY: {"median_price": 1.8, "average_days_on_market": 1.8},
             }
 
             adjustments = type_adjustments.get(property_type, {})
@@ -463,11 +461,7 @@ class AustinMarketService:
 
         return MarketMetrics(**base_metrics)
 
-    async def _search_mls_properties(
-        self,
-        criteria: Dict[str, Any],
-        limit: int
-    ) -> List[PropertyListing]:
+    async def _search_mls_properties(self, criteria: Dict[str, Any], limit: int) -> List[PropertyListing]:
         """Search MLS properties - integrate with actual MLS API in production."""
         # Simulate MLS search results
         # In production, this would connect to Austin Tech Hub MLS API
@@ -493,7 +487,7 @@ class AustinMarketService:
                 "photos": ["photo1.jpg", "photo2.jpg"],
                 "description": "Beautiful family home in prestigious Etiwanda area",
                 "listing_agent": {"name": "Jorge Martinez", "phone": "(909) 555-0123"},
-                "last_updated": datetime.now()
+                "last_updated": datetime.now(),
             }
         ]
 
@@ -538,7 +532,7 @@ class AustinMarketService:
             corporate_proximity=corporate_proximity,
             amenities=base_data["amenities"],
             demographics=base_data["demographics"],
-            market_condition=metrics.market_condition
+            market_condition=metrics.market_condition,
         )
 
     async def _fetch_school_district_data(self, district_name: str) -> Dict[str, Any]:
@@ -555,10 +549,10 @@ class AustinMarketService:
                 "top_schools": [
                     {"name": "Etiwanda High School", "rating": 9.5, "type": "High School"},
                     {"name": "George Washington High School", "rating": 9.2, "type": "High School"},
-                    {"name": "Eleanor Roosevelt High School", "rating": 9.0, "type": "High School"}
+                    {"name": "Eleanor Roosevelt High School", "rating": 9.0, "type": "High School"},
                 ],
                 "special_programs": ["AVID", "AP", "STEM", "Dual Enrollment"],
-                "boundaries": "North Rancho Cucamonga, Etiwanda area"
+                "boundaries": "North Rancho Cucamonga, Etiwanda area",
             },
             "central elementary school district": {
                 "name": "Central Elementary School District",
@@ -570,19 +564,17 @@ class AustinMarketService:
                 "top_schools": [
                     {"name": "Rancho Cucamonga High School", "rating": 8.8, "type": "High School"},
                     {"name": "Los Osos High School", "rating": 8.5, "type": "High School"},
-                    {"name": "Alta Loma High School", "rating": 8.9, "type": "High School"}
+                    {"name": "Alta Loma High School", "rating": 8.9, "type": "High School"},
                 ],
                 "special_programs": ["IB Programme", "Career Technical Education", "GATE"],
-                "boundaries": "Central Rancho Cucamonga, Alta Loma"
-            }
+                "boundaries": "Central Rancho Cucamonga, Alta Loma",
+            },
         }
 
         return districts.get(district_name.lower(), {})
 
     async def _generate_corporate_insights(
-        self,
-        employer: Optional[str],
-        position_level: Optional[str]
+        self, employer: Optional[str], position_level: Optional[str]
     ) -> Dict[str, Any]:
         """Generate insights for corporate relocations."""
         insights = {
@@ -590,12 +582,12 @@ class AustinMarketService:
                 "total_logistics_healthcare_workers": 45000,
                 "growth_rate_annual": 8.5,
                 "median_salary": 85000,
-                "housing_demand": "High"
+                "housing_demand": "High",
             },
             "top_employers": list(self.corporate_hqs.values()),
             "recommended_neighborhoods": [],
             "budget_guidance": {},
-            "timing_advice": {}
+            "timing_advice": {},
         }
 
         if employer and employer.lower().replace(" ", "_") in self.corporate_hqs:
@@ -606,13 +598,13 @@ class AustinMarketService:
                 insights["recommended_neighborhoods"] = [
                     {"name": "South RC", "commute": "10 mins", "appeal": "Direct access to fulfillment centers"},
                     {"name": "Central RC", "commute": "15 mins", "appeal": "Family-friendly, good schools"},
-                    {"name": "Etiwanda", "commute": "20 mins", "appeal": "Top schools, family community"}
+                    {"name": "Etiwanda", "commute": "20 mins", "appeal": "Top schools, family community"},
                 ]
             elif employer.lower() == "kaiser_permanente" or "kaiser" in employer.lower():
                 insights["recommended_neighborhoods"] = [
                     {"name": "Central RC", "commute": "15 mins", "appeal": "Healthcare community, amenities"},
                     {"name": "Etiwanda", "commute": "20 mins", "appeal": "Excellent schools for healthcare families"},
-                    {"name": "Alta Loma", "commute": "25 mins", "appeal": "Luxury community, professional appeal"}
+                    {"name": "Alta Loma", "commute": "25 mins", "appeal": "Luxury community, professional appeal"},
                 ]
 
             # Budget guidance based on salary
@@ -623,15 +615,13 @@ class AustinMarketService:
                 "recommended_max": recommended_budget,
                 "comfortable_range": f"${recommended_budget * 0.7:.0f} - ${recommended_budget:.0f}",
                 "monthly_payment_target": f"${recommended_budget * 0.28 / 12:.0f}",
-                "down_payment_suggestion": f"${recommended_budget * 0.2:.0f} (20%)"
+                "down_payment_suggestion": f"${recommended_budget * 0.2:.0f} (20%)",
             }
 
         return insights
 
     async def _calculate_commute_analysis(
-        self,
-        property_coords: Tuple[float, float],
-        work_location: str
+        self, property_coords: Tuple[float, float], work_location: str
     ) -> Dict[str, Any]:
         """Calculate comprehensive commute analysis."""
         # In production, integrate with Google Maps API or similar
@@ -646,22 +636,22 @@ class AustinMarketService:
                 "time_typical": "25 minutes",
                 "time_rush_hour": "35 minutes",
                 "distance": "15.2 miles",
-                "cost_monthly": "$180 (gas + parking)"
+                "cost_monthly": "$180 (gas + parking)",
             },
             "public_transit": {
                 "time_typical": "45 minutes",
                 "cost_monthly": "$41.25 (CapMetro)",
                 "routes": ["Bus + Light Rail"],
-                "walkability_to_transit": "8/10"
+                "walkability_to_transit": "8/10",
             },
             "bike": {
                 "time_typical": "45 minutes",
                 "distance": "12.8 miles",
                 "safety_rating": "7/10",
-                "bike_lanes": "Partially protected"
+                "bike_lanes": "Partially protected",
             },
             "overall_score": 8.5,
-            "recommendation": "Excellent commute with multiple transportation options"
+            "recommendation": "Excellent commute with multiple transportation options",
         }
 
     def _analyze_buy_timing(self, metrics: MarketMetrics) -> Dict[str, Any]:
@@ -702,7 +692,7 @@ class AustinMarketService:
         return {
             "timing_score": max(0, min(100, timing_score)),
             "recommendations": recommendations,
-            "urgency_level": urgency
+            "urgency_level": urgency,
         }
 
     def _analyze_sell_timing(self, metrics: MarketMetrics) -> Dict[str, Any]:
@@ -743,7 +733,7 @@ class AustinMarketService:
         return {
             "timing_score": max(0, min(100, timing_score)),
             "recommendations": recommendations,
-            "urgency_level": urgency
+            "urgency_level": urgency,
         }
 
     def _get_seasonal_factors(self) -> Dict[str, Any]:
@@ -756,29 +746,29 @@ class AustinMarketService:
                 "activity_level": "Peak",
                 "buyer_behavior": "High activity, competitive",
                 "seller_behavior": "Highest listing volume",
-                "recommendation": "Best time for sellers, competitive for buyers"
+                "recommendation": "Best time for sellers, competitive for buyers",
             },
             "summer": {
                 "months": [6, 7, 8],
                 "activity_level": "High",
                 "buyer_behavior": "Sustained activity, family moves",
                 "seller_behavior": "Continued strong inventory",
-                "recommendation": "Good for both buyers and sellers"
+                "recommendation": "Good for both buyers and sellers",
             },
             "fall": {
                 "months": [9, 10, 11],
                 "activity_level": "Moderate",
                 "buyer_behavior": "More selective, school considerations",
                 "seller_behavior": "Inventory begins to decline",
-                "recommendation": "Balanced market conditions"
+                "recommendation": "Balanced market conditions",
             },
             "winter": {
                 "months": [12, 1, 2],
                 "activity_level": "Slower",
                 "buyer_behavior": "Serious buyers, less competition",
                 "seller_behavior": "Limited inventory",
-                "recommendation": "Opportunities for motivated buyers"
-            }
+                "recommendation": "Opportunities for motivated buyers",
+            },
         }
 
         # Determine current season
@@ -795,8 +785,8 @@ class AustinMarketService:
                 "Logistics hiring peaks in Q4 for holiday season",
                 "Healthcare hiring increases in summer months",
                 "Family moves align with school calendar",
-                "Weather allows year-round showing activity"
-            ]
+                "Weather allows year-round showing activity",
+            ],
         }
 
     async def get_pricing_analytics(
@@ -804,7 +794,7 @@ class AustinMarketService:
         neighborhood: Optional[str] = None,
         property_type: Optional[PropertyType] = None,
         price_range: Optional[Tuple[float, float]] = None,
-        days_back: int = 90
+        days_back: int = 90,
     ) -> Dict[str, Any]:
         """
         Get comprehensive pricing analytics for Dynamic Pricing Intelligence integration.
@@ -842,7 +832,7 @@ class AustinMarketService:
                 "price_trend_3m": market_metrics.price_trend_3m,
                 "price_trend_1y": market_metrics.price_trend_1y,
                 "market_condition": market_metrics.market_condition.value,
-                "absorption_rate": market_metrics.absorption_rate
+                "absorption_rate": market_metrics.absorption_rate,
             },
             "price_distribution": price_distribution,
             "appreciation_trends": appreciation_trends,
@@ -851,7 +841,7 @@ class AustinMarketService:
             "pricing_recommendations": self._generate_pricing_recommendations(
                 market_metrics, price_distribution, appreciation_trends
             ),
-            "last_updated": datetime.now().isoformat()
+            "last_updated": datetime.now().isoformat(),
         }
 
         # Cache for 15 minutes
@@ -861,17 +851,15 @@ class AustinMarketService:
         return pricing_analytics
 
     def _calculate_price_distribution(
-        self,
-        neighborhood: Optional[str],
-        property_type: Optional[PropertyType]
+        self, neighborhood: Optional[str], property_type: Optional[PropertyType]
     ) -> Dict[str, Any]:
         """Calculate price distribution statistics for the market."""
         # Simulated price distribution data
         # In production, would analyze actual MLS data
 
-        base_median = self.neighborhoods.get(
-            neighborhood.lower() if neighborhood else "central_rc", {}
-        ).get("median_price", 825000)
+        base_median = self.neighborhoods.get(neighborhood.lower() if neighborhood else "central_rc", {}).get(
+            "median_price", 825000
+        )
 
         return {
             "percentiles": {
@@ -879,28 +867,19 @@ class AustinMarketService:
                 "p25": int(base_median * 0.8),
                 "p50": int(base_median),
                 "p75": int(base_median * 1.3),
-                "p90": int(base_median * 1.7)
+                "p90": int(base_median * 1.7),
             },
-            "price_per_sqft": {
-                "min": 220,
-                "median": 295,
-                "max": 450,
-                "average": 310
-            },
+            "price_per_sqft": {"min": 220, "median": 295, "max": 450, "average": 310},
             "active_listings_by_price": {
                 "under_500k": 45,
                 "500k_750k": 125,
                 "750k_1m": 85,
                 "1m_1_5m": 35,
-                "over_1_5m": 15
-            }
+                "over_1_5m": 15,
+            },
         }
 
-    def _calculate_appreciation_trends(
-        self,
-        neighborhood: Optional[str],
-        days_back: int
-    ) -> Dict[str, Any]:
+    def _calculate_appreciation_trends(self, neighborhood: Optional[str], days_back: int) -> Dict[str, Any]:
         """Calculate historical appreciation trends."""
         # Simulated appreciation data
         # In production, would analyze historical sales data
@@ -926,18 +905,16 @@ class AustinMarketService:
                 {"quarter": "Q1_2024", "appreciation": round(actual_appreciation * 0.25, 2)},
                 {"quarter": "Q2_2024", "appreciation": round(actual_appreciation * 0.28, 2)},
                 {"quarter": "Q3_2024", "appreciation": round(actual_appreciation * 0.23, 2)},
-                {"quarter": "Q4_2024", "appreciation": round(actual_appreciation * 0.24, 2)}
+                {"quarter": "Q4_2024", "appreciation": round(actual_appreciation * 0.24, 2)},
             ],
             "5_year_projection": round(actual_appreciation * 5, 1),
             "appreciation_vs_county": "+2.3%",  # Outperforming San Bernardino County
-            "appreciation_vs_state": "+0.8%"   # Slightly outperforming California
+            "appreciation_vs_state": "+0.8%",  # Slightly outperforming California
         }
 
     def _calculate_investment_metrics(self, neighborhood: Optional[str]) -> Dict[str, Any]:
         """Calculate investment-specific metrics for the market."""
-        neighborhood_data = self.neighborhoods.get(
-            neighborhood.lower() if neighborhood else "central_rc", {}
-        )
+        neighborhood_data = self.neighborhoods.get(neighborhood.lower() if neighborhood else "central_rc", {})
 
         median_price = neighborhood_data.get("median_price", 825000)
 
@@ -951,26 +928,23 @@ class AustinMarketService:
                 "gross_yield": round(gross_yield, 2),
                 "estimated_net_yield": round(gross_yield * 0.65, 2),  # After expenses
                 "monthly_rent_estimate": int(monthly_rent),
-                "rent_to_price_ratio": round((monthly_rent / median_price) * 100, 3)
+                "rent_to_price_ratio": round((monthly_rent / median_price) * 100, 3),
             },
             "investment_scores": {
                 "cash_flow_potential": 75,  # 0-100 scale
                 "appreciation_potential": 85,
                 "liquidity_score": neighborhood_data.get("logistics_healthcare_appeal", 80),
-                "overall_investment_grade": "B+"
+                "overall_investment_grade": "B+",
             },
             "market_fundamentals": {
                 "job_growth_rate": 3.2,  # Annual percentage
                 "population_growth_rate": 2.8,
                 "new_construction_permits": 145,  # Monthly average
-                "corporate_expansion_activity": "High"  # Amazon, healthcare growth
-            }
+                "corporate_expansion_activity": "High",  # Amazon, healthcare growth
+            },
         }
 
-    async def _get_competitive_pricing_data(
-        self,
-        neighborhood: Optional[str]
-    ) -> Dict[str, Any]:
+    async def _get_competitive_pricing_data(self, neighborhood: Optional[str]) -> Dict[str, Any]:
         """Get competitive pricing analysis data."""
         # Simulated competitive analysis
         # In production, would analyze actual listing and sales data
@@ -980,40 +954,37 @@ class AustinMarketService:
                 "below_market_listings": 25,  # Count
                 "at_market_listings": 45,
                 "above_market_listings": 30,
-                "overpriced_listings": 15
+                "overpriced_listings": 15,
             },
             "days_on_market_by_pricing": {
                 "aggressively_priced": 18,  # Days
                 "competitively_priced": 28,
                 "strategically_priced": 35,
-                "overpriced": 65
+                "overpriced": 65,
             },
             "price_reduction_analysis": {
                 "listings_with_reductions": 35,  # Percentage
                 "average_reduction_amount": 25000,
                 "average_days_before_reduction": 45,
-                "success_rate_after_reduction": 78
+                "success_rate_after_reduction": 78,
             },
             "seasonal_pricing_patterns": {
                 "spring_premium": 3.5,  # Percentage above annual average
                 "summer_premium": 1.8,
                 "fall_discount": -1.2,
-                "winter_discount": -2.8
-            }
+                "winter_discount": -2.8,
+            },
         }
 
     def _generate_pricing_recommendations(
-        self,
-        market_metrics: MarketMetrics,
-        price_distribution: Dict[str, Any],
-        appreciation_trends: Dict[str, Any]
+        self, market_metrics: MarketMetrics, price_distribution: Dict[str, Any], appreciation_trends: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Generate intelligent pricing recommendations."""
         recommendations = {
             "current_market_strategy": "",
             "pricing_guidance": [],
             "timing_recommendations": [],
-            "risk_factors": []
+            "risk_factors": [],
         }
 
         # Determine market strategy based on conditions
@@ -1040,15 +1011,11 @@ class AustinMarketService:
                 "Strong appreciation trend supports holding strategy for sellers"
             )
         elif annual_appreciation < 3:
-            recommendations["risk_factors"].append(
-                "Slower appreciation may limit investment upside"
-            )
+            recommendations["risk_factors"].append("Slower appreciation may limit investment upside")
 
         # Market velocity recommendations
         if market_metrics.average_days_on_market < 25:
-            recommendations["timing_recommendations"].append(
-                "Fast-moving market - price competitively for quick sale"
-            )
+            recommendations["timing_recommendations"].append("Fast-moving market - price competitively for quick sale")
         elif market_metrics.average_days_on_market > 45:
             recommendations["pricing_guidance"].append(
                 "Slower market - consider strategic pricing 3-5% below market for attraction"
@@ -1060,12 +1027,14 @@ class AustinMarketService:
 # Global service instance
 _rancho_cucamonga_market_service = None
 
+
 def get_rancho_cucamonga_market_service() -> AustinMarketService:
     """Get singleton instance of Rancho Cucamonga Market Service."""
     global _rancho_cucamonga_market_service
     if _rancho_cucamonga_market_service is None:
         _rancho_cucamonga_market_service = AustinMarketService()
     return _rancho_cucamonga_market_service
+
 
 # Alias for backward compatibility with Austin naming - keep existing class name
 RanchoCucamongaMarketService = AustinMarketService

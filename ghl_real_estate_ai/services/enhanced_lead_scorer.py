@@ -25,29 +25,25 @@ Date: 2026-01-09
 Version: 1.0.0
 """
 
-import json
 import asyncio
+import json
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Union
-from dataclasses import dataclass, asdict
+from typing import Any, Dict, List, Optional, Union
 
-from .lead_scorer import LeadScorer
 from .ai_predictive_lead_scoring import PredictiveLeadScorer
-from .dynamic_scoring_weights import (
-    DynamicScoringOrchestrator,
-    LeadSegment,
-    MarketMetrics,
-    ScoringWeights
-)
+from .dynamic_scoring_weights import DynamicScoringOrchestrator, LeadSegment, MarketMetrics, ScoringWeights
+from .lead_scorer import LeadScorer
 
 
 @dataclass
 class ScoringMode:
     """Scoring mode configuration"""
-    JORGE_ORIGINAL = "jorge_original"      # Question count only
-    ML_ENHANCED = "ml_enhanced"            # ML + questions
+
+    JORGE_ORIGINAL = "jorge_original"  # Question count only
+    ML_ENHANCED = "ml_enhanced"  # ML + questions
     DYNAMIC_ADAPTIVE = "dynamic_adaptive"  # Full dynamic system
-    HYBRID = "hybrid"                      # All systems combined
+    HYBRID = "hybrid"  # All systems combined
 
 
 @dataclass
@@ -58,12 +54,12 @@ class EnhancedScoringResult:
     lead_id: str
     final_score: float  # 0-100 unified score
     classification: str  # hot/warm/cold
-    confidence: float   # 0-1 confidence level
+    confidence: float  # 0-1 confidence level
 
     # Component scores
-    jorge_score: int           # Original question count (0-7)
-    ml_score: float           # ML prediction score (0-100)
-    dynamic_score: float      # Dynamic weighted score (0-100)
+    jorge_score: int  # Original question count (0-7)
+    ml_score: float  # ML prediction score (0-100)
+    dynamic_score: float  # Dynamic weighted score (0-100)
 
     # Metadata
     segment: str
@@ -84,7 +80,7 @@ class EnhancedScoringResult:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for API responses"""
         result = asdict(self)
-        result['scored_at'] = self.scored_at.isoformat()
+        result["scored_at"] = self.scored_at.isoformat()
         return result
 
 
@@ -149,11 +145,7 @@ class EnhancedLeadScorer:
     - A/B testing support
     """
 
-    def __init__(
-        self,
-        redis_url: Optional[str] = None,
-        default_mode: str = ScoringMode.HYBRID
-    ):
+    def __init__(self, redis_url: Optional[str] = None, default_mode: str = ScoringMode.HYBRID):
         # Initialize component scorers
         self.jorge_scorer = LeadScorer()
         self.ml_scorer = PredictiveLeadScorer()
@@ -164,12 +156,7 @@ class EnhancedLeadScorer:
         self.fallback_manager = ScoringFallbackManager()
 
         # Performance tracking
-        self.performance_stats = {
-            'total_scores': 0,
-            'avg_response_time': 0,
-            'mode_usage': {},
-            'fallback_rate': 0
-        }
+        self.performance_stats = {"total_scores": 0, "avg_response_time": 0, "mode_usage": {}, "fallback_rate": 0}
 
     async def score_lead(
         self,
@@ -177,7 +164,7 @@ class EnhancedLeadScorer:
         context: Dict[str, Any],
         tenant_id: str = "default",
         mode: Optional[str] = None,
-        segment: Optional[LeadSegment] = None
+        segment: Optional[LeadSegment] = None,
     ) -> EnhancedScoringResult:
         """
         Score a lead using the enhanced scoring system
@@ -230,15 +217,11 @@ class EnhancedLeadScorer:
         return result
 
     async def _score_dynamic_adaptive(
-        self,
-        lead_id: str,
-        context: Dict[str, Any],
-        tenant_id: str,
-        segment: Optional[LeadSegment]
+        self, lead_id: str, context: Dict[str, Any], tenant_id: str, segment: Optional[LeadSegment]
     ) -> EnhancedScoringResult:
         """Score using full dynamic adaptive system"""
 
-        if self.fallback_manager.is_circuit_open('dynamic_adaptive'):
+        if self.fallback_manager.is_circuit_open("dynamic_adaptive"):
             raise Exception("Dynamic adaptive circuit breaker is open")
 
         # Convert context to dynamic scorer format
@@ -246,10 +229,7 @@ class EnhancedLeadScorer:
 
         # Get dynamic score
         dynamic_result = await self.dynamic_orchestrator.score_lead_with_dynamic_weights(
-            tenant_id=tenant_id,
-            lead_id=lead_id,
-            lead_data=lead_data,
-            segment=segment
+            tenant_id=tenant_id, lead_id=lead_id, lead_data=lead_data, segment=segment
         )
 
         # Get Jorge score for comparison
@@ -268,19 +248,15 @@ class EnhancedLeadScorer:
             jorge_result=jorge_result,
             ml_score=ml_score,
             dynamic_result=dynamic_result,
-            scoring_mode=ScoringMode.DYNAMIC_ADAPTIVE
+            scoring_mode=ScoringMode.DYNAMIC_ADAPTIVE,
         )
 
     async def _score_ml_enhanced(
-        self,
-        lead_id: str,
-        context: Dict[str, Any],
-        tenant_id: str,
-        segment: Optional[LeadSegment]
+        self, lead_id: str, context: Dict[str, Any], tenant_id: str, segment: Optional[LeadSegment]
     ) -> EnhancedScoringResult:
         """Score using ML enhanced mode"""
 
-        if self.fallback_manager.is_circuit_open('ml_enhanced'):
+        if self.fallback_manager.is_circuit_open("ml_enhanced"):
             raise Exception("ML enhanced circuit breaker is open")
 
         # Get Jorge score
@@ -292,9 +268,9 @@ class EnhancedLeadScorer:
 
         # Combine scores (weighted average)
         jorge_weight = 0.4  # 40% Jorge (questions)
-        ml_weight = 0.6     # 60% ML prediction
+        ml_weight = 0.6  # 60% ML prediction
 
-        combined_score = (jorge_result['score'] / 7.0 * 100 * jorge_weight) + (ml_result.score * ml_weight)
+        combined_score = (jorge_result["score"] / 7.0 * 100 * jorge_weight) + (ml_result.score * ml_weight)
 
         # Determine classification
         classification = self._classify_combined_score(combined_score, ml_result.confidence)
@@ -304,7 +280,7 @@ class EnhancedLeadScorer:
             final_score=combined_score,
             classification=classification,
             confidence=ml_result.confidence,
-            jorge_score=jorge_result['score'],
+            jorge_score=jorge_result["score"],
             ml_score=ml_result.score,
             dynamic_score=0.0,  # Not used in this mode
             segment=segment.value if segment else "unknown",
@@ -313,50 +289,42 @@ class EnhancedLeadScorer:
             scoring_mode=ScoringMode.ML_ENHANCED,
             reasoning=f"{jorge_result['reasoning']} | ML: {ml_result.score:.1f}/100",
             factors=ml_result.factors,
-            recommended_actions=jorge_result['recommended_actions'],
+            recommended_actions=jorge_result["recommended_actions"],
             scored_at=datetime.now(),
-            response_time_ms=0
+            response_time_ms=0,
         )
 
     async def _score_jorge_original(
-        self,
-        lead_id: str,
-        context: Dict[str, Any],
-        tenant_id: str,
-        segment: Optional[LeadSegment]
+        self, lead_id: str, context: Dict[str, Any], tenant_id: str, segment: Optional[LeadSegment]
     ) -> EnhancedScoringResult:
         """Score using original Jorge method only"""
 
         jorge_result = self.jorge_scorer.calculate_with_reasoning(context)
 
         # Convert question count to 0-100 score
-        final_score = (jorge_result['score'] / 7.0) * 100
+        final_score = (jorge_result["score"] / 7.0) * 100
 
         return EnhancedScoringResult(
             lead_id=lead_id,
             final_score=final_score,
-            classification=jorge_result['classification'],
+            classification=jorge_result["classification"],
             confidence=0.9,  # High confidence in simple method
-            jorge_score=jorge_result['score'],
+            jorge_score=jorge_result["score"],
             ml_score=0.0,
             dynamic_score=0.0,
             segment=segment.value if segment else "unknown",
             market_condition="unknown",
             weights_profile={},
             scoring_mode=ScoringMode.JORGE_ORIGINAL,
-            reasoning=jorge_result['reasoning'],
+            reasoning=jorge_result["reasoning"],
             factors=[],
-            recommended_actions=jorge_result['recommended_actions'],
+            recommended_actions=jorge_result["recommended_actions"],
             scored_at=datetime.now(),
-            response_time_ms=0
+            response_time_ms=0,
         )
 
     async def _score_hybrid(
-        self,
-        lead_id: str,
-        context: Dict[str, Any],
-        tenant_id: str,
-        segment: Optional[LeadSegment]
+        self, lead_id: str, context: Dict[str, Any], tenant_id: str, segment: Optional[LeadSegment]
     ) -> EnhancedScoringResult:
         """Score using hybrid approach - all systems combined"""
 
@@ -369,23 +337,20 @@ class EnhancedLeadScorer:
 
         # Try ML scoring
         try:
-            if not self.fallback_manager.is_circuit_open('ml_scorer'):
+            if not self.fallback_manager.is_circuit_open("ml_scorer"):
                 ml_result = self.ml_scorer.score_lead(lead_id, lead_data, include_explanation=True)
                 ml_score = ml_result.score
         except:
-            self.fallback_manager.record_failure('ml_scorer')
+            self.fallback_manager.record_failure("ml_scorer")
 
         # Try dynamic scoring
         try:
-            if not self.fallback_manager.is_circuit_open('dynamic_scorer'):
+            if not self.fallback_manager.is_circuit_open("dynamic_scorer"):
                 dynamic_result = await self.dynamic_orchestrator.score_lead_with_dynamic_weights(
-                    tenant_id=tenant_id,
-                    lead_id=lead_id,
-                    lead_data=lead_data,
-                    segment=segment
+                    tenant_id=tenant_id, lead_id=lead_id, lead_data=lead_data, segment=segment
                 )
         except:
-            self.fallback_manager.record_failure('dynamic_scorer')
+            self.fallback_manager.record_failure("dynamic_scorer")
 
         # Combine available scores intelligently
         return self._create_hybrid_result(
@@ -393,16 +358,11 @@ class EnhancedLeadScorer:
             jorge_result=jorge_result,
             ml_score=ml_score,
             dynamic_result=dynamic_result,
-            segment=segment
+            segment=segment,
         )
 
     async def _fallback_scoring(
-        self,
-        lead_id: str,
-        context: Dict[str, Any],
-        tenant_id: str,
-        segment: Optional[LeadSegment],
-        failed_mode: str
+        self, lead_id: str, context: Dict[str, Any], tenant_id: str, segment: Optional[LeadSegment], failed_mode: str
     ) -> EnhancedScoringResult:
         """Fallback scoring when primary method fails"""
 
@@ -423,30 +383,27 @@ class EnhancedLeadScorer:
         return self._static_fallback_score(lead_id, context, segment)
 
     def _static_fallback_score(
-        self,
-        lead_id: str,
-        context: Dict[str, Any],
-        segment: Optional[LeadSegment]
+        self, lead_id: str, context: Dict[str, Any], segment: Optional[LeadSegment]
     ) -> EnhancedScoringResult:
         """Static fallback when all else fails"""
 
-        prefs = context.get('extracted_preferences', {})
+        prefs = context.get("extracted_preferences", {})
 
         # Simple heuristic scoring
         score = 30  # Base score
 
-        if prefs.get('budget'):
+        if prefs.get("budget"):
             score += 20
-        if prefs.get('location'):
+        if prefs.get("location"):
             score += 15
-        if prefs.get('timeline'):
+        if prefs.get("timeline"):
             score += 15
-        if prefs.get('bedrooms') or prefs.get('bathrooms'):
+        if prefs.get("bedrooms") or prefs.get("bathrooms"):
             score += 10
-        if prefs.get('financing'):
+        if prefs.get("financing"):
             score += 10
 
-        classification = 'hot' if score >= 70 else 'warm' if score >= 50 else 'cold'
+        classification = "hot" if score >= 70 else "warm" if score >= 50 else "cold"
 
         return EnhancedScoringResult(
             lead_id=lead_id,
@@ -465,7 +422,7 @@ class EnhancedLeadScorer:
             recommended_actions=["Manual review required", "System failures detected"],
             scored_at=datetime.now(),
             response_time_ms=0,
-            fallback_used=True
+            fallback_used=True,
         )
 
     def _create_unified_result(
@@ -474,31 +431,24 @@ class EnhancedLeadScorer:
         jorge_result: Dict[str, Any],
         ml_score: Optional[float],
         dynamic_result: Dict[str, Any],
-        scoring_mode: str
+        scoring_mode: str,
     ) -> EnhancedScoringResult:
         """Create unified result from all scoring components"""
 
         # Use dynamic score as primary
-        final_score = dynamic_result['score']
-        classification = dynamic_result['tier']
+        final_score = dynamic_result["score"]
+        classification = dynamic_result["tier"]
 
         # Build comprehensive reasoning
-        reasoning_parts = [
-            f"Questions: {jorge_result['reasoning']}",
-            f"Dynamic: {final_score:.1f}/100"
-        ]
+        reasoning_parts = [f"Questions: {jorge_result['reasoning']}", f"Dynamic: {final_score:.1f}/100"]
 
         if ml_score:
             reasoning_parts.append(f"ML: {ml_score:.1f}/100")
 
         # Combine factors from all sources
-        factors = dynamic_result.get('feature_contributions', {})
+        factors = dynamic_result.get("feature_contributions", {})
         factor_list = [
-            {
-                'name': name.replace('_', ' ').title(),
-                'value': f"{value:.3f}",
-                'impact': round(value * 100, 1)
-            }
+            {"name": name.replace("_", " ").title(), "value": f"{value:.3f}", "impact": round(value * 100, 1)}
             for name, value in factors.items()
         ]
 
@@ -506,19 +456,19 @@ class EnhancedLeadScorer:
             lead_id=lead_id,
             final_score=final_score,
             classification=classification,
-            confidence=dynamic_result.get('confidence', 0.8),
-            jorge_score=jorge_result['score'],
+            confidence=dynamic_result.get("confidence", 0.8),
+            jorge_score=jorge_result["score"],
             ml_score=ml_score or 0.0,
             dynamic_score=final_score,
-            segment=dynamic_result.get('segment', 'unknown'),
-            market_condition=dynamic_result.get('market_condition', 'unknown'),
-            weights_profile=dynamic_result.get('weights_used', {}),
+            segment=dynamic_result.get("segment", "unknown"),
+            market_condition=dynamic_result.get("market_condition", "unknown"),
+            weights_profile=dynamic_result.get("weights_used", {}),
             scoring_mode=scoring_mode,
-            reasoning=' | '.join(reasoning_parts),
+            reasoning=" | ".join(reasoning_parts),
             factors=factor_list,
-            recommended_actions=jorge_result['recommended_actions'],
+            recommended_actions=jorge_result["recommended_actions"],
             scored_at=datetime.now(),
-            response_time_ms=0
+            response_time_ms=0,
         )
 
     def _create_hybrid_result(
@@ -527,12 +477,12 @@ class EnhancedLeadScorer:
         jorge_result: Dict[str, Any],
         ml_score: Optional[float],
         dynamic_result: Optional[Dict[str, Any]],
-        segment: Optional[LeadSegment]
+        segment: Optional[LeadSegment],
     ) -> EnhancedScoringResult:
         """Create result from hybrid scoring approach"""
 
         # Determine which scores are available
-        jorge_score_normalized = (jorge_result['score'] / 7.0) * 100
+        jorge_score_normalized = (jorge_result["score"] / 7.0) * 100
 
         available_scores = [jorge_score_normalized]
         weights = [0.4]  # Jorge base weight
@@ -542,7 +492,7 @@ class EnhancedLeadScorer:
             weights.append(0.3)  # ML weight
 
         if dynamic_result is not None:
-            available_scores.append(dynamic_result['score'])
+            available_scores.append(dynamic_result["score"])
             weights.append(0.3)  # Dynamic weight
 
         # Normalize weights
@@ -567,53 +517,53 @@ class EnhancedLeadScorer:
             final_score=final_score,
             classification=classification,
             confidence=0.85 if len(available_scores) > 1 else 0.6,
-            jorge_score=jorge_result['score'],
+            jorge_score=jorge_result["score"],
             ml_score=ml_score or 0.0,
-            dynamic_score=dynamic_result['score'] if dynamic_result else 0.0,
+            dynamic_score=dynamic_result["score"] if dynamic_result else 0.0,
             segment=segment.value if segment else "unknown",
-            market_condition=dynamic_result.get('market_condition', 'unknown') if dynamic_result else 'unknown',
-            weights_profile=dynamic_result.get('weights_used', {}) if dynamic_result else {},
+            market_condition=dynamic_result.get("market_condition", "unknown") if dynamic_result else "unknown",
+            weights_profile=dynamic_result.get("weights_used", {}) if dynamic_result else {},
             scoring_mode=ScoringMode.HYBRID,
-            reasoning=' | '.join(reasoning_parts),
-            factors=dynamic_result.get('factors', []) if dynamic_result else [],
-            recommended_actions=jorge_result['recommended_actions'],
+            reasoning=" | ".join(reasoning_parts),
+            factors=dynamic_result.get("factors", []) if dynamic_result else [],
+            recommended_actions=jorge_result["recommended_actions"],
             scored_at=datetime.now(),
-            response_time_ms=0
+            response_time_ms=0,
         )
 
     def _convert_context_to_lead_data(self, context: Dict[str, Any]) -> Dict[str, Any]:
         """Convert original context format to lead_data format for ML/dynamic scorers"""
 
-        prefs = context.get('extracted_preferences', {})
-        messages = context.get('conversation_history', [])
+        prefs = context.get("extracted_preferences", {})
+        messages = context.get("conversation_history", [])
 
         # Extract budget
         budget = 0
-        budget_str = prefs.get('budget', '')
+        budget_str = prefs.get("budget", "")
         if budget_str:
             try:
                 # Simple budget parsing
-                budget_str = str(budget_str).replace('$', '').replace(',', '').replace('k', '000')
+                budget_str = str(budget_str).replace("$", "").replace(",", "").replace("k", "000")
                 budget = float(budget_str)
             except:
                 budget = 0
 
         # Convert to lead_data format
         lead_data = {
-            'budget': budget,
-            'location': prefs.get('location', ''),
-            'timeline': prefs.get('timeline', ''),
-            'bedrooms': prefs.get('bedrooms', 0),
-            'bathrooms': prefs.get('bathrooms', 0),
-            'financing': prefs.get('financing', ''),
-            'motivation': prefs.get('motivation', ''),
-            'messages': [{'content': msg.get('content', '')} for msg in messages],
-            'source': 'direct',  # Default
-            'page_views': len(messages),  # Approximate
-            'email_opens': max(1, len(messages) // 2),  # Approximate
-            'emails_sent': max(1, len(messages) // 3),  # Approximate
-            'property_matches': 0,  # Would need actual data
-            'communication_quality': min(len(' '.join(msg.get('content', '') for msg in messages)) / 200.0, 1.0)
+            "budget": budget,
+            "location": prefs.get("location", ""),
+            "timeline": prefs.get("timeline", ""),
+            "bedrooms": prefs.get("bedrooms", 0),
+            "bathrooms": prefs.get("bathrooms", 0),
+            "financing": prefs.get("financing", ""),
+            "motivation": prefs.get("motivation", ""),
+            "messages": [{"content": msg.get("content", "")} for msg in messages],
+            "source": "direct",  # Default
+            "page_views": len(messages),  # Approximate
+            "email_opens": max(1, len(messages) // 2),  # Approximate
+            "emails_sent": max(1, len(messages) // 3),  # Approximate
+            "property_matches": 0,  # Would need actual data
+            "communication_quality": min(len(" ".join(msg.get("content", "") for msg in messages)) / 200.0, 1.0),
         }
 
         return lead_data
@@ -629,36 +579,34 @@ class EnhancedLeadScorer:
             warm_threshold = 55
 
         if score >= hot_threshold:
-            return 'hot'
+            return "hot"
         elif score >= warm_threshold:
-            return 'warm'
+            return "warm"
         else:
-            return 'cold'
+            return "cold"
 
     def _update_performance_stats(self, mode: str, response_time: int, fallback_used: bool):
         """Update performance statistics"""
-        self.performance_stats['total_scores'] += 1
+        self.performance_stats["total_scores"] += 1
 
         # Update average response time
-        current_avg = self.performance_stats['avg_response_time']
-        total_scores = self.performance_stats['total_scores']
-        self.performance_stats['avg_response_time'] = (
-            (current_avg * (total_scores - 1) + response_time) / total_scores
-        )
+        current_avg = self.performance_stats["avg_response_time"]
+        total_scores = self.performance_stats["total_scores"]
+        self.performance_stats["avg_response_time"] = (current_avg * (total_scores - 1) + response_time) / total_scores
 
         # Update mode usage
-        if mode not in self.performance_stats['mode_usage']:
-            self.performance_stats['mode_usage'][mode] = 0
-        self.performance_stats['mode_usage'][mode] += 1
+        if mode not in self.performance_stats["mode_usage"]:
+            self.performance_stats["mode_usage"][mode] = 0
+        self.performance_stats["mode_usage"][mode] += 1
 
         # Update fallback rate
         if fallback_used:
-            self.performance_stats['fallback_rate'] = (
-                (self.performance_stats['fallback_rate'] * (total_scores - 1) + 1) / total_scores
-            )
+            self.performance_stats["fallback_rate"] = (
+                self.performance_stats["fallback_rate"] * (total_scores - 1) + 1
+            ) / total_scores
         else:
-            self.performance_stats['fallback_rate'] = (
-                self.performance_stats['fallback_rate'] * (total_scores - 1)
+            self.performance_stats["fallback_rate"] = (
+                self.performance_stats["fallback_rate"] * (total_scores - 1)
             ) / total_scores
 
     # Backwards compatible methods
@@ -676,18 +624,15 @@ class EnhancedLeadScorer:
         result = asyncio.run(self.score_lead("unknown", context, mode=ScoringMode.JORGE_ORIGINAL))
 
         return {
-            'score': result.jorge_score,
-            'classification': result.classification,
-            'reasoning': result.reasoning,
-            'recommended_actions': result.recommended_actions
+            "score": result.jorge_score,
+            "classification": result.classification,
+            "reasoning": result.reasoning,
+            "recommended_actions": result.recommended_actions,
         }
 
     # New enhanced methods
     async def score_with_explanation(
-        self,
-        lead_id: str,
-        context: Dict[str, Any],
-        tenant_id: str = "default"
+        self, lead_id: str, context: Dict[str, Any], tenant_id: str = "default"
     ) -> Dict[str, Any]:
         """Score lead with full explanation - new enhanced API"""
 
@@ -695,17 +640,14 @@ class EnhancedLeadScorer:
         return result.to_dict()
 
     async def batch_score_leads(
-        self,
-        leads: List[Dict[str, Any]],
-        tenant_id: str = "default",
-        mode: Optional[str] = None
+        self, leads: List[Dict[str, Any]], tenant_id: str = "default", mode: Optional[str] = None
     ) -> List[EnhancedScoringResult]:
         """Score multiple leads efficiently"""
 
         tasks = []
         for lead in leads:
-            lead_id = lead.get('id', f"batch_{hash(str(lead))}")
-            context = lead.get('context', lead)
+            lead_id = lead.get("id", f"batch_{hash(str(lead))}")
+            context = lead.get("context", lead)
 
             task = self.score_lead(lead_id, context, tenant_id, mode)
             tasks.append(task)
@@ -721,21 +663,17 @@ class EnhancedLeadScorer:
         stats = self.performance_stats.copy()
 
         # Add circuit breaker status
-        stats['circuit_breakers'] = {}
-        for component in ['dynamic_adaptive', 'ml_enhanced', 'ml_scorer', 'dynamic_scorer']:
-            stats['circuit_breakers'][component] = {
-                'is_open': self.fallback_manager.is_circuit_open(component),
-                'failure_count': self.fallback_manager.circuit_breakers.get(component, (0, None))[0]
+        stats["circuit_breakers"] = {}
+        for component in ["dynamic_adaptive", "ml_enhanced", "ml_scorer", "dynamic_scorer"]:
+            stats["circuit_breakers"][component] = {
+                "is_open": self.fallback_manager.is_circuit_open(component),
+                "failure_count": self.fallback_manager.circuit_breakers.get(component, (0, None))[0],
             }
 
         return stats
 
     async def record_conversion(
-        self,
-        lead_id: str,
-        converted: bool,
-        conversion_value: float = 0.0,
-        context: Optional[Dict[str, Any]] = None
+        self, lead_id: str, converted: bool, conversion_value: float = 0.0, context: Optional[Dict[str, Any]] = None
     ):
         """Record conversion outcome for optimization"""
         if context:
@@ -746,15 +684,12 @@ class EnhancedLeadScorer:
                 lead_id=lead_id,
                 converted=converted,
                 conversion_value=conversion_value,
-                lead_data=lead_data
+                lead_data=lead_data,
             )
 
 
 # Factory function for easy initialization
-def create_enhanced_scorer(
-    redis_url: Optional[str] = None,
-    mode: str = ScoringMode.HYBRID
-) -> EnhancedLeadScorer:
+def create_enhanced_scorer(redis_url: Optional[str] = None, mode: str = ScoringMode.HYBRID) -> EnhancedLeadScorer:
     """
     Factory function to create enhanced lead scorer
 
@@ -770,27 +705,28 @@ def create_enhanced_scorer(
 
 # Example usage and testing
 if __name__ == "__main__":
+
     async def main():
         # Create enhanced scorer
         scorer = create_enhanced_scorer(mode=ScoringMode.HYBRID)
 
         # Example context (original format)
         context = {
-            'extracted_preferences': {
-                'budget': '$750,000',
-                'location': 'Austin, TX',
-                'timeline': 'next 2 months',
-                'bedrooms': 3,
-                'bathrooms': 2,
-                'financing': 'pre-approved',
-                'motivation': 'growing family'
+            "extracted_preferences": {
+                "budget": "$750,000",
+                "location": "Austin, TX",
+                "timeline": "next 2 months",
+                "bedrooms": 3,
+                "bathrooms": 2,
+                "financing": "pre-approved",
+                "motivation": "growing family",
             },
-            'conversation_history': [
-                {'content': 'Looking for a 3-bedroom house in Austin'},
-                {'content': 'Budget is around $750k, need to move by spring'},
-                {'content': 'Already pre-approved for mortgage'}
+            "conversation_history": [
+                {"content": "Looking for a 3-bedroom house in Austin"},
+                {"content": "Budget is around $750k, need to move by spring"},
+                {"content": "Already pre-approved for mortgage"},
             ],
-            'created_at': datetime.now()
+            "created_at": datetime.now(),
         }
 
         # Test different scoring modes
@@ -799,12 +735,7 @@ if __name__ == "__main__":
         modes = [ScoringMode.JORGE_ORIGINAL, ScoringMode.ML_ENHANCED, ScoringMode.HYBRID]
 
         for mode in modes:
-            result = await scorer.score_lead(
-                lead_id="test_123",
-                context=context,
-                tenant_id="demo_tenant",
-                mode=mode
-            )
+            result = await scorer.score_lead(lead_id="test_123", context=context, tenant_id="demo_tenant", mode=mode)
 
             print(f"📊 {mode.replace('_', ' ').upper()}:")
             print(f"   Final Score: {result.final_score:.1f}/100")
@@ -835,10 +766,7 @@ if __name__ == "__main__":
 
         # Test batch scoring
         print("📦 Batch Scoring Test:")
-        leads = [
-            {'id': 'batch_1', 'context': context},
-            {'id': 'batch_2', 'context': context}
-        ]
+        leads = [{"id": "batch_1", "context": context}, {"id": "batch_2", "context": context}]
 
         batch_results = await scorer.batch_score_leads(leads)
         print(f"   Scored {len(batch_results)} leads successfully")

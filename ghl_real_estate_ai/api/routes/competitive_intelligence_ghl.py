@@ -4,21 +4,22 @@ Specialized API endpoints for integrating competitive intelligence with GoHighLe
 Provides automated competitive threat detection, response campaigns, and market intelligence sync.
 """
 
-from typing import Dict, List, Optional, Any, Union
-from datetime import datetime, timedelta
 import asyncio
 import json
 import logging
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel, Field
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Union
+
 import httpx
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.core.llm_client import LLMClient
+from ghl_real_estate_ai.ghl_utils.config import Config
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.competitive_data_pipeline import CompetitiveDataPipeline
 from ghl_real_estate_ai.services.competitive_response_automation import CompetitiveResponseEngine
-from ghl_real_estate_ai.ghl_utils.config import Config
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/competitive-intelligence-ghl", tags=["competitive-intelligence-ghl"])
@@ -27,6 +28,7 @@ security = HTTPBearer()
 
 class GHLCompetitorLead(BaseModel):
     """Model for GHL lead with competitive intelligence tagging."""
+
     lead_id: str = Field(..., description="GHL lead ID")
     contact_id: str = Field(..., description="GHL contact ID")
     competitor_name: Optional[str] = Field(None, description="Identified competitor")
@@ -39,6 +41,7 @@ class GHLCompetitorLead(BaseModel):
 
 class MarketIntelligenceSync(BaseModel):
     """Model for syncing market intelligence data with GHL."""
+
     sync_id: str = Field(..., description="Unique sync ID")
     territory: str = Field(..., description="Market territory")
     competitor_data: Dict[str, Any] = Field(..., description="Competitor intelligence data")
@@ -49,6 +52,7 @@ class MarketIntelligenceSync(BaseModel):
 
 class CompetitiveResponseCampaign(BaseModel):
     """Model for automated competitive response campaigns in GHL."""
+
     campaign_id: str = Field(..., description="GHL campaign ID")
     trigger_type: str = Field(..., description="Competitive trigger type")
     target_audience: Dict[str, Any] = Field(..., description="Target audience criteria")
@@ -77,37 +81,22 @@ class GHLMarketIntelligenceService:
             headers = {"Authorization": f"Bearer {token}"}
 
             async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    f"{self.ghl_api_base}/users/me",
-                    headers=headers,
-                    timeout=10.0
-                )
+                response = await client.get(f"{self.ghl_api_base}/users/me", headers=headers, timeout=10.0)
 
                 if response.status_code != 200:
-                    raise HTTPException(
-                        status_code=401,
-                        detail="Invalid GHL authentication token"
-                    )
+                    raise HTTPException(status_code=401, detail="Invalid GHL authentication token")
 
                 return response.json()
 
         except httpx.TimeoutException:
             logger.error("GHL authentication timeout")
-            raise HTTPException(
-                status_code=503,
-                detail="GHL authentication service unavailable"
-            )
+            raise HTTPException(status_code=503, detail="GHL authentication service unavailable")
         except Exception as e:
             logger.error(f"GHL authentication error: {str(e)}")
-            raise HTTPException(
-                status_code=500,
-                detail="Authentication service error"
-            )
+            raise HTTPException(status_code=500, detail="Authentication service error")
 
     async def analyze_lead_competitive_intelligence(
-        self,
-        lead_data: Dict[str, Any],
-        ghl_token: str
+        self, lead_data: Dict[str, Any], ghl_token: str
     ) -> GHLCompetitorLead:
         """Analyze GHL lead for competitive intelligence."""
         try:
@@ -119,7 +108,7 @@ class GHLMarketIntelligenceService:
                 "lead_source": lead_data.get("source"),
                 "communication_history": lead_data.get("notes", []),
                 "property_interests": lead_data.get("custom_fields", {}),
-                "interaction_patterns": lead_data.get("activities", [])
+                "interaction_patterns": lead_data.get("activities", []),
             }
 
             # Analyze using AI for competitive insights
@@ -133,7 +122,7 @@ class GHLMarketIntelligenceService:
                 competitor_probability=competitive_analysis.get("probability", 0.0),
                 competitive_insights=competitive_analysis.get("insights", {}),
                 threat_level=competitive_analysis.get("threat_level", "LOW"),
-                recommended_actions=competitive_analysis.get("actions", [])
+                recommended_actions=competitive_analysis.get("actions", []),
             )
 
             # Cache the analysis
@@ -141,17 +130,14 @@ class GHLMarketIntelligenceService:
             await self.cache_service.set_data(
                 cache_key,
                 competitor_lead.model_dump(),
-                ttl=3600  # 1 hour cache
+                ttl=3600,  # 1 hour cache
             )
 
             return competitor_lead
 
         except Exception as e:
             logger.error(f"Lead competitive analysis error: {str(e)}")
-            raise HTTPException(
-                status_code=500,
-                detail="Failed to analyze lead competitive intelligence"
-            )
+            raise HTTPException(status_code=500, detail="Failed to analyze lead competitive intelligence")
 
     async def _analyze_with_ai(self, analysis_data: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze data using AI for competitive insights."""
@@ -159,9 +145,9 @@ class GHLMarketIntelligenceService:
             prompt = f"""
             Analyze this real estate lead data for competitive intelligence:
 
-            Lead Source: {analysis_data.get('lead_source')}
-            Communication History: {json.dumps(analysis_data.get('communication_history', []), indent=2)}
-            Property Interests: {json.dumps(analysis_data.get('property_interests', {}), indent=2)}
+            Lead Source: {analysis_data.get("lead_source")}
+            Communication History: {json.dumps(analysis_data.get("communication_history", []), indent=2)}
+            Property Interests: {json.dumps(analysis_data.get("property_interests", {}), indent=2)}
 
             Provide analysis in JSON format:
             {{
@@ -183,11 +169,7 @@ class GHLMarketIntelligenceService:
             4. Market knowledge sources
             """
 
-            response = await self.llm_client.generate_response(
-                prompt,
-                max_tokens=800,
-                temperature=0.3
-            )
+            response = await self.llm_client.generate_response(prompt, max_tokens=800, temperature=0.3)
 
             # Parse AI response
             try:
@@ -199,7 +181,7 @@ class GHLMarketIntelligenceService:
                     "probability": 0.0,
                     "threat_level": "LOW",
                     "insights": {},
-                    "actions": []
+                    "actions": [],
                 }
 
         except Exception as e:
@@ -209,13 +191,11 @@ class GHLMarketIntelligenceService:
                 "probability": 0.0,
                 "threat_level": "LOW",
                 "insights": {"error": str(e)},
-                "actions": []
+                "actions": [],
             }
 
     async def create_competitive_response_campaign(
-        self,
-        campaign_data: Dict[str, Any],
-        ghl_token: str
+        self, campaign_data: Dict[str, Any], ghl_token: str
     ) -> CompetitiveResponseCampaign:
         """Create automated competitive response campaign in GHL."""
         try:
@@ -227,22 +207,16 @@ class GHLMarketIntelligenceService:
                 "type": "drip",
                 "status": "active" if campaign_data.get("auto_start", False) else "draft",
                 "triggers": campaign_data.get("triggers", []),
-                "actions": campaign_data.get("actions", [])
+                "actions": campaign_data.get("actions", []),
             }
 
             async with httpx.AsyncClient() as client:
                 response = await client.post(
-                    f"{self.ghl_api_base}/campaigns",
-                    headers=headers,
-                    json=campaign_payload,
-                    timeout=30.0
+                    f"{self.ghl_api_base}/campaigns", headers=headers, json=campaign_payload, timeout=30.0
                 )
 
                 if response.status_code not in [200, 201]:
-                    raise HTTPException(
-                        status_code=400,
-                        detail=f"Failed to create GHL campaign: {response.text}"
-                    )
+                    raise HTTPException(status_code=400, detail=f"Failed to create GHL campaign: {response.text}")
 
                 ghl_campaign = response.json()
 
@@ -257,8 +231,8 @@ class GHLMarketIntelligenceService:
                     "created_at": datetime.utcnow().isoformat(),
                     "leads_targeted": 0,
                     "responses_generated": 0,
-                    "conversion_rate": 0.0
-                }
+                    "conversion_rate": 0.0,
+                },
             )
 
             # Cache campaign configuration
@@ -266,23 +240,17 @@ class GHLMarketIntelligenceService:
             await self.cache_service.set_data(
                 cache_key,
                 response_campaign.model_dump(),
-                ttl=7200  # 2 hour cache
+                ttl=7200,  # 2 hour cache
             )
 
             return response_campaign
 
         except httpx.TimeoutException:
             logger.error("GHL campaign creation timeout")
-            raise HTTPException(
-                status_code=503,
-                detail="GHL service timeout"
-            )
+            raise HTTPException(status_code=503, detail="GHL service timeout")
         except Exception as e:
             logger.error(f"Campaign creation error: {str(e)}")
-            raise HTTPException(
-                status_code=500,
-                detail="Failed to create competitive response campaign"
-            )
+            raise HTTPException(status_code=500, detail="Failed to create competitive response campaign")
 
 
 # Initialize service
@@ -299,7 +267,7 @@ async def analyze_lead_competitive_intelligence(
     lead_data: Dict[str, Any],
     background_tasks: BackgroundTasks,
     current_user: Dict[str, Any] = Depends(get_current_user),
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    credentials: HTTPAuthorizationCredentials = Depends(security),
 ):
     """
     Analyze a GHL lead for competitive intelligence.
@@ -312,33 +280,25 @@ async def analyze_lead_competitive_intelligence(
 
         # Analyze lead
         competitive_lead = await market_intelligence_service.analyze_lead_competitive_intelligence(
-            lead_data,
-            credentials.credentials
+            lead_data, credentials.credentials
         )
 
         # Schedule background sync if high threat detected
         if competitive_lead.threat_level in ["MEDIUM", "HIGH"]:
-            background_tasks.add_task(
-                sync_competitive_insights_to_ghl,
-                competitive_lead,
-                credentials.credentials
-            )
+            background_tasks.add_task(sync_competitive_insights_to_ghl, competitive_lead, credentials.credentials)
 
         return competitive_lead
 
     except Exception as e:
         logger.error(f"Lead analysis error: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to analyze lead competitive intelligence"
-        )
+        raise HTTPException(status_code=500, detail="Failed to analyze lead competitive intelligence")
 
 
 @router.post("/campaigns/competitive-response", response_model=CompetitiveResponseCampaign)
 async def create_competitive_response_campaign(
     campaign_data: Dict[str, Any],
     current_user: Dict[str, Any] = Depends(get_current_user),
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    credentials: HTTPAuthorizationCredentials = Depends(security),
 ):
     """
     Create automated competitive response campaign in GHL.
@@ -353,15 +313,11 @@ async def create_competitive_response_campaign(
         required_fields = ["name", "trigger_type", "target_audience"]
         for field in required_fields:
             if field not in campaign_data:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Missing required field: {field}"
-                )
+                raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
 
         # Create campaign
         response_campaign = await market_intelligence_service.create_competitive_response_campaign(
-            campaign_data,
-            credentials.credentials
+            campaign_data, credentials.credentials
         )
 
         return response_campaign
@@ -370,17 +326,14 @@ async def create_competitive_response_campaign(
         raise
     except Exception as e:
         logger.error(f"Campaign creation error: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to create competitive response campaign"
-        )
+        raise HTTPException(status_code=500, detail="Failed to create competitive response campaign")
 
 
 @router.get("/sync/status", response_model=Dict[str, Any])
 async def get_market_intelligence_sync_status(
     territory: Optional[str] = Query(None, description="Filter by territory"),
     last_hours: int = Query(24, description="Hours to look back"),
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user),
 ):
     """
     Get market intelligence sync status with GHL.
@@ -403,58 +356,31 @@ async def get_market_intelligence_sync_status(
             # Generate sync status
             sync_status = {
                 "territory": territory,
-                "time_range": {
-                    "start": start_time.isoformat(),
-                    "end": end_time.isoformat(),
-                    "hours": last_hours
-                },
+                "time_range": {"start": start_time.isoformat(), "end": end_time.isoformat(), "hours": last_hours},
                 "sync_summary": {
                     "total_syncs": 156,
                     "successful_syncs": 151,
                     "failed_syncs": 5,
                     "pending_syncs": 12,
-                    "success_rate": 96.8
+                    "success_rate": 96.8,
                 },
                 "data_types": {
-                    "competitor_profiles": {
-                        "synced": 45,
-                        "updated": 23,
-                        "failed": 2
-                    },
-                    "market_insights": {
-                        "synced": 78,
-                        "updated": 34,
-                        "failed": 1
-                    },
-                    "threat_assessments": {
-                        "synced": 33,
-                        "updated": 18,
-                        "failed": 2
-                    }
+                    "competitor_profiles": {"synced": 45, "updated": 23, "failed": 2},
+                    "market_insights": {"synced": 78, "updated": 34, "failed": 1},
+                    "threat_assessments": {"synced": 33, "updated": 18, "failed": 2},
                 },
-                "performance_metrics": {
-                    "avg_sync_time": "2.3s",
-                    "data_freshness": "95%",
-                    "error_rate": "3.2%"
-                },
-                "last_updated": datetime.utcnow().isoformat()
+                "performance_metrics": {"avg_sync_time": "2.3s", "data_freshness": "95%", "error_rate": "3.2%"},
+                "last_updated": datetime.utcnow().isoformat(),
             }
 
             # Cache for 5 minutes
-            await market_intelligence_service.cache_service.set_data(
-                cache_key,
-                sync_status,
-                ttl=300
-            )
+            await market_intelligence_service.cache_service.set_data(cache_key, sync_status, ttl=300)
 
         return sync_status
 
     except Exception as e:
         logger.error(f"Sync status error: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to get sync status"
-        )
+        raise HTTPException(status_code=500, detail="Failed to get sync status")
 
 
 @router.post("/sync/trigger", response_model=Dict[str, Any])
@@ -462,7 +388,7 @@ async def trigger_market_intelligence_sync(
     sync_request: Dict[str, Any],
     background_tasks: BackgroundTasks,
     current_user: Dict[str, Any] = Depends(get_current_user),
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    credentials: HTTPAuthorizationCredentials = Depends(security),
 ):
     """
     Trigger manual market intelligence sync with GHL.
@@ -487,36 +413,29 @@ async def trigger_market_intelligence_sync(
             territory=territory or "all",
             competitor_data={"sync_type": sync_type},
             market_trends={"data_types": data_types},
-            sync_status="INITIATED"
+            sync_status="INITIATED",
         )
 
         # Schedule background sync
-        background_tasks.add_task(
-            execute_market_intelligence_sync,
-            sync_record,
-            credentials.credentials
-        )
+        background_tasks.add_task(execute_market_intelligence_sync, sync_record, credentials.credentials)
 
         return {
             "sync_id": sync_id,
             "status": "INITIATED",
             "estimated_completion": (datetime.utcnow() + timedelta(minutes=5)).isoformat(),
-            "message": "Market intelligence sync initiated successfully"
+            "message": "Market intelligence sync initiated successfully",
         }
 
     except Exception as e:
         logger.error(f"Sync trigger error: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to trigger market intelligence sync"
-        )
+        raise HTTPException(status_code=500, detail="Failed to trigger market intelligence sync")
 
 
 @router.get("/insights/competitive-landscape", response_model=Dict[str, Any])
 async def get_competitive_landscape_insights(
     territory: Optional[str] = Query(None, description="Territory filter"),
     timeframe: str = Query("30d", description="Analysis timeframe"),
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user),
 ):
     """
     Get competitive landscape insights for GHL integration.
@@ -529,8 +448,7 @@ async def get_competitive_landscape_insights(
 
         # Get competitive data from pipeline
         competitive_data = await market_intelligence_service.data_pipeline.collect_competitor_data(
-            territory or "all",
-            data_sources=["mls", "social_media", "market_reports"]
+            territory or "all", data_sources=["mls", "social_media", "market_reports"]
         )
 
         # Process insights for GHL format
@@ -542,7 +460,7 @@ async def get_competitive_landscape_insights(
                 "total_competitors": len(competitive_data),
                 "active_threats": sum(1 for d in competitive_data if d.threat_level == "HIGH"),
                 "market_share_impact": 15.2,
-                "response_opportunities": 23
+                "response_opportunities": 23,
             },
             "competitor_profiles": [
                 {
@@ -550,7 +468,7 @@ async def get_competitive_landscape_insights(
                     "threat_level": data.threat_level,
                     "market_presence": data.additional_data.get("market_presence", "unknown"),
                     "recent_activity": data.additional_data.get("recent_activity", []),
-                    "response_recommendations": data.additional_data.get("recommendations", [])
+                    "response_recommendations": data.additional_data.get("recommendations", []),
                 }
                 for data in competitive_data[:10]  # Top 10 competitors
             ],
@@ -558,34 +476,24 @@ async def get_competitive_landscape_insights(
                 "pricing_trends": "increasing",
                 "inventory_levels": "low",
                 "competitor_activity": "high",
-                "market_sentiment": "competitive"
+                "market_sentiment": "competitive",
             },
             "ghl_integration_data": {
                 "recommended_campaigns": 5,
                 "target_lead_segments": 8,
                 "automation_opportunities": 12,
-                "performance_benchmarks": {
-                    "response_rate": 0.18,
-                    "conversion_rate": 0.045,
-                    "engagement_score": 7.2
-                }
-            }
+                "performance_benchmarks": {"response_rate": 0.18, "conversion_rate": 0.045, "engagement_score": 7.2},
+            },
         }
 
         return landscape_insights
 
     except Exception as e:
         logger.error(f"Competitive landscape error: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to get competitive landscape insights"
-        )
+        raise HTTPException(status_code=500, detail="Failed to get competitive landscape insights")
 
 
-async def sync_competitive_insights_to_ghl(
-    competitive_lead: GHLCompetitorLead,
-    ghl_token: str
-):
+async def sync_competitive_insights_to_ghl(competitive_lead: GHLCompetitorLead, ghl_token: str):
     """Background task to sync competitive insights to GHL."""
     try:
         headers = {"Authorization": f"Bearer {ghl_token}"}
@@ -597,12 +505,9 @@ async def sync_competitive_insights_to_ghl(
                 "competitor_probability": competitive_lead.competitor_probability,
                 "threat_level": competitive_lead.threat_level,
                 "competitive_insights": json.dumps(competitive_lead.competitive_insights),
-                "last_competitive_analysis": competitive_lead.last_analyzed.isoformat()
+                "last_competitive_analysis": competitive_lead.last_analyzed.isoformat(),
             },
-            "tags": [
-                f"threat_{competitive_lead.threat_level.lower()}",
-                "competitive_intelligence"
-            ]
+            "tags": [f"threat_{competitive_lead.threat_level.lower()}", "competitive_intelligence"],
         }
 
         if competitive_lead.competitor_name:
@@ -613,7 +518,7 @@ async def sync_competitive_insights_to_ghl(
                 f"{market_intelligence_service.ghl_api_base}/contacts/{competitive_lead.contact_id}",
                 headers=headers,
                 json=update_payload,
-                timeout=15.0
+                timeout=15.0,
             )
 
             if response.status_code == 200:
@@ -625,10 +530,7 @@ async def sync_competitive_insights_to_ghl(
         logger.error(f"Sync background task error: {str(e)}")
 
 
-async def execute_market_intelligence_sync(
-    sync_record: MarketIntelligenceSync,
-    ghl_token: str
-):
+async def execute_market_intelligence_sync(sync_record: MarketIntelligenceSync, ghl_token: str):
     """Background task to execute market intelligence sync."""
     try:
         logger.info(f"Executing market intelligence sync: {sync_record.sync_id}")
@@ -647,7 +549,7 @@ async def execute_market_intelligence_sync(
         await market_intelligence_service.cache_service.set_data(
             cache_key,
             sync_record.model_dump(),
-            ttl=86400  # 24 hour cache
+            ttl=86400,  # 24 hour cache
         )
 
         logger.info(f"Market intelligence sync completed: {sync_record.sync_id}")

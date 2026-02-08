@@ -11,29 +11,32 @@ Features:
 - Integration with existing SMS compliance infrastructure
 """
 
-import streamlit as st
 import asyncio
-import pandas as pd
+import json
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
+
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import streamlit as st
 from plotly.subplots import make_subplots
-import json
 
 # Import existing SMS compliance services
 try:
-    from ghl_real_estate_ai.services.sms_compliance_service import get_sms_compliance_service, OptOutReason
     from ghl_real_estate_ai.services.cache_service import get_cache_service
     from ghl_real_estate_ai.services.event_publisher import get_event_publisher
+    from ghl_real_estate_ai.services.sms_compliance_service import OptOutReason, get_sms_compliance_service
 except ImportError:
     st.error("SMS compliance services not available - check backend configuration")
     st.stop()
+
 
 @st.cache_resource
 def get_compliance_service():
     """Get cached SMS compliance service instance."""
     return get_sms_compliance_service()
+
 
 @st.cache_data(ttl=60)  # Cache for 60 seconds
 def load_compliance_overview() -> Dict[str, Any]:
@@ -50,11 +53,12 @@ def load_compliance_overview() -> Dict[str, Any]:
             "daily_violations": 0,
             "monthly_violations": 2,
             "compliance_score": 98.2,
-            "last_updated": datetime.now().isoformat()
+            "last_updated": datetime.now().isoformat(),
         }
     except Exception as e:
         st.error(f"Error loading compliance overview: {str(e)}")
         return {}
+
 
 @st.cache_data(ttl=30)  # Cache for 30 seconds
 def load_recent_events() -> List[Dict[str, Any]]:
@@ -69,7 +73,7 @@ def load_recent_events() -> List[Dict[str, Any]]:
                 "phone_number": "+15551234567",
                 "method": "stop_keyword",
                 "keywords_detected": ["STOP"],
-                "location_id": "service6_location_demo"
+                "location_id": "service6_location_demo",
             },
             {
                 "timestamp": (datetime.now() - timedelta(hours=2)).isoformat(),
@@ -77,19 +81,20 @@ def load_recent_events() -> List[Dict[str, Any]]:
                 "phone_number": "+15551234890",
                 "limit_type": "daily",
                 "current_count": 3,
-                "location_id": "service6_location_demo"
+                "location_id": "service6_location_demo",
             },
             {
                 "timestamp": (datetime.now() - timedelta(hours=6)).isoformat(),
                 "event_type": "compliance_violation",
                 "phone_number": "+15551234999",
                 "violation_type": "attempted_send_to_opted_out",
-                "severity": "high"
-            }
+                "severity": "high",
+            },
         ]
     except Exception as e:
         st.error(f"Error loading recent events: {str(e)}")
         return []
+
 
 def render_compliance_metrics():
     """Render key compliance metrics cards."""
@@ -104,17 +109,13 @@ def render_compliance_metrics():
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.metric(
-            "📱 Total Contacts",
-            f"{overview['total_contacts']:,}",
-            help="Total contacts in SMS system"
-        )
+        st.metric("📱 Total Contacts", f"{overview['total_contacts']:,}", help="Total contacts in SMS system")
 
     with col2:
         st.metric(
             "🚫 Opted Out",
             f"{overview['opted_out_count']} ({overview['opt_out_rate']:.1f}%)",
-            help="Contacts who have opted out of SMS"
+            help="Contacts who have opted out of SMS",
         )
 
     with col3:
@@ -123,18 +124,19 @@ def render_compliance_metrics():
             f"{overview['monthly_violations']}",
             delta=f"-{overview['daily_violations']} today",
             delta_color="inverse",
-            help="Compliance violations in last 30 days"
+            help="Compliance violations in last 30 days",
         )
 
     with col4:
-        compliance_color = "normal" if overview['compliance_score'] > 95 else "inverse"
+        compliance_color = "normal" if overview["compliance_score"] > 95 else "inverse"
         st.metric(
             "✅ Compliance Score",
             f"{overview['compliance_score']:.1f}%",
             delta=f"Target: 98%+",
             delta_color=compliance_color,
-            help="Overall TCPA compliance rating"
+            help="Overall TCPA compliance rating",
         )
+
 
 def render_opt_out_management():
     """Render opt-out management interface."""
@@ -151,28 +153,24 @@ def render_opt_out_management():
 
             with col1:
                 phone_number = st.text_input(
-                    "📱 Phone Number",
-                    placeholder="+1234567890",
-                    help="Enter phone number to opt out"
+                    "📱 Phone Number", placeholder="+1234567890", help="Enter phone number to opt out"
                 )
 
                 opt_out_reason = st.selectbox(
                     "📝 Opt-Out Reason",
                     ["user_request", "compliance_violation", "admin_block", "frequency_abuse"],
-                    help="Reason for opt-out (audit trail)"
+                    help="Reason for opt-out (audit trail)",
                 )
 
             with col2:
                 location_id = st.text_input(
-                    "📍 Location ID",
-                    value="service6_location_demo",
-                    help="GHL Location ID (optional)"
+                    "📍 Location ID", value="service6_location_demo", help="GHL Location ID (optional)"
                 )
 
                 notes = st.text_area(
                     "📋 Notes",
                     placeholder="Additional details about opt-out request...",
-                    help="Optional notes for audit trail"
+                    help="Optional notes for audit trail",
                 )
 
             submitted = st.form_submit_button("🚫 Process Opt-Out", type="primary")
@@ -186,7 +184,7 @@ def render_opt_out_management():
                         "user_request": OptOutReason.USER_REQUEST,
                         "compliance_violation": OptOutReason.COMPLIANCE_VIOLATION,
                         "admin_block": OptOutReason.ADMIN_BLOCK,
-                        "frequency_abuse": OptOutReason.FREQUENCY_ABUSE
+                        "frequency_abuse": OptOutReason.FREQUENCY_ABUSE,
                     }
 
                     # Process opt-out (async call)
@@ -203,11 +201,7 @@ def render_opt_out_management():
     with lookup_tab:
         st.write("**Check compliance status for phone number**")
 
-        lookup_phone = st.text_input(
-            "📱 Phone Number to Check",
-            placeholder="+1234567890",
-            key="lookup_phone"
-        )
+        lookup_phone = st.text_input("📱 Phone Number to Check", placeholder="+1234567890", key="lookup_phone")
 
         if st.button("🔍 Check Status", type="secondary") and lookup_phone:
             try:
@@ -224,7 +218,7 @@ def render_opt_out_management():
                         "daily_limit": 3,
                         "monthly_limit": 20,
                         "compliance_status": "compliant",
-                        "last_sent": datetime.now().isoformat()
+                        "last_sent": datetime.now().isoformat(),
                     }
 
                 # Display status in formatted way
@@ -235,7 +229,7 @@ def render_opt_out_management():
                     st.metric(
                         f"{status_color} Opt-Out Status",
                         "Active" if not status["opted_out"] else "OPTED OUT",
-                        help="Current opt-out status"
+                        help="Current opt-out status",
                     )
 
                 with col2:
@@ -243,7 +237,7 @@ def render_opt_out_management():
                     st.metric(
                         f"{daily_status} Daily Count",
                         f"{status['daily_count']}/{status['daily_limit']}",
-                        help="Messages sent today"
+                        help="Messages sent today",
                     )
 
                 with col3:
@@ -251,7 +245,7 @@ def render_opt_out_management():
                     st.metric(
                         f"{monthly_status} Monthly Count",
                         f"{status['monthly_count']}/{status['monthly_limit']}",
-                        help="Messages sent this month"
+                        help="Messages sent this month",
                     )
 
                 # Show detailed status
@@ -266,9 +260,7 @@ def render_opt_out_management():
 
         if st.checkbox("⚠️ I am an administrator"):
             uploaded_file = st.file_uploader(
-                "📁 Upload phone numbers (CSV)",
-                type=['csv'],
-                help="CSV file with phone_number column"
+                "📁 Upload phone numbers (CSV)", type=["csv"], help="CSV file with phone_number column"
             )
 
             if uploaded_file:
@@ -282,72 +274,62 @@ def render_opt_out_management():
         else:
             st.info("👮‍♂️ Admin privileges required for bulk operations")
 
+
 def render_frequency_tracking():
     """Render SMS frequency tracking and limits visualization."""
     st.subheader("📈 SMS Frequency Tracking")
 
     # Create sample frequency data for visualization
-    dates = pd.date_range(start=datetime.now() - timedelta(days=30), end=datetime.now(), freq='D')
+    dates = pd.date_range(start=datetime.now() - timedelta(days=30), end=datetime.now(), freq="D")
 
     # Sample daily SMS volumes
     daily_volumes = {
-        'date': dates,
-        'total_sent': [120 + i*2 + (i%7)*10 for i in range(len(dates))],
-        'violations': [0 if i%10 != 0 else 1 for i in range(len(dates))],
-        'opt_outs': [0 if i%15 != 0 else 2 for i in range(len(dates))]
+        "date": dates,
+        "total_sent": [120 + i * 2 + (i % 7) * 10 for i in range(len(dates))],
+        "violations": [0 if i % 10 != 0 else 1 for i in range(len(dates))],
+        "opt_outs": [0 if i % 15 != 0 else 2 for i in range(len(dates))],
     }
 
     df_volumes = pd.DataFrame(daily_volumes)
 
     # Create frequency tracking chart
     fig = make_subplots(
-        rows=2, cols=1,
+        rows=2,
+        cols=1,
         subplot_titles=("Daily SMS Volume", "Compliance Events"),
         vertical_spacing=0.1,
-        row_heights=[0.7, 0.3]
+        row_heights=[0.7, 0.3],
     )
 
     # SMS volume chart
     fig.add_trace(
         go.Scatter(
-            x=df_volumes['date'],
-            y=df_volumes['total_sent'],
-            mode='lines+markers',
-            name='SMS Sent',
-            line=dict(color='#1f77b4', width=2),
-            fill='tonexty'
+            x=df_volumes["date"],
+            y=df_volumes["total_sent"],
+            mode="lines+markers",
+            name="SMS Sent",
+            line=dict(color="#1f77b4", width=2),
+            fill="tonexty",
         ),
-        row=1, col=1
+        row=1,
+        col=1,
     )
 
     # Add compliance events
     fig.add_trace(
-        go.Bar(
-            x=df_volumes['date'],
-            y=df_volumes['violations'],
-            name='Violations',
-            marker_color='red',
-            opacity=0.7
-        ),
-        row=2, col=1
+        go.Bar(x=df_volumes["date"], y=df_volumes["violations"], name="Violations", marker_color="red", opacity=0.7),
+        row=2,
+        col=1,
     )
 
     fig.add_trace(
-        go.Bar(
-            x=df_volumes['date'],
-            y=df_volumes['opt_outs'],
-            name='Opt-Outs',
-            marker_color='orange',
-            opacity=0.7
-        ),
-        row=2, col=1
+        go.Bar(x=df_volumes["date"], y=df_volumes["opt_outs"], name="Opt-Outs", marker_color="orange", opacity=0.7),
+        row=2,
+        col=1,
     )
 
     fig.update_layout(
-        height=500,
-        title="📊 30-Day SMS Activity & Compliance Trends",
-        showlegend=True,
-        hovermode='x unified'
+        height=500, title="📊 30-Day SMS Activity & Compliance Trends", showlegend=True, hovermode="x unified"
     )
 
     fig.update_xaxes(title_text="Date", row=2, col=1)
@@ -372,9 +354,10 @@ def render_frequency_tracking():
     with col2:
         st.info(f"""
         **🛑 Auto-Opt-Out Keywords**
-        {', '.join(list(compliance_service.STOP_KEYWORDS)[:6])}
-        + {len(compliance_service.STOP_KEYWORDS)-6} more standard keywords
+        {", ".join(list(compliance_service.STOP_KEYWORDS)[:6])}
+        + {len(compliance_service.STOP_KEYWORDS) - 6} more standard keywords
         """)
+
 
 def render_recent_events():
     """Render recent compliance events."""
@@ -388,14 +371,14 @@ def render_recent_events():
 
     # Convert to DataFrame for better display
     df_events = pd.DataFrame(events)
-    df_events['timestamp'] = pd.to_datetime(df_events['timestamp'])
-    df_events['time_ago'] = df_events['timestamp'].apply(
+    df_events["timestamp"] = pd.to_datetime(df_events["timestamp"])
+    df_events["time_ago"] = df_events["timestamp"].apply(
         lambda x: f"{int((datetime.now() - x.replace(tzinfo=None)).total_seconds() / 60)} min ago"
     )
 
     # Display events with styling
     for _, event in df_events.iterrows():
-        event_type = event['event_type']
+        event_type = event["event_type"]
 
         # Choose icon and color based on event type
         if event_type == "opt_out_processed":
@@ -424,7 +407,7 @@ def render_recent_events():
                 # Show additional details based on event type
                 if event_type == "opt_out_processed":
                     st.write(f"Method: {event.get('method', 'unknown')}")
-                    if 'keywords_detected' in event:
+                    if "keywords_detected" in event:
                         st.write(f"Keywords: {', '.join(event['keywords_detected'])}")
                 elif event_type == "frequency_limit_hit":
                     st.write(f"Limit: {event.get('limit_type', 'unknown')} ({event.get('current_count', 0)} messages)")
@@ -433,6 +416,7 @@ def render_recent_events():
                 st.write(f"🕐 {event['time_ago']}")
 
         st.divider()
+
 
 def render_compliance_settings():
     """Render compliance settings and configuration."""
@@ -454,12 +438,7 @@ Business Hours: {compliance_service.BUSINESS_HOURS_START}:00 - {compliance_servi
         with col2:
             st.write("**STOP Keywords:**")
             keywords_text = ", ".join(list(compliance_service.STOP_KEYWORDS))
-            st.text_area(
-                "Recognized opt-out keywords",
-                value=keywords_text,
-                height=100,
-                disabled=True
-            )
+            st.text_area("Recognized opt-out keywords", value=keywords_text, height=100, disabled=True)
 
     with st.expander("📊 Compliance Monitoring"):
         st.write("""
@@ -473,14 +452,18 @@ Business Hours: {compliance_service.BUSINESS_HOURS_START}:00 - {compliance_servi
 
     with st.expander("🔗 API Endpoints"):
         st.write("**Available SMS Compliance API endpoints:**")
-        st.code("""
+        st.code(
+            """
 POST /api/sms-compliance/validate-send      # Validate SMS before sending
 POST /api/sms-compliance/record-send        # Record SMS send for tracking
 POST /api/sms-compliance/manual-opt-out     # Manual opt-out processing
 GET  /api/sms-compliance/status/{phone}     # Get compliance status
 GET  /api/sms-compliance/compliance-report  # Generate compliance report
 GET  /api/sms-compliance/stop-keywords      # Get STOP keywords list
-        """, language="bash")
+        """,
+            language="bash",
+        )
+
 
 def render_sms_compliance_dashboard():
     """Main function to render the complete SMS compliance dashboard."""
@@ -504,6 +487,7 @@ def render_sms_compliance_dashboard():
     # Auto-refresh functionality
     if auto_refresh:
         import time
+
         placeholder = st.empty()
         time.sleep(30)
         st.experimental_rerun()
@@ -537,6 +521,7 @@ def render_sms_compliance_dashboard():
 
     with col3:
         st.info("📊 Data Source: **Live Redis Cache + Event Streams**")
+
 
 # === MAIN EXECUTION ===
 

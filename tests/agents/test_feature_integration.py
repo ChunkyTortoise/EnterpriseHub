@@ -10,24 +10,24 @@ Also validates no regression when all features are disabled.
 """
 
 import asyncio
-import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
 from datetime import datetime, timezone
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from ghl_real_estate_ai.agents.jorge_seller_bot import (
-    JorgeSellerBot,
     JorgeFeatureConfig,
+    JorgeSellerBot,
     QualificationResult,
 )
 from ghl_real_estate_ai.config.feature_config import (
-    ProgressiveSkillsConfig,
     AgentMeshConfig,
-    MCPConfig,
     FeatureConfig,
-    load_feature_config_from_env,
+    MCPConfig,
+    ProgressiveSkillsConfig,
     feature_config_to_jorge_kwargs,
+    load_feature_config_from_env,
 )
-
 
 # ======================================================================
 # Shared Fixtures
@@ -37,13 +37,11 @@ from ghl_real_estate_ai.config.feature_config import (
 @pytest.fixture
 def mock_core_dependencies():
     """Patch core dependencies (intent decoder, claude, event publisher, ML engine)."""
-    with patch(
-        "ghl_real_estate_ai.agents.jorge_seller_bot.LeadIntentDecoder"
-    ) as mock_intent, patch(
-        "ghl_real_estate_ai.agents.jorge_seller_bot.ClaudeAssistant"
-    ) as mock_claude, patch(
-        "ghl_real_estate_ai.agents.jorge_seller_bot.get_event_publisher"
-    ) as mock_events:
+    with (
+        patch("ghl_real_estate_ai.agents.jorge_seller_bot.LeadIntentDecoder") as mock_intent,
+        patch("ghl_real_estate_ai.agents.jorge_seller_bot.ClaudeAssistant") as mock_claude,
+        patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_event_publisher") as mock_events,
+    ):
         mock_intent.return_value = MagicMock()
         mock_claude.return_value = MagicMock()
         mock_events.return_value = MagicMock()
@@ -146,9 +144,7 @@ class TestProgressiveSkillsIntegration:
         bot.skills_manager = None
 
         # Mock the claude assistant for traditional fallback
-        bot.claude.analyze_with_context = AsyncMock(
-            return_value={"content": "Traditional qualification result"}
-        )
+        bot.claude.analyze_with_context = AsyncMock(return_value={"content": "Traditional qualification result"})
 
         result = await bot._execute_progressive_qualification(sample_lead_data)
 
@@ -298,9 +294,7 @@ class TestAgentMeshIntegration:
     )
     @patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_mesh_coordinator")
     @pytest.mark.asyncio
-    async def test_mesh_task_creation(
-        self, mock_coordinator_fn, mock_core_dependencies, sample_lead_data
-    ):
+    async def test_mesh_task_creation(self, mock_coordinator_fn, mock_core_dependencies, sample_lead_data):
         """Mesh coordinator creates a task and increments orchestration count."""
         mock_coordinator = MagicMock()
         mock_coordinator.submit_task = AsyncMock(return_value="task_abc_123")
@@ -325,9 +319,7 @@ class TestAgentMeshIntegration:
     )
     @patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_mesh_coordinator")
     @pytest.mark.asyncio
-    async def test_mesh_fallback_when_unavailable(
-        self, mock_coordinator_fn, mock_core_dependencies, sample_lead_data
-    ):
+    async def test_mesh_fallback_when_unavailable(self, mock_coordinator_fn, mock_core_dependencies, sample_lead_data):
         """When mesh coordinator is None, _create_mesh_qualification_task returns None."""
         config = JorgeFeatureConfig(
             enable_agent_mesh=False,
@@ -346,9 +338,7 @@ class TestAgentMeshIntegration:
     )
     @patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_mesh_coordinator")
     @pytest.mark.asyncio
-    async def test_orchestrate_supporting_tasks(
-        self, mock_coordinator_fn, mock_core_dependencies, sample_lead_data
-    ):
+    async def test_orchestrate_supporting_tasks(self, mock_coordinator_fn, mock_core_dependencies, sample_lead_data):
         """Orchestrate supporting tasks (property valuation) when address is provided."""
         mock_coordinator = MagicMock()
         mock_coordinator.submit_task = AsyncMock(return_value="valuation_task_456")
@@ -381,9 +371,7 @@ class TestAgentMeshIntegration:
     ):
         """If orchestration throws, empty list is returned gracefully."""
         mock_coordinator = MagicMock()
-        mock_coordinator.submit_task = AsyncMock(
-            side_effect=Exception("Mesh network error")
-        )
+        mock_coordinator.submit_task = AsyncMock(side_effect=Exception("Mesh network error"))
         mock_coordinator_fn.return_value = mock_coordinator
 
         config = JorgeFeatureConfig(
@@ -403,9 +391,7 @@ class TestAgentMeshIntegration:
         assert isinstance(orchestrated, list)
 
     @pytest.mark.asyncio
-    async def test_health_check_mesh_disabled(
-        self, mock_core_dependencies, disabled_config
-    ):
+    async def test_health_check_mesh_disabled(self, mock_core_dependencies, disabled_config):
         """Health check reports mesh as disabled when flag is off."""
         bot = JorgeSellerBot(config=disabled_config)
         health = await bot.health_check()
@@ -448,9 +434,7 @@ class TestMCPIntegration:
     )
     @patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_mcp_client")
     @pytest.mark.asyncio
-    async def test_mcp_enrichment_success(
-        self, mock_mcp_fn, mock_core_dependencies, sample_lead_data
-    ):
+    async def test_mcp_enrichment_success(self, mock_mcp_fn, mock_core_dependencies, sample_lead_data):
         """Successful MCP enrichment returns CRM and property data."""
         mock_mcp = MagicMock()
         mock_mcp.call_tool = AsyncMock(
@@ -497,14 +481,10 @@ class TestMCPIntegration:
     )
     @patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_mcp_client")
     @pytest.mark.asyncio
-    async def test_mcp_circuit_breaker_fallback(
-        self, mock_mcp_fn, mock_core_dependencies, sample_lead_data
-    ):
+    async def test_mcp_circuit_breaker_fallback(self, mock_mcp_fn, mock_core_dependencies, sample_lead_data):
         """When MCP call fails, enrichment gracefully degrades."""
         mock_mcp = MagicMock()
-        mock_mcp.call_tool = AsyncMock(
-            side_effect=Exception("MCP server connection refused")
-        )
+        mock_mcp.call_tool = AsyncMock(side_effect=Exception("MCP server connection refused"))
         mock_mcp_fn.return_value = mock_mcp
 
         config = JorgeFeatureConfig(
@@ -521,9 +501,7 @@ class TestMCPIntegration:
         assert "enrichment_error" in result["mcp_enrichment"]
 
     @pytest.mark.asyncio
-    async def test_mcp_enrichment_skipped_when_disabled(
-        self, mock_core_dependencies, disabled_config
-    ):
+    async def test_mcp_enrichment_skipped_when_disabled(self, mock_core_dependencies, disabled_config):
         """When MCP is disabled, enrichment returns False with no calls."""
         bot = JorgeSellerBot(config=disabled_config)
         result = await bot._enrich_with_mcp_data({}, {})
@@ -537,9 +515,7 @@ class TestMCPIntegration:
     )
     @patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_mcp_client")
     @pytest.mark.asyncio
-    async def test_crm_sync_via_mcp(
-        self, mock_mcp_fn, mock_core_dependencies, sample_lead_data
-    ):
+    async def test_crm_sync_via_mcp(self, mock_mcp_fn, mock_core_dependencies, sample_lead_data):
         """CRM sync writes qualification data through MCP protocol."""
         mock_mcp = MagicMock()
         mock_mcp.call_tool = AsyncMock(return_value={"success": True})
@@ -568,14 +544,10 @@ class TestMCPIntegration:
     )
     @patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_mcp_client")
     @pytest.mark.asyncio
-    async def test_crm_sync_failure_is_silent(
-        self, mock_mcp_fn, mock_core_dependencies, sample_lead_data
-    ):
+    async def test_crm_sync_failure_is_silent(self, mock_mcp_fn, mock_core_dependencies, sample_lead_data):
         """CRM sync failures do not propagate up."""
         mock_mcp = MagicMock()
-        mock_mcp.call_tool = AsyncMock(
-            side_effect=Exception("CRM timeout")
-        )
+        mock_mcp.call_tool = AsyncMock(side_effect=Exception("CRM timeout"))
         mock_mcp_fn.return_value = mock_mcp
 
         config = JorgeFeatureConfig(
@@ -592,9 +564,7 @@ class TestMCPIntegration:
         )
 
     @pytest.mark.asyncio
-    async def test_health_check_mcp_disabled(
-        self, mock_core_dependencies, disabled_config
-    ):
+    async def test_health_check_mcp_disabled(self, mock_core_dependencies, disabled_config):
         """Health check reports MCP as disabled when flag is off."""
         bot = JorgeSellerBot(config=disabled_config)
         health = await bot.health_check()
@@ -606,9 +576,7 @@ class TestMCPIntegration:
     )
     @patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_mcp_client")
     @pytest.mark.asyncio
-    async def test_shutdown_disconnects_mcp(
-        self, mock_mcp_fn, mock_core_dependencies
-    ):
+    async def test_shutdown_disconnects_mcp(self, mock_mcp_fn, mock_core_dependencies):
         """Bot shutdown calls disconnect_all on MCP client."""
         mock_mcp = MagicMock()
         mock_mcp.disconnect_all = AsyncMock()
@@ -664,9 +632,7 @@ class TestNoRegression:
         assert bot.mcp_client is None
 
     @pytest.mark.asyncio
-    async def test_health_check_all_disabled(
-        self, mock_core_dependencies, disabled_config
-    ):
+    async def test_health_check_all_disabled(self, mock_core_dependencies, disabled_config):
         """Health check reports healthy when all optional features are off."""
         bot = JorgeSellerBot(config=disabled_config)
         health = await bot.health_check()
@@ -677,9 +643,7 @@ class TestNoRegression:
         assert health["mcp_integration"] == "disabled"
 
     @pytest.mark.asyncio
-    async def test_performance_metrics_all_disabled(
-        self, mock_core_dependencies, disabled_config
-    ):
+    async def test_performance_metrics_all_disabled(self, mock_core_dependencies, disabled_config):
         """Performance metrics return base stats when no optional features are on."""
         bot = JorgeSellerBot(config=disabled_config)
         metrics = await bot.get_performance_metrics()
@@ -690,14 +654,10 @@ class TestNoRegression:
         assert metrics["features_enabled"]["mcp_integration"] is False
 
     @pytest.mark.asyncio
-    async def test_traditional_qualification_fallback(
-        self, mock_core_dependencies, disabled_config
-    ):
+    async def test_traditional_qualification_fallback(self, mock_core_dependencies, disabled_config):
         """Traditional qualification runs when progressive skills are off."""
         bot = JorgeSellerBot(config=disabled_config)
-        bot.claude.analyze_with_context = AsyncMock(
-            return_value={"content": "Qualification result"}
-        )
+        bot.claude.analyze_with_context = AsyncMock(return_value={"content": "Qualification result"})
 
         lead_data = {"lead_name": "Test", "property_address": "123 Main St"}
         result = await bot._execute_traditional_qualification(lead_data)
@@ -800,15 +760,19 @@ class TestFeatureConfigModule:
 
     def test_end_to_end_env_to_bot(self, mock_core_dependencies):
         """Full path: env vars -> FeatureConfig -> JorgeFeatureConfig -> bot."""
-        with patch(
-            "ghl_real_estate_ai.agents.jorge_seller_bot.PROGRESSIVE_SKILLS_AVAILABLE",
-            False,
-        ), patch(
-            "ghl_real_estate_ai.agents.jorge_seller_bot.AGENT_MESH_AVAILABLE",
-            False,
-        ), patch(
-            "ghl_real_estate_ai.agents.jorge_seller_bot.MCP_INTEGRATION_AVAILABLE",
-            False,
+        with (
+            patch(
+                "ghl_real_estate_ai.agents.jorge_seller_bot.PROGRESSIVE_SKILLS_AVAILABLE",
+                False,
+            ),
+            patch(
+                "ghl_real_estate_ai.agents.jorge_seller_bot.AGENT_MESH_AVAILABLE",
+                False,
+            ),
+            patch(
+                "ghl_real_estate_ai.agents.jorge_seller_bot.MCP_INTEGRATION_AVAILABLE",
+                False,
+            ),
         ):
             env = {
                 "ENABLE_PROGRESSIVE_SKILLS": "true",
@@ -917,9 +881,7 @@ class TestCombinedFeatures:
         mock_mesh.return_value = MagicMock()
 
         mock_mcp = MagicMock()
-        mock_mcp.health_check = AsyncMock(
-            return_value={"status": "healthy", "ghl-crm": "healthy"}
-        )
+        mock_mcp.health_check = AsyncMock(return_value={"status": "healthy", "ghl-crm": "healthy"})
         mock_mcp_fn.return_value = mock_mcp
 
         config = JorgeFeatureConfig(

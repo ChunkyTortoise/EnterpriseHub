@@ -21,15 +21,16 @@ Date: 2026-01-25
 Performance: <10ms WebSocket latency, 1000+ concurrent connections
 """
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException, Query, Path
-from typing import Optional, List
 import asyncio
 import logging
 from datetime import datetime
+from typing import List, Optional
+
+from fastapi import APIRouter, HTTPException, Path, Query, WebSocket, WebSocketDisconnect
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.bi_websocket_server import get_bi_websocket_manager
 from ghl_real_estate_ai.services.auth_service import UserRole
+from ghl_real_estate_ai.services.bi_websocket_server import get_bi_websocket_manager
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)
@@ -41,12 +42,13 @@ router = APIRouter(tags=["BI WebSocket Real-Time"])
 bi_websocket_manager = get_bi_websocket_manager()
 cache_service = get_cache_service()
 
+
 @router.websocket("/ws/dashboard/{location_id}")
 async def dashboard_websocket(
     websocket: WebSocket,
     location_id: str = Path(..., description="Location ID for the dashboard"),
     token: Optional[str] = Query(None, description="Authentication token"),
-    components: Optional[str] = Query(None, description="Comma-separated list of component subscriptions")
+    components: Optional[str] = Query(None, description="Comma-separated list of component subscriptions"),
 ):
     """
     Main BI Dashboard WebSocket endpoint.
@@ -71,16 +73,18 @@ async def dashboard_websocket(
         logger.info(f"Dashboard WebSocket connection requested for location: {location_id}")
 
         # Parse component subscriptions
-        component_list = components.split(',') if components else [
-            'executive_kpis', 'revenue_metrics', 'lead_metrics', 'system_health'
-        ]
+        component_list = (
+            components.split(",")
+            if components
+            else ["executive_kpis", "revenue_metrics", "lead_metrics", "system_health"]
+        )
 
         # Handle BI WebSocket connection with dashboard-specific channels
         await bi_websocket_manager.handle_bi_websocket(
             websocket=websocket,
             location_id=location_id,
-            channels=['dashboard', 'alerts', 'system_health'],
-            components=component_list
+            channels=["dashboard", "alerts", "system_health"],
+            components=component_list,
         )
 
     except WebSocketDisconnect:
@@ -92,12 +96,13 @@ async def dashboard_websocket(
         except:
             pass
 
+
 @router.websocket("/ws/bi/revenue-intelligence/{location_id}")
 async def revenue_intelligence_websocket(
     websocket: WebSocket,
     location_id: str = Path(..., description="Location ID for revenue intelligence"),
     token: Optional[str] = Query(None, description="Authentication token"),
-    forecast_days: Optional[int] = Query(90, description="Forecast period in days")
+    forecast_days: Optional[int] = Query(90, description="Forecast period in days"),
 ):
     """
     Revenue Intelligence WebSocket endpoint.
@@ -119,15 +124,18 @@ async def revenue_intelligence_websocket(
 
         # Initialize revenue intelligence components
         revenue_components = [
-            'revenue_forecasting', 'commission_tracking', 'pipeline_analytics',
-            'predictive_revenue', 'jorge_commission'
+            "revenue_forecasting",
+            "commission_tracking",
+            "pipeline_analytics",
+            "predictive_revenue",
+            "jorge_commission",
         ]
 
         await bi_websocket_manager.handle_bi_websocket(
             websocket=websocket,
             location_id=location_id,
-            channels=['revenue_intelligence', 'analytics'],
-            components=revenue_components
+            channels=["revenue_intelligence", "analytics"],
+            components=revenue_components,
         )
 
     except WebSocketDisconnect:
@@ -139,12 +147,13 @@ async def revenue_intelligence_websocket(
         except:
             pass
 
+
 @router.websocket("/ws/bot-performance/{location_id}")
 async def bot_performance_websocket(
     websocket: WebSocket,
     location_id: str = Path(..., description="Location ID for bot performance"),
     token: Optional[str] = Query(None, description="Authentication token"),
-    bot_types: Optional[str] = Query(None, description="Comma-separated list of bot types to monitor")
+    bot_types: Optional[str] = Query(None, description="Comma-separated list of bot types to monitor"),
 ):
     """
     Bot Performance Matrix WebSocket endpoint.
@@ -166,21 +175,24 @@ async def bot_performance_websocket(
         logger.info(f"Bot Performance WebSocket connection for location: {location_id}")
 
         # Parse bot type filters
-        bot_filter = bot_types.split(',') if bot_types else [
-            'jorge-seller', 'jorge-buyer', 'lead-bot', 'intent-decoder'
-        ]
+        bot_filter = (
+            bot_types.split(",") if bot_types else ["jorge-seller", "jorge-buyer", "lead-bot", "intent-decoder"]
+        )
 
         # Bot performance specific components
         bot_components = [
-            'bot_performance_matrix', 'coordination_metrics', 'bot_health',
-            'qualification_tracking', 'sequence_monitoring'
+            "bot_performance_matrix",
+            "coordination_metrics",
+            "bot_health",
+            "qualification_tracking",
+            "sequence_monitoring",
         ]
 
         await bi_websocket_manager.handle_bi_websocket(
             websocket=websocket,
             location_id=location_id,
-            channels=['bot_performance', 'alerts'],
-            components=bot_components
+            channels=["bot_performance", "alerts"],
+            components=bot_components,
         )
 
     except WebSocketDisconnect:
@@ -192,12 +204,13 @@ async def bot_performance_websocket(
         except:
             pass
 
+
 @router.websocket("/ws/business-intelligence/{location_id}")
 async def business_intelligence_websocket(
     websocket: WebSocket,
     location_id: str = Path(..., description="Location ID for business intelligence"),
     token: Optional[str] = Query(None, description="Authentication token"),
-    intelligence_types: Optional[str] = Query(None, description="Intelligence types to subscribe to")
+    intelligence_types: Optional[str] = Query(None, description="Intelligence types to subscribe to"),
 ):
     """
     Business Intelligence WebSocket endpoint.
@@ -219,21 +232,23 @@ async def business_intelligence_websocket(
         logger.info(f"Business Intelligence WebSocket connection for location: {location_id}")
 
         # Parse intelligence type filters
-        intel_types = intelligence_types.split(',') if intelligence_types else [
-            'executive_insights', 'market_analysis', 'competitive_intel', 'performance_trends'
-        ]
+        intel_types = (
+            intelligence_types.split(",")
+            if intelligence_types
+            else ["executive_insights", "market_analysis", "competitive_intel", "performance_trends"]
+        )
 
         # Business intelligence specific components
         bi_components = [
-            'executive_dashboard', 'market_intelligence', 'competitive_analysis',
-            'performance_insights', 'predictive_analytics'
+            "executive_dashboard",
+            "market_intelligence",
+            "competitive_analysis",
+            "performance_insights",
+            "predictive_analytics",
         ]
 
         await bi_websocket_manager.handle_bi_websocket(
-            websocket=websocket,
-            location_id=location_id,
-            channels=['analytics', 'drill_down'],
-            components=bi_components
+            websocket=websocket, location_id=location_id, channels=["analytics", "drill_down"], components=bi_components
         )
 
     except WebSocketDisconnect:
@@ -245,12 +260,13 @@ async def business_intelligence_websocket(
         except:
             pass
 
+
 @router.websocket("/ws/ai-concierge/{location_id}")
 async def ai_concierge_websocket(
     websocket: WebSocket,
     location_id: str = Path(..., description="Location ID for AI concierge"),
     token: Optional[str] = Query(None, description="Authentication token"),
-    concierge_features: Optional[str] = Query(None, description="AI concierge features to enable")
+    concierge_features: Optional[str] = Query(None, description="AI concierge features to enable"),
 ):
     """
     AI Concierge Intelligence WebSocket endpoint.
@@ -272,21 +288,26 @@ async def ai_concierge_websocket(
         logger.info(f"AI Concierge WebSocket connection for location: {location_id}")
 
         # Parse concierge feature filters
-        features = concierge_features.split(',') if concierge_features else [
-            'proactive_coaching', 'conversation_quality', 'strategic_insights', 'performance_guidance'
-        ]
+        features = (
+            concierge_features.split(",")
+            if concierge_features
+            else ["proactive_coaching", "conversation_quality", "strategic_insights", "performance_guidance"]
+        )
 
         # AI concierge specific components
         concierge_components = [
-            'proactive_insights', 'coaching_engine', 'conversation_analysis',
-            'strategy_recommendations', 'quality_monitoring'
+            "proactive_insights",
+            "coaching_engine",
+            "conversation_analysis",
+            "strategy_recommendations",
+            "quality_monitoring",
         ]
 
         await bi_websocket_manager.handle_bi_websocket(
             websocket=websocket,
             location_id=location_id,
-            channels=['analytics', 'alerts'],
-            components=concierge_components
+            channels=["analytics", "alerts"],
+            components=concierge_components,
         )
 
     except WebSocketDisconnect:
@@ -298,12 +319,13 @@ async def ai_concierge_websocket(
         except:
             pass
 
+
 @router.websocket("/ws/analytics/advanced/{location_id}")
 async def advanced_analytics_websocket(
     websocket: WebSocket,
     location_id: str = Path(..., description="Location ID for advanced analytics"),
     token: Optional[str] = Query(None, description="Authentication token"),
-    analytics_modules: Optional[str] = Query(None, description="Analytics modules to activate")
+    analytics_modules: Optional[str] = Query(None, description="Analytics modules to activate"),
 ):
     """
     Advanced Analytics WebSocket endpoint.
@@ -325,21 +347,26 @@ async def advanced_analytics_websocket(
         logger.info(f"Advanced Analytics WebSocket connection for location: {location_id}")
 
         # Parse analytics module filters
-        modules = analytics_modules.split(',') if analytics_modules else [
-            'shap_analysis', 'predictive_modeling', 'market_intelligence', 'ml_insights'
-        ]
+        modules = (
+            analytics_modules.split(",")
+            if analytics_modules
+            else ["shap_analysis", "predictive_modeling", "market_intelligence", "ml_insights"]
+        )
 
         # Advanced analytics specific components
         advanced_components = [
-            'shap_explainability', 'ml_performance', 'market_analytics',
-            'predictive_insights', 'advanced_metrics'
+            "shap_explainability",
+            "ml_performance",
+            "market_analytics",
+            "predictive_insights",
+            "advanced_metrics",
         ]
 
         await bi_websocket_manager.handle_bi_websocket(
             websocket=websocket,
             location_id=location_id,
-            channels=['analytics', 'drill_down'],
-            components=advanced_components
+            channels=["analytics", "drill_down"],
+            components=advanced_components,
         )
 
     except WebSocketDisconnect:
@@ -351,7 +378,9 @@ async def advanced_analytics_websocket(
         except:
             pass
 
+
 # Administrative endpoints for BI WebSocket management
+
 
 @router.get("/ws/bi/health")
 async def bi_websocket_health():
@@ -363,7 +392,7 @@ async def bi_websocket_health():
     """
     try:
         # Check if BI WebSocket manager exists and is operational
-        if hasattr(bi_websocket_manager, 'is_running'):
+        if hasattr(bi_websocket_manager, "is_running"):
             is_running = bi_websocket_manager.is_running
 
             # Try to start if not running
@@ -379,7 +408,7 @@ async def bi_websocket_health():
 
         # Get metrics safely
         try:
-            metrics = bi_websocket_manager.get_metrics() if hasattr(bi_websocket_manager, 'get_metrics') else {}
+            metrics = bi_websocket_manager.get_metrics() if hasattr(bi_websocket_manager, "get_metrics") else {}
         except Exception as metrics_error:
             logger.warning(f"Could not get BI WebSocket metrics: {metrics_error}")
             metrics = {}
@@ -394,7 +423,7 @@ async def bi_websocket_health():
             "background_tasks_running": metrics.get("background_tasks_running", 0),
             "is_running": is_running,
             "last_check": datetime.now().isoformat(),
-            "version": "Phase 7 BI Integration"
+            "version": "Phase 7 BI Integration",
         }
 
         return health_status
@@ -405,8 +434,9 @@ async def bi_websocket_health():
             "status": "unhealthy",
             "error": str(e),
             "service": "BI WebSocket Real-Time Service",
-            "last_check": datetime.now().isoformat()
+            "last_check": datetime.now().isoformat(),
         }
+
 
 @router.get("/ws/bi/metrics")
 async def bi_websocket_metrics():
@@ -418,14 +448,12 @@ async def bi_websocket_metrics():
     """
     try:
         metrics = bi_websocket_manager.get_metrics()
-        return {
-            "timestamp": datetime.now().isoformat(),
-            "metrics": metrics
-        }
+        return {"timestamp": datetime.now().isoformat(), "metrics": metrics}
 
     except Exception as e:
         logger.error(f"Failed to get BI WebSocket metrics: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get metrics: {str(e)}")
+
 
 # Initialize BI WebSocket manager on module load
 async def initialize_bi_websocket_services():

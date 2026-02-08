@@ -1,41 +1,50 @@
 """
 RAG Knowledge Base Uploader - Allow AI to reference specific documents
 """
-import streamlit as st
-from typing import List, Dict
-from pathlib import Path
+
 import hashlib
+from pathlib import Path
+from typing import Dict, List
+
+import streamlit as st
+
 
 def render_knowledge_base_uploader():
     """
     Render the RAG knowledge base uploader component
     Allows uploading PDFs, docs, and text files for AI context
     """
-    st.markdown('### 📚 Knowledge Base (RAG)')
-    st.markdown('*Upload neighborhood PDFs, HOA docs, or market reports for AI to reference*')
-    if 'knowledge_base' not in st.session_state:
+    st.markdown("### 📚 Knowledge Base (RAG)")
+    st.markdown("*Upload neighborhood PDFs, HOA docs, or market reports for AI to reference*")
+    if "knowledge_base" not in st.session_state:
         st.session_state.knowledge_base = []
     col_upload, col_status = st.columns([2, 1])
     with col_upload:
-        uploaded_files = st.file_uploader('Upload Documents', type=['pdf', 'txt', 'docx', 'md'], accept_multiple_files=True, help='AI will use these documents to answer specific questions', key='kb_uploader')
+        uploaded_files = st.file_uploader(
+            "Upload Documents",
+            type=["pdf", "txt", "docx", "md"],
+            accept_multiple_files=True,
+            help="AI will use these documents to answer specific questions",
+            key="kb_uploader",
+        )
         if uploaded_files:
             for file in uploaded_files:
                 file_hash = hashlib.md5(file.read()).hexdigest()
                 file.seek(0)
-                if not any((doc['hash'] == file_hash for doc in st.session_state.knowledge_base)):
+                if not any((doc["hash"] == file_hash for doc in st.session_state.knowledge_base)):
                     doc_info = process_document(file, file_hash)
                     st.session_state.knowledge_base.append(doc_info)
                     st.success(f"✅ '{file.name}' indexed for AI recall!")
                 else:
                     st.info(f"ℹ️ '{file.name}' already in knowledge base")
     with col_status:
-        st.metric('Documents Indexed', len(st.session_state.knowledge_base))
+        st.metric("Documents Indexed", len(st.session_state.knowledge_base))
         if st.session_state.knowledge_base:
-            total_size = sum((doc['size'] for doc in st.session_state.knowledge_base))
-            st.caption(f'📦 Total: {total_size / 1024:.1f} KB')
-    st.markdown('---')
+            total_size = sum((doc["size"] for doc in st.session_state.knowledge_base))
+            st.caption(f"📦 Total: {total_size / 1024:.1f} KB")
+    st.markdown("---")
     if st.session_state.knowledge_base:
-        st.markdown('#### 📖 Indexed Documents')
+        st.markdown("#### 📖 Indexed Documents")
         for idx, doc in enumerate(st.session_state.knowledge_base):
             with st.expander(f"{doc['icon']} {doc['name']}", expanded=False):
                 col_info, col_action = st.columns([3, 1])
@@ -44,85 +53,101 @@ def render_knowledge_base_uploader():
                     st.markdown(f"**Size**: {doc['size'] / 1024:.1f} KB")
                     st.markdown(f"**Chunks**: {doc['chunks']} segments")
                     st.markdown(f"**Usage**: {doc['usage_count']} times referenced by AI")
-                    if doc.get('preview'):
+                    if doc.get("preview"):
                         st.caption(f"Preview: {doc['preview'][:150]}...")
                 with col_action:
-                    if st.button('🗑️ Remove', key=f'remove_{idx}', use_container_width=True):
+                    if st.button("🗑️ Remove", key=f"remove_{idx}", use_container_width=True):
                         st.session_state.knowledge_base.pop(idx)
-                        st.toast(f"Removed {doc['name']}", icon='🗑️')
+                        st.toast(f"Removed {doc['name']}", icon="🗑️")
                         st.rerun()
-        if st.button('🗑️ Clear All Documents', type='secondary'):
+        if st.button("🗑️ Clear All Documents", type="secondary"):
             st.session_state.knowledge_base = []
-            st.toast('Knowledge base cleared', icon='✅')
+            st.toast("Knowledge base cleared", icon="✅")
             st.rerun()
     else:
-        st.info('📂 No documents uploaded yet. Upload PDFs or docs for the AI to reference.')
-    st.markdown('---')
-    with st.expander('ℹ️ How RAG Knowledge Base Works'):
-        st.markdown('\n        **What is RAG?**  \n        Retrieval-Augmented Generation allows the AI to search uploaded documents \n        and include relevant facts in its responses.\n        \n        **Example Use Cases:**\n        - **HOA Rules**: "Are dogs allowed in the Avery Ranch HOA?"  \n          → AI searches HOA PDF and answers accurately\n        \n        - **School Zones**: "What elementary school serves this address?"  \n          → AI references school district map\n        \n        - **Local Taxes**: "What\'s the property tax rate in this area?"  \n          → AI pulls from uploaded tax documents\n        \n        **Supported Formats:**\n        - 📄 PDF (most common for HOA docs, listings)\n        - 📝 TXT/MD (market reports, notes)\n        - 📃 DOCX (neighborhood guides)\n        \n        **Privacy:**  \n        Documents are stored in your session only. Not shared between users.\n        ')
+        st.info("📂 No documents uploaded yet. Upload PDFs or docs for the AI to reference.")
+    st.markdown("---")
+    with st.expander("ℹ️ How RAG Knowledge Base Works"):
+        st.markdown(
+            '\n        **What is RAG?**  \n        Retrieval-Augmented Generation allows the AI to search uploaded documents \n        and include relevant facts in its responses.\n        \n        **Example Use Cases:**\n        - **HOA Rules**: "Are dogs allowed in the Avery Ranch HOA?"  \n          → AI searches HOA PDF and answers accurately\n        \n        - **School Zones**: "What elementary school serves this address?"  \n          → AI references school district map\n        \n        - **Local Taxes**: "What\'s the property tax rate in this area?"  \n          → AI pulls from uploaded tax documents\n        \n        **Supported Formats:**\n        - 📄 PDF (most common for HOA docs, listings)\n        - 📝 TXT/MD (market reports, notes)\n        - 📃 DOCX (neighborhood guides)\n        \n        **Privacy:**  \n        Documents are stored in your session only. Not shared between users.\n        '
+        )
+
 
 def process_document(file, file_hash: str) -> Dict:
     """
     Process uploaded document and prepare for RAG
-    
+
     In production, this would:
     1. Extract text from PDF/DOCX
     2. Chunk text into segments
     3. Generate embeddings
     4. Store in vector database (Pinecone/ChromaDB)
-    
+
     For demo, we simulate this process
     """
     try:
-        content = file.read().decode('utf-8') if file.type == 'text/plain' else file.read()
+        content = file.read().decode("utf-8") if file.type == "text/plain" else file.read()
         file.seek(0)
     except:
         content = file.read()
     file_type = file.type
-    if 'pdf' in file_type:
-        icon = '📄'
-    elif 'word' in file_type or 'docx' in file_type:
-        icon = '📃'
+    if "pdf" in file_type:
+        icon = "📄"
+    elif "word" in file_type or "docx" in file_type:
+        icon = "📃"
     else:
-        icon = '📝'
+        icon = "📝"
     content_length = len(content) if isinstance(content, str) else len(content)
     estimated_chunks = max(1, content_length // 1000)
     if isinstance(content, str):
         preview = content[:500]
     else:
-        preview = 'Binary content (PDF/DOCX)'
-    return {'name': file.name, 'type': file_type, 'size': file.size, 'hash': file_hash, 'chunks': estimated_chunks, 'usage_count': 0, 'icon': icon, 'preview': preview, 'uploaded_at': str(st.session_state.get('current_time', 'now'))}
+        preview = "Binary content (PDF/DOCX)"
+    return {
+        "name": file.name,
+        "type": file_type,
+        "size": file.size,
+        "hash": file_hash,
+        "chunks": estimated_chunks,
+        "usage_count": 0,
+        "icon": icon,
+        "preview": preview,
+        "uploaded_at": str(st.session_state.get("current_time", "now")),
+    }
+
 
 @st.cache_data(ttl=300)
 def get_knowledge_base_context(query: str) -> str:
     """
     Retrieve relevant context from knowledge base for a query
-    
+
     In production, this would:
     1. Generate embedding for query
     2. Search vector database
     3. Return top-k most relevant chunks
-    
+
     For demo, we return a simulated response
     """
-    if 'knowledge_base' not in st.session_state or not st.session_state.knowledge_base:
-        return ''
+    if "knowledge_base" not in st.session_state or not st.session_state.knowledge_base:
+        return ""
     relevant_docs = []
     query_lower = query.lower()
     for doc in st.session_state.knowledge_base:
-        if any((keyword in query_lower for keyword in ['hoa', 'rules', 'breed', 'pet'])):
-            if 'hoa' in doc['name'].lower():
+        if any((keyword in query_lower for keyword in ["hoa", "rules", "breed", "pet"])):
+            if "hoa" in doc["name"].lower():
                 relevant_docs.append(doc)
-                doc['usage_count'] += 1
-        if any((keyword in query_lower for keyword in ['school', 'education', 'elementary'])):
-            if 'school' in doc['name'].lower():
+                doc["usage_count"] += 1
+        if any((keyword in query_lower for keyword in ["school", "education", "elementary"])):
+            if "school" in doc["name"].lower():
                 relevant_docs.append(doc)
-                doc['usage_count'] += 1
-        if any((keyword in query_lower for keyword in ['tax', 'rate', 'property tax'])):
-            if 'tax' in doc['name'].lower():
+                doc["usage_count"] += 1
+        if any((keyword in query_lower for keyword in ["tax", "rate", "property tax"])):
+            if "tax" in doc["name"].lower():
                 relevant_docs.append(doc)
-                doc['usage_count'] += 1
+                doc["usage_count"] += 1
     if relevant_docs:
-        context = f"[Retrieved from {len(relevant_docs)} document(s): {', '.join((d['name'] for d in relevant_docs))}]\n\n"
+        context = (
+            f"[Retrieved from {len(relevant_docs)} document(s): {', '.join((d['name'] for d in relevant_docs))}]\n\n"
+        )
         return context
-    return ''
+    return ""

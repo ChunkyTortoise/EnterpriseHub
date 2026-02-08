@@ -1,41 +1,48 @@
 import asyncio
 import json
-import uuid
-import time
 import threading
-from uuid import uuid4
-from typing import Dict, Any, Literal, List, Optional, Tuple
-from datetime import datetime, timedelta, timezone
-from dataclasses import dataclass
+import time
+import uuid
 from collections import OrderedDict
-from langgraph.graph import StateGraph, END
+from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Literal, Optional, Tuple
+from uuid import uuid4
 
-from ghl_real_estate_ai.models.workflows import LeadFollowUpState
-from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
+from langgraph.graph import END, StateGraph
+
 from ghl_real_estate_ai.agents.cma_generator import CMAGenerator
-from ghl_real_estate_ai.services.ghost_followup_engine import get_ghost_followup_engine, GhostState
-from ghl_real_estate_ai.utils.pdf_renderer import PDFRenderer, PDFGenerationError
-from ghl_real_estate_ai.integrations.retell import RetellClient
-from ghl_real_estate_ai.integrations.lyrio import LyrioClient
+from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
+from ghl_real_estate_ai.api.schemas.ghl import MessageType
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.integrations.lyrio import LyrioClient
+from ghl_real_estate_ai.integrations.retell import RetellClient
+from ghl_real_estate_ai.models.workflows import LeadFollowUpState
 from ghl_real_estate_ai.services.agent_state_sync import sync_service
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
-from ghl_real_estate_ai.services.lead_sequence_state_service import get_sequence_service, SequenceDay, LeadSequenceState, SequenceStatus
-from ghl_real_estate_ai.services.lead_sequence_scheduler import get_lead_scheduler
-from ghl_real_estate_ai.api.schemas.ghl import MessageType
-from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
-from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
-from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
+from ghl_real_estate_ai.services.ghost_followup_engine import GhostState, get_ghost_followup_engine
 from ghl_real_estate_ai.services.jorge.ab_testing_service import ABTestingService
+from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
+from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
+from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
+from ghl_real_estate_ai.services.lead_sequence_scheduler import get_lead_scheduler
+from ghl_real_estate_ai.services.lead_sequence_state_service import (
+    LeadSequenceState,
+    SequenceDay,
+    SequenceStatus,
+    get_sequence_service,
+)
+from ghl_real_estate_ai.utils.pdf_renderer import PDFGenerationError, PDFRenderer
 
 # Enhanced Features (Track 3.1 Integration)
 try:
     from bots.shared.ml_analytics_engine import (
-        MLAnalyticsEngine,
-        LeadJourneyPrediction,
         ConversionProbabilityAnalysis,
-        TouchpointOptimization
+        LeadJourneyPrediction,
+        MLAnalyticsEngine,
+        TouchpointOptimization,
     )
+
     TRACK3_ML_AVAILABLE = True
 except ImportError:
     TRACK3_ML_AVAILABLE = False
@@ -44,8 +51,9 @@ logger = get_logger(__name__)
 
 # Phase 3.3 Bot Intelligence Middleware Integration
 try:
-    from ghl_real_estate_ai.services.bot_intelligence_middleware import get_bot_intelligence_middleware
     from ghl_real_estate_ai.models.intelligence_context import BotIntelligenceContext
+    from ghl_real_estate_ai.services.bot_intelligence_middleware import get_bot_intelligence_middleware
+
     BOT_INTELLIGENCE_AVAILABLE = True
 except ImportError as e:
     logger.warning(f"Bot Intelligence Middleware unavailable: {e}")
@@ -55,9 +63,11 @@ except ImportError as e:
 # ENHANCED FEATURES DATACLASSES
 # ================================
 
+
 @dataclass
 class ResponsePattern:
     """Tracks lead response patterns for optimization"""
+
     avg_response_hours: float
     response_count: int
     channel_preferences: Dict[str, float]  # SMS, Email, Voice, WhatsApp
@@ -65,18 +75,22 @@ class ResponsePattern:
     best_contact_times: List[int]  # Hours of day (0-23)
     message_length_preference: str  # "brief", "detailed"
 
+
 @dataclass
 class SequenceOptimization:
     """Optimized sequence timing based on behavioral patterns"""
+
     day_3: int
     day_7: int
     day_14: int
     day_30: int
     channel_sequence: List[str]  # Ordered list of channels to use
 
+
 @dataclass
 class LeadBotConfig:
     """Configuration for Lead Bot enhanced features"""
+
     enable_predictive_analytics: bool = False
     enable_behavioral_optimization: bool = False
     enable_personality_adaptation: bool = False
@@ -198,8 +212,7 @@ class TTLLRUCache:
         with self._lock:
             current_time = datetime.now().timestamp()
             expired_keys = [
-                key for key, (_, timestamp) in self._cache.items()
-                if current_time - timestamp > self._ttl_seconds
+                key for key, (_, timestamp) in self._cache.items() if current_time - timestamp > self._ttl_seconds
             ]
             for key in expired_keys:
                 del self._cache[key]
@@ -247,10 +260,7 @@ class BehavioralAnalyticsEngine:
     CACHE_TTL_SECONDS = 3600  # 60 minutes
 
     def __init__(self):
-        self._patterns_cache = TTLLRUCache(
-            max_entries=self.CACHE_MAX_ENTRIES,
-            ttl_seconds=self.CACHE_TTL_SECONDS
-        )
+        self._patterns_cache = TTLLRUCache(max_entries=self.CACHE_MAX_ENTRIES, ttl_seconds=self.CACHE_TTL_SECONDS)
         logger.info(
             f"BehavioralAnalyticsEngine initialized with TTL cache "
             f"(max_entries={self.CACHE_MAX_ENTRIES}, ttl={self.CACHE_TTL_SECONDS}s)"
@@ -277,26 +287,26 @@ class BehavioralAnalyticsEngine:
         response_times = []
         for i in range(1, len(conversation_history)):
             current_msg = conversation_history[i]
-            prev_msg = conversation_history[i-1]
+            prev_msg = conversation_history[i - 1]
 
             # Real timestamp analysis using conversation timestamps
-            if current_msg.get('role') == 'user' and prev_msg.get('role') == 'assistant':
-                current_ts = current_msg.get('timestamp')
-                prev_ts = prev_msg.get('timestamp')
-                
+            if current_msg.get("role") == "user" and prev_msg.get("role") == "assistant":
+                current_ts = current_msg.get("timestamp")
+                prev_ts = prev_msg.get("timestamp")
+
                 if current_ts and prev_ts:
                     try:
                         # Parse timestamps (support ISO format and Unix timestamps)
                         if isinstance(current_ts, (int, float)):
                             current_dt = datetime.fromtimestamp(current_ts, tz=timezone.utc)
                         else:
-                            current_dt = datetime.fromisoformat(str(current_ts).replace('Z', '+00:00'))
-                        
+                            current_dt = datetime.fromisoformat(str(current_ts).replace("Z", "+00:00"))
+
                         if isinstance(prev_ts, (int, float)):
                             prev_dt = datetime.fromtimestamp(prev_ts, tz=timezone.utc)
                         else:
-                            prev_dt = datetime.fromisoformat(str(prev_ts).replace('Z', '+00:00'))
-                        
+                            prev_dt = datetime.fromisoformat(str(prev_ts).replace("Z", "+00:00"))
+
                         # Calculate hours between messages
                         delta_hours = (current_dt - prev_dt).total_seconds() / 3600
                         if delta_hours > 0:  # Only count positive deltas
@@ -320,21 +330,21 @@ class BehavioralAnalyticsEngine:
         channel_prefs = await self._get_channel_preferences(lead_id, conversation_history)
 
         # Analyze message length preference
-        avg_msg_length = sum(len(m.get('content', '').split()) for m in conversation_history if m.get('role') == 'user')
-        avg_msg_length = avg_msg_length / max(1, len([m for m in conversation_history if m.get('role') == 'user']))
+        avg_msg_length = sum(len(m.get("content", "").split()) for m in conversation_history if m.get("role") == "user")
+        avg_msg_length = avg_msg_length / max(1, len([m for m in conversation_history if m.get("role") == "user"]))
 
         length_pref = "brief" if avg_msg_length < 10 else "detailed"
 
         # Calculate best contact times from engagement patterns
         best_times = self._calculate_best_contact_times(conversation_history)
-        
+
         pattern = ResponsePattern(
             avg_response_hours=avg_response_hours,
-            response_count=len([m for m in conversation_history if m.get('role') == 'user']),
+            response_count=len([m for m in conversation_history if m.get("role") == "user"]),
             channel_preferences=channel_prefs,
             engagement_velocity=velocity,
             best_contact_times=best_times,
-            message_length_preference=length_pref
+            message_length_preference=length_pref,
         )
 
         # Store in cache (handles LRU eviction automatically)
@@ -352,94 +362,90 @@ class BehavioralAnalyticsEngine:
     async def _get_channel_preferences(self, lead_id: str, conversation_history: List[Dict]) -> Dict[str, float]:
         """
         Get channel preferences from GHL contact data or infer from conversation history.
-        
+
         Returns:
             Dict mapping channel names to preference scores (0.0-1.0)
         """
-        channel_prefs = {
-            "SMS": 0.5,
-            "Email": 0.5,
-            "Voice": 0.5,
-            "WhatsApp": 0.3
-        }
-        
+        channel_prefs = {"SMS": 0.5, "Email": 0.5, "Voice": 0.5, "WhatsApp": 0.3}
+
         try:
             # Try to fetch contact preferences from GHL
             from ghl_real_estate_ai.services.enhanced_ghl_client import EnhancedGHLClient
+
             async with EnhancedGHLClient() as ghl_client:
                 contact = await ghl_client.get_contact(lead_id)
                 if contact:
                     # Extract channel preferences from contact custom fields
-                    custom_fields = getattr(contact, 'custom_fields', {}) or {}
-                    
+                    custom_fields = getattr(contact, "custom_fields", {}) or {}
+
                     # Check for explicit channel preferences
-                    if custom_fields.get('preferred_channel'):
-                        preferred = custom_fields['preferred_channel'].upper()
+                    if custom_fields.get("preferred_channel"):
+                        preferred = custom_fields["preferred_channel"].upper()
                         if preferred in channel_prefs:
                             channel_prefs[preferred] = 0.9
-                    
+
                     # Check DND (Do Not Disturb) settings
-                    if getattr(contact, 'dnd', False):
+                    if getattr(contact, "dnd", False):
                         channel_prefs["Voice"] = 0.1
-                    
+
                     # Check email opt-out
-                    if getattr(contact, 'email_opt_out', False):
+                    if getattr(contact, "email_opt_out", False):
                         channel_prefs["Email"] = 0.0
-                    
+
                     # Check SMS opt-out
-                    if getattr(contact, 'sms_opt_out', False):
+                    if getattr(contact, "sms_opt_out", False):
                         channel_prefs["SMS"] = 0.0
-                        
+
         except Exception as e:
             logger.debug(f"Could not fetch GHL contact preferences for {lead_id}: {e}")
-        
+
         # Infer preferences from conversation history
         channel_counts = {"SMS": 0, "Email": 0, "Voice": 0, "WhatsApp": 0}
         for msg in conversation_history:
-            channel = msg.get('channel', '').upper()
+            channel = msg.get("channel", "").upper()
             if channel in channel_counts:
                 channel_counts[channel] += 1
-        
+
         total_messages = sum(channel_counts.values())
         if total_messages > 0:
             for channel, count in channel_counts.items():
                 # Blend GHL preferences with observed behavior (70% observed, 30% GHL)
                 observed_pref = count / total_messages
                 channel_prefs[channel] = 0.7 * observed_pref + 0.3 * channel_prefs[channel]
-        
+
         return channel_prefs
 
     def _calculate_best_contact_times(self, conversation_history: List[Dict]) -> List[int]:
         """
         Calculate best contact times based on engagement patterns.
-        
+
         Analyzes when the lead typically responds to determine optimal contact hours.
-        
+
         Returns:
             List of hours (0-23) when lead is most responsive
         """
         hour_engagement = {}  # hour -> response count
-        
+
         for msg in conversation_history:
-            if msg.get('role') == 'user':
-                timestamp = msg.get('timestamp')
+            if msg.get("role") == "user":
+                timestamp = msg.get("timestamp")
                 if timestamp:
                     try:
                         if isinstance(timestamp, (int, float)):
                             dt = datetime.fromtimestamp(timestamp, tz=timezone.utc)
                         else:
-                            dt = datetime.fromisoformat(str(timestamp).replace('Z', '+00:00'))
-                        
+                            dt = datetime.fromisoformat(str(timestamp).replace("Z", "+00:00"))
+
                         hour = dt.hour
                         hour_engagement[hour] = hour_engagement.get(hour, 0) + 1
                     except (ValueError, TypeError):
                         continue
-        
+
         if hour_engagement:
             # Sort hours by engagement count and return top 3
             sorted_hours = sorted(hour_engagement.items(), key=lambda x: x[1], reverse=True)
             best_times = [hour for hour, _ in sorted_hours[:3]]
-            
+
             # Ensure we have at least 3 times, pad with business hours defaults
             default_times = [9, 14, 18]
             while len(best_times) < 3:
@@ -447,9 +453,9 @@ class BehavioralAnalyticsEngine:
                     if default not in best_times:
                         best_times.append(default)
                         break
-            
+
             return best_times[:3]
-        
+
         # Default to standard business hours if no engagement data
         return [9, 14, 18]
 
@@ -460,40 +466,33 @@ class BehavioralAnalyticsEngine:
         if pattern.engagement_velocity == "fast":
             # Accelerate sequence for fast responders
             optimization = SequenceOptimization(
-                day_3=1,    # Contact tomorrow
-                day_7=3,    # Contact in 3 days
-                day_14=7,   # Contact in 1 week
+                day_3=1,  # Contact tomorrow
+                day_7=3,  # Contact in 3 days
+                day_14=7,  # Contact in 1 week
                 day_30=14,  # Contact in 2 weeks
-                channel_sequence=["SMS", "Voice", "SMS", "Email"]
+                channel_sequence=["SMS", "Voice", "SMS", "Email"],
             )
         elif pattern.engagement_velocity == "slow":
             # Extend intervals for slow responders
             optimization = SequenceOptimization(
-                day_3=5,    # Wait 5 days
-                day_7=14,   # Wait 2 weeks
+                day_3=5,  # Wait 5 days
+                day_7=14,  # Wait 2 weeks
                 day_14=21,  # Wait 3 weeks
                 day_30=45,  # Wait 6+ weeks
-                channel_sequence=["Email", "SMS", "Voice", "SMS"]
+                channel_sequence=["Email", "SMS", "Voice", "SMS"],
             )
         else:
             # Standard intervals for moderate responders
             optimization = SequenceOptimization(
-                day_3=3,
-                day_7=7,
-                day_14=14,
-                day_30=30,
-                channel_sequence=["SMS", "Email", "Voice", "SMS"]
+                day_3=3, day_7=7, day_14=14, day_30=30, channel_sequence=["SMS", "Email", "Voice", "SMS"]
             )
 
         # Adjust channel sequence based on preferences
-        sorted_channels = sorted(
-            pattern.channel_preferences.items(),
-            key=lambda x: x[1],
-            reverse=True
-        )
+        sorted_channels = sorted(pattern.channel_preferences.items(), key=lambda x: x[1], reverse=True)
         optimization.channel_sequence = [ch[0] for ch in sorted_channels]
 
         return optimization
+
 
 class PersonalityAdapter:
     """Adapts messaging based on lead personality and preferences"""
@@ -504,26 +503,26 @@ class PersonalityAdapter:
                 "style": "data-driven",
                 "tone": "professional",
                 "format": "bullet points",
-                "keywords": ["analysis", "data", "research", "comparison"]
+                "keywords": ["analysis", "data", "research", "comparison"],
             },
             "relationship": {
                 "style": "personal",
                 "tone": "warm",
                 "format": "conversational",
-                "keywords": ["understand", "help", "partnership", "together"]
+                "keywords": ["understand", "help", "partnership", "together"],
             },
             "results": {
                 "style": "direct",
                 "tone": "urgent",
                 "format": "brief",
-                "keywords": ["action", "results", "quickly", "efficiently"]
+                "keywords": ["action", "results", "quickly", "efficiently"],
             },
             "security": {
                 "style": "cautious",
                 "tone": "reassuring",
                 "format": "detailed",
-                "keywords": ["safe", "secure", "guaranteed", "protected"]
-            }
+                "keywords": ["safe", "secure", "guaranteed", "protected"],
+            },
         }
 
     async def detect_personality(self, conversation_history: List[Dict]) -> str:
@@ -536,7 +535,9 @@ class PersonalityAdapter:
             personality_scores[personality] = score
 
         # Return highest scoring personality or default to 'relationship'
-        return max(personality_scores, key=personality_scores.get) if any(personality_scores.values()) else "relationship"
+        return (
+            max(personality_scores, key=personality_scores.get) if any(personality_scores.values()) else "relationship"
+        )
 
     async def adapt_message(self, base_message: str, personality_type: str, pattern: ResponsePattern) -> str:
         """Adapt message based on personality type and response patterns"""
@@ -545,8 +546,8 @@ class PersonalityAdapter:
         # Adjust message length based on preference
         if pattern.message_length_preference == "brief" and profile["format"] != "brief":
             # Shorten message for brief preference
-            sentences = base_message.split('. ')
-            adapted_message = '. '.join(sentences[:2]) + '.'
+            sentences = base_message.split(". ")
+            adapted_message = ". ".join(sentences[:2]) + "."
         else:
             adapted_message = base_message
 
@@ -562,6 +563,7 @@ class PersonalityAdapter:
 
         return adapted_message
 
+
 class TemperaturePredictionEngine:
     """Predicts lead temperature changes and provides early warnings"""
 
@@ -572,7 +574,7 @@ class TemperaturePredictionEngine:
         """Predict lead temperature trend and provide early warnings"""
 
         # Store current temperature score
-        current_temp = (current_scores.get('frs_score', 0) + current_scores.get('pcs_score', 0)) / 2
+        current_temp = (current_scores.get("frs_score", 0) + current_scores.get("pcs_score", 0)) / 2
 
         if lead_id not in self.temperature_history:
             self.temperature_history[lead_id] = []
@@ -614,7 +616,7 @@ class TemperaturePredictionEngine:
                 "type": "temperature_declining",
                 "urgency": "medium",
                 "recommendation": "Immediate engagement recommended - lead showing signs of disengagement",
-                "suggested_action": "Schedule call within 24 hours"
+                "suggested_action": "Schedule call within 24 hours",
             }
 
         return {
@@ -622,8 +624,9 @@ class TemperaturePredictionEngine:
             "trend": trend,
             "confidence": confidence,
             "early_warning": early_warning,
-            "prediction_next_interaction": max(0, current_temp + (diff * 1.5))
+            "prediction_next_interaction": max(0, current_temp + (diff * 1.5)),
         }
+
 
 class LeadBotWorkflow:
     """
@@ -658,6 +661,7 @@ class LeadBotWorkflow:
         self.sequence_service = get_sequence_service()
         self.scheduler = get_lead_scheduler()
         from ghl_real_estate_ai.services.national_market_intelligence import get_national_market_intelligence
+
         self.market_intel = get_national_market_intelligence()
 
         # Enhanced components (optional)
@@ -708,7 +712,7 @@ class LeadBotWorkflow:
             "personality_adaptations": 0,
             "track3_enhancements": 0,
             "jorge_handoffs": 0,
-            "intelligence_gathering_operations": 0
+            "intelligence_gathering_operations": 0,
         }
 
         # Build workflow based on enabled features
@@ -726,38 +730,40 @@ class LeadBotWorkflow:
 
     def _build_unified_graph(self) -> StateGraph:
         """Build workflow graph based on enabled features"""
-        if (self.config.enable_predictive_analytics or
-            self.config.enable_behavioral_optimization or
-            self.config.enable_track3_intelligence or
-            self.config.enable_bot_intelligence):
+        if (
+            self.config.enable_predictive_analytics
+            or self.config.enable_behavioral_optimization
+            or self.config.enable_track3_intelligence
+            or self.config.enable_bot_intelligence
+        ):
             return self._build_enhanced_graph()
         else:
             return self._build_standard_graph()
 
     def _build_standard_graph(self) -> StateGraph:
         workflow = StateGraph(LeadFollowUpState)
-        
+
         # Define Nodes
         workflow.add_node("analyze_intent", self.analyze_intent)
         workflow.add_node("determine_path", self.determine_path)
         workflow.add_node("generate_cma", self.generate_cma)
-        
+
         # Follow-up Nodes
         workflow.add_node("send_day_3_sms", self.send_day_3_sms)
         workflow.add_node("initiate_day_7_call", self.initiate_day_7_call)
         workflow.add_node("send_day_14_email", self.send_day_14_email)
         workflow.add_node("send_day_30_nudge", self.send_day_30_nudge)
-        
+
         # Full Lifecycle Nodes
         workflow.add_node("schedule_showing", self.schedule_showing)
         workflow.add_node("post_showing_survey", self.post_showing_survey)
         workflow.add_node("facilitate_offer", self.facilitate_offer)
         workflow.add_node("contract_to_close_nurture", self.contract_to_close_nurture)
-        
+
         # Define Edges
         workflow.set_entry_point("analyze_intent")
         workflow.add_edge("analyze_intent", "determine_path")
-        
+
         # Conditional Routing based on 'current_step' and 'engagement_status'
         workflow.add_conditional_edges(
             "determine_path",
@@ -773,10 +779,10 @@ class LeadBotWorkflow:
                 "facilitate_offer": "facilitate_offer",
                 "closing_nurture": "contract_to_close_nurture",
                 "qualified": END,
-                "nurture": END
-            }
+                "nurture": END,
+            },
         )
-        
+
         # All actions end for this single-turn execution
         workflow.add_edge("generate_cma", END)
         workflow.add_edge("send_day_3_sms", END)
@@ -787,7 +793,7 @@ class LeadBotWorkflow:
         workflow.add_edge("post_showing_survey", END)
         workflow.add_edge("facilitate_offer", END)
         workflow.add_edge("contract_to_close_nurture", END)
-        
+
         return workflow.compile()
 
     def _build_enhanced_graph(self) -> StateGraph:
@@ -859,14 +865,22 @@ class LeadBotWorkflow:
                 "facilitate_offer": "facilitate_offer",
                 "closing_nurture": "contract_to_close_nurture",
                 "qualified": END,
-                "nurture": END
-            }
+                "nurture": END,
+            },
         )
 
         # All actions end
-        for node in ["generate_cma", "send_optimized_day_3", "initiate_predictive_day_7",
-                    "send_adaptive_day_14", "send_intelligent_day_30", "schedule_showing",
-                    "post_showing_survey", "facilitate_offer", "contract_to_close_nurture"]:
+        for node in [
+            "generate_cma",
+            "send_optimized_day_3",
+            "initiate_predictive_day_7",
+            "send_adaptive_day_14",
+            "send_intelligent_day_30",
+            "schedule_showing",
+            "post_showing_survey",
+            "facilitate_offer",
+            "contract_to_close_nurture",
+        ]:
             workflow.add_edge(node, END)
 
         return workflow.compile()
@@ -892,7 +906,7 @@ class LeadBotWorkflow:
             bot_type="enhanced-lead-bot",
             contact_id=state["lead_id"],
             status="processing",
-            current_step="gather_lead_intelligence"
+            current_step="gather_lead_intelligence",
         )
 
         # Initialize performance tracking
@@ -911,8 +925,8 @@ class LeadBotWorkflow:
                         "sequence_day": state.get("sequence_day"),
                         "engagement_status": state.get("engagement_status"),
                         "nurture_focus": True,
-                        "intent_profile": state.get("intent_profile").to_dict() if state.get("intent_profile") else {}
-                    }
+                        "intent_profile": state.get("intent_profile").to_dict() if state.get("intent_profile") else {},
+                    },
                 )
 
                 intelligence_performance_ms = (time.time() - intelligence_start_time) * 1000
@@ -931,12 +945,12 @@ class LeadBotWorkflow:
                     status="processing",
                     current_step="lead_intelligence_gathered",
                     message=f"Lead intelligence gathered: {intelligence_context.property_intelligence.match_count} properties, "
-                           f"engagement score: {intelligence_context.composite_engagement_score:.2f}"
+                    f"engagement score: {intelligence_context.composite_engagement_score:.2f}",
                 )
 
                 return {
                     "intelligence_context": intelligence_context,
-                    "intelligence_performance_ms": intelligence_performance_ms
+                    "intelligence_performance_ms": intelligence_performance_ms,
                 }
             else:
                 logger.warning(f"Intelligence middleware not available for lead {state['lead_id']}")
@@ -951,12 +965,12 @@ class LeadBotWorkflow:
                 lead_id=state["lead_id"],
                 location_id="national",
                 bot_type="lead-bot",
-                error_context=f"intelligence_gathering_failed: {str(e)}"
+                error_context=f"intelligence_gathering_failed: {str(e)}",
             )
 
             return {
                 "intelligence_context": fallback_context,
-                "intelligence_performance_ms": intelligence_performance_ms
+                "intelligence_performance_ms": intelligence_performance_ms,
             }
 
     async def analyze_behavioral_patterns(self, state: LeadFollowUpState) -> Dict:
@@ -967,7 +981,7 @@ class LeadBotWorkflow:
             bot_type="enhanced-lead-bot",
             contact_id=state["lead_id"],
             status="processing",
-            current_step="behavioral_analysis"
+            current_step="behavioral_analysis",
         )
 
         # Initialize defaults
@@ -978,25 +992,23 @@ class LeadBotWorkflow:
         # Analyze response patterns if engine available
         if self.analytics_engine:
             pattern = await self.analytics_engine.analyze_response_patterns(
-                state['lead_id'],
-                state['conversation_history']
+                state["lead_id"], state["conversation_history"]
             )
             self.workflow_stats["behavioral_optimizations"] += 1
 
         # Detect personality type if adapter available
         if self.personality_adapter:
-            personality = await self.personality_adapter.detect_personality(state['conversation_history'])
+            personality = await self.personality_adapter.detect_personality(state["conversation_history"])
             self.workflow_stats["personality_adaptations"] += 1
 
         # Predict temperature trend if engine available
         if self.temperature_engine:
             current_scores = {
-                'frs_score': state['intent_profile'].frs.total_score,
-                'pcs_score': state['intent_profile'].pcs.total_score
+                "frs_score": state["intent_profile"].frs.total_score,
+                "pcs_score": state["intent_profile"].pcs.total_score,
             }
             temperature_prediction = await self.temperature_engine.predict_temperature_trend(
-                state['lead_id'],
-                current_scores
+                state["lead_id"], current_scores
             )
 
         # Emit behavioral analysis event
@@ -1007,28 +1019,27 @@ class LeadBotWorkflow:
             churn_risk_score=0.1,  # Mocked for now
             engagement_score=0.8,  # Mocked for now
             next_actions=[],
-            prediction_latency_ms=0.0
+            prediction_latency_ms=0.0,
         )
 
         return {
             "response_pattern": pattern,
             "personality_type": personality,
-            "temperature_prediction": temperature_prediction
+            "temperature_prediction": temperature_prediction,
         }
 
     async def predict_sequence_optimization(self, state: LeadFollowUpState) -> Dict:
         """Predict optimal sequence timing and channels"""
         logger.info(f"Optimizing sequence for lead {state['lead_id']}")
 
-        if not self.analytics_engine or not state.get('response_pattern'):
+        if not self.analytics_engine or not state.get("response_pattern"):
             # Return default optimization
             default_optimization = SequenceOptimization(
-                day_3=3, day_7=7, day_14=14, day_30=30,
-                channel_sequence=["SMS", "Email", "Voice", "SMS"]
+                day_3=3, day_7=7, day_14=14, day_30=30, channel_sequence=["SMS", "Email", "Voice", "SMS"]
             )
             return {"sequence_optimization": default_optimization}
 
-        pattern = state['response_pattern']
+        pattern = state["response_pattern"]
         optimization = await self.analytics_engine.predict_optimal_sequence(pattern)
 
         logger.info(f"Sequence optimization: {optimization}")
@@ -1043,7 +1054,7 @@ class LeadBotWorkflow:
             bot_type="enhanced-lead-bot",
             contact_id=state["lead_id"],
             status="processing",
-            current_step="track3_market_analysis"
+            current_step="track3_market_analysis",
         )
 
         try:
@@ -1052,25 +1063,19 @@ class LeadBotWorkflow:
                 return {"track3_applied": False, "fallback_reason": "ML analytics not available"}
 
             # Track 3.1 enhancement: Get comprehensive predictive analysis
-            journey_analysis = await self.ml_analytics.predict_lead_journey(state['lead_id'])
+            journey_analysis = await self.ml_analytics.predict_lead_journey(state["lead_id"])
             conversion_analysis = await self.ml_analytics.predict_conversion_probability(
-                state['lead_id'],
-                state.get('current_journey_stage', 'nurture')
+                state["lead_id"], state.get("current_journey_stage", "nurture")
             )
-            touchpoint_analysis = await self.ml_analytics.predict_optimal_touchpoints(state['lead_id'])
+            touchpoint_analysis = await self.ml_analytics.predict_optimal_touchpoints(state["lead_id"])
 
             # Apply market timing enhancements
             enhanced_optimization = await self._apply_market_timing_intelligence(
-                state.get('sequence_optimization'),
-                journey_analysis,
-                conversion_analysis,
-                touchpoint_analysis
+                state.get("sequence_optimization"), journey_analysis, conversion_analysis, touchpoint_analysis
             )
 
             # Detect critical scenarios
-            critical_scenario = await self._detect_critical_scenarios(
-                journey_analysis, conversion_analysis, state
-            )
+            critical_scenario = await self._detect_critical_scenarios(journey_analysis, conversion_analysis, state)
 
             self.workflow_stats["track3_enhancements"] += 1
 
@@ -1080,7 +1085,7 @@ class LeadBotWorkflow:
                 "touchpoint_analysis": touchpoint_analysis,
                 "enhanced_optimization": enhanced_optimization,
                 "critical_scenario": critical_scenario,
-                "track3_applied": True
+                "track3_applied": True,
             }
 
         except Exception as e:
@@ -1092,12 +1097,12 @@ class LeadBotWorkflow:
         logger.info(f"Sending intelligence-optimized Day 3 SMS for {state['lead_name']}")
 
         # Use enhanced optimization if available
-        optimization = state.get('enhanced_optimization', state.get('sequence_optimization'))
-        pattern = state.get('response_pattern')
-        personality = state.get('personality_type', 'relationship')
+        optimization = state.get("enhanced_optimization", state.get("sequence_optimization"))
+        pattern = state.get("response_pattern")
+        personality = state.get("personality_type", "relationship")
 
         # Phase 3.3 Intelligence Enhancement: Use intelligence context for nurture optimization
-        intelligence_context = state.get('intelligence_context')
+        intelligence_context = state.get("intelligence_context")
         churn_risk = 0.5  # Default
         preferred_timing = None
         personalized_insights = []
@@ -1108,11 +1113,15 @@ class LeadBotWorkflow:
             preferred_timing = self._extract_preferred_engagement_timing(intelligence_context)
             personalized_insights = intelligence_context.priority_insights or []
 
-            logger.info(f"Intelligence context applied - churn risk: {churn_risk:.2f}, insights: {len(personalized_insights)}")
+            logger.info(
+                f"Intelligence context applied - churn risk: {churn_risk:.2f}, insights: {len(personalized_insights)}"
+            )
 
         # Use optimized timing if available
         actual_day = optimization.day_3 if optimization else 3
-        preferred_channel = optimization.channel_sequence[0] if optimization and optimization.channel_sequence else "SMS"
+        preferred_channel = (
+            optimization.channel_sequence[0] if optimization and optimization.channel_sequence else "SMS"
+        )
 
         # Intelligence-driven timing adjustment for nurture sequences
         if churn_risk > 0.7:
@@ -1123,8 +1132,8 @@ class LeadBotWorkflow:
             logger.info(f"Low churn risk ({churn_risk:.2f}) - extending to day {actual_day} to avoid fatigue")
 
         # Check for critical scenarios
-        critical_scenario = state.get('critical_scenario')
-        if critical_scenario and critical_scenario.get('urgency') == 'critical':
+        critical_scenario = state.get("critical_scenario")
+        if critical_scenario and critical_scenario.get("urgency") == "critical":
             logger.warning(f"CRITICAL SCENARIO: {critical_scenario['type']} - {critical_scenario['recommendation']}")
             actual_day = 0  # Contact immediately
             preferred_channel = "Voice"  # Use most direct channel
@@ -1148,26 +1157,26 @@ class LeadBotWorkflow:
             "response_content": adapted_msg,
             "optimized_timing_applied": bool(optimization),
             "personalization_applied": bool(self.personality_adapter),
-            "track3_enhancement_applied": state.get('track3_applied', False),
+            "track3_enhancement_applied": state.get("track3_applied", False),
             "critical_scenario_handled": bool(critical_scenario),
             "intelligence_enhancement_applied": bool(intelligence_context),
             "churn_risk_score": churn_risk,
             "sequence_optimization_applied": True,
-            "preferred_engagement_timing": preferred_timing
+            "preferred_engagement_timing": preferred_timing,
         }
 
     async def initiate_predictive_day_7(self, state: LeadFollowUpState) -> Dict:
         """Day 7 with predictive timing and channel optimization using intelligence context"""
         logger.info(f"Initiating intelligence-enhanced Day 7 call for {state['lead_name']}")
 
-        optimization = state.get('enhanced_optimization', state.get('sequence_optimization'))
-        temperature_pred = state.get('temperature_prediction')
-        journey_analysis = state.get('journey_analysis')
-        conversion_analysis = state.get('conversion_analysis')
+        optimization = state.get("enhanced_optimization", state.get("sequence_optimization"))
+        temperature_pred = state.get("temperature_prediction")
+        journey_analysis = state.get("journey_analysis")
+        conversion_analysis = state.get("conversion_analysis")
 
         # Phase 3.3 Intelligence Enhancement: Use intelligence context for call optimization
-        intelligence_context = state.get('intelligence_context')
-        churn_risk = state.get('churn_risk_score', 0.5)
+        intelligence_context = state.get("intelligence_context")
+        churn_risk = state.get("churn_risk_score", 0.5)
         cross_bot_handoff_eligible = False
 
         if intelligence_context:
@@ -1176,17 +1185,20 @@ class LeadBotWorkflow:
             objections_detected = len(intelligence_context.conversation_intelligence.objections_detected)
 
             # Enhanced Jorge handoff logic using comprehensive intelligence
-            if (engagement_score > 0.7 and churn_risk < 0.4 and objections_detected < 2):
+            if engagement_score > 0.7 and churn_risk < 0.4 and objections_detected < 2:
                 cross_bot_handoff_eligible = True
-                logger.info(f"Intelligence suggests Jorge handoff eligibility for {state['lead_name']} "
-                           f"(engagement: {engagement_score:.2f}, churn_risk: {churn_risk:.2f})")
+                logger.info(
+                    f"Intelligence suggests Jorge handoff eligibility for {state['lead_name']} "
+                    f"(engagement: {engagement_score:.2f}, churn_risk: {churn_risk:.2f})"
+                )
 
         # Check conversion probability for Jorge handoff consideration
-        if (conversion_analysis and
-            conversion_analysis.stage_conversion_probability > 0.7 and
-            journey_analysis and
-            journey_analysis.conversion_probability > 0.6):
-
+        if (
+            conversion_analysis
+            and conversion_analysis.stage_conversion_probability > 0.7
+            and journey_analysis
+            and journey_analysis.conversion_probability > 0.6
+        ):
             logger.info(f"High conversion indicators for {state['lead_name']} - consider Jorge handoff")
             cross_bot_handoff_eligible = True
             if self.config.jorge_handoff_enabled:
@@ -1198,14 +1210,20 @@ class LeadBotWorkflow:
             urgency_indicators = intelligence_context.conversation_intelligence.urgency_indicators
             if urgency_indicators or churn_risk > 0.8:
                 urgency_detected = True
-                logger.warning(f"Urgency detected for {state['lead_name']}: "
-                              f"indicators={len(urgency_indicators)}, churn_risk={churn_risk:.2f}")
+                logger.warning(
+                    f"Urgency detected for {state['lead_name']}: "
+                    f"indicators={len(urgency_indicators)}, churn_risk={churn_risk:.2f}"
+                )
 
         # Check for temperature early warning
-        if temperature_pred and temperature_pred.get('early_warning'):
-            logger.warning(f"Temperature early warning for {state['lead_name']}: {temperature_pred['early_warning']['recommendation']}")
+        if temperature_pred and temperature_pred.get("early_warning"):
+            logger.warning(
+                f"Temperature early warning for {state['lead_name']}: {temperature_pred['early_warning']['recommendation']}"
+            )
 
-        preferred_channel = optimization.channel_sequence[1] if optimization and len(optimization.channel_sequence) > 1 else "Voice"
+        preferred_channel = (
+            optimization.channel_sequence[1] if optimization and len(optimization.channel_sequence) > 1 else "Voice"
+        )
         actual_day = optimization.day_7 if optimization else 7
 
         # Intelligence-driven timing adjustment
@@ -1226,24 +1244,26 @@ class LeadBotWorkflow:
             "jorge_handoff_eligible": cross_bot_handoff_eligible,
             "intelligence_enhancement_applied": bool(intelligence_context),
             "urgency_detected": urgency_detected,
-            "churn_risk_score": churn_risk
+            "churn_risk_score": churn_risk,
         }
 
     async def send_adaptive_day_14(self, state: LeadFollowUpState) -> Dict:
         """Day 14 with adaptive messaging and channel selection using intelligence context"""
         logger.info(f"Sending intelligence-adaptive Day 14 message for {state['lead_name']}")
 
-        optimization = state.get('enhanced_optimization', state.get('sequence_optimization'))
-        personality = state.get('personality_type', 'relationship')
-        journey_analysis = state.get('journey_analysis')
-        conversion_analysis = state.get('conversion_analysis')
+        optimization = state.get("enhanced_optimization", state.get("sequence_optimization"))
+        personality = state.get("personality_type", "relationship")
+        journey_analysis = state.get("journey_analysis")
+        conversion_analysis = state.get("conversion_analysis")
 
         # Phase 3.3 Intelligence Enhancement: Adaptive messaging based on intelligence
-        intelligence_context = state.get('intelligence_context')
-        churn_risk = state.get('churn_risk_score', 0.5)
+        intelligence_context = state.get("intelligence_context")
+        churn_risk = state.get("churn_risk_score", 0.5)
         content_adaptation_applied = False
 
-        preferred_channel = optimization.channel_sequence[2] if optimization and len(optimization.channel_sequence) > 2 else "Email"
+        preferred_channel = (
+            optimization.channel_sequence[2] if optimization and len(optimization.channel_sequence) > 2 else "Email"
+        )
         actual_day = optimization.day_14 if optimization else 14
 
         # Intelligence-driven content and channel adaptation
@@ -1261,13 +1281,18 @@ class LeadBotWorkflow:
             # Property intelligence-driven content
             if intelligence_context.property_intelligence.match_count > 0:
                 content_adaptation_applied = True
-                logger.info(f"Incorporating {intelligence_context.property_intelligence.match_count} property matches into Day 14 message")
+                logger.info(
+                    f"Incorporating {intelligence_context.property_intelligence.match_count} property matches into Day 14 message"
+                )
 
         # Check for bottlenecks requiring intervention
         intervention_needed = False
-        if (journey_analysis and journey_analysis.stage_bottlenecks and
-            conversion_analysis and conversion_analysis.urgency_score > 0.6):
-
+        if (
+            journey_analysis
+            and journey_analysis.stage_bottlenecks
+            and conversion_analysis
+            and conversion_analysis.urgency_score > 0.6
+        ):
             intervention_needed = True
             logger.warning(f"Stage bottlenecks detected for {state['lead_name']}: {journey_analysis.stage_bottlenecks}")
             preferred_channel = "Voice"  # Override to voice call for bottleneck resolution
@@ -1292,21 +1317,21 @@ class LeadBotWorkflow:
             "channel_escalated": intervention_needed,
             "intelligence_enhancement_applied": bool(intelligence_context),
             "content_adaptation_applied": content_adaptation_applied,
-            "churn_risk_score": churn_risk
+            "churn_risk_score": churn_risk,
         }
 
     async def send_intelligent_day_30(self, state: LeadFollowUpState) -> Dict:
         """Day 30 with intelligent re-engagement strategy using comprehensive intelligence"""
         logger.info(f"Executing intelligent Day 30 final engagement for {state['lead_name']}")
 
-        optimization = state.get('enhanced_optimization', state.get('sequence_optimization'))
-        temperature_pred = state.get('temperature_prediction')
-        journey_analysis = state.get('journey_analysis')
-        conversion_analysis = state.get('conversion_analysis')
+        optimization = state.get("enhanced_optimization", state.get("sequence_optimization"))
+        temperature_pred = state.get("temperature_prediction")
+        journey_analysis = state.get("journey_analysis")
+        conversion_analysis = state.get("conversion_analysis")
 
         # Phase 3.3 Intelligence Enhancement: Comprehensive final decision
-        intelligence_context = state.get('intelligence_context')
-        churn_risk = state.get('churn_risk_score', 0.5)
+        intelligence_context = state.get("intelligence_context")
+        churn_risk = state.get("churn_risk_score", 0.5)
 
         actual_day = optimization.day_30 if optimization else 30
 
@@ -1325,17 +1350,19 @@ class LeadBotWorkflow:
 
             # Calculate comprehensive intelligence score for handoff decision
             intelligence_score = (
-                engagement_score * 0.3 +
-                min(property_matches / 5.0, 1.0) * 0.2 +  # Normalize to 0-1
-                max(0, (5 - objections_count) / 5.0) * 0.2 +  # Fewer objections = better
-                max(0, (sentiment + 1) / 2.0) * 0.15 +  # Normalize sentiment to 0-1
-                preference_completeness * 0.15
+                engagement_score * 0.3
+                + min(property_matches / 5.0, 1.0) * 0.2  # Normalize to 0-1
+                + max(0, (5 - objections_count) / 5.0) * 0.2  # Fewer objections = better
+                + max(0, (sentiment + 1) / 2.0) * 0.15  # Normalize sentiment to 0-1
+                + preference_completeness * 0.15
             )
 
-            logger.info(f"Intelligence score calculation for {state['lead_name']}: "
-                       f"engagement={engagement_score:.2f}, properties={property_matches}, "
-                       f"objections={objections_count}, sentiment={sentiment:.2f}, "
-                       f"preferences={preference_completeness:.2f} → score={intelligence_score:.2f}")
+            logger.info(
+                f"Intelligence score calculation for {state['lead_name']}: "
+                f"engagement={engagement_score:.2f}, properties={property_matches}, "
+                f"objections={objections_count}, sentiment={sentiment:.2f}, "
+                f"preferences={preference_completeness:.2f} → score={intelligence_score:.2f}"
+            )
 
             # Enhanced decision logic using comprehensive intelligence
             if intelligence_score > 0.7 and churn_risk < 0.4:
@@ -1349,19 +1376,19 @@ class LeadBotWorkflow:
 
             elif intelligence_score < 0.3 or churn_risk > 0.8:
                 final_strategy = "graceful_disengage"
-                handoff_reasoning.append(f"Low intelligence score ({intelligence_score:.2f}) or high churn risk ({churn_risk:.2f})")
+                handoff_reasoning.append(
+                    f"Low intelligence score ({intelligence_score:.2f}) or high churn risk ({churn_risk:.2f})"
+                )
 
         # Traditional Track 3.1 logic as backup
         if journey_analysis and conversion_analysis and final_strategy == "nurture":
             # High potential - recommend Jorge qualification
-            if (journey_analysis.conversion_probability > 0.5 and
-                conversion_analysis.stage_conversion_probability > 0.4):
+            if journey_analysis.conversion_probability > 0.5 and conversion_analysis.stage_conversion_probability > 0.4:
                 final_strategy = "jorge_qualification"
                 handoff_reasoning.append("High Track 3.1 conversion probability")
 
             # Low potential with cooling trend - disengage gracefully
-            elif (journey_analysis.conversion_probability < 0.2 and
-                  conversion_analysis.drop_off_risk > 0.8):
+            elif journey_analysis.conversion_probability < 0.2 and conversion_analysis.drop_off_risk > 0.8:
                 final_strategy = "graceful_disengage"
                 handoff_reasoning.append("Low Track 3.1 conversion probability with high drop-off risk")
 
@@ -1375,9 +1402,11 @@ class LeadBotWorkflow:
         # Construct final message based on strategy
         msg = self._construct_intelligent_day30_message(state, final_strategy, intelligence_score, handoff_reasoning)
 
-        logger.info(f"Intelligent Day {actual_day} final engagement for {state['lead_name']} - "
-                   f"Strategy: {final_strategy}, Intelligence Score: {intelligence_score:.2f}, "
-                   f"Reasoning: {'; '.join(handoff_reasoning)}")
+        logger.info(
+            f"Intelligent Day {actual_day} final engagement for {state['lead_name']} - "
+            f"Strategy: {final_strategy}, Intelligence Score: {intelligence_score:.2f}, "
+            f"Reasoning: {'; '.join(handoff_reasoning)}"
+        )
 
         return {
             "engagement_status": "enhanced_final",
@@ -1389,15 +1418,29 @@ class LeadBotWorkflow:
             "intelligence_score": intelligence_score,
             "handoff_reasoning": handoff_reasoning,
             "intelligence_enhancement_applied": bool(intelligence_context),
-            "churn_risk_score": churn_risk
+            "churn_risk_score": churn_risk,
         }
 
-    def _route_enhanced_step(self, state: LeadFollowUpState) -> Literal["generate_cma", "day_3", "day_7", "day_14", "day_30", "schedule_showing", "post_showing", "facilitate_offer", "closing_nurture", "qualified", "nurture"]:
+    def _route_enhanced_step(
+        self, state: LeadFollowUpState
+    ) -> Literal[
+        "generate_cma",
+        "day_3",
+        "day_7",
+        "day_14",
+        "day_30",
+        "schedule_showing",
+        "post_showing",
+        "facilitate_offer",
+        "closing_nurture",
+        "qualified",
+        "nurture",
+    ]:
         """Enhanced routing with predictive logic"""
         # Check for early warnings that require immediate action
-        if state.get('temperature_prediction', {}).get('early_warning'):
-            warning = state['temperature_prediction']['early_warning']
-            if warning.get('urgency') == 'high':
+        if state.get("temperature_prediction", {}).get("early_warning"):
+            warning = state["temperature_prediction"]["early_warning"]
+            if warning.get("urgency") == "high":
                 return "schedule_showing"  # Immediate escalation
 
         # Use parent routing logic with enhancements
@@ -1405,13 +1448,17 @@ class LeadBotWorkflow:
 
     # --- Track 3.1 Enhancement Helper Methods ---
 
-    async def _apply_market_timing_intelligence(self, base_optimization: Optional[SequenceOptimization],
-                                              journey_analysis, conversion_analysis, touchpoint_analysis) -> SequenceOptimization:
+    async def _apply_market_timing_intelligence(
+        self,
+        base_optimization: Optional[SequenceOptimization],
+        journey_analysis,
+        conversion_analysis,
+        touchpoint_analysis,
+    ) -> SequenceOptimization:
         """Apply Track 3.1 market timing intelligence to enhance sequence optimization"""
         if not base_optimization:
             base_optimization = SequenceOptimization(
-                day_3=3, day_7=7, day_14=14, day_30=30,
-                channel_sequence=["SMS", "Email", "Voice", "SMS"]
+                day_3=3, day_7=7, day_14=14, day_30=30, channel_sequence=["SMS", "Email", "Voice", "SMS"]
             )
 
         enhanced_optimization = SequenceOptimization(
@@ -1419,7 +1466,7 @@ class LeadBotWorkflow:
             day_7=base_optimization.day_7,
             day_14=base_optimization.day_14,
             day_30=base_optimization.day_30,
-            channel_sequence=base_optimization.channel_sequence.copy()
+            channel_sequence=base_optimization.channel_sequence.copy(),
         )
 
         # Timing enhancement: Urgency-based acceleration
@@ -1440,38 +1487,34 @@ class LeadBotWorkflow:
 
         # Channel enhancement: Use ML-predicted optimal channels
         if touchpoint_analysis.channel_preferences:
-            optimal_channels = sorted(
-                touchpoint_analysis.channel_preferences.items(),
-                key=lambda x: x[1],
-                reverse=True
-            )
+            optimal_channels = sorted(touchpoint_analysis.channel_preferences.items(), key=lambda x: x[1], reverse=True)
             enhanced_optimization.channel_sequence = [ch[0] for ch in optimal_channels[:4]]
             logger.info(f"Updated channel sequence based on ML preferences: {enhanced_optimization.channel_sequence}")
 
         return enhanced_optimization
 
-    async def _detect_critical_scenarios(self, journey_analysis, conversion_analysis, state: LeadFollowUpState) -> Optional[Dict[str, Any]]:
+    async def _detect_critical_scenarios(
+        self, journey_analysis, conversion_analysis, state: LeadFollowUpState
+    ) -> Optional[Dict[str, Any]]:
         """Detect critical scenarios requiring immediate intervention or Jorge Bot handoff"""
         # Scenario 1: High value lead cooling down rapidly
-        if (journey_analysis.conversion_probability > 0.6 and
-            conversion_analysis.drop_off_risk > 0.7):
+        if journey_analysis.conversion_probability > 0.6 and conversion_analysis.drop_off_risk > 0.7:
             return {
                 "type": "high_value_cooling",
                 "urgency": "critical",
                 "recommendation": "immediate_jorge_handoff",
                 "reason": f"High conversion probability ({journey_analysis.conversion_probability:.2f}) but high drop-off risk ({conversion_analysis.drop_off_risk:.2f})",
-                "suggested_action": "Deploy Jorge Seller Bot for confrontational re-engagement within 2 hours"
+                "suggested_action": "Deploy Jorge Seller Bot for confrontational re-engagement within 2 hours",
             }
 
         # Scenario 2: Ready for qualification
-        if (journey_analysis.conversion_probability > 0.75 and
-            conversion_analysis.stage_conversion_probability > 0.8):
+        if journey_analysis.conversion_probability > 0.75 and conversion_analysis.stage_conversion_probability > 0.8:
             return {
                 "type": "qualification_ready",
                 "urgency": "medium",
                 "recommendation": "jorge_qualification",
                 "reason": f"High conversion indicators suggest readiness for Jorge's qualification process",
-                "suggested_action": "Schedule Jorge Bot consultation within 24 hours"
+                "suggested_action": "Schedule Jorge Bot consultation within 24 hours",
             }
 
         return None
@@ -1485,8 +1528,8 @@ class LeadBotWorkflow:
             data={
                 "conversion_probability": journey_analysis.conversion_probability,
                 "stage_conversion_probability": conversion_analysis.stage_conversion_probability,
-                "recommendation": "Consider Jorge Seller Bot engagement for qualification"
-            }
+                "recommendation": "Consider Jorge Seller Bot engagement for qualification",
+            },
         )
 
     async def _publish_jorge_handoff_request(self, state, journey_analysis, conversion_analysis):
@@ -1501,11 +1544,11 @@ class LeadBotWorkflow:
                 "handoff_data": {
                     "conversion_probability": journey_analysis.conversion_probability,
                     "stage_conversion_probability": conversion_analysis.stage_conversion_probability,
-                    "lead_temperature": state.get('temperature_prediction', {}).get('current_temperature', 0),
+                    "lead_temperature": state.get("temperature_prediction", {}).get("current_temperature", 0),
                     "sequence_completion": "day_30_reached",
-                    "recommendation": "Jorge confrontational qualification recommended"
-                }
-            }
+                    "recommendation": "Jorge confrontational qualification recommended",
+                },
+            },
         )
 
     # --- Node Implementations ---
@@ -1516,50 +1559,42 @@ class LeadBotWorkflow:
 
         # Emit bot status update
         await self.event_publisher.publish_bot_status_update(
-            bot_type="lead-bot",
-            contact_id=state["lead_id"],
-            status="processing",
-            current_step="analyze_intent"
+            bot_type="lead-bot", contact_id=state["lead_id"], status="processing", current_step="analyze_intent"
         )
 
-        await sync_service.record_lead_event(state['lead_id'], "AI", "Analyzing lead intent profile.", "thought")
+        await sync_service.record_lead_event(state["lead_id"], "AI", "Analyzing lead intent profile.", "thought")
 
         _intent_start_time = time.time()
-        profile = self.intent_decoder.analyze_lead(
-            state['lead_id'], 
-            state['conversation_history']
-        )
-        
+        profile = self.intent_decoder.analyze_lead(state["lead_id"], state["conversation_history"])
+
         # Sync to Lyrio (Phase 4)
         lyrio = LyrioClient()
-        
+
         # Run sync in background
-        asyncio.create_task(lyrio.sync_lead_score(
-            state['lead_id'],
-            profile.frs.total_score,
-            profile.pcs.total_score,
-            [profile.frs.classification]
-        ))
-        
+        asyncio.create_task(
+            lyrio.sync_lead_score(
+                state["lead_id"], profile.frs.total_score, profile.pcs.total_score, [profile.frs.classification]
+            )
+        )
+
         await sync_service.record_lead_event(
-            state['lead_id'],
+            state["lead_id"],
             "AI",
             f"Intent Decoded: {profile.frs.classification} (Score: {profile.frs.total_score})",
-            "thought"
+            "thought",
         )
 
         # Initialize or restore sequence state
-        sequence_state = await self.sequence_service.get_state(state['lead_id'])
+        sequence_state = await self.sequence_service.get_state(state["lead_id"])
         if not sequence_state:
             # Create new sequence for new lead
             logger.info(f"Creating new sequence for lead {state['lead_id']}")
             sequence_state = await self.sequence_service.create_sequence(
-                state['lead_id'],
-                initial_day=SequenceDay.DAY_3
+                state["lead_id"], initial_day=SequenceDay.DAY_3
             )
 
             # Schedule the initial sequence start (immediate or slight delay)
-            await self.scheduler.schedule_sequence_start(state['lead_id'], delay_minutes=1)
+            await self.scheduler.schedule_sequence_start(state["lead_id"], delay_minutes=1)
         else:
             logger.info(f"Restored sequence state for lead {state['lead_id']}: {sequence_state.current_day.value}")
 
@@ -1575,132 +1610,140 @@ class LeadBotWorkflow:
             intent_category=profile.frs.classification,
             frs_score=profile.frs.total_score,
             pcs_score=profile.pcs.total_score,
-            recommendations=[f"Sequence day: {sequence_state.current_day.value}"]
+            recommendations=[f"Sequence day: {sequence_state.current_day.value}"],
         )
 
-        return {
-            "intent_profile": profile,
-            "sequence_state": sequence_state.to_dict()
-        }
+        return {"intent_profile": profile, "sequence_state": sequence_state.to_dict()}
 
     async def determine_path(self, state: LeadFollowUpState) -> Dict:
         """Decide the next step based on engagement and timeline."""
 
         # 1. Check for Price Objection / CMA Request (Phase 3)
-        last_msg = state['conversation_history'][-1]['content'].lower() if state['conversation_history'] else ""
+        last_msg = state["conversation_history"][-1]["content"].lower() if state["conversation_history"] else ""
         price_keywords = ["price", "value", "worth", "zestimate", "comps", "market analysis"]
 
-        is_price_aware = state['intent_profile'].frs.price.category == "Price-Aware"
+        is_price_aware = state["intent_profile"].frs.price.category == "Price-Aware"
         has_keyword = any(k in last_msg for k in price_keywords)
-        
+
         logger.debug(f"determine_path - last_msg: '{last_msg}'")
         logger.debug(f"determine_path - is_price_aware: {is_price_aware}, has_keyword: {has_keyword}")
         logger.debug(f"determine_path - cma_generated: {state.get('cma_generated')}")
 
-        if (is_price_aware or has_keyword) and not state.get('cma_generated'):
+        if (is_price_aware or has_keyword) and not state.get("cma_generated"):
             logger.debug("determine_path - Routing to generate_cma")
-            await sync_service.record_lead_event(state['lead_id'], "AI", "Price awareness detected. Routing to CMA generation.", "node")
+            await sync_service.record_lead_event(
+                state["lead_id"], "AI", "Price awareness detected. Routing to CMA generation.", "node"
+            )
             return {"current_step": "generate_cma", "engagement_status": "responsive"}
 
         # 2. Check for immediate qualification (High Intent)
-        if state['intent_profile'].frs.classification == "Hot Lead":
-            await sync_service.record_lead_event(state['lead_id'], "AI", "High intent lead detected. Routing to qualified state.", "thought")
+        if state["intent_profile"].frs.classification == "Hot Lead":
+            await sync_service.record_lead_event(
+                state["lead_id"], "AI", "High intent lead detected. Routing to qualified state.", "thought"
+            )
             return {"current_step": "qualified", "engagement_status": "qualified"}
-            
+
         # 3. Use sequence state to determine next step
-        sequence_data = state.get('sequence_state', {})
-        sequence_day_val = state.get('sequence_day')
-        
+        sequence_data = state.get("sequence_state", {})
+        sequence_day_val = state.get("sequence_day")
+
         if sequence_day_val is not None:
             # Simulation/Direct mode: create temporary sequence state from sequence_day
             # Map numeric day to SequenceDay enum
             day_enum = SequenceDay.DAY_3
-            if sequence_day_val == 7: day_enum = SequenceDay.DAY_7
-            elif sequence_day_val == 14: day_enum = SequenceDay.DAY_14
-            elif sequence_day_val == 30: day_enum = SequenceDay.DAY_30
-            
+            if sequence_day_val == 7:
+                day_enum = SequenceDay.DAY_7
+            elif sequence_day_val == 14:
+                day_enum = SequenceDay.DAY_14
+            elif sequence_day_val == 30:
+                day_enum = SequenceDay.DAY_30
+
             sequence_state = LeadSequenceState(
-                lead_id=state['lead_id'],
+                lead_id=state["lead_id"],
                 current_day=day_enum,
                 sequence_status=SequenceStatus.IN_PROGRESS,
                 sequence_started_at=datetime.now(timezone.utc),
-                engagement_status="responsive"
+                engagement_status="responsive",
             )
         elif sequence_data:
             sequence_state = LeadSequenceState.from_dict(sequence_data)
         else:
             # Fallback: get from service if not in state
-            sequence_state = await self.sequence_service.get_state(state['lead_id'])
+            sequence_state = await self.sequence_service.get_state(state["lead_id"])
             if not sequence_state:
                 # Create new sequence
-                sequence_state = await self.sequence_service.create_sequence(state['lead_id'])
+                sequence_state = await self.sequence_service.create_sequence(state["lead_id"])
 
-        logger.debug(f"determine_path - sequence state: {sequence_state.current_day.value}, status: {sequence_state.sequence_status}")
+        logger.debug(
+            f"determine_path - sequence state: {sequence_state.current_day.value}, status: {sequence_state.sequence_status}"
+        )
 
         # Determine routing based on sequence day
         current_day = sequence_state.current_day
         if sequence_day_val is not None:
-            if sequence_day_val == 3: current_day = SequenceDay.DAY_3
-            elif sequence_day_val == 7: current_day = SequenceDay.DAY_7
-            elif sequence_day_val == 14: current_day = SequenceDay.DAY_14
-            elif sequence_day_val == 30: current_day = SequenceDay.DAY_30
+            if sequence_day_val == 3:
+                current_day = SequenceDay.DAY_3
+            elif sequence_day_val == 7:
+                current_day = SequenceDay.DAY_7
+            elif sequence_day_val == 14:
+                current_day = SequenceDay.DAY_14
+            elif sequence_day_val == 30:
+                current_day = SequenceDay.DAY_30
 
         if current_day == SequenceDay.DAY_3:
             logger.debug("determine_path - Routing to day_3")
-            await sync_service.record_lead_event(state['lead_id'], "AI", "Executing Day 3 SMS sequence.", "sequence")
+            await sync_service.record_lead_event(state["lead_id"], "AI", "Executing Day 3 SMS sequence.", "sequence")
             return {"current_step": "day_3", "engagement_status": sequence_state.engagement_status}
 
         elif current_day == SequenceDay.DAY_7:
             logger.debug("determine_path - Routing to day_7")
-            await sync_service.record_lead_event(state['lead_id'], "AI", "Executing Day 7 call sequence.", "sequence")
+            await sync_service.record_lead_event(state["lead_id"], "AI", "Executing Day 7 call sequence.", "sequence")
             return {"current_step": "day_7", "engagement_status": sequence_state.engagement_status}
 
         elif current_day == SequenceDay.DAY_14:
             logger.debug("determine_path - Routing to day_14")
-            await sync_service.record_lead_event(state['lead_id'], "AI", "Executing Day 14 email sequence.", "sequence")
+            await sync_service.record_lead_event(state["lead_id"], "AI", "Executing Day 14 email sequence.", "sequence")
             return {"current_step": "day_14", "engagement_status": sequence_state.engagement_status}
 
         elif current_day == SequenceDay.DAY_30:
             logger.debug("determine_path - Routing to day_30")
-            await sync_service.record_lead_event(state['lead_id'], "AI", "Executing Day 30 final nudge.", "sequence")
+            await sync_service.record_lead_event(state["lead_id"], "AI", "Executing Day 30 final nudge.", "sequence")
             return {"current_step": "day_30", "engagement_status": sequence_state.engagement_status}
 
         elif current_day == SequenceDay.QUALIFIED:
             logger.debug("determine_path - Lead is qualified")
-            await sync_service.record_lead_event(state['lead_id'], "AI", "Lead qualified, exiting sequence.", "sequence")
+            await sync_service.record_lead_event(
+                state["lead_id"], "AI", "Lead qualified, exiting sequence.", "sequence"
+            )
             return {"current_step": "qualified", "engagement_status": "qualified"}
 
         else:  # NURTURE or other
             logger.debug("determine_path - Moving to nurture")
-            await sync_service.record_lead_event(state['lead_id'], "AI", "Lead in nurture status.", "sequence")
+            await sync_service.record_lead_event(state["lead_id"], "AI", "Lead in nurture status.", "sequence")
             return {"current_step": "nurture", "engagement_status": "nurture"}
 
     async def generate_cma(self, state: LeadFollowUpState) -> Dict:
         """Generate Zillow-Defense CMA and inject into conversation."""
         logger.info(f"Generating CMA for {state['lead_name']}")
-        
-        address = state.get('property_address', '123 Main St, Rancho Cucamonga, CA') # Fallback if missing
-        
-        await sync_service.record_lead_event(state['lead_id'], "AI", f"Generating CMA for {address}", "thought")
+
+        address = state.get("property_address", "123 Main St, Rancho Cucamonga, CA")  # Fallback if missing
+
+        await sync_service.record_lead_event(state["lead_id"], "AI", f"Generating CMA for {address}", "thought")
 
         # Generate Report
         report = await self.cma_generator.generate_report(address)
-        
+
         # Render PDF URL (Mock)
         pdf_url = PDFRenderer.generate_pdf_url(report)
-        
+
         # Phase 8: Digital Twin Association
         lyrio = LyrioClient()
         # Mock URL for digital twin
         digital_twin_url = f"https://enterprise-hub.ai/visualize/{address.replace(' ', '-').lower()}"
-        
+
         # Sync Digital Twin URL to Lyrio in background
-        asyncio.create_task(lyrio.sync_digital_twin_url(
-            state['lead_id'],
-            address,
-            digital_twin_url
-        ))
-        
+        asyncio.create_task(lyrio.sync_digital_twin_url(state["lead_id"], address, digital_twin_url))
+
         # Construct Response
         response_msg = (
             f"I ran the numbers for {address}. Zillow's estimate is off by ${report.zillow_variance_abs:,.0f}. "
@@ -1708,14 +1751,16 @@ class LeadBotWorkflow:
             f"[View CMA Report]({pdf_url})\n\n"
             f"I've also prepared a 3D Digital Twin of your property: {digital_twin_url}"
         )
-        
+
         # In a real system, we'd send this via GHL API here
         logger.info(f"CMA Injection: {response_msg}")
-        
-        await sync_service.record_lead_event(state['lead_id'], "AI", f"CMA Generated with ${report.zillow_variance_abs:,.0f} variance.", "thought")
+
+        await sync_service.record_lead_event(
+            state["lead_id"], "AI", f"CMA Generated with ${report.zillow_variance_abs:,.0f} variance.", "thought"
+        )
 
         # Mark CMA as generated in sequence state
-        await self.sequence_service.set_cma_generated(state['lead_id'])
+        await self.sequence_service.set_cma_generated(state["lead_id"])
 
         # Emit lead bot sequence update for CMA generation
         await self.event_publisher.publish_lead_bot_sequence_update(
@@ -1723,36 +1768,31 @@ class LeadBotWorkflow:
             sequence_day=0,  # CMA can be generated at any time
             action_type="cma_generated",
             success=True,
-            message_sent=response_msg
+            message_sent=response_msg,
         )
 
         return {
             "cma_generated": True,
-            "current_step": "nurture", # Return to nurture or wait for reply
-            "last_interaction_time": datetime.now(timezone.utc)
+            "current_step": "nurture",  # Return to nurture or wait for reply
+            "last_interaction_time": datetime.now(timezone.utc),
         }
 
     async def send_day_3_sms(self, state: LeadFollowUpState) -> Dict:
         """Day 3: Soft Check-in with FRS-aware logic via GhostEngine."""
         # Emit lead bot sequence update - starting Day 3
         await self.event_publisher.publish_lead_bot_sequence_update(
-            contact_id=state["lead_id"],
-            sequence_day=3,
-            action_type="analysis_started",
-            success=True
+            contact_id=state["lead_id"], sequence_day=3, action_type="analysis_started", success=True
         )
 
         ghost_state = GhostState(
-            contact_id=state['lead_id'],
-            current_day=3,
-            frs_score=state['intent_profile'].frs.total_score
+            contact_id=state["lead_id"], current_day=3, frs_score=state["intent_profile"].frs.total_score
         )
 
-        action = await self.ghost_engine.process_lead_step(ghost_state, state['conversation_history'])
-        msg = action['content']
+        action = await self.ghost_engine.process_lead_step(ghost_state, state["conversation_history"])
+        msg = action["content"]
 
         logger.info(f"Day 3 SMS to {state['contact_phone']}: {msg} (Logic: {action.get('logic')})")
-        await sync_service.record_lead_event(state['lead_id'], "AI", f"Sent Day 3 SMS: {msg[:50]}...", "sms")
+        await sync_service.record_lead_event(state["lead_id"], "AI", f"Sent Day 3 SMS: {msg[:50]}...", "sms")
 
         # Emit lead bot sequence update - message sent
         await self.event_publisher.publish_lead_bot_sequence_update(
@@ -1761,50 +1801,42 @@ class LeadBotWorkflow:
             action_type="message_sent",
             success=True,
             next_action_date=(datetime.now(timezone.utc) + timedelta(days=4)).isoformat(),  # Day 7
-            message_sent=msg
+            message_sent=msg,
         )
 
         # Mark Day 3 as completed in sequence state
-        await self.sequence_service.mark_action_completed(state['lead_id'], SequenceDay.DAY_3, "sms_sent")
+        await self.sequence_service.mark_action_completed(state["lead_id"], SequenceDay.DAY_3, "sms_sent")
 
         # Schedule next sequence action (Day 7 call)
-        await self.scheduler.schedule_next_action(state['lead_id'], SequenceDay.DAY_3)
+        await self.scheduler.schedule_next_action(state["lead_id"], SequenceDay.DAY_3)
 
         # Advance sequence to next day
-        await self.sequence_service.advance_to_next_day(state['lead_id'])
+        await self.sequence_service.advance_to_next_day(state["lead_id"])
 
         # Send SMS via GHL API
         if self.ghl_client:
             try:
-                await self.ghl_client.send_message(
-                    contact_id=state['lead_id'],
-                    message=msg,
-                    channel=MessageType.SMS
-                )
+                await self.ghl_client.send_message(contact_id=state["lead_id"], message=msg, channel=MessageType.SMS)
                 logger.info(f"SMS sent successfully to contact {state['lead_id']}")
             except Exception as e:
                 logger.error(f"Failed to send SMS via GHL: {e}")
 
-        return {
-            "engagement_status": "ghosted", 
-            "current_step": "day_7_call",
-            "response_content": msg
-        }
+        return {"engagement_status": "ghosted", "current_step": "day_7_call", "response_content": msg}
 
     async def initiate_day_7_call(self, state: LeadFollowUpState) -> Dict:
         """Day 7: Initiate Retell AI Call with Stall-Breaker logic."""
         logger.info(f"Initiating Day 7 Call for {state['lead_name']}")
-        
+
         # Prepare context for the AI agent
         stall_breaker = self._select_stall_breaker(state)
         context = {
-            "lead_name": state['lead_name'],
-            "property": state.get('property_address'),
+            "lead_name": state["lead_name"],
+            "property": state.get("property_address"),
             "stall_breaker_script": stall_breaker,
-            "frs_score": state['intent_profile'].frs.total_score
+            "frs_score": state["intent_profile"].frs.total_score,
         }
-        
-        await sync_service.record_lead_event(state['lead_id'], "AI", "Initiating Day 7 Retell AI Call.", "action")
+
+        await sync_service.record_lead_event(state["lead_id"], "AI", "Initiating Day 7 Retell AI Call.", "action")
 
         # Trigger Retell Call (Fire-and-forget for Dashboard UI performance)
         def _call_finished(fut):
@@ -1814,57 +1846,55 @@ class LeadBotWorkflow:
             except Exception as e:
                 logger.error(f"Background Retell call failed for {state['lead_name']}: {e}")
 
-        task = asyncio.create_task(self.retell_client.create_call(
-            to_number=state['contact_phone'],
-            lead_name=state['lead_name'],
-            lead_context=context,
-            metadata={"contact_id": state['lead_id']}
-        ))
+        task = asyncio.create_task(
+            self.retell_client.create_call(
+                to_number=state["contact_phone"],
+                lead_name=state["lead_name"],
+                lead_context=context,
+                metadata={"contact_id": state["lead_id"]},
+            )
+        )
         task.add_done_callback(_call_finished)
 
         # Mark Day 7 as completed in sequence state
-        await self.sequence_service.mark_action_completed(state['lead_id'], SequenceDay.DAY_7, "call_initiated")
+        await self.sequence_service.mark_action_completed(state["lead_id"], SequenceDay.DAY_7, "call_initiated")
 
         # Schedule next sequence action (Day 14 email)
-        await self.scheduler.schedule_next_action(state['lead_id'], SequenceDay.DAY_7)
+        await self.scheduler.schedule_next_action(state["lead_id"], SequenceDay.DAY_7)
 
         # Advance sequence to next day
-        await self.sequence_service.advance_to_next_day(state['lead_id'])
+        await self.sequence_service.advance_to_next_day(state["lead_id"])
 
         return {
-            "engagement_status": "ghosted", 
+            "engagement_status": "ghosted",
             "current_step": "day_14_email",
-            "response_content": f"Initiating Day 7 Call with stall breaker: {stall_breaker}"
+            "response_content": f"Initiating Day 7 Call with stall breaker: {stall_breaker}",
         }
 
     async def send_day_14_email(self, state: LeadFollowUpState) -> Dict:
         """Day 14: Value Injection (CMA) via GhostEngine."""
         ghost_state = GhostState(
-            contact_id=state['lead_id'],
-            current_day=14,
-            frs_score=state['intent_profile'].frs.total_score
+            contact_id=state["lead_id"], current_day=14, frs_score=state["intent_profile"].frs.total_score
         )
-        action = await self.ghost_engine.process_lead_step(ghost_state, state['conversation_history'])
+        action = await self.ghost_engine.process_lead_step(ghost_state, state["conversation_history"])
 
         logger.info(f"Sending Day 14 Email to {state['contact_email']}: {action['content']}")
-        await sync_service.record_lead_event(state['lead_id'], "AI", "Sent Day 14 Email with value injection.", "email")
+        await sync_service.record_lead_event(state["lead_id"], "AI", "Sent Day 14 Email with value injection.", "email")
 
         # Mark Day 14 as completed in sequence state
-        await self.sequence_service.mark_action_completed(state['lead_id'], SequenceDay.DAY_14, "email_sent")
+        await self.sequence_service.mark_action_completed(state["lead_id"], SequenceDay.DAY_14, "email_sent")
 
         # Schedule next sequence action (Day 30 SMS)
-        await self.scheduler.schedule_next_action(state['lead_id'], SequenceDay.DAY_14)
+        await self.scheduler.schedule_next_action(state["lead_id"], SequenceDay.DAY_14)
 
         # Advance sequence to next day
-        await self.sequence_service.advance_to_next_day(state['lead_id'])
+        await self.sequence_service.advance_to_next_day(state["lead_id"])
 
         # Send email via GHL API (CRM tracking copy)
         if self.ghl_client:
             try:
                 await self.ghl_client.send_message(
-                    contact_id=state['lead_id'],
-                    message=action['content'],
-                    channel=MessageType.EMAIL
+                    contact_id=state["lead_id"], message=action["content"], channel=MessageType.EMAIL
                 )
                 logger.info(f"Email sent successfully to contact {state['lead_id']}")
             except Exception as e:
@@ -1872,11 +1902,11 @@ class LeadBotWorkflow:
 
         # Generate CMA PDF and send rich email via SendGrid
         cma_attached = False
-        contact_email = state.get('contact_email')
-        property_address = state.get('property_address')
+        contact_email = state.get("contact_email")
+        property_address = state.get("property_address")
         if contact_email and property_address and self.sendgrid_client:
             cma_attached = await self._send_cma_email_with_attachment(
-                lead_id=state['lead_id'],
+                lead_id=state["lead_id"],
                 contact_email=contact_email,
                 property_address=property_address,
             )
@@ -1884,27 +1914,27 @@ class LeadBotWorkflow:
         return {
             "engagement_status": "ghosted",
             "current_step": "day_30_nudge",
-            "response_content": action['content'],
+            "response_content": action["content"],
             "cma_attached": cma_attached,
         }
 
-    async def _send_cma_email_with_attachment(
-        self, lead_id: str, contact_email: str, property_address: str
-    ) -> bool:
+    async def _send_cma_email_with_attachment(self, lead_id: str, contact_email: str, property_address: str) -> bool:
         """Generate a CMA PDF and email it as an attachment via SendGrid.
 
         Returns True on success, False on any failure.  Never raises.
         """
         import re
+
         try:
             report = await self.cma_generator.generate_report(property_address)
             pdf_bytes = PDFRenderer.generate_pdf_bytes(report)
 
             import base64
-            b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+
+            b64_pdf = base64.b64encode(pdf_bytes).decode("utf-8")
 
             # Build a filesystem-safe filename from the address
-            safe_addr = re.sub(r'[^A-Za-z0-9]+', '_', property_address).strip('_')[:60]
+            safe_addr = re.sub(r"[^A-Za-z0-9]+", "_", property_address).strip("_")[:60]
             filename = f"CMA_{safe_addr}.pdf"
 
             email_html = self._build_cma_email_html(property_address)
@@ -1914,16 +1944,16 @@ class LeadBotWorkflow:
                 subject=f"Your Personalized CMA for {property_address}",
                 html_content=email_html,
                 lead_id=lead_id,
-                attachments=[{
-                    "content": b64_pdf,
-                    "filename": filename,
-                    "type": "application/pdf",
-                }],
+                attachments=[
+                    {
+                        "content": b64_pdf,
+                        "filename": filename,
+                        "type": "application/pdf",
+                    }
+                ],
             )
 
-            await sync_service.record_lead_event(
-                lead_id, "AI", f"CMA PDF emailed to {contact_email}", "email"
-            )
+            await sync_service.record_lead_event(lead_id, "AI", f"CMA PDF emailed to {contact_email}", "email")
             await self.sequence_service.set_cma_generated(lead_id)
 
             logger.info(f"CMA PDF attachment sent to {contact_email} for lead {lead_id}")
@@ -1969,60 +1999,57 @@ class LeadBotWorkflow:
     async def send_day_30_nudge(self, state: LeadFollowUpState) -> Dict:
         """Day 30: Final qualification attempt via GhostEngine."""
         ghost_state = GhostState(
-            contact_id=state['lead_id'],
-            current_day=30,
-            frs_score=state['intent_profile'].frs.total_score
+            contact_id=state["lead_id"], current_day=30, frs_score=state["intent_profile"].frs.total_score
         )
-        action = await self.ghost_engine.process_lead_step(ghost_state, state['conversation_history'])
-        
+        action = await self.ghost_engine.process_lead_step(ghost_state, state["conversation_history"])
+
         logger.info(f"Sending Day 30 SMS to {state['contact_phone']}: {action['content']}")
-        await sync_service.record_lead_event(state['lead_id'], "AI", "Sent Day 30 final nudge SMS.", "sms")
+        await sync_service.record_lead_event(state["lead_id"], "AI", "Sent Day 30 final nudge SMS.", "sms")
 
         # Mark Day 30 as completed in sequence state
-        await self.sequence_service.mark_action_completed(state['lead_id'], SequenceDay.DAY_30, "sms_sent")
+        await self.sequence_service.mark_action_completed(state["lead_id"], SequenceDay.DAY_30, "sms_sent")
 
         # Complete the sequence - move to nurture
-        await self.sequence_service.complete_sequence(state['lead_id'], "nurture")
+        await self.sequence_service.complete_sequence(state["lead_id"], "nurture")
 
         # Send SMS via GHL API
         if self.ghl_client:
             try:
                 await self.ghl_client.send_message(
-                    contact_id=state['lead_id'],
-                    message=action['content'],
-                    channel=MessageType.SMS
+                    contact_id=state["lead_id"], message=action["content"], channel=MessageType.SMS
                 )
                 logger.info(f"Day 30 SMS sent successfully to contact {state['lead_id']}")
             except Exception as e:
                 logger.error(f"Failed to send Day 30 SMS via GHL: {e}")
 
-        return {
-            "engagement_status": "nurture", 
-            "current_step": "nurture",
-            "response_content": action['content']
-        }
+        return {"engagement_status": "nurture", "current_step": "nurture", "response_content": action["content"]}
 
     async def schedule_showing(self, state: LeadFollowUpState) -> Dict:
         """Handle showing coordination with market-aware scheduling."""
         logger.info(f"Scheduling showing for {state['lead_name']} at {state['property_address']}")
-        
-        await sync_service.record_lead_event(state['lead_id'], "AI", "Coordinating showing with market-aware scheduling.", "thought")
+
+        await sync_service.record_lead_event(
+            state["lead_id"], "AI", "Coordinating showing with market-aware scheduling.", "thought"
+        )
 
         # Phase 7: Use Smart Scheduler
         from ghl_real_estate_ai.services.calendar_scheduler import get_smart_scheduler
+
         scheduler = get_smart_scheduler(self.ghl_client)
-        
-        address = state.get('property_address', 'the property')
+
+        address = state.get("property_address", "the property")
         market_metrics = await self.market_intel.get_market_metrics(address)
-        
+
         # Inject urgency if market is hot
         urgency_msg = ""
         if market_metrics and market_metrics.inventory_days < 15:
-            urgency_msg = f" This market is moving fast ({market_metrics.inventory_days} days avg), so we should see it soon."
-            
+            urgency_msg = (
+                f" This market is moving fast ({market_metrics.inventory_days} days avg), so we should see it soon."
+            )
+
         msg = f"Great choice! I'm coordinating with the listing agent for {address}.{urgency_msg} Does tomorrow afternoon work for a tour?"
-        
-        await sync_service.record_lead_event(state['lead_id'], "AI", f"Showing inquiry sent for {address}.", "sms")
+
+        await sync_service.record_lead_event(state["lead_id"], "AI", f"Showing inquiry sent for {address}.", "sms")
 
         # In a real system, trigger GHL SMS here
         return {"engagement_status": "showing_booked", "current_step": "post_showing"}
@@ -2030,25 +2057,29 @@ class LeadBotWorkflow:
     async def post_showing_survey(self, state: LeadFollowUpState) -> Dict:
         """Collect feedback after a showing with behavioral intent capture."""
         logger.info(f"Collecting post-showing feedback from {state['lead_name']}")
-        
-        await sync_service.record_lead_event(state['lead_id'], "AI", "Collecting post-showing behavioral feedback.", "thought")
+
+        await sync_service.record_lead_event(
+            state["lead_id"], "AI", "Collecting post-showing behavioral feedback.", "thought"
+        )
 
         # Use Tone Engine (Jorge style if applicable, or standard)
         msg = "How was the tour? On a scale of 1-10, how well does this home fit what you're looking for?"
-        
-        await sync_service.record_lead_event(state['lead_id'], "AI", "Post-showing survey sent.", "sms")
+
+        await sync_service.record_lead_event(state["lead_id"], "AI", "Post-showing survey sent.", "sms")
 
         return {"current_step": "facilitate_offer", "engagement_status": "qualified"}
 
     async def facilitate_offer(self, state: LeadFollowUpState) -> Dict:
         """Guide the lead through the offer submission process using NationalMarketIntelligence."""
         logger.info(f"Facilitating offer for {state['lead_name']}")
-        
-        address = state.get('property_address', 'the property')
-        await sync_service.record_lead_event(state['lead_id'], "AI", f"Facilitating offer strategy for {address}", "thought")
+
+        address = state.get("property_address", "the property")
+        await sync_service.record_lead_event(
+            state["lead_id"], "AI", f"Facilitating offer strategy for {address}", "thought"
+        )
 
         metrics = await self.market_intel.get_market_metrics(address)
-        
+
         # Generate offer strategy advice
         strategy = "We should look at recent comps to find the right number."
         if metrics:
@@ -2056,65 +2087,83 @@ class LeadBotWorkflow:
                 strategy = "Given the 10%+ appreciation in this area, we might need to be aggressive with the terms."
             else:
                 strategy = "Market is stable here, so we have some room to negotiate on repairs."
-                
+
         msg = f"I've prepared an offer strategy for {address}. {strategy} Ready to review the numbers?"
-        
-        await sync_service.record_lead_event(state['lead_id'], "AI", "Offer strategy sent to lead.", "sms")
+
+        await sync_service.record_lead_event(state["lead_id"], "AI", "Offer strategy sent to lead.", "sms")
 
         return {"engagement_status": "offer_sent", "current_step": "closing_nurture"}
 
     async def contract_to_close_nurture(self, state: LeadFollowUpState) -> Dict:
         """Automated touchpoints during the escrow period with milestone tracking."""
         logger.info(f"Escrow nurture for {state['lead_name']}")
-        
-        await sync_service.record_lead_event(state['lead_id'], "AI", "Starting escrow nurture and milestone tracking.", "node")
+
+        await sync_service.record_lead_event(
+            state["lead_id"], "AI", "Starting escrow nurture and milestone tracking.", "node"
+        )
 
         # Real milestone tracking based on lead state and engagement
         milestone = self._determine_escrow_milestone(state)
-        msg = self._get_milestone_message(milestone, state['lead_name'])
-        
-        await sync_service.record_lead_event(state['lead_id'], "AI", f"Escrow update: {milestone} milestone tracked.", "thought")
+        msg = self._get_milestone_message(milestone, state["lead_name"])
+
+        await sync_service.record_lead_event(
+            state["lead_id"], "AI", f"Escrow update: {milestone} milestone tracked.", "thought"
+        )
 
         return {"engagement_status": "under_contract", "current_step": "closed"}
 
     # --- Helper Logic ---
 
-    def _route_next_step(self, state: LeadFollowUpState) -> Literal["generate_cma", "day_3", "day_7", "day_14", "day_30", "schedule_showing", "post_showing", "facilitate_offer", "closing_nurture", "qualified", "nurture"]:
+    def _route_next_step(
+        self, state: LeadFollowUpState
+    ) -> Literal[
+        "generate_cma",
+        "day_3",
+        "day_7",
+        "day_14",
+        "day_30",
+        "schedule_showing",
+        "post_showing",
+        "facilitate_offer",
+        "closing_nurture",
+        "qualified",
+        "nurture",
+    ]:
         """Conditional routing logic."""
         # Fix for phase 3: check for generate_cma first
-        if state.get('current_step') == 'generate_cma':
+        if state.get("current_step") == "generate_cma":
             return "generate_cma"
 
         # Check for lifecycle transitions
-        engagement = state['engagement_status']
+        engagement = state["engagement_status"]
         if engagement == "showing_booked":
             return "post_showing"
         if engagement == "offer_sent":
             return "closing_nurture"
         if engagement == "under_contract":
-            return "qualified" # Or specific closing node
-            
+            return "qualified"  # Or specific closing node
+
         # Logic for booking showings if score is high
-        if state['intent_profile'] and state['intent_profile'].frs.classification == "Hot Lead":
+        if state["intent_profile"] and state["intent_profile"].frs.classification == "Hot Lead":
             if engagement != "showing_booked":
                 return "schedule_showing"
 
-        if state['engagement_status'] == "qualified":
+        if state["engagement_status"] == "qualified":
             return "qualified"
-        if state['engagement_status'] == "nurture":
+        if state["engagement_status"] == "nurture":
             return "nurture"
-            
+
         # Valid steps mapping
-        step = state.get('current_step', 'initial')
+        step = state.get("current_step", "initial")
         if step in ["day_3", "day_7", "day_14", "day_30"]:
             return step
-        
+
         # Intelligent fallback based on lead signals and engagement
         return self._classify_lead_for_routing(state)
 
     def _select_stall_breaker(self, state: LeadFollowUpState) -> str:
         """Select the appropriate stall-breaking script based on intent profile via GhostEngine."""
-        last_msg = state['conversation_history'][-1]['content'].lower() if state['conversation_history'] else ""
+        last_msg = state["conversation_history"][-1]["content"].lower() if state["conversation_history"] else ""
 
         objection_type = "market_shift"  # Default
 
@@ -2132,7 +2181,7 @@ class LeadBotWorkflow:
     def _determine_escrow_milestone(self, state: LeadFollowUpState) -> str:
         """
         Determine current escrow milestone based on lead state and timeline.
-        
+
         Milestones in order:
         1. contract_signed - Initial contract execution
         2. inspection - Home inspection period
@@ -2142,103 +2191,105 @@ class LeadBotWorkflow:
         6. closing - Closing day
         """
         # Check for milestone indicators in conversation history
-        conversation_text = " ".join(
-            msg.get('content', '').lower() 
-            for msg in state.get('conversation_history', [])
-        )
-        
+        conversation_text = " ".join(msg.get("content", "").lower() for msg in state.get("conversation_history", []))
+
         # Check custom fields or state for milestone tracking
-        custom_fields = state.get('custom_fields', {})
-        current_milestone = custom_fields.get('escrow_milestone', '')
-        
+        custom_fields = state.get("custom_fields", {})
+        current_milestone = custom_fields.get("escrow_milestone", "")
+
         if current_milestone:
             return current_milestone
-        
+
         # Infer milestone from conversation keywords
         milestone_keywords = {
-            'closing': ['closing', 'close of escrow', 'coe', 'keys', 'final signing'],
-            'final_walkthrough': ['walkthrough', 'walk-through', 'final walk'],
-            'loan_approval': ['loan approved', 'clear to close', 'ctc', 'underwriting'],
-            'appraisal': ['appraisal', 'appraiser', 'appraisal value'],
-            'inspection': ['inspection', 'inspector', 'home inspection'],
-            'contract_signed': ['contract', 'under contract', 'accepted offer']
+            "closing": ["closing", "close of escrow", "coe", "keys", "final signing"],
+            "final_walkthrough": ["walkthrough", "walk-through", "final walk"],
+            "loan_approval": ["loan approved", "clear to close", "ctc", "underwriting"],
+            "appraisal": ["appraisal", "appraiser", "appraisal value"],
+            "inspection": ["inspection", "inspector", "home inspection"],
+            "contract_signed": ["contract", "under contract", "accepted offer"],
         }
-        
+
         # Check in reverse order (most advanced milestone first)
         for milestone, keywords in milestone_keywords.items():
             if any(kw in conversation_text for kw in keywords):
                 return milestone
-        
+
         # Default to inspection as first major milestone after contract
-        return 'inspection'
+        return "inspection"
 
     def _get_milestone_message(self, milestone: str, lead_name: str) -> str:
         """
         Get appropriate message for the current escrow milestone.
         """
         milestone_messages = {
-            'contract_signed': f"Congrats {lead_name} on getting under contract! The next step is scheduling the home inspection. I'll help coordinate everything.",
-            'inspection': f"Great news {lead_name}! The inspection is the next major milestone. I'll be there to make sure everything is handled properly.",
-            'appraisal': f"{lead_name}, the appraisal is coming up. This is when the lender confirms the home's value. I'll keep you posted on the results.",
-            'loan_approval': f"Exciting progress {lead_name}! We're waiting on final loan approval. Once we get the clear to close, we're almost there!",
-            'final_walkthrough': f"{lead_name}, time for the final walkthrough! This is your chance to verify everything is in order before closing.",
-            'closing': f"The big day is here {lead_name}! Closing day - you're about to get the keys to your new home!"
+            "contract_signed": f"Congrats {lead_name} on getting under contract! The next step is scheduling the home inspection. I'll help coordinate everything.",
+            "inspection": f"Great news {lead_name}! The inspection is the next major milestone. I'll be there to make sure everything is handled properly.",
+            "appraisal": f"{lead_name}, the appraisal is coming up. This is when the lender confirms the home's value. I'll keep you posted on the results.",
+            "loan_approval": f"Exciting progress {lead_name}! We're waiting on final loan approval. Once we get the clear to close, we're almost there!",
+            "final_walkthrough": f"{lead_name}, time for the final walkthrough! This is your chance to verify everything is in order before closing.",
+            "closing": f"The big day is here {lead_name}! Closing day - you're about to get the keys to your new home!",
         }
-        
+
         return milestone_messages.get(
-            milestone, 
-            f"Congrats {lead_name} on being under contract! I'll keep you updated on each milestone."
+            milestone, f"Congrats {lead_name} on being under contract! I'll keep you updated on each milestone."
         )
 
     def _classify_lead_for_routing(self, state: LeadFollowUpState) -> Literal["qualified", "nurture"]:
         """
         Classify lead for routing based on intent signals, engagement, and temperature.
-        
+
         Returns:
             'qualified' if lead shows strong buying/selling signals
             'nurture' if lead needs more engagement
         """
         # Check intent profile for classification
-        intent_profile = state.get('intent_profile')
+        intent_profile = state.get("intent_profile")
         if intent_profile:
-            frs = getattr(intent_profile, 'frs', None)
+            frs = getattr(intent_profile, "frs", None)
             if frs:
-                classification = getattr(frs, 'classification', '')
-                if classification in ['Hot Lead', 'Warm Lead']:
-                    return 'qualified'
-        
+                classification = getattr(frs, "classification", "")
+                if classification in ["Hot Lead", "Warm Lead"]:
+                    return "qualified"
+
         # Check lead score from state
-        lead_score = state.get('lead_score', 0)
+        lead_score = state.get("lead_score", 0)
         if lead_score >= 70:
-            return 'qualified'
-        
+            return "qualified"
+
         # Analyze conversation for buying signals
-        conversation_history = state.get('conversation_history', [])
+        conversation_history = state.get("conversation_history", [])
         if conversation_history:
             recent_messages = conversation_history[-5:]  # Last 5 messages
             message_text = " ".join(
-                msg.get('content', '').lower() 
-                for msg in recent_messages 
-                if msg.get('role') == 'user'
+                msg.get("content", "").lower() for msg in recent_messages if msg.get("role") == "user"
             )
-            
+
             # Strong buying signals
             buying_signals = [
-                'pre-approved', 'preapproved', 'ready to buy', 'want to make an offer',
-                'schedule a showing', 'see the house', 'budget is', 'looking to buy',
-                'sell my house', 'list my home', 'what\'s my home worth'
+                "pre-approved",
+                "preapproved",
+                "ready to buy",
+                "want to make an offer",
+                "schedule a showing",
+                "see the house",
+                "budget is",
+                "looking to buy",
+                "sell my house",
+                "list my home",
+                "what's my home worth",
             ]
-            
+
             if any(signal in message_text for signal in buying_signals):
-                return 'qualified'
-        
+                return "qualified"
+
         # Check engagement status
-        engagement = state.get('engagement_status', '')
-        if engagement in ['showing_booked', 'offer_sent', 'under_contract']:
-            return 'qualified'
-        
+        engagement = state.get("engagement_status", "")
+        if engagement in ["showing_booked", "offer_sent", "under_contract"]:
+            return "qualified"
+
         # Default to nurture for leads needing more engagement
-        return 'nurture'
+        return "nurture"
 
     # ================================
     # INTELLIGENCE HELPER METHODS
@@ -2293,11 +2344,11 @@ class LeadBotWorkflow:
             # Standard timing
             return [9, 14, 18]
 
-    def _construct_intelligent_day3_message(self, state, intelligence_context,
-                                           personalized_insights: List[str],
-                                           critical_scenario) -> str:
+    def _construct_intelligent_day3_message(
+        self, state, intelligence_context, personalized_insights: List[str], critical_scenario
+    ) -> str:
         """Construct Day 3 message using intelligence insights."""
-        lead_name = state['lead_name']
+        lead_name = state["lead_name"]
 
         # Base message logic
         if critical_scenario:
@@ -2306,24 +2357,27 @@ class LeadBotWorkflow:
             # Standard nurture message with intelligence enhancements
             if intelligence_context and personalized_insights:
                 # Use intelligence insights to personalize the message
-                if "property matches" in ' '.join(personalized_insights).lower():
+                if "property matches" in " ".join(personalized_insights).lower():
                     base_msg = f"Hi {lead_name}, I found some properties that match what you're looking for. Any questions about the market?"
-                elif "objections" in ' '.join(personalized_insights).lower():
+                elif "objections" in " ".join(personalized_insights).lower():
                     base_msg = f"Hi {lead_name}, checking in about your property search. Happy to address any concerns you might have."
-                elif "positive sentiment" in ' '.join(personalized_insights).lower():
+                elif "positive sentiment" in " ".join(personalized_insights).lower():
                     base_msg = f"Hi {lead_name}, hope you're doing well! Any updates on your property search?"
                 else:
-                    base_msg = f"Hi {lead_name}, checking in about your property search. Any questions about the market?"
+                    base_msg = (
+                        f"Hi {lead_name}, checking in about your property search. Any questions about the market?"
+                    )
             else:
                 # Fallback to standard message
                 base_msg = f"Hi {lead_name}, checking in about your property search. Any questions about the market?"
 
         return base_msg
 
-    def _construct_adaptive_day14_message(self, state, intelligence_context,
-                                         preferred_channel: str, content_adaptation_applied: bool) -> str:
+    def _construct_adaptive_day14_message(
+        self, state, intelligence_context, preferred_channel: str, content_adaptation_applied: bool
+    ) -> str:
         """Construct adaptive Day 14 message using intelligence insights."""
-        lead_name = state['lead_name']
+        lead_name = state["lead_name"]
 
         if intelligence_context and content_adaptation_applied:
             property_matches = intelligence_context.property_intelligence.match_count
@@ -2338,7 +2392,9 @@ class LeadBotWorkflow:
 
             elif objections and sentiment < 0:
                 if preferred_channel == "Voice":
-                    msg = f"Hey {lead_name}, I hear you on the concerns. Easier to talk it through—open to a quick call?"
+                    msg = (
+                        f"Hey {lead_name}, I hear you on the concerns. Easier to talk it through—open to a quick call?"
+                    )
                 else:
                     msg = f"Hey {lead_name}, totally understand the hesitation. Happy to answer questions—what's on your mind?"
 
@@ -2351,10 +2407,11 @@ class LeadBotWorkflow:
 
         return msg
 
-    def _construct_intelligent_day30_message(self, state, final_strategy: str,
-                                            intelligence_score: float, handoff_reasoning: List[str]) -> str:
+    def _construct_intelligent_day30_message(
+        self, state, final_strategy: str, intelligence_score: float, handoff_reasoning: List[str]
+    ) -> str:
         """Construct intelligent Day 30 message based on final strategy."""
-        lead_name = state['lead_name']
+        lead_name = state["lead_name"]
 
         if final_strategy == "jorge_qualification":
             msg = f"Hey {lead_name}, been 30 days—sounds like you're getting serious. Want me to connect you with Jorge for a deeper market breakdown?"
@@ -2370,32 +2427,34 @@ class LeadBotWorkflow:
 
         return msg
 
-    async def _publish_intelligent_jorge_handoff_request(self, state, intelligence_context,
-                                                       handoff_type: str, intelligence_score: float,
-                                                       handoff_reasoning: List[str]):
+    async def _publish_intelligent_jorge_handoff_request(
+        self, state, intelligence_context, handoff_type: str, intelligence_score: float, handoff_reasoning: List[str]
+    ):
         """Publish enhanced Jorge handoff request with comprehensive intelligence context."""
         handoff_data = {
             "handoff_type": handoff_type,
             "intelligence_score": intelligence_score,
             "handoff_reasoning": handoff_reasoning,
             "sequence_completion": "day_30_reached",
-            "recommendation": f"Jorge {handoff_type} recommended based on comprehensive intelligence analysis"
+            "recommendation": f"Jorge {handoff_type} recommended based on comprehensive intelligence analysis",
         }
 
         # Add intelligence context details if available
         if intelligence_context:
-            handoff_data.update({
-                "engagement_score": intelligence_context.composite_engagement_score,
-                "property_matches": intelligence_context.property_intelligence.match_count,
-                "objections_count": len(intelligence_context.conversation_intelligence.objections_detected),
-                "sentiment": intelligence_context.conversation_intelligence.overall_sentiment,
-                "preference_completeness": intelligence_context.preference_intelligence.profile_completeness,
-                "recommended_approach": intelligence_context.recommended_approach,
-                "priority_insights": intelligence_context.priority_insights
-            })
+            handoff_data.update(
+                {
+                    "engagement_score": intelligence_context.composite_engagement_score,
+                    "property_matches": intelligence_context.property_intelligence.match_count,
+                    "objections_count": len(intelligence_context.conversation_intelligence.objections_detected),
+                    "sentiment": intelligence_context.conversation_intelligence.overall_sentiment,
+                    "preference_completeness": intelligence_context.preference_intelligence.profile_completeness,
+                    "recommended_approach": intelligence_context.recommended_approach,
+                    "priority_insights": intelligence_context.priority_insights,
+                }
+            )
 
         # Add traditional analytics if available
-        churn_risk = state.get('churn_risk_score')
+        churn_risk = state.get("churn_risk_score")
         if churn_risk:
             handoff_data["churn_risk_score"] = churn_risk
 
@@ -2404,11 +2463,13 @@ class LeadBotWorkflow:
             from_bot="enhanced-lead-bot",
             to_bot="jorge-seller-bot",
             contact_id=state["lead_id"],
-            data=handoff_data
+            data=handoff_data,
         )
 
-        logger.info(f"Intelligent Jorge handoff request published for {state['lead_name']} "
-                   f"(type: {handoff_type}, score: {intelligence_score:.2f})")
+        logger.info(
+            f"Intelligent Jorge handoff request published for {state['lead_name']} "
+            f"(type: {handoff_type}, score: {intelligence_score:.2f})"
+        )
 
     # ================================
     # UNIFIED PROCESSING METHODS
@@ -2423,14 +2484,14 @@ class LeadBotWorkflow:
         sequence_day: int = 0,
         lead_phone: Optional[str] = None,
         lead_email: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Main entry point for processing lead conversations.
-        
+
         This is the primary public API method for the Lead Bot, providing a simple
         interface for processing incoming lead messages through the LangGraph workflow.
-        
+
         Args:
             conversation_id: Unique identifier for the conversation
             user_message: The incoming message from the lead
@@ -2440,7 +2501,7 @@ class LeadBotWorkflow:
             lead_phone: Optional phone number for SMS follow-ups
             lead_email: Optional email for email follow-ups
             metadata: Optional additional metadata
-            
+
         Returns:
             Dict containing:
                 - response_content: Bot's response message
@@ -2459,7 +2520,8 @@ class LeadBotWorkflow:
             return {
                 "conversation_id": conversation_id,
                 "response_content": "I didn't catch that. Could you say more?",
-                "current_step": "awaiting_input", "engagement_status": "active",
+                "current_step": "awaiting_input",
+                "engagement_status": "active",
                 "handoff_signals": {},
             }
         user_message = str(user_message).strip()[:MAX_MESSAGE_LENGTH]
@@ -2472,15 +2534,13 @@ class LeadBotWorkflow:
                 conversation_history = []
 
             # Add the user message to history
-            conversation_history.append({
-                "role": "user",
-                "content": user_message,
-                "timestamp": datetime.now(timezone.utc).isoformat()
-            })
+            conversation_history.append(
+                {"role": "user", "content": user_message, "timestamp": datetime.now(timezone.utc).isoformat()}
+            )
 
             # Prune to prevent unbounded memory growth
             if len(conversation_history) > self.MAX_CONVERSATION_HISTORY:
-                conversation_history = conversation_history[-self.MAX_CONVERSATION_HISTORY:]
+                conversation_history = conversation_history[-self.MAX_CONVERSATION_HISTORY :]
 
             # Get A/B test variant for response tone
             try:
@@ -2500,13 +2560,11 @@ class LeadBotWorkflow:
                 "cma_generated": False,
                 "user_message": user_message,
                 "tone_variant": _tone_variant,
-
                 # Enhanced fields
                 "response_pattern": None,
                 "personality_type": None,
                 "temperature_prediction": None,
                 "sequence_optimization": None,
-
                 # Track 3.1 fields
                 "journey_analysis": None,
                 "conversion_analysis": None,
@@ -2514,16 +2572,15 @@ class LeadBotWorkflow:
                 "enhanced_optimization": None,
                 "critical_scenario": None,
                 "track3_applied": False,
-
                 # Phase 3.3 Intelligence Enhancement fields
                 "intelligence_context": None,
                 "intelligence_performance_ms": 0.0,
                 "preferred_engagement_timing": None,
                 "churn_risk_score": None,
                 "cross_bot_preferences": None,
-                "sequence_optimization_applied": False
+                "sequence_optimization_applied": False,
             }
-            
+
             # Add optional metadata
             if lead_phone:
                 initial_state["lead_phone"] = lead_phone
@@ -2531,7 +2588,7 @@ class LeadBotWorkflow:
                 initial_state["lead_email"] = lead_email
             if metadata:
                 initial_state["metadata"] = metadata
-            
+
             # Execute the workflow
             result = await self.workflow.ainvoke(initial_state)
 
@@ -2543,6 +2600,7 @@ class LeadBotWorkflow:
             handoff_signals = {}
             if self.config.jorge_handoff_enabled:
                 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+
                 handoff_signals = JorgeHandoffService.extract_intent_signals(user_message)
 
             result["handoff_signals"] = handoff_signals
@@ -2554,12 +2612,8 @@ class LeadBotWorkflow:
             }
 
             # Record performance metrics
-            await self.performance_tracker.track_operation(
-                "lead_bot", "process", _workflow_duration_ms, success=True
-            )
-            self.metrics_collector.record_bot_interaction(
-                "lead", duration_ms=_workflow_duration_ms, success=True
-            )
+            await self.performance_tracker.track_operation("lead_bot", "process", _workflow_duration_ms, success=True)
+            self.metrics_collector.record_bot_interaction("lead", duration_ms=_workflow_duration_ms, success=True)
 
             # Feed metrics to alerting (non-blocking)
             try:
@@ -2583,7 +2637,7 @@ class LeadBotWorkflow:
                 bot_type="lead-bot",
                 contact_id=conversation_id,
                 status="completed",
-                current_step=result.get("current_step", "unknown")
+                current_step=result.get("current_step", "unknown"),
             )
 
             return result
@@ -2592,12 +2646,8 @@ class LeadBotWorkflow:
             # Record failure metrics
             try:
                 _fail_duration = (time.time() - _workflow_start) * 1000
-                await self.performance_tracker.track_operation(
-                    "lead_bot", "process", _fail_duration, success=False
-                )
-                self.metrics_collector.record_bot_interaction(
-                    "lead", duration_ms=_fail_duration, success=False
-                )
+                await self.performance_tracker.track_operation("lead_bot", "process", _fail_duration, success=False)
+                self.metrics_collector.record_bot_interaction("lead", duration_ms=_fail_duration, success=False)
             except Exception:
                 pass
 
@@ -2608,11 +2658,12 @@ class LeadBotWorkflow:
                 "response_content": "I apologize, but I encountered an issue processing your message. Please try again.",
                 "current_step": "error",
                 "engagement_status": "error",
-                "handoff_signals": {}
+                "handoff_signals": {},
             }
 
-    async def process_enhanced_lead_sequence(self, lead_id: str, sequence_day: int,
-                                           conversation_history: List[Dict]) -> Dict[str, Any]:
+    async def process_enhanced_lead_sequence(
+        self, lead_id: str, sequence_day: int, conversation_history: List[Dict]
+    ) -> Dict[str, Any]:
         """
         Process lead through enhanced workflow with all enabled enhancements.
         This is the primary entry point for the enhanced Lead Bot.
@@ -2626,13 +2677,11 @@ class LeadBotWorkflow:
             "sequence_day": sequence_day,
             "engagement_status": "responsive",
             "cma_generated": False,
-
             # Enhanced fields
             "response_pattern": None,
             "personality_type": None,
             "temperature_prediction": None,
             "sequence_optimization": None,
-
             # Track 3.1 fields
             "journey_analysis": None,
             "conversion_analysis": None,
@@ -2640,14 +2689,13 @@ class LeadBotWorkflow:
             "enhanced_optimization": None,
             "critical_scenario": None,
             "track3_applied": False,
-
             # Phase 3.3 Intelligence Enhancement fields
             "intelligence_context": None,
             "intelligence_performance_ms": 0.0,
             "preferred_engagement_timing": None,
             "churn_risk_score": None,
             "cross_bot_preferences": None,
-            "sequence_optimization_applied": False
+            "sequence_optimization_applied": False,
         }
 
         return await self.workflow.ainvoke(initial_state)
@@ -2664,44 +2712,48 @@ class LeadBotWorkflow:
                 "personality_adaptation": self.config.enable_personality_adaptation,
                 "track3_intelligence": self.config.enable_track3_intelligence,
                 "jorge_handoff": self.config.jorge_handoff_enabled,
-                "bot_intelligence": self.config.enable_bot_intelligence
-            }
+                "bot_intelligence": self.config.enable_bot_intelligence,
+            },
         }
 
         # Behavioral optimization metrics
         if self.config.enable_behavioral_optimization and self.workflow_stats["total_sequences"] > 0:
             metrics["behavioral_optimization"] = {
                 "optimizations_applied": self.workflow_stats["behavioral_optimizations"],
-                "optimization_rate": self.workflow_stats["behavioral_optimizations"] / self.workflow_stats["total_sequences"]
+                "optimization_rate": self.workflow_stats["behavioral_optimizations"]
+                / self.workflow_stats["total_sequences"],
             }
 
         # Personality adaptation metrics
         if self.config.enable_personality_adaptation:
             metrics["personality_adaptation"] = {
                 "adaptations_applied": self.workflow_stats["personality_adaptations"],
-                "adaptation_rate": self.workflow_stats["personality_adaptations"] / max(self.workflow_stats["total_sequences"], 1)
+                "adaptation_rate": self.workflow_stats["personality_adaptations"]
+                / max(self.workflow_stats["total_sequences"], 1),
             }
 
         # Track 3.1 metrics
         if self.config.enable_track3_intelligence:
             metrics["track3_intelligence"] = {
                 "enhancements_applied": self.workflow_stats["track3_enhancements"],
-                "enhancement_rate": self.workflow_stats["track3_enhancements"] / max(self.workflow_stats["total_sequences"], 1)
+                "enhancement_rate": self.workflow_stats["track3_enhancements"]
+                / max(self.workflow_stats["total_sequences"], 1),
             }
 
         # Jorge handoff metrics
         if self.config.jorge_handoff_enabled:
             metrics["jorge_handoffs"] = {
                 "total_handoffs": self.workflow_stats["jorge_handoffs"],
-                "handoff_rate": self.workflow_stats["jorge_handoffs"] / max(self.workflow_stats["total_sequences"], 1)
+                "handoff_rate": self.workflow_stats["jorge_handoffs"] / max(self.workflow_stats["total_sequences"], 1),
             }
 
         # Bot Intelligence metrics
         if self.config.enable_bot_intelligence:
             metrics["bot_intelligence"] = {
                 "intelligence_operations": self.workflow_stats["intelligence_gathering_operations"],
-                "intelligence_rate": self.workflow_stats["intelligence_gathering_operations"] / max(self.workflow_stats["total_sequences"], 1),
-                "middleware_available": self.intelligence_middleware is not None
+                "intelligence_rate": self.workflow_stats["intelligence_gathering_operations"]
+                / max(self.workflow_stats["total_sequences"], 1),
+                "middleware_available": self.intelligence_middleware is not None,
             }
 
             # Include middleware metrics if available
@@ -2720,7 +2772,7 @@ class LeadBotWorkflow:
             "personality_adaptation": "disabled",
             "track3_intelligence": "disabled",
             "bot_intelligence": "disabled",
-            "overall_status": "healthy"
+            "overall_status": "healthy",
         }
 
         # Check predictive analytics
@@ -2756,23 +2808,21 @@ class LeadBotWorkflow:
     # ================================
 
     @classmethod
-    def create_standard_lead_bot(cls, ghl_client=None) -> 'LeadBotWorkflow':
+    def create_standard_lead_bot(cls, ghl_client=None) -> "LeadBotWorkflow":
         """Factory method: Create standard lead bot (3-7-30 sequence only)"""
         config = LeadBotConfig()
         return cls(ghl_client=ghl_client, config=config)
 
     @classmethod
-    def create_enhanced_lead_bot(cls, ghl_client=None) -> 'LeadBotWorkflow':
+    def create_enhanced_lead_bot(cls, ghl_client=None) -> "LeadBotWorkflow":
         """Factory method: Create lead bot with behavioral optimization"""
         config = LeadBotConfig(
-            enable_behavioral_optimization=True,
-            enable_personality_adaptation=True,
-            enable_predictive_analytics=True
+            enable_behavioral_optimization=True, enable_personality_adaptation=True, enable_predictive_analytics=True
         )
         return cls(ghl_client=ghl_client, config=config)
 
     @classmethod
-    def create_enterprise_lead_bot(cls, ghl_client=None) -> 'LeadBotWorkflow':
+    def create_enterprise_lead_bot(cls, ghl_client=None) -> "LeadBotWorkflow":
         """Factory method: Create fully-enhanced enterprise lead bot"""
         config = LeadBotConfig(
             enable_predictive_analytics=True,
@@ -2780,23 +2830,21 @@ class LeadBotWorkflow:
             enable_personality_adaptation=True,
             enable_track3_intelligence=True,
             enable_bot_intelligence=True,
-            jorge_handoff_enabled=True
+            jorge_handoff_enabled=True,
         )
         return cls(ghl_client=ghl_client, config=config)
 
     @classmethod
-    def create_intelligence_enhanced_lead_bot(cls, ghl_client=None) -> 'LeadBotWorkflow':
+    def create_intelligence_enhanced_lead_bot(cls, ghl_client=None) -> "LeadBotWorkflow":
         """Factory method: Create lead bot with Phase 3.3 Intelligence Middleware"""
-        config = LeadBotConfig(
-            enable_bot_intelligence=True,
-            jorge_handoff_enabled=True
-        )
+        config = LeadBotConfig(enable_bot_intelligence=True, jorge_handoff_enabled=True)
         return cls(ghl_client=ghl_client, config=config)
 
 
 # ================================
 # FACTORY FUNCTIONS FOR EASY USE
 # ================================
+
 
 def get_lead_bot(enhancement_level: str = "standard", ghl_client=None) -> LeadBotWorkflow:
     """
@@ -2813,9 +2861,8 @@ def get_lead_bot(enhancement_level: str = "standard", ghl_client=None) -> LeadBo
     else:
         return LeadBotWorkflow.create_standard_lead_bot(ghl_client)
 
+
 # Backward compatibility
 def get_predictive_lead_bot(ghl_client=None) -> LeadBotWorkflow:
     """Factory function for backward compatibility - returns enterprise lead bot"""
     return LeadBotWorkflow.create_enterprise_lead_bot(ghl_client)
-
-    

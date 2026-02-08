@@ -11,21 +11,23 @@ Optimizes follow-up sequences based on:
 
 import asyncio
 import json
-import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass
-from enum import Enum
 import random
+import time
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
-from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
-from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 
 logger = get_logger(__name__)
 
+
 class LeadStage(Enum):
     """Lead progression stages."""
+
     NEW = "new"
     CONTACTED = "contacted"
     QUALIFIED = "qualified"
@@ -35,24 +37,30 @@ class LeadStage(Enum):
     CLOSED = "closed"
     LOST = "lost"
 
+
 class FollowUpChannel(Enum):
     """Available follow-up channels."""
+
     EMAIL = "email"
     SMS = "sms"
     PHONE_CALL = "phone_call"
     SOCIAL_MEDIA = "social_media"
     DIRECT_MAIL = "direct_mail"
 
+
 class EngagementLevel(Enum):
     """Lead engagement levels."""
+
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
     DISENGAGED = "disengaged"
 
+
 @dataclass
 class FollowUpAction:
     """Represents a single follow-up action."""
+
     action_id: str
     lead_id: str
     channel: FollowUpChannel
@@ -64,9 +72,11 @@ class FollowUpAction:
     expected_response_rate: float
     success_metrics: Dict[str, Any]
 
+
 @dataclass
 class LeadInteraction:
     """Represents a lead interaction event."""
+
     interaction_id: str
     lead_id: str
     timestamp: datetime
@@ -77,9 +87,11 @@ class LeadInteraction:
     engagement_score: float
     metadata: Dict[str, Any]
 
+
 @dataclass
 class OptimizationInsight:
     """Follow-up optimization insights."""
+
     insight_id: str
     lead_segment: str
     best_timing: Dict[str, Any]
@@ -88,6 +100,7 @@ class OptimizationInsight:
     response_rate_improvement: float
     confidence_score: float
     recommendation: str
+
 
 class SmartFollowUpOptimizer:
     """
@@ -110,7 +123,7 @@ class SmartFollowUpOptimizer:
             return
 
         try:
-            if hasattr(self.claude_assistant, 'initialize'):
+            if hasattr(self.claude_assistant, "initialize"):
                 await self.claude_assistant.initialize()
 
             # Load optimization insights from cache
@@ -128,7 +141,7 @@ class SmartFollowUpOptimizer:
         lead_id: str,
         lead_data: Dict[str, Any],
         interaction_history: List[LeadInteraction],
-        goal: str = "conversion"
+        goal: str = "conversion",
     ) -> List[FollowUpAction]:
         """
         Generate optimized follow-up sequence for a specific lead.
@@ -145,22 +158,14 @@ class SmartFollowUpOptimizer:
         await self._ensure_initialized()
 
         # Analyze lead behavior and engagement patterns
-        engagement_analysis = await self._analyze_lead_engagement(
-            lead_id, lead_data, interaction_history
-        )
+        engagement_analysis = await self._analyze_lead_engagement(lead_id, lead_data, interaction_history)
 
         # Get optimal timing recommendations
-        timing_optimization = await self._optimize_timing(
-            lead_id, engagement_analysis
-        )
+        timing_optimization = await self._optimize_timing(lead_id, engagement_analysis)
 
         # Generate personalized content for each follow-up
         sequence = await self._generate_followup_sequence(
-            lead_id,
-            lead_data,
-            engagement_analysis,
-            timing_optimization,
-            goal
+            lead_id, lead_data, engagement_analysis, timing_optimization, goal
         )
 
         # Cache the optimized sequence
@@ -173,10 +178,7 @@ class SmartFollowUpOptimizer:
         return sequence
 
     async def _analyze_lead_engagement(
-        self,
-        lead_id: str,
-        lead_data: Dict[str, Any],
-        interaction_history: List[LeadInteraction]
+        self, lead_id: str, lead_data: Dict[str, Any], interaction_history: List[LeadInteraction]
     ) -> Dict[str, Any]:
         """Analyze lead engagement patterns using AI."""
 
@@ -184,13 +186,13 @@ class SmartFollowUpOptimizer:
         Analyze this lead's engagement patterns and provide optimization insights:
 
         Lead Profile:
-        - Name: {lead_data.get('name', 'N/A')}
-        - Email: {lead_data.get('email', 'N/A')}
-        - Phone: {lead_data.get('phone', 'N/A')}
-        - Lead Source: {lead_data.get('source', 'N/A')}
-        - Budget: ${lead_data.get('budget', 0):,.0f}
-        - Property Type: {lead_data.get('property_type', 'N/A')}
-        - Timeline: {lead_data.get('timeline', 'N/A')}
+        - Name: {lead_data.get("name", "N/A")}
+        - Email: {lead_data.get("email", "N/A")}
+        - Phone: {lead_data.get("phone", "N/A")}
+        - Lead Source: {lead_data.get("source", "N/A")}
+        - Budget: ${lead_data.get("budget", 0):,.0f}
+        - Property Type: {lead_data.get("property_type", "N/A")}
+        - Timeline: {lead_data.get("timeline", "N/A")}
 
         Interaction History ({len(interaction_history)} interactions):
         {self._format_interactions_for_analysis(interaction_history)}
@@ -212,7 +214,7 @@ class SmartFollowUpOptimizer:
             ai_analysis = await self.claude_assistant.chat_with_claude(
                 message=engagement_prompt,
                 conversation_id=f"engagement_analysis_{lead_id}",
-                system_prompt="You are an expert lead engagement analyst specializing in real estate conversion optimization."
+                system_prompt="You are an expert lead engagement analyst specializing in real estate conversion optimization.",
             )
 
             # Parse AI response (simplified for demo)
@@ -221,16 +223,16 @@ class SmartFollowUpOptimizer:
                 "preferred_channels": [FollowUpChannel.EMAIL, FollowUpChannel.SMS],
                 "optimal_timing": {
                     "best_days": ["Tuesday", "Wednesday", "Thursday"],
-                    "best_times": ["10:00 AM", "2:00 PM", "6:00 PM"]
+                    "best_times": ["10:00 AM", "2:00 PM", "6:00 PM"],
                 },
                 "content_preferences": {
                     "interests": ["market_updates", "property_listings", "neighborhood_info"],
                     "tone": "professional",
-                    "format": "visual_heavy"
+                    "format": "visual_heavy",
                 },
                 "buying_readiness": self._assess_buying_readiness(interaction_history),
                 "personalization_data": lead_data,
-                "ai_insights": ai_analysis
+                "ai_insights": ai_analysis,
             }
 
             return engagement_analysis
@@ -239,20 +241,16 @@ class SmartFollowUpOptimizer:
             logger.warning(f"Engagement analysis failed: {e}")
             return self._get_fallback_engagement_analysis(lead_data, interaction_history)
 
-    async def _optimize_timing(
-        self,
-        lead_id: str,
-        engagement_analysis: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _optimize_timing(self, lead_id: str, engagement_analysis: Dict[str, Any]) -> Dict[str, Any]:
         """Optimize follow-up timing based on engagement patterns."""
 
         timing_prompt = f"""
         Optimize follow-up timing for maximum response rates:
 
         Lead Engagement Profile:
-        - Engagement Level: {engagement_analysis['engagement_level']}
-        - Previous Response Patterns: {engagement_analysis.get('optimal_timing', {})}
-        - Buying Readiness: {engagement_analysis.get('buying_readiness', 'unknown')}
+        - Engagement Level: {engagement_analysis["engagement_level"]}
+        - Previous Response Patterns: {engagement_analysis.get("optimal_timing", {})}
+        - Buying Readiness: {engagement_analysis.get("buying_readiness", "unknown")}
 
         Create an optimal follow-up schedule that:
         1. Maximizes response probability
@@ -272,7 +270,7 @@ class SmartFollowUpOptimizer:
             ai_timing = await self.claude_assistant.chat_with_claude(
                 message=timing_prompt,
                 conversation_id=f"timing_optimization_{lead_id}",
-                system_prompt="You are a timing optimization expert with deep knowledge of lead response patterns."
+                system_prompt="You are a timing optimization expert with deep knowledge of lead response patterns.",
             )
 
             timing_optimization = {
@@ -281,7 +279,7 @@ class SmartFollowUpOptimizer:
                 "optimal_send_times": engagement_analysis["optimal_timing"]["best_times"],
                 "preferred_days": engagement_analysis["optimal_timing"]["best_days"],
                 "max_frequency": "daily" if engagement_analysis["engagement_level"] == "high" else "weekly",
-                "ai_recommendations": ai_timing
+                "ai_recommendations": ai_timing,
             }
 
             return timing_optimization
@@ -296,7 +294,7 @@ class SmartFollowUpOptimizer:
         lead_data: Dict[str, Any],
         engagement_analysis: Dict[str, Any],
         timing_optimization: Dict[str, Any],
-        goal: str
+        goal: str,
     ) -> List[FollowUpAction]:
         """Generate personalized follow-up sequence."""
 
@@ -304,15 +302,15 @@ class SmartFollowUpOptimizer:
         Generate a personalized follow-up sequence for this real estate lead:
 
         Lead Information:
-        - Name: {lead_data.get('name', 'Valued Client')}
-        - Budget: ${lead_data.get('budget', 0):,.0f}
-        - Property Type: {lead_data.get('property_type', 'N/A')}
-        - Location: {lead_data.get('location', 'Austin, TX')}
-        - Timeline: {lead_data.get('timeline', 'Not specified')}
+        - Name: {lead_data.get("name", "Valued Client")}
+        - Budget: ${lead_data.get("budget", 0):,.0f}
+        - Property Type: {lead_data.get("property_type", "N/A")}
+        - Location: {lead_data.get("location", "Austin, TX")}
+        - Timeline: {lead_data.get("timeline", "Not specified")}
 
         Goal: {goal}
-        Engagement Level: {engagement_analysis['engagement_level']}
-        Preferred Channels: {[ch.value for ch in engagement_analysis['preferred_channels']]}
+        Engagement Level: {engagement_analysis["engagement_level"]}
+        Preferred Channels: {[ch.value for ch in engagement_analysis["preferred_channels"]]}
 
         Create 5 follow-up messages that:
         1. Build rapport and trust
@@ -333,7 +331,7 @@ class SmartFollowUpOptimizer:
             ai_content = await self.claude_assistant.chat_with_claude(
                 message=content_prompt,
                 conversation_id=f"followup_content_{lead_id}",
-                system_prompt="You are an expert real estate follow-up specialist creating conversion-optimized sequences."
+                system_prompt="You are an expert real estate follow-up specialist creating conversion-optimized sequences.",
             )
 
             # Generate sequence based on timing optimization
@@ -345,18 +343,18 @@ class SmartFollowUpOptimizer:
                 scheduled_time = base_time + timedelta(hours=intervals[i])
 
                 action = FollowUpAction(
-                    action_id=f"followup_{lead_id}_{i+1}",
+                    action_id=f"followup_{lead_id}_{i + 1}",
                     lead_id=lead_id,
-                    channel=engagement_analysis['preferred_channels'][i % len(engagement_analysis['preferred_channels'])],
+                    channel=engagement_analysis["preferred_channels"][
+                        i % len(engagement_analysis["preferred_channels"])
+                    ],
                     scheduled_time=scheduled_time,
-                    content=self._generate_followup_content(i+1, lead_data, engagement_analysis),
-                    subject_line=self._generate_subject_line(i+1, lead_data),
+                    content=self._generate_followup_content(i + 1, lead_data, engagement_analysis),
+                    subject_line=self._generate_subject_line(i + 1, lead_data),
                     priority=5 + i,  # Increasing priority over time
                     personalization_data=lead_data,
-                    expected_response_rate=self._calculate_expected_response_rate(
-                        engagement_analysis, i+1
-                    ),
-                    success_metrics={"opens": 0, "clicks": 0, "responses": 0}
+                    expected_response_rate=self._calculate_expected_response_rate(engagement_analysis, i + 1),
+                    success_metrics={"opens": 0, "clicks": 0, "responses": 0},
                 )
 
                 sequence.append(action)
@@ -367,11 +365,7 @@ class SmartFollowUpOptimizer:
             logger.warning(f"Follow-up sequence generation failed: {e}")
             return self._get_fallback_followup_sequence(lead_id, lead_data, timing_optimization)
 
-    async def track_followup_performance(
-        self,
-        action_id: str,
-        metrics: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def track_followup_performance(self, action_id: str, metrics: Dict[str, Any]) -> Dict[str, Any]:
         """
         Track performance of follow-up actions for continuous optimization.
 
@@ -388,7 +382,7 @@ class SmartFollowUpOptimizer:
             "action_id": action_id,
             "timestamp": datetime.now(),
             "metrics": metrics,
-            "performance_score": self._calculate_performance_score(metrics)
+            "performance_score": self._calculate_performance_score(metrics),
         }
 
         # Store performance data
@@ -402,14 +396,10 @@ class SmartFollowUpOptimizer:
             "performance_score": performance_data["performance_score"],
             "optimization_recommendations": await self._get_optimization_recommendations(performance_data),
             "benchmarks": self._get_performance_benchmarks(),
-            "next_actions": await self._suggest_next_actions(action_id, performance_data)
+            "next_actions": await self._suggest_next_actions(action_id, performance_data),
         }
 
-    async def get_followup_analytics(
-        self,
-        agent_id: str,
-        time_range_days: int = 30
-    ) -> Dict[str, Any]:
+    async def get_followup_analytics(self, agent_id: str, time_range_days: int = 30) -> Dict[str, Any]:
         """
         Get comprehensive follow-up analytics for the agent.
 
@@ -428,30 +418,30 @@ class SmartFollowUpOptimizer:
                 "total_followups_sent": 247,
                 "avg_response_rate": 34.2,
                 "conversion_rate": 18.7,
-                "revenue_attributed": 185000
+                "revenue_attributed": 185000,
             },
             "channel_performance": {
                 "email": {"sent": 150, "response_rate": 28.5, "conversion_rate": 15.2},
                 "sms": {"sent": 67, "response_rate": 45.3, "conversion_rate": 24.8},
-                "phone": {"sent": 30, "response_rate": 72.1, "conversion_rate": 38.4}
+                "phone": {"sent": 30, "response_rate": 72.1, "conversion_rate": 38.4},
             },
             "timing_insights": {
                 "best_send_times": ["10:00 AM", "2:00 PM", "6:30 PM"],
                 "best_days": ["Tuesday", "Wednesday", "Thursday"],
-                "worst_times": ["Monday morning", "Friday evening"]
+                "worst_times": ["Monday morning", "Friday evening"],
             },
             "content_performance": {
                 "market_updates": 42.1,
                 "property_suggestions": 38.7,
                 "educational_content": 29.3,
-                "personal_outreach": 51.2
+                "personal_outreach": 51.2,
             },
             "optimization_opportunities": [
                 "Increase SMS usage for high-engagement leads",
                 "Implement Tuesday/Wednesday sending preference",
                 "A/B test personal vs. informational content",
-                "Optimize subject lines for 15%+ improvement"
-            ]
+                "Optimize subject lines for 15%+ improvement",
+            ],
         }
 
         return analytics
@@ -510,37 +500,30 @@ class SmartFollowUpOptimizer:
             return "low"
 
     def _generate_followup_content(
-        self,
-        sequence_number: int,
-        lead_data: Dict[str, Any],
-        engagement_analysis: Dict[str, Any]
+        self, sequence_number: int, lead_data: Dict[str, Any], engagement_analysis: Dict[str, Any]
     ) -> str:
         """Generate personalized follow-up content."""
 
-        name = lead_data.get('name', 'there')
-        location = lead_data.get('location', 'Austin')
-        property_type = lead_data.get('property_type', 'home')
+        name = lead_data.get("name", "there")
+        location = lead_data.get("location", "Austin")
+        property_type = lead_data.get("property_type", "home")
 
         content_templates = [
             f"Hi {name}! I wanted to follow up on your interest in {location} properties. "
             f"I've found some excellent {property_type.lower()} options that match your criteria. "
             f"Would you like me to send you the latest listings?",
-
             f"Hello {name}, I hope you're doing well! The {location} market has some exciting "
             f"developments this week. I'd love to share some insights that could benefit your "
             f"{property_type.lower()} search. When would be a good time to chat?",
-
             f"Hi {name}, I noticed you haven't had a chance to respond to my previous messages. "
             f"No worries - I know house hunting can be overwhelming! I'm here whenever you're "
             f"ready to explore {location} properties. Just let me know what works for you.",
-
             f"Hello {name}! I wanted to share some market trends I think you'd find interesting. "
             f"The {location} area is showing strong potential for {property_type.lower()} buyers "
             f"right now. Would you like a quick market update call this week?",
-
             f"Hi {name}, I don't want you to miss out on the current opportunities in {location}. "
             f"Several {property_type.lower()} properties matching your criteria just came on the market. "
-            f"Would you like me to schedule some showings before they're gone?"
+            f"Would you like me to schedule some showings before they're gone?",
         ]
 
         return content_templates[sequence_number - 1]
@@ -548,34 +531,25 @@ class SmartFollowUpOptimizer:
     def _generate_subject_line(self, sequence_number: int, lead_data: Dict[str, Any]) -> str:
         """Generate engaging subject lines."""
 
-        location = lead_data.get('location', 'Austin')
-        property_type = lead_data.get('property_type', 'Home')
+        location = lead_data.get("location", "Austin")
+        property_type = lead_data.get("property_type", "Home")
 
         subject_templates = [
             f"Perfect {property_type} Options in {location} - Just for You",
             f"{location} Market Update: Great News for Buyers!",
             f"Quick Question About Your {location} House Hunt",
             f"This Week's {location} Market Insights",
-            f"Don't Miss These {location} Opportunities!"
+            f"Don't Miss These {location} Opportunities!",
         ]
 
         return subject_templates[sequence_number - 1]
 
-    def _calculate_expected_response_rate(
-        self,
-        engagement_analysis: Dict[str, Any],
-        sequence_number: int
-    ) -> float:
+    def _calculate_expected_response_rate(self, engagement_analysis: Dict[str, Any], sequence_number: int) -> float:
         """Calculate expected response rate based on engagement level."""
 
-        base_rates = {
-            "high": 0.45,
-            "medium": 0.25,
-            "low": 0.12,
-            "disengaged": 0.05
-        }
+        base_rates = {"high": 0.45, "medium": 0.25, "low": 0.12, "disengaged": 0.05}
 
-        engagement_level = engagement_analysis.get('engagement_level', 'medium')
+        engagement_level = engagement_analysis.get("engagement_level", "medium")
         base_rate = base_rates.get(engagement_level, 0.25)
 
         # Decrease rate with each follow-up
@@ -585,10 +559,10 @@ class SmartFollowUpOptimizer:
 
     def _calculate_performance_score(self, metrics: Dict[str, Any]) -> float:
         """Calculate overall performance score."""
-        opens = metrics.get('opens', 0)
-        clicks = metrics.get('clicks', 0)
-        responses = metrics.get('responses', 0)
-        sent = metrics.get('sent', 1)
+        opens = metrics.get("opens", 0)
+        clicks = metrics.get("clicks", 0)
+        responses = metrics.get("responses", 0)
+        sent = metrics.get("sent", 1)
 
         open_rate = opens / sent if sent > 0 else 0
         click_rate = clicks / opens if opens > 0 else 0
@@ -605,7 +579,7 @@ class SmartFollowUpOptimizer:
             "email_click_rate": 3.2,
             "email_response_rate": 8.1,
             "sms_response_rate": 45.0,
-            "phone_connect_rate": 68.5
+            "phone_connect_rate": 68.5,
         }
 
     async def _load_optimization_insights(self):
@@ -643,7 +617,11 @@ class SmartFollowUpOptimizer:
         elif score >= 40:
             return ["Average performance. Review content relevance.", "Test different communication channels."]
         else:
-            return ["Low performance. Revise messaging strategy.", "Consider re-engagement campaign.", "Review lead qualification."]
+            return [
+                "Low performance. Revise messaging strategy.",
+                "Consider re-engagement campaign.",
+                "Review lead qualification.",
+            ]
 
     async def _suggest_next_actions(self, action_id: str, performance_data: Dict[str, Any]) -> List[str]:
         """Suggest next actions based on performance."""
@@ -651,13 +629,11 @@ class SmartFollowUpOptimizer:
             "Schedule follow-up based on response timing",
             "Adjust communication frequency",
             "Personalize next message based on engagement",
-            "Consider channel switching if low performance"
+            "Consider channel switching if low performance",
         ]
 
     def _get_fallback_engagement_analysis(
-        self,
-        lead_data: Dict[str, Any],
-        interaction_history: List[LeadInteraction]
+        self, lead_data: Dict[str, Any], interaction_history: List[LeadInteraction]
     ) -> Dict[str, Any]:
         """Provide fallback engagement analysis."""
         return {
@@ -665,15 +641,15 @@ class SmartFollowUpOptimizer:
             "preferred_channels": [FollowUpChannel.EMAIL, FollowUpChannel.SMS],
             "optimal_timing": {
                 "best_days": ["Tuesday", "Wednesday", "Thursday"],
-                "best_times": ["10:00 AM", "2:00 PM", "6:00 PM"]
+                "best_times": ["10:00 AM", "2:00 PM", "6:00 PM"],
             },
             "content_preferences": {
                 "interests": ["property_listings", "market_updates"],
                 "tone": "professional",
-                "format": "text_with_images"
+                "format": "text_with_images",
             },
             "buying_readiness": "medium",
-            "personalization_data": lead_data
+            "personalization_data": lead_data,
         }
 
     def _get_fallback_timing_optimization(self, engagement_analysis: Dict[str, Any]) -> Dict[str, Any]:
@@ -683,14 +659,11 @@ class SmartFollowUpOptimizer:
             "sequence_intervals": [2, 24, 72, 168],
             "optimal_send_times": ["10:00 AM", "2:00 PM"],
             "preferred_days": ["Tuesday", "Wednesday"],
-            "max_frequency": "weekly"
+            "max_frequency": "weekly",
         }
 
     def _get_fallback_followup_sequence(
-        self,
-        lead_id: str,
-        lead_data: Dict[str, Any],
-        timing_optimization: Dict[str, Any]
+        self, lead_id: str, lead_data: Dict[str, Any], timing_optimization: Dict[str, Any]
     ) -> List[FollowUpAction]:
         """Provide fallback follow-up sequence."""
         sequence = []
@@ -701,16 +674,16 @@ class SmartFollowUpOptimizer:
             scheduled_time = base_time + timedelta(hours=intervals[i])
 
             action = FollowUpAction(
-                action_id=f"followup_{lead_id}_{i+1}",
+                action_id=f"followup_{lead_id}_{i + 1}",
                 lead_id=lead_id,
                 channel=FollowUpChannel.EMAIL,
                 scheduled_time=scheduled_time,
-                content=f"Follow-up message #{i+1} for lead {lead_id}",
+                content=f"Follow-up message #{i + 1} for lead {lead_id}",
                 subject_line=f"Your {lead_data.get('location', 'Austin')} Home Search",
                 priority=5,
                 personalization_data=lead_data,
                 expected_response_rate=0.25,
-                success_metrics={}
+                success_metrics={},
             )
             sequence.append(action)
 
@@ -721,8 +694,10 @@ class SmartFollowUpOptimizer:
         if not self._initialized:
             await self.initialize()
 
+
 # Global service instance
 _smart_followup_optimizer = None
+
 
 def get_smart_followup_optimizer() -> SmartFollowUpOptimizer:
     """Get the global smart follow-up optimizer instance."""

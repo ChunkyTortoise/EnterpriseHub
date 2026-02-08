@@ -1,8 +1,9 @@
-import pytest
 from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
+
 from ghl_real_estate_ai.api.routes import webhook as webhook_module
-from ghl_real_estate_ai.api.schemas.ghl import GHLTagWebhookEvent, GHLContact
+from ghl_real_estate_ai.api.schemas.ghl import GHLContact, GHLTagWebhookEvent
 
 
 @pytest.mark.asyncio
@@ -27,12 +28,16 @@ async def test_tag_webhook_sends_initial_outreach():
     background_tasks = Mock()
     background_tasks.add_task = Mock()
 
-    with patch("ghl_real_estate_ai.services.security_framework.SecurityFramework.verify_webhook_signature", new=AsyncMock(return_value=True)), \
-         patch("ghl_real_estate_ai.services.security_framework.SecurityFramework._audit_log", new=AsyncMock()), \
-         patch.object(webhook_module, "_get_tenant_ghl_client", new=AsyncMock(return_value=Mock())), \
-         patch.object(webhook_module, "conversation_manager") as mock_cm, \
-         patch.object(webhook_module, "analytics_service") as mock_analytics:
-
+    with (
+        patch(
+            "ghl_real_estate_ai.services.security_framework.SecurityFramework.verify_webhook_signature",
+            new=AsyncMock(return_value=True),
+        ),
+        patch("ghl_real_estate_ai.services.security_framework.SecurityFramework._audit_log", new=AsyncMock()),
+        patch.object(webhook_module, "_get_tenant_ghl_client", new=AsyncMock(return_value=Mock())),
+        patch.object(webhook_module, "conversation_manager") as mock_cm,
+        patch.object(webhook_module, "analytics_service") as mock_analytics,
+    ):
         mock_cm.get_context = AsyncMock(return_value={"conversation_history": []})
         mock_cm.memory_service.save_context = AsyncMock()
         mock_analytics.track_event = AsyncMock()
@@ -67,11 +72,15 @@ async def test_tag_webhook_no_outreach_if_history_exists():
     background_tasks = Mock()
     background_tasks.add_task = Mock()
 
-    with patch("ghl_real_estate_ai.services.security_framework.SecurityFramework.verify_webhook_signature", new=AsyncMock(return_value=True)), \
-         patch("ghl_real_estate_ai.services.security_framework.SecurityFramework._audit_log", new=AsyncMock()), \
-         patch.object(webhook_module, "_get_tenant_ghl_client", new=AsyncMock(return_value=Mock())), \
-         patch.object(webhook_module, "conversation_manager") as mock_cm:
-
+    with (
+        patch(
+            "ghl_real_estate_ai.services.security_framework.SecurityFramework.verify_webhook_signature",
+            new=AsyncMock(return_value=True),
+        ),
+        patch("ghl_real_estate_ai.services.security_framework.SecurityFramework._audit_log", new=AsyncMock()),
+        patch.object(webhook_module, "_get_tenant_ghl_client", new=AsyncMock(return_value=Mock())),
+        patch.object(webhook_module, "conversation_manager") as mock_cm,
+    ):
         mock_cm.get_context = AsyncMock(return_value={"conversation_history": [{"role": "user", "content": "hi"}]})
 
         response = await webhook_module.handle_ghl_tag_webhook.__wrapped__(request, event, background_tasks)

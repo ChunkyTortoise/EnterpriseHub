@@ -9,11 +9,13 @@ KEY OPTIMIZATIONS:
 4. Batch request support
 5. Connection pool monitoring
 """
+
 import asyncio
-import httpx
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Generator, Optional, Union, AsyncGenerator, List, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, Generator, List, Optional, Union
+
+import httpx
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -27,6 +29,7 @@ logger = get_logger(__name__)
 
 class LLMProvider(Enum):
     """Supported LLM providers."""
+
     GEMINI = "gemini"
     CLAUDE = "claude"
     PERPLEXITY = "perplexity"
@@ -35,6 +38,7 @@ class LLMProvider(Enum):
 @dataclass
 class LLMResponse:
     """Standardized LLM response."""
+
     content: str
     provider: LLMProvider
     model: str
@@ -62,7 +66,7 @@ class LLMClientOptimized:
         model: Optional[str] = None,
         api_key: Optional[str] = None,
         max_connections: int = 20,
-        keepalive_expiry: int = 300
+        keepalive_expiry: int = 300,
     ):
         """
         Initialize optimized LLM client.
@@ -103,7 +107,7 @@ class LLMClientOptimized:
             "connection_reuses": 0,
             "new_connections": 0,
             "timeouts": 0,
-            "errors": 0
+            "errors": 0,
         }
 
     # ============================================================================
@@ -121,26 +125,28 @@ class LLMClientOptimized:
         # PERFORMANCE: Optimized connection limits
         limits = httpx.Limits(
             max_keepalive_connections=self.max_connections // 2,  # 10 keepalive
-            max_connections=self.max_connections,                  # 20 total
-            keepalive_expiry=self.keepalive_expiry                # 5 minutes
+            max_connections=self.max_connections,  # 20 total
+            keepalive_expiry=self.keepalive_expiry,  # 5 minutes
         )
 
         # PERFORMANCE: Optimized timeouts for faster failures
         timeout = httpx.Timeout(
-            connect=3.0,   # Connection timeout (reduced from 5s)
-            read=30.0,     # Read timeout
-            write=10.0,    # Write timeout
-            pool=2.0       # Pool acquisition timeout (reduced from 5s)
+            connect=3.0,  # Connection timeout (reduced from 5s)
+            read=30.0,  # Read timeout
+            write=10.0,  # Write timeout
+            pool=2.0,  # Pool acquisition timeout (reduced from 5s)
         )
 
         self._http_client = httpx.AsyncClient(
             limits=limits,
             timeout=timeout,
             http2=True,  # HTTP/2 for connection multiplexing
-            follow_redirects=True
+            follow_redirects=True,
         )
 
-        logger.info(f"Optimized HTTP client initialized: pool_size={self.max_connections}, keepalive={self.keepalive_expiry}s, http2=True")
+        logger.info(
+            f"Optimized HTTP client initialized: pool_size={self.max_connections}, keepalive={self.keepalive_expiry}s, http2=True"
+        )
         return self._http_client
 
     def _init_async_client(self) -> None:
@@ -156,10 +162,7 @@ class LLMClientOptimized:
             # PERFORMANCE: Use optimized HTTP client for Claude
             http_client = self._init_http_client()
 
-            self._async_client = AsyncAnthropic(
-                api_key=api_key,
-                http_client=http_client
-            )
+            self._async_client = AsyncAnthropic(api_key=api_key, http_client=http_client)
 
             logger.info(f"Claude async client initialized with optimized connection pool")
 
@@ -194,6 +197,7 @@ class LLMClientOptimized:
 
         try:
             import google.generativeai as genai
+
             genai.configure(api_key=api_key)
             self._client = genai.GenerativeModel(self.model)
             logger.info(f"Gemini client initialized with model: {self.model}")
@@ -211,6 +215,7 @@ class LLMClientOptimized:
 
         try:
             from anthropic import Anthropic
+
             self._client = Anthropic(api_key=api_key)
             logger.info(f"Claude client initialized with model: {self.model}")
         except ImportError:
@@ -246,7 +251,7 @@ class LLMClientOptimized:
         response_schema: Optional[Any] = None,
         cached_content: Optional[str] = None,
         tools: Optional[List[Any]] = None,
-        **kwargs
+        **kwargs,
     ) -> LLMResponse:
         """
         OPTIMIZED: Async generate with connection pooling.
@@ -261,17 +266,20 @@ class LLMClientOptimized:
         try:
             if self.provider == LLMProvider.GEMINI:
                 return await self._agenerate_gemini(
-                    prompt, system_prompt, history, max_tokens, temperature,
-                    response_schema, cached_content, tools, **kwargs
+                    prompt,
+                    system_prompt,
+                    history,
+                    max_tokens,
+                    temperature,
+                    response_schema,
+                    cached_content,
+                    tools,
+                    **kwargs,
                 )
             elif self.provider == LLMProvider.PERPLEXITY:
-                return await self._agenerate_perplexity(
-                    prompt, system_prompt, history, max_tokens, temperature
-                )
+                return await self._agenerate_perplexity(prompt, system_prompt, history, max_tokens, temperature)
             else:
-                return await self._agenerate_claude(
-                    prompt, system_prompt, history, max_tokens, temperature
-                )
+                return await self._agenerate_claude(prompt, system_prompt, history, max_tokens, temperature)
 
         except httpx.TimeoutException:
             self._connection_stats["timeouts"] += 1
@@ -286,7 +294,7 @@ class LLMClientOptimized:
         system_prompt: Optional[str],
         history: Optional[list[dict[str, str]]],
         max_tokens: int,
-        temperature: float
+        temperature: float,
     ) -> LLMResponse:
         """OPTIMIZED: Claude generation using persistent connection."""
         messages = history.copy() if history else []
@@ -298,13 +306,13 @@ class LLMClientOptimized:
             max_tokens=max_tokens,
             temperature=temperature,
             system=system_prompt or "You are a helpful AI assistant.",
-            messages=messages
+            messages=messages,
         )
 
         self._connection_stats["connection_reuses"] += 1
 
-        input_tokens = response.usage.input_tokens if hasattr(response, 'usage') else None
-        output_tokens = response.usage.output_tokens if hasattr(response, 'usage') else None
+        input_tokens = response.usage.input_tokens if hasattr(response, "usage") else None
+        output_tokens = response.usage.output_tokens if hasattr(response, "usage") else None
 
         return LLMResponse(
             content=response.content[0].text,
@@ -313,7 +321,7 @@ class LLMClientOptimized:
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             tokens_used=(input_tokens + output_tokens) if input_tokens and output_tokens else None,
-            finish_reason=response.stop_reason
+            finish_reason=response.stop_reason,
         )
 
     async def _agenerate_gemini(
@@ -326,7 +334,7 @@ class LLMClientOptimized:
         response_schema: Optional[Any],
         cached_content: Optional[str],
         tools: Optional[List[Any]],
-        **kwargs
+        **kwargs,
     ) -> LLMResponse:
         """Gemini async generation."""
         full_prompt = f"{system_prompt}\n\n" if system_prompt else ""
@@ -342,24 +350,29 @@ class LLMClientOptimized:
             gen_config["response_schema"] = response_schema
 
         import google.generativeai as genai
+
         model = genai.GenerativeModel(model=self.model, tools=tools)
 
         if cached_content:
             from google.generativeai import caching
+
             cache = caching.CachedContent.get(cached_content)
             response = await model.generate_content_async(
-                full_prompt,
-                generation_config=gen_config,
-                cached_content=cache
+                full_prompt, generation_config=gen_config, cached_content=cache
             )
         else:
-            response = await model.generate_content_async(
-                full_prompt,
-                generation_config=gen_config
-            )
+            response = await model.generate_content_async(full_prompt, generation_config=gen_config)
 
-        input_tokens = getattr(response.usage_metadata, 'prompt_token_count', None) if hasattr(response, 'usage_metadata') else None
-        output_tokens = getattr(response.usage_metadata, 'candidates_token_count', None) if hasattr(response, 'usage_metadata') else None
+        input_tokens = (
+            getattr(response.usage_metadata, "prompt_token_count", None)
+            if hasattr(response, "usage_metadata")
+            else None
+        )
+        output_tokens = (
+            getattr(response.usage_metadata, "candidates_token_count", None)
+            if hasattr(response, "usage_metadata")
+            else None
+        )
 
         return LLMResponse(
             content=response.text,
@@ -368,7 +381,7 @@ class LLMClientOptimized:
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             tokens_used=(input_tokens + output_tokens) if input_tokens and output_tokens else None,
-            finish_reason=response.candidates[0].finish_reason.name if response.candidates else None
+            finish_reason=response.candidates[0].finish_reason.name if response.candidates else None,
         )
 
     async def _agenerate_perplexity(
@@ -377,7 +390,7 @@ class LLMClientOptimized:
         system_prompt: Optional[str],
         history: Optional[list[dict[str, str]]],
         max_tokens: int,
-        temperature: float
+        temperature: float,
     ) -> LLMResponse:
         """OPTIMIZED: Perplexity generation using connection pool."""
         messages = []
@@ -387,20 +400,13 @@ class LLMClientOptimized:
             messages.extend(history)
         messages.append({"role": "user", "content": prompt})
 
-        payload = {
-            "model": self.model,
-            "messages": messages,
-            "max_tokens": max_tokens,
-            "temperature": temperature
-        }
+        payload = {"model": self.model, "messages": messages, "max_tokens": max_tokens, "temperature": temperature}
 
         api_key = self.api_key or settings.perplexity_api_key
 
         # Use persistent HTTP client
         response = await self._async_client.post(
-            "https://api.perplexity.ai/chat/completions",
-            json=payload,
-            headers={"Authorization": f"Bearer {api_key}"}
+            "https://api.perplexity.ai/chat/completions", json=payload, headers={"Authorization": f"Bearer {api_key}"}
         )
         response.raise_for_status()
 
@@ -417,19 +423,14 @@ class LLMClientOptimized:
             input_tokens=usage.get("prompt_tokens"),
             output_tokens=usage.get("completion_tokens"),
             tokens_used=(usage.get("prompt_tokens", 0) + usage.get("completion_tokens", 0)),
-            finish_reason=data["choices"][0].get("finish_reason")
+            finish_reason=data["choices"][0].get("finish_reason"),
         )
 
     # ============================================================================
     # Streaming Support
     # ============================================================================
 
-    async def astream(
-        self,
-        prompt: str,
-        system_prompt: Optional[str] = None,
-        **kwargs
-    ) -> AsyncGenerator[str, None]:
+    async def astream(self, prompt: str, system_prompt: Optional[str] = None, **kwargs) -> AsyncGenerator[str, None]:
         """
         OPTIMIZED: Stream response chunks using persistent connection.
         """
@@ -450,7 +451,7 @@ class LLMClientOptimized:
                 model=self.model,
                 max_tokens=2048,
                 system=system_prompt or "You are a helpful AI assistant.",
-                messages=[{"role": "user", "content": prompt}]
+                messages=[{"role": "user", "content": prompt}],
             ) as stream:
                 async for text in stream.text_stream:
                     yield text
@@ -464,16 +465,13 @@ class LLMClientOptimized:
     def get_connection_stats(self) -> Dict[str, Any]:
         """Get connection pool performance statistics."""
         total_requests = self._connection_stats["requests"]
-        reuse_rate = (
-            self._connection_stats["connection_reuses"] / total_requests
-            if total_requests > 0 else 0
-        )
+        reuse_rate = self._connection_stats["connection_reuses"] / total_requests if total_requests > 0 else 0
 
         return {
             **self._connection_stats,
             "connection_reuse_rate": reuse_rate,
             "pool_size": self.max_connections,
-            "keepalive_expiry": self.keepalive_expiry
+            "keepalive_expiry": self.keepalive_expiry,
         }
 
     async def close(self):
@@ -495,6 +493,7 @@ class LLMClientOptimized:
         """Get LangChain-compatible model."""
         # Import original implementation
         from ghl_real_estate_ai.core.llm_client import LLMClient
+
         original = LLMClient(provider=self.provider.value, model=self.model, api_key=self.api_key)
         return original.get_langchain_model(**kwargs)
 
@@ -503,17 +502,13 @@ class LLMClientOptimized:
         prompt = messages[-1]["content"]
         history = messages[:-1]
         system = kwargs.pop("system", None)
-        return await self.agenerate(
-            prompt=prompt,
-            system_prompt=system,
-            history=history,
-            **kwargs
-        )
+        return await self.agenerate(prompt=prompt, system_prompt=system, history=history, **kwargs)
 
     def generate(self, prompt: str, **kwargs) -> LLMResponse:
         """Synchronous generate (not optimized, use agenerate instead)."""
         logger.warning("Using synchronous generate() - consider switching to async agenerate() for better performance")
         from ghl_real_estate_ai.core.llm_client import LLMClient
+
         original = LLMClient(provider=self.provider.value, model=self.model, api_key=self.api_key)
         return original.generate(prompt, **kwargs)
 

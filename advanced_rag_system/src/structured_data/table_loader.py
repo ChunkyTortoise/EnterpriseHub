@@ -343,9 +343,7 @@ class TableLoader:
         # Determine text columns if not specified
         if text_columns is None:
             text_columns = [
-                col
-                for col in data.columns
-                if data[col].dtype == "object" or pd.api.types.is_string_dtype(data[col])
+                col for col in data.columns if data[col].dtype == "object" or pd.api.types.is_string_dtype(data[col])
             ]
 
         # Determine metadata columns if not specified
@@ -433,11 +431,13 @@ class TableLoader:
 
             # Add numeric statistics if applicable
             if pd.api.types.is_numeric_dtype(data[col]):
-                col_stats.update({
-                    "min": float(data[col].min()) if not data[col].isnull().all() else None,
-                    "max": float(data[col].max()) if not data[col].isnull().all() else None,
-                    "mean": float(data[col].mean()) if not data[col].isnull().all() else None,
-                })
+                col_stats.update(
+                    {
+                        "min": float(data[col].min()) if not data[col].isnull().all() else None,
+                        "max": float(data[col].max()) if not data[col].isnull().all() else None,
+                        "mean": float(data[col].mean()) if not data[col].isnull().all() else None,
+                    }
+                )
 
             stats[str(col)] = col_stats
 

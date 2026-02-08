@@ -12,34 +12,37 @@ Features:
 """
 
 import asyncio
+import json
+import pickle
+import time
+import warnings
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
 import pandas as pd
-import pickle
-import json
-import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, asdict
-import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 # ML imports
+import shap
 import xgboost as xgb
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-import shap
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
+from sklearn.model_selection import GridSearchCV, cross_val_score, train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+
+from ghl_real_estate_ai.agents.intent_decoder import IntentDecoder
+from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 # Jorge's platform imports
 from ghl_real_estate_ai.services.ghl_service import GHLService
 from ghl_real_estate_ai.services.memory_service import MemoryService
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.services.analytics_service import AnalyticsService
-from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
-from ghl_real_estate_ai.agents.intent_decoder import IntentDecoder
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -47,14 +50,16 @@ logger = get_logger(__name__)
 # PREDICTION MODELS AND DATA STRUCTURES
 # =============================================================================
 
+
 @dataclass
 class LeadPrediction:
     """Lead conversion prediction with explainability."""
+
     lead_id: str
     conversion_probability: float  # 0.0 to 1.0
-    confidence_score: float       # 0.0 to 1.0
-    temperature_prediction: int   # 0-100 scale
-    predicted_timeline: str      # 'immediate', '30_days', '60_days', '90_days', 'long_term'
+    confidence_score: float  # 0.0 to 1.0
+    temperature_prediction: int  # 0-100 scale
+    predicted_timeline: str  # 'immediate', '30_days', '60_days', '90_days', 'long_term'
 
     # Explainability
     top_positive_factors: List[Dict[str, float]]
@@ -72,9 +77,11 @@ class LeadPrediction:
     prediction_timestamp: datetime
     data_freshness_hours: int
 
+
 @dataclass
 class ModelPerformance:
     """Model performance metrics and validation."""
+
     model_name: str
     accuracy: float
     precision: float
@@ -86,14 +93,17 @@ class ModelPerformance:
     validation_date: datetime
     prediction_confidence: float
 
+
 @dataclass
 class FeatureImportance:
     """Feature importance analysis for model interpretability."""
+
     feature_name: str
     importance_score: float
     category: str  # 'conversation', 'market', 'behavioral', 'timing'
     description: str
     jorge_methodology_relevance: str
+
 
 class PredictiveLeadScoringEngine:
     """
@@ -140,10 +150,9 @@ class PredictiveLeadScoringEngine:
     # MAIN PREDICTION INTERFACE
     # =========================================================================
 
-    async def predict_lead_conversion(self,
-                                    lead_id: str,
-                                    include_explanation: bool = True,
-                                    use_cache: bool = True) -> LeadPrediction:
+    async def predict_lead_conversion(
+        self, lead_id: str, include_explanation: bool = True, use_cache: bool = True
+    ) -> LeadPrediction:
         """
         Generate comprehensive lead conversion prediction.
 
@@ -181,33 +190,28 @@ class PredictiveLeadScoringEngine:
                 explanations = await self._generate_shap_explanations(features)
 
             # Create business intelligence recommendations
-            recommendations = await self._generate_business_recommendations(
-                lead_id, features, ensemble_prediction
-            )
+            recommendations = await self._generate_business_recommendations(lead_id, features, ensemble_prediction)
 
             # Build comprehensive prediction object
             prediction = LeadPrediction(
                 lead_id=lead_id,
-                conversion_probability=ensemble_prediction['probability'],
-                confidence_score=ensemble_prediction['confidence'],
-                temperature_prediction=int(ensemble_prediction['probability'] * 100),
-                predicted_timeline=ensemble_prediction['timeline'],
-
+                conversion_probability=ensemble_prediction["probability"],
+                confidence_score=ensemble_prediction["confidence"],
+                temperature_prediction=int(ensemble_prediction["probability"] * 100),
+                predicted_timeline=ensemble_prediction["timeline"],
                 # Explainability
-                top_positive_factors=explanations.get('positive_factors', []),
-                top_negative_factors=explanations.get('negative_factors', []),
-                feature_importance=explanations.get('feature_importance', {}),
-
+                top_positive_factors=explanations.get("positive_factors", []),
+                top_negative_factors=explanations.get("negative_factors", []),
+                feature_importance=explanations.get("feature_importance", {}),
                 # Business intelligence
-                recommended_actions=recommendations['actions'],
-                optimal_contact_timing=recommendations['timing'],
-                predicted_objections=recommendations['objections'],
-                jorge_strategy_match=recommendations['strategy_match'],
-
+                recommended_actions=recommendations["actions"],
+                optimal_contact_timing=recommendations["timing"],
+                predicted_objections=recommendations["objections"],
+                jorge_strategy_match=recommendations["strategy_match"],
                 # Metadata
                 model_version=self.model_version,
                 prediction_timestamp=datetime.now(),
-                data_freshness_hours=await self._calculate_data_freshness(lead_id)
+                data_freshness_hours=await self._calculate_data_freshness(lead_id),
             )
 
             # Cache the prediction
@@ -215,8 +219,10 @@ class PredictiveLeadScoringEngine:
                 await self._cache_prediction(lead_id, prediction)
 
             processing_time = (time.time() - start_time) * 1000
-            logger.info(f"Generated prediction for {lead_id}: {prediction.conversion_probability:.1%} "
-                       f"probability in {processing_time:.0f}ms")
+            logger.info(
+                f"Generated prediction for {lead_id}: {prediction.conversion_probability:.1%} "
+                f"probability in {processing_time:.0f}ms"
+            )
 
             return prediction
 
@@ -225,9 +231,9 @@ class PredictiveLeadScoringEngine:
             # Return fallback prediction
             return await self._generate_fallback_prediction(lead_id)
 
-    async def batch_predict_pipeline(self,
-                                   lead_ids: List[str],
-                                   include_explanations: bool = False) -> List[LeadPrediction]:
+    async def batch_predict_pipeline(
+        self, lead_ids: List[str], include_explanations: bool = False
+    ) -> List[LeadPrediction]:
         """Generate predictions for multiple leads efficiently."""
         logger.info(f"Generating batch predictions for {len(lead_ids)} leads...")
 
@@ -236,7 +242,7 @@ class PredictiveLeadScoringEngine:
         # Process in batches for memory efficiency
         batch_size = 50
         for i in range(0, len(lead_ids), batch_size):
-            batch_ids = lead_ids[i:i + batch_size]
+            batch_ids = lead_ids[i : i + batch_size]
 
             # Extract features for batch
             batch_features = []
@@ -247,9 +253,7 @@ class PredictiveLeadScoringEngine:
             # Generate batch predictions
             for lead_id, features in batch_features:
                 if features:
-                    prediction = await self.predict_lead_conversion(
-                        lead_id, include_explanations, use_cache=True
-                    )
+                    prediction = await self.predict_lead_conversion(lead_id, include_explanations, use_cache=True)
                     predictions.append(prediction)
 
         logger.info(f"Completed batch prediction: {len(predictions)} successful predictions")
@@ -305,53 +309,53 @@ class PredictiveLeadScoringEngine:
         """Extract features from conversation data."""
         if not conversations:
             return {
-                'conversation_count': 0,
-                'avg_response_time_hours': 0,
-                'sentiment_progression': 0,
-                'engagement_score': 0
+                "conversation_count": 0,
+                "avg_response_time_hours": 0,
+                "sentiment_progression": 0,
+                "engagement_score": 0,
             }
 
         features = {}
 
         # Basic conversation metrics
-        features['conversation_count'] = len(conversations)
-        features['total_messages'] = sum(len(conv.get('messages', [])) for conv in conversations)
+        features["conversation_count"] = len(conversations)
+        features["total_messages"] = sum(len(conv.get("messages", [])) for conv in conversations)
 
         # Response timing analysis
         response_times = []
         for conv in conversations:
-            messages = conv.get('messages', [])
+            messages = conv.get("messages", [])
             for i in range(1, len(messages)):
-                if messages[i]['sender'] == 'lead':
-                    time_diff = self._calculate_response_time(messages[i-1], messages[i])
+                if messages[i]["sender"] == "lead":
+                    time_diff = self._calculate_response_time(messages[i - 1], messages[i])
                     response_times.append(time_diff)
 
-        features['avg_response_time_hours'] = np.mean(response_times) if response_times else 0
-        features['response_consistency'] = 1 / (np.std(response_times) + 1) if response_times else 0
+        features["avg_response_time_hours"] = np.mean(response_times) if response_times else 0
+        features["response_consistency"] = 1 / (np.std(response_times) + 1) if response_times else 0
 
         # Sentiment analysis progression
         sentiments = []
         for conv in conversations:
-            for message in conv.get('messages', []):
-                if 'sentiment_score' in message:
-                    sentiments.append(message['sentiment_score'])
+            for message in conv.get("messages", []):
+                if "sentiment_score" in message:
+                    sentiments.append(message["sentiment_score"])
 
         if sentiments:
-            features['sentiment_progression'] = sentiments[-1] - sentiments[0] if len(sentiments) > 1 else sentiments[0]
-            features['avg_sentiment'] = np.mean(sentiments)
-            features['sentiment_volatility'] = np.std(sentiments)
+            features["sentiment_progression"] = sentiments[-1] - sentiments[0] if len(sentiments) > 1 else sentiments[0]
+            features["avg_sentiment"] = np.mean(sentiments)
+            features["sentiment_volatility"] = np.std(sentiments)
         else:
-            features['sentiment_progression'] = 0
-            features['avg_sentiment'] = 0.5
-            features['sentiment_volatility'] = 0
+            features["sentiment_progression"] = 0
+            features["avg_sentiment"] = 0.5
+            features["sentiment_volatility"] = 0
 
         # Engagement scoring
-        features['engagement_score'] = self._calculate_engagement_score(conversations)
+        features["engagement_score"] = self._calculate_engagement_score(conversations)
 
         # Question answering analysis (Jorge's 4 core questions focus)
-        features['core_questions_answered'] = self._count_answered_core_questions(conversations)
-        features['objection_count'] = self._count_objections_raised(conversations)
-        features['information_requests'] = self._count_information_requests(conversations)
+        features["core_questions_answered"] = self._count_answered_core_questions(conversations)
+        features["objection_count"] = self._count_objections_raised(conversations)
+        features["information_requests"] = self._count_information_requests(conversations)
 
         return features
 
@@ -360,29 +364,29 @@ class PredictiveLeadScoringEngine:
         features = {}
 
         # Property value analysis
-        if 'property_value' in lead_data and 'estimated_market_value' in market_data:
-            property_value = lead_data['property_value']
-            market_value = market_data['estimated_market_value']
+        if "property_value" in lead_data and "estimated_market_value" in market_data:
+            property_value = lead_data["property_value"]
+            market_value = market_data["estimated_market_value"]
 
-            features['price_realism_ratio'] = property_value / market_value if market_value > 0 else 1
-            features['price_vs_market'] = property_value - market_value
-            features['overpriced_flag'] = 1 if property_value > market_value * 1.1 else 0
-            features['underpriced_flag'] = 1 if property_value < market_value * 0.9 else 0
+            features["price_realism_ratio"] = property_value / market_value if market_value > 0 else 1
+            features["price_vs_market"] = property_value - market_value
+            features["overpriced_flag"] = 1 if property_value > market_value * 1.1 else 0
+            features["underpriced_flag"] = 1 if property_value < market_value * 0.9 else 0
         else:
-            features['price_realism_ratio'] = 1
-            features['price_vs_market'] = 0
-            features['overpriced_flag'] = 0
-            features['underpriced_flag'] = 0
+            features["price_realism_ratio"] = 1
+            features["price_vs_market"] = 0
+            features["overpriced_flag"] = 0
+            features["underpriced_flag"] = 0
 
         # Market conditions
-        features['market_velocity'] = market_data.get('avg_days_on_market', 30)
-        features['market_appreciation_rate'] = market_data.get('appreciation_rate', 0.03)
-        features['inventory_levels'] = market_data.get('inventory_months', 6)
-        features['competition_density'] = market_data.get('competing_listings', 5)
+        features["market_velocity"] = market_data.get("avg_days_on_market", 30)
+        features["market_appreciation_rate"] = market_data.get("appreciation_rate", 0.03)
+        features["inventory_levels"] = market_data.get("inventory_months", 6)
+        features["competition_density"] = market_data.get("competing_listings", 5)
 
         # Seasonal factors
         current_month = datetime.now().month
-        features['selling_season_score'] = self._calculate_seasonal_score(current_month)
+        features["selling_season_score"] = self._calculate_seasonal_score(current_month)
 
         return features
 
@@ -391,61 +395,63 @@ class PredictiveLeadScoringEngine:
         features = {}
 
         # Platform engagement
-        features['platform_visits'] = behavioral_data.get('total_visits', 0)
-        features['avg_session_duration'] = behavioral_data.get('avg_session_duration', 0)
-        features['pages_per_visit'] = behavioral_data.get('pages_per_visit', 1)
-        features['return_visitor'] = 1 if behavioral_data.get('visit_count', 1) > 1 else 0
+        features["platform_visits"] = behavioral_data.get("total_visits", 0)
+        features["avg_session_duration"] = behavioral_data.get("avg_session_duration", 0)
+        features["pages_per_visit"] = behavioral_data.get("pages_per_visit", 1)
+        features["return_visitor"] = 1 if behavioral_data.get("visit_count", 1) > 1 else 0
 
         # Content consumption
-        features['property_views'] = behavioral_data.get('property_views', 0)
-        features['market_report_downloads'] = behavioral_data.get('market_downloads', 0)
-        features['video_engagement'] = behavioral_data.get('video_completion_rate', 0)
+        features["property_views"] = behavioral_data.get("property_views", 0)
+        features["market_report_downloads"] = behavioral_data.get("market_downloads", 0)
+        features["video_engagement"] = behavioral_data.get("video_completion_rate", 0)
 
         # Communication preferences
-        features['prefers_sms'] = 1 if behavioral_data.get('preferred_channel') == 'sms' else 0
-        features['prefers_email'] = 1 if behavioral_data.get('preferred_channel') == 'email' else 0
-        features['prefers_calls'] = 1 if behavioral_data.get('preferred_channel') == 'calls' else 0
+        features["prefers_sms"] = 1 if behavioral_data.get("preferred_channel") == "sms" else 0
+        features["prefers_email"] = 1 if behavioral_data.get("preferred_channel") == "email" else 0
+        features["prefers_calls"] = 1 if behavioral_data.get("preferred_channel") == "calls" else 0
 
         return features
 
-    async def _extract_jorge_methodology_features(self,
-                                                lead_data: Dict,
-                                                conversations: List[Dict]) -> Dict[str, Any]:
+    async def _extract_jorge_methodology_features(self, lead_data: Dict, conversations: List[Dict]) -> Dict[str, Any]:
         """Extract features specific to Jorge's selling methodology."""
         features = {}
 
         # Jorge's confrontational approach receptivity
-        features['confrontational_receptivity'] = self._measure_confrontational_receptivity(conversations)
-        features['direct_question_response_rate'] = self._calculate_direct_response_rate(conversations)
-        features['pushback_resistance'] = self._measure_pushback_resistance(conversations)
+        features["confrontational_receptivity"] = self._measure_confrontational_receptivity(conversations)
+        features["direct_question_response_rate"] = self._calculate_direct_response_rate(conversations)
+        features["pushback_resistance"] = self._measure_pushback_resistance(conversations)
 
         # 6% commission value analysis
-        if 'property_value' in lead_data:
-            property_value = lead_data['property_value']
-            features['jorge_commission_value'] = property_value * 0.06
-            features['high_commission_flag'] = 1 if property_value > 500000 else 0
+        if "property_value" in lead_data:
+            property_value = lead_data["property_value"]
+            features["jorge_commission_value"] = property_value * 0.06
+            features["high_commission_flag"] = 1 if property_value > 500000 else 0
         else:
-            features['jorge_commission_value'] = 0
-            features['high_commission_flag'] = 0
+            features["jorge_commission_value"] = 0
+            features["high_commission_flag"] = 0
 
         # Temperature classification (Jorge's system)
-        features['initial_temperature'] = lead_data.get('seller_temperature', 50)
-        features['temperature_velocity'] = self._calculate_temperature_velocity(conversations)
-        features['hot_lead_indicators'] = self._count_hot_lead_indicators(conversations)
+        features["initial_temperature"] = lead_data.get("seller_temperature", 50)
+        features["temperature_velocity"] = self._calculate_temperature_velocity(conversations)
+        features["hot_lead_indicators"] = self._count_hot_lead_indicators(conversations)
 
         # Qualification stage progression
         qualification_stages = {
-            'unqualified': 0, 'initial_contact': 1, 'in_progress': 2,
-            'qualified': 3, 'appointment_set': 4, 'contract_signed': 5
+            "unqualified": 0,
+            "initial_contact": 1,
+            "in_progress": 2,
+            "qualified": 3,
+            "appointment_set": 4,
+            "contract_signed": 5,
         }
-        current_stage = lead_data.get('qualification_stage', 'unqualified')
-        features['qualification_stage_numeric'] = qualification_stages.get(current_stage, 0)
+        current_stage = lead_data.get("qualification_stage", "unqualified")
+        features["qualification_stage_numeric"] = qualification_stages.get(current_stage, 0)
 
         # Motivation analysis (Jorge's focus areas)
-        motivation = lead_data.get('motivation', '')
-        features['urgent_motivation'] = 1 if motivation in ['job_relocation', 'financial_distress'] else 0
-        features['lifestyle_motivation'] = 1 if motivation in ['downsizing', 'upgrade_home'] else 0
-        features['investment_motivation'] = 1 if motivation in ['investment_liquidation', 'portfolio_rebalance'] else 0
+        motivation = lead_data.get("motivation", "")
+        features["urgent_motivation"] = 1 if motivation in ["job_relocation", "financial_distress"] else 0
+        features["lifestyle_motivation"] = 1 if motivation in ["downsizing", "upgrade_home"] else 0
+        features["investment_motivation"] = 1 if motivation in ["investment_liquidation", "portfolio_rebalance"] else 0
 
         return features
 
@@ -454,42 +460,39 @@ class PredictiveLeadScoringEngine:
         features = {}
 
         # Lead age and urgency
-        created_date = lead_data.get('created_at')
+        created_date = lead_data.get("created_at")
         if created_date:
             if isinstance(created_date, str):
-                created_date = datetime.fromisoformat(created_date.replace('Z', '+00:00'))
+                created_date = datetime.fromisoformat(created_date.replace("Z", "+00:00"))
 
             lead_age_days = (datetime.now() - created_date).days
-            features['lead_age_days'] = lead_age_days
-            features['fresh_lead'] = 1 if lead_age_days <= 3 else 0
-            features['stale_lead'] = 1 if lead_age_days > 30 else 0
+            features["lead_age_days"] = lead_age_days
+            features["fresh_lead"] = 1 if lead_age_days <= 3 else 0
+            features["stale_lead"] = 1 if lead_age_days > 30 else 0
         else:
-            features['lead_age_days'] = 0
-            features['fresh_lead'] = 0
-            features['stale_lead'] = 0
+            features["lead_age_days"] = 0
+            features["fresh_lead"] = 0
+            features["stale_lead"] = 0
 
         # Timeline urgency (Jorge's focus)
-        timeline = lead_data.get('timeline', 'exploring')
-        timeline_scores = {
-            'immediate': 4, '30_days': 3, '45_days': 2,
-            '60_days': 2, '90_days': 1, 'exploring': 0
-        }
-        features['timeline_urgency'] = timeline_scores.get(timeline, 0)
+        timeline = lead_data.get("timeline", "exploring")
+        timeline_scores = {"immediate": 4, "30_days": 3, "45_days": 2, "60_days": 2, "90_days": 1, "exploring": 0}
+        features["timeline_urgency"] = timeline_scores.get(timeline, 0)
 
         # Communication timing patterns
         if conversations:
-            features['avg_hours_between_contacts'] = self._calculate_avg_contact_intervals(conversations)
-            features['weekend_communication'] = self._count_weekend_communications(conversations)
-            features['evening_communication'] = self._count_evening_communications(conversations)
+            features["avg_hours_between_contacts"] = self._calculate_avg_contact_intervals(conversations)
+            features["weekend_communication"] = self._count_weekend_communications(conversations)
+            features["evening_communication"] = self._count_evening_communications(conversations)
         else:
-            features['avg_hours_between_contacts'] = 0
-            features['weekend_communication'] = 0
-            features['evening_communication'] = 0
+            features["avg_hours_between_contacts"] = 0
+            features["weekend_communication"] = 0
+            features["evening_communication"] = 0
 
         # Market timing factors
         current_month = datetime.now().month
-        features['peak_selling_season'] = 1 if current_month in [4, 5, 6, 7, 8, 9] else 0
-        features['holiday_period'] = 1 if current_month in [11, 12, 1] else 0
+        features["peak_selling_season"] = 1 if current_month in [4, 5, 6, 7, 8, 9] else 0
+        features["holiday_period"] = 1 if current_month in [11, 12, 1] else 0
 
         return features
 
@@ -515,9 +518,7 @@ class PredictiveLeadScoringEngine:
             logger.info(f"Training with {len(X)} samples and {len(X.columns)} features")
 
             # Split data for validation
-            X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=0.2, random_state=42, stratify=y
-            )
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
             # Train individual models
             models_performance = {}
@@ -531,15 +532,15 @@ class PredictiveLeadScoringEngine:
                 subsample=0.8,
                 colsample_bytree=0.8,
                 random_state=42,
-                eval_metric='logloss'
+                eval_metric="logloss",
             )
 
             xgb_model.fit(X_train, y_train)
             xgb_pred = xgb_model.predict(X_test)
             xgb_proba = xgb_model.predict_proba(X_test)[:, 1]
 
-            models_performance['xgboost'] = ModelPerformance(
-                model_name='XGBoost',
+            models_performance["xgboost"] = ModelPerformance(
+                model_name="XGBoost",
                 accuracy=accuracy_score(y_test, xgb_pred),
                 precision=precision_score(y_test, xgb_pred),
                 recall=recall_score(y_test, xgb_pred),
@@ -548,25 +549,21 @@ class PredictiveLeadScoringEngine:
                 feature_count=len(X.columns),
                 training_data_size=len(X_train),
                 validation_date=datetime.now(),
-                prediction_confidence=np.mean(np.max(xgb_model.predict_proba(X_test), axis=1))
+                prediction_confidence=np.mean(np.max(xgb_model.predict_proba(X_test), axis=1)),
             )
 
             # 2. Random Forest (ensemble diversity)
             logger.info("Training Random Forest model...")
             rf_model = RandomForestClassifier(
-                n_estimators=100,
-                max_depth=10,
-                min_samples_split=5,
-                min_samples_leaf=2,
-                random_state=42
+                n_estimators=100, max_depth=10, min_samples_split=5, min_samples_leaf=2, random_state=42
             )
 
             rf_model.fit(X_train, y_train)
             rf_pred = rf_model.predict(X_test)
             rf_proba = rf_model.predict_proba(X_test)[:, 1]
 
-            models_performance['random_forest'] = ModelPerformance(
-                model_name='Random Forest',
+            models_performance["random_forest"] = ModelPerformance(
+                model_name="Random Forest",
                 accuracy=accuracy_score(y_test, rf_pred),
                 precision=precision_score(y_test, rf_pred),
                 recall=recall_score(y_test, rf_pred),
@@ -575,7 +572,7 @@ class PredictiveLeadScoringEngine:
                 feature_count=len(X.columns),
                 training_data_size=len(X_train),
                 validation_date=datetime.now(),
-                prediction_confidence=np.mean(np.max(rf_model.predict_proba(X_test), axis=1))
+                prediction_confidence=np.mean(np.max(rf_model.predict_proba(X_test), axis=1)),
             )
 
             # 3. Logistic Regression (interpretability)
@@ -584,18 +581,14 @@ class PredictiveLeadScoringEngine:
             X_train_scaled = scaler.fit_transform(X_train)
             X_test_scaled = scaler.transform(X_test)
 
-            lr_model = LogisticRegression(
-                random_state=42,
-                max_iter=1000,
-                class_weight='balanced'
-            )
+            lr_model = LogisticRegression(random_state=42, max_iter=1000, class_weight="balanced")
 
             lr_model.fit(X_train_scaled, y_train)
             lr_pred = lr_model.predict(X_test_scaled)
             lr_proba = lr_model.predict_proba(X_test_scaled)[:, 1]
 
-            models_performance['logistic_regression'] = ModelPerformance(
-                model_name='Logistic Regression',
+            models_performance["logistic_regression"] = ModelPerformance(
+                model_name="Logistic Regression",
                 accuracy=accuracy_score(y_test, lr_pred),
                 precision=precision_score(y_test, lr_pred),
                 recall=recall_score(y_test, lr_pred),
@@ -604,18 +597,14 @@ class PredictiveLeadScoringEngine:
                 feature_count=len(X.columns),
                 training_data_size=len(X_train),
                 validation_date=datetime.now(),
-                prediction_confidence=np.mean(np.max(lr_model.predict_proba(X_test_scaled), axis=1))
+                prediction_confidence=np.mean(np.max(lr_model.predict_proba(X_test_scaled), axis=1)),
             )
 
             # 4. Ensemble Voting Classifier
             logger.info("Creating ensemble voting classifier...")
             ensemble_model = VotingClassifier(
-                estimators=[
-                    ('xgb', xgb_model),
-                    ('rf', rf_model),
-                    ('lr', lr_model)
-                ],
-                voting='soft'  # Use probability averaging
+                estimators=[("xgb", xgb_model), ("rf", rf_model), ("lr", lr_model)],
+                voting="soft",  # Use probability averaging
             )
 
             # Retrain ensemble on scaled data for LR component
@@ -623,8 +612,8 @@ class PredictiveLeadScoringEngine:
             ensemble_pred = ensemble_model.predict(X_test_scaled)
             ensemble_proba = ensemble_model.predict_proba(X_test_scaled)[:, 1]
 
-            models_performance['ensemble'] = ModelPerformance(
-                model_name='Ensemble',
+            models_performance["ensemble"] = ModelPerformance(
+                model_name="Ensemble",
                 accuracy=accuracy_score(y_test, ensemble_pred),
                 precision=precision_score(y_test, ensemble_pred),
                 recall=recall_score(y_test, ensemble_pred),
@@ -633,20 +622,18 @@ class PredictiveLeadScoringEngine:
                 feature_count=len(X.columns),
                 training_data_size=len(X_train),
                 validation_date=datetime.now(),
-                prediction_confidence=np.mean(np.max(ensemble_model.predict_proba(X_test_scaled), axis=1))
+                prediction_confidence=np.mean(np.max(ensemble_model.predict_proba(X_test_scaled), axis=1)),
             )
 
             # Store models and preprocessors
             self.models = {
-                'xgboost': xgb_model,
-                'random_forest': rf_model,
-                'logistic_regression': lr_model,
-                'ensemble': ensemble_model
+                "xgboost": xgb_model,
+                "random_forest": rf_model,
+                "logistic_regression": lr_model,
+                "ensemble": ensemble_model,
             }
 
-            self.scalers = {
-                'standard_scaler': scaler
-            }
+            self.scalers = {"standard_scaler": scaler}
 
             self.feature_columns = X.columns.tolist()
             self.model_performance = models_performance
@@ -661,8 +648,7 @@ class PredictiveLeadScoringEngine:
 
             # Log performance summary
             for model_name, performance in models_performance.items():
-                logger.info(f"{model_name}: Accuracy={performance.accuracy:.3f}, "
-                           f"ROC-AUC={performance.roc_auc:.3f}")
+                logger.info(f"{model_name}: Accuracy={performance.accuracy:.3f}, ROC-AUC={performance.roc_auc:.3f}")
 
             return models_performance
 
@@ -678,18 +664,18 @@ class PredictiveLeadScoringEngine:
             feature_df = feature_df.reindex(columns=self.feature_columns, fill_value=0)
 
             # Scale features for models that require it
-            feature_array_scaled = self.scalers['standard_scaler'].transform(feature_df)
+            feature_array_scaled = self.scalers["standard_scaler"].transform(feature_df)
 
             # Get predictions from ensemble model
-            ensemble_model = self.models['ensemble']
+            ensemble_model = self.models["ensemble"]
             probability = ensemble_model.predict_proba(feature_array_scaled)[0, 1]
             prediction = ensemble_model.predict(feature_array_scaled)[0]
 
             # Get individual model predictions for confidence calculation
             individual_predictions = []
-            for model_name in ['xgboost', 'random_forest', 'logistic_regression']:
+            for model_name in ["xgboost", "random_forest", "logistic_regression"]:
                 model = self.models[model_name]
-                if model_name == 'logistic_regression':
+                if model_name == "logistic_regression":
                     pred_proba = model.predict_proba(feature_array_scaled)[0, 1]
                 else:
                     pred_proba = model.predict_proba(feature_df)[0, 1]
@@ -700,32 +686,32 @@ class PredictiveLeadScoringEngine:
 
             # Determine predicted timeline based on probability
             if probability >= 0.8:
-                timeline = 'immediate'
+                timeline = "immediate"
             elif probability >= 0.6:
-                timeline = '30_days'
+                timeline = "30_days"
             elif probability >= 0.4:
-                timeline = '60_days'
+                timeline = "60_days"
             elif probability >= 0.2:
-                timeline = '90_days'
+                timeline = "90_days"
             else:
-                timeline = 'long_term'
+                timeline = "long_term"
 
             return {
-                'probability': float(probability),
-                'prediction': int(prediction),
-                'confidence': float(confidence),
-                'timeline': timeline,
-                'individual_predictions': individual_predictions
+                "probability": float(probability),
+                "prediction": int(prediction),
+                "confidence": float(confidence),
+                "timeline": timeline,
+                "individual_predictions": individual_predictions,
             }
 
         except Exception as e:
             logger.error(f"Error generating ensemble prediction: {e}")
             return {
-                'probability': 0.5,
-                'prediction': 0,
-                'confidence': 0.5,
-                'timeline': '60_days',
-                'individual_predictions': [0.5, 0.5, 0.5]
+                "probability": 0.5,
+                "prediction": 0,
+                "confidence": 0.5,
+                "timeline": "60_days",
+                "individual_predictions": [0.5, 0.5, 0.5],
             }
 
     # =========================================================================
@@ -740,20 +726,27 @@ class PredictiveLeadScoringEngine:
         score_components = []
 
         for conv in conversations:
-            messages = conv.get('messages', [])
+            messages = conv.get("messages", [])
             if not messages:
                 continue
 
             # Message length analysis
-            lead_messages = [msg for msg in messages if msg.get('sender') == 'lead']
-            avg_message_length = np.mean([len(msg.get('message', '')) for msg in lead_messages])
+            lead_messages = [msg for msg in messages if msg.get("sender") == "lead"]
+            avg_message_length = np.mean([len(msg.get("message", "")) for msg in lead_messages])
             score_components.append(min(avg_message_length / 100, 1.0))  # Normalize to 0-1
 
             # Question answering rate
-            questions_asked = len([msg for msg in messages if '?' in msg.get('message', '')])
+            questions_asked = len([msg for msg in messages if "?" in msg.get("message", "")])
             if questions_asked > 0:
-                answers_given = len([msg for msg in lead_messages if any(word in msg.get('message', '').lower()
-                                                                      for word in ['yes', 'no', 'maybe', 'sure', 'okay'])])
+                answers_given = len(
+                    [
+                        msg
+                        for msg in lead_messages
+                        if any(
+                            word in msg.get("message", "").lower() for word in ["yes", "no", "maybe", "sure", "okay"]
+                        )
+                    ]
+                )
                 score_components.append(answers_given / questions_asked)
 
         return np.mean(score_components) if score_components else 0.0
@@ -762,22 +755,22 @@ class PredictiveLeadScoringEngine:
         """Count how many of Jorge's 4 core questions have been answered."""
         # Jorge's core qualification questions
         core_questions_keywords = [
-            ['ready', 'sell', 'decision'],  # Are you ready to sell?
-            ['timeline', 'when', 'time'],   # What's your timeline?
-            ['price', 'value', 'worth'],    # What do you think it's worth?
-            ['agent', 'realtor', 'work']    # Have you worked with an agent?
+            ["ready", "sell", "decision"],  # Are you ready to sell?
+            ["timeline", "when", "time"],  # What's your timeline?
+            ["price", "value", "worth"],  # What do you think it's worth?
+            ["agent", "realtor", "work"],  # Have you worked with an agent?
         ]
 
         answered_questions = 0
         all_lead_messages = []
 
         for conv in conversations:
-            lead_messages = [msg.get('message', '').lower()
-                           for msg in conv.get('messages', [])
-                           if msg.get('sender') == 'lead']
+            lead_messages = [
+                msg.get("message", "").lower() for msg in conv.get("messages", []) if msg.get("sender") == "lead"
+            ]
             all_lead_messages.extend(lead_messages)
 
-        combined_text = ' '.join(all_lead_messages)
+        combined_text = " ".join(all_lead_messages)
 
         for question_keywords in core_questions_keywords:
             if any(keyword in combined_text for keyword in question_keywords):
@@ -788,16 +781,26 @@ class PredictiveLeadScoringEngine:
     def _count_objections_raised(self, conversations: List[Dict]) -> int:
         """Count objections raised by the lead."""
         objection_keywords = [
-            'but', 'however', 'concern', 'worried', 'not sure',
-            'think about', 'need time', 'too high', 'too low',
-            'other agent', 'compare', 'shop around', 'market'
+            "but",
+            "however",
+            "concern",
+            "worried",
+            "not sure",
+            "think about",
+            "need time",
+            "too high",
+            "too low",
+            "other agent",
+            "compare",
+            "shop around",
+            "market",
         ]
 
         objection_count = 0
         for conv in conversations:
-            for msg in conv.get('messages', []):
-                if msg.get('sender') == 'lead':
-                    message_lower = msg.get('message', '').lower()
+            for msg in conv.get("messages", []):
+                if msg.get("sender") == "lead":
+                    message_lower = msg.get("message", "").lower()
                     for keyword in objection_keywords:
                         if keyword in message_lower:
                             objection_count += 1
@@ -808,16 +811,23 @@ class PredictiveLeadScoringEngine:
     def _count_information_requests(self, conversations: List[Dict]) -> int:
         """Count information requests from the lead."""
         info_keywords = [
-            'can you send', 'more information', 'details about',
-            'tell me more', 'explain', 'how does', 'what is',
-            'show me', 'provide', 'need to know'
+            "can you send",
+            "more information",
+            "details about",
+            "tell me more",
+            "explain",
+            "how does",
+            "what is",
+            "show me",
+            "provide",
+            "need to know",
         ]
 
         info_requests = 0
         for conv in conversations:
-            for msg in conv.get('messages', []):
-                if msg.get('sender') == 'lead':
-                    message_lower = msg.get('message', '').lower()
+            for msg in conv.get("messages", []):
+                if msg.get("sender") == "lead":
+                    message_lower = msg.get("message", "").lower()
                     for keyword in info_keywords:
                         if keyword in message_lower:
                             info_requests += 1
@@ -829,8 +839,18 @@ class PredictiveLeadScoringEngine:
         """Calculate selling season score (0-1) based on historical patterns."""
         # Peak selling months: April through September
         seasonal_scores = {
-            1: 0.3, 2: 0.4, 3: 0.6, 4: 0.8, 5: 1.0, 6: 1.0,
-            7: 1.0, 8: 0.9, 9: 0.8, 10: 0.6, 11: 0.4, 12: 0.3
+            1: 0.3,
+            2: 0.4,
+            3: 0.6,
+            4: 0.8,
+            5: 1.0,
+            6: 1.0,
+            7: 1.0,
+            8: 0.9,
+            9: 0.8,
+            10: 0.6,
+            11: 0.4,
+            12: 0.3,
         }
         return seasonal_scores.get(month, 0.5)
 
@@ -840,16 +860,16 @@ class PredictiveLeadScoringEngine:
             return 0.5
 
         # Look for positive responses to direct/confrontational questions
-        positive_indicators = ['yes', 'you\'re right', 'absolutely', 'exactly', 'correct', 'agree']
-        negative_indicators = ['offended', 'rude', 'don\'t like', 'too direct', 'pushy']
+        positive_indicators = ["yes", "you're right", "absolutely", "exactly", "correct", "agree"]
+        negative_indicators = ["offended", "rude", "don't like", "too direct", "pushy"]
 
         positive_count = 0
         negative_count = 0
 
         for conv in conversations:
-            for msg in conv.get('messages', []):
-                if msg.get('sender') == 'lead':
-                    message_lower = msg.get('message', '').lower()
+            for msg in conv.get("messages", []):
+                if msg.get("sender") == "lead":
+                    message_lower = msg.get("message", "").lower()
 
                     for indicator in positive_indicators:
                         if indicator in message_lower:
@@ -874,22 +894,24 @@ class PredictiveLeadScoringEngine:
         direct_answers = 0
 
         for conv in conversations:
-            messages = conv.get('messages', [])
+            messages = conv.get("messages", [])
             for i in range(len(messages) - 1):
                 current_msg = messages[i]
                 next_msg = messages[i + 1]
 
                 # Check if Jorge asked a direct question
-                if (current_msg.get('sender') == 'jorge_seller_bot' and
-                    '?' in current_msg.get('message', '') and
-                    next_msg.get('sender') == 'lead'):
-
+                if (
+                    current_msg.get("sender") == "jorge_seller_bot"
+                    and "?" in current_msg.get("message", "")
+                    and next_msg.get("sender") == "lead"
+                ):
                     direct_questions += 1
 
                     # Check if lead gave a direct answer (not evasive)
-                    lead_response = next_msg.get('message', '').lower()
-                    if (any(word in lead_response for word in ['yes', 'no', 'maybe', '$', 'thousand', 'million']) and
-                        not any(phrase in lead_response for phrase in ['not sure', 'don\'t know', 'think about it'])):
+                    lead_response = next_msg.get("message", "").lower()
+                    if any(
+                        word in lead_response for word in ["yes", "no", "maybe", "$", "thousand", "million"]
+                    ) and not any(phrase in lead_response for phrase in ["not sure", "don't know", "think about it"]):
                         direct_answers += 1
 
         return direct_answers / direct_questions if direct_questions > 0 else 0.0
@@ -907,15 +929,21 @@ class PredictiveLeadScoringEngine:
     def _count_hot_lead_indicators(self, conversations: List[Dict]) -> int:
         """Count indicators that suggest a hot lead."""
         hot_indicators = [
-            'need to sell soon', 'urgent', 'already moved', 'job transfer',
-            'timeline', 'ready now', 'want to close', 'need the money'
+            "need to sell soon",
+            "urgent",
+            "already moved",
+            "job transfer",
+            "timeline",
+            "ready now",
+            "want to close",
+            "need the money",
         ]
 
         count = 0
         for conv in conversations:
-            for msg in conv.get('messages', []):
-                if msg.get('sender') == 'lead':
-                    message_lower = msg.get('message', '').lower()
+            for msg in conv.get("messages", []):
+                if msg.get("sender") == "lead":
+                    message_lower = msg.get("message", "").lower()
                     for indicator in hot_indicators:
                         if indicator in message_lower:
                             count += 1
@@ -964,17 +992,17 @@ class PredictiveLeadScoringEngine:
             conversion_probability=0.5,
             confidence_score=0.3,
             temperature_prediction=50,
-            predicted_timeline='60_days',
+            predicted_timeline="60_days",
             top_positive_factors=[],
             top_negative_factors=[],
             feature_importance={},
-            recommended_actions=['Review lead data', 'Manual qualification needed'],
-            optimal_contact_timing={'next_contact': 'within_24_hours'},
-            predicted_objections=['Unknown - manual analysis needed'],
+            recommended_actions=["Review lead data", "Manual qualification needed"],
+            optimal_contact_timing={"next_contact": "within_24_hours"},
+            predicted_objections=["Unknown - manual analysis needed"],
             jorge_strategy_match=0.5,
             model_version=self.model_version,
             prediction_timestamp=datetime.now(),
-            data_freshness_hours=0
+            data_freshness_hours=0,
         )
 
     # Additional placeholder methods
@@ -1007,10 +1035,10 @@ class PredictiveLeadScoringEngine:
 
     async def _generate_business_recommendations(self, lead_id: str, features: Dict, prediction: Dict) -> Dict:
         return {
-            'actions': ['Follow up within 24 hours', 'Send market analysis'],
-            'timing': {'next_contact': 'morning'},
-            'objections': ['Price concerns', 'Timing questions'],
-            'strategy_match': 0.75
+            "actions": ["Follow up within 24 hours", "Send market analysis"],
+            "timing": {"next_contact": "morning"},
+            "objections": ["Price concerns", "Timing questions"],
+            "strategy_match": 0.75,
         }
 
 
@@ -1019,6 +1047,7 @@ class PredictiveLeadScoringEngine:
 # =============================================================================
 
 _scoring_engine_instance = None
+
 
 def get_predictive_lead_scoring_engine() -> PredictiveLeadScoringEngine:
     """Get singleton scoring engine instance."""
@@ -1033,6 +1062,7 @@ def get_predictive_lead_scoring_engine() -> PredictiveLeadScoringEngine:
 # =============================================================================
 
 if __name__ == "__main__":
+
     async def main():
         print("🧠 Jorge's Predictive Lead Scoring Engine - Track 5")
         print("=" * 60)

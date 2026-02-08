@@ -6,15 +6,16 @@ Tracks agent accuracy, latency, and cost.
 
 import logging
 import time
-from typing import List, Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
+
 
 class PerformanceMonitoringService:
     def __init__(self):
         self.metrics_log = []
-        self.data_moat = [] # Storage for "Golden Dataset" candidates
+        self.data_moat = []  # Storage for "Golden Dataset" candidates
 
     def log_agent_run(self, agent_name: str, duration: float, token_usage: Dict[str, int], status: str):
         """Log performance metrics for an agent run."""
@@ -24,7 +25,7 @@ class PerformanceMonitoringService:
             "latency_sec": round(duration, 3),
             "tokens": token_usage,
             "status": status,
-            "estimated_cost": self._calculate_cost(token_usage)
+            "estimated_cost": self._calculate_cost(token_usage),
         }
         self.metrics_log.append(metric)
         logger.info(f"Metric Logged: {agent_name} - {duration}s")
@@ -35,27 +36,19 @@ class PerformanceMonitoringService:
         In production, this would call Braintrust or a dedicated Eval Agent.
         """
         # Mock evaluation logic
-        score = 0.95 # Base high accuracy
+        score = 0.95  # Base high accuracy
         feedback = "Structure matches schema perfectly."
-        
+
         if not output:
             score = 0
             feedback = "Empty output detected."
-        
-        eval_result = {
-            "score": score,
-            "feedback": feedback,
-            "evaluator": "Gemini-2.0-Flash (Judge)"
-        }
-        
+
+        eval_result = {"score": score, "feedback": feedback, "evaluator": "Gemini-2.0-Flash (Judge)"}
+
         # If score is high, add to data moat for future fine-tuning
         if score > 0.9:
-            self.data_moat.append({
-                "agent": agent_name,
-                "output": output,
-                "score": score
-            })
-            
+            self.data_moat.append({"agent": agent_name, "output": output, "score": score})
+
         return eval_result
 
     def _calculate_cost(self, tokens: Dict[str, int]) -> float:
@@ -69,16 +62,17 @@ class PerformanceMonitoringService:
         """Get overall platform performance summary."""
         if not self.metrics_log:
             return {"status": "No data"}
-            
+
         total_latency = sum(m["latency_sec"] for m in self.metrics_log)
         total_cost = sum(m["estimated_cost"] for m in self.metrics_log)
-        
+
         return {
             "avg_latency": round(total_latency / len(self.metrics_log), 2),
             "total_runs": len(self.metrics_log),
             "total_estimated_cost": round(total_cost, 4),
             "moat_size": len(self.data_moat),
-            "uptime": "99.98%"
+            "uptime": "99.98%",
         }
+
 
 performance_monitor = PerformanceMonitoringService()

@@ -6,27 +6,28 @@ mechanisms for the dependency injection container.
 """
 
 import asyncio
-import time
+import logging
 import threading
+import time
+import weakref
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from typing import Dict, Any, List, Optional, Callable, TypeVar
 from datetime import datetime, timedelta
-import logging
-import weakref
+from typing import Any, Callable, Dict, List, Optional, TypeVar
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 @dataclass
 class PerformanceMetrics:
     """Performance metrics for service resolution"""
+
     service_name: str
     total_resolutions: int = 0
     total_time_ms: float = 0.0
-    min_time_ms: float = float('inf')
+    min_time_ms: float = float("inf")
     max_time_ms: float = 0.0
     avg_time_ms: float = 0.0
     cache_hits: int = 0
@@ -68,15 +69,15 @@ class PerformanceMetrics:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization"""
         return {
-            'service_name': self.service_name,
-            'total_resolutions': self.total_resolutions,
-            'avg_time_ms': self.avg_time_ms,
-            'min_time_ms': self.min_time_ms if self.min_time_ms != float('inf') else 0.0,
-            'max_time_ms': self.max_time_ms,
-            'recent_avg_time_ms': self.recent_avg_time_ms,
-            'cache_hit_rate': self.cache_hit_rate,
-            'error_count': self.error_count,
-            'last_accessed': self.last_accessed.isoformat() if self.last_accessed else None
+            "service_name": self.service_name,
+            "total_resolutions": self.total_resolutions,
+            "avg_time_ms": self.avg_time_ms,
+            "min_time_ms": self.min_time_ms if self.min_time_ms != float("inf") else 0.0,
+            "max_time_ms": self.max_time_ms,
+            "recent_avg_time_ms": self.recent_avg_time_ms,
+            "cache_hit_rate": self.cache_hit_rate,
+            "error_count": self.error_count,
+            "last_accessed": self.last_accessed.isoformat() if self.last_accessed else None,
         }
 
 
@@ -87,15 +88,12 @@ class PerformanceMonitor:
         self.enabled = enabled
         self.max_history = max_history
         self.metrics: Dict[str, PerformanceMetrics] = {}
-        self.global_metrics = {
-            'total_resolutions': 0,
-            'total_time_ms': 0.0,
-            'start_time': datetime.utcnow()
-        }
+        self.global_metrics = {"total_resolutions": 0, "total_time_ms": 0.0, "start_time": datetime.utcnow()}
         self._lock = threading.Lock()
 
-    def record_resolution(self, service_name: str, resolution_time_ms: float,
-                         was_cached: bool = False, error: bool = False):
+    def record_resolution(
+        self, service_name: str, resolution_time_ms: float, was_cached: bool = False, error: bool = False
+    ):
         """Record service resolution metrics"""
         if not self.enabled:
             return
@@ -107,13 +105,13 @@ class PerformanceMonitor:
             self.metrics[service_name].update(resolution_time_ms, was_cached, error)
 
             if not error:
-                self.global_metrics['total_resolutions'] += 1
-                self.global_metrics['total_time_ms'] += resolution_time_ms
+                self.global_metrics["total_resolutions"] += 1
+                self.global_metrics["total_time_ms"] += resolution_time_ms
 
     def get_metrics(self, service_name: str = None) -> Dict[str, Any]:
         """Get performance metrics"""
         if not self.enabled:
-            return {'monitoring_disabled': True}
+            return {"monitoring_disabled": True}
 
         with self._lock:
             if service_name:
@@ -121,21 +119,28 @@ class PerformanceMonitor:
 
             # Return all metrics
             result = {
-                'global': {
+                "global": {
                     **self.global_metrics,
-                    'avg_resolution_time_ms': (
-                        self.global_metrics['total_time_ms'] / self.global_metrics['total_resolutions']
-                        if self.global_metrics['total_resolutions'] > 0 else 0.0
+                    "avg_resolution_time_ms": (
+                        self.global_metrics["total_time_ms"] / self.global_metrics["total_resolutions"]
+                        if self.global_metrics["total_resolutions"] > 0
+                        else 0.0
                     ),
-                    'uptime_seconds': (datetime.utcnow() - self.global_metrics['start_time']).total_seconds()
+                    "uptime_seconds": (datetime.utcnow() - self.global_metrics["start_time"]).total_seconds(),
                 },
-                'services': {name: metrics.to_dict() for name, metrics in self.metrics.items()},
-                'summary': {
-                    'total_services': len(self.metrics),
-                    'avg_cache_hit_rate': sum(m.cache_hit_rate for m in self.metrics.values()) / len(self.metrics) if self.metrics else 0.0,
-                    'slowest_service': max(self.metrics.values(), key=lambda m: m.avg_time_ms).service_name if self.metrics else None,
-                    'most_used_service': max(self.metrics.values(), key=lambda m: m.total_resolutions).service_name if self.metrics else None
-                }
+                "services": {name: metrics.to_dict() for name, metrics in self.metrics.items()},
+                "summary": {
+                    "total_services": len(self.metrics),
+                    "avg_cache_hit_rate": sum(m.cache_hit_rate for m in self.metrics.values()) / len(self.metrics)
+                    if self.metrics
+                    else 0.0,
+                    "slowest_service": max(self.metrics.values(), key=lambda m: m.avg_time_ms).service_name
+                    if self.metrics
+                    else None,
+                    "most_used_service": max(self.metrics.values(), key=lambda m: m.total_resolutions).service_name
+                    if self.metrics
+                    else None,
+                },
             }
 
             return result
@@ -143,28 +148,18 @@ class PerformanceMonitor:
     def get_slow_services(self, threshold_ms: float = 100.0) -> List[str]:
         """Get services that are slower than threshold"""
         with self._lock:
-            return [
-                name for name, metrics in self.metrics.items()
-                if metrics.avg_time_ms > threshold_ms
-            ]
+            return [name for name, metrics in self.metrics.items() if metrics.avg_time_ms > threshold_ms]
 
     def get_frequently_used_services(self, min_usage: int = 100) -> List[str]:
         """Get services used more than minimum threshold"""
         with self._lock:
-            return [
-                name for name, metrics in self.metrics.items()
-                if metrics.total_resolutions >= min_usage
-            ]
+            return [name for name, metrics in self.metrics.items() if metrics.total_resolutions >= min_usage]
 
     def reset_metrics(self):
         """Reset all performance metrics"""
         with self._lock:
             self.metrics.clear()
-            self.global_metrics = {
-                'total_resolutions': 0,
-                'total_time_ms': 0.0,
-                'start_time': datetime.utcnow()
-            }
+            self.global_metrics = {"total_resolutions": 0, "total_time_ms": 0.0, "start_time": datetime.utcnow()}
 
 
 class ServiceCache:
@@ -187,14 +182,14 @@ class ServiceCache:
             now = time.time()
 
             # Check TTL
-            if cache_entry['expires_at'] < now:
+            if cache_entry["expires_at"] < now:
                 del self._cache[key]
                 del self._access_times[key]
                 return None
 
             # Update access time
             self._access_times[key] = now
-            return cache_entry['value']
+            return cache_entry["value"]
 
     def set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
         """Cache service instance"""
@@ -206,11 +201,7 @@ class ServiceCache:
             ttl = ttl or self.default_ttl
             now = time.time()
 
-            self._cache[key] = {
-                'value': value,
-                'created_at': now,
-                'expires_at': now + ttl
-            }
+            self._cache[key] = {"value": value, "created_at": now, "expires_at": now + ttl}
             self._access_times[key] = now
 
     def delete(self, key: str) -> bool:
@@ -241,16 +232,13 @@ class ServiceCache:
         """Get cache statistics"""
         with self._lock:
             now = time.time()
-            expired_count = sum(
-                1 for entry in self._cache.values()
-                if entry['expires_at'] < now
-            )
+            expired_count = sum(1 for entry in self._cache.values() if entry["expires_at"] < now)
 
             return {
-                'size': len(self._cache),
-                'max_size': self.max_size,
-                'expired_entries': expired_count,
-                'utilization': len(self._cache) / self.max_size
+                "size": len(self._cache),
+                "max_size": self.max_size,
+                "expired_entries": expired_count,
+                "utilization": len(self._cache) / self.max_size,
             }
 
 
@@ -307,8 +295,7 @@ class OptimizedDIContainer:
         except Exception as e:
             logger.warning(f"Failed to warm up service {service_name}: {e}")
 
-    async def get_service_async(self, service_type: type, name: str = None,
-                               scope_id: str = None, **kwargs) -> Any:
+    async def get_service_async(self, service_type: type, name: str = None, scope_id: str = None, **kwargs) -> Any:
         """Optimized service resolution with caching and monitoring"""
         service_name = name or self.base_container._get_service_name(service_type)
 
@@ -325,23 +312,19 @@ class OptimizedDIContainer:
                 if cached_instance:
                     resolution_time_ms = (time.perf_counter() - start_time) * 1000
                     if self.enable_monitoring:
-                        self.performance_monitor.record_resolution(
-                            service_name, resolution_time_ms, was_cached=True
-                        )
+                        self.performance_monitor.record_resolution(service_name, resolution_time_ms, was_cached=True)
                     return cached_instance
 
             # Use fast path if available
             if service_name in self._fast_path_services:
                 instance = await self._fast_path_resolution(service_type, service_name, scope_id, **kwargs)
             else:
-                instance = await self.base_container.get_service_async(
-                    service_type, name, scope_id, **kwargs
-                )
+                instance = await self.base_container.get_service_async(service_type, name, scope_id, **kwargs)
 
             # Cache the result if appropriate
             if self.service_cache and scope_id is None:  # Don't cache scoped services
                 metadata = self.base_container._services.get(service_name)
-                if metadata and metadata.lifetime.value == 'singleton':
+                if metadata and metadata.lifetime.value == "singleton":
                     cache_key = f"{service_name}:default"
                     self.service_cache.set(cache_key, instance)
 
@@ -355,13 +338,10 @@ class OptimizedDIContainer:
             if self.enable_monitoring:
                 resolution_time_ms = (time.perf_counter() - start_time) * 1000
                 self.performance_monitor.record_resolution(
-                    service_name, resolution_time_ms,
-                    was_cached=cached_instance is not None,
-                    error=error
+                    service_name, resolution_time_ms, was_cached=cached_instance is not None, error=error
                 )
 
-    async def _fast_path_resolution(self, service_type: type, service_name: str,
-                                   scope_id: str = None, **kwargs) -> Any:
+    async def _fast_path_resolution(self, service_type: type, service_name: str, scope_id: str = None, **kwargs) -> Any:
         """Fast path resolution for simple services"""
         # This would implement optimized resolution logic for services
         # that don't have complex dependencies
@@ -370,20 +350,20 @@ class OptimizedDIContainer:
     def get_performance_report(self) -> Dict[str, Any]:
         """Get comprehensive performance report"""
         report = {
-            'container_performance': self.performance_monitor.get_metrics(),
-            'optimization_settings': {
-                'caching_enabled': self.enable_caching,
-                'monitoring_enabled': self.enable_monitoring,
-                'fast_path_services': list(self._fast_path_services),
-                'warm_services': list(self._warm_services)
-            }
+            "container_performance": self.performance_monitor.get_metrics(),
+            "optimization_settings": {
+                "caching_enabled": self.enable_caching,
+                "monitoring_enabled": self.enable_monitoring,
+                "fast_path_services": list(self._fast_path_services),
+                "warm_services": list(self._warm_services),
+            },
         }
 
         if self.service_cache:
-            report['cache_stats'] = self.service_cache.get_stats()
+            report["cache_stats"] = self.service_cache.get_stats()
 
         # Performance recommendations
-        report['recommendations'] = self._generate_performance_recommendations()
+        report["recommendations"] = self._generate_performance_recommendations()
 
         return report
 
@@ -394,20 +374,16 @@ class OptimizedDIContainer:
         if self.enable_monitoring:
             slow_services = self.performance_monitor.get_slow_services(threshold_ms=50.0)
             if slow_services:
-                recommendations.append(
-                    f"Consider optimizing slow services: {', '.join(slow_services)}"
-                )
+                recommendations.append(f"Consider optimizing slow services: {', '.join(slow_services)}")
 
             frequent_services = self.performance_monitor.get_frequently_used_services(min_usage=50)
             non_warm_frequent = set(frequent_services) - self._warm_services
             if non_warm_frequent:
-                recommendations.append(
-                    f"Consider warming up frequently used services: {', '.join(non_warm_frequent)}"
-                )
+                recommendations.append(f"Consider warming up frequently used services: {', '.join(non_warm_frequent)}")
 
         if self.service_cache:
             stats = self.service_cache.get_stats()
-            if stats['utilization'] > 0.8:
+            if stats["utilization"] > 0.8:
                 recommendations.append("Consider increasing cache size")
 
         return recommendations
@@ -422,22 +398,13 @@ class RealEstatePerformanceOptimizer:
         """Configure container with real estate-specific optimizations"""
 
         # Fast-path services (simple, frequently used)
-        fast_path_services = [
-            'PropertyQueryBuilder',
-            'ConfigurationService',
-            'PerformanceMonitor'
-        ]
+        fast_path_services = ["PropertyQueryBuilder", "ConfigurationService", "PerformanceMonitor"]
 
         for service in fast_path_services:
             container.register_fast_path_service(service)
 
         # Warm-up services (expensive to create, frequently used)
-        warm_services = [
-            'PropertyRepository',
-            'PropertyDataService',
-            'ScoringFactory',
-            'MemoryCacheBackend'
-        ]
+        warm_services = ["PropertyRepository", "PropertyDataService", "ScoringFactory", "MemoryCacheBackend"]
 
         for service in warm_services:
             container.register_warm_service(service)
@@ -446,28 +413,23 @@ class RealEstatePerformanceOptimizer:
     def get_performance_configuration() -> Dict[str, Any]:
         """Get recommended performance configuration for real estate services"""
         return {
-            'caching': {
-                'max_size': 2000,  # Higher cache size for property data
-                'default_ttl': 1800,  # 30 minutes for real estate data
-                'property_cache_ttl': 3600,  # 1 hour for individual properties
-                'search_cache_ttl': 900  # 15 minutes for search results
+            "caching": {
+                "max_size": 2000,  # Higher cache size for property data
+                "default_ttl": 1800,  # 30 minutes for real estate data
+                "property_cache_ttl": 3600,  # 1 hour for individual properties
+                "search_cache_ttl": 900,  # 15 minutes for search results
             },
-            'monitoring': {
-                'enabled': True,
-                'slow_service_threshold_ms': 100.0,
-                'frequent_use_threshold': 25
+            "monitoring": {"enabled": True, "slow_service_threshold_ms": 100.0, "frequent_use_threshold": 25},
+            "optimization": {
+                "enable_query_optimization": True,
+                "enable_result_caching": True,
+                "enable_repository_pooling": True,
+                "max_concurrent_queries": 10,
             },
-            'optimization': {
-                'enable_query_optimization': True,
-                'enable_result_caching': True,
-                'enable_repository_pooling': True,
-                'max_concurrent_queries': 10
-            }
         }
 
     @staticmethod
-    async def benchmark_property_operations(container: OptimizedDIContainer,
-                                          iterations: int = 100) -> Dict[str, Any]:
+    async def benchmark_property_operations(container: OptimizedDIContainer, iterations: int = 100) -> Dict[str, Any]:
         """Benchmark common property operations"""
         from ..repositories.interfaces import PropertyQuery
 
@@ -479,7 +441,7 @@ class RealEstatePerformanceOptimizer:
             start = time.perf_counter()
 
             try:
-                repo = await container.get_service_async('IPropertyRepository')
+                repo = await container.get_service_async("IPropertyRepository")
                 query = PropertyQuery()
                 query.add_price_range(300000, 800000)
                 query.pagination.limit = 10
@@ -491,11 +453,11 @@ class RealEstatePerformanceOptimizer:
                 pass
 
         if search_times:
-            results['property_search'] = {
-                'avg_time_ms': sum(search_times) / len(search_times),
-                'min_time_ms': min(search_times),
-                'max_time_ms': max(search_times),
-                'success_rate': len(search_times) / iterations
+            results["property_search"] = {
+                "avg_time_ms": sum(search_times) / len(search_times),
+                "min_time_ms": min(search_times),
+                "max_time_ms": max(search_times),
+                "success_rate": len(search_times) / iterations,
             }
 
         # Benchmark scoring operations
@@ -504,21 +466,12 @@ class RealEstatePerformanceOptimizer:
             start = time.perf_counter()
 
             try:
-                scoring_factory = await container.get_service_async('ScoringFactory')
-                scorer = scoring_factory.create_scorer('basic')
+                scoring_factory = await container.get_service_async("ScoringFactory")
+                scorer = scoring_factory.create_scorer("basic")
 
-                property_data = {
-                    'price': 500000,
-                    'bedrooms': 3,
-                    'bathrooms': 2.5,
-                    'location': 'Austin'
-                }
+                property_data = {"price": 500000, "bedrooms": 3, "bathrooms": 2.5, "location": "Austin"}
 
-                preferences = {
-                    'budget': 600000,
-                    'bedrooms': 3,
-                    'location': 'Austin'
-                }
+                preferences = {"budget": 600000, "bedrooms": 3, "location": "Austin"}
 
                 scorer.score_property(property_data, preferences)
                 end = time.perf_counter()
@@ -527,11 +480,11 @@ class RealEstatePerformanceOptimizer:
                 pass
 
         if scoring_times:
-            results['property_scoring'] = {
-                'avg_time_ms': sum(scoring_times) / len(scoring_times),
-                'min_time_ms': min(scoring_times),
-                'max_time_ms': max(scoring_times),
-                'success_rate': len(scoring_times) / iterations
+            results["property_scoring"] = {
+                "avg_time_ms": sum(scoring_times) / len(scoring_times),
+                "min_time_ms": min(scoring_times),
+                "max_time_ms": max(scoring_times),
+                "success_rate": len(scoring_times) / iterations,
             }
 
         return results

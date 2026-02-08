@@ -4,11 +4,12 @@ Provides functions for generating realistic OHLCV market data
 with proper validation and reproducible random seeds.
 """
 
-import pandas as pd
-import numpy as np
 import random
 from datetime import datetime, timedelta
 from typing import Optional
+
+import numpy as np
+import pandas as pd
 
 from utils.config import BASE_PRICES, VOLATILITY, VOLUME_RANGE
 from utils.indicators import add_all_indicators

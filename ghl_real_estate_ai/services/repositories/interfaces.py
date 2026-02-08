@@ -5,22 +5,24 @@ Defines abstract base classes and data structures for the Repository Pattern.
 All repository implementations must conform to these interfaces.
 """
 
+import asyncio
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Union, Any, Callable, Awaitable
-from enum import Enum
-import asyncio
 from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Union
 
 
 class SortOrder(Enum):
     """Sort order for query results"""
+
     ASC = "asc"
     DESC = "desc"
 
 
 class QueryOperator(Enum):
     """Query filter operators"""
+
     EQUALS = "eq"
     NOT_EQUALS = "ne"
     GREATER_THAN = "gt"
@@ -40,6 +42,7 @@ class QueryOperator(Enum):
 @dataclass
 class QueryFilter:
     """Individual query filter criterion"""
+
     field: str
     operator: QueryOperator
     value: Any
@@ -56,6 +59,7 @@ class QueryFilter:
 @dataclass
 class PaginationConfig:
     """Pagination configuration"""
+
     page: int = 1
     limit: int = 50
     offset: Optional[int] = None
@@ -167,6 +171,7 @@ class PropertyQuery:
 @dataclass
 class RepositoryMetadata:
     """Repository operation metadata"""
+
     source: str  # Repository identifier
     query_time_ms: Optional[float] = None
     cache_hit: bool = False
@@ -226,6 +231,7 @@ class RepositoryResult:
 
 class RepositoryError(Exception):
     """Base exception for repository operations"""
+
     def __init__(self, message: str, repository_type: str = None, original_error: Exception = None):
         super().__init__(message)
         self.repository_type = repository_type
@@ -236,38 +242,39 @@ class IPropertyQueryBuilder(ABC):
     """Interface for building property queries"""
 
     @abstractmethod
-    def reset(self) -> 'IPropertyQueryBuilder':
+    def reset(self) -> "IPropertyQueryBuilder":
         """Reset query builder to empty state"""
         pass
 
     @abstractmethod
-    def filter_by_price(self, min_price: int = None, max_price: int = None) -> 'IPropertyQueryBuilder':
+    def filter_by_price(self, min_price: int = None, max_price: int = None) -> "IPropertyQueryBuilder":
         """Add price range filter"""
         pass
 
     @abstractmethod
-    def filter_by_location(self, location: str = None, lat: float = None, lon: float = None,
-                          radius_miles: float = None) -> 'IPropertyQueryBuilder':
+    def filter_by_location(
+        self, location: str = None, lat: float = None, lon: float = None, radius_miles: float = None
+    ) -> "IPropertyQueryBuilder":
         """Add location-based filter"""
         pass
 
     @abstractmethod
-    def filter_by_bedrooms(self, min_beds: int = None, max_beds: int = None) -> 'IPropertyQueryBuilder':
+    def filter_by_bedrooms(self, min_beds: int = None, max_beds: int = None) -> "IPropertyQueryBuilder":
         """Add bedroom count filter"""
         pass
 
     @abstractmethod
-    def filter_by_amenities(self, required: List[str] = None, preferred: List[str] = None) -> 'IPropertyQueryBuilder':
+    def filter_by_amenities(self, required: List[str] = None, preferred: List[str] = None) -> "IPropertyQueryBuilder":
         """Add amenity filters"""
         pass
 
     @abstractmethod
-    def sort_by(self, field: str, order: SortOrder = SortOrder.ASC) -> 'IPropertyQueryBuilder':
+    def sort_by(self, field: str, order: SortOrder = SortOrder.ASC) -> "IPropertyQueryBuilder":
         """Add sorting specification"""
         pass
 
     @abstractmethod
-    def paginate(self, page: int = 1, limit: int = 50) -> 'IPropertyQueryBuilder':
+    def paginate(self, page: int = 1, limit: int = 50) -> "IPropertyQueryBuilder":
         """Add pagination"""
         pass
 
@@ -383,6 +390,7 @@ class IPropertyRepository(ABC):
     def create_query_builder(self) -> IPropertyQueryBuilder:
         """Create a query builder for this repository"""
         from .query_builder import PropertyQueryBuilder
+
         return PropertyQueryBuilder()
 
     @abstractmethod

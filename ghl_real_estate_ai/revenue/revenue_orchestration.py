@@ -4,30 +4,32 @@ Unifies and optimizes all revenue streams for maximum value extraction.
 Creates comprehensive revenue intelligence and growth optimization.
 """
 
-from typing import Dict, List, Optional, Any, Union, Tuple
-from datetime import datetime, timedelta
-from decimal import Decimal
 import asyncio
-import uuid
-from dataclasses import dataclass, asdict
-from enum import Enum
 import json
 import logging
+import uuid
 from collections import defaultdict
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from decimal import Decimal
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import numpy as np
 
 from ..core.llm_client import LLMClient
+from ..platform.api_monetization import APIMonetization, PricingTier
+from ..platform.developer_ecosystem import DeveloperEcosystem
 from ..services.cache_service import CacheService
 from ..services.database_service import DatabaseService
 from ..services.enhanced_error_handling import enhanced_error_handler
-from ..platform.api_monetization import APIMonetization, PricingTier
-from ..platform.developer_ecosystem import DeveloperEcosystem
 
 logger = logging.getLogger(__name__)
 
 
 class RevenueStream(Enum):
     """Different revenue streams in the platform."""
+
     SAAS_SUBSCRIPTIONS = "saas_subscriptions"
     API_PLATFORM = "api_platform"
     MARKETPLACE_COMMISSION = "marketplace_commission"
@@ -42,6 +44,7 @@ class RevenueStream(Enum):
 
 class CustomerSegment(Enum):
     """Customer segmentation for targeted revenue optimization."""
+
     STARTUP = "startup"
     SMB = "small_medium_business"
     ENTERPRISE = "enterprise"
@@ -53,6 +56,7 @@ class CustomerSegment(Enum):
 @dataclass
 class RevenueMetrics:
     """Comprehensive revenue metrics across all streams."""
+
     stream: RevenueStream
     monthly_revenue: Decimal
     quarterly_revenue: Decimal
@@ -70,6 +74,7 @@ class RevenueMetrics:
 @dataclass
 class CustomerRevenueProfile:
     """Individual customer revenue analysis."""
+
     customer_id: str
     segment: CustomerSegment
     total_lifetime_value: Decimal
@@ -85,6 +90,7 @@ class CustomerRevenueProfile:
 @dataclass
 class RevenueOptimization:
     """Revenue optimization recommendations."""
+
     optimization_id: str
     target_stream: RevenueStream
     current_performance: Dict[str, Any]
@@ -99,6 +105,7 @@ class RevenueOptimization:
 @dataclass
 class MarketExpansion:
     """Market expansion opportunities."""
+
     market_id: str
     market_name: str
     geographic_region: str
@@ -125,12 +132,14 @@ class RevenueOrchestration:
     - Cross-sell and upsell automation
     """
 
-    def __init__(self,
-                 llm_client: LLMClient,
-                 cache_service: CacheService,
-                 database_service: DatabaseService,
-                 api_monetization: APIMonetization,
-                 developer_ecosystem: DeveloperEcosystem):
+    def __init__(
+        self,
+        llm_client: LLMClient,
+        cache_service: CacheService,
+        database_service: DatabaseService,
+        api_monetization: APIMonetization,
+        developer_ecosystem: DeveloperEcosystem,
+    ):
         self.llm_client = llm_client
         self.cache = cache_service
         self.db = database_service
@@ -142,33 +151,33 @@ class RevenueOrchestration:
             RevenueStream.SAAS_SUBSCRIPTIONS: {
                 "target_monthly": Decimal("10000000"),  # $10M/month
                 "growth_rate": 0.15,
-                "margin": 0.85
+                "margin": 0.85,
             },
             RevenueStream.API_PLATFORM: {
                 "target_monthly": Decimal("5000000"),  # $5M/month
                 "growth_rate": 0.25,
-                "margin": 0.95
+                "margin": 0.95,
             },
             RevenueStream.MARKETPLACE_COMMISSION: {
                 "target_monthly": Decimal("3000000"),  # $3M/month
                 "growth_rate": 0.35,
-                "margin": 0.70
+                "margin": 0.70,
             },
             RevenueStream.WHITE_LABEL_LICENSING: {
                 "target_monthly": Decimal("15000000"),  # $15M/month
                 "growth_rate": 0.10,
-                "margin": 0.90
+                "margin": 0.90,
             },
             RevenueStream.CUSTOM_DEVELOPMENT: {
                 "target_monthly": Decimal("8000000"),  # $8M/month
                 "growth_rate": 0.20,
-                "margin": 0.60
+                "margin": 0.60,
             },
             RevenueStream.DATA_INSIGHTS: {
                 "target_monthly": Decimal("2000000"),  # $2M/month
                 "growth_rate": 0.30,
-                "margin": 0.98
-            }
+                "margin": 0.98,
+            },
         }
 
         # Customer segment pricing strategies
@@ -176,23 +185,23 @@ class RevenueOrchestration:
             CustomerSegment.STARTUP: {
                 "discount_rate": 0.30,
                 "payment_terms": "monthly",
-                "focus_streams": [RevenueStream.SAAS_SUBSCRIPTIONS, RevenueStream.API_PLATFORM]
+                "focus_streams": [RevenueStream.SAAS_SUBSCRIPTIONS, RevenueStream.API_PLATFORM],
             },
             CustomerSegment.SMB: {
                 "discount_rate": 0.15,
                 "payment_terms": "quarterly",
-                "focus_streams": [RevenueStream.SAAS_SUBSCRIPTIONS, RevenueStream.MARKETPLACE_COMMISSION]
+                "focus_streams": [RevenueStream.SAAS_SUBSCRIPTIONS, RevenueStream.MARKETPLACE_COMMISSION],
             },
             CustomerSegment.ENTERPRISE: {
                 "discount_rate": 0.05,
                 "payment_terms": "annual",
-                "focus_streams": [RevenueStream.WHITE_LABEL_LICENSING, RevenueStream.CUSTOM_DEVELOPMENT]
+                "focus_streams": [RevenueStream.WHITE_LABEL_LICENSING, RevenueStream.CUSTOM_DEVELOPMENT],
             },
             CustomerSegment.FORTUNE_500: {
                 "discount_rate": 0.00,
                 "payment_terms": "annual",
-                "focus_streams": [RevenueStream.WHITE_LABEL_LICENSING, RevenueStream.CONSULTING_SERVICES]
-            }
+                "focus_streams": [RevenueStream.WHITE_LABEL_LICENSING, RevenueStream.CONSULTING_SERVICES],
+            },
         }
 
         logger.info("Revenue Orchestration Engine initialized")
@@ -250,7 +259,7 @@ class RevenueOrchestration:
             churn_probability=churn_probability,
             next_renewal_date=await self._get_next_renewal_date(customer_id),
             upsell_potential=upsell_potential,
-            cross_sell_opportunities=cross_sell_opportunities
+            cross_sell_opportunities=cross_sell_opportunities,
         )
 
     @enhanced_error_handler
@@ -271,17 +280,19 @@ class RevenueOrchestration:
             optimization = await self._generate_stream_optimization(stream, current_performance)
 
             if optimization["expected_impact"] > Decimal("10000"):  # $10K+ impact threshold
-                optimizations.append(RevenueOptimization(
-                    optimization_id=str(uuid.uuid4()),
-                    target_stream=stream,
-                    current_performance=current_performance,
-                    optimization_strategy=optimization["strategy"],
-                    expected_impact=optimization["expected_impact"],
-                    implementation_timeline=optimization["timeline_days"],
-                    success_probability=optimization["success_probability"],
-                    required_resources=optimization["resources"],
-                    roi_projection=optimization["roi"]
-                ))
+                optimizations.append(
+                    RevenueOptimization(
+                        optimization_id=str(uuid.uuid4()),
+                        target_stream=stream,
+                        current_performance=current_performance,
+                        optimization_strategy=optimization["strategy"],
+                        expected_impact=optimization["expected_impact"],
+                        implementation_timeline=optimization["timeline_days"],
+                        success_probability=optimization["success_probability"],
+                        required_resources=optimization["resources"],
+                        roi_projection=optimization["roi"],
+                    )
+                )
 
         # Sort by impact and ROI
         optimizations.sort(key=lambda x: x.expected_impact * x.roi_projection, reverse=True)
@@ -289,9 +300,9 @@ class RevenueOrchestration:
         return optimizations[:10]  # Top 10 optimization opportunities
 
     @enhanced_error_handler
-    async def generate_revenue_forecast(self,
-                                      forecast_months: int = 12,
-                                      scenarios: Optional[List[str]] = None) -> Dict[str, Any]:
+    async def generate_revenue_forecast(
+        self, forecast_months: int = 12, scenarios: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
         """
         Generate comprehensive revenue forecasts across all streams.
 
@@ -317,7 +328,9 @@ class RevenueOrchestration:
                 historical_data = await self._get_historical_revenue_data(stream, months=12)
 
                 # Generate forecast using AI and statistical models
-                stream_forecast = await self._forecast_stream_revenue(stream, historical_data, forecast_months, scenario)
+                stream_forecast = await self._forecast_stream_revenue(
+                    stream, historical_data, forecast_months, scenario
+                )
 
                 scenario_forecast[stream.value] = stream_forecast
 
@@ -334,7 +347,7 @@ class RevenueOrchestration:
             "insights": insights,
             "confidence_level": await self._calculate_forecast_confidence(forecasts),
             "key_assumptions": await self._extract_forecast_assumptions(forecasts),
-            "risk_factors": await self._identify_forecast_risks(forecasts)
+            "risk_factors": await self._identify_forecast_risks(forecasts),
         }
 
     @enhanced_error_handler
@@ -375,16 +388,13 @@ class RevenueOrchestration:
                 regulatory_requirements=market_analysis["regulatory_requirements"],
                 entry_cost=market_analysis["entry_cost"],
                 revenue_potential=market_analysis["revenue_potential"],
-                time_to_market=market_analysis["time_to_market_months"]
+                time_to_market=market_analysis["time_to_market_months"],
             )
 
             opportunities.append(expansion)
 
         # Sort by revenue potential and feasibility
-        opportunities.sort(
-            key=lambda x: (x.revenue_potential / x.entry_cost) * (1 / x.time_to_market),
-            reverse=True
-        )
+        opportunities.sort(key=lambda x: (x.revenue_potential / x.entry_cost) * (1 / x.time_to_market), reverse=True)
 
         return opportunities[:20]  # Top 20 opportunities
 
@@ -409,7 +419,8 @@ class RevenueOrchestration:
 
         # Filter recommendations by probability and impact
         high_value_recommendations = [
-            rec for rec in recommendations
+            rec
+            for rec in recommendations
             if rec["success_probability"] > 0.6 and rec["revenue_impact"] > Decimal("1000")
         ]
 
@@ -420,22 +431,26 @@ class RevenueOrchestration:
                 # Execute cross-sell action
                 result = await self._execute_cross_sell_action(customer_id, recommendation)
 
-                execution_results.append({
-                    "recommendation_id": recommendation["id"],
-                    "action": recommendation["action"],
-                    "status": "executed",
-                    "expected_revenue": recommendation["revenue_impact"],
-                    "execution_details": result
-                })
+                execution_results.append(
+                    {
+                        "recommendation_id": recommendation["id"],
+                        "action": recommendation["action"],
+                        "status": "executed",
+                        "expected_revenue": recommendation["revenue_impact"],
+                        "execution_details": result,
+                    }
+                )
 
             except Exception as e:
                 logger.error(f"Cross-sell execution failed: {e}")
-                execution_results.append({
-                    "recommendation_id": recommendation["id"],
-                    "action": recommendation["action"],
-                    "status": "failed",
-                    "error": str(e)
-                })
+                execution_results.append(
+                    {
+                        "recommendation_id": recommendation["id"],
+                        "action": recommendation["action"],
+                        "status": "failed",
+                        "error": str(e),
+                    }
+                )
 
         # Calculate total impact
         total_potential_revenue = sum(
@@ -449,12 +464,13 @@ class RevenueOrchestration:
             "recommendations_executed": len([r for r in execution_results if r["status"] == "executed"]),
             "total_potential_revenue": total_potential_revenue,
             "execution_results": execution_results,
-            "next_follow_up": datetime.utcnow() + timedelta(days=7)
+            "next_follow_up": datetime.utcnow() + timedelta(days=7),
         }
 
     @enhanced_error_handler
-    async def get_comprehensive_revenue_dashboard(self,
-                                                date_range: Optional[Dict[str, datetime]] = None) -> Dict[str, Any]:
+    async def get_comprehensive_revenue_dashboard(
+        self, date_range: Optional[Dict[str, datetime]] = None
+    ) -> Dict[str, Any]:
         """
         Generate comprehensive revenue dashboard with all key metrics.
 
@@ -489,9 +505,7 @@ class RevenueOrchestration:
         dashboard["short_term_forecast"] = await self.generate_revenue_forecast(forecast_months=3)
 
         # Optimization opportunities
-        dashboard["optimization_opportunities"] = [
-            asdict(opt) for opt in await self.optimize_pricing_strategy()
-        ]
+        dashboard["optimization_opportunities"] = [asdict(opt) for opt in await self.optimize_pricing_strategy()]
 
         # Market insights
         dashboard["market_insights"] = await self._generate_market_insights(date_range)
@@ -510,7 +524,7 @@ class RevenueOrchestration:
             "monthly_recurring_revenue": Decimal("5000"),
             "subscription_tier": "enterprise",
             "contract_length": 12,
-            "renewal_date": datetime.utcnow() + timedelta(days=90)
+            "renewal_date": datetime.utcnow() + timedelta(days=90),
         }
 
     async def _get_api_revenue_data(self, customer_id: str) -> Dict[str, Any]:
@@ -520,32 +534,24 @@ class RevenueOrchestration:
         return {
             "monthly_api_revenue": analytics.total_revenue,
             "api_usage_tier": "pro",
-            "requests_per_month": analytics.total_requests
+            "requests_per_month": analytics.total_requests,
         }
 
     async def _get_marketplace_revenue_data(self, customer_id: str) -> Dict[str, Any]:
         """Get marketplace revenue data for customer."""
-        return {
-            "marketplace_spending": Decimal("1200"),
-            "installed_agents": 5,
-            "developer_commission": Decimal("360")
-        }
+        return {"marketplace_spending": Decimal("1200"), "installed_agents": 5, "developer_commission": Decimal("360")}
 
     async def _get_custom_development_data(self, customer_id: str) -> Dict[str, Any]:
         """Get custom development revenue data."""
-        return {
-            "active_projects": 2,
-            "project_value": Decimal("50000"),
-            "completion_rate": 0.75
-        }
+        return {"active_projects": 2, "project_value": Decimal("50000"), "completion_rate": 0.75}
 
     async def _classify_customer_segment(self, customer_id: str, *args) -> CustomerSegment:
         """Classify customer into appropriate segment."""
         # Simplified classification based on revenue size
         total_monthly = sum(
-            data.get("monthly_recurring_revenue", Decimal("0")) +
-            data.get("monthly_api_revenue", Decimal("0")) +
-            data.get("marketplace_spending", Decimal("0"))
+            data.get("monthly_recurring_revenue", Decimal("0"))
+            + data.get("monthly_api_revenue", Decimal("0"))
+            + data.get("marketplace_spending", Decimal("0"))
             for data in args
         )
 
@@ -562,9 +568,9 @@ class RevenueOrchestration:
         """Calculate total customer lifetime value."""
         # Simplified CLV calculation
         monthly_revenue = sum(
-            data.get("monthly_recurring_revenue", Decimal("0")) +
-            data.get("monthly_api_revenue", Decimal("0")) +
-            data.get("marketplace_spending", Decimal("0"))
+            data.get("monthly_recurring_revenue", Decimal("0"))
+            + data.get("monthly_api_revenue", Decimal("0"))
+            + data.get("marketplace_spending", Decimal("0"))
             for data in revenue_data
         )
 
@@ -590,10 +596,9 @@ class RevenueOrchestration:
         # Simplified calculation
         return Decimal("5000")
 
-    async def _identify_expansion_opportunities(self,
-                                             customer_id: str,
-                                             segment: CustomerSegment,
-                                             active_streams: List[RevenueStream]) -> List[Dict[str, Any]]:
+    async def _identify_expansion_opportunities(
+        self, customer_id: str, segment: CustomerSegment, active_streams: List[RevenueStream]
+    ) -> List[Dict[str, Any]]:
         """Identify expansion opportunities for customer."""
         opportunities = []
 
@@ -607,7 +612,7 @@ class RevenueOrchestration:
                     "type": "new_stream",
                     "stream": stream.value,
                     "estimated_value": Decimal("2000"),
-                    "success_probability": 0.7
+                    "success_probability": 0.7,
                 }
                 opportunities.append(opportunity)
 
@@ -637,7 +642,8 @@ class RevenueOrchestration:
         try:
             # Extract probability from response
             import re
-            probability_match = re.search(r'0\.\d+', response)
+
+            probability_match = re.search(r"0\.\d+", response)
             if probability_match:
                 return float(probability_match.group())
         except:
@@ -646,11 +652,15 @@ class RevenueOrchestration:
         return 0.1  # Default low churn probability
 
     # Additional implementation methods...
-    async def _calculate_upsell_potential(self, customer_id: str, segment: CustomerSegment, active_streams: List[RevenueStream]) -> Decimal:
+    async def _calculate_upsell_potential(
+        self, customer_id: str, segment: CustomerSegment, active_streams: List[RevenueStream]
+    ) -> Decimal:
         """Calculate upsell potential for customer."""
         return Decimal("3000")
 
-    async def _find_cross_sell_opportunities(self, customer_id: str, segment: CustomerSegment, active_streams: List[RevenueStream]) -> List[str]:
+    async def _find_cross_sell_opportunities(
+        self, customer_id: str, segment: CustomerSegment, active_streams: List[RevenueStream]
+    ) -> List[str]:
         """Find cross-sell opportunities."""
         return ["Premium Support", "Advanced Analytics", "Custom Integration"]
 
@@ -664,7 +674,7 @@ class RevenueOrchestration:
             "current_monthly_revenue": Decimal("1000000"),
             "growth_rate": 0.15,
             "customer_count": 500,
-            "average_deal_size": Decimal("2000")
+            "average_deal_size": Decimal("2000"),
         }
 
     async def _generate_stream_optimization(self, stream: RevenueStream, performance: Dict[str, Any]) -> Dict[str, Any]:
@@ -675,7 +685,7 @@ class RevenueOrchestration:
             "timeline_days": 30,
             "success_probability": 0.8,
             "resources": ["Product Team", "Sales Team"],
-            "roi": 5.0
+            "roi": 5.0,
         }
 
     # Additional helper methods would be implemented here...
@@ -683,7 +693,9 @@ class RevenueOrchestration:
         """Get historical revenue data for forecasting."""
         return []
 
-    async def _forecast_stream_revenue(self, stream: RevenueStream, historical: List[Dict], months: int, scenario: str) -> Dict[str, Any]:
+    async def _forecast_stream_revenue(
+        self, stream: RevenueStream, historical: List[Dict], months: int, scenario: str
+    ) -> Dict[str, Any]:
         """Forecast revenue for a specific stream."""
         return {"monthly_projections": [], "total_forecast": Decimal("1000000")}
 
@@ -711,21 +723,21 @@ class RevenueOrchestration:
         """Analyze geographic expansion opportunities."""
         return [
             {"name": "European Union", "region": "Europe", "market_size": Decimal("500000000")},
-            {"name": "Asia Pacific", "region": "APAC", "market_size": Decimal("800000000")}
+            {"name": "Asia Pacific", "region": "APAC", "market_size": Decimal("800000000")},
         ]
 
     async def _analyze_vertical_expansion(self) -> List[Dict[str, Any]]:
         """Analyze vertical market expansion."""
         return [
             {"name": "Automotive Sales", "vertical": "Automotive", "market_size": Decimal("200000000")},
-            {"name": "Insurance Agencies", "vertical": "Insurance", "market_size": Decimal("150000000")}
+            {"name": "Insurance Agencies", "vertical": "Insurance", "market_size": Decimal("150000000")},
         ]
 
     async def _analyze_product_expansion(self) -> List[Dict[str, Any]]:
         """Analyze product/service expansion."""
         return [
             {"name": "Voice AI Platform", "type": "product", "market_size": Decimal("300000000")},
-            {"name": "Consulting Services", "type": "service", "market_size": Decimal("100000000")}
+            {"name": "Consulting Services", "type": "service", "market_size": Decimal("100000000")},
         ]
 
     async def _analyze_market_opportunity(self, opportunity: Dict[str, Any]) -> Dict[str, Any]:
@@ -737,17 +749,19 @@ class RevenueOrchestration:
             "regulatory_requirements": ["GDPR", "Local Business License"],
             "entry_cost": Decimal("500000"),
             "revenue_potential": opportunity["market_size"] * Decimal("0.001"),  # 0.1% capture
-            "time_to_market_months": 6
+            "time_to_market_months": 6,
         }
 
-    async def _generate_cross_sell_recommendations(self, customer_profile: CustomerRevenueProfile) -> List[Dict[str, Any]]:
+    async def _generate_cross_sell_recommendations(
+        self, customer_profile: CustomerRevenueProfile
+    ) -> List[Dict[str, Any]]:
         """Generate AI-powered cross-sell recommendations."""
         return [
             {
                 "id": str(uuid.uuid4()),
                 "action": "Upgrade to Enterprise API tier",
                 "revenue_impact": Decimal("2000"),
-                "success_probability": 0.8
+                "success_probability": 0.8,
             }
         ]
 
@@ -769,32 +783,23 @@ class RevenueOrchestration:
             customer_lifetime_value=Decimal("48000"),
             cost_of_acquisition=Decimal("1000"),
             profit_margin=0.80,
-            forecasted_revenue=Decimal("15000000")
+            forecasted_revenue=Decimal("15000000"),
         )
 
     async def _calculate_customer_metrics(self, date_range: Dict[str, datetime]) -> Dict[str, Any]:
         """Calculate customer-related metrics."""
-        return {
-            "total_customers": 2500,
-            "new_customers": 150,
-            "churned_customers": 25,
-            "net_revenue_retention": 1.15
-        }
+        return {"total_customers": 2500, "new_customers": 150, "churned_customers": 25, "net_revenue_retention": 1.15}
 
     async def _calculate_growth_metrics(self, date_range: Dict[str, datetime]) -> Dict[str, Any]:
         """Calculate growth metrics."""
-        return {
-            "revenue_growth_rate": 0.18,
-            "customer_growth_rate": 0.12,
-            "market_share_growth": 0.05
-        }
+        return {"revenue_growth_rate": 0.18, "customer_growth_rate": 0.12, "market_share_growth": 0.05}
 
     async def _generate_market_insights(self, date_range: Dict[str, datetime]) -> List[str]:
         """Generate market insights."""
         return [
             "API platform adoption accelerating in enterprise segment",
             "White-label solutions showing strong demand in EMEA",
-            "Marketplace ecosystem reaching critical mass"
+            "Marketplace ecosystem reaching critical mass",
         ]
 
     async def _generate_executive_summary(self, dashboard: Dict[str, Any]) -> Dict[str, Any]:
@@ -805,11 +810,11 @@ class RevenueOrchestration:
             "key_achievements": [
                 "Exceeded Q1 revenue targets by 12%",
                 "Launched successful white-label program",
-                "Achieved 95% customer retention rate"
+                "Achieved 95% customer retention rate",
             ],
             "priorities": [
                 "Accelerate API platform adoption",
                 "Expand international markets",
-                "Optimize pricing for enterprise segment"
-            ]
+                "Optimize pricing for enterprise segment",
+            ],
         }

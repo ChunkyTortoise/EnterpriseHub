@@ -6,32 +6,33 @@ Version: 2.0.0
 
 import asyncio
 import json
+import logging
 import uuid
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
-from dataclasses import dataclass, asdict
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 import redis.asyncio as redis
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
 
 from ..database import get_async_session
+from ..models.conversations import Conversation, ConversationMessage
 from ..models.leads import Lead, LeadInteraction
 from ..models.properties import Property, PropertyMatch
-from ..models.conversations import Conversation, ConversationMessage
 from ..services.cache_service import CacheService
-from ..services.roi_calculator_service import ROICalculatorService
 from ..services.claude_assistant import ClaudeAssistant
-from .ml_analytics_engine import MLAnalyticsEngine
+from ..services.roi_calculator_service import ROICalculatorService
 from .ghl_service import GHLService
-import logging
+from .ml_analytics_engine import MLAnalyticsEngine
 
 logger = logging.getLogger(__name__)
 
 
 class DemoScenario(Enum):
     """Professional client demonstration scenarios"""
+
     LUXURY_AGENT = "luxury_agent"
     MID_MARKET = "mid_market"
     FIRST_TIME_BUYER = "first_time_buyer"
@@ -42,6 +43,7 @@ class DemoScenario(Enum):
 @dataclass
 class ClientProfile:
     """Client profile for demonstration purposes"""
+
     id: str
     name: str
     agency_name: str
@@ -54,12 +56,13 @@ class ClientProfile:
     pain_points: List[str]
     geographic_market: str
     experience_level: str  # novice, experienced, expert
-    tech_adoption: str     # low, medium, high
+    tech_adoption: str  # low, medium, high
 
 
 @dataclass
 class DemoEnvironment:
     """Complete demonstration environment state"""
+
     session_id: str
     client_profile: ClientProfile
     demo_leads: List[Dict[str, Any]]
@@ -107,7 +110,7 @@ class ClientDemoService:
         scenario: DemoScenario,
         client_name: str = None,
         agency_name: str = None,
-        custom_params: Dict[str, Any] = None
+        custom_params: Dict[str, Any] = None,
     ) -> DemoEnvironment:
         """
         Create a new client demonstration session with seeded data
@@ -125,10 +128,7 @@ class ClientDemoService:
 
         # Create client profile based on scenario
         client_profile = self._create_client_profile(
-            scenario,
-            client_name or f"Demo {scenario.value.replace('_', ' ').title()}",
-            agency_name,
-            custom_params
+            scenario, client_name or f"Demo {scenario.value.replace('_', ' ').title()}", agency_name, custom_params
         )
 
         # Generate realistic demo data
@@ -152,7 +152,7 @@ class ClientDemoService:
             roi_calculation=roi_calculation,
             performance_metrics=performance_metrics,
             created_at=datetime.utcnow(),
-            expires_at=datetime.utcnow() + self.session_duration
+            expires_at=datetime.utcnow() + self.session_duration,
         )
 
         # Store in Redis with expiration
@@ -171,17 +171,17 @@ class ClientDemoService:
             data = json.loads(demo_data)
 
             # Convert back to DemoEnvironment
-            client_profile = ClientProfile(**data['client_profile'])
+            client_profile = ClientProfile(**data["client_profile"])
             demo_env = DemoEnvironment(
-                session_id=data['session_id'],
+                session_id=data["session_id"],
                 client_profile=client_profile,
-                demo_leads=data['demo_leads'],
-                demo_properties=data['demo_properties'],
-                demo_conversations=data['demo_conversations'],
-                roi_calculation=data['roi_calculation'],
-                performance_metrics=data['performance_metrics'],
-                created_at=datetime.fromisoformat(data['created_at']),
-                expires_at=datetime.fromisoformat(data['expires_at'])
+                demo_leads=data["demo_leads"],
+                demo_properties=data["demo_properties"],
+                demo_conversations=data["demo_conversations"],
+                roi_calculation=data["roi_calculation"],
+                performance_metrics=data["performance_metrics"],
+                created_at=datetime.fromisoformat(data["created_at"]),
+                expires_at=datetime.fromisoformat(data["expires_at"]),
             )
 
             # Check if session has expired
@@ -218,9 +218,7 @@ class ClientDemoService:
 
         # Create new session with same client profile
         return await self.create_demo_session(
-            demo_env.client_profile.market_segment,
-            demo_env.client_profile.name,
-            demo_env.client_profile.agency_name
+            demo_env.client_profile.market_segment, demo_env.client_profile.name, demo_env.client_profile.agency_name
         )
 
     async def cleanup_demo_session(self, session_id: str) -> bool:
@@ -253,10 +251,10 @@ class ClientDemoService:
                 session_data = await self.redis.get(key)
                 if session_data:
                     data = json.loads(session_data)
-                    expires_at = datetime.fromisoformat(data['expires_at'])
+                    expires_at = datetime.fromisoformat(data["expires_at"])
 
                     if datetime.utcnow() > expires_at:
-                        session_id = data['session_id']
+                        session_id = data["session_id"]
                         await self.cleanup_demo_session(session_id)
                         expired_count += 1
 
@@ -268,11 +266,7 @@ class ClientDemoService:
             return 0
 
     def _create_client_profile(
-        self,
-        scenario: DemoScenario,
-        client_name: str,
-        agency_name: str = None,
-        custom_params: Dict[str, Any] = None
+        self, scenario: DemoScenario, client_name: str, agency_name: str = None, custom_params: Dict[str, Any] = None
     ) -> ClientProfile:
         """Create client profile based on demonstration scenario"""
 
@@ -286,25 +280,24 @@ class ClientDemoService:
                     "High-net-worth clients expect immediate responses",
                     "Competitive luxury market with demanding clients",
                     "Managing multiple $1M+ transactions simultaneously",
-                    "Maintaining white-glove service at scale"
+                    "Maintaining white-glove service at scale",
                 ],
                 "goals": [
                     "Increase deal volume without compromising service quality",
                     "Improve response times to under 30 seconds",
                     "Automate initial qualification while maintaining luxury experience",
-                    "Scale to handle 40+ high-value leads per month"
+                    "Scale to handle 40+ high-value leads per month",
                 ],
                 "pain_points": [
                     "Missing qualified leads due to delayed responses",
                     "High operational costs with traditional staff",
                     "Difficulty maintaining consistency across team",
-                    "Time-intensive manual lead qualification process"
+                    "Time-intensive manual lead qualification process",
                 ],
                 "geographic_market": "Beverly Hills, CA / Manhattan, NY",
                 "experience_level": "expert",
-                "tech_adoption": "medium"
+                "tech_adoption": "medium",
             },
-
             DemoScenario.MID_MARKET: {
                 "agency_name": agency_name or "Hometown Realty Partners",
                 "monthly_leads": 45,
@@ -314,25 +307,24 @@ class ClientDemoService:
                     "High volume of leads with limited staff",
                     "Inconsistent follow-up processes",
                     "Difficulty prioritizing qualified prospects",
-                    "Manual CRM updates consuming valuable time"
+                    "Manual CRM updates consuming valuable time",
                 ],
                 "goals": [
                     "Increase conversion rate from 15% to 25%",
                     "Automate initial lead qualification",
                     "Improve follow-up consistency",
-                    "Scale team efficiency without hiring"
+                    "Scale team efficiency without hiring",
                 ],
                 "pain_points": [
                     "Leads falling through cracks in busy periods",
                     "Spending too much time on unqualified prospects",
                     "Inconsistent client communication",
-                    "Manual administrative tasks reducing selling time"
+                    "Manual administrative tasks reducing selling time",
                 ],
                 "geographic_market": "Austin, TX Metro Area",
                 "experience_level": "experienced",
-                "tech_adoption": "medium"
+                "tech_adoption": "medium",
             },
-
             DemoScenario.FIRST_TIME_BUYER: {
                 "agency_name": agency_name or "First Home Specialists",
                 "monthly_leads": 60,
@@ -342,25 +334,24 @@ class ClientDemoService:
                     "First-time buyers need extensive education",
                     "High volume of questions and concerns",
                     "Long sales cycles with emotional decisions",
-                    "Managing complex financing scenarios"
+                    "Managing complex financing scenarios",
                 ],
                 "goals": [
                     "Streamline first-time buyer education process",
                     "Reduce average time-to-close from 45 to 35 days",
                     "Improve client satisfaction scores",
-                    "Handle more transactions with same team size"
+                    "Handle more transactions with same team size",
                 ],
                 "pain_points": [
                     "Repetitive education conversations",
                     "High emotional support requirements",
                     "Complex financing coordination",
-                    "Time-intensive hand-holding throughout process"
+                    "Time-intensive hand-holding throughout process",
                 ],
                 "geographic_market": "Phoenix, AZ / Tampa, FL",
                 "experience_level": "experienced",
-                "tech_adoption": "high"
+                "tech_adoption": "high",
             },
-
             DemoScenario.INVESTOR_FOCUSED: {
                 "agency_name": agency_name or "Investment Property Pros",
                 "monthly_leads": 35,
@@ -370,25 +361,24 @@ class ClientDemoService:
                     "Investors require detailed market analysis",
                     "Need rapid response for investment opportunities",
                     "Managing multiple portfolio acquisitions",
-                    "Providing accurate ROI calculations on demand"
+                    "Providing accurate ROI calculations on demand",
                 ],
                 "goals": [
                     "Provide instant market analysis and ROI projections",
                     "Increase deal velocity for time-sensitive opportunities",
                     "Expand investor client base",
-                    "Automate property comparison reports"
+                    "Automate property comparison reports",
                 ],
                 "pain_points": [
                     "Time-intensive financial analysis preparation",
                     "Missing opportunities due to slow response times",
                     "Manual research for market comparisons",
-                    "Difficulty managing multiple investor portfolios"
+                    "Difficulty managing multiple investor portfolios",
                 ],
                 "geographic_market": "Dallas, TX / Atlanta, GA",
                 "experience_level": "expert",
-                "tech_adoption": "high"
+                "tech_adoption": "high",
             },
-
             DemoScenario.HIGH_VOLUME: {
                 "agency_name": agency_name or "Metro Realty Network",
                 "monthly_leads": 120,
@@ -398,24 +388,24 @@ class ClientDemoService:
                     "Managing extremely high lead volume",
                     "Maintaining quality with quantity focus",
                     "Team coordination across multiple agents",
-                    "Scaling systems for growth"
+                    "Scaling systems for growth",
                 ],
                 "goals": [
                     "Increase monthly closings from 25 to 40",
                     "Maintain 90%+ client satisfaction despite volume",
                     "Automate lead distribution and initial contact",
-                    "Optimize team productivity across all agents"
+                    "Optimize team productivity across all agents",
                 ],
                 "pain_points": [
                     "Lead management becomes overwhelming",
                     "Quality control difficult at scale",
                     "Agent burnout from high volume",
-                    "Technology gaps limiting efficiency"
+                    "Technology gaps limiting efficiency",
                 ],
                 "geographic_market": "Houston, TX / Orlando, FL",
                 "experience_level": "experienced",
-                "tech_adoption": "high"
-            }
+                "tech_adoption": "high",
+            },
         }
 
         config = scenario_configs[scenario]
@@ -424,12 +414,7 @@ class ClientDemoService:
         if custom_params:
             config.update(custom_params)
 
-        return ClientProfile(
-            id=str(uuid.uuid4()),
-            name=client_name,
-            market_segment=scenario,
-            **config
-        )
+        return ClientProfile(id=str(uuid.uuid4()), name=client_name, market_segment=scenario, **config)
 
     async def _generate_demo_leads(self, client_profile: ClientProfile) -> List[Dict[str, Any]]:
         """Generate realistic demo leads based on client profile"""
@@ -448,7 +433,7 @@ class ClientDemoService:
             created_date = base_date + timedelta(
                 days=i * 30 / client_profile.monthly_leads,
                 hours=np.random.randint(0, 24),
-                minutes=np.random.randint(0, 60)
+                minutes=np.random.randint(0, 60),
             )
 
             lead = {
@@ -467,12 +452,12 @@ class ClientDemoService:
                 "last_contact": (created_date + timedelta(days=np.random.randint(1, 7))).isoformat(),
                 "jorge_interactions": np.random.randint(1, 8),
                 "conversion_probability": lead_template["conversion_prob"],
-                "notes": lead_template["notes"]
+                "notes": lead_template["notes"],
             }
 
             leads.append(lead)
 
-        return sorted(leads, key=lambda x: x['created_at'], reverse=True)
+        return sorted(leads, key=lambda x: x["created_at"], reverse=True)
 
     async def _generate_demo_properties(self, client_profile: ClientProfile) -> List[Dict[str, Any]]:
         """Generate realistic demo properties for matching"""
@@ -496,7 +481,7 @@ class ClientDemoService:
                 "neighborhood": template["neighborhood"],
                 "features": template["features"],
                 "status": template["status"],
-                "agent_notes": template["notes"]
+                "agent_notes": template["notes"],
             }
 
             properties.append(property_data)
@@ -504,9 +489,7 @@ class ClientDemoService:
         return properties
 
     async def _generate_demo_conversations(
-        self,
-        client_profile: ClientProfile,
-        demo_leads: List[Dict[str, Any]]
+        self, client_profile: ClientProfile, demo_leads: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """Generate realistic Jorge bot conversations"""
         conversations = []
@@ -516,8 +499,7 @@ class ClientDemoService:
 
         for lead in top_leads:
             conversation_templates = self._get_conversation_templates(
-                client_profile.market_segment,
-                lead["qualification_status"]
+                client_profile.market_segment, lead["qualification_status"]
             )
 
             conversation = {
@@ -526,7 +508,9 @@ class ClientDemoService:
                 "lead_name": lead["name"],
                 "conversation_type": "Jorge Seller Bot",
                 "start_time": lead["created_at"],
-                "end_time": (datetime.fromisoformat(lead["created_at"]) + timedelta(minutes=np.random.randint(5, 25))).isoformat(),
+                "end_time": (
+                    datetime.fromisoformat(lead["created_at"]) + timedelta(minutes=np.random.randint(5, 25))
+                ).isoformat(),
                 "messages": conversation_templates["messages"],
                 "sentiment_analysis": conversation_templates["sentiment"],
                 "qualification_result": {
@@ -534,14 +518,14 @@ class ClientDemoService:
                     "psychological_commitment_score": conversation_templates["pcs_score"],
                     "overall_temperature": lead["temperature"],
                     "key_insights": conversation_templates["insights"],
-                    "recommended_actions": conversation_templates["actions"]
+                    "recommended_actions": conversation_templates["actions"],
                 },
                 "jorge_performance": {
                     "response_time_avg": "28 seconds",
                     "accuracy_score": 0.94,
                     "engagement_score": conversation_templates["engagement"],
-                    "conversion_likelihood": lead["conversion_probability"]
-                }
+                    "conversion_likelihood": lead["conversion_probability"],
+                },
             }
 
             conversations.append(conversation)
@@ -557,11 +541,11 @@ class ClientDemoService:
                 "avg_deal_size": client_profile.avg_deal_size,
                 "commission_rate": client_profile.commission_rate,
                 "current_conversion_rate": 0.15,  # Industry average
-                "target_conversion_rate": 0.25,   # With Jorge AI
+                "target_conversion_rate": 0.25,  # With Jorge AI
                 "current_response_time_hours": 3.5,
                 "jorge_response_time_seconds": 30,
                 "current_accuracy": 0.65,
-                "jorge_accuracy": 0.95
+                "jorge_accuracy": 0.95,
             }
 
             roi_calculation = {
@@ -569,46 +553,70 @@ class ClientDemoService:
                 "time_horizon_months": 12,
                 "traditional_costs": {
                     "agent_salary": 180000,  # $15k/month fully loaded cost
-                    "commission_total": client_profile.monthly_leads * 0.15 * client_profile.avg_deal_size * client_profile.commission_rate * 12,
+                    "commission_total": client_profile.monthly_leads
+                    * 0.15
+                    * client_profile.avg_deal_size
+                    * client_profile.commission_rate
+                    * 12,
                     "marketing_costs": 36000,  # $3k/month
                     "administrative_overhead": 24000,  # $2k/month
-                    "opportunity_cost": 48000  # Lost deals due to slow response
+                    "opportunity_cost": 48000,  # Lost deals due to slow response
                 },
                 "jorge_costs": {
-                    "platform_fee": 30000,   # $2.5k/month
-                    "commission_total": client_profile.monthly_leads * 0.25 * client_profile.avg_deal_size * client_profile.commission_rate * 12,
-                    "setup_cost": 5000       # One-time implementation
+                    "platform_fee": 30000,  # $2.5k/month
+                    "commission_total": client_profile.monthly_leads
+                    * 0.25
+                    * client_profile.avg_deal_size
+                    * client_profile.commission_rate
+                    * 12,
+                    "setup_cost": 5000,  # One-time implementation
                 },
                 "jorge_benefits": {
                     "faster_response": {
                         "additional_conversions": client_profile.monthly_leads * 0.03 * 12,  # 3% improvement from speed
-                        "value": client_profile.monthly_leads * 0.03 * 12 * client_profile.avg_deal_size * client_profile.commission_rate
+                        "value": client_profile.monthly_leads
+                        * 0.03
+                        * 12
+                        * client_profile.avg_deal_size
+                        * client_profile.commission_rate,
                     },
                     "higher_accuracy": {
-                        "additional_conversions": client_profile.monthly_leads * 0.07 * 12,  # 7% from better qualification
-                        "value": client_profile.monthly_leads * 0.07 * 12 * client_profile.avg_deal_size * client_profile.commission_rate
+                        "additional_conversions": client_profile.monthly_leads
+                        * 0.07
+                        * 12,  # 7% from better qualification
+                        "value": client_profile.monthly_leads
+                        * 0.07
+                        * 12
+                        * client_profile.avg_deal_size
+                        * client_profile.commission_rate,
                     },
                     "24_7_availability": {
                         "additional_conversions": client_profile.monthly_leads * 0.02 * 12,  # 2% from availability
-                        "value": client_profile.monthly_leads * 0.02 * 12 * client_profile.avg_deal_size * client_profile.commission_rate
+                        "value": client_profile.monthly_leads
+                        * 0.02
+                        * 12
+                        * client_profile.avg_deal_size
+                        * client_profile.commission_rate,
                     },
                     "cost_reduction": {
                         "staffing_savings": 150000,  # Reduced staffing needs
-                        "operational_efficiency": 24000  # Less administrative overhead
-                    }
-                }
+                        "operational_efficiency": 24000,  # Less administrative overhead
+                    },
+                },
             }
 
             # Calculate totals
             traditional_total = sum(roi_calculation["traditional_costs"].values())
             jorge_total = sum(roi_calculation["jorge_costs"].values())
-            benefits_total = sum([
-                roi_calculation["jorge_benefits"]["faster_response"]["value"],
-                roi_calculation["jorge_benefits"]["higher_accuracy"]["value"],
-                roi_calculation["jorge_benefits"]["24_7_availability"]["value"],
-                roi_calculation["jorge_benefits"]["cost_reduction"]["staffing_savings"],
-                roi_calculation["jorge_benefits"]["cost_reduction"]["operational_efficiency"]
-            ])
+            benefits_total = sum(
+                [
+                    roi_calculation["jorge_benefits"]["faster_response"]["value"],
+                    roi_calculation["jorge_benefits"]["higher_accuracy"]["value"],
+                    roi_calculation["jorge_benefits"]["24_7_availability"]["value"],
+                    roi_calculation["jorge_benefits"]["cost_reduction"]["staffing_savings"],
+                    roi_calculation["jorge_benefits"]["cost_reduction"]["operational_efficiency"],
+                ]
+            )
 
             roi_calculation["summary"] = {
                 "traditional_total_cost": traditional_total,
@@ -616,8 +624,9 @@ class ClientDemoService:
                 "total_benefits": benefits_total,
                 "net_savings": benefits_total - (jorge_total - traditional_total),
                 "roi_percentage": ((benefits_total - (jorge_total - traditional_total)) / traditional_total) * 100,
-                "payback_period_months": (jorge_total - traditional_total) / ((benefits_total - (jorge_total - traditional_total)) / 12),
-                "cost_reduction_percentage": ((traditional_total - jorge_total) / traditional_total) * 100
+                "payback_period_months": (jorge_total - traditional_total)
+                / ((benefits_total - (jorge_total - traditional_total)) / 12),
+                "cost_reduction_percentage": ((traditional_total - jorge_total) / traditional_total) * 100,
             }
 
             return roi_calculation
@@ -625,11 +634,7 @@ class ClientDemoService:
         except Exception as e:
             logger.error(f"Error calculating demo ROI: {str(e)}")
             # Return fallback calculation
-            return {
-                "error": "ROI calculation failed",
-                "fallback_savings": "75%",
-                "fallback_roi": "300%"
-            }
+            return {"error": "ROI calculation failed", "fallback_savings": "75%", "fallback_roi": "300%"}
 
     async def _generate_performance_metrics(self, client_profile: ClientProfile) -> Dict[str, Any]:
         """Generate realistic performance metrics for demonstration"""
@@ -639,46 +644,38 @@ class ClientDemoService:
         jorge_conversions = client_profile.monthly_leads * 0.25  # 25% with Jorge AI
 
         metrics = {
-            "response_times": {
-                "traditional_avg": "3.5 hours",
-                "jorge_avg": "28 seconds",
-                "improvement": "99.8%"
-            },
+            "response_times": {"traditional_avg": "3.5 hours", "jorge_avg": "28 seconds", "improvement": "99.8%"},
             "conversion_rates": {
                 "traditional": f"{15:.1f}%",
                 "jorge": f"{25:.1f}%",
-                "improvement": f"{((0.25 - 0.15) / 0.15) * 100:.1f}%"
+                "improvement": f"{((0.25 - 0.15) / 0.15) * 100:.1f}%",
             },
-            "accuracy_scores": {
-                "traditional": "65%",
-                "jorge": "95%",
-                "improvement": "46%"
-            },
+            "accuracy_scores": {"traditional": "65%", "jorge": "95%", "improvement": "46%"},
             "monthly_performance": {
                 "leads_processed": client_profile.monthly_leads,
                 "traditional_conversions": int(base_conversions),
                 "jorge_conversions": int(jorge_conversions),
                 "additional_deals": int(jorge_conversions - base_conversions),
-                "additional_revenue": int((jorge_conversions - base_conversions) * client_profile.avg_deal_size * client_profile.commission_rate)
+                "additional_revenue": int(
+                    (jorge_conversions - base_conversions)
+                    * client_profile.avg_deal_size
+                    * client_profile.commission_rate
+                ),
             },
             "operational_efficiency": {
                 "traditional_hours_per_lead": 2.5,
                 "jorge_hours_per_lead": 0.3,
                 "time_savings_per_lead": 2.2,
                 "monthly_time_savings": client_profile.monthly_leads * 2.2,
-                "cost_savings_monthly": client_profile.monthly_leads * 2.2 * 75  # $75/hour agent cost
+                "cost_savings_monthly": client_profile.monthly_leads * 2.2 * 75,  # $75/hour agent cost
             },
-            "client_satisfaction": {
-                "traditional_nps": 7.2,
-                "jorge_nps": 8.9,
-                "satisfaction_improvement": "24%"
-            },
+            "client_satisfaction": {"traditional_nps": 7.2, "jorge_nps": 8.9, "satisfaction_improvement": "24%"},
             "business_impact": {
                 "revenue_increase": f"${int((jorge_conversions - base_conversions) * client_profile.avg_deal_size * client_profile.commission_rate):,}/month",
                 "cost_reduction": "75%",
                 "roi": "300%",
-                "payback_period": "3.2 months"
-            }
+                "payback_period": "3.2 months",
+            },
         }
 
         return metrics
@@ -696,16 +693,12 @@ class ClientDemoService:
                 "roi_calculation": demo_env.roi_calculation,
                 "performance_metrics": demo_env.performance_metrics,
                 "created_at": demo_env.created_at.isoformat(),
-                "expires_at": demo_env.expires_at.isoformat()
+                "expires_at": demo_env.expires_at.isoformat(),
             }
 
             # Store in Redis with TTL
             key = f"{self.isolation_prefix}:session:{demo_env.session_id}"
-            await self.redis.setex(
-                key,
-                int(self.session_duration.total_seconds()),
-                json.dumps(data, default=str)
-            )
+            await self.redis.setex(key, int(self.session_duration.total_seconds()), json.dumps(data, default=str))
 
             logger.info(f"Stored demo environment {demo_env.session_id}")
 
@@ -716,16 +709,19 @@ class ClientDemoService:
     def _get_lead_templates(self, scenario: DemoScenario) -> List[Dict[str, Any]]:
         """Get lead templates based on scenario"""
         from .demo_data_templates import DemoDataTemplates
+
         return DemoDataTemplates.get_lead_templates(scenario)
 
     def _get_property_templates(self, scenario: DemoScenario) -> List[Dict[str, Any]]:
         """Get property templates based on scenario"""
         from .demo_data_templates import DemoDataTemplates
+
         return DemoDataTemplates.get_property_templates(scenario)
 
     def _get_conversation_templates(self, scenario: DemoScenario, status: str) -> Dict[str, Any]:
         """Get conversation templates based on scenario and qualification status"""
         from .demo_data_templates import DemoDataTemplates
+
         return DemoDataTemplates.get_conversation_templates(scenario, status)
 
 

@@ -68,16 +68,14 @@ class AILeadInsightsService:
         metadata = lead_data.get("metadata", {})
 
         # Insight 1: Closing Probability
-        closing_prob = self._calculate_closing_probability(
-            conversations, score, metadata
-        )
+        closing_prob = self._calculate_closing_probability(conversations, score, metadata)
         if closing_prob > 0.7:
             insights.append(
                 LeadInsight(
                     lead_id=lead_id,
                     insight_type="opportunity",
                     title="High Probability Close",
-                    description=f"This lead has a {closing_prob*100:.0f}% probability of closing within 30 days based on engagement patterns.",
+                    description=f"This lead has a {closing_prob * 100:.0f}% probability of closing within 30 days based on engagement patterns.",
                     confidence=closing_prob,
                     priority=1,
                     recommended_action="Schedule in-person property viewing within 48 hours",
@@ -160,9 +158,7 @@ class AILeadInsightsService:
 
         return insights
 
-    def _calculate_closing_probability(
-        self, conversations: List, score: float, metadata: Dict
-    ) -> float:
+    def _calculate_closing_probability(self, conversations: List, score: float, metadata: Dict) -> float:
         """Calculate probability of closing based on multiple factors"""
         probability = 0.0
 
@@ -277,11 +273,7 @@ class AILeadInsightsService:
             if i > 0 and conv.get("sender") == "lead":
                 timestamp = conv.get("timestamp")
                 if timestamp:
-                    dt = (
-                        datetime.fromisoformat(timestamp)
-                        if isinstance(timestamp, str)
-                        else timestamp
-                    )
+                    dt = datetime.fromisoformat(timestamp) if isinstance(timestamp, str) else timestamp
                     response_hours.append(dt.hour)
 
         if response_hours:
@@ -334,25 +326,15 @@ class AILeadInsightsService:
                 curr_time = curr_conv.get("timestamp")
 
                 if prev_time and curr_time:
-                    prev_dt = (
-                        datetime.fromisoformat(prev_time)
-                        if isinstance(prev_time, str)
-                        else prev_time
-                    )
-                    curr_dt = (
-                        datetime.fromisoformat(curr_time)
-                        if isinstance(curr_time, str)
-                        else curr_time
-                    )
+                    prev_dt = datetime.fromisoformat(prev_time) if isinstance(prev_time, str) else prev_time
+                    curr_dt = datetime.fromisoformat(curr_time) if isinstance(curr_time, str) else curr_time
                     diff = (curr_dt - prev_dt).total_seconds()
                     if diff > 0:
                         response_times.append(diff)
 
         return sum(response_times) / len(response_times) if response_times else 3600
 
-    def _analyze_budget_reality(
-        self, conversations: List, metadata: Dict
-    ) -> Optional[LeadInsight]:
+    def _analyze_budget_reality(self, conversations: List, metadata: Dict) -> Optional[LeadInsight]:
         """Analyze if lead's budget matches their expectations"""
         budget = metadata.get("budget")
         location = metadata.get("location", "").lower()
@@ -410,10 +392,7 @@ class AILeadInsightsService:
                 "important_items": len(important),
             },
             "top_opportunities": [
-                i.to_dict()
-                for i in sorted(
-                    opportunities, key=lambda x: x.confidence, reverse=True
-                )[:5]
+                i.to_dict() for i in sorted(opportunities, key=lambda x: x.confidence, reverse=True)[:5]
             ],
             "urgent_actions": [i.to_dict() for i in urgent[:10]],
             "risk_alerts": [i.to_dict() for i in risks[:5]],
@@ -434,9 +413,7 @@ class AILeadInsightsService:
         actions = []
 
         # Action 1: Call if hot and urgent
-        if score > 7.5 and any(
-            "urgent" in str(c.get("message", "")).lower() for c in conversations
-        ):
+        if score > 7.5 and any("urgent" in str(c.get("message", "")).lower() for c in conversations):
             actions.append(
                 {
                     "action": "call_now",
@@ -519,18 +496,13 @@ class AILeadInsightsService:
 
         # Calculate health components
         engagement_health = min(len(conversations) * 10, 100)
-        response_health = (
-            100 if conversations and conversations[-1].get("sender") == "lead" else 50
-        )
+        response_health = 100 if conversations and conversations[-1].get("sender") == "lead" else 50
         qualification_health = (metadata.get("answered_questions", 0) / 7) * 100
         momentum_health = self._calculate_momentum(conversations)
 
         # Weighted average
         overall_health = (
-            engagement_health * 0.3
-            + response_health * 0.2
-            + qualification_health * 0.3
-            + momentum_health * 0.2
+            engagement_health * 0.3 + response_health * 0.2 + qualification_health * 0.3 + momentum_health * 0.2
         )
 
         # Determine status
@@ -640,6 +612,4 @@ if __name__ == "__main__":
         print(f"{'🔥' if insight.priority == 1 else '⚠️'} {insight.title}")
         print(f"   {insight.description}")
         print(f"   → Action: {insight.recommended_action}")
-        print(
-            f"   Confidence: {insight.confidence*100:.0f}% | Impact: {insight.estimated_impact}\n"
-        )
+        print(f"   Confidence: {insight.confidence * 100:.0f}% | Impact: {insight.estimated_impact}\n")

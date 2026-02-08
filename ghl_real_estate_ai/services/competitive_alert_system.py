@@ -10,30 +10,29 @@ This system provides:
 """
 
 import asyncio
+import json
 import logging
-from typing import Dict, List, Optional, Any
+import smtplib
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from enum import Enum
-import json
-import httpx
-import smtplib
-from email.mime.text import MimeText
 from email.mime.multipart import MimeMultipart
+from email.mime.text import MimeText
+from enum import Enum
+from typing import Any, Dict, List, Optional
 
-from ghl_real_estate_ai.services.competitor_intelligence import (
-    CompetitiveAnalysis, RiskLevel, CompetitorMention
-)
-from ghl_real_estate_ai.services.cache_service import CacheService
-from ghl_real_estate_ai.services.ghl_client import GHLClient
+import httpx
+
 from ghl_real_estate_ai.core.config import get_settings
-
+from ghl_real_estate_ai.services.cache_service import CacheService
+from ghl_real_estate_ai.services.competitor_intelligence import CompetitiveAnalysis, CompetitorMention, RiskLevel
+from ghl_real_estate_ai.services.ghl_client import GHLClient
 
 logger = logging.getLogger(__name__)
 
 
 class NotificationChannel(Enum):
     """Available notification channels"""
+
     SLACK = "slack"
     SMS = "sms"
     EMAIL = "email"
@@ -44,6 +43,7 @@ class NotificationChannel(Enum):
 
 class AlertPriority(Enum):
     """Alert priority levels"""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -54,6 +54,7 @@ class AlertPriority(Enum):
 @dataclass
 class NotificationConfig:
     """Configuration for notification channels"""
+
     channel: NotificationChannel
     enabled: bool
     priority_threshold: AlertPriority
@@ -65,6 +66,7 @@ class NotificationConfig:
 @dataclass
 class CompetitiveAlert:
     """Data structure for competitive alerts"""
+
     alert_id: str
     lead_id: str
     lead_name: str
@@ -107,7 +109,7 @@ class CompetitiveAlertSystem:
         self.jorge_contacts = {
             "phone": self.settings.JORGE_PHONE_NUMBER,
             "email": self.settings.JORGE_EMAIL,
-            "slack_user_id": self.settings.JORGE_SLACK_USER_ID
+            "slack_user_id": self.settings.JORGE_SLACK_USER_ID,
         }
 
     def _load_notification_configs(self) -> List[NotificationConfig]:
@@ -118,7 +120,7 @@ class CompetitiveAlertSystem:
                 enabled=True,
                 priority_threshold=AlertPriority.MEDIUM,
                 endpoint=self.settings.SLACK_WEBHOOK_URL,
-                rate_limit=10  # 10 per hour
+                rate_limit=10,  # 10 per hour
             ),
             NotificationConfig(
                 channel=NotificationChannel.SMS,
@@ -127,9 +129,9 @@ class CompetitiveAlertSystem:
                 credentials={
                     "account_sid": self.settings.TWILIO_ACCOUNT_SID,
                     "auth_token": self.settings.TWILIO_AUTH_TOKEN,
-                    "from_number": self.settings.TWILIO_PHONE_NUMBER
+                    "from_number": self.settings.TWILIO_PHONE_NUMBER,
                 },
-                rate_limit=5  # 5 per hour
+                rate_limit=5,  # 5 per hour
             ),
             NotificationConfig(
                 channel=NotificationChannel.EMAIL,
@@ -139,15 +141,15 @@ class CompetitiveAlertSystem:
                     "smtp_server": self.settings.SMTP_SERVER,
                     "smtp_port": self.settings.SMTP_PORT,
                     "username": self.settings.SMTP_USERNAME,
-                    "password": self.settings.SMTP_PASSWORD
+                    "password": self.settings.SMTP_PASSWORD,
                 },
-                rate_limit=20  # 20 per hour
+                rate_limit=20,  # 20 per hour
             ),
             NotificationConfig(
                 channel=NotificationChannel.GHL_TAG,
                 enabled=True,
                 priority_threshold=AlertPriority.LOW,
-                rate_limit=50  # 50 per hour
+                rate_limit=50,  # 50 per hour
             ),
             NotificationConfig(
                 channel=NotificationChannel.PHONE_CALL,
@@ -156,10 +158,10 @@ class CompetitiveAlertSystem:
                 credentials={
                     "account_sid": self.settings.TWILIO_ACCOUNT_SID,
                     "auth_token": self.settings.TWILIO_AUTH_TOKEN,
-                    "from_number": self.settings.TWILIO_PHONE_NUMBER
+                    "from_number": self.settings.TWILIO_PHONE_NUMBER,
                 },
-                rate_limit=3  # 3 per hour
-            )
+                rate_limit=3,  # 3 per hour
+            ),
         ]
 
     def _load_escalation_rules(self) -> Dict[RiskLevel, Dict]:
@@ -170,29 +172,34 @@ class CompetitiveAlertSystem:
                 "channels": [NotificationChannel.GHL_TAG],
                 "delay_minutes": 0,
                 "escalation_delay": None,
-                "human_intervention": False
+                "human_intervention": False,
             },
             RiskLevel.MEDIUM: {
                 "priority": AlertPriority.MEDIUM,
                 "channels": [NotificationChannel.SLACK, NotificationChannel.GHL_TAG],
                 "delay_minutes": 0,
                 "escalation_delay": 30,  # Escalate if no response in 30 minutes
-                "human_intervention": False
+                "human_intervention": False,
             },
             RiskLevel.HIGH: {
                 "priority": AlertPriority.HIGH,
                 "channels": [NotificationChannel.SLACK, NotificationChannel.SMS, NotificationChannel.GHL_TAG],
                 "delay_minutes": 0,
                 "escalation_delay": 15,  # Escalate if no response in 15 minutes
-                "human_intervention": True
+                "human_intervention": True,
             },
             RiskLevel.CRITICAL: {
                 "priority": AlertPriority.CRITICAL,
-                "channels": [NotificationChannel.SLACK, NotificationChannel.SMS, NotificationChannel.EMAIL, NotificationChannel.GHL_TAG],
+                "channels": [
+                    NotificationChannel.SLACK,
+                    NotificationChannel.SMS,
+                    NotificationChannel.EMAIL,
+                    NotificationChannel.GHL_TAG,
+                ],
                 "delay_minutes": 0,
                 "escalation_delay": 5,  # Escalate if no response in 5 minutes
-                "human_intervention": True
-            }
+                "human_intervention": True,
+            },
         }
 
     async def send_competitive_alert(
@@ -200,7 +207,7 @@ class CompetitiveAlertSystem:
         lead_id: str,
         lead_data: Dict[str, Any],
         competitive_analysis: CompetitiveAnalysis,
-        conversation_context: Optional[Dict] = None
+        conversation_context: Optional[Dict] = None,
     ) -> CompetitiveAlert:
         """
         Send competitive alert through appropriate channels
@@ -230,7 +237,7 @@ class CompetitiveAlertSystem:
                 human_intervention_required=competitive_analysis.escalation_needed,
                 escalation_level=0,
                 resolved=False,
-                resolution_notes=None
+                resolution_notes=None,
             )
 
             # Get escalation rules for this risk level
@@ -260,7 +267,9 @@ class CompetitiveAlertSystem:
             if any(ch in [NotificationChannel.SMS, NotificationChannel.PHONE_CALL] for ch in alert.channels_sent):
                 alert.jorge_notified = True
 
-            logger.info(f"Competitive alert sent: {alert.alert_id} - Risk: {competitive_analysis.risk_level} - Channels: {[ch.value for ch in alert.channels_sent]}")
+            logger.info(
+                f"Competitive alert sent: {alert.alert_id} - Risk: {competitive_analysis.risk_level} - Channels: {[ch.value for ch in alert.channels_sent]}"
+            )
 
             return alert
 
@@ -281,7 +290,7 @@ class CompetitiveAlertSystem:
                 human_intervention_required=True,
                 escalation_level=0,
                 resolved=False,
-                resolution_notes=f"Error sending alert: {str(e)}"
+                resolution_notes=f"Error sending alert: {str(e)}",
             )
 
     def _determine_alert_priority(self, risk_level: RiskLevel) -> AlertPriority:
@@ -290,7 +299,7 @@ class CompetitiveAlertSystem:
             RiskLevel.LOW: AlertPriority.LOW,
             RiskLevel.MEDIUM: AlertPriority.MEDIUM,
             RiskLevel.HIGH: AlertPriority.HIGH,
-            RiskLevel.CRITICAL: AlertPriority.CRITICAL
+            RiskLevel.CRITICAL: AlertPriority.CRITICAL,
         }
         return mapping.get(risk_level, AlertPriority.LOW)
 
@@ -319,10 +328,7 @@ class CompetitiveAlertSystem:
         return True
 
     async def _send_notification(
-        self,
-        channel: NotificationChannel,
-        alert: CompetitiveAlert,
-        conversation_context: Optional[Dict] = None
+        self, channel: NotificationChannel, alert: CompetitiveAlert, conversation_context: Optional[Dict] = None
     ) -> bool:
         """Send notification through specific channel"""
         try:
@@ -351,102 +357,71 @@ class CompetitiveAlertSystem:
             return False
 
         # Build Slack message
-        risk_emojis = {
-            RiskLevel.LOW: "🟡",
-            RiskLevel.MEDIUM: "🟠",
-            RiskLevel.HIGH: "🔴",
-            RiskLevel.CRITICAL: "🚨"
-        }
+        risk_emojis = {RiskLevel.LOW: "🟡", RiskLevel.MEDIUM: "🟠", RiskLevel.HIGH: "🔴", RiskLevel.CRITICAL: "🚨"}
 
         emoji = risk_emojis.get(alert.competitive_analysis.risk_level, "⚠️")
 
         # Format competitor mentions
         mentions_text = ""
         if alert.competitive_analysis.mentions:
-            mentions_text = "\n".join([
-                f"• {mention.mention_text} (confidence: {mention.confidence_score:.1%})"
-                for mention in alert.competitive_analysis.mentions[:3]
-            ])
+            mentions_text = "\n".join(
+                [
+                    f"• {mention.mention_text} (confidence: {mention.confidence_score:.1%})"
+                    for mention in alert.competitive_analysis.mentions[:3]
+                ]
+            )
 
         slack_message = {
             "text": f"{emoji} Competitor Risk Alert - {alert.competitive_analysis.risk_level.value.title()}",
             "blocks": [
-                {
-                    "type": "header",
-                    "text": {
-                        "type": "plain_text",
-                        "text": f"{emoji} Competitor Risk Detected"
-                    }
-                },
+                {"type": "header", "text": {"type": "plain_text", "text": f"{emoji} Competitor Risk Detected"}},
                 {
                     "type": "section",
                     "fields": [
+                        {"type": "mrkdwn", "text": f"*Lead:* {alert.lead_name}"},
                         {
                             "type": "mrkdwn",
-                            "text": f"*Lead:* {alert.lead_name}"
+                            "text": f"*Risk Level:* {alert.competitive_analysis.risk_level.value.title()}",
                         },
-                        {
-                            "type": "mrkdwn",
-                            "text": f"*Risk Level:* {alert.competitive_analysis.risk_level.value.title()}"
-                        },
-                        {
-                            "type": "mrkdwn",
-                            "text": f"*Phone:* {alert.lead_phone or 'N/A'}"
-                        },
-                        {
-                            "type": "mrkdwn",
-                            "text": f"*Confidence:* {alert.competitive_analysis.confidence_score:.1%}"
-                        }
-                    ]
-                }
-            ]
+                        {"type": "mrkdwn", "text": f"*Phone:* {alert.lead_phone or 'N/A'}"},
+                        {"type": "mrkdwn", "text": f"*Confidence:* {alert.competitive_analysis.confidence_score:.1%}"},
+                    ],
+                },
+            ],
         }
 
         if mentions_text:
-            slack_message["blocks"].append({
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"*Competitor Mentions:*\n{mentions_text}"
-                }
-            })
+            slack_message["blocks"].append(
+                {"type": "section", "text": {"type": "mrkdwn", "text": f"*Competitor Mentions:*\n{mentions_text}"}}
+            )
 
         if alert.competitive_analysis.recommended_responses:
-            response_text = "\n".join([
-                f"• {response}"
-                for response in alert.competitive_analysis.recommended_responses[:2]
-            ])
-            slack_message["blocks"].append({
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"*Recommended Response:*\n{response_text}"
-                }
-            })
+            response_text = "\n".join(
+                [f"• {response}" for response in alert.competitive_analysis.recommended_responses[:2]]
+            )
+            slack_message["blocks"].append(
+                {"type": "section", "text": {"type": "mrkdwn", "text": f"*Recommended Response:*\n{response_text}"}}
+            )
 
         # Add action buttons
-        slack_message["blocks"].append({
-            "type": "actions",
-            "elements": [
-                {
-                    "type": "button",
-                    "text": {
-                        "type": "plain_text",
-                        "text": "View in GHL"
+        slack_message["blocks"].append(
+            {
+                "type": "actions",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {"type": "plain_text", "text": "View in GHL"},
+                        "url": f"https://app.gohighlevel.com/contacts/{alert.lead_id}",
+                        "style": "primary",
                     },
-                    "url": f"https://app.gohighlevel.com/contacts/{alert.lead_id}",
-                    "style": "primary"
-                },
-                {
-                    "type": "button",
-                    "text": {
-                        "type": "plain_text",
-                        "text": "Call Lead"
+                    {
+                        "type": "button",
+                        "text": {"type": "plain_text", "text": "Call Lead"},
+                        "value": f"call_{alert.lead_id}",
                     },
-                    "value": f"call_{alert.lead_id}"
-                }
-            ]
-        })
+                ],
+            }
+        )
 
         # Send to Slack
         async with httpx.AsyncClient() as client:
@@ -499,7 +474,9 @@ class CompetitiveAlertSystem:
 
         try:
             # Create email content
-            subject = f"🚨 Competitor Risk Alert - {alert.lead_name} ({alert.competitive_analysis.risk_level.value.title()})"
+            subject = (
+                f"🚨 Competitor Risk Alert - {alert.lead_name} ({alert.competitive_analysis.risk_level.value.title()})"
+            )
 
             html_body = f"""
             <html>
@@ -516,7 +493,7 @@ class CompetitiveAlertSystem:
                     </tr>
                     <tr>
                         <td style="padding: 8px; border: 1px solid #ddd;"><strong>Phone:</strong></td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">{alert.lead_phone or 'N/A'}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{alert.lead_phone or "N/A"}</td>
                     </tr>
                     <tr>
                         <td style="padding: 8px; border: 1px solid #ddd;"><strong>Confidence:</strong></td>
@@ -666,7 +643,7 @@ class CompetitiveAlertSystem:
         escalation_data = {
             "alert_id": alert.alert_id,
             "escalation_time": (datetime.now() + timedelta(minutes=delay_minutes)).isoformat(),
-            "escalation_level": alert.escalation_level + 1
+            "escalation_level": alert.escalation_level + 1,
         }
 
         cache_key = f"escalation_pending:{alert.alert_id}"
@@ -687,7 +664,7 @@ class CompetitiveAlertSystem:
             "jorge_notified": alert.jorge_notified,
             "human_intervention_required": alert.human_intervention_required,
             "mentions_count": len(alert.competitive_analysis.mentions),
-            "confidence_score": alert.competitive_analysis.confidence_score
+            "confidence_score": alert.competitive_analysis.confidence_score,
         }
 
         cache_key = f"competitive_alert:{alert.alert_id}"
@@ -737,6 +714,7 @@ class CompetitiveAlertSystem:
 
 # Singleton instance
 _competitive_alert_system = None
+
 
 def get_competitive_alert_system() -> CompetitiveAlertSystem:
     """Get singleton competitive alert system"""

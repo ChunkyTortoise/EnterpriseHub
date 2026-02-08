@@ -3,12 +3,14 @@ Configuration module for GHL Real Estate AI.
 
 Manages environment variables and application settings using Pydantic.
 """
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field, field_validator, ValidationInfo
-from typing import Optional
-from enum import Enum
+
 import os
 import sys
+from enum import Enum
+from typing import Optional
+
+from pydantic import Field, ValidationInfo, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -38,7 +40,7 @@ class Settings(BaseSettings):
     google_api_key: Optional[str] = None
     perplexity_api_key: Optional[str] = None
     perplexity_model: str = "sonar"
-    
+
     # OpenRouter Configuration
     openrouter_api_key: Optional[str] = None
     openrouter_default_model: str = "anthropic/claude-3.5-sonnet"
@@ -238,7 +240,7 @@ class Settings(BaseSettings):
     # Testing
     test_mode: bool = False
 
-    @field_validator('jwt_secret_key')
+    @field_validator("jwt_secret_key")
     @classmethod
     def validate_jwt_secret(cls, v: Optional[str], info: ValidationInfo):
         """
@@ -247,13 +249,13 @@ class Settings(BaseSettings):
         - Production: MUST have 32+ character secret, exits immediately if missing/weak
         - Development: Generates a temporary secret with warning, but logs it clearly
         """
-        import secrets as secrets_module
         import logging
+        import secrets as secrets_module
 
-        environment = info.data.get('environment', 'development')
+        environment = info.data.get("environment", "development")
 
         # Production: Fail fast if no secret or weak secret
-        if environment == 'production':
+        if environment == "production":
             if not v:
                 print("=" * 60)
                 print("CRITICAL SECURITY ERROR: JWT_SECRET_KEY is required in production")
@@ -297,12 +299,12 @@ class Settings(BaseSettings):
 
         return v
 
-    @field_validator('ghl_webhook_secret')
+    @field_validator("ghl_webhook_secret")
     @classmethod
     def validate_webhook_secret(cls, v: Optional[str], info: ValidationInfo):
         """SECURITY FIX: Validate webhook secret in production."""
-        environment = info.data.get('environment', 'development')
-        if environment == 'production' and not v:
+        environment = info.data.get("environment", "development")
+        if environment == "production" and not v:
             print("❌ SECURITY ERROR: GHL_WEBHOOK_SECRET is required in production")
             print("   Generate with: openssl rand -hex 32")
             sys.exit(1)
@@ -310,12 +312,12 @@ class Settings(BaseSettings):
             print("⚠️  WARNING: Webhook secret should be at least 32 characters")
         return v
 
-    @field_validator('redis_password')
+    @field_validator("redis_password")
     @classmethod
     def validate_redis_password(cls, v: Optional[str], info: ValidationInfo):
         """SECURITY FIX: Validate Redis password in production."""
-        environment = info.data.get('environment', 'development')
-        if environment == 'production' and not v:
+        environment = info.data.get("environment", "development")
+        if environment == "production" and not v:
             print("❌ SECURITY ERROR: REDIS_PASSWORD is required in production")
             print("   Generate with: openssl rand -hex 32")
             sys.exit(1)
@@ -323,28 +325,23 @@ class Settings(BaseSettings):
             print("⚠️  WARNING: Redis password should be at least 32 characters")
         return v
 
-    @field_validator('anthropic_api_key')
+    @field_validator("anthropic_api_key")
     @classmethod
     def validate_anthropic_key(cls, v: str):
         """Validate Anthropic API key format."""
-        if v and not v.startswith('sk-ant-'):
+        if v and not v.startswith("sk-ant-"):
             print("⚠️  WARNING: Anthropic API key should start with 'sk-ant-'")
         return v
 
-    @field_validator('ghl_api_key')
+    @field_validator("ghl_api_key")
     @classmethod
     def validate_ghl_key(cls, v: str):
         """Validate GHL API key format."""
-        if v and not v.startswith('eyJ'):
+        if v and not v.startswith("eyJ"):
             print("⚠️  WARNING: GHL API key should be JWT format (starts with 'eyJ')")
         return v
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore",
-        case_sensitive=False
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore", case_sensitive=False)
 
 
 # Global settings instance
@@ -353,10 +350,7 @@ try:
     settings = Settings()
 except Exception as e:
     # Provide a clear, actionable error instead of a raw Pydantic traceback
-    missing = [
-        var for var in ("ANTHROPIC_API_KEY", "GHL_API_KEY", "GHL_LOCATION_ID")
-        if not os.getenv(var)
-    ]
+    missing = [var for var in ("ANTHROPIC_API_KEY", "GHL_API_KEY", "GHL_LOCATION_ID") if not os.getenv(var)]
     if missing:
         print(f"\n❌  STARTUP ERROR: Required environment variables not set: {', '.join(missing)}")
         print("   Copy .env.example → .env and fill in the values, or set them in your Railway dashboard.\n")
@@ -368,21 +362,22 @@ except Exception as e:
 # Environment Mode Detection
 class EnvironmentMode(Enum):
     """Application environment modes"""
-    DEMO = "demo"           # Mock data, no API calls (default)
-    STAGING = "staging"     # Real API, test account
+
+    DEMO = "demo"  # Mock data, no API calls (default)
+    STAGING = "staging"  # Real API, test account
     PRODUCTION = "production"  # Real API, production account
 
 
 def get_environment() -> EnvironmentMode:
     """
     Detect environment based on GHL_API_KEY and ENVIRONMENT variable
-    
+
     Returns:
         EnvironmentMode: Current environment (DEMO, STAGING, or PRODUCTION)
     """
     env_var = os.getenv("ENVIRONMENT", "").lower()
     api_key = os.getenv("GHL_API_KEY", "")
-    
+
     # Explicit environment variable takes precedence
     if env_var == "production":
         return EnvironmentMode.PRODUCTION
@@ -390,7 +385,7 @@ def get_environment() -> EnvironmentMode:
         return EnvironmentMode.STAGING
     elif env_var == "demo":
         return EnvironmentMode.DEMO
-    
+
     # Auto-detect based on API key
     if not api_key or api_key == "demo_mode" or api_key == "dummy":
         return EnvironmentMode.DEMO
@@ -403,7 +398,7 @@ def get_environment() -> EnvironmentMode:
 def is_mock_mode() -> bool:
     """
     Check if application should use mock data
-    
+
     Returns:
         bool: True if in DEMO mode, False otherwise
     """
@@ -413,19 +408,19 @@ def is_mock_mode() -> bool:
 def get_environment_display() -> dict:
     """
     Get environment display information for UI
-    
+
     Returns:
         dict: Environment info with icon, color, and message
     """
     env = get_environment()
-    
+
     if env == EnvironmentMode.DEMO:
         return {
             "icon": "🎭",
             "name": "Demo Mode",
             "color": "#F59E0B",
             "message": "Using sample data. Set GHL_API_KEY to enable live sync.",
-            "banner_type": "info"
+            "banner_type": "info",
         }
     elif env == EnvironmentMode.STAGING:
         return {
@@ -433,7 +428,7 @@ def get_environment_display() -> dict:
             "name": "Staging Mode",
             "color": "#3B82F6",
             "message": "Connected to test environment.",
-            "banner_type": "info"
+            "banner_type": "info",
         }
     else:  # PRODUCTION
         return {
@@ -441,5 +436,5 @@ def get_environment_display() -> dict:
             "name": "Live Mode",
             "color": "#10B981",
             "message": "Connected to GoHighLevel production.",
-            "banner_type": "success"
+            "banner_type": "success",
         }

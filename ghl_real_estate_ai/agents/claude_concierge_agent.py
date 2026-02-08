@@ -8,38 +8,44 @@ coordinating with 40+ specialized agents while providing intelligent, context-aw
 
 import asyncio
 import json
-from typing import Dict, Any, List, Optional, Tuple, Union
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
-from enum import Enum
 import re
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
-from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.agents.enhanced_bot_orchestrator import get_enhanced_bot_orchestrator
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
+from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 
 logger = get_logger(__name__)
 
+
 class ConciergeMode(Enum):
     """Operational modes for the Concierge Agent."""
-    PROACTIVE = "proactive"           # Anticipates user needs
-    REACTIVE = "reactive"             # Responds to user requests
-    MONITORING = "monitoring"         # Observes and learns
-    COORDINATING = "coordinating"     # Managing multi-agent tasks
-    EMERGENCY = "emergency"           # Crisis intervention mode
+
+    PROACTIVE = "proactive"  # Anticipates user needs
+    REACTIVE = "reactive"  # Responds to user requests
+    MONITORING = "monitoring"  # Observes and learns
+    COORDINATING = "coordinating"  # Managing multi-agent tasks
+    EMERGENCY = "emergency"  # Crisis intervention mode
+
 
 class UserIntent(Enum):
     """User intent categories for context awareness."""
-    EXPLORING = "exploring"           # Learning about platform
-    WORKING = "working"               # Performing specific tasks
-    TROUBLESHOOTING = "troubleshooting" # Solving problems
-    ANALYZING = "analyzing"           # Reviewing data/reports
-    CONFIGURING = "configuring"       # Setting up features
-    LEARNING = "learning"             # Seeking knowledge/training
+
+    EXPLORING = "exploring"  # Learning about platform
+    WORKING = "working"  # Performing specific tasks
+    TROUBLESHOOTING = "troubleshooting"  # Solving problems
+    ANALYZING = "analyzing"  # Reviewing data/reports
+    CONFIGURING = "configuring"  # Setting up features
+    LEARNING = "learning"  # Seeking knowledge/training
+
 
 class PlatformContext(Enum):
     """Platform areas and contexts."""
+
     DASHBOARD = "dashboard"
     LEAD_MANAGEMENT = "lead_management"
     PROPERTY_ANALYSIS = "property_analysis"
@@ -49,9 +55,11 @@ class PlatformContext(Enum):
     INTEGRATIONS = "integrations"
     MOBILE = "mobile"
 
+
 @dataclass
 class UserSession:
     """Tracks user session context and patterns."""
+
     user_id: str
     session_start: datetime
     last_activity: datetime
@@ -64,9 +72,11 @@ class UserSession:
     competency_level: str = "intermediate"  # beginner, intermediate, advanced
     frustration_indicators: List[str] = field(default_factory=list)
 
+
 @dataclass
 class AgentCapability:
     """Represents an agent and its capabilities."""
+
     agent_name: str
     agent_type: str
     capabilities: List[str]
@@ -75,9 +85,11 @@ class AgentCapability:
     performance_score: float = 1.0
     specializations: List[str] = field(default_factory=list)
 
+
 @dataclass
 class ConciergeRecommendation:
     """Recommendation from the Concierge Agent."""
+
     recommendation_type: str
     title: str
     description: str
@@ -86,6 +98,7 @@ class ConciergeRecommendation:
     confidence: float
     relevant_agents: List[str] = field(default_factory=list)
     estimated_time: Optional[str] = None
+
 
 class PlatformKnowledgeEngine:
     """Comprehensive knowledge of the platform's capabilities."""
@@ -101,37 +114,54 @@ class PlatformKnowledgeEngine:
         return {
             "lead_management": {
                 "features": [
-                    "Jorge Seller Bot (Adaptive)", "Predictive Lead Bot", "Real-time Intent Decoder",
-                    "Lead Intelligence Swarm", "Voss Negotiation Agent", "Temperature Prediction",
-                    "Behavioral Analytics", "Multi-channel Sequences", "Lead Scoring"
+                    "Jorge Seller Bot (Adaptive)",
+                    "Predictive Lead Bot",
+                    "Real-time Intent Decoder",
+                    "Lead Intelligence Swarm",
+                    "Voss Negotiation Agent",
+                    "Temperature Prediction",
+                    "Behavioral Analytics",
+                    "Multi-channel Sequences",
+                    "Lead Scoring",
                 ],
                 "workflows": ["Lead Capture", "Qualification", "Nurture Sequences", "Conversion"],
-                "integrations": ["GHL", "Retell AI", "Lyrio", "Webhooks"]
+                "integrations": ["GHL", "Retell AI", "Lyrio", "Webhooks"],
             },
             "property_analysis": {
                 "features": [
-                    "CMA Generator", "Property Intelligence", "Market Analysis",
-                    "Competitive Benchmarking", "Investment Analysis", "Pricing Intelligence"
+                    "CMA Generator",
+                    "Property Intelligence",
+                    "Market Analysis",
+                    "Competitive Benchmarking",
+                    "Investment Analysis",
+                    "Pricing Intelligence",
                 ],
                 "workflows": ["Property Valuation", "Market Comparison", "Investment Scoring"],
-                "integrations": ["Zillow", "MLS", "Market Data APIs"]
+                "integrations": ["Zillow", "MLS", "Market Data APIs"],
             },
             "bot_ecosystem": {
                 "features": [
-                    "40+ Specialized Agents", "Multi-agent Orchestration", "Swarm Intelligence",
-                    "Real-time Coordination", "Performance Monitoring", "Adaptive Learning"
+                    "40+ Specialized Agents",
+                    "Multi-agent Orchestration",
+                    "Swarm Intelligence",
+                    "Real-time Coordination",
+                    "Performance Monitoring",
+                    "Adaptive Learning",
                 ],
                 "workflows": ["Bot Deployment", "Agent Coordination", "Performance Optimization"],
-                "integrations": ["LangGraph", "Claude API", "Event System"]
+                "integrations": ["LangGraph", "Claude API", "Event System"],
             },
             "analytics_reporting": {
                 "features": [
-                    "Revenue Attribution", "Performance Dashboards", "Predictive Analytics",
-                    "Lead Intelligence Reports", "Agent Performance Metrics"
+                    "Revenue Attribution",
+                    "Performance Dashboards",
+                    "Predictive Analytics",
+                    "Lead Intelligence Reports",
+                    "Agent Performance Metrics",
                 ],
                 "workflows": ["Report Generation", "Performance Analysis", "Forecasting"],
-                "integrations": ["PostgreSQL", "Redis", "Visualization Tools"]
-            }
+                "integrations": ["PostgreSQL", "Redis", "Visualization Tools"],
+            },
         }
 
     def _load_agent_registry(self) -> Dict[str, AgentCapability]:
@@ -143,84 +173,81 @@ class PlatformKnowledgeEngine:
                 agent_type="seller_qualification",
                 capabilities=["real_time_questioning", "calendar_integration", "stall_breaking"],
                 current_status="active",
-                specializations=["seller_qualification", "confrontational_methodology"]
+                specializations=["seller_qualification", "confrontational_methodology"],
             ),
             "predictive_lead": AgentCapability(
                 agent_name="Predictive Lead Bot",
                 agent_type="lead_nurture",
                 capabilities=["timing_optimization", "personality_adaptation", "multi_channel"],
                 current_status="active",
-                specializations=["behavioral_analysis", "sequence_optimization"]
+                specializations=["behavioral_analysis", "sequence_optimization"],
             ),
             "realtime_intent": AgentCapability(
                 agent_name="Real-time Intent Decoder",
                 agent_type="intent_analysis",
                 capabilities=["streaming_analysis", "semantic_understanding", "forecasting"],
                 current_status="active",
-                specializations=["intent_scoring", "conversation_analysis"]
+                specializations=["intent_scoring", "conversation_analysis"],
             ),
-
             # Specialized Intelligence Agents
             "voss_negotiation": AgentCapability(
                 agent_name="Voss Negotiation Agent",
                 agent_type="negotiation",
                 capabilities=["tactical_empathy", "compliance_audit", "tone_calibration"],
                 current_status="active",
-                specializations=["negotiation_tactics", "behavioral_psychology"]
+                specializations=["negotiation_tactics", "behavioral_psychology"],
             ),
             "epsilon_predictive": AgentCapability(
                 agent_name="Epsilon Predictive AI",
                 agent_type="predictive_analytics",
                 capabilities=["ml_scoring", "feature_engineering", "training"],
                 current_status="active",
-                specializations=["machine_learning", "predictive_modeling"]
+                specializations=["machine_learning", "predictive_modeling"],
             ),
             "lead_intelligence_swarm": AgentCapability(
                 agent_name="Lead Intelligence Swarm",
                 agent_type="multi_agent_analysis",
                 capabilities=["demographic_analysis", "behavioral_profiling", "consensus_building"],
                 current_status="active",
-                specializations=["swarm_intelligence", "collaborative_analysis"]
+                specializations=["swarm_intelligence", "collaborative_analysis"],
             ),
-
             # Orchestration & Coordination
             "enhanced_orchestrator": AgentCapability(
                 agent_name="Enhanced Bot Orchestrator",
                 agent_type="orchestration",
                 capabilities=["multi_bot_coordination", "fallback_management", "metrics_tracking"],
                 current_status="active",
-                specializations=["bot_coordination", "performance_optimization"]
+                specializations=["bot_coordination", "performance_optimization"],
             ),
             "swarm_orchestrator": AgentCapability(
                 agent_name="Agent Swarm Orchestrator",
                 agent_type="swarm_management",
                 capabilities=["agent_deployment", "resource_allocation", "conflict_resolution"],
                 current_status="active",
-                specializations=["swarm_coordination", "resource_management"]
+                specializations=["swarm_coordination", "resource_management"],
             ),
-
             # Analytics & Intelligence
             "quant_agent": AgentCapability(
                 agent_name="Quantitative Analysis Agent",
                 agent_type="analytics",
                 capabilities=["statistical_analysis", "market_modeling", "risk_assessment"],
                 current_status="active",
-                specializations=["quantitative_analysis", "financial_modeling"]
+                specializations=["quantitative_analysis", "financial_modeling"],
             ),
             "iota_revenue": AgentCapability(
                 agent_name="Iota Revenue Attribution",
                 agent_type="revenue_analysis",
                 capabilities=["attribution_modeling", "revenue_tracking", "performance_metrics"],
                 current_status="active",
-                specializations=["revenue_attribution", "performance_tracking"]
+                specializations=["revenue_attribution", "performance_tracking"],
             ),
             "kappa_competitive": AgentCapability(
                 agent_name="Kappa Competitive Benchmarking",
                 agent_type="competitive_analysis",
                 capabilities=["market_comparison", "competitive_intelligence", "positioning"],
                 current_status="active",
-                specializations=["competitive_analysis", "market_intelligence"]
-            )
+                specializations=["competitive_analysis", "market_intelligence"],
+            ),
         }
 
     def _load_user_workflows(self) -> Dict[str, Dict]:
@@ -232,10 +259,10 @@ class PlatformKnowledgeEngine:
                     "Lead capture setup",
                     "Bot configuration",
                     "Integration connections",
-                    "First lead processing"
+                    "First lead processing",
                 ],
                 "estimated_time": "30-45 minutes",
-                "required_agents": ["adaptive_jorge", "predictive_lead", "enhanced_orchestrator"]
+                "required_agents": ["adaptive_jorge", "predictive_lead", "enhanced_orchestrator"],
             },
             "lead_qualification_workflow": {
                 "steps": [
@@ -243,10 +270,10 @@ class PlatformKnowledgeEngine:
                     "Jorge adaptive questioning",
                     "Real-time intent analysis",
                     "Temperature classification",
-                    "Action recommendation"
+                    "Action recommendation",
                 ],
                 "estimated_time": "5-15 minutes",
-                "required_agents": ["adaptive_jorge", "realtime_intent", "lead_intelligence_swarm"]
+                "required_agents": ["adaptive_jorge", "realtime_intent", "lead_intelligence_swarm"],
             },
             "property_analysis_workflow": {
                 "steps": [
@@ -254,11 +281,11 @@ class PlatformKnowledgeEngine:
                     "CMA generation",
                     "Market analysis",
                     "Investment scoring",
-                    "Report generation"
+                    "Report generation",
                 ],
                 "estimated_time": "10-20 minutes",
-                "required_agents": ["cma_generator", "quant_agent", "kappa_competitive"]
-            }
+                "required_agents": ["cma_generator", "quant_agent", "kappa_competitive"],
+            },
         }
 
     def _load_integration_points(self) -> Dict[str, Dict]:
@@ -267,23 +294,23 @@ class PlatformKnowledgeEngine:
             "ghl": {
                 "status": "connected",
                 "capabilities": ["contact_sync", "webhook_processing", "custom_fields"],
-                "last_sync": datetime.now() - timedelta(minutes=5)
+                "last_sync": datetime.now() - timedelta(minutes=5),
             },
             "claude_api": {
                 "status": "connected",
                 "capabilities": ["conversation_intelligence", "real_time_analysis", "content_generation"],
-                "last_sync": datetime.now() - timedelta(seconds=30)
+                "last_sync": datetime.now() - timedelta(seconds=30),
             },
             "retell_ai": {
                 "status": "connected",
                 "capabilities": ["voice_calls", "call_scheduling", "conversation_recording"],
-                "last_sync": datetime.now() - timedelta(minutes=2)
+                "last_sync": datetime.now() - timedelta(minutes=2),
             },
             "lyrio": {
                 "status": "connected",
                 "capabilities": ["lead_sync", "score_tracking", "digital_twin_association"],
-                "last_sync": datetime.now() - timedelta(minutes=1)
-            }
+                "last_sync": datetime.now() - timedelta(minutes=1),
+            },
         }
 
     def get_relevant_features(self, context: PlatformContext, user_intent: UserIntent) -> List[Dict]:
@@ -294,18 +321,21 @@ class PlatformKnowledgeEngine:
             PlatformContext.LEAD_MANAGEMENT: "lead_management",
             PlatformContext.PROPERTY_ANALYSIS: "property_analysis",
             PlatformContext.BOT_MANAGEMENT: "bot_ecosystem",
-            PlatformContext.REPORTS: "analytics_reporting"
+            PlatformContext.REPORTS: "analytics_reporting",
         }
 
         if context in context_map:
             feature_category = self.platform_features.get(context_map[context], {})
-            relevant.append({
-                "category": context_map[context],
-                "features": feature_category.get("features", []),
-                "workflows": feature_category.get("workflows", [])
-            })
+            relevant.append(
+                {
+                    "category": context_map[context],
+                    "features": feature_category.get("features", []),
+                    "workflows": feature_category.get("workflows", []),
+                }
+            )
 
         return relevant
+
 
 class ContextAwarenessEngine:
     """Tracks user context and activity patterns."""
@@ -324,16 +354,13 @@ class ContextAwarenessEngine:
                 session_start=datetime.now(),
                 last_activity=datetime.now(),
                 current_context=self._detect_context(activity),
-                detected_intent=self._detect_intent(activity)
+                detected_intent=self._detect_intent(activity),
             )
             self.active_sessions[user_id] = session
 
         # Update session with new activity
         session.last_activity = datetime.now()
-        session.activity_history.append({
-            "timestamp": datetime.now(),
-            "activity": activity
-        })
+        session.activity_history.append({"timestamp": datetime.now(), "activity": activity})
 
         # Re-detect context and intent
         session.current_context = self._detect_context(activity)
@@ -402,6 +429,7 @@ class ContextAwarenessEngine:
             if len(set(recent_actions)) == 1:
                 session.frustration_indicators.append("repeated_action")
 
+
 class MultiAgentCoordinator:
     """Coordinates interactions with all platform agents."""
 
@@ -410,9 +438,7 @@ class MultiAgentCoordinator:
         self.bot_orchestrator = get_enhanced_bot_orchestrator()
         self.active_agent_tasks: Dict[str, Dict] = {}
 
-    async def coordinate_agent_assistance(self,
-                                        user_request: str,
-                                        context: UserSession) -> Dict[str, Any]:
+    async def coordinate_agent_assistance(self, user_request: str, context: UserSession) -> Dict[str, Any]:
         """Coordinate multiple agents to fulfill user request."""
 
         # Analyze request to determine required agents
@@ -431,12 +457,10 @@ class MultiAgentCoordinator:
             "coordinated_response": results,
             "agents_used": [agent.agent_name for agent in available_agents],
             "coordination_plan": coordination_plan,
-            "execution_time": datetime.now()
+            "execution_time": datetime.now(),
         }
 
-    async def _analyze_request_requirements(self,
-                                          request: str,
-                                          context: UserSession) -> List[str]:
+    async def _analyze_request_requirements(self, request: str, context: UserSession) -> List[str]:
         """Analyze request to determine which agents are needed."""
         request_lower = request.lower()
         required_agents = []
@@ -480,10 +504,9 @@ class MultiAgentCoordinator:
 
         return available
 
-    async def _create_coordination_plan(self,
-                                      request: str,
-                                      available_agents: List[AgentCapability],
-                                      context: UserSession) -> Dict[str, Any]:
+    async def _create_coordination_plan(
+        self, request: str, available_agents: List[AgentCapability], context: UserSession
+    ) -> Dict[str, Any]:
         """Create plan for coordinating multiple agents."""
         plan = {
             "primary_agent": None,
@@ -493,12 +516,12 @@ class MultiAgentCoordinator:
             "request": request,
             "context": {
                 "user_id": context.user_id,
-                "user_name": getattr(context, 'user_name', 'User'),
+                "user_name": getattr(context, "user_name", "User"),
                 "current_context": context.current_context.value,
                 "detected_intent": context.detected_intent.value,
                 "competency_level": context.competency_level,
-                "conversation_history": getattr(context, 'conversation_history', [])
-            }
+                "conversation_history": getattr(context, "conversation_history", []),
+            },
         }
 
         if available_agents:
@@ -514,29 +537,25 @@ class MultiAgentCoordinator:
 
             # Create execution sequence
             for i, agent in enumerate(available_agents):
-                plan["execution_sequence"].append({
-                    "step": i + 1,
-                    "agent": agent.agent_name,
-                    "task": f"Process user request with {agent.agent_type} capabilities"
-                })
+                plan["execution_sequence"].append(
+                    {
+                        "step": i + 1,
+                        "agent": agent.agent_name,
+                        "task": f"Process user request with {agent.agent_type} capabilities",
+                    }
+                )
 
         return plan
 
     async def _execute_coordination_plan(self, plan: Dict[str, Any]) -> Dict[str, Any]:
         """Execute the coordination plan with real agent invocation."""
-        results = {
-            "primary_response": None,
-            "supporting_responses": [],
-            "coordination_summary": plan
-        }
+        results = {"primary_response": None, "supporting_responses": [], "coordination_summary": plan}
 
         try:
             # Execute primary agent if specified
             if plan.get("primary_agent"):
                 primary_response = await self._invoke_agent(
-                    plan["primary_agent"],
-                    plan.get("request", ""),
-                    plan.get("context", {})
+                    plan["primary_agent"], plan.get("request", ""), plan.get("context", {})
                 )
                 results["primary_response"] = primary_response
 
@@ -545,24 +564,17 @@ class MultiAgentCoordinator:
                 supporting_tasks = []
                 for agent in plan["supporting_agents"]:
                     task = self._invoke_agent(
-                        agent,
-                        plan.get("request", ""),
-                        plan.get("context", {}),
-                        is_supporting=True
+                        agent, plan.get("request", ""), plan.get("context", {}), is_supporting=True
                     )
                     supporting_tasks.append(task)
 
                 # Wait for all supporting agents to complete
                 if supporting_tasks:
-                    supporting_responses = await asyncio.gather(
-                        *supporting_tasks,
-                        return_exceptions=True
-                    )
+                    supporting_responses = await asyncio.gather(*supporting_tasks, return_exceptions=True)
 
                     # Filter out exceptions and format responses
                     results["supporting_responses"] = [
-                        resp for resp in supporting_responses
-                        if not isinstance(resp, Exception)
+                        resp for resp in supporting_responses if not isinstance(resp, Exception)
                     ]
 
             return results
@@ -575,17 +587,15 @@ class MultiAgentCoordinator:
                     "agent": "claude_fallback",
                     "response": f"I encountered an issue coordinating agents: {str(e)}. Let me help you directly instead.",
                     "confidence": 0.6,
-                    "fallback_reason": str(e)
+                    "fallback_reason": str(e),
                 },
                 "supporting_responses": [],
-                "coordination_summary": plan
+                "coordination_summary": plan,
             }
 
-    async def _invoke_agent(self,
-                          agent_capability: AgentCapability,
-                          request: str,
-                          context: Dict[str, Any],
-                          is_supporting: bool = False) -> Dict[str, Any]:
+    async def _invoke_agent(
+        self, agent_capability: AgentCapability, request: str, context: Dict[str, Any], is_supporting: bool = False
+    ) -> Dict[str, Any]:
         """Invoke a specific agent and return structured response."""
 
         agent_name = agent_capability.agent_name.lower().replace(" ", "_")
@@ -618,10 +628,12 @@ class MultiAgentCoordinator:
                 "response": f"Agent temporarily unavailable: {str(e)}",
                 "confidence": 0.3,
                 "error": str(e),
-                "status": "failed"
+                "status": "failed",
             }
 
-    async def _invoke_jorge_seller_bot(self, agent_capability: AgentCapability, request: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _invoke_jorge_seller_bot(
+        self, agent_capability: AgentCapability, request: str, context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Invoke Jorge Seller Bot with proper conversation context."""
         try:
             from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
@@ -631,15 +643,15 @@ class MultiAgentCoordinator:
             # Extract conversation details from context
             lead_id = context.get("user_id", "concierge_user")
             lead_name = context.get("user_name", "User")
-            conversation_history = context.get("conversation_history", [
-                {"role": "user", "content": request}
-            ])
+            conversation_history = context.get("conversation_history", [{"role": "user", "content": request}])
 
             result = await jorge_bot.process_seller_message(lead_id, lead_name, conversation_history)
 
             # Handle different response formats safely
             if isinstance(result, dict):
-                response_content = result.get("response_content", result.get("message", "I can help with seller qualification."))
+                response_content = result.get(
+                    "response_content", result.get("message", "I can help with seller qualification.")
+                )
                 qualification_data = result.get("qualification_summary", result.get("intent_profile", {}))
                 next_actions = result.get("next_actions", result.get("recommended_actions", []))
             else:
@@ -654,14 +666,16 @@ class MultiAgentCoordinator:
                 "agent_type": "seller_qualification",
                 "qualification_data": qualification_data,
                 "next_actions": next_actions,
-                "status": "success"
+                "status": "success",
             }
 
         except Exception as e:
             logger.error(f"Jorge Seller Bot invocation error: {e}")
             return await self._invoke_claude_generic_agent(agent_capability, request, context)
 
-    async def _invoke_jorge_buyer_bot(self, agent_capability: AgentCapability, request: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _invoke_jorge_buyer_bot(
+        self, agent_capability: AgentCapability, request: str, context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Invoke Jorge Buyer Bot with proper conversation context."""
         try:
             from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
@@ -672,15 +686,15 @@ class MultiAgentCoordinator:
 
             buyer_id = context.get("user_id", "concierge_user")
             buyer_name = context.get("user_name", "User")
-            conversation_history = context.get("conversation_history", [
-                {"role": "user", "content": request}
-            ])
+            conversation_history = context.get("conversation_history", [{"role": "user", "content": request}])
 
             result = await buyer_bot.process_buyer_conversation(buyer_id, buyer_name, conversation_history)
 
             # Handle different response formats safely
             if isinstance(result, dict):
-                response_content = result.get("response_content", result.get("message", "I can help you find the right property."))
+                response_content = result.get(
+                    "response_content", result.get("message", "I can help you find the right property.")
+                )
                 financial_score = result.get("financial_readiness_score", 0)
                 matched_properties = result.get("matched_properties", [])
                 buyer_temp = result.get("buyer_temperature", "cold")
@@ -698,14 +712,16 @@ class MultiAgentCoordinator:
                 "financial_readiness_score": financial_score,
                 "matched_properties": matched_properties,
                 "buyer_temperature": buyer_temp,
-                "status": "success"
+                "status": "success",
             }
 
         except Exception as e:
             logger.error(f"Jorge Buyer Bot invocation error: {e}")
             return await self._invoke_claude_generic_agent(agent_capability, request, context)
 
-    async def _invoke_lead_bot(self, agent_capability: AgentCapability, request: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _invoke_lead_bot(
+        self, agent_capability: AgentCapability, request: str, context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Invoke Lead Bot for sequence and nurture workflows."""
         try:
             from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
@@ -725,17 +741,19 @@ class MultiAgentCoordinator:
                 "sequence_recommendations": [
                     "Review current sequence position",
                     "Optimize message timing",
-                    "Personalize follow-up content"
+                    "Personalize follow-up content",
                 ],
                 "next_sequence_day": sequence_day + 1,
-                "status": "success"
+                "status": "success",
             }
 
         except Exception as e:
             logger.error(f"Lead Bot invocation error: {e}")
             return await self._invoke_claude_generic_agent(agent_capability, request, context)
 
-    async def _invoke_intent_decoder(self, agent_capability: AgentCapability, request: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _invoke_intent_decoder(
+        self, agent_capability: AgentCapability, request: str, context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Invoke Intent Decoder for conversation analysis."""
         try:
             from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
@@ -747,8 +765,8 @@ class MultiAgentCoordinator:
                 analysis_result = await intent_decoder.decode_intent_context(request)
 
                 if isinstance(analysis_result, dict):
-                    primary_intent = analysis_result.get('primary_intent', 'exploratory')
-                    confidence = analysis_result.get('confidence', 0.7)
+                    primary_intent = analysis_result.get("primary_intent", "exploratory")
+                    confidence = analysis_result.get("confidence", 0.7)
                     intent_signals = analysis_result.get("intent_signals", [])
                     frs_delta = analysis_result.get("frs_delta", 0)
                     pcs_delta = analysis_result.get("pcs_delta", 0)
@@ -779,14 +797,16 @@ class MultiAgentCoordinator:
                 "frs_delta": frs_delta,
                 "pcs_delta": pcs_delta,
                 "recommended_action": recommended_action,
-                "status": "success"
+                "status": "success",
             }
 
         except Exception as e:
             logger.error(f"Intent Decoder invocation error: {e}")
             return await self._invoke_claude_generic_agent(agent_capability, request, context)
 
-    async def _invoke_bot_orchestrator(self, agent_capability: AgentCapability, request: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _invoke_bot_orchestrator(
+        self, agent_capability: AgentCapability, request: str, context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Invoke Enhanced Bot Orchestrator for complex coordination."""
         try:
             from ghl_real_estate_ai.agents.enhanced_bot_orchestrator import get_enhanced_bot_orchestrator
@@ -809,7 +829,7 @@ class MultiAgentCoordinator:
                 lead_name=lead_name,
                 message=request,
                 conversation_type=conversation_type,
-                conversation_history=conversation_history
+                conversation_history=conversation_history,
             )
 
             return {
@@ -820,14 +840,16 @@ class MultiAgentCoordinator:
                 "bot_type_used": result.get("bot_type", "unknown"),
                 "enhancement_level": result.get("enhancement_level", "standard"),
                 "orchestration_metadata": result.get("orchestration_metadata", {}),
-                "status": "success"
+                "status": "success",
             }
 
         except Exception as e:
             logger.error(f"Bot Orchestrator invocation error: {e}")
             return await self._invoke_claude_generic_agent(agent_capability, request, context)
 
-    async def _invoke_claude_generic_agent(self, agent_capability: AgentCapability, request: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _invoke_claude_generic_agent(
+        self, agent_capability: AgentCapability, request: str, context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Generic Claude-powered agent for agents without specific implementations."""
         try:
             # Create a basic response based on agent capabilities without requiring Claude API
@@ -852,7 +874,7 @@ class MultiAgentCoordinator:
                 "confidence": 0.7,
                 "agent_type": agent_capability.agent_type,
                 "capabilities_used": agent_capability.capabilities,
-                "status": "success_generic"
+                "status": "success_generic",
             }
 
         except Exception as e:
@@ -862,8 +884,9 @@ class MultiAgentCoordinator:
                 "response": f"I'm {agent_capability.agent_name} and I'm experiencing technical difficulties. Please try again later.",
                 "confidence": 0.4,
                 "error": str(e),
-                "status": "error"
+                "status": "error",
             }
+
 
 class ProactiveAssistant:
     """Provides proactive assistance and recommendations."""
@@ -899,11 +922,11 @@ class ProactiveAssistant:
             action_steps=[
                 "Let me guide you through what you're trying to accomplish",
                 "I can show you the most efficient way to complete your task",
-                "Would you like a quick tutorial on this feature?"
+                "Would you like a quick tutorial on this feature?",
             ],
             priority="high",
             confidence=0.9,
-            estimated_time="2-5 minutes"
+            estimated_time="2-5 minutes",
         )
 
     async def _create_context_recommendations(self, session: UserSession) -> List[ConciergeRecommendation]:
@@ -911,36 +934,40 @@ class ProactiveAssistant:
         recommendations = []
 
         if session.current_context == PlatformContext.LEAD_MANAGEMENT:
-            recommendations.append(ConciergeRecommendation(
-                recommendation_type="lead_optimization",
-                title="Optimize your lead qualification",
-                description="I can help you set up Jorge's adaptive questioning for better lead qualification.",
-                action_steps=[
-                    "Configure Jorge Seller Bot with your specific questions",
-                    "Set up real-time intent analysis",
-                    "Create predictive nurture sequences"
-                ],
-                priority="medium",
-                confidence=0.8,
-                relevant_agents=["adaptive_jorge", "realtime_intent"],
-                estimated_time="10-15 minutes"
-            ))
+            recommendations.append(
+                ConciergeRecommendation(
+                    recommendation_type="lead_optimization",
+                    title="Optimize your lead qualification",
+                    description="I can help you set up Jorge's adaptive questioning for better lead qualification.",
+                    action_steps=[
+                        "Configure Jorge Seller Bot with your specific questions",
+                        "Set up real-time intent analysis",
+                        "Create predictive nurture sequences",
+                    ],
+                    priority="medium",
+                    confidence=0.8,
+                    relevant_agents=["adaptive_jorge", "realtime_intent"],
+                    estimated_time="10-15 minutes",
+                )
+            )
 
         elif session.current_context == PlatformContext.PROPERTY_ANALYSIS:
-            recommendations.append(ConciergeRecommendation(
-                recommendation_type="property_intelligence",
-                title="Enhanced property analysis available",
-                description="Use our advanced property intelligence agents for deeper market insights.",
-                action_steps=[
-                    "Generate comprehensive CMA with market comparisons",
-                    "Run competitive benchmarking analysis",
-                    "Create investment scoring reports"
-                ],
-                priority="medium",
-                confidence=0.75,
-                relevant_agents=["cma_generator", "kappa_competitive"],
-                estimated_time="5-10 minutes"
-            ))
+            recommendations.append(
+                ConciergeRecommendation(
+                    recommendation_type="property_intelligence",
+                    title="Enhanced property analysis available",
+                    description="Use our advanced property intelligence agents for deeper market insights.",
+                    action_steps=[
+                        "Generate comprehensive CMA with market comparisons",
+                        "Run competitive benchmarking analysis",
+                        "Create investment scoring reports",
+                    ],
+                    priority="medium",
+                    confidence=0.75,
+                    relevant_agents=["cma_generator", "kappa_competitive"],
+                    estimated_time="5-10 minutes",
+                )
+            )
 
         return recommendations
 
@@ -958,21 +985,24 @@ class ProactiveAssistant:
 
             for action, count in action_counts.items():
                 if count >= 3:  # Repeated action
-                    recommendations.append(ConciergeRecommendation(
-                        recommendation_type="automation_opportunity",
-                        title=f"Automate your '{action}' workflow",
-                        description=f"I notice you're doing '{action}' frequently. I can help automate this.",
-                        action_steps=[
-                            f"Set up automated {action} with our agent ecosystem",
-                            "Configure triggers and conditions",
-                            "Test the automation workflow"
-                        ],
-                        priority="low",
-                        confidence=0.6,
-                        estimated_time="15-20 minutes"
-                    ))
+                    recommendations.append(
+                        ConciergeRecommendation(
+                            recommendation_type="automation_opportunity",
+                            title=f"Automate your '{action}' workflow",
+                            description=f"I notice you're doing '{action}' frequently. I can help automate this.",
+                            action_steps=[
+                                f"Set up automated {action} with our agent ecosystem",
+                                "Configure triggers and conditions",
+                                "Test the automation workflow",
+                            ],
+                            priority="low",
+                            confidence=0.6,
+                            estimated_time="15-20 minutes",
+                        )
+                    )
 
         return recommendations
+
 
 class ClaudeConciergeAgent:
     """
@@ -1000,22 +1030,22 @@ class ClaudeConciergeAgent:
             "recommendations_generated": 0,
             "agent_coordinations": 0,
             "user_satisfaction_score": 0.0,
-            "proactive_assists": 0
+            "proactive_assists": 0,
         }
 
-    async def process_user_interaction(self,
-                                     user_id: str,
-                                     message: str,
-                                     context: Dict[str, Any]) -> Dict[str, Any]:
+    async def process_user_interaction(self, user_id: str, message: str, context: Dict[str, Any]) -> Dict[str, Any]:
         """Process user interaction and provide intelligent assistance."""
 
         # Track user activity and context
-        session = await self.context_engine.track_user_activity(user_id, {
-            "action": context.get("action", "message"),
-            "page": context.get("page", "unknown"),
-            "device": context.get("device", "desktop"),
-            "message": message
-        })
+        session = await self.context_engine.track_user_activity(
+            user_id,
+            {
+                "action": context.get("action", "message"),
+                "page": context.get("page", "unknown"),
+                "device": context.get("device", "desktop"),
+                "message": message,
+            },
+        )
 
         # Analyze user request
         request_analysis = await self._analyze_user_request(message, session)
@@ -1040,7 +1070,7 @@ class ClaudeConciergeAgent:
             interaction_type=response_strategy["type"],
             response_provided=True,
             recommendations_count=len(recommendations),
-            agent_coordination_required=response_strategy.get("requires_coordination", False)
+            agent_coordination_required=response_strategy.get("requires_coordination", False),
         )
 
         return {
@@ -1049,13 +1079,13 @@ class ClaudeConciergeAgent:
             "session_context": {
                 "current_context": session.current_context.value,
                 "detected_intent": session.detected_intent.value,
-                "competency_level": session.competency_level
+                "competency_level": session.competency_level,
             },
             "response_metadata": {
                 "strategy": response_strategy,
                 "processing_time": datetime.now(),
-                "confidence": response_strategy.get("confidence", 0.8)
-            }
+                "confidence": response_strategy.get("confidence", 0.8),
+            },
         }
 
     async def _analyze_user_request(self, message: str, session: UserSession) -> Dict[str, Any]:
@@ -1091,22 +1121,15 @@ class ClaudeConciergeAgent:
                 "complexity": "moderate",
                 "urgency": "medium",
                 "knowledge_domains": ["general"],
-                "needs_coordination": False
+                "needs_coordination": False,
             }
 
         return analysis
 
-    async def _determine_response_strategy(self,
-                                         analysis: Dict[str, Any],
-                                         session: UserSession) -> Dict[str, Any]:
+    async def _determine_response_strategy(self, analysis: Dict[str, Any], session: UserSession) -> Dict[str, Any]:
         """Determine the best response strategy."""
 
-        strategy = {
-            "type": "direct_response",
-            "confidence": 0.8,
-            "requires_coordination": False,
-            "primary_agent": None
-        }
+        strategy = {"type": "direct_response", "confidence": 0.8, "requires_coordination": False, "primary_agent": None}
 
         # Determine if multi-agent coordination is needed
         if analysis.get("complexity") == "complex" or analysis.get("needs_coordination"):
@@ -1125,24 +1148,21 @@ class ClaudeConciergeAgent:
 
         return strategy
 
-    async def _execute_response_strategy(self,
-                                       strategy: Dict[str, Any],
-                                       session: UserSession,
-                                       message: str) -> Dict[str, Any]:
+    async def _execute_response_strategy(
+        self, strategy: Dict[str, Any], session: UserSession, message: str
+    ) -> Dict[str, Any]:
         """Execute the determined response strategy."""
 
         if strategy["type"] == "coordinated_response":
             # Use multi-agent coordination
-            coordination_result = await self.multi_agent_coordinator.coordinate_agent_assistance(
-                message, session
-            )
+            coordination_result = await self.multi_agent_coordinator.coordinate_agent_assistance(message, session)
             self.performance_metrics["agent_coordinations"] += 1
 
             return {
                 "response_type": "coordinated",
                 "content": "I've coordinated with multiple agents to provide you with comprehensive assistance.",
                 "coordination_details": coordination_result,
-                "confidence": strategy["confidence"]
+                "confidence": strategy["confidence"],
             }
 
         elif strategy["type"] == "priority_response":
@@ -1151,7 +1171,7 @@ class ClaudeConciergeAgent:
                 "response_type": "priority",
                 "content": "I understand you need immediate assistance. Let me help you right away.",
                 "immediate_actions": await self._generate_immediate_actions(session, message),
-                "confidence": strategy["confidence"]
+                "confidence": strategy["confidence"],
             }
 
         elif strategy["type"] == "guided_response":
@@ -1160,24 +1180,20 @@ class ClaudeConciergeAgent:
                 "response_type": "guided",
                 "content": "I'll walk you through this step by step.",
                 "tutorial_steps": await self._generate_tutorial_steps(session, message),
-                "confidence": strategy["confidence"]
+                "confidence": strategy["confidence"],
             }
 
         else:
             # Direct response
             response_content = await self._generate_direct_response(session, message)
-            return {
-                "response_type": "direct",
-                "content": response_content,
-                "confidence": strategy["confidence"]
-            }
+            return {"response_type": "direct", "content": response_content, "confidence": strategy["confidence"]}
 
     async def _generate_immediate_actions(self, session: UserSession, message: str) -> List[str]:
         """Generate immediate action steps for high-priority situations."""
         return [
             "Let me connect you with the right specialized agent",
             "I'm analyzing your situation for the best solution",
-            "Here are the immediate steps we can take together"
+            "Here are the immediate steps we can take together",
         ]
 
     async def _generate_tutorial_steps(self, session: UserSession, message: str) -> List[Dict]:
@@ -1187,20 +1203,20 @@ class ClaudeConciergeAgent:
                 "step": 1,
                 "title": "Understanding your request",
                 "description": "Let me break down what you're trying to accomplish",
-                "estimated_time": "1 minute"
+                "estimated_time": "1 minute",
             },
             {
                 "step": 2,
                 "title": "Navigating to the right section",
                 "description": "I'll show you exactly where to find this feature",
-                "estimated_time": "2 minutes"
+                "estimated_time": "2 minutes",
             },
             {
                 "step": 3,
                 "title": "Completing the task",
                 "description": "Let's complete this together with the right agent assistance",
-                "estimated_time": "5-10 minutes"
-            }
+                "estimated_time": "5-10 minutes",
+            },
         ]
 
     async def _generate_direct_response(self, session: UserSession, message: str) -> str:
@@ -1208,8 +1224,7 @@ class ClaudeConciergeAgent:
 
         # Get relevant platform knowledge
         relevant_features = self.knowledge_engine.get_relevant_features(
-            session.current_context,
-            session.detected_intent
+            session.current_context, session.detected_intent
         )
 
         context_prompt = f"""
@@ -1247,20 +1262,22 @@ class ClaudeConciergeAgent:
             "knowledge_base": {
                 "registered_agents": len(self.knowledge_engine.agent_registry),
                 "platform_features": len(self.knowledge_engine.platform_features),
-                "integration_points": len(self.knowledge_engine.integration_points)
+                "integration_points": len(self.knowledge_engine.integration_points),
             },
             "capabilities": [
                 "Platform guidance and navigation",
                 "Multi-agent coordination",
                 "Proactive assistance",
                 "Context-aware recommendations",
-                "Real-time problem solving"
-            ]
+                "Real-time problem solving",
+            ],
         }
+
 
 # --- Factory and Utility Functions ---
 
 _concierge_instance: Optional[ClaudeConciergeAgent] = None
+
 
 def get_claude_concierge() -> ClaudeConciergeAgent:
     """Get singleton Claude Concierge Agent instance."""
@@ -1271,14 +1288,12 @@ def get_claude_concierge() -> ClaudeConciergeAgent:
 
     return _concierge_instance
 
+
 # --- Event Publisher Extensions ---
+
 
 async def publish_concierge_interaction(event_publisher, **kwargs):
     """Publish concierge interaction event."""
     await event_publisher.publish_event(
-        event_type="concierge_interaction",
-        data={
-            **kwargs,
-            "timestamp": datetime.now().isoformat()
-        }
+        event_type="concierge_interaction", data={**kwargs, "timestamp": datetime.now().isoformat()}
     )

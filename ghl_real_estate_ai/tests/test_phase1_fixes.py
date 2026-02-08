@@ -2,16 +2,18 @@
 Integration tests for Phase 1 fixes.
 Tests all 6 swarm agent fixes.
 """
-import pytest
+
 import sys
 from pathlib import Path
+
+import pytest
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from ghl_real_estate_ai.core.conversation_manager import ConversationManager
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 
 
 class TestSMSConstraintEnforcement:

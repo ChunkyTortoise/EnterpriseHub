@@ -17,30 +17,31 @@ Coverage Target: 85%+ for all SendGrid operations
 
 import asyncio
 import json
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 import pytest_asyncio
-from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, Any, List
 
 # Import the module under test
 try:
     from ghl_real_estate_ai.services.sendgrid_client import (
+        EmailMessage,
+        EmailStatus,
+        EmailTemplate,
+        SendGridAPIException,
         SendGridClient,
         SendGridConfig,
-        EmailMessage,
-        EmailTemplate,
         SuppressionEntry,
-        EmailStatus,
         SuppressionType,
-        SendGridAPIException
     )
 except (ImportError, TypeError, AttributeError):
     pytest.skip("required imports unavailable", allow_module_level=True)
 
 # Import test utilities
-from tests.mocks.external_services import MockSendGridClient
 from tests.fixtures.sample_data import LeadProfiles
+from tests.mocks.external_services import MockSendGridClient
 
 
 class TestSendGridConfig:
@@ -62,7 +63,7 @@ class TestSendGridConfig:
             sender_email="sales@company.com",
             sender_name="Company Sales Team",
             max_retries=5,
-            rate_limit_emails_per_minute=500
+            rate_limit_emails_per_minute=500,
         )
 
         assert config.api_key == "test_sendgrid_key"
@@ -79,9 +80,7 @@ class TestSendGridClient:
     async def sendgrid_client(self):
         """Create SendGrid client with mocked dependencies"""
         config = SendGridConfig(
-            api_key="test_sendgrid_key",
-            sender_email="test@enterprisehub.ai",
-            sender_name="EnterpriseHub"
+            api_key="test_sendgrid_key", sender_email="test@enterprisehub.ai", sender_name="EnterpriseHub"
         )
 
         # Mock cache service
@@ -111,8 +110,12 @@ class TestSendGridClient:
         mock_http_response.status = 200
         mock_http_response.content_type = "application/json"
         mock_http_response.json = AsyncMock(return_value={})
-        mock_session.get = MagicMock(return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_http_response), __aexit__=AsyncMock()))
-        mock_session.post = MagicMock(return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_http_response), __aexit__=AsyncMock()))
+        mock_session.get = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_http_response), __aexit__=AsyncMock())
+        )
+        mock_session.post = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_http_response), __aexit__=AsyncMock())
+        )
         mock_session.close = AsyncMock()
 
         client.session = mock_session
@@ -157,9 +160,7 @@ class TestEmailSending:
     async def sendgrid_client(self):
         """Create SendGrid client for email testing"""
         config = SendGridConfig(
-            api_key="test_key",
-            sender_email="sales@enterprisehub.ai",
-            sender_name="EnterpriseHub Sales"
+            api_key="test_key", sender_email="sales@enterprisehub.ai", sender_name="EnterpriseHub Sales"
         )
 
         mock_cache = AsyncMock()
@@ -187,7 +188,7 @@ class TestEmailSending:
             to_email="sarah.johnson@example.com",
             subject="Your Property Viewing is Confirmed",
             html_content="<h1>Viewing Confirmed</h1><p>We look forward to seeing you tomorrow at 2pm.</p>",
-            plain_content="Viewing Confirmed. We look forward to seeing you tomorrow at 2pm."
+            plain_content="Viewing Confirmed. We look forward to seeing you tomorrow at 2pm.",
         )
 
         assert isinstance(result, EmailMessage)
@@ -204,23 +205,15 @@ class TestEmailSending:
     async def test_send_email_with_attachments(self, sendgrid_client):
         """Test sending email with attachments"""
         attachments = [
-            {
-                "filename": "property_details.pdf",
-                "content": "base64_encoded_pdf_content",
-                "type": "application/pdf"
-            },
-            {
-                "filename": "floor_plan.png",
-                "content": "base64_encoded_image_content",
-                "type": "image/png"
-            }
+            {"filename": "property_details.pdf", "content": "base64_encoded_pdf_content", "type": "application/pdf"},
+            {"filename": "floor_plan.png", "content": "base64_encoded_image_content", "type": "image/png"},
         ]
 
         result = await sendgrid_client.send_email(
             to_email="client@example.com",
             subject="Property Information",
             html_content="<p>Please find attached property details.</p>",
-            attachments=attachments
+            attachments=attachments,
         )
 
         assert isinstance(result, EmailMessage)
@@ -235,7 +228,7 @@ class TestEmailSending:
             to_email="lead@example.com",
             subject="Market Update",
             template_id="d-abc123",
-            dynamic_template_data={"name": "John", "location": "Austin"}
+            dynamic_template_data={"name": "John", "location": "Austin"},
         )
 
         assert isinstance(result, EmailMessage)
@@ -254,7 +247,7 @@ class TestEmailSending:
             await sendgrid_client.send_email(
                 to_email="suppressed@example.com",
                 subject="This should not be sent",
-                html_content="<p>Suppressed email</p>"
+                html_content="<p>Suppressed email</p>",
             )
 
     @pytest.mark.asyncio
@@ -265,9 +258,7 @@ class TestEmailSending:
 
         with pytest.raises(SendGridAPIException):
             await sendgrid_client.send_email(
-                to_email="test@example.com",
-                subject="This will fail",
-                html_content="<p>API error test</p>"
+                to_email="test@example.com", subject="This will fail", html_content="<p>API error test</p>"
             )
 
     @pytest.mark.asyncio
@@ -280,9 +271,7 @@ class TestEmailSending:
         tasks = []
         for i in range(3):
             task = sendgrid_client.send_email(
-                to_email=f"test{i}@example.com",
-                subject=f"Test Email {i}",
-                html_content=f"<p>Test content {i}</p>"
+                to_email=f"test{i}@example.com", subject=f"Test Email {i}", html_content=f"<p>Test content {i}</p>"
             )
             tasks.append(task)
 
@@ -300,9 +289,7 @@ class TestTemplatedEmails:
     async def sendgrid_client(self):
         """Create SendGrid client for template testing"""
         config = SendGridConfig(
-            api_key="test_key",
-            sender_email="sales@enterprisehub.ai",
-            sender_name="EnterpriseHub Sales"
+            api_key="test_key", sender_email="sales@enterprisehub.ai", sender_name="EnterpriseHub Sales"
         )
 
         client = SendGridClient(config)
@@ -332,7 +319,7 @@ class TestTemplatedEmails:
                 to_email="sarah.johnson@example.com",
                 template_name="welcome",
                 variables={"first_name": "Sarah", "agent_name": "Michael"},
-                lead_id="lead_001"
+                lead_id="lead_001",
             )
 
             assert isinstance(result, EmailMessage)
@@ -348,9 +335,7 @@ class TestTemplatedEmails:
 
             with pytest.raises(SendGridAPIException, match="not found"):
                 await sendgrid_client.send_templated_email(
-                    to_email="test@example.com",
-                    template_name="nonexistent_template",
-                    variables={}
+                    to_email="test@example.com", template_name="nonexistent_template", variables={}
                 )
 
 
@@ -372,10 +357,12 @@ class TestSuppressionManagement:
     async def test_load_suppressions(self, sendgrid_client):
         """Test loading suppressions from SendGrid API"""
         # Mock suppression list response for _fetch_suppressions via _make_request
-        sendgrid_client._make_request = AsyncMock(return_value=[
-            {"email": "suppressed1@example.com", "created": 1640995200},
-            {"email": "suppressed2@example.com", "created": 1640995300}
-        ])
+        sendgrid_client._make_request = AsyncMock(
+            return_value=[
+                {"email": "suppressed1@example.com", "created": 1640995200},
+                {"email": "suppressed2@example.com", "created": 1640995300},
+            ]
+        )
 
         await sendgrid_client._load_suppressions()
 
@@ -407,10 +394,7 @@ class TestSuppressionManagement:
         # Mock successful suppression addition
         sendgrid_client._make_request = AsyncMock(return_value={})
 
-        result = await sendgrid_client.add_to_suppression(
-            ["unsubscribe@example.com"],
-            SuppressionType.UNSUBSCRIBE
-        )
+        result = await sendgrid_client.add_to_suppression(["unsubscribe@example.com"], SuppressionType.UNSUBSCRIBE)
 
         # add_to_suppression returns bool
         assert result is True
@@ -430,10 +414,7 @@ class TestSuppressionManagement:
         # Mock successful suppression removal
         sendgrid_client._make_request = AsyncMock(return_value={})
 
-        result = await sendgrid_client.remove_from_suppression(
-            ["resubscribe@example.com"],
-            SuppressionType.UNSUBSCRIBE
-        )
+        result = await sendgrid_client.remove_from_suppression(["resubscribe@example.com"], SuppressionType.UNSUBSCRIBE)
 
         assert result is True
 
@@ -444,10 +425,12 @@ class TestSuppressionManagement:
     async def test_fetch_suppressions_by_type(self, sendgrid_client):
         """Test fetching suppressions by type"""
         # Mock bounces response
-        sendgrid_client._make_request = AsyncMock(return_value=[
-            {"email": "bounce1@example.com", "created": 1640995200, "reason": "550 No such user"},
-            {"email": "bounce2@example.com", "created": 1640995300, "reason": "554 Mailbox full"}
-        ])
+        sendgrid_client._make_request = AsyncMock(
+            return_value=[
+                {"email": "bounce1@example.com", "created": 1640995200, "reason": "550 No such user"},
+                {"email": "bounce2@example.com", "created": 1640995300, "reason": "554 Mailbox full"},
+            ]
+        )
 
         suppressions = await sendgrid_client._fetch_suppressions(SuppressionType.BOUNCE)
 
@@ -463,10 +446,7 @@ class TestSuppressionManagement:
         sendgrid_client._make_request = AsyncMock(side_effect=SendGridAPIException("Invalid email address"))
 
         # add_to_suppression catches exceptions and returns False
-        result = await sendgrid_client.add_to_suppression(
-            ["invalid_email"],
-            SuppressionType.UNSUBSCRIBE
-        )
+        result = await sendgrid_client.add_to_suppression(["invalid_email"], SuppressionType.UNSUBSCRIBE)
         assert result is False
 
 
@@ -497,10 +477,10 @@ class TestWebhookProcessing:
 
         webhook_events = [
             {
-                'email': 'delivered@example.com',
-                'event': 'delivered',
-                'timestamp': int(datetime.now().timestamp()),
-                'sg_message_id': 'SG.delivered_123'
+                "email": "delivered@example.com",
+                "event": "delivered",
+                "timestamp": int(datetime.now().timestamp()),
+                "sg_message_id": "SG.delivered_123",
             }
         ]
 
@@ -515,7 +495,9 @@ class TestWebhookProcessing:
             mock_db = AsyncMock()
             mock_conn = AsyncMock()
             mock_conn.fetchrow = AsyncMock(return_value=None)
-            mock_db.transaction = MagicMock(return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_conn), __aexit__=AsyncMock()))
+            mock_db.transaction = MagicMock(
+                return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_conn), __aexit__=AsyncMock())
+            )
             sendgrid_client.database_service.get_service.return_value = mock_db
 
             result = await sendgrid_client.process_event_webhook(mock_request, webhook_events)
@@ -530,12 +512,12 @@ class TestWebhookProcessing:
 
         webhook_events = [
             {
-                'email': 'bounced@example.com',
-                'event': 'bounce',
-                'timestamp': int(datetime.now().timestamp()),
-                'sg_message_id': 'SG.bounced_123',
-                'reason': '550 No such user',
-                'type': 'block'
+                "email": "bounced@example.com",
+                "event": "bounce",
+                "timestamp": int(datetime.now().timestamp()),
+                "sg_message_id": "SG.bounced_123",
+                "reason": "550 No such user",
+                "type": "block",
             }
         ]
 
@@ -549,7 +531,9 @@ class TestWebhookProcessing:
             mock_db = AsyncMock()
             mock_conn = AsyncMock()
             mock_conn.fetchrow = AsyncMock(return_value=None)
-            mock_db.transaction = MagicMock(return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_conn), __aexit__=AsyncMock()))
+            mock_db.transaction = MagicMock(
+                return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_conn), __aexit__=AsyncMock())
+            )
             sendgrid_client.database_service.get_service.return_value = mock_db
 
             result = await sendgrid_client.process_event_webhook(mock_request, webhook_events)
@@ -557,7 +541,7 @@ class TestWebhookProcessing:
             assert result is True
 
             # Verify bounced email was added to suppression cache
-            assert 'bounced@example.com' in sendgrid_client._suppression_cache[SuppressionType.BOUNCE]
+            assert "bounced@example.com" in sendgrid_client._suppression_cache[SuppressionType.BOUNCE]
 
     @pytest.mark.asyncio
     async def test_process_event_webhook_unsubscribed(self, sendgrid_client):
@@ -566,10 +550,10 @@ class TestWebhookProcessing:
 
         webhook_events = [
             {
-                'email': 'unsubscribed@example.com',
-                'event': 'unsubscribe',
-                'timestamp': int(datetime.now().timestamp()),
-                'sg_message_id': 'SG.unsub_123'
+                "email": "unsubscribed@example.com",
+                "event": "unsubscribe",
+                "timestamp": int(datetime.now().timestamp()),
+                "sg_message_id": "SG.unsub_123",
             }
         ]
 
@@ -583,7 +567,9 @@ class TestWebhookProcessing:
             mock_db = AsyncMock()
             mock_conn = AsyncMock()
             mock_conn.fetchrow = AsyncMock(return_value=None)
-            mock_db.transaction = MagicMock(return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_conn), __aexit__=AsyncMock()))
+            mock_db.transaction = MagicMock(
+                return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_conn), __aexit__=AsyncMock())
+            )
             sendgrid_client.database_service.get_service.return_value = mock_db
 
             result = await sendgrid_client.process_event_webhook(mock_request, webhook_events)
@@ -591,7 +577,7 @@ class TestWebhookProcessing:
             assert result is True
 
             # Verify unsubscribed email was added to suppression cache
-            assert 'unsubscribed@example.com' in sendgrid_client._suppression_cache[SuppressionType.UNSUBSCRIBE]
+            assert "unsubscribed@example.com" in sendgrid_client._suppression_cache[SuppressionType.UNSUBSCRIBE]
 
     @pytest.mark.asyncio
     async def test_process_event_webhook_multiple_events(self, sendgrid_client):
@@ -600,23 +586,23 @@ class TestWebhookProcessing:
 
         webhook_events = [
             {
-                'email': 'user1@example.com',
-                'event': 'delivered',
-                'timestamp': int(datetime.now().timestamp()),
-                'sg_message_id': 'SG.msg1'
+                "email": "user1@example.com",
+                "event": "delivered",
+                "timestamp": int(datetime.now().timestamp()),
+                "sg_message_id": "SG.msg1",
             },
             {
-                'email': 'user1@example.com',
-                'event': 'open',
-                'timestamp': int(datetime.now().timestamp()) + 60,
-                'sg_message_id': 'SG.msg1'
+                "email": "user1@example.com",
+                "event": "open",
+                "timestamp": int(datetime.now().timestamp()) + 60,
+                "sg_message_id": "SG.msg1",
             },
             {
-                'email': 'user2@example.com',
-                'event': 'unsubscribe',
-                'timestamp': int(datetime.now().timestamp()),
-                'sg_message_id': 'SG.msg2'
-            }
+                "email": "user2@example.com",
+                "event": "unsubscribe",
+                "timestamp": int(datetime.now().timestamp()),
+                "sg_message_id": "SG.msg2",
+            },
         ]
 
         with patch("ghl_real_estate_ai.services.sendgrid_client.SecurityFramework") as mock_sf_class:
@@ -629,7 +615,9 @@ class TestWebhookProcessing:
             mock_db = AsyncMock()
             mock_conn = AsyncMock()
             mock_conn.fetchrow = AsyncMock(return_value=None)
-            mock_db.transaction = MagicMock(return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_conn), __aexit__=AsyncMock()))
+            mock_db.transaction = MagicMock(
+                return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_conn), __aexit__=AsyncMock())
+            )
             sendgrid_client.database_service.get_service.return_value = mock_db
 
             result = await sendgrid_client.process_event_webhook(mock_request, webhook_events)
@@ -637,7 +625,7 @@ class TestWebhookProcessing:
             assert result is True
 
             # Verify unsubscribed email was suppressed
-            assert 'user2@example.com' in sendgrid_client._suppression_cache[SuppressionType.UNSUBSCRIBE]
+            assert "user2@example.com" in sendgrid_client._suppression_cache[SuppressionType.UNSUBSCRIBE]
 
     @pytest.mark.asyncio
     async def test_process_event_webhook_invalid_signature(self, sendgrid_client):
@@ -646,10 +634,10 @@ class TestWebhookProcessing:
 
         webhook_events = [
             {
-                'email': 'test@example.com',
-                'event': 'delivered',
-                'timestamp': int(datetime.now().timestamp()),
-                'sg_message_id': 'SG.test'
+                "email": "test@example.com",
+                "event": "delivered",
+                "timestamp": int(datetime.now().timestamp()),
+                "sg_message_id": "SG.test",
             }
         ]
 
@@ -660,6 +648,7 @@ class TestWebhookProcessing:
             mock_sf_class.return_value = mock_sf
 
             from fastapi import HTTPException
+
             with pytest.raises(HTTPException):
                 await sendgrid_client.process_event_webhook(mock_request, webhook_events)
 
@@ -671,9 +660,7 @@ class TestBulkEmailOperations:
     async def sendgrid_client(self):
         """Create SendGrid client for bulk email testing"""
         config = SendGridConfig(
-            api_key="test_key",
-            sender_email="marketing@enterprisehub.ai",
-            sender_name="EnterpriseHub Marketing"
+            api_key="test_key", sender_email="marketing@enterprisehub.ai", sender_name="EnterpriseHub Marketing"
         )
 
         client = SendGridClient(config)
@@ -697,25 +684,25 @@ class TestBulkEmailOperations:
             {
                 "to_email": "lead1@example.com",
                 "subject": "Austin Market Update for North Austin",
-                "html_content": "<h1>Hi John</h1><p>Market update</p>"
+                "html_content": "<h1>Hi John</h1><p>Market update</p>",
             },
             {
                 "to_email": "lead2@example.com",
                 "subject": "Austin Market Update for South Austin",
-                "html_content": "<h1>Hi Jane</h1><p>Market update</p>"
+                "html_content": "<h1>Hi Jane</h1><p>Market update</p>",
             },
             {
                 "to_email": "lead3@example.com",
                 "subject": "Austin Market Update for East Austin",
-                "html_content": "<h1>Hi Bob</h1><p>Market update</p>"
-            }
+                "html_content": "<h1>Hi Bob</h1><p>Market update</p>",
+            },
         ]
 
         results = await sendgrid_client.send_bulk_emails(emails)
 
         assert len(results) == 3
-        assert all(result['success'] for result in results)
-        assert all('message_id' in result for result in results)
+        assert all(result["success"] for result in results)
+        assert all("message_id" in result for result in results)
 
         # Verify all emails were sent
         assert sendgrid_client.sg_client.send.call_count == 3
@@ -726,7 +713,7 @@ class TestBulkEmailOperations:
         emails = [
             {"to_email": "good1@example.com", "subject": "Test", "html_content": "<p>Hi</p>"},
             {"to_email": "bad@example.com", "subject": "Test", "html_content": "<p>Hi</p>"},
-            {"to_email": "good2@example.com", "subject": "Test", "html_content": "<p>Hi</p>"}
+            {"to_email": "good2@example.com", "subject": "Test", "html_content": "<p>Hi</p>"},
         ]
 
         # Mock one failure by making send raise on second call
@@ -748,12 +735,12 @@ class TestBulkEmailOperations:
 
         assert len(results) == 3
         # First and third should succeed, second should fail
-        assert results[0]['success'] is True
-        assert results[1]['success'] is False
-        assert results[2]['success'] is True
+        assert results[0]["success"] is True
+        assert results[1]["success"] is False
+        assert results[2]["success"] is True
 
         # Check error details for failed email
-        assert 'error' in results[1]
+        assert "error" in results[1]
 
     @pytest.mark.asyncio
     async def test_send_bulk_emails_rate_limiting(self, sendgrid_client):
@@ -767,6 +754,7 @@ class TestBulkEmailOperations:
         ]
 
         import time
+
         start_time = time.time()
 
         results = await sendgrid_client.send_bulk_emails(emails)
@@ -775,7 +763,7 @@ class TestBulkEmailOperations:
 
         # All should succeed
         assert len(results) == 5
-        assert all(result['success'] for result in results)
+        assert all(result["success"] for result in results)
 
         # Should take some time due to rate limiting
         execution_time = end_time - start_time
@@ -787,7 +775,7 @@ class TestBulkEmailOperations:
         emails = [
             {"to_email": "allowed@example.com", "subject": "Test", "html_content": "<p>Hi</p>"},
             {"to_email": "suppressed@example.com", "subject": "Test", "html_content": "<p>Hi</p>"},
-            {"to_email": "another@example.com", "subject": "Test", "html_content": "<p>Hi</p>"}
+            {"to_email": "another@example.com", "subject": "Test", "html_content": "<p>Hi</p>"},
         ]
 
         # Add one email to suppression cache
@@ -796,12 +784,12 @@ class TestBulkEmailOperations:
         results = await sendgrid_client.send_bulk_emails(emails)
 
         assert len(results) == 3
-        assert results[0]['success'] is True   # allowed@example.com
-        assert results[1]['success'] is False  # suppressed@example.com
-        assert results[2]['success'] is True   # another@example.com
+        assert results[0]["success"] is True  # allowed@example.com
+        assert results[1]["success"] is False  # suppressed@example.com
+        assert results[2]["success"] is True  # another@example.com
 
         # Check suppressed email error
-        assert 'error' in results[1]
+        assert "error" in results[1]
 
 
 class TestEmailAnalytics:
@@ -822,24 +810,26 @@ class TestEmailAnalytics:
     async def test_get_email_stats(self, sendgrid_client):
         """Test getting email statistics"""
         # Mock stats response - the actual service iterates day_stats with 'stats' key
-        sendgrid_client._make_request = AsyncMock(return_value=[
-            {
-                "date": "2026-01-16",
-                "stats": [
-                    {
-                        "requests": 456,
-                        "delivered": 450,
-                        "bounces": 5,
-                        "opens": 280,
-                        "unique_opens": 195,
-                        "clicks": 120,
-                        "unique_clicks": 85,
-                        "unsubscribes": 3,
-                        "spam_reports": 1
-                    }
-                ]
-            }
-        ])
+        sendgrid_client._make_request = AsyncMock(
+            return_value=[
+                {
+                    "date": "2026-01-16",
+                    "stats": [
+                        {
+                            "requests": 456,
+                            "delivered": 450,
+                            "bounces": 5,
+                            "opens": 280,
+                            "unique_opens": 195,
+                            "clicks": 120,
+                            "unique_clicks": 85,
+                            "unsubscribes": 3,
+                            "spam_reports": 1,
+                        }
+                    ],
+                }
+            ]
+        )
 
         start_date = datetime.now() - timedelta(days=7)
         end_date = datetime.now()
@@ -847,15 +837,13 @@ class TestEmailAnalytics:
         stats = await sendgrid_client.get_email_stats(start_date, end_date)
 
         # The actual service returns keys: 'period', 'totals', 'rates', 'suppression_counts'
-        assert 'totals' in stats or 'period' in stats or 'rates' in stats or 'error' not in stats
+        assert "totals" in stats or "period" in stats or "rates" in stats or "error" not in stats
 
     @pytest.mark.asyncio
     async def test_get_email_stats_error(self, sendgrid_client):
         """Test handling stats API errors gracefully"""
         # Mock API error - get_email_stats catches exceptions and returns {"error": str(e)}
-        sendgrid_client._make_request = AsyncMock(
-            side_effect=SendGridAPIException("Invalid date range", 400)
-        )
+        sendgrid_client._make_request = AsyncMock(side_effect=SendGridAPIException("Invalid date range", 400))
 
         start_date = datetime.now()
         end_date = datetime.now() - timedelta(days=1)  # Invalid range
@@ -863,7 +851,7 @@ class TestEmailAnalytics:
         result = await sendgrid_client.get_email_stats(start_date, end_date)
 
         # The service catches exceptions and returns {"error": str(e)}
-        assert 'error' in result
+        assert "error" in result
 
 
 class TestHealthAndMonitoring:
@@ -884,16 +872,13 @@ class TestHealthAndMonitoring:
     async def test_health_check_success(self, sendgrid_client):
         """Test successful health check"""
         # Mock API response
-        sendgrid_client._make_request = AsyncMock(return_value={
-            "username": "test_user",
-            "email": "test@example.com"
-        })
+        sendgrid_client._make_request = AsyncMock(return_value={"username": "test_user", "email": "test@example.com"})
 
         result = await sendgrid_client.health_check()
 
-        assert result['status'] == 'healthy'
-        assert result['api_accessible'] is True
-        assert 'timestamp' in result
+        assert result["status"] == "healthy"
+        assert result["api_accessible"] is True
+        assert "timestamp" in result
 
     @pytest.mark.asyncio
     async def test_health_check_api_error(self, sendgrid_client):
@@ -903,23 +888,21 @@ class TestHealthAndMonitoring:
 
         result = await sendgrid_client.health_check()
 
-        assert result['status'] == 'unhealthy'
-        assert result['api_accessible'] is False
-        assert 'error' in result
+        assert result["status"] == "unhealthy"
+        assert result["api_accessible"] is False
+        assert "error" in result
 
     @pytest.mark.asyncio
     async def test_health_check_authentication_error(self, sendgrid_client):
         """Test health check with authentication error"""
         # Mock auth error
-        sendgrid_client._make_request = AsyncMock(
-            side_effect=SendGridAPIException("Authentication failed", 401)
-        )
+        sendgrid_client._make_request = AsyncMock(side_effect=SendGridAPIException("Authentication failed", 401))
 
         result = await sendgrid_client.health_check()
 
-        assert result['status'] == 'unhealthy'
+        assert result["status"] == "unhealthy"
         # For 401, api_accessible should be False (401 is in [401, 403])
-        assert result['api_accessible'] is False
+        assert result["api_accessible"] is False
 
 
 class TestErrorHandlingAndEdgeCases:
@@ -928,18 +911,12 @@ class TestErrorHandlingAndEdgeCases:
     def test_config_validation_rejects_placeholder_key(self):
         """Test that config validation rejects placeholder API key"""
         with pytest.raises(Exception):
-            SendGridConfig(
-                api_key="your_sendgrid_api_key",
-                sender_email="test@example.com"
-            )
+            SendGridConfig(api_key="your_sendgrid_api_key", sender_email="test@example.com")
 
     def test_config_validation_rejects_invalid_email(self):
         """Test that config validation rejects invalid sender email"""
         with pytest.raises(Exception):
-            SendGridConfig(
-                api_key="valid_key",
-                sender_email="not_an_email"
-            )
+            SendGridConfig(api_key="valid_key", sender_email="not_an_email")
 
     @pytest.mark.asyncio
     async def test_send_email_without_content(self):
@@ -950,7 +927,7 @@ class TestErrorHandlingAndEdgeCases:
         with pytest.raises((ValueError, SendGridAPIException)):
             await client.send_email(
                 to_email="test@example.com",
-                subject="No Content"
+                subject="No Content",
                 # No html_content, plain_content, or template_id
             )
 
@@ -961,13 +938,14 @@ class TestErrorHandlingAndEdgeCases:
             api_key="test_key",
             sender_email="test@example.com",
             max_retries=2,
-            retry_delay=0.01  # Fast retries for testing
+            retry_delay=0.01,  # Fast retries for testing
         )
 
         client = SendGridClient(config)
 
         # Create a mock session that raises aiohttp.ClientError
         import aiohttp
+
         mock_session = MagicMock()
         error_ctx = MagicMock()
         error_ctx.__aenter__ = AsyncMock(side_effect=aiohttp.ClientError("timeout"))
@@ -976,7 +954,7 @@ class TestErrorHandlingAndEdgeCases:
         client.session = mock_session
 
         with pytest.raises(SendGridAPIException, match="retries"):
-            await client._make_request('GET', '/test')
+            await client._make_request("GET", "/test")
 
 
 @pytest.mark.performance
@@ -999,15 +977,12 @@ class TestPerformanceCharacteristics:
 
         # Test with many recipients using the actual send_bulk_emails signature
         emails = [
-            {
-                "to_email": f"user{i}@example.com",
-                "subject": f"Test Email {i}",
-                "html_content": f"<p>Hi User {i}</p>"
-            }
+            {"to_email": f"user{i}@example.com", "subject": f"Test Email {i}", "html_content": f"<p>Hi User {i}</p>"}
             for i in range(100)
         ]
 
         import time
+
         start_time = time.time()
 
         results = await client.send_bulk_emails(emails)
@@ -1016,7 +991,7 @@ class TestPerformanceCharacteristics:
 
         # Verify all emails sent
         assert len(results) == 100
-        assert all(result['success'] for result in results)
+        assert all(result["success"] for result in results)
 
         # Performance should be reasonable (under 10 seconds for mocked operations)
         execution_time = end_time - start_time
@@ -1025,8 +1000,4 @@ class TestPerformanceCharacteristics:
 
 if __name__ == "__main__":
     # Run specific test classes for development
-    pytest.main([
-        "-v",
-        "tests/services/test_sendgrid_client.py::TestEmailSending",
-        "--tb=short"
-    ])
+    pytest.main(["-v", "tests/services/test_sendgrid_client.py::TestEmailSending", "--tb=short"])
