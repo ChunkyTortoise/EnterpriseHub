@@ -126,6 +126,29 @@ Production-ready bot services with enhanced monitoring and A/B testing:
 - [Integration Guide](ghl_real_estate_ai/docs/JORGE_BOT_INTEGRATION_GUIDE.md)
 - [Alert Channels](ghl_real_estate_ai/docs/ALERT_CHANNELS_DEPLOYMENT_GUIDE.md)
 
+## Deployment & Monitoring
+
+Production-ready infrastructure with observability built in:
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  Docker Compose Profiles                                  │
+│  ├── postgres (primary DB + Alembic migrations)           │
+│  ├── redis (L2 cache, sessions, rate limiting)            │
+│  ├── api (FastAPI, 91+ routes)                            │
+│  ├── bots (Lead :8001, Seller :8002, Buyer :8003)         │
+│  └── dashboard (Streamlit BI :8501)                       │
+└──────────────────────────────────────────────────────────┘
+```
+
+| Capability | Implementation | Key Metric |
+|-----------|----------------|------------|
+| **Token Cost Optimization** | 3-tier cache (L1 memory, L2 Redis, L3 PostgreSQL) + model routing | 93K → 7.8K tokens/workflow (89% reduction) |
+| **Latency Monitoring** | `PerformanceTracker` — P50/P95/P99 percentiles, SLA compliance | Lead Bot P95 < 2,000ms |
+| **Alerting** | `AlertingService` — 7 default rules, configurable cooldowns | Error rate, latency, cache, handoff, tokens |
+| **Per-Bot Metrics** | `BotMetricsCollector` — throughput, cache hits, error categorization | 87% cache hit rate |
+| **Health Checks** | `/health/aggregate` endpoint checks all services | Bot + DB + Redis + CRM status |
+
 ## Testing
 
 ```bash
