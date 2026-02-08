@@ -108,6 +108,24 @@ EnterpriseHub/
 └── docker-compose.yml            # Container orchestration
 ```
 
+## Jorge Bot Audit (February 2026)
+
+Production-ready bot services with enhanced monitoring and A/B testing:
+
+| Service | Status | Features |
+|---------|--------|----------|
+| **JorgeHandoffService** | ✅ Production | Circular prevention, rate limiting, pattern learning |
+| **ABTestingService** | ✅ Production | Deterministic assignment, z-test significance |
+| **PerformanceTracker** | ✅ Production | P50/P95/P99 latency, SLA compliance |
+| **AlertingService** | ✅ Production | 7 default rules, email/Slack/webhook |
+| **BotMetricsCollector** | ✅ Production | Per-bot stats, cache hits, alerting |
+
+### Quick Links
+
+- [Deployment Checklist](ghl_real_estate_ai/docs/JORGE_BOT_DEPLOYMENT_CHECKLIST.md)
+- [Integration Guide](ghl_real_estate_ai/docs/JORGE_BOT_INTEGRATION_GUIDE.md)
+- [Alert Channels](ghl_real_estate_ai/docs/ALERT_CHANNELS_DEPLOYMENT_GUIDE.md)
+
 ## Testing
 
 ```bash
