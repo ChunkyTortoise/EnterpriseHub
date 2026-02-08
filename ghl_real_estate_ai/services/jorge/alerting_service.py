@@ -2,8 +2,9 @@
 Jorge Bot Alerting Service
 
 Monitors bot performance metrics and sends alerts when thresholds are breached.
-Supports multiple notification channels (email, Slack, webhook) with cooldown
-periods to prevent alert spam.
+Supports multiple notification channels (email, Slack, webhook, PagerDuty,
+Opsgenie) with cooldown periods to prevent alert spam and a 3-level
+escalation policy for unacknowledged critical alerts.
 
 Default alert rules align with the Jorge Bot Audit Spec:
 1. SLA Violation: P95 latency exceeds target
@@ -14,23 +15,33 @@ Default alert rules align with the Jorge Bot Audit Spec:
 6. Circular Handoff Spike: >10 blocked handoffs in 1 hour
 7. Rate Limit Breach: Rate limit errors > 10%
 
+Escalation Policy:
+    Level 1 (0s):   Send to rule's configured channels
+    Level 2 (5min): Re-send unacknowledged critical alerts to email+slack+webhook
+    Level 3 (15min): Escalate unacknowledged critical alerts to PagerDuty/Opsgenie
+
 Usage:
     service = AlertingService()
     alerts = await service.check_alerts(performance_stats)
     await service.send_alert(alert)
     history = await service.get_alert_history(limit=50)
+    escalations = service.escalation_policy.get_pending_escalations(
+        await service.get_active_alerts()
+    )
 """
 
 import asyncio
+import json as _json
 import logging
+import os
 import smtplib
 import time
 import uuid
 from dataclasses import dataclass, field
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from typing import Any, Callable, Dict, List, Optional
+from email.mime.text import MIMEText
 from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import aiohttp
 
@@ -67,6 +78,149 @@ class Alert:
     performance_stats: Dict[str, Any]
     channels_sent: List[str] = field(default_factory=list)
     acknowledged: bool = False
+
+
+# ── Alert Channel Configuration ────────────────────────────────────────
+
+
+@dataclass
+class AlertChannelConfig:
+    """Configuration for alert notification channels, loaded from environment."""
+
+    # Email (SMTP)
+    email_enabled: bool = False
+    smtp_host: str = "localhost"
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    email_from: str = "alerts@enterprisehub.com"
+    email_to: List[str] = field(default_factory=list)
+    smtp_use_tls: bool = True
+
+    # Slack
+    slack_enabled: bool = False
+    slack_webhook_url: str = ""
+    slack_channel: str = "#jorge-alerts"
+    slack_username: str = "Jorge Bot Alert"
+    slack_icon_emoji: str = ":rotating_light:"
+
+    # Generic Webhook
+    webhook_enabled: bool = False
+    webhook_url: str = ""
+    webhook_headers: Dict[str, str] = field(default_factory=dict)
+
+    # PagerDuty Events API v2
+    pagerduty_url: str = ""
+    pagerduty_api_key: str = ""
+
+    # Opsgenie
+    opsgenie_url: str = ""
+    opsgenie_api_key: str = ""
+
+    @classmethod
+    def from_environment(cls) -> "AlertChannelConfig":
+        """Load configuration from environment variables."""
+        to_emails = os.getenv("ALERT_EMAIL_TO", "")
+        headers_raw = os.getenv("ALERT_WEBHOOK_HEADERS", "{}")
+        try:
+            headers = _json.loads(headers_raw)
+        except (ValueError, TypeError):
+            headers = {}
+
+        return cls(
+            email_enabled=os.getenv("ALERT_EMAIL_ENABLED", "false").lower() == "true",
+            smtp_host=os.getenv("ALERT_EMAIL_SMTP_HOST", os.getenv("ALERT_SMTP_HOST", "localhost")),
+            smtp_port=int(os.getenv("ALERT_EMAIL_SMTP_PORT", os.getenv("ALERT_SMTP_PORT", "587"))),
+            smtp_user=os.getenv("ALERT_EMAIL_SMTP_USER", os.getenv("ALERT_SMTP_USER", "")),
+            smtp_password=os.getenv("ALERT_EMAIL_SMTP_PASSWORD", os.getenv("ALERT_SMTP_PASSWORD", "")),
+            email_from=os.getenv("ALERT_EMAIL_FROM", "alerts@enterprisehub.com"),
+            email_to=[e.strip() for e in to_emails.split(",") if e.strip()],
+            smtp_use_tls=os.getenv("ALERT_EMAIL_SMTP_USE_TLS", "true").lower() == "true",
+            slack_enabled=os.getenv("ALERT_SLACK_ENABLED", "false").lower() == "true",
+            slack_webhook_url=os.getenv("ALERT_SLACK_WEBHOOK_URL", ""),
+            slack_channel=os.getenv("ALERT_SLACK_CHANNEL", "#jorge-alerts"),
+            slack_username=os.getenv("ALERT_SLACK_USERNAME", "Jorge Bot Alert"),
+            slack_icon_emoji=os.getenv("ALERT_SLACK_ICON_EMOJI", ":rotating_light:"),
+            webhook_enabled=os.getenv("ALERT_WEBHOOK_ENABLED", "false").lower() == "true",
+            webhook_url=os.getenv("ALERT_WEBHOOK_URL", ""),
+            webhook_headers=headers,
+            pagerduty_url=os.getenv("ALERT_WEBHOOK_PAGERDUTY_URL", ""),
+            pagerduty_api_key=os.getenv("ALERT_WEBHOOK_PAGERDUTY_API_KEY", ""),
+            opsgenie_url=os.getenv("ALERT_WEBHOOK_OPSGENIE_URL", ""),
+            opsgenie_api_key=os.getenv("ALERT_WEBHOOK_OPSGENIE_API_KEY", ""),
+        )
+
+    def validate(self) -> List[str]:
+        """Validate channel configuration.
+
+        Returns:
+            List of warning messages for misconfigured channels.
+        """
+        warnings: List[str] = []
+        if self.email_enabled and not self.email_to:
+            warnings.append("Email alerts enabled but no recipients (ALERT_EMAIL_TO)")
+        if self.slack_enabled and not self.slack_webhook_url:
+            warnings.append("Slack alerts enabled but no webhook URL (ALERT_SLACK_WEBHOOK_URL)")
+        if self.webhook_enabled and not self.webhook_url:
+            warnings.append("Webhook alerts enabled but no URL (ALERT_WEBHOOK_URL)")
+        return warnings
+
+
+# ── Escalation Policy ──────────────────────────────────────────────────
+
+
+@dataclass
+class EscalationLevel:
+    """One level in an escalation chain."""
+
+    level: int
+    delay_seconds: int
+    channels: List[str]
+    description: str = ""
+
+
+class EscalationPolicy:
+    """3-level escalation policy for unacknowledged critical alerts.
+
+    Level 1 (0s):   Rule's configured channels (immediate)
+    Level 2 (5min): Re-send to email + slack + webhook
+    Level 3 (15min): Escalate to PagerDuty / Opsgenie
+    """
+
+    DEFAULT_LEVELS = [
+        EscalationLevel(1, 0, [], "Immediate: rule channels"),
+        EscalationLevel(2, 300, ["email", "slack", "webhook"], "5min unack: all channels"),
+        EscalationLevel(3, 900, ["pagerduty", "opsgenie"], "15min unack: PagerDuty/Opsgenie"),
+    ]
+
+    def __init__(self, levels: Optional[List[EscalationLevel]] = None) -> None:
+        self.levels = levels if levels is not None else list(self.DEFAULT_LEVELS)
+
+    def get_escalation_level(self, alert: Alert) -> int:
+        """Return the current escalation level for *alert* (0 if acknowledged)."""
+        if alert.acknowledged:
+            return 0
+        elapsed = time.time() - alert.triggered_at
+        current = 1
+        for lvl in self.levels:
+            if elapsed >= lvl.delay_seconds:
+                current = lvl.level
+        return current
+
+    def get_pending_escalations(
+        self, alerts: List[Alert],
+    ) -> List[Tuple[Alert, EscalationLevel]]:
+        """Return unacknowledged critical alerts that need escalation (level >= 2)."""
+        results: List[Tuple[Alert, EscalationLevel]] = []
+        for alert in alerts:
+            if alert.acknowledged or alert.severity != "critical":
+                continue
+            level = self.get_escalation_level(alert)
+            if level >= 2:
+                lvl_cfg = next((l for l in self.levels if l.level == level), None)
+                if lvl_cfg:
+                    results.append((alert, lvl_cfg))
+        return results
 
 
 class AlertingService:
