@@ -38,6 +38,7 @@ class UnionCompatibleRoute(APIRoute):
         if 'response_model' not in kwargs:
             kwargs['response_model'] = None
         super().__init__(*args, **kwargs)
+import asyncio
 import os
 import time
 import logging
@@ -227,9 +228,55 @@ async def lifespan(app: FastAPI):
         logger.error(f"❌ Failed to start Lead Sequence Scheduler: {e}")
         logger.warning("Lead Bot automation will not function - sequences must be triggered manually")
 
+    # ========================================================================
+    # JORGE BOT MONITORING: Periodic alerting background task
+    # ========================================================================
+
+    alerting_task = None
+    try:
+        from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
+        from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
+
+        async def _periodic_alert_check():
+            """Run alert checks every 60 seconds."""
+            alerting_svc = AlertingService()
+            metrics_collector = BotMetricsCollector()
+            while True:
+                try:
+                    await asyncio.sleep(60)
+                    summary = metrics_collector.get_system_summary()
+                    await alerting_svc.check_and_send_alerts(summary)
+                except asyncio.CancelledError:
+                    break
+                except Exception as exc:
+                    logger.debug("Periodic alert check error (non-fatal): %s", exc)
+
+        alerting_task = asyncio.create_task(_periodic_alert_check())
+        logger.info("Periodic alerting background task started (60s interval)")
+    except Exception as e:
+        logger.warning("Failed to start periodic alerting task: %s", e)
+
+    # ========================================================================
+    # STARTUP ENV VAR VALIDATION (non-blocking warnings)
+    # ========================================================================
+
+    if os.getenv("ALERT_EMAIL_ENABLED", "").lower() == "true" and not os.getenv("ALERT_SMTP_HOST"):
+        logger.warning("ALERT_EMAIL_ENABLED=true but ALERT_SMTP_HOST is not configured — email alerts will not be sent")
+    if os.getenv("ALERT_SLACK_ENABLED", "").lower() == "true" and not os.getenv("ALERT_SLACK_WEBHOOK_URL"):
+        logger.warning("ALERT_SLACK_ENABLED=true but ALERT_SLACK_WEBHOOK_URL is not configured — Slack alerts will not be sent")
+    if os.getenv("AB_TESTING_ENABLED", "").lower() == "true":
+        logger.info("A/B testing is enabled — experiments will be registered on first bot initialization")
+
     yield
 
-    # Shutdown logic ... (kept as is)
+    # Shutdown logic
+    if alerting_task and not alerting_task.done():
+        alerting_task.cancel()
+        try:
+            await alerting_task
+        except asyncio.CancelledError:
+            pass
+        logger.info("Periodic alerting background task stopped")
 
 def _verify_admin_api_key():
     """Dependency that guards admin endpoints with an API key in production."""
