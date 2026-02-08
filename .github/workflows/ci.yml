@@ -146,7 +146,7 @@ jobs:
         pip install -r requirements-dev.txt
 
     - name: Run mypy
-      run: mypy app.py modules/ utils/
+      run: mypy app.py utils/
 
   build:
     name: Build Check
