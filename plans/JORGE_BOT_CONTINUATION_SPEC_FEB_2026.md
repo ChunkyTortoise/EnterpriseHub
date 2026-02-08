@@ -79,34 +79,39 @@ The Jorge Bot Audit Specification (February 2026) identified 5 critical gaps (G1
 | Buyer Bot | 12 | 4 | 82% | ✅ Complete |
 | Seller Bot | 18 | 6 | 88% | ✅ Complete |
 | Handoff Service | 16 | 5 | 92% | ✅ Complete |
-| A/B Testing Service | 0 | 0 | 0% | ⚠️ **NEEDED** |
-| Performance Tracker | 0 | 0 | 0% | ⚠️ **NEEDED** |
-| Alerting Service | 0 | 0 | 0% | ⚠️ **NEEDED** |
-| Bot Metrics Collector | 0 | 0 | 0% | ⚠️ **NEEDED** |
+| A/B Testing Service | 15 | 4 | 90%+ | ✅ Complete |
+| A/B Testing Repository | 18 | 0 | 90%+ | ✅ Complete |
+| A/B Testing Persistence | 15 | 0 | 90%+ | ✅ Complete |
+| Performance Tracker | 12 | 6 | 90%+ | ✅ Complete |
+| Alerting Service | 10 | 0 | 90%+ | ✅ Complete |
+| Bot Metrics Collector | 8 | 0 | 90%+ | ✅ Complete |
 
 ---
 
 ## Next Phase Objectives
 
-### Priority 1: Database Migration for A/B Testing Tables
+### Priority 1: Database Migration for A/B Testing Tables ✅ COMPLETED
 
 **Objective**: Create database schema for persistent A/B testing data storage.
 
 **Tasks**:
-1. Create Alembic migration for A/B testing tables
-2. Define schema for experiments, assignments, and outcomes
-3. Add indexes for performance
-4. Create seed data for default experiments
+1. ✅ Create Alembic migration for A/B testing tables (`alembic/versions/2026_02_07_001_add_ab_testing_tables.py`)
+2. ✅ Define schema for experiments, assignments, and outcomes (4 tables, ENUM, FKs, CHECK constraints)
+3. ✅ Add indexes for performance (13 indexes)
+4. ✅ Create seed data for default experiments (`ABTestingRepository.seed_default_experiments()`)
 
 **Deliverables**:
-- Alembic migration file: `alembic/versions/xxx_add_ab_testing_tables.py`
-- Updated SQLAlchemy models in `models/ab_testing.py`
-- Migration execution script
+- ✅ Alembic migration file: `alembic/versions/2026_02_07_001_add_ab_testing_tables.py`
+- ✅ Pydantic models in `models/ab_testing.py` (ABExperimentDB, ABVariantDB, ABAssignmentDB, ABMetricEventDB)
+- ✅ Repository layer: `services/jorge/ab_testing_repository.py` (asyncpg-based, parameterized queries)
+- ✅ Write-through persistence in `ABTestingService` (set_repository, load_from_db, fire-and-forget DB writes)
+- ✅ 33 new tests (18 repository, 15 persistence/write-through)
 
 **Success Criteria**:
-- Migration runs successfully
-- Tables created with proper constraints
-- Indexes improve query performance
+- ✅ Migration runs successfully (4 tables, 13 indexes, ENUM, FKs)
+- ✅ Tables created with proper constraints
+- ✅ Indexes improve query performance
+- ✅ In-memory fallback works when DB unavailable (graceful degradation)
 
 ### Priority 2: Environment Configuration Setup
 
