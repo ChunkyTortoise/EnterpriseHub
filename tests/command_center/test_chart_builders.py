@@ -16,6 +16,7 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+pytest.importorskip("command_center", reason="command_center package not available")
 from command_center.utils.chart_builders import (
     ChartFactory,
     JorgeTheme,
