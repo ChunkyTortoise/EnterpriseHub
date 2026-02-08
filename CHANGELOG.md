@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - OpenRouter multi-LLM provider integration with automatic fallbacks
 - Supermemory AI universal memory service integration
 - JorgeConfig backward-compatible alias in jorge_config.py (supports 19 modules)
+- **Jorge Bot v8.2 Services**:
+  - [`ghl_real_estate_ai/services/jorge/ab_testing_service.py`](ghl_real_estate_ai/services/jorge/ab_testing_service.py) - A/B testing with deterministic assignment and z-test significance
+  - [`ghl_real_estate_ai/services/jorge/performance_tracker.py`](ghl_real_estate_ai/services/jorge/performance_tracker.py) - P50/P95/P99 latency tracking and SLA compliance
+  - [`ghl_real_estate_ai/services/jorge/alerting_service.py`](ghl_real_estate_ai/services/jorge/alerting_service.py) - 7 default alert rules with email/Slack/webhook channels
+  - [`ghl_real_estate_ai/services/jorge/bot_metrics_collector.py`](ghl_real_estate_ai/services/jorge/bot_metrics_collector.py) - Per-bot metrics aggregation
+  - [`ghl_real_estate_ai/services/jorge/buyer_budget_config.py`](ghl_real_estate_ai/services/jorge/buyer_budget_config.py) - Dynamic budget configuration
+- **Jorge Bot v8.2 Documentation**:
+  - [`ghl_real_estate_ai/docs/JORGE_BOT_DEPLOYMENT_CHECKLIST.md`](ghl_real_estate_ai/docs/JORGE_BOT_DEPLOYMENT_CHECKLIST.md) - Complete deployment procedures
+  - [`ghl_real_estate_ai/docs/JORGE_BOT_INTEGRATION_GUIDE.md`](ghl_real_estate_ai/docs/JORGE_BOT_INTEGRATION_GUIDE.md) - API endpoints and usage examples
 
 ### Fixed
 - 11 dashboard component import errors resolved (0 failures across 137 components)

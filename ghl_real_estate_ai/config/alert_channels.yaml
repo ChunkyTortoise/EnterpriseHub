@@ -1,0 +1,166 @@
+# ==============================================================================
+# Jorge Bot Alert Channels Configuration
+# ==============================================================================
+# Main configuration file for alert notification channels.
+# Supports email (SMTP), Slack webhooks, and custom webhooks (PagerDuty/Opsgenie).
+# 
+# Usage:
+#   from config.alert_channels import AlertChannelConfig
+#   config = AlertChannelConfig.load()
+# ==============================================================================
+
+# Global Alert Settings
+alerting:
+  enabled: true
+  environment: ${ENVIRONMENT:development}
+  service_name: "Jorge Bot"
+  
+# Email Alert Channel Configuration
+email:
+  enabled: false
+  provider: "smtp"  # Options: smtp, sendgrid, ses
+  
+  # SMTP Configuration
+  smtp:
+    host: ${ALERT_EMAIL_SMTP_HOST:localhost}
+    port: ${ALERT_EMAIL_SMTP_PORT:587}
+    username: ${ALERT_EMAIL_SMTP_USER:}
+    password: ${ALERT_EMAIL_SMTP_PASSWORD:}
+    use_tls: true
+    connection_timeout: 10
+    
+  # Email Content
+  from_address: ${ALERT_EMAIL_FROM:alerts@enterprisehub.com}
+  from_name: "Jorge Bot Alerts"
+  reply_to: ${ALERT_EMAIL_REPLY_TO:}
+  
+  # Recipients (comma-separated for multiple)
+  recipients: ${ALERT_EMAIL_TO:admin@yourdomain.com}
+  
+  # Email Templates
+  templates:
+    directory: "config/templates/"
+    critical_subject: "[CRITICAL] {{ rule_name }} - Jorge Bot Alert"
+    warning_subject: "[WARNING] {{ rule_name }} - Jorge Bot Alert"
+    info_subject: "[INFO] {{ rule_name }} - Jorge Bot Alert"
+  
+  # Retry Configuration
+  retry:
+    max_attempts: 3
+    delay_seconds: 5
+    backoff_multiplier: 2
+  
+  # Rate Limiting
+  rate_limit:
+    max_per_hour: 10
+    max_per_day: 50
+
+# Slack Alert Channel Configuration
+slack:
+  enabled: false
+  
+  # Webhook Configuration
+  webhook:
+    url: ${ALERT_SLACK_WEBHOOK_URL:}
+    method: "POST"
+    timeout: 10
+    
+  # Message Formatting
+  formatting:
+    use_attachments: true
+    show_timestamp: true
+    show_footer: true
+    
+  # Severity to Color Mapping
+  colors:
+    critical: "#FF0000"
+    warning: "#FFA500"
+    info: "#00FF00"
+  
+  # Channel Configuration
+  channel: ${ALERT_SLACK_CHANNEL:#jorge-alerts}
+  username: "Jorge Bot Alert"
+  icon_emoji: ":rotating_light:"
+  
+  # Retry Configuration
+  retry:
+    max_attempts: 3
+    delay_seconds: 5
+    backoff_multiplier: 2
+
+# Custom Webhook Alert Channel Configuration
+webhook:
+  enabled: false
+  
+  # Webhook Endpoints
+  endpoints:
+    - name: "pagerduty"
+      url: ${ALERT_WEBHOOK_PAGERDUTY_URL:}
+      type: "pagerduty"  # Options: pagerduty, opsgenie, custom
+      headers:
+        Authorization: "Bearer ${ALERT_WEBHOOK_PAGERDUTY_API_KEY:}"
+        Content-Type: "application/json"
+        
+    - name: "opsgenie"
+      url: ${ALERT_WEBHOOK_OPSGENIE_URL:}
+      type: "opsgenie"
+      headers:
+        Authorization: "Bearer ${ALERT_WEBHOOK_OPSGENIE_API_KEY:}"
+        Content-Type: "application/json"
+        
+    - name: "custom"
+      url: ${ALERT_WEBHOOK_URL:}
+      type: "custom"
+      headers: ${ALERT_WEBHOOK_HEADERS:{"Content-Type": "application/json"}}
+  
+  # Request Configuration
+  request:
+    method: "POST"
+    timeout: 30
+    verify_ssl: true
+    
+  # Payload Templates
+  payload:
+    pagerduty:
+      event_type: "trigger"
+      urgency: "high"
+      dedup_key: "jorge_{{ rule_name }}_{{ timestamp }}"
+      
+    opsgenie:
+      message: "[{{ severity.upper() }}] {{ rule_name }}"
+      priority: "P1"
+      tags: ["jorge", "{{ rule_name }}"]
+      
+    custom:
+      template: "webhook_template.j2"
+  
+  # Retry Configuration
+  retry:
+    max_attempts: 3
+    delay_seconds: 5
+    backoff_multiplier: 2
+
+# Alert Cooldown Rules (override defaults)
+cooldowns:
+  sla_violation: 300        # 5 minutes
+  high_error_rate: 300      # 5 minutes
+  low_cache_hit_rate: 600   # 10 minutes
+  handoff_failure: 300      # 5 minutes
+  bot_unresponsive: 600     # 10 minutes
+  circular_handoff_spike: 600  # 10 minutes
+  rate_limit_breach: 300    # 5 minutes
+
+# Alert Aggregation (reduce alert noise)
+aggregation:
+  enabled: true
+  window_seconds: 300  # Aggregate alerts within 5 minute window
+  max_alerts_per_window: 5
+  
+# Escalation Rules
+escalation:
+  enabled: false
+  rules:
+    - after_alerts: 3
+      within_minutes: 30
+      escalate_to: "pagerduty"
+      severity: "critical"

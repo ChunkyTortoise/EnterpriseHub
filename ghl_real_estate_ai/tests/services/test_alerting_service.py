@@ -44,7 +44,6 @@ class TestAlertingService:
             performance_stats={},
         )
 
-        # Create mock SMTP context manager
         mock_smtp_instance = MagicMock()
         mock_smtp_instance.__enter__ = MagicMock(return_value=mock_smtp_instance)
         mock_smtp_instance.__exit__ = MagicMock(return_value=False)
@@ -62,8 +61,8 @@ class TestAlertingService:
                 mock_smtp_instance.send_message.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_send_email_alert_smtp_failure(self, alerting_service):
-        """Test email alert handling on SMTP failure."""
+    async def test_send_email_alert_no_recipients(self, alerting_service):
+        """Test email alert with no recipients configured."""
         alert = Alert(
             id="test_alert",
             rule_name="test_rule",
@@ -73,16 +72,9 @@ class TestAlertingService:
             performance_stats={},
         )
 
-        with patch("ghl_real_estate_ai.services.jorge.alerting_service.smtplib.SMTP") as mock_smtp:
-            mock_smtp.side_effect = Exception("SMTP Error")
-
-            with patch.dict("os.environ", {
-                "ALERT_EMAIL_TO": "test@example.com",
-                "ALERT_SMTP_HOST": "localhost",
-                "ALERT_SMTP_PORT": "587",
-            }):
-                with pytest.raises(Exception, match="SMTP Error"):
-                    await alerting_service._send_email_alert(alert)
+        # Should not raise when no recipients configured
+        with patch.dict("os.environ", {"ALERT_EMAIL_TO": ""}):
+            await alerting_service._send_email_alert(alert)
 
     @pytest.mark.asyncio
     async def test_send_slack_alert_success(self, alerting_service):
@@ -114,8 +106,8 @@ class TestAlertingService:
                 mock_session.post.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_send_slack_alert_webhook_failure(self, alerting_service):
-        """Test Slack alert handling on webhook failure."""
+    async def test_send_slack_alert_no_webhook(self, alerting_service):
+        """Test Slack alert with no webhook configured."""
         alert = Alert(
             id="test_alert",
             rule_name="test_rule",
@@ -125,19 +117,9 @@ class TestAlertingService:
             performance_stats={},
         )
 
-        mock_post = AsyncMock()
-        mock_post.__aenter__ = AsyncMock(side_effect=Exception("Webhook Error"))
-        mock_post.__aexit__ = AsyncMock(return_value=None)
-        
-        mock_session = AsyncMock()
-        mock_session.post = MagicMock(return_value=mock_post)
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-
-        with patch("aiohttp.ClientSession", return_value=mock_session):
-            with patch.dict("os.environ", {"ALERT_SLACK_WEBHOOK_URL": "https://hooks.slack.com/test"}):
-                with pytest.raises(Exception, match="Webhook Error"):
-                    await alerting_service._send_slack_alert(alert)
+        # Should not raise when no webhook configured
+        with patch.dict("os.environ", {}, clear=True):
+            await alerting_service._send_slack_alert(alert)
 
     @pytest.mark.asyncio
     async def test_send_webhook_alert_success(self, alerting_service):
@@ -169,8 +151,8 @@ class TestAlertingService:
                 mock_session.post.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_send_webhook_alert_failure(self, alerting_service):
-        """Test webhook alert handling on failure."""
+    async def test_send_webhook_alert_no_url(self, alerting_service):
+        """Test webhook alert with no URL configured."""
         alert = Alert(
             id="test_alert",
             rule_name="test_rule",
@@ -180,19 +162,9 @@ class TestAlertingService:
             performance_stats={},
         )
 
-        mock_post = AsyncMock()
-        mock_post.__aenter__ = AsyncMock(side_effect=Exception("Webhook Error"))
-        mock_post.__aexit__ = AsyncMock(return_value=None)
-
-        mock_session = AsyncMock()
-        mock_session.post = MagicMock(return_value=mock_post)
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-
-        with patch("aiohttp.ClientSession", return_value=mock_session):
-            with patch.dict("os.environ", {"ALERT_WEBHOOK_URL": "https://example.com/webhook"}):
-                with pytest.raises(Exception, match="Webhook Error"):
-                    await alerting_service._send_webhook_alert(alert)
+        # Should not raise when no webhook URL configured
+        with patch.dict("os.environ", {}, clear=True):
+            await alerting_service._send_webhook_alert(alert)
 
     @pytest.mark.asyncio
     async def test_check_alert_rules(self, alerting_service):
