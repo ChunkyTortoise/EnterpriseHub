@@ -1,8 +1,13 @@
 # EnterpriseHub: Real Estate AI & BI Platform
 
+**Purpose**: This document provides AI agents (Claude, Gemini, Perplexity) with the technical context needed to understand and work with the EnterpriseHub codebase.
+
 **Domain**: Rancho Cucamonga real estate market with AI-powered lead qualification, chatbot orchestration, and BI dashboards.
 
-**References**: `.claude/reference/domain-context.md` (market, terminology, bots) | `.claude/reference/quality-standards.md` (perf targets, testing, KPIs)
+**References**:
+- `.claude/reference/domain-context.md` (market, terminology, bots)
+- `.claude/reference/quality-standards.md` (perf targets, testing, KPIs)
+- [`AGENTS.md`](AGENTS.md) (human agent personas and workflows)
 
 ---
 
@@ -45,7 +50,7 @@ ghl_real_estate_ai/            # Main app
 
 ## Agent & MCP Landscape
 
-### Claude Code Agents (17)
+### Claude Code Agents (22)
 All agents are **domain-agnostic** -- they adapt to this project's domain via CLAUDE.md and reference files.
 
 | Agent | Purpose |
@@ -67,6 +72,11 @@ All agents are **domain-agnostic** -- they adapt to this project's domain via CL
 | cost-token-optimization | AI cost engineering and token efficiency |
 | dashboard-design | Streamlit BI dashboard architecture and visualization |
 | kpi-definition | Business intelligence KPI frameworks and metrics |
+| feature-enhancement-guide | Incremental feature development and backward compatibility |
+| repo-scaffold | Greenfield repository creation following portfolio conventions |
+| test-engineering | Test architecture, TDD, coverage gap analysis |
+| portfolio-coordinator | Cross-repository strategy and convention consistency |
+| quality-gate | CI/CD validation and release readiness checks |
 
 ### MCP Servers (5)
 | Server | Package | Purpose |
