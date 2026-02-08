@@ -1,7 +1,7 @@
 # Jorge Bot Deployment Checklist
 
-**Version:** 8.2  
-**Date:** February 7, 2026  
+**Version:** 8.3
+**Date:** February 8, 2026
 **Scope:** Production Deployment of Jorge Bot Services
 
 ---
@@ -78,9 +78,9 @@
 ### Monitoring Setup
 
 - [ ] Grafana dashboards imported
-- [ ] Alert rules configured in AlertingService
+- [x] Alert rules configured in AlertingService (7 rules, P5 complete)
 - [ ] On-call rotation established
-- [ ] Escalation policy documented
+- [x] Escalation policy documented (3-level, see [On-Call Runbook](JORGE_BOT_ON_CALL_RUNBOOK.md))
 
 ---
 
@@ -264,13 +264,15 @@ docker logs jorge-api --tail 100 | grep -i warning
 
 ### Performance Baselines
 
-| Metric | Baseline | Current | Status |
-|--------|----------|---------|--------|
-| Lead Bot P95 | <2000ms | ___ | ☐ |
-| Buyer Bot P95 | <2500ms | ___ | ☐ |
-| Seller Bot P95 | <2500ms | ___ | ☐ |
-| Handoff P95 | <500ms | ___ | ☐ |
-| Cache Hit Rate | >70% | ___ | ☐ |
+See [Performance Baseline Report](JORGE_BOT_PERFORMANCE_BASELINE_FEB_2026.md) for full details.
+
+| Metric | Target | Baseline (Feb 2026) | Status |
+|--------|--------|---------------------|--------|
+| Lead Bot P95 | <1500ms | ~340ms | ✅ |
+| Buyer Bot P95 | <1800ms | ~460ms | ✅ |
+| Seller Bot P95 | <1800ms | ~460ms | ✅ |
+| Handoff P95 | <500ms | ~91ms | ✅ |
+| Cache Hit Rate | >70% | Tracked | ✅ |
 
 ---
 
@@ -287,6 +289,8 @@ docker logs jorge-api --tail 100 | grep -i warning
 
 ## Troubleshooting
 
+For detailed troubleshooting procedures per alert rule, see the [On-Call Runbook](JORGE_BOT_ON_CALL_RUNBOOK.md).
+
 ### Common Issues
 
 | Issue | Cause | Solution |
@@ -294,8 +298,10 @@ docker logs jorge-api --tail 100 | grep -i warning
 | Containers not starting | Missing env vars | Check `.env` file |
 | Database connection failed | Wrong connection string | Verify `DATABASE_URL` |
 | Alerts not sending | SMTP auth failed | Check credentials |
-| Handoffs blocked | Rate limit exceeded | Wait for cooldown |
+| Handoffs blocked | Rate limit exceeded | Wait for cooldown (3/hr, 10/day) |
 | High latency | Cache miss | Check Redis connection |
+| Circular handoff spike | Ambiguous intent | Review decoder thresholds |
+| Bot unresponsive | Container crash/OOM | `docker restart jorge-api` |
 
 ### Debug Commands
 
@@ -312,6 +318,11 @@ python -c "from ghl_real_estate_ai.database import engine; print(engine.execute(
 
 ---
 
-**Document Version:** 8.2.0  
-**Last Updated:** February 7, 2026  
-**Next Review:** After v8.2.0 deployment
+**Document Version:** 8.3.0
+**Last Updated:** February 8, 2026
+**Related Documentation:**
+- [On-Call Runbook](JORGE_BOT_ON_CALL_RUNBOOK.md)
+- [Performance Baseline Report](JORGE_BOT_PERFORMANCE_BASELINE_FEB_2026.md)
+- [Integration Guide](JORGE_BOT_INTEGRATION_GUIDE.md)
+- [Alert Channels Deployment Guide](ALERT_CHANNELS_DEPLOYMENT_GUIDE.md)
+**Next Review:** After v8.3.0 deployment
