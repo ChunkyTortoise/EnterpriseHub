@@ -45,6 +45,8 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import aiohttp
 
+from ghl_real_estate_ai.services.jorge.telemetry import trace_operation
+
 logger = logging.getLogger(__name__)
 
 # Configuration constants
@@ -78,6 +80,8 @@ class Alert:
     performance_stats: Dict[str, Any]
     channels_sent: List[str] = field(default_factory=list)
     acknowledged: bool = False
+    acknowledged_at: Optional[float] = None
+    acknowledged_by: Optional[str] = None
 
 
 # ── Alert Channel Configuration ────────────────────────────────────────
@@ -429,6 +433,7 @@ class AlertingService:
 
     # ── Alert Checking ────────────────────────────────────────────────
 
+    @trace_operation("jorge.alerting", "check_alerts")
     async def check_alerts(self, performance_stats: Dict[str, Any]) -> List[Alert]:
         """Check all rules against performance statistics.
 
@@ -526,6 +531,7 @@ class AlertingService:
 
     # ── Alert Sending ─────────────────────────────────────────────────
 
+    @trace_operation("jorge.alerting", "send_alert")
     async def send_alert(self, alert: Alert) -> None:
         """Send an alert through configured notification channels.
 
@@ -732,25 +738,86 @@ class AlertingService:
         """
         return [alert for alert in self._alerts if not alert.acknowledged]
 
-    async def acknowledge_alert(self, alert_id: str) -> None:
+    @trace_operation("jorge.alerting", "acknowledge_alert")
+    async def acknowledge_alert(
+        self,
+        alert_id: str,
+        acknowledged_by: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """Acknowledge an alert by its ID.
+
+        Records who acknowledged the alert and when, preventing further
+        escalation.
 
         Args:
             alert_id: The short hex ID of the alert to acknowledge.
+            acknowledged_by: Optional identifier of the person or system
+                that acknowledged the alert (e.g. "jorge@example.com",
+                "auto-resolver").
+
+        Returns:
+            Dict with acknowledgment details (alert_id, acknowledged_at,
+            acknowledged_by, time_to_ack_seconds).
+
+        Raises:
+            KeyError: If the alert ID is not found.
+        """
+        now = time.time()
+        for alert in self._alerts:
+            if alert.id == alert_id:
+                alert.acknowledged = True
+                alert.acknowledged_at = now
+                alert.acknowledged_by = acknowledged_by
+                time_to_ack = now - alert.triggered_at
+                logger.info(
+                    "Acknowledged alert '%s' by '%s' (%.1fs after trigger)",
+                    alert_id,
+                    acknowledged_by or "unknown",
+                    time_to_ack,
+                )
+                return {
+                    "alert_id": alert_id,
+                    "acknowledged_at": now,
+                    "acknowledged_by": acknowledged_by,
+                    "time_to_ack_seconds": round(time_to_ack, 2),
+                }
+
+        raise KeyError(f"Alert '{alert_id}' not found")
+
+    async def get_acknowledgment_status(self, alert_id: str) -> Dict[str, Any]:
+        """Get the acknowledgment status of a specific alert.
+
+        Args:
+            alert_id: The short hex ID of the alert to query.
+
+        Returns:
+            Dict with alert_id, acknowledged, acknowledged_at,
+            acknowledged_by, and time_to_ack_seconds (if acknowledged).
 
         Raises:
             KeyError: If the alert ID is not found.
         """
         for alert in self._alerts:
             if alert.id == alert_id:
-                alert.acknowledged = True
-                logger.info("Acknowledged alert '%s'", alert_id)
-                return
+                result: Dict[str, Any] = {
+                    "alert_id": alert_id,
+                    "rule_name": alert.rule_name,
+                    "severity": alert.severity,
+                    "acknowledged": alert.acknowledged,
+                    "triggered_at": alert.triggered_at,
+                }
+                if alert.acknowledged:
+                    result["acknowledged_at"] = alert.acknowledged_at
+                    result["acknowledged_by"] = alert.acknowledged_by
+                    if alert.acknowledged_at is not None:
+                        result["time_to_ack_seconds"] = round(alert.acknowledged_at - alert.triggered_at, 2)
+                return result
 
         raise KeyError(f"Alert '{alert_id}' not found")
 
     # ── Convenience Methods ────────────────────────────────────────────
 
+    @trace_operation("jorge.alerting", "check_and_send_alerts")
     async def check_and_send_alerts(self, performance_stats: Dict[str, Any]) -> List[Alert]:
         """Check for alerts and send them through configured channels.
 
