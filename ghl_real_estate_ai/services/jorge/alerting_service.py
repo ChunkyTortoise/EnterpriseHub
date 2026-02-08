@@ -258,6 +258,8 @@ class AlertingService:
         self._alerts: List[Alert] = []
         self._last_fired: Dict[str, float] = {}  # rule_name -> last fire timestamp
         self._recorded_metrics: Dict[str, float] = {}
+        self._repository: Any = None  # Optional MetricsRepository for DB persistence
+        self._disabled_rules: set = set()  # Rule names temporarily disabled
         self.channel_config = AlertChannelConfig.from_environment()
         self.escalation_policy = EscalationPolicy()
         self._initialized = True
@@ -431,6 +433,84 @@ class AlertingService:
         """
         return list(self._rules.values())
 
+    # ── Persistence Configuration ────────────────────────────────────
+
+    def set_repository(self, repository: Any) -> None:
+        """Attach a repository for alert persistence.
+
+        The repository object must implement:
+            - ``save_alert(rule_name, severity, message, triggered_at,
+              performance_stats, channels_sent)`` (async, returns None)
+            - ``load_alerts(limit)``
+              (async, returns list of dicts)
+
+        Args:
+            repository: A repository instance (or None to disable persistence).
+        """
+        self._repository = repository
+        logger.info(
+            "AlertingService persistence %s",
+            "enabled" if repository else "disabled",
+        )
+
+    async def _persist_alert(self, alert: Alert) -> None:
+        """Write a single alert to the database repository."""
+        try:
+            await self._repository.save_alert(
+                rule_name=alert.rule_name,
+                severity=alert.severity,
+                message=alert.message,
+                triggered_at=alert.triggered_at,
+                performance_stats=alert.performance_stats,
+                channels_sent=alert.channels_sent,
+            )
+        except Exception as exc:
+            logger.debug("DB write-through failed for alert: %s", exc)
+
+    # ── Rule Enable/Disable ─────────────────────────────────────────
+
+    async def enable_rule(self, name: str) -> None:
+        """Enable a previously disabled rule by name.
+
+        Args:
+            name: The rule name to enable.
+
+        Raises:
+            KeyError: If the rule does not exist.
+        """
+        if name not in self._rules:
+            raise KeyError(f"Alert rule '{name}' not found")
+        self._disabled_rules.discard(name)
+        logger.info("Enabled alert rule '%s'", name)
+
+    async def disable_rule(self, name: str) -> None:
+        """Temporarily disable a rule (remove from active evaluation).
+
+        Disabled rules are skipped during ``check_alerts()`` until
+        re-enabled via ``enable_rule()``.
+
+        Args:
+            name: The rule name to disable.
+
+        Raises:
+            KeyError: If the rule does not exist.
+        """
+        if name not in self._rules:
+            raise KeyError(f"Alert rule '{name}' not found")
+        self._disabled_rules.add(name)
+        logger.info("Disabled alert rule '%s'", name)
+
+    def is_rule_active(self, name: str) -> bool:
+        """Check if a rule is active (not disabled).
+
+        Args:
+            name: The rule name to check.
+
+        Returns:
+            True if the rule is active, False if disabled.
+        """
+        return name not in self._disabled_rules
+
     # ── Alert Checking ────────────────────────────────────────────────
 
     @trace_operation("jorge.alerting", "check_alerts")
@@ -447,6 +527,10 @@ class AlertingService:
         triggered: List[Alert] = []
 
         for rule in self._rules.values():
+            # Skip disabled rules
+            if not self.is_rule_active(rule.name):
+                continue
+
             # Check cooldown
             last_fire = self._last_fired.get(rule.name, 0.0)
             if (now - last_fire) < rule.cooldown_seconds:
@@ -474,6 +558,13 @@ class AlertingService:
             self._alerts.append(alert)
             self._last_fired[rule.name] = now
             triggered.append(alert)
+
+            # Write-through to DB (fire-and-forget on error)
+            if self._repository is not None:
+                try:
+                    asyncio.ensure_future(self._persist_alert(alert))
+                except RuntimeError:
+                    logger.debug("No event loop for alert DB write-through")
 
             logger.warning(
                 "Alert triggered: '%s' (severity=%s) - %s",
@@ -858,6 +949,8 @@ class AlertingService:
             cls._instance._alerts.clear()
             cls._instance._last_fired.clear()
             cls._instance._recorded_metrics.clear()
+            cls._instance._disabled_rules.clear()
+            cls._instance._repository = None
             cls._instance._initialized = False
         cls._instance = None
 

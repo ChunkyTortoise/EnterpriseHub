@@ -1,6 +1,6 @@
 # 🛡️ Quality Audit: Editorial FinTech Review
 
-**Drafts Reviewed**: [content_gen_drafts.md](file:///Users/Cave/Desktop/enterprise-hub/EnterpriseHub/docs/swarm/content_gen_drafts.md)
+**Drafts Reviewed**: [content_gen_drafts.md](content_gen_drafts.md)
 **Status**: REVISED & APPROVED
 
 ## Revision Notes & "Editorial FinTech" Filter
@@ -24,13 +24,13 @@
 
 The following assets are now committed to the production sales directory.
 
-### [Target 1: AI Solutions Architect (Upwork)](file:///Users/Cave/Desktop/enterprise-hub/EnterpriseHub/docs/sales/UPWORK_AI_ARCHITECT.md)
+### [Target 1: AI Solutions Architect (Upwork)](../sales/UPWORK_AI_ARCHITECT.md)
 *Status: READY TO SEND*
 
-### [Target 2: Dashboard Surgery (Fiverr)](file:///Users/Cave/Desktop/enterprise-hub/EnterpriseHub/docs/sales/FIVERR_DASHBOARD_SURGERY.md)
+### [Target 2: Dashboard Surgery (Fiverr)](../sales/FIVERR_DASHBOARD_SURGERY.md)
 *Status: READY TO PUBLISH*
 
-### [Target 3: AI Strategic Leader (LinkedIn)](file:///Users/Cave/Desktop/enterprise-hub/EnterpriseHub/docs/sales/LINKEDIN_STRATEGY_LEAD.md)
+### [Target 3: AI Strategic Leader (LinkedIn)](../sales/LINKEDIN_STRATEGY_LEAD.md)
 *Status: READY TO POST*
 
 ---

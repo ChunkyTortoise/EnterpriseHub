@@ -1,0 +1,802 @@
+[
+  {
+    "route": "lead->buyer",
+    "contact_id": "seed_lead_buyer_000",
+    "outcome": "successful",
+    "timestamp": 1770569051.4269624,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->buyer",
+    "contact_id": "seed_lead_buyer_001",
+    "outcome": "successful",
+    "timestamp": 1770449180.0772886,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->buyer",
+    "contact_id": "seed_lead_buyer_002",
+    "outcome": "successful",
+    "timestamp": 1770174910.0817275,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->buyer",
+    "contact_id": "seed_lead_buyer_003",
+    "outcome": "failed",
+    "timestamp": 1770227048.0601919,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->buyer",
+    "contact_id": "seed_lead_buyer_004",
+    "outcome": "successful",
+    "timestamp": 1770527511.0506527,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->buyer",
+    "contact_id": "seed_lead_buyer_005",
+    "outcome": "successful",
+    "timestamp": 1770220077.0043914,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->buyer",
+    "contact_id": "seed_lead_buyer_006",
+    "outcome": "successful",
+    "timestamp": 1770151129.2698255,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->buyer",
+    "contact_id": "seed_lead_buyer_007",
+    "outcome": "successful",
+    "timestamp": 1770330452.3440034,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->buyer",
+    "contact_id": "seed_lead_buyer_008",
+    "outcome": "successful",
+    "timestamp": 1770415928.1913831,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->buyer",
+    "contact_id": "seed_lead_buyer_009",
+    "outcome": "failed",
+    "timestamp": 1770161943.2256322,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->buyer",
+    "contact_id": "seed_lead_buyer_010",
+    "outcome": "successful",
+    "timestamp": 1770490143.930235,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->buyer",
+    "contact_id": "seed_lead_buyer_011",
+    "outcome": "reverted",
+    "timestamp": 1770522361.1564817,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->buyer",
+    "contact_id": "seed_lead_buyer_012",
+    "outcome": "successful",
+    "timestamp": 1770367067.2024038,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->buyer",
+    "contact_id": "seed_lead_buyer_013",
+    "outcome": "successful",
+    "timestamp": 1770424195.711225,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->buyer",
+    "contact_id": "seed_lead_buyer_014",
+    "outcome": "successful",
+    "timestamp": 1770306317.7644954,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->buyer",
+    "contact_id": "seed_lead_buyer_015",
+    "outcome": "successful",
+    "timestamp": 1770026373.6907184,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->buyer",
+    "contact_id": "seed_lead_buyer_016",
+    "outcome": "successful",
+    "timestamp": 1770406863.707126,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->buyer",
+    "contact_id": "seed_lead_buyer_017",
+    "outcome": "successful",
+    "timestamp": 1770048656.7145689,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->buyer",
+    "contact_id": "seed_lead_buyer_018",
+    "outcome": "successful",
+    "timestamp": 1770467881.7923338,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->buyer",
+    "contact_id": "seed_lead_buyer_019",
+    "outcome": "successful",
+    "timestamp": 1770184245.8766513,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->seller",
+    "contact_id": "seed_lead_seller_000",
+    "outcome": "failed",
+    "timestamp": 1770066881.774051,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->seller",
+    "contact_id": "seed_lead_seller_001",
+    "outcome": "reverted",
+    "timestamp": 1770416059.49656,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->seller",
+    "contact_id": "seed_lead_seller_002",
+    "outcome": "successful",
+    "timestamp": 1770363527.42988,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->seller",
+    "contact_id": "seed_lead_seller_003",
+    "outcome": "successful",
+    "timestamp": 1770457468.0795105,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->seller",
+    "contact_id": "seed_lead_seller_004",
+    "outcome": "successful",
+    "timestamp": 1770017689.2370725,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->seller",
+    "contact_id": "seed_lead_seller_005",
+    "outcome": "successful",
+    "timestamp": 1770215775.4994936,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->seller",
+    "contact_id": "seed_lead_seller_006",
+    "outcome": "successful",
+    "timestamp": 1770143202.0443206,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->seller",
+    "contact_id": "seed_lead_seller_007",
+    "outcome": "successful",
+    "timestamp": 1770354683.280546,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->seller",
+    "contact_id": "seed_lead_seller_008",
+    "outcome": "timeout",
+    "timestamp": 1770167977.5792606,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->seller",
+    "contact_id": "seed_lead_seller_009",
+    "outcome": "successful",
+    "timestamp": 1770388051.7339466,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->seller",
+    "contact_id": "seed_lead_seller_010",
+    "outcome": "failed",
+    "timestamp": 1770445649.657797,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->seller",
+    "contact_id": "seed_lead_seller_011",
+    "outcome": "successful",
+    "timestamp": 1770393391.9282548,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->seller",
+    "contact_id": "seed_lead_seller_012",
+    "outcome": "successful",
+    "timestamp": 1770456575.50792,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->seller",
+    "contact_id": "seed_lead_seller_013",
+    "outcome": "timeout",
+    "timestamp": 1770393860.749414,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->seller",
+    "contact_id": "seed_lead_seller_014",
+    "outcome": "successful",
+    "timestamp": 1770344899.7579594,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->seller",
+    "contact_id": "seed_lead_seller_015",
+    "outcome": "reverted",
+    "timestamp": 1770497769.1938217,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->seller",
+    "contact_id": "seed_lead_seller_016",
+    "outcome": "successful",
+    "timestamp": 1770133608.595352,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->seller",
+    "contact_id": "seed_lead_seller_017",
+    "outcome": "successful",
+    "timestamp": 1770132383.9784336,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->seller",
+    "contact_id": "seed_lead_seller_018",
+    "outcome": "successful",
+    "timestamp": 1770231257.2187138,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "lead->seller",
+    "contact_id": "seed_lead_seller_019",
+    "outcome": "successful",
+    "timestamp": 1769980995.3011932,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "buyer->seller",
+    "contact_id": "seed_buyer_seller_000",
+    "outcome": "successful",
+    "timestamp": 1770285699.5547798,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "buyer->seller",
+    "contact_id": "seed_buyer_seller_001",
+    "outcome": "failed",
+    "timestamp": 1770491739.501779,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "buyer->seller",
+    "contact_id": "seed_buyer_seller_002",
+    "outcome": "successful",
+    "timestamp": 1770172622.8937984,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "buyer->seller",
+    "contact_id": "seed_buyer_seller_003",
+    "outcome": "successful",
+    "timestamp": 1770351470.6616201,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "buyer->seller",
+    "contact_id": "seed_buyer_seller_004",
+    "outcome": "successful",
+    "timestamp": 1770301101.3595889,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "buyer->seller",
+    "contact_id": "seed_buyer_seller_005",
+    "outcome": "successful",
+    "timestamp": 1770249586.90969,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "buyer->seller",
+    "contact_id": "seed_buyer_seller_006",
+    "outcome": "timeout",
+    "timestamp": 1770148285.375372,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "buyer->seller",
+    "contact_id": "seed_buyer_seller_007",
+    "outcome": "timeout",
+    "timestamp": 1770130047.038528,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "buyer->seller",
+    "contact_id": "seed_buyer_seller_008",
+    "outcome": "reverted",
+    "timestamp": 1770516711.1771302,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "buyer->seller",
+    "contact_id": "seed_buyer_seller_009",
+    "outcome": "successful",
+    "timestamp": 1770309765.8341331,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "buyer->seller",
+    "contact_id": "seed_buyer_seller_010",
+    "outcome": "timeout",
+    "timestamp": 1770424880.2338266,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "buyer->seller",
+    "contact_id": "seed_buyer_seller_011",
+    "outcome": "successful",
+    "timestamp": 1770476129.2743764,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "buyer->seller",
+    "contact_id": "seed_buyer_seller_012",
+    "outcome": "timeout",
+    "timestamp": 1770403678.5218527,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "buyer->seller",
+    "contact_id": "seed_buyer_seller_013",
+    "outcome": "timeout",
+    "timestamp": 1770463876.4973736,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "buyer->seller",
+    "contact_id": "seed_buyer_seller_014",
+    "outcome": "successful",
+    "timestamp": 1770486473.0748975,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "buyer->seller",
+    "contact_id": "seed_buyer_seller_015",
+    "outcome": "timeout",
+    "timestamp": 1770028673.0663104,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "buyer->seller",
+    "contact_id": "seed_buyer_seller_016",
+    "outcome": "successful",
+    "timestamp": 1770288669.199505,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "buyer->seller",
+    "contact_id": "seed_buyer_seller_017",
+    "outcome": "successful",
+    "timestamp": 1770364647.16373,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "buyer->seller",
+    "contact_id": "seed_buyer_seller_018",
+    "outcome": "reverted",
+    "timestamp": 1770439357.1744285,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "buyer->seller",
+    "contact_id": "seed_buyer_seller_019",
+    "outcome": "successful",
+    "timestamp": 1770241040.452178,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "seller->buyer",
+    "contact_id": "seed_seller_buyer_000",
+    "outcome": "successful",
+    "timestamp": 1770141520.218359,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "seller->buyer",
+    "contact_id": "seed_seller_buyer_001",
+    "outcome": "timeout",
+    "timestamp": 1770121001.268876,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "seller->buyer",
+    "contact_id": "seed_seller_buyer_002",
+    "outcome": "successful",
+    "timestamp": 1770296727.149447,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "seller->buyer",
+    "contact_id": "seed_seller_buyer_003",
+    "outcome": "successful",
+    "timestamp": 1770423871.682538,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "seller->buyer",
+    "contact_id": "seed_seller_buyer_004",
+    "outcome": "reverted",
+    "timestamp": 1770000931.2461677,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "seller->buyer",
+    "contact_id": "seed_seller_buyer_005",
+    "outcome": "timeout",
+    "timestamp": 1770166945.987827,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "seller->buyer",
+    "contact_id": "seed_seller_buyer_006",
+    "outcome": "successful",
+    "timestamp": 1770342867.3886826,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "seller->buyer",
+    "contact_id": "seed_seller_buyer_007",
+    "outcome": "successful",
+    "timestamp": 1770358333.2117913,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "seller->buyer",
+    "contact_id": "seed_seller_buyer_008",
+    "outcome": "reverted",
+    "timestamp": 1770510994.59406,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "seller->buyer",
+    "contact_id": "seed_seller_buyer_009",
+    "outcome": "successful",
+    "timestamp": 1770379703.783734,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "seller->buyer",
+    "contact_id": "seed_seller_buyer_010",
+    "outcome": "successful",
+    "timestamp": 1770445004.5414464,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "seller->buyer",
+    "contact_id": "seed_seller_buyer_011",
+    "outcome": "successful",
+    "timestamp": 1770541241.3133028,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "seller->buyer",
+    "contact_id": "seed_seller_buyer_012",
+    "outcome": "successful",
+    "timestamp": 1770445713.940872,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "seller->buyer",
+    "contact_id": "seed_seller_buyer_013",
+    "outcome": "reverted",
+    "timestamp": 1770541323.4065082,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "seller->buyer",
+    "contact_id": "seed_seller_buyer_014",
+    "outcome": "successful",
+    "timestamp": 1770179580.1714075,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "seller->buyer",
+    "contact_id": "seed_seller_buyer_015",
+    "outcome": "successful",
+    "timestamp": 1770504155.7256122,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "seller->buyer",
+    "contact_id": "seed_seller_buyer_016",
+    "outcome": "timeout",
+    "timestamp": 1770235685.12597,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "seller->buyer",
+    "contact_id": "seed_seller_buyer_017",
+    "outcome": "successful",
+    "timestamp": 1770298123.895828,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "seller->buyer",
+    "contact_id": "seed_seller_buyer_018",
+    "outcome": "successful",
+    "timestamp": 1770527129.6900027,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  },
+  {
+    "route": "seller->buyer",
+    "contact_id": "seed_seller_buyer_019",
+    "outcome": "successful",
+    "timestamp": 1770369898.7634475,
+    "metadata": {
+      "seeded": true,
+      "batch": "historical_seed"
+    }
+  }
+]

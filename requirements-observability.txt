@@ -1,0 +1,15 @@
+# =============================================================================
+# OpenTelemetry Observability Dependencies
+# =============================================================================
+# Install with: pip install -r requirements-observability.txt
+# These are optional -- the app runs fine without them (graceful degradation).
+# =============================================================================
+
+opentelemetry-api>=1.22.0
+opentelemetry-sdk>=1.22.0
+opentelemetry-exporter-otlp-proto-grpc>=1.22.0
+opentelemetry-exporter-otlp-proto-http>=1.22.0
+opentelemetry-instrumentation-fastapi>=0.43b0
+opentelemetry-instrumentation-httpx>=0.43b0
+opentelemetry-instrumentation-asyncpg>=0.43b0
+opentelemetry-instrumentation-redis>=0.43b0
