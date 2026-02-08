@@ -1,0 +1,11 @@
+# ==============================================================================
+# EnterpriseHub - Streamlit Cloud Demo Requirements
+# ==============================================================================
+# Minimal dependencies for the portfolio demo (DEMO_MODE=true)
+# Full requirements in requirements.txt (includes DB, Redis, ML, etc.)
+# ==============================================================================
+
+streamlit>=1.41.0
+plotly>=5.18.0
+pandas>=2.0.0
+numpy>=1.24.0
