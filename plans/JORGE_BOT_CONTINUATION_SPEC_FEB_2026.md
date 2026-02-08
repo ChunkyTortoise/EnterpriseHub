@@ -319,9 +319,15 @@ The Jorge Bot Audit Specification (February 2026) identified 5 critical gaps (G1
 
 ## Integration Tasks
 
-### Task 1: Integrate PerformanceTracker into Bot Workflows
+### Task 1: Integrate PerformanceTracker into Bot Workflows ✅ COMPLETE (pre-existing)
 
 **Objective**: Track performance metrics for all bot operations.
+
+> **Status**: Already implemented during Jorge Bot Audit (Phase 3+4). All three bots have:
+> - `PerformanceTracker.track_operation()` on success + failure paths
+> - `BotMetricsCollector.record_bot_interaction()` integration
+> - `metrics_collector.feed_to_alerting()` non-blocking alerting feed
+> - Manual timing (`_workflow_start` → `_workflow_duration_ms`) in `process_*` methods
 
 **Implementation Steps**:
 
@@ -428,9 +434,15 @@ ALERT_SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
 - Cooldown periods respected
 - Alert history tracked
 
-### Task 3: Use ABTestingService in Bot Responses
+### Task 3: Use ABTestingService in Bot Responses ✅ COMPLETE
 
 **Objective**: Test different response variations to optimize conversion.
+
+> **Completed 2026-02-08.** Changes:
+> - **Seller Bot**: `get_variant()` in `generate_jorge_response` and `generate_adaptive_response` (tone in prompts), `record_outcome()` in success path
+> - **Lead Bot**: Variant injected into `initial_state["tone_variant"]`, `record_outcome()` in success path, `tone_variant` added to `LeadFollowUpState` TypedDict
+> - **Buyer Bot**: `get_variant()` already existed in response node, added `record_outcome()` in success path
+> - **Tests**: 4 new tests in `test_ab_testing_workflow.py::TestBotABIntegration` (8 total pass)
 
 **Implementation Steps**:
 

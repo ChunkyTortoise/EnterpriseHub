@@ -496,14 +496,16 @@ class JorgeBuyerBot:
             matches = state.get("matched_properties", [])
             intelligence_context = state.get("intelligence_context")
 
-            # Get A/B test variant for response tone
-            buyer_id = state.get("buyer_id", "unknown")
-            try:
-                tone_variant = await self.ab_testing.get_variant(
-                    ABTestingService.RESPONSE_TONE_EXPERIMENT, buyer_id
-                )
-            except (KeyError, ValueError):
-                tone_variant = "empathetic"
+            # Use A/B test variant from state (assigned in process_buyer_conversation)
+            tone_variant = state.get("tone_variant")
+            if not tone_variant:
+                buyer_id = state.get("buyer_id", "unknown")
+                try:
+                    tone_variant = await self.ab_testing.get_variant(
+                        ABTestingService.RESPONSE_TONE_EXPERIMENT, buyer_id
+                    )
+                except (KeyError, ValueError):
+                    tone_variant = "empathetic"
 
             # Base prompt for buyer consultation
             buyer_temp = getattr(profile, "buyer_temperature", "cold") if profile else "cold"
@@ -1092,6 +1094,14 @@ class JorgeBuyerBot:
             if len(conversation_history) > self.MAX_CONVERSATION_HISTORY:
                 conversation_history = conversation_history[-self.MAX_CONVERSATION_HISTORY:]
 
+            # Get A/B test variant for response tone (before workflow)
+            try:
+                _tone_variant = await self.ab_testing.get_variant(
+                    ABTestingService.RESPONSE_TONE_EXPERIMENT, conversation_id
+                )
+            except (KeyError, ValueError):
+                _tone_variant = "empathetic"
+
             initial_state = {
                 "buyer_id": conversation_id,
                 "buyer_name": buyer_name or f"Buyer {conversation_id}",
@@ -1115,6 +1125,7 @@ class JorgeBuyerBot:
                 "properties_viewed_count": 0,
                 "last_action_timestamp": None,
                 "user_message": user_message,
+                "tone_variant": _tone_variant,
                 "intelligence_context": None,
                 "intelligence_performance_ms": 0.0,
             }
@@ -1167,6 +1178,23 @@ class JorgeBuyerBot:
                 self.metrics_collector.feed_to_alerting(self.alerting_service)
             except Exception:
                 pass
+
+            # Record A/B test outcome (reuse variant from pre-workflow assignment)
+            try:
+                await self.ab_testing.record_outcome(
+                    ABTestingService.RESPONSE_TONE_EXPERIMENT,
+                    conversation_id,
+                    _tone_variant,
+                    "response",
+                )
+            except (KeyError, ValueError):
+                pass
+
+            # Tag response with A/B experiment metadata
+            result["ab_test"] = {
+                "experiment_id": ABTestingService.RESPONSE_TONE_EXPERIMENT,
+                "variant": _tone_variant,
+            }
 
             await self.event_publisher.publish_bot_status_update(
                 bot_type="jorge-buyer",

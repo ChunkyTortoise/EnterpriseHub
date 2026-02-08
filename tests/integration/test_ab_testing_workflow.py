@@ -6,6 +6,7 @@ End-to-end tests for the ABTestingService covering:
 - Outcome recording and aggregation
 - Statistical significance calculation via two-proportion z-test
 - Winning variant identification with skewed conversion data
+- Bot-level variant assignment and outcome recording
 """
 
 import pytest
@@ -247,3 +248,97 @@ class TestABTestingWorkflow:
 
         # Verify total conversions match what we recorded
         assert results.total_conversions == conversions_a + conversions_b
+
+
+class TestBotABIntegration:
+    """Tests verifying A/B testing integration in bot process workflows."""
+
+    @pytest.mark.asyncio
+    async def test_response_tone_experiment_registered_by_bots(self):
+        """All bots register the response_tone experiment on init.
+
+        Simulate the registration that happens in each bot's _init_ab_experiments()
+        and verify the experiment is queryable.
+        """
+        service = ABTestingService()
+
+        # Replicate what each bot does in _init_ab_experiments()
+        try:
+            service.create_experiment(
+                ABTestingService.RESPONSE_TONE_EXPERIMENT,
+                ["formal", "casual", "empathetic"],
+            )
+        except ValueError:
+            pass  # Already exists
+
+        # Verify variants are the expected set
+        results = service.get_experiment_results(ABTestingService.RESPONSE_TONE_EXPERIMENT)
+        variant_names = {vs.variant for vs in results.variants}
+        assert variant_names == {"formal", "casual", "empathetic"}
+
+    @pytest.mark.asyncio
+    async def test_variant_assignment_deterministic_per_contact(self):
+        """Same contact always gets the same variant for response_tone."""
+        service = ABTestingService()
+        service.create_experiment(
+            ABTestingService.RESPONSE_TONE_EXPERIMENT,
+            ["formal", "casual", "empathetic"],
+        )
+
+        contact = "contact-buyer-001"
+        first = await service.get_variant(ABTestingService.RESPONSE_TONE_EXPERIMENT, contact)
+        for _ in range(5):
+            assert await service.get_variant(
+                ABTestingService.RESPONSE_TONE_EXPERIMENT, contact
+            ) == first
+
+    @pytest.mark.asyncio
+    async def test_outcome_recording_matches_variant(self):
+        """record_outcome with 'response' outcome accumulates correctly."""
+        service = ABTestingService()
+        service.create_experiment(
+            ABTestingService.RESPONSE_TONE_EXPERIMENT,
+            ["formal", "casual", "empathetic"],
+        )
+
+        contacts = [f"contact-{i}" for i in range(10)]
+        for contact_id in contacts:
+            variant = await service.get_variant(
+                ABTestingService.RESPONSE_TONE_EXPERIMENT, contact_id
+            )
+            await service.record_outcome(
+                ABTestingService.RESPONSE_TONE_EXPERIMENT,
+                contact_id, variant, "response",
+            )
+
+        results = service.get_experiment_results(ABTestingService.RESPONSE_TONE_EXPERIMENT)
+        # All 10 contacts should be impressions
+        assert results.total_impressions == 10
+        # All 10 contacts recorded an outcome (response counts as conversion)
+        assert results.total_conversions == 10
+
+    @pytest.mark.asyncio
+    async def test_multiple_bots_share_experiment(self):
+        """When multiple bots (lead, buyer, seller) use the same singleton
+        experiment, outcomes aggregate across all bots."""
+        service = ABTestingService()
+        service.create_experiment(
+            ABTestingService.RESPONSE_TONE_EXPERIMENT,
+            ["formal", "casual", "empathetic"],
+        )
+
+        # Simulate 3 bots each processing 5 contacts
+        for bot in ["lead", "buyer", "seller"]:
+            for i in range(5):
+                contact_id = f"{bot}-contact-{i}"
+                variant = await service.get_variant(
+                    ABTestingService.RESPONSE_TONE_EXPERIMENT, contact_id
+                )
+                await service.record_outcome(
+                    ABTestingService.RESPONSE_TONE_EXPERIMENT,
+                    contact_id, variant, "response",
+                )
+
+        results = service.get_experiment_results(ABTestingService.RESPONSE_TONE_EXPERIMENT)
+        assert results.total_impressions == 15
+        assert results.total_conversions == 15

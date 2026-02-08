@@ -37,6 +37,9 @@ class LeadFollowUpState(TypedDict):
     intelligence_context: Optional[Any]  # BotIntelligenceContext
     intelligence_performance_ms: Optional[float]
 
+    # A/B testing
+    tone_variant: Optional[str]  # A/B experiment variant: "formal", "casual", "empathetic"
+
     # Enhanced nurture fields for intelligence-driven optimization
     preferred_engagement_timing: Optional[List[int]]  # Hours of day when lead is most responsive
     churn_risk_score: Optional[float]  # 0-1 risk of lead disengagement
