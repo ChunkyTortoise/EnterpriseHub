@@ -735,3 +735,17 @@ timestamp,model,provider,task_type,input_tokens,output_tokens,cache_creation_inp
 2026-02-03T07:33:50.943263,claude-3-5-haiku-20241022,claude,general,334,328,0,0,662,0.005922,N/A,system,False
 2026-02-03T07:34:00.680070,claude-3-5-haiku-20241022,claude,general,316,266,0,0,582,0.004938,N/A,system,False
 2026-02-03T07:34:00.680618,claude-3-5-haiku-20241022,claude,general,316,266,0,0,582,0.004938,N/A,system,False
+2026-02-08T01:37:05.409270,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
+2026-02-08T01:37:05.409762,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
+2026-02-08T01:37:05.422025,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
+2026-02-08T01:37:05.422122,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
+2026-02-08T01:37:05.428213,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
+2026-02-08T01:37:05.428483,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
+2026-02-08T01:37:05.435712,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
+2026-02-08T01:37:05.435829,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
+2026-02-08T01:37:07.473292,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
+2026-02-08T01:37:07.473380,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
+2026-02-08T01:37:07.484998,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
+2026-02-08T01:37:07.485080,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
+2026-02-08T01:37:07.499819,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
+2026-02-08T01:37:07.499898,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
