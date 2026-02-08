@@ -32,7 +32,10 @@ from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
 from ghl_real_estate_ai.services.jorge.ab_testing_service import ABTestingService
 
 # Track 3.1 Predictive Intelligence Integration
-from bots.shared.ml_analytics_engine import MLAnalyticsEngine, get_ml_analytics_engine
+try:
+    from bots.shared.ml_analytics_engine import MLAnalyticsEngine, get_ml_analytics_engine
+except ImportError:
+    from ghl_real_estate_ai.stubs.bots_stub import MLAnalyticsEngine, get_ml_analytics_engine
 
 # Phase 3.3 Bot Intelligence Middleware Integration
 try:

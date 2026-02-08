@@ -29,7 +29,10 @@ from collections import defaultdict, deque
 # Core service imports
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
-from bots.shared.ml_analytics_engine import get_ml_analytics_engine
+try:
+    from bots.shared.ml_analytics_engine import get_ml_analytics_engine
+except ImportError:
+    from ghl_real_estate_ai.stubs.bots_stub import get_ml_analytics_engine
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)

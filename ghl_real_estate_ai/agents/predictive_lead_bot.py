@@ -19,12 +19,20 @@ from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 # Track 3.1 Integration
-from bots.shared.ml_analytics_engine import (
-    MLAnalyticsEngine,
-    LeadJourneyPrediction,
-    ConversionProbabilityAnalysis,
-    TouchpointOptimization
-)
+try:
+    from bots.shared.ml_analytics_engine import (
+        MLAnalyticsEngine,
+        LeadJourneyPrediction,
+        ConversionProbabilityAnalysis,
+        TouchpointOptimization,
+    )
+except ImportError:
+    from ghl_real_estate_ai.stubs.bots_stub import (
+        MLAnalyticsEngine,
+        LeadJourneyPrediction,
+        ConversionProbabilityAnalysis,
+        TouchpointOptimization,
+    )
 
 logger = get_logger(__name__)
 
