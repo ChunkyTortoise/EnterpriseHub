@@ -26,6 +26,10 @@ from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
+from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
+from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
+from ghl_real_estate_ai.services.jorge.ab_testing_service import ABTestingService
 
 # Track 3.1 Predictive Intelligence Integration
 from bots.shared.ml_analytics_engine import MLAnalyticsEngine, get_ml_analytics_engine
@@ -302,6 +306,13 @@ class JorgeSellerBot:
         elif self.config.enable_bot_intelligence:
             logger.warning("Jorge bot: Bot Intelligence requested but dependencies not available")
 
+        # Monitoring services (singletons — cheap to instantiate)
+        self.performance_tracker = PerformanceTracker()
+        self.metrics_collector = BotMetricsCollector()
+        self.alerting_service = AlertingService()
+        self.ab_testing = ABTestingService()
+        self._init_ab_experiments()
+
         # Performance tracking
         self.workflow_stats = {
             "total_interactions": 0,
@@ -316,6 +327,16 @@ class JorgeSellerBot:
 
         # Build appropriate workflow based on enabled features
         self.workflow = self._build_unified_graph()
+
+    def _init_ab_experiments(self) -> None:
+        """Create default A/B experiments if not already registered."""
+        try:
+            self.ab_testing.create_experiment(
+                ABTestingService.RESPONSE_TONE_EXPERIMENT,
+                ["formal", "casual", "empathetic"],
+            )
+        except ValueError:
+            pass  # Already exists
 
     def _build_unified_graph(self) -> StateGraph:
         """Build workflow graph based on enabled features"""
@@ -1487,6 +1508,8 @@ class JorgeSellerBot:
         metadata: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         try:
+            _workflow_start = time.time()
+
             if conversation_history is None:
                 conversation_history = []
 
@@ -1523,6 +1546,8 @@ class JorgeSellerBot:
 
             result = await self.workflow.ainvoke(initial_state)
 
+            _workflow_duration_ms = (time.time() - _workflow_start) * 1000
+
             self.workflow_stats["total_interactions"] += 1
 
             handoff_signals = {}
@@ -1536,6 +1561,20 @@ class JorgeSellerBot:
             if intent_profile:
                 frs_score = getattr(getattr(intent_profile, "frs", None), "total_score", 0.0)
                 pcs_score = getattr(getattr(intent_profile, "pcs", None), "total_score", 0.0)
+
+            # Record performance metrics
+            await self.performance_tracker.track_operation(
+                "seller_bot", "process", _workflow_duration_ms, success=True
+            )
+            self.metrics_collector.record_bot_interaction(
+                "seller", duration_ms=_workflow_duration_ms, success=True
+            )
+
+            # Feed metrics to alerting (non-blocking)
+            try:
+                self.metrics_collector.feed_to_alerting(self.alerting_service)
+            except Exception:
+                pass
 
             await self.event_publisher.publish_bot_status_update(
                 bot_type="seller-bot",
@@ -1555,6 +1594,18 @@ class JorgeSellerBot:
             }
 
         except Exception as e:
+            # Record failure metrics
+            try:
+                _fail_duration = (time.time() - _workflow_start) * 1000
+                await self.performance_tracker.track_operation(
+                    "seller_bot", "process", _fail_duration, success=False
+                )
+                self.metrics_collector.record_bot_interaction(
+                    "seller", duration_ms=_fail_duration, success=False
+                )
+            except Exception:
+                pass
+
             logger.error(f"Error processing seller message for {conversation_id}: {str(e)}")
             return {
                 "response_content": "Thanks for reaching out! I'd love to help you with your property. Could you tell me more about what you're looking for?",
