@@ -142,9 +142,27 @@ async def demo_bots():
     """Active bot instances and today's conversation counts. No auth required."""
     return {
         "bots": [
-            {"name": "Jorge Lead Bot", "type": "lead", "status": "active", "uptime_hours": 72.3, "conversations_today": 47},
-            {"name": "Jorge Buyer Bot", "type": "buyer", "status": "active", "uptime_hours": 72.3, "conversations_today": 31},
-            {"name": "Jorge Seller Bot", "type": "seller", "status": "active", "uptime_hours": 72.3, "conversations_today": 18},
+            {
+                "name": "Jorge Lead Bot",
+                "type": "lead",
+                "status": "active",
+                "uptime_hours": 72.3,
+                "conversations_today": 47,
+            },
+            {
+                "name": "Jorge Buyer Bot",
+                "type": "buyer",
+                "status": "active",
+                "uptime_hours": 72.3,
+                "conversations_today": 31,
+            },
+            {
+                "name": "Jorge Seller Bot",
+                "type": "seller",
+                "status": "active",
+                "uptime_hours": 72.3,
+                "conversations_today": 18,
+            },
         ],
         "total_conversations_today": 96,
     }
