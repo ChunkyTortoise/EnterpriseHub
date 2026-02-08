@@ -132,7 +132,9 @@ class AlertChannelConfig:
             smtp_host=os.getenv("ALERT_EMAIL_SMTP_HOST", os.getenv("ALERT_SMTP_HOST", "localhost")),
             smtp_port=int(os.getenv("ALERT_EMAIL_SMTP_PORT", os.getenv("ALERT_SMTP_PORT", "587"))),
             smtp_user=os.getenv("ALERT_EMAIL_SMTP_USER", os.getenv("ALERT_SMTP_USER", "")),
-            smtp_password=os.getenv("ALERT_EMAIL_SMTP_PASSWORD", os.getenv("ALERT_SMTP_PASSWORD", "")),
+            smtp_password=os.getenv(
+                "ALERT_EMAIL_SMTP_PASSWORD", os.getenv("ALERT_SMTP_PASSWORD", ""),
+            ),
             email_from=os.getenv("ALERT_EMAIL_FROM", "alerts@enterprisehub.com"),
             email_to=[e.strip() for e in to_emails.split(",") if e.strip()],
             smtp_use_tls=os.getenv("ALERT_EMAIL_SMTP_USE_TLS", "true").lower() == "true",
@@ -217,7 +219,7 @@ class EscalationPolicy:
                 continue
             level = self.get_escalation_level(alert)
             if level >= 2:
-                lvl_cfg = next((l for l in self.levels if l.level == level), None)
+                lvl_cfg = next((lv for lv in self.levels if lv.level == level), None)
                 if lvl_cfg:
                     results.append((alert, lvl_cfg))
         return results
@@ -563,66 +565,49 @@ class AlertingService:
     async def _send_email_alert(self, alert: Alert) -> None:
         """Send alert via email (SMTP).
 
-        Args:
-            alert: The Alert object to send.
-
-        Raises:
-            Exception: If email sending fails.
+        Uses ``channel_config`` for SMTP settings. Silently skips if no
+        recipients are configured.
         """
-        import os
-
-        smtp_host = os.getenv("ALERT_SMTP_HOST", "localhost")
-        smtp_port = int(os.getenv("ALERT_SMTP_PORT", "587"))
-        smtp_user = os.getenv("ALERT_SMTP_USER", "")
-        smtp_password = os.getenv("ALERT_SMTP_PASSWORD", "")
-        from_email = os.getenv("ALERT_EMAIL_FROM", "alerts@enterprisehub.com")
-        to_emails = os.getenv("ALERT_EMAIL_TO", "").split(",")
-
-        if not to_emails or not to_emails[0]:
+        cfg = self.channel_config
+        if not cfg.email_to:
             logger.warning("No email recipients configured, skipping email alert")
             return
 
-        # Create message
         msg = MIMEMultipart()
-        msg["From"] = from_email
-        msg["To"] = ", ".join(to_emails)
+        msg["From"] = cfg.email_from
+        msg["To"] = ", ".join(cfg.email_to)
         msg["Subject"] = f"[{alert.severity.upper()}] Jorge Bot Alert: {alert.rule_name}"
+        msg.attach(MIMEText(alert.message, "plain"))
 
-        # Add body
-        body = alert.message
-        msg.attach(MIMEText(body, "plain"))
-
-        # Send via SMTP
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
-            if smtp_user and smtp_password:
-                server.starttls()
-                server.login(smtp_user, smtp_password)
+        with smtplib.SMTP(cfg.smtp_host, cfg.smtp_port) as server:
+            if cfg.smtp_user and cfg.smtp_password:
+                if cfg.smtp_use_tls:
+                    server.starttls()
+                server.login(cfg.smtp_user, cfg.smtp_password)
             server.send_message(msg)
 
     async def _send_slack_alert(self, alert: Alert) -> None:
         """Send alert via Slack webhook.
 
-        Args:
-            alert: The Alert object to send.
-
-        Raises:
-            Exception: If Slack webhook fails.
+        Uses ``channel_config`` for webhook URL and formatting. Silently
+        skips if no webhook URL is configured.
         """
-        import os
-
-        webhook_url = os.getenv("ALERT_SLACK_WEBHOOK_URL")
+        cfg = self.channel_config
+        webhook_url = cfg.slack_webhook_url
         if not webhook_url:
             logger.warning("Slack webhook URL not configured, skipping Slack alert")
             return
 
-        # Format message for Slack
         color = {
             "critical": "danger",
             "warning": "warning",
-            "info": "good"
+            "info": "good",
         }.get(alert.severity, "warning")
 
         payload = {
+            "channel": cfg.slack_channel,
+            "username": cfg.slack_username,
+            "icon_emoji": cfg.slack_icon_emoji,
             "attachments": [
                 {
                     "color": color,
@@ -631,7 +616,7 @@ class AlertingService:
                     "footer": f"Alert ID: {alert.id}",
                     "ts": int(alert.triggered_at),
                 }
-            ]
+            ],
         }
 
         async with aiohttp.ClientSession() as session:
@@ -639,22 +624,27 @@ class AlertingService:
                 response.raise_for_status()
 
     async def _send_webhook_alert(self, alert: Alert) -> None:
-        """Send alert via custom webhook (e.g., PagerDuty, Opsgenie).
+        """Send alert via generic webhook.
 
-        Args:
-            alert: The Alert object to send.
-
-        Raises:
-            Exception: If webhook fails.
+        Falls back to ``channel_config.webhook_url`` when PagerDuty and
+        Opsgenie are not configured. Silently skips if no URL is available.
         """
-        import os
+        cfg = self.channel_config
 
-        webhook_url = os.getenv("ALERT_WEBHOOK_URL")
+        # Try PagerDuty first, then Opsgenie, then generic webhook
+        if cfg.pagerduty_url and cfg.pagerduty_api_key:
+            await self._send_pagerduty_alert(alert)
+            return
+
+        if cfg.opsgenie_url and cfg.opsgenie_api_key:
+            await self._send_opsgenie_alert(alert)
+            return
+
+        webhook_url = cfg.webhook_url
         if not webhook_url:
             logger.warning("Webhook URL not configured, skipping webhook alert")
             return
 
-        # Format payload
         payload = {
             "alert_id": alert.id,
             "rule_name": alert.rule_name,
@@ -664,9 +654,69 @@ class AlertingService:
             "performance_stats": alert.performance_stats,
         }
 
+        headers = dict(cfg.webhook_headers)
         async with aiohttp.ClientSession() as session:
-            async with session.post(webhook_url, json=payload) as response:
+            async with session.post(webhook_url, json=payload, headers=headers) as response:
                 response.raise_for_status()
+
+    async def _send_pagerduty_alert(self, alert: Alert) -> None:
+        """Send alert via PagerDuty Events API v2.
+
+        Formats the alert as a PagerDuty ``trigger`` event with severity
+        mapped to PD severity levels (critical/warning/info).
+        """
+        cfg = self.channel_config
+        severity_map = {"critical": "critical", "warning": "warning", "info": "info"}
+        payload = {
+            "routing_key": cfg.pagerduty_api_key,
+            "event_action": "trigger",
+            "dedup_key": f"jorge-{alert.rule_name}-{alert.id}",
+            "payload": {
+                "summary": f"[Jorge Bot] {alert.rule_name}: {alert.message[:255]}",
+                "severity": severity_map.get(alert.severity, "warning"),
+                "source": "jorge-bot-alerting",
+                "component": alert.rule_name,
+                "group": "jorge-bots",
+                "class": alert.severity,
+                "custom_details": alert.performance_stats,
+            },
+        }
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(cfg.pagerduty_url, json=payload) as response:
+                response.raise_for_status()
+
+        logger.info(
+            "PagerDuty alert sent for %s (dedup_key=%s)", alert.rule_name, payload["dedup_key"],
+        )
+
+    async def _send_opsgenie_alert(self, alert: Alert) -> None:
+        """Send alert via Opsgenie Alerts API.
+
+        Formats the alert with Opsgenie priority mapping:
+        critical → P1, warning → P3, info → P5.
+        """
+        cfg = self.channel_config
+        priority_map = {"critical": "P1", "warning": "P3", "info": "P5"}
+        payload = {
+            "message": f"[Jorge Bot] {alert.rule_name}",
+            "alias": f"jorge-{alert.rule_name}-{alert.id}",
+            "description": alert.message,
+            "priority": priority_map.get(alert.severity, "P3"),
+            "source": "jorge-bot-alerting",
+            "tags": ["jorge", alert.severity, alert.rule_name],
+            "details": alert.performance_stats,
+        }
+        headers = {
+            "Authorization": f"GenieKey {cfg.opsgenie_api_key}",
+            "Content-Type": "application/json",
+        }
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(cfg.opsgenie_url, json=payload, headers=headers) as response:
+                response.raise_for_status()
+
+        logger.info("Opsgenie alert sent for %s (alias=%s)", alert.rule_name, payload["alias"])
 
     # ── Alert History ─────────────────────────────────────────────────
 
@@ -728,6 +778,17 @@ class AlertingService:
         await asyncio.gather(*send_tasks, return_exceptions=True)
 
         return alerts
+
+    # ── Escalation ─────────────────────────────────────────────────────
+
+    async def check_escalations(self) -> List[Tuple[Alert, EscalationLevel]]:
+        """Return unacknowledged critical alerts needing escalation.
+
+        Returns:
+            List of (Alert, EscalationLevel) tuples for alerts at level >= 2.
+        """
+        active = await self.get_active_alerts()
+        return self.escalation_policy.get_pending_escalations(active)
 
     # ── Testing Support ───────────────────────────────────────────────
 
