@@ -7,6 +7,7 @@
 [![Tests](https://img.shields.io/badge/tests-4,467_passing-brightgreen)](tests/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-F1C40F.svg)](LICENSE)
+[![Demo](https://img.shields.io/badge/demo-live-FF4B4B.svg?logo=streamlit&logoColor=white)](https://ct-enterprise-ai.streamlit.app)
 
 ![Platform Overview](assets/screenshots/platform-overview.png)
 

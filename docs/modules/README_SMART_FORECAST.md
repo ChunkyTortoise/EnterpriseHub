@@ -2,7 +2,7 @@
 
 > **AI-Powered Time Series Forecasting** - Predict future asset prices using Machine Learning
 
-[![Status](https://img.shields.io/badge/Status-Active-success)](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)
+[![Status](https://img.shields.io/badge/Status-Active-success)](https://ct-enterprise-ai.streamlit.app/)
 [![License](https://img.shields.io/badge/License-MIT-blue)](../LICENSE)
 
 ---

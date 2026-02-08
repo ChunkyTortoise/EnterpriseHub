@@ -80,7 +80,7 @@ Each template includes:
 
 ### Step 3: Input Your Numbers
 Copy the template inputs to the **Margin Hunter** module:
-- Go to [Live Demo](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)
+- Go to [Live Demo](https://ct-enterprise-ai.streamlit.app/)
 - Navigate to **💰 Margin Hunter**
 - Enter your actual numbers (or use template values to explore)
 
@@ -149,7 +149,7 @@ Test the impact of cost reductions:
 ## 🔗 Additional Resources
 
 - **[Margin Hunter Full Documentation](../modules/README_MARGIN_HUNTER.md)** - Complete feature guide
-- **[Live Demo](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)** - Try Margin Hunter now
+- **[Live Demo](https://ct-enterprise-ai.streamlit.app/)** - Try Margin Hunter now
 - **[GitHub Issues](https://github.com/ChunkyTortoise/enterprise-hub/issues)** - Report bugs or request new templates
 
 ---
