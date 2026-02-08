@@ -27,11 +27,11 @@ Comprehensive system architecture documentation covering:
 ## 📖 Other Documentation
 
 ### User Documentation
-Located in the repository root:
+Located in repository root:
 
 - **[README.md](../README.md)** - Main project documentation, quickstart, features
-- **[FAQ.md](../FAQ.md)** - Frequently asked questions
-- **[Deploy.md](../Deploy.md)** - Deployment guide for various platforms
+- **[docs/case_studies.md](case_studies.md)** - Case studies and success stories
+- **[docs/DEPLOYMENT.md](DEPLOYMENT.md)** - Deployment guide for various platforms
 
 ### Contributor Documentation
 - **[CONTRIBUTING.md](../CONTRIBUTING.md)** - Contribution guidelines
@@ -52,7 +52,6 @@ Located in `modules/`:
 ### Handoffs & Reports
 Located in `docs/handoffs/` and `docs/reports/`:
 - **[HANDOFF_CLEANUP_SESSION.md](handoffs/HANDOFF_CLEANUP_SESSION.md)** - Summary of cleanup and optimization (Dec 31, 2025)
-- **PHASE5_DEPLOYMENT_GUIDE.md** - Go-to-market playbook
 
 ### Scenario Templates
 Located in `scenarios/`:
@@ -62,8 +61,7 @@ Located in `scenarios/`:
 
 ### Portfolio & Demo
 Located in `assets/`:
-- **DEMO-VIDEO-INSTRUCTIONS.md** - Video recording guide
-- **SCREENSHOT-INSTRUCTIONS.md** - Screenshot specifications
+- **[assets/screenshots/README.md](../assets/screenshots/README.md)** - Screenshot guidelines and documentation
 
 ---
 
@@ -84,7 +82,7 @@ Found a typo? Missing information? Want to improve clarity?
 
 1. **Small fixes**: Edit directly and submit a PR
 2. **Large changes**: Open an issue first to discuss
-3. **New pages**: Follow the structure of existing docs
+3. **New pages**: Follows structure of existing docs
 4. **Style guide**: Clear, concise, actionable
 
 See [CONTRIBUTING.md](../CONTRIBUTING.md) for detailed guidelines.
@@ -128,10 +126,10 @@ Future documentation to be added:
 
 ## 📞 Questions?
 
-- **General questions**: See [FAQ.md](../FAQ.md)
-- **Technical questions**: Open a [GitHub Discussion](https://github.com/ChunkyTortoise/enterprise-hub/discussions)
-- **Bug reports**: Open a [GitHub Issue](https://github.com/ChunkyTortoise/enterprise-hub/issues)
+- **General questions**: See [README.md](../README.md)
+- **Technical questions**: Open a [GitHub Discussion](https://github.com/ChunkyTortoise/EnterpriseHub/discussions)
+- **Bug reports**: Open a [GitHub Issue](https://github.com/ChunkyTortoise/EnterpriseHub/issues)
 
 ---
 
-Last Updated: December 6, 2025
+Last Updated: February 8, 2026

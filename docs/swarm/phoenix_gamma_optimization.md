@@ -137,7 +137,7 @@ A production-grade business intelligence platform consolidating 9 mission-critic
 
 **The agent that builds itself out of a job.**
 
-> [Watch ARETE Deploy a Stripe Integration in 19 Minutes](link-to-demo) 
+> [Watch ARETE Deploy a Stripe Integration in 19 Minutes](https://ct-enterprise-ai.streamlit.app) 
 
 ---
 
@@ -262,7 +262,7 @@ Merge → Decision Logging → Pattern Learning → Self-Improvement
 
 **Live Demo:** [ct-enterprise-ai.streamlit.app](https://ct-enterprise-ai.streamlit.app)
 
-**GitHub:** [github.com/yourusername/EnterpriseHub](link)
+**GitHub:** [github.com/ChunkyTortoise/EnterpriseHub](https://github.com/ChunkyTortoise/EnterpriseHub)
 
 **Key Metrics:**
 - 12 production modules built with ARETE assistance

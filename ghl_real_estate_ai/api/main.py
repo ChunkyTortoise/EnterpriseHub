@@ -119,6 +119,7 @@ from ghl_real_estate_ai.api.routes import (
 from ghl_real_estate_ai.api.socketio_app import integrate_socketio_with_fastapi
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.observability import setup_observability
 from ghl_real_estate_ai.services.coordination_engine import get_coordination_engine
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.system_health_monitor import (
@@ -157,6 +158,11 @@ async def lifespan(app: FastAPI):
         f"Starting {settings.app_name} v{settings.version}",
         extra={"environment": settings.environment, "model": settings.claude_model},
     )
+
+    # Initialize OpenTelemetry (reads from OTEL_ENABLED env var)
+    otel_ok = setup_observability()
+    if otel_ok:
+        logger.info("OpenTelemetry tracing initialized successfully")
 
     # Auto-register primary tenant from environment variables
     if settings.ghl_location_id and settings.ghl_api_key:
@@ -414,6 +420,7 @@ def _verify_admin_api_key():
 
 def _setup_routers(app: FastAPI):
     """Initialize all routers for the application."""
+    from ghl_real_estate_ai.api.jorge_alerting import router as jorge_alerting_router
     from ghl_real_estate_ai.api.routes import claude_concierge, demo
 
     admin_guard = _verify_admin_api_key()
@@ -488,6 +495,7 @@ def _setup_routers(app: FastAPI):
     app.include_router(attribution_reports.router, prefix="/api")
     app.include_router(jorge_advanced.router, prefix="/api")
     app.include_router(jorge_followup.router, prefix="/api")
+    app.include_router(jorge_alerting_router, prefix="/api")
     app.include_router(reports.router, prefix="/api")
     app.include_router(retell_webhook.router, prefix="/api")
     app.include_router(vapi.router, prefix="/api")
