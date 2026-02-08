@@ -273,6 +273,31 @@ BOT_METRICS_RETENTION_DAYS=7
 - ✅ Alerts fire within 30 seconds of threshold breach (test_check_and_send_fires_within_30_seconds)
 - ✅ Escalation policy documented and tested
 
+### Documentation & Runbook ✅ COMPLETE
+
+**Objective**: Create on-call runbook, performance baseline report, and update deployment documentation.
+
+**Status**: ✅ COMPLETE (February 8, 2026)
+
+**Deliverables**:
+- ✅ On-call runbook: `ghl_real_estate_ai/docs/JORGE_BOT_ON_CALL_RUNBOOK.md`
+  - Troubleshooting procedures for all 7 alert rules
+  - Escalation policy quick reference
+  - Alert acknowledgment procedures
+  - Post-incident checklist
+  - Environment variable quick reference
+- ✅ Performance baseline report: `ghl_real_estate_ai/docs/JORGE_BOT_PERFORMANCE_BASELINE_FEB_2026.md`
+  - SLA targets and baseline measurements
+  - Headroom analysis (>50% unused at every percentile)
+  - Test suite summary (38 tests across 4 files)
+  - Regression detection methodology
+  - Production monitoring instructions
+- ✅ Deployment checklist updated: `ghl_real_estate_ai/docs/JORGE_BOT_DEPLOYMENT_CHECKLIST.md` (v8.3)
+  - Performance baselines filled in with actual values
+  - Monitoring setup items checked (alert rules, escalation policy)
+  - Cross-references to runbook and baseline report added
+  - Troubleshooting section expanded
+
 ---
 
 ## Technical Debt
@@ -806,19 +831,19 @@ class TestABTestingWorkflow:
 #### Monitoring & Alerting
 
 - [ ] Grafana dashboards configured
-- [ ] Alert rules configured in AlertingService
-- [ ] Alert channels tested (email, Slack, webhook)
+- [x] Alert rules configured in AlertingService (7 rules — P5)
+- [x] Alert channels tested (email, Slack, webhook — P5, 60 tests)
 - [ ] On-call rotation established
-- [ ] Escalation policy documented
-- [ ] Runbook created for common issues
+- [x] Escalation policy documented (3-level — P5 + Runbook)
+- [x] Runbook created for common issues (`JORGE_BOT_ON_CALL_RUNBOOK.md`)
 
 #### Documentation
 
-- [ ] API documentation updated
-- [ ] Deployment guide updated
-- [ ] Onboarding documentation updated
-- [ ] Troubleshooting guide created
-- [ ] Runbook created
+- [x] API documentation updated (`JORGE_BOT_INTEGRATION_GUIDE.md`)
+- [x] Deployment guide updated (`JORGE_BOT_DEPLOYMENT_CHECKLIST.md` v8.3)
+- [x] Onboarding documentation updated (Integration Guide covers all APIs)
+- [x] Troubleshooting guide created (On-Call Runbook, 7 alert procedures)
+- [x] Runbook created (`JORGE_BOT_ON_CALL_RUNBOOK.md`)
 
 ### Deployment Steps
 
