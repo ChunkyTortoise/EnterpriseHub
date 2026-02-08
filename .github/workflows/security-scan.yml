@@ -1,0 +1,258 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/*.py'
+      - 'requirements*.txt'
+      - 'docker-compose*.yml'
+      - '.github/workflows/security-scan.yml'
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly on Monday at 2 AM UTC
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  secrets-detection:
+    name: Secrets Detection
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan for hardcoded credentials
+        run: |
+          # Scan Python source files for potential secrets (exclude tests, archives, vendor code)
+          FOUND=0
+          if grep -r -E "(API_KEY|SECRET|PASSWORD|TOKEN)\s*=\s*['\"][^'\"]{10,}['\"]" \
+              --include="*.py" \
+              --exclude-dir=.git \
+              --exclude-dir=_archive \
+              --exclude-dir=auto-claude \
+              --exclude-dir=tests \
+              --exclude-dir=__pycache__ \
+              --exclude-dir=venv \
+              --exclude-dir=.claude \
+              . | grep -v "\.example" | grep -v "test_" | grep -v "your_.*_here" | grep -v '""' | grep -v "None"; then
+            FOUND=1
+          fi
+
+          # Check for known secret prefixes in source code
+          if grep -r -E "(sk-ant-|AKIA[0-9A-Z]{16}|ghp_[a-zA-Z0-9]{36})" \
+              --include="*.py" \
+              --exclude-dir=.git \
+              --exclude-dir=_archive \
+              --exclude-dir=auto-claude \
+              --exclude-dir=tests \
+              .; then
+            FOUND=1
+          fi
+
+          if [ "$FOUND" -eq 1 ]; then
+            echo "::error::Potential secrets detected in source code"
+            exit 1
+          fi
+
+          echo "No secrets detected"
+
+  python-security:
+    name: Static Security Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Run Bandit
+        run: |
+          pip install bandit[toml]
+          bandit -r ghl_real_estate_ai/ -f json -o bandit-report.json \
+            -s B101 \
+            --exclude "*/tests/*" || true
+          bandit -r ghl_real_estate_ai/ -s B101 --exclude "*/tests/*"
+
+      - name: Upload Bandit report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bandit-report
+          path: bandit-report.json
+
+  dependency-audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Audit Python dependencies
+        run: |
+          pip install pip-audit
+          pip install -r requirements.txt
+          pip-audit --format json --output pip-audit-report.json || true
+          pip-audit || echo "Vulnerabilities found — review required"
+
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-audit
+          path: pip-audit-report.json
+
+  sql-injection-check:
+    name: SQL Injection Detection
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for SQL injection patterns
+        run: |
+          cat > /tmp/check_sql.py << 'PYEOF'
+          """Check for potential SQL injection vulnerabilities."""
+          import re
+          from pathlib import Path
+
+          dangerous_patterns = [
+              (r'execute\([^)]*%[^)]*\)', "String formatting in execute()"),
+              (r'\.format\([^)]*\).*execute', "format() with execute()"),
+              (r'f["\'].*\{.*\}.*["\'].*execute', "f-string with execute()"),
+          ]
+
+          issues = []
+          for py_file in Path('ghl_real_estate_ai').rglob('*.py'):
+              if 'test_' in py_file.name or '__pycache__' in str(py_file):
+                  continue
+              try:
+                  content = py_file.read_text()
+                  for pattern, desc in dangerous_patterns:
+                      for match in re.finditer(pattern, content, re.IGNORECASE):
+                          issues.append(f"  {py_file}: {desc} — {match.group(0)[:60]}")
+              except Exception:
+                  pass
+
+          if issues:
+              print("Potential SQL injection vulnerabilities:")
+              for issue in issues:
+                  print(issue)
+              exit(1)
+          else:
+              print("No SQL injection patterns detected")
+          PYEOF
+
+          python /tmp/check_sql.py
+
+  infrastructure-security:
+    name: Infrastructure Config Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan Docker Compose for security issues
+        run: |
+          pip install checkov
+          for f in docker-compose*.yml; do
+            if [ -f "$f" ]; then
+              echo "Scanning $f..."
+              checkov -f "$f" --framework docker_compose --soft-fail || true
+            fi
+          done
+
+      - name: Check for secrets in infrastructure files
+        run: |
+          FOUND=0
+          if grep -r -i "password.*=.*['\"][^'\"]\{8,\}['\"]" docker-compose*.yml infrastructure/ \
+              --exclude="*.example" 2>/dev/null | grep -v "password_file\|password_hash\|_PASSWORD:"; then
+            echo "Potential hardcoded passwords in infrastructure files"
+            FOUND=1
+          fi
+
+          if [ "$FOUND" -eq 0 ]; then
+            echo "No secrets found in infrastructure files"
+          fi
+
+  compliance-check:
+    name: Compliance Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fair housing compliance
+        run: |
+          # Check for demographic filtering in business logic (not test files)
+          if grep -r -i -l "race\|religion\|gender\|nationality\|ethnicity" \
+              ghl_real_estate_ai/ --include="*.py" \
+              | grep -v test | grep -v __pycache__; then
+            echo "Review flagged files for fair housing compliance"
+          else
+            echo "No demographic filtering patterns found"
+          fi
+
+      - name: Verify .env is gitignored
+        run: |
+          if grep -q "^\.env$" .gitignore; then
+            echo ".env is properly gitignored"
+          else
+            echo "::error::.env is not in .gitignore"
+            exit 1
+          fi
+
+  summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    needs:
+      - secrets-detection
+      - python-security
+      - dependency-audit
+      - sql-injection-check
+      - infrastructure-security
+      - compliance-check
+    if: always()
+
+    steps:
+      - name: Generate summary
+        run: |
+          echo "## Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Secrets Detection | ${{ needs.secrets-detection.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Static Analysis (Bandit) | ${{ needs.python-security.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dependency Audit | ${{ needs.dependency-audit.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SQL Injection | ${{ needs.sql-injection-check.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Infrastructure Config | ${{ needs.infrastructure-security.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Compliance | ${{ needs.compliance-check.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
+
+          TOTAL=6
+          PASSED=0
+          [ "${{ needs.secrets-detection.result }}" == "success" ] && PASSED=$((PASSED + 1))
+          [ "${{ needs.python-security.result }}" == "success" ] && PASSED=$((PASSED + 1))
+          [ "${{ needs.dependency-audit.result }}" == "success" ] && PASSED=$((PASSED + 1))
+          [ "${{ needs.sql-injection-check.result }}" == "success" ] && PASSED=$((PASSED + 1))
+          [ "${{ needs.infrastructure-security.result }}" == "success" ] && PASSED=$((PASSED + 1))
+          [ "${{ needs.compliance-check.result }}" == "success" ] && PASSED=$((PASSED + 1))
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Score: ${PASSED}/${TOTAL}**" >> $GITHUB_STEP_SUMMARY
