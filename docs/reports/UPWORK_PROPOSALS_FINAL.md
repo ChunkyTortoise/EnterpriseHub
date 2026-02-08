@@ -14,7 +14,7 @@ Hi [Client Name],
 I saw you need a financial model for [Project Context]. Instead of building a fragile Excel sheet from scratch, I can deploy a production-grade **Python Financial Analyst Dashboard** for you.
 
 I have already built this exact system. You can test the live demo here:
-👉 **[Link to Financial Analyst Module](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)**
+👉 **[Link to Financial Analyst Module](https://ct-enterprise-ai.streamlit.app/)**
 *(Navigate to 'Financial Analyst' in the sidebar)*
 
 **What it includes right now:**
@@ -45,7 +45,7 @@ Hi there,
 I read that you need a dashboard to visualize stock data. I specialize in Streamlit and have a pre-built **Market Pulse** module that matches your requirements.
 
 **See it live here:**
-👉 **[Live Market Pulse Demo](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)**
+👉 **[Live Market Pulse Demo](https://ct-enterprise-ai.streamlit.app/)**
 
 **Features I can deploy for you today:**
 1.  **Real-time Data Connection**: Integrated with Yahoo Finance API.
@@ -70,7 +70,7 @@ Hi,
 Automating content is tricky because most AI output sounds robotic. I solved this by building a **Content Engine** that uses "Meta-Prompting" and engagement prediction scoring.
 
 **Check out the tool here:**
-👉 **[Content Engine Demo](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)**
+👉 **[Content Engine Demo](https://ct-enterprise-ai.streamlit.app/)**
 *(Select 'Content Engine' in the sidebar)*
 
 **How it works:**
@@ -88,5 +88,5 @@ Cayman Roden
 
 ## ⚡ Quick Links for You
 - **Your Portfolio Website**: https://chunkytortoise.github.io/enterprisehub/
-- **Live App Demo**: https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/
+- **Live App Demo**: https://ct-enterprise-ai.streamlit.app/
 - **Source Code**: https://github.com/ChunkyTortoise/enterprise-hub

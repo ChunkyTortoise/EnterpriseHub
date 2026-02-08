@@ -2,7 +2,7 @@
 
 > **AI-Powered Market Sentiment Analysis** - Analyze news sentiment with TextBlob or Claude AI
 
-[![Status](https://img.shields.io/badge/Status-Active-success)](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)
+[![Status](https://img.shields.io/badge/Status-Active-success)](https://ct-enterprise-ai.streamlit.app/)
 [![AI Powered](https://img.shields.io/badge/AI-Claude%203.5-purple)](https://www.anthropic.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue)](../LICENSE)
 

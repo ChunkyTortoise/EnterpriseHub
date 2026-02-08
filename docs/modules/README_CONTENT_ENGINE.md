@@ -2,7 +2,7 @@
 
 > **AI-Powered LinkedIn Post Generator** - Transform ideas into engaging professional content in seconds
 
-[![Status](https://img.shields.io/badge/Status-Active-success)](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)
+[![Status](https://img.shields.io/badge/Status-Active-success)](https://ct-enterprise-ai.streamlit.app/)
 [![AI Powered](https://img.shields.io/badge/AI-Claude%203.5-purple)](https://www.anthropic.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue)](../LICENSE)
 
@@ -575,6 +575,6 @@ MIT License - see [LICENSE](../LICENSE) for details
 
 ---
 
-**Built by Cayman Roden** | [GitHub](https://github.com/ChunkyTortoise) | [Live Demo](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)
+**Built by Cayman Roden** | [GitHub](https://github.com/ChunkyTortoise) | [Live Demo](https://ct-enterprise-ai.streamlit.app/)
 
 *Part of the Enterprise Hub platform - 5 mission-critical business tools in one unified dashboard*
