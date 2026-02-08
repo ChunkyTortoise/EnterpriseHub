@@ -95,6 +95,7 @@ class AlertingService:
         self._rules: Dict[str, AlertRule] = {}
         self._alerts: List[Alert] = []
         self._last_fired: Dict[str, float] = {}  # rule_name -> last fire timestamp
+        self._recorded_metrics: Dict[str, float] = {}
         self._initialized = True
 
         # Load default rules
@@ -185,6 +186,29 @@ class AlertingService:
             channels=["slack"],
             description="Rate limit error rate exceeds 10%",
         )
+
+    # ── Metric Recording ─────────────────────────────────────────────
+
+    def record_metric(self, name: str, value: float) -> None:
+        """Record a named metric value for later alert evaluation.
+
+        Called by BotMetricsCollector.feed_to_alerting() to push metrics
+        into the alerting service. Stored metrics can be evaluated via
+        check_alerts() by passing them as performance_stats.
+
+        Args:
+            name: Metric identifier (e.g., "error_rate", "lead_bot.response_time_p95").
+            value: Metric value.
+        """
+        self._recorded_metrics[name] = value
+
+    def get_recorded_metrics(self) -> Dict[str, float]:
+        """Return a copy of all recorded metrics."""
+        return dict(self._recorded_metrics)
+
+    def clear_recorded_metrics(self) -> None:
+        """Clear all recorded metrics."""
+        self._recorded_metrics.clear()
 
     # ── Rule Management ───────────────────────────────────────────────
 
@@ -553,6 +577,7 @@ class AlertingService:
             cls._instance._rules.clear()
             cls._instance._alerts.clear()
             cls._instance._last_fired.clear()
+            cls._instance._recorded_metrics.clear()
             cls._instance._initialized = False
         cls._instance = None
 
