@@ -236,16 +236,23 @@ async def lifespan(app: FastAPI):
     try:
         from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
         from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
+        from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
 
         async def _periodic_alert_check():
-            """Run alert checks every 60 seconds."""
+            """Run alert checks every 60 seconds.
+
+            Builds a flat stats dict from BotMetricsCollector, PerformanceTracker,
+            and JorgeHandoffService so that AlertingService rules can evaluate
+            thresholds correctly.
+            """
             alerting_svc = AlertingService()
             metrics_collector = BotMetricsCollector()
+            perf_tracker = PerformanceTracker()
             while True:
                 try:
                     await asyncio.sleep(60)
-                    summary = metrics_collector.get_system_summary()
-                    await alerting_svc.check_and_send_alerts(summary)
+                    stats = await _build_alert_stats(metrics_collector, perf_tracker)
+                    await alerting_svc.check_and_send_alerts(stats)
                 except asyncio.CancelledError:
                     break
                 except Exception as exc:
@@ -272,6 +279,61 @@ async def lifespan(app: FastAPI):
         except asyncio.CancelledError:
             pass
         logger.info("Periodic alerting background task stopped")
+
+async def _build_alert_stats(metrics_collector, perf_tracker) -> dict:
+    """Build a flat stats dict matching AlertingService rule expectations.
+
+    Merges data from BotMetricsCollector (interactions, handoffs),
+    PerformanceTracker (P95 latencies), and JorgeHandoffService (analytics)
+    into the key structure that the 7 default alert rules evaluate.
+    """
+    summary = metrics_collector.get_system_summary()
+    overall = summary.get("overall", {})
+    handoffs = summary.get("handoffs", {})
+    bots = summary.get("bots", {})
+
+    # Get P95 from PerformanceTracker (more accurate rolling-window stats)
+    lead_stats = await perf_tracker.get_bot_stats("lead_bot")
+    buyer_stats = await perf_tracker.get_bot_stats("buyer_bot")
+    seller_stats = await perf_tracker.get_bot_stats("seller_bot")
+
+    # Get handoff analytics for circular/rate-limit rules
+    blocked_handoffs = 0
+    rate_limit_error_rate = 0.0
+    try:
+        from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+        analytics = JorgeHandoffService.get_analytics_summary()
+        blocked_handoffs = (
+            analytics.get("blocked_by_circular", 0)
+            + analytics.get("blocked_by_rate_limit", 0)
+        )
+        total_handoff_attempts = analytics.get("total_handoffs", 0) + blocked_handoffs
+        if total_handoff_attempts > 0:
+            rate_limit_error_rate = analytics.get("blocked_by_rate_limit", 0) / total_handoff_attempts
+    except Exception:
+        pass
+
+    # Build flat dict matching alert rule conditions
+    stats: dict = {
+        # Rule 1: sla_violation — nested dicts with p95_latency_ms
+        "lead_bot": {"p95_latency_ms": lead_stats.get("p95", 0.0)},
+        "buyer_bot": {"p95_latency_ms": buyer_stats.get("p95", 0.0)},
+        "seller_bot": {"p95_latency_ms": seller_stats.get("p95", 0.0)},
+        # Rule 2: high_error_rate
+        "error_rate": overall.get("error_rate", 0.0),
+        # Rule 3: low_cache_hit_rate
+        "cache_hit_rate": overall.get("cache_hit_rate", 1.0),
+        # Rule 4: handoff_failure
+        "handoff_success_rate": handoffs.get("success_rate", 1.0),
+        # Rule 5: bot_unresponsive — last response timestamp
+        "last_response_time": metrics_collector.last_interaction_time(),
+        # Rule 6: circular_handoff_spike
+        "blocked_handoffs_last_hour": blocked_handoffs,
+        # Rule 7: rate_limit_breach
+        "rate_limit_error_rate": rate_limit_error_rate,
+    }
+    return stats
+
 
 def _validate_jorge_services_config(logger) -> None:
     """Validate Jorge Bot services configuration at startup.

@@ -376,9 +376,14 @@ async with self.tracker.track_async_operation("handoff", "execute"):
 - Handoffs measured
 - SLA compliance monitored
 
-### Task 2: Integrate AlertingService with Monitoring
+### Task 2: Integrate AlertingService with Monitoring ✅ COMPLETE
 
 **Objective**: Send alerts when performance thresholds are breached.
+
+> **Completed 2026-02-08.** The periodic alerting loop already existed in `api/main.py` lifespan but had a key mismatch — `get_system_summary()` returns nested dicts while alert rules expect flat keys. Fixed by:
+> - Adding `_build_alert_stats()` adapter that merges BotMetricsCollector, PerformanceTracker, and JorgeHandoffService data into the flat format alert rules expect
+> - Adding `BotMetricsCollector.last_interaction_time()` for the `bot_unresponsive` rule
+> - 7 new tests (5 for `_build_alert_stats`, 2 for `last_interaction_time`)
 
 **Implementation Steps**:
 
@@ -503,9 +508,11 @@ if results.is_significant:
 - Statistical significance calculated correctly
 - Winning variants identified
 
-### Task 4: Configure Circular Handoff Prevention
+### Task 4: Configure Circular Handoff Prevention ✅ COMPLETE (pre-existing)
 
 **Objective**: Ensure handoff service prevents circular handoffs.
+
+> **Status**: Already implemented in Jorge Bot Audit Phase 3. Verified by 6 integration tests in `test_handoff_prevention_integration.py` (P3).
 
 **Implementation Steps**:
 
