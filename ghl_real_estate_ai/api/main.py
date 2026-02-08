@@ -260,12 +260,7 @@ async def lifespan(app: FastAPI):
     # STARTUP ENV VAR VALIDATION (non-blocking warnings)
     # ========================================================================
 
-    if os.getenv("ALERT_EMAIL_ENABLED", "").lower() == "true" and not os.getenv("ALERT_SMTP_HOST"):
-        logger.warning("ALERT_EMAIL_ENABLED=true but ALERT_SMTP_HOST is not configured — email alerts will not be sent")
-    if os.getenv("ALERT_SLACK_ENABLED", "").lower() == "true" and not os.getenv("ALERT_SLACK_WEBHOOK_URL"):
-        logger.warning("ALERT_SLACK_ENABLED=true but ALERT_SLACK_WEBHOOK_URL is not configured — Slack alerts will not be sent")
-    if os.getenv("AB_TESTING_ENABLED", "").lower() == "true":
-        logger.info("A/B testing is enabled — experiments will be registered on first bot initialization")
+    _validate_jorge_services_config(logger)
 
     yield
 
@@ -277,6 +272,48 @@ async def lifespan(app: FastAPI):
         except asyncio.CancelledError:
             pass
         logger.info("Periodic alerting background task stopped")
+
+def _validate_jorge_services_config(logger) -> None:
+    """Validate Jorge Bot services configuration at startup.
+
+    Checks environment variables for A/B testing, performance tracking,
+    alerting channels, and bot metrics. Logs warnings for misconfigurations
+    but never raises — the app should still start.
+    """
+    # -- A/B Testing --
+    if os.getenv("AB_TESTING_ENABLED", "").lower() == "true":
+        logger.info("A/B testing is enabled — experiments will be registered on first bot initialization")
+
+    # -- Performance Tracking --
+    if os.getenv("PERFORMANCE_TRACKING_ENABLED", "").lower() == "true":
+        sample_rate = os.getenv("PERFORMANCE_TRACKING_SAMPLE_RATE", "1.0")
+        try:
+            rate = float(sample_rate)
+            if not 0.0 <= rate <= 1.0:
+                logger.warning("PERFORMANCE_TRACKING_SAMPLE_RATE=%s is out of range [0.0, 1.0] — defaulting to 1.0", sample_rate)
+        except ValueError:
+            logger.warning("PERFORMANCE_TRACKING_SAMPLE_RATE=%s is not a valid float — defaulting to 1.0", sample_rate)
+
+    # -- Alerting Channels (uses AlertChannelConfig.validate()) --
+    try:
+        from ghl_real_estate_ai.services.jorge.alerting_service import AlertChannelConfig
+
+        channel_config = AlertChannelConfig.from_environment()
+        for warning in channel_config.validate():
+            logger.warning("Alert channel config: %s", warning)
+    except Exception as exc:
+        logger.debug("Could not validate alert channel config: %s", exc)
+
+    # -- Bot Metrics --
+    if os.getenv("BOT_METRICS_ENABLED", "").lower() == "true":
+        interval = os.getenv("BOT_METRICS_COLLECTION_INTERVAL", "60")
+        try:
+            iv = int(interval)
+            if iv < 10:
+                logger.warning("BOT_METRICS_COLLECTION_INTERVAL=%s is very low (<10s) — may cause high CPU usage", interval)
+        except ValueError:
+            logger.warning("BOT_METRICS_COLLECTION_INTERVAL=%s is not a valid integer — defaulting to 60", interval)
+
 
 def _verify_admin_api_key():
     """Dependency that guards admin endpoints with an API key in production."""

@@ -113,54 +113,38 @@ The Jorge Bot Audit Specification (February 2026) identified 5 critical gaps (G1
 - ✅ Indexes improve query performance
 - ✅ In-memory fallback works when DB unavailable (graceful degradation)
 
-### Priority 2: Environment Configuration Setup
+### Priority 2: Environment Configuration Setup ✅ COMPLETE
 
 **Objective**: Configure all environment variables for new services.
 
+**Status**: ✅ COMPLETE (February 8, 2026) — 19 tests, all passing.
+
 **Tasks**:
-1. Update `.env.example` with new service variables
-2. Create production environment template
-3. Document all required variables
-4. Add validation at startup
-
-**Environment Variables to Add**:
-
-```bash
-# A/B Testing Service
-AB_TESTING_ENABLED=true
-AB_TESTING_DB_CONNECTION_STRING=postgresql://...
-
-# Performance Tracker
-PERFORMANCE_TRACKING_ENABLED=true
-PERFORMANCE_TRACKING_RETENTION_DAYS=30
-PERFORMANCE_TRACKING_SAMPLE_RATE=1.0
-
-# Alerting Service
-ALERTING_ENABLED=true
-ALERT_SMTP_HOST=smtp.example.com
-ALERT_SMTP_PORT=587
-ALERT_SMTP_USER=alerts@example.com
-ALERT_SMTP_PASSWORD=***
-ALERT_EMAIL_FROM=alerts@enterprisehub.com
-ALERT_EMAIL_TO=ops@enterprisehub.com,dev@enterprisehub.com
-ALERT_SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
-ALERT_WEBHOOK_URL=https://pagerduty.example.com/webhook
-
-# Bot Metrics Collector
-BOT_METRICS_ENABLED=true
-BOT_METRICS_COLLECTION_INTERVAL=60
-BOT_METRICS_RETENTION_DAYS=7
-```
+1. ✅ Update `.env.example` with new service variables
+   - Added `PERFORMANCE_TRACKING_SAMPLE_RATE` to performance tracking section
+   - Added `BOT_METRICS_ENABLED`, `BOT_METRICS_COLLECTION_INTERVAL`, `BOT_METRICS_RETENTION_DAYS` section
+   - A/B testing, performance tracking, and alerting sections already existed
+2. ✅ Update production environment template
+   - `configs/env_templates/.env.jorge.production.template` updated with all Jorge services
+   - Sections: A/B Testing, Performance Tracking, Alerting (Email/Slack/PD/OG), Bot Metrics
+3. ✅ Document all required variables (documented in `.env.example` with inline comments)
+4. ✅ Add validation at startup
+   - `_validate_jorge_services_config()` in `ghl_real_estate_ai/api/main.py`
+   - Uses `AlertChannelConfig.from_environment().validate()` for channel config
+   - Validates `PERFORMANCE_TRACKING_SAMPLE_RATE` range [0.0, 1.0]
+   - Validates `BOT_METRICS_COLLECTION_INTERVAL` is integer and >= 10
+   - All warnings are non-blocking (app always starts)
 
 **Deliverables**:
-- Updated `.env.example`
-- Production environment template: `configs/production/.env.jorge.production.template`
-- Startup validation in `app.py`
+- ✅ Updated `.env.example` (added BOT_METRICS section + SAMPLE_RATE)
+- ✅ Updated production template: `configs/env_templates/.env.jorge.production.template`
+- ✅ Startup validation: `_validate_jorge_services_config()` in `api/main.py`
+- ✅ 19 tests: `tests/api/test_startup_validation.py`
 
 **Success Criteria**:
-- All variables documented
-- Startup validation catches missing variables
-- Production template ready for deployment
+- ✅ All variables documented in `.env.example`
+- ✅ Startup validation catches misconfigured channels, bad sample rates, low intervals
+- ✅ Production template has all Jorge services configured
 
 ### Priority 3: Integration Testing for New Services
 
