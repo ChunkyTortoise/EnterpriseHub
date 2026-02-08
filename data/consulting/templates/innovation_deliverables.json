@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Custom AI Model Development",
+    "category": "technical",
+    "estimated_hours": 160,
+    "description": "Proprietary AI models tailored to client's unique competitive advantage",
+    "acceptance_criteria": [
+      "Custom models trained and validated",
+      "Proprietary algorithm documentation delivered",
+      "Competitive differentiation verified"
+    ],
+    "client_value": "Unique competitive advantage, proprietary IP creation"
+  },
+  {
+    "name": "Innovation Lab Setup",
+    "category": "strategic",
+    "estimated_hours": 48,
+    "description": "Complete innovation lab for ongoing AI experimentation and development",
+    "acceptance_criteria": [
+      "Innovation lab infrastructure deployed",
+      "Experimentation frameworks established",
+      "Success measurement criteria defined"
+    ],
+    "client_value": "Ongoing innovation capability, future-ready organization"
+  },
+  {
+    "name": "Market Launch Strategy",
+    "category": "strategic",
+    "estimated_hours": 32,
+    "description": "Go-to-market strategy for AI-powered competitive advantage",
+    "acceptance_criteria": [
+      "Market positioning strategy delivered",
+      "Launch plan with success metrics",
+      "Competitive analysis and differentiation strategy"
+    ],
+    "client_value": "Strategic market positioning, revenue growth acceleration"
+  },
+  {
+    "name": "Executive Advisory Program",
+    "category": "strategic",
+    "estimated_hours": 80,
+    "description": "Ongoing executive advisory and strategic optimization",
+    "acceptance_criteria": [
+      "Advisory framework established",
+      "Monthly strategic reviews scheduled",
+      "Continuous optimization process active"
+    ],
+    "client_value": "Ongoing strategic guidance, performance optimization"
+  }
+]
