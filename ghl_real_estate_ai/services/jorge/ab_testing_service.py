@@ -6,12 +6,23 @@ Contacts are deterministically assigned to variants via hash-based bucketing,
 ensuring consistent experiences across sessions. Statistical significance is
 evaluated with a two-proportion z-test.
 
+Supports optional PostgreSQL persistence via ABTestingRepository.  When a
+repository is configured (via ``set_repository``), mutations are written
+through to the database.  The in-memory state is always authoritative;
+DB failures are logged but never block the caller.
+
 Usage:
     service = ABTestingService()
     service.create_experiment("greeting_style", ["formal", "casual", "empathetic"])
     variant = await service.get_variant("greeting_style", contact_id)
     await service.record_outcome("greeting_style", contact_id, variant, "conversion")
     results = service.get_experiment_results("greeting_style")
+
+    # Optional: enable DB persistence
+    from ghl_real_estate_ai.services.jorge.ab_testing_repository import ABTestingRepository
+    repo = ABTestingRepository(db_manager)
+    service.set_repository(repo)
+    await service.load_from_db()
 """
 
 import hashlib
@@ -115,8 +126,106 @@ class ABTestingService:
             return
         self._experiments: Dict[str, _Experiment] = {}
         self._data_lock = threading.Lock()
+        self._repository = None  # Optional ABTestingRepository for DB persistence
         self._initialized = True
         logger.info("ABTestingService initialized")
+
+    # ── Persistence Configuration ──────────────────────────────────────
+
+    def set_repository(self, repository) -> None:
+        """Attach an ABTestingRepository for write-through DB persistence.
+
+        Args:
+            repository: An ABTestingRepository instance (or None to disable).
+        """
+        self._repository = repository
+        logger.info(
+            "ABTestingService persistence %s",
+            "enabled" if repository else "disabled",
+        )
+
+    async def load_from_db(self) -> int:
+        """Hydrate in-memory state from the database.
+
+        Loads all active experiments from DB into memory.  Also creates
+        DB records for any in-memory experiments that don't yet exist in
+        the database (bidirectional sync).
+
+        Returns:
+            Number of experiments loaded from DB.
+        """
+        if self._repository is None:
+            return 0
+
+        loaded = 0
+        try:
+            active_experiments = await self._repository.list_active_experiments()
+            for exp_row in active_experiments:
+                exp_name = exp_row["experiment_name"]
+                if exp_name in self._experiments:
+                    continue  # already in memory
+
+                exp_detail = await self._repository.get_experiment(exp_name)
+                if exp_detail is None:
+                    continue
+
+                variants = [v["variant_name"] for v in exp_detail["variants"]]
+                split_raw = exp_detail.get("default_traffic_split")
+                if isinstance(split_raw, str):
+                    import json
+                    split_raw = json.loads(split_raw)
+
+                if split_raw and isinstance(split_raw, dict):
+                    traffic_split = split_raw
+                else:
+                    n = len(variants)
+                    traffic_split = {v: 1.0 / n for v in variants} if n else {}
+
+                with self._data_lock:
+                    self._experiments[exp_name] = _Experiment(
+                        experiment_id=exp_name,
+                        variants=variants,
+                        traffic_split=traffic_split,
+                        status=ExperimentStatus.ACTIVE,
+                        created_at=time.time(),
+                        assignments={v: [] for v in variants},
+                        outcomes={v: [] for v in variants},
+                    )
+                loaded += 1
+                logger.debug("Loaded experiment '%s' from DB", exp_name)
+
+            # Sync in-memory → DB (create DB records for experiments
+            # that exist in memory but not in DB)
+            with self._data_lock:
+                experiment_names = list(self._experiments.keys())
+
+            for exp_name in experiment_names:
+                try:
+                    existing = await self._repository.get_experiment(exp_name)
+                    if existing is None:
+                        exp = self._experiments[exp_name]
+                        await self._repository.create_experiment(
+                            experiment_name=exp.experiment_id,
+                            variants=exp.variants,
+                            traffic_split=exp.traffic_split,
+                        )
+                        logger.debug(
+                            "Persisted in-memory experiment '%s' to DB",
+                            exp_name,
+                        )
+                except Exception as exc:
+                    logger.warning(
+                        "Failed to sync experiment '%s' to DB: %s",
+                        exp_name,
+                        exc,
+                    )
+
+        except Exception as exc:
+            logger.warning("Failed to load experiments from DB: %s", exc)
+
+        if loaded:
+            logger.info("Loaded %d experiments from database", loaded)
+        return loaded
 
     # ── Experiment Management ─────────────────────────────────────────
 
@@ -274,8 +383,34 @@ class ABTestingService:
             )
 
             # Track assignment (deduplicate)
-            if contact_id not in experiment.assignments[variant]:
+            is_new = contact_id not in experiment.assignments[variant]
+            if is_new:
                 experiment.assignments[variant].append(contact_id)
+
+            bucket_value = int(
+                hashlib.sha256(
+                    f"{contact_id}:{experiment_id}".encode()
+                ).hexdigest()[:8],
+                16,
+            ) / 0xFFFFFFFF
+
+        # Write-through to DB (outside lock, fire-and-forget on error)
+        if is_new and self._repository is not None:
+            try:
+                await self._repository.get_or_create_assignment(
+                    experiment_name=experiment_id,
+                    user_id=contact_id,
+                    variant_name=variant,
+                    bucket_value=bucket_value,
+                )
+            except Exception as exc:
+                logger.debug(
+                    "DB write-through failed for assignment "
+                    "(experiment=%s, contact=%s): %s",
+                    experiment_id,
+                    contact_id,
+                    exc,
+                )
 
         return variant
 
@@ -330,6 +465,26 @@ class ABTestingService:
             f"Recorded outcome '{outcome}' (value={value}) for "
             f"variant '{variant}' in experiment '{experiment_id}'"
         )
+
+        # Write-through to DB (fire-and-forget on error)
+        if self._repository is not None:
+            try:
+                await self._repository.record_outcome(
+                    experiment_name=experiment_id,
+                    user_id=contact_id,
+                    variant_name=variant,
+                    event_type=outcome,
+                    value=value,
+                )
+            except Exception as exc:
+                logger.debug(
+                    "DB write-through failed for outcome "
+                    "(experiment=%s, contact=%s): %s",
+                    experiment_id,
+                    contact_id,
+                    exc,
+                )
+
         return {
             "experiment_id": experiment_id,
             "contact_id": contact_id,
@@ -558,5 +713,6 @@ class ABTestingService:
         with cls._lock:
             if cls._instance is not None:
                 cls._instance._experiments.clear()
+                cls._instance._repository = None
                 cls._instance._initialized = False
             cls._instance = None
