@@ -9,35 +9,38 @@ OPTIMIZATIONS:
 4. Demo cache fast path
 5. Batch processing support
 """
-import streamlit as st
-import pandas as pd
+
 import asyncio
 import hashlib
 import json
 import time
 from datetime import datetime
-from typing import Dict, List, Any, Optional, Union
-from ghl_real_estate_ai.services.memory_service import MemoryService
+from typing import Any, Dict, List, Optional, Union
+
+import pandas as pd
+import streamlit as st
+
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.utils.async_utils import safe_create_task
 
 logger = get_logger(__name__)
 
 # Import multi-market and churn recovery systems
-from ghl_real_estate_ai.markets.registry import get_market_service, MarketRegistry
 from ghl_real_estate_ai.markets.config_schemas import MarketConfig
+from ghl_real_estate_ai.markets.registry import MarketRegistry, get_market_service
+from ghl_real_estate_ai.services.churn_prediction_engine import (
+    ChurnEventTracker,
+    ChurnEventType,
+    ChurnReason,
+)
 from ghl_real_estate_ai.services.reengagement_engine import (
-    ReengagementEngine,
     CLVEstimate,
     CLVTier,
     RecoveryCampaignType,
-)
-from ghl_real_estate_ai.services.churn_prediction_engine import (
-    ChurnEventTracker,
-    ChurnReason,
-    ChurnEventType,
+    ReengagementEngine,
 )
 
 
@@ -60,6 +63,7 @@ class ClaudeAssistantOptimized:
         # Import here to avoid circular dependencies
         try:
             from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
+
             self.orchestrator = get_claude_orchestrator()
         except ImportError:
             self.orchestrator = None
@@ -72,6 +76,7 @@ class ClaudeAssistantOptimized:
 
         # PERFORMANCE: Enhanced semantic cache with batch support
         from ghl_real_estate_ai.services.semantic_cache_optimized import SemanticResponseCacheOptimized
+
         self.semantic_cache = SemanticResponseCacheOptimized()
 
         # Multi-market components
@@ -89,9 +94,9 @@ class ClaudeAssistantOptimized:
         safe_create_task(self._warm_demo_cache_background())
 
     def _initialize_state(self):
-        if 'assistant_greeted' not in st.session_state:
+        if "assistant_greeted" not in st.session_state:
             st.session_state.assistant_greeted = False
-        if 'claude_history' not in st.session_state:
+        if "claude_history" not in st.session_state:
             st.session_state.claude_history = []
 
     async def _warm_demo_cache_background(self):
@@ -102,7 +107,7 @@ class ClaudeAssistantOptimized:
                 "Analyze lead investment potential",
                 "Draft SMS for property tour",
                 "Summarize Austin market conditions",
-                "Generate churn recovery script"
+                "Generate churn recovery script",
             ]
 
             warmed = await self.semantic_cache.warm_cache(DEMO_QUERIES)
@@ -274,8 +279,8 @@ class ClaudeAssistantOptimized:
             context = {
                 "market": market,
                 "market_context": market_context,
-                "current_hub": st.session_state.get('current_hub', 'Unknown'),
-                "selected_lead": st.session_state.get('selected_lead_name', 'None'),
+                "current_hub": st.session_state.get("current_hub", "Unknown"),
+                "selected_lead": st.session_state.get("selected_lead_name", "None"),
                 "market_specializations": market_context.get("primary_specialization", ""),
                 "top_neighborhoods": market_context.get("top_neighborhoods", []),
                 "major_employers": market_context.get("major_employers", []),
@@ -302,7 +307,7 @@ class ClaudeAssistantOptimized:
                 provider=response_obj.provider or "claude",
                 input_tokens=response_obj.input_tokens or 0,
                 output_tokens=response_obj.output_tokens or 0,
-                cached=False
+                cached=False,
             )
 
             return response_obj.content
@@ -320,6 +325,7 @@ class ClaudeAssistantOptimized:
             try:
                 # PERFORMANCE: Use nest_asyncio for proper event loop reuse
                 import nest_asyncio
+
                 nest_asyncio.apply()
 
                 # Get or create event loop (reuse if possible)
@@ -330,20 +336,21 @@ class ClaudeAssistantOptimized:
                     asyncio.set_event_loop(loop)
 
                 # Execute async handler
-                response = loop.run_until_complete(
-                    self._async_handle_query(query, leads, market)
-                )
+                response = loop.run_until_complete(self._async_handle_query(query, leads, market))
 
             except Exception as e:
                 logger.error(f"Query handler error: {e}")
                 response = f"I encountered an error processing your request: {str(e)}"
 
         # Display response
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div style='background: #f3f4f6; padding: 10px; border-radius: 8px; border-left: 3px solid #6D28D9; margin-top: 10px;'>
             <p style='font-size: 0.85rem; color: #1f2937; margin: 0;'>{response}</p>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
         if "Draft" in response or "script" in response.lower():
             if st.button("🚀 Push to GHL"):
@@ -352,13 +359,13 @@ class ClaudeAssistantOptimized:
     def _generate_query_cache_key(self, query: str, context: Dict[str, Any]) -> str:
         """Generate cache key for query with context."""
         # Normalize query
-        normalized_query = ' '.join(query.lower().strip().split())
+        normalized_query = " ".join(query.lower().strip().split())
 
         # Extract key context elements
         key_context = {
-            'market': context.get('market', ''),
-            'hub': context.get('current_hub', ''),
-            'lead': context.get('selected_lead', ''),
+            "market": context.get("market", ""),
+            "hub": context.get("current_hub", ""),
+            "lead": context.get("selected_lead", ""),
         }
 
         # Create deterministic hash
@@ -370,11 +377,7 @@ class ClaudeAssistantOptimized:
     # ============================================================================
 
     async def _async_handle_query_streaming(
-        self,
-        query: str,
-        leads: Dict[str, Any],
-        market: str,
-        response_container: st.delta_generator.DeltaGenerator
+        self, query: str, leads: Dict[str, Any], market: str, response_container: st.delta_generator.DeltaGenerator
     ):
         """
         PERFORMANCE: Stream AI response for instant perceived feedback.
@@ -391,8 +394,8 @@ class ClaudeAssistantOptimized:
             context = {
                 "market": market,
                 "market_context": market_context,
-                "current_hub": st.session_state.get('current_hub', 'Unknown'),
-                "selected_lead": st.session_state.get('selected_lead_name', 'None'),
+                "current_hub": st.session_state.get("current_hub", "Unknown"),
+                "selected_lead": st.session_state.get("selected_lead_name", "None"),
             }
 
             # Check cache first (instant response for demos)
@@ -409,11 +412,14 @@ class ClaudeAssistantOptimized:
             response_text = ""
             async for chunk in self.orchestrator.stream_chat_query(query, context):
                 response_text += chunk
-                response_container.markdown(f"""
+                response_container.markdown(
+                    f"""
                 <div style='background: #f3f4f6; padding: 10px; border-radius: 8px; border-left: 3px solid #6D28D9;'>
                     <p style='font-size: 0.85rem; color: #1f2937; margin: 0;'>{response_text}▌</p>
                 </div>
-                """, unsafe_allow_html=True)
+                """,
+                    unsafe_allow_html=True,
+                )
                 await asyncio.sleep(0.01)  # Smooth animation
 
             # Cache final response
@@ -425,16 +431,19 @@ class ClaudeAssistantOptimized:
 
     async def _simulate_streaming(self, content: str, response_container: st.delta_generator.DeltaGenerator):
         """Simulate streaming for cached responses (smooth UX)."""
-        words = content.split(' ')
+        words = content.split(" ")
         displayed_text = ""
 
         for word in words:
             displayed_text += word + " "
-            response_container.markdown(f"""
+            response_container.markdown(
+                f"""
             <div style='background: #f3f4f6; padding: 10px; border-radius: 8px; border-left: 3px solid #6D28D9;'>
                 <p style='font-size: 0.85rem; color: #1f2937; margin: 0;'>{displayed_text}▌</p>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
             await asyncio.sleep(0.03)  # Smooth word-by-word reveal
 
     # ============================================================================
@@ -445,7 +454,8 @@ class ClaudeAssistantOptimized:
         """Renders the persistent sidebar intelligence panel."""
         with st.sidebar:
             st.markdown("---")
-            st.markdown(f"""
+            st.markdown(
+                f"""
             <div style='background: linear-gradient(135deg, #6D28D9 0%, #4C1D95 100%);
                         padding: 1.25rem; border-radius: 12px; color: white; margin-bottom: 1rem;
                         box-shadow: 0 4px 15px rgba(109, 40, 217, 0.3); position: relative; overflow: hidden;'>
@@ -458,7 +468,9 @@ class ClaudeAssistantOptimized:
                     Context: <b>{hub_name}</b> ({market})
                 </p>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
             # Generate and show context-aware insight
             insight = self.get_insight(hub_name, leads)
@@ -469,14 +481,14 @@ class ClaudeAssistantOptimized:
 
     def get_insight(self, hub_name: str, leads: Dict[str, Any]) -> str:
         """Generates a contextual insight based on current hub and data."""
-        clean_hub = hub_name.split(' ', 1)[1] if ' ' in hub_name else hub_name
+        clean_hub = hub_name.split(" ", 1)[1] if " " in hub_name else hub_name
 
         if "Executive" in clean_hub:
-            hot_leads = sum(1 for l in leads.values() if l and l.get('classification') == 'hot')
+            hot_leads = sum(1 for l in leads.values() if l and l.get("classification") == "hot")
             return f"Jorge, your pipeline has {hot_leads} leads ready for immediate closing. Most are focused on the Austin downtown cluster."
 
         elif "Lead Intelligence" in clean_hub:
-            selected = st.session_state.get('selected_lead_name', '-- Select a Lead --')
+            selected = st.session_state.get("selected_lead_name", "-- Select a Lead --")
             if selected != "-- Select a Lead --":
                 if "Sarah Chen" in selected:
                     return f"Sarah is a data-driven Apple engineer with a hard 45-day deadline. She's prioritizing Teravista for its commute efficiency."
@@ -496,10 +508,12 @@ class ClaudeAssistantOptimized:
     def render_chat_interface(self, leads: Dict[str, Any], market: str):
         """Renders the interactive 'Ask Claude' expander."""
         with st.expander("Commands & Queries", expanded=False):
-            query = st.text_input("How can I help Jorge?", placeholder="Ex: Draft text for Sarah", key="claude_sidebar_chat")
+            query = st.text_input(
+                "How can I help Jorge?", placeholder="Ex: Draft text for Sarah", key="claude_sidebar_chat"
+            )
 
             # PERFORMANCE: Option to use streaming
-            use_streaming = st.session_state.get('use_claude_streaming', False)
+            use_streaming = st.session_state.get("use_claude_streaming", False)
 
             if query:
                 if use_streaming:
@@ -511,19 +525,31 @@ class ClaudeAssistantOptimized:
     def greet_user(self, name: str = "Jorge"):
         """Shows the one-time greeting toast."""
         if not st.session_state.assistant_greeted:
-            st.toast(f"Hello {name}! 👋 I'm Claude, your AI partner. I've indexed your GHL context and I'm ready to work.", icon="🤖")
+            st.toast(
+                f"Hello {name}! 👋 I'm Claude, your AI partner. I've indexed your GHL context and I'm ready to work.",
+                icon="🤖",
+            )
             st.session_state.assistant_greeted = True
 
     # Compatibility methods for existing code
-    async def generate_retention_script(self, lead_data: Dict[str, Any], risk_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def generate_retention_script(
+        self, lead_data: Dict[str, Any], risk_data: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Compatibility wrapper for retention script generation."""
         # Import original implementation
         from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
+
         original = ClaudeAssistant(context_type=self.context_type, market_id=self.market_id)
         return await original.generate_retention_script(lead_data, risk_data)
 
-    async def explain_match_with_claude(self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any], conversation_history: Optional[List[Dict]] = None) -> str:
+    async def explain_match_with_claude(
+        self,
+        property_data: Dict[str, Any],
+        lead_preferences: Dict[str, Any],
+        conversation_history: Optional[List[Dict]] = None,
+    ) -> str:
         """Compatibility wrapper for property match explanation."""
         from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
+
         original = ClaudeAssistant(context_type=self.context_type, market_id=self.market_id)
         return await original.explain_match_with_claude(property_data, lead_preferences, conversation_history)

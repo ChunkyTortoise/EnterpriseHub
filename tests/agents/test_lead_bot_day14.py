@@ -9,17 +9,18 @@ Validates:
 """
 
 import base64
-import pytest
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
 from datetime import date
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from ghl_real_estate_ai.models.cma import CMAReport, CMAProperty, Comparable, MarketContext
-from ghl_real_estate_ai.utils.pdf_renderer import PDFRenderer, PDFGenerationError
+import pytest
 
+from ghl_real_estate_ai.models.cma import CMAProperty, CMAReport, Comparable, MarketContext
+from ghl_real_estate_ai.utils.pdf_renderer import PDFGenerationError, PDFRenderer
 
 # ================================
 # FIXTURES
 # ================================
+
 
 @pytest.fixture
 def sample_cma_report():
@@ -33,7 +34,7 @@ def sample_cma_report():
             year_built=2015,
             condition="Good",
             updates=["Kitchen Remodel (2024)"],
-            features=["Pool", "Corner Lot"]
+            features=["Pool", "Corner Lot"],
         ),
         comparables=[
             Comparable(
@@ -83,20 +84,20 @@ def mock_lead_bot_deps():
     """Mock all lead bot dependencies for isolated testing."""
     mock_sync = MagicMock()
     mock_sync.record_lead_event = AsyncMock()
-    with patch.multiple(
-        'ghl_real_estate_ai.agents.lead_bot',
-        LeadIntentDecoder=Mock,
-        CMAGenerator=Mock,
-        RetellClient=Mock,
-        LyrioClient=Mock,
-        get_ghost_followup_engine=Mock,
-        get_event_publisher=Mock,
-        get_sequence_service=Mock,
-        get_lead_scheduler=Mock,
-        sync_service=mock_sync,
-    ), patch(
-        'ghl_real_estate_ai.services.national_market_intelligence.get_national_market_intelligence',
-        Mock()
+    with (
+        patch.multiple(
+            "ghl_real_estate_ai.agents.lead_bot",
+            LeadIntentDecoder=Mock,
+            CMAGenerator=Mock,
+            RetellClient=Mock,
+            LyrioClient=Mock,
+            get_ghost_followup_engine=Mock,
+            get_event_publisher=Mock,
+            get_sequence_service=Mock,
+            get_lead_scheduler=Mock,
+            sync_service=mock_sync,
+        ),
+        patch("ghl_real_estate_ai.services.national_market_intelligence.get_national_market_intelligence", Mock()),
     ):
         yield
 
@@ -104,6 +105,7 @@ def mock_lead_bot_deps():
 # ================================
 # PDF RENDERER TESTS
 # ================================
+
 
 class TestPDFRendererCMA:
     """Tests for CMA PDF generation via PDFRenderer."""
@@ -138,7 +140,7 @@ class TestPDFRendererCMA:
         assert isinstance(pdf_bytes, bytes)
         assert len(pdf_bytes) > 0
         # PDF magic bytes
-        assert pdf_bytes[:4] == b'%PDF'
+        assert pdf_bytes[:4] == b"%PDF"
 
     def test_generate_pdf_bytes_under_size_limit(self, sample_cma_report):
         """Generated PDF is under the 2MB size limit."""
@@ -161,6 +163,7 @@ class TestPDFRendererCMA:
 # CMA EMAIL ATTACHMENT TESTS
 # ================================
 
+
 class TestSendCMAEmailWithAttachment:
     """Tests for _send_cma_email_with_attachment method."""
 
@@ -179,12 +182,12 @@ class TestSendCMAEmailWithAttachment:
         bot.cma_generator.generate_report = AsyncMock(return_value=mock_report)
 
         # Mock PDFRenderer to return fake PDF bytes
-        fake_pdf = b'%PDF-1.4 fake content'
-        with patch.object(PDFRenderer, 'generate_pdf_bytes', return_value=fake_pdf):
+        fake_pdf = b"%PDF-1.4 fake content"
+        with patch.object(PDFRenderer, "generate_pdf_bytes", return_value=fake_pdf):
             result = await bot._send_cma_email_with_attachment(
                 lead_id="lead_123",
                 contact_email="buyer@example.com",
-                property_address="123 Main St, Rancho Cucamonga, CA"
+                property_address="123 Main St, Rancho Cucamonga, CA",
             )
 
         assert result is True
@@ -213,12 +216,9 @@ class TestSendCMAEmailWithAttachment:
 
         bot.cma_generator.generate_report = AsyncMock(return_value=MagicMock())
 
-        with patch.object(PDFRenderer, 'generate_pdf_bytes',
-                          side_effect=PDFGenerationError("Render failed")):
+        with patch.object(PDFRenderer, "generate_pdf_bytes", side_effect=PDFGenerationError("Render failed")):
             result = await bot._send_cma_email_with_attachment(
-                lead_id="lead_456",
-                contact_email="buyer@example.com",
-                property_address="456 Oak Ave"
+                lead_id="lead_456", contact_email="buyer@example.com", property_address="456 Oak Ave"
             )
 
         assert result is False
@@ -234,11 +234,9 @@ class TestSendCMAEmailWithAttachment:
         bot = LeadBotWorkflow(sendgrid_client=mock_sendgrid)
         bot.cma_generator.generate_report = AsyncMock(return_value=MagicMock())
 
-        with patch.object(PDFRenderer, 'generate_pdf_bytes', return_value=b'%PDF-1.4 fake'):
+        with patch.object(PDFRenderer, "generate_pdf_bytes", return_value=b"%PDF-1.4 fake"):
             result = await bot._send_cma_email_with_attachment(
-                lead_id="lead_789",
-                contact_email="buyer@example.com",
-                property_address="789 Pine St"
+                lead_id="lead_789", contact_email="buyer@example.com", property_address="789 Pine St"
             )
 
         assert result is False
@@ -253,11 +251,11 @@ class TestSendCMAEmailWithAttachment:
         bot.sequence_service = AsyncMock()
         bot.cma_generator.generate_report = AsyncMock(return_value=MagicMock())
 
-        with patch.object(PDFRenderer, 'generate_pdf_bytes', return_value=b'%PDF-1.4 fake'):
+        with patch.object(PDFRenderer, "generate_pdf_bytes", return_value=b"%PDF-1.4 fake"):
             await bot._send_cma_email_with_attachment(
                 lead_id="lead_fn",
                 contact_email="buyer@example.com",
-                property_address="123 Main St, Rancho Cucamonga, CA 91730"
+                property_address="123 Main St, Rancho Cucamonga, CA 91730",
             )
 
         attachments = mock_sendgrid.send_email.call_args.kwargs["attachments"]
@@ -271,6 +269,7 @@ class TestSendCMAEmailWithAttachment:
 # ================================
 # DAY 14 FLOW INTEGRATION TESTS
 # ================================
+
 
 class TestDay14EmailFlow:
     """Tests for the full send_day_14_email workflow node."""
@@ -368,6 +367,7 @@ class TestDay14EmailFlow:
 # ================================
 # EMAIL TEMPLATE TEST
 # ================================
+
 
 class TestCMAEmailTemplate:
     """Tests for the CMA email HTML template."""

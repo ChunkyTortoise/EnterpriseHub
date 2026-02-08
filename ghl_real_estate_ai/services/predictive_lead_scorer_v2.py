@@ -10,18 +10,19 @@ predictions of closing probability. Provides multi-dimensional scoring:
 """
 
 import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
 
+from ghl_real_estate_ai.agents.lead_intelligence_swarm import lead_intelligence_swarm
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from ghl_real_estate_ai.ml.closing_probability_model import ClosingProbabilityModel, ModelPrediction
 from ghl_real_estate_ai.ml.feature_engineering import FeatureEngineer
-from ghl_real_estate_ai.agents.lead_intelligence_swarm import lead_intelligence_swarm
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 
 logger = get_logger(__name__)
 cache = get_cache_service()
@@ -30,11 +31,11 @@ cache = get_cache_service()
 class LeadPriority(Enum):
     """Lead priority levels for Jorge's workflow optimization."""
 
-    CRITICAL = "critical"      # 90-100% - Immediate action required
-    HIGH = "high"             # 75-89% - Contact within 2 hours
-    MEDIUM = "medium"         # 50-74% - Contact within 24 hours
-    LOW = "low"              # 25-49% - Add to nurture campaign
-    COLD = "cold"            # 0-24% - Long-term nurture only
+    CRITICAL = "critical"  # 90-100% - Immediate action required
+    HIGH = "high"  # 75-89% - Contact within 2 hours
+    MEDIUM = "medium"  # 50-74% - Contact within 24 hours
+    LOW = "low"  # 25-49% - Add to nurture campaign
+    COLD = "cold"  # 0-24% - Long-term nurture only
 
 
 @dataclass
@@ -51,8 +52,8 @@ class PredictiveScore:
 
     # Multi-dimensional analysis
     engagement_score: float  # 0-100
-    urgency_score: float    # 0-100
-    risk_score: float       # 0-100 (higher = more risk)
+    urgency_score: float  # 0-100
+    risk_score: float  # 0-100 (higher = more risk)
 
     # Composite scoring
     overall_priority_score: float  # 0-100
@@ -68,17 +69,17 @@ class PredictiveScore:
     # ROI predictions
     estimated_revenue_potential: float
     effort_efficiency_score: float  # Revenue potential / effort required
-    
+
     # Model metadata
     model_confidence: float
     last_updated: datetime
 
     # ROI predictions (continued)
-    net_yield_estimate: Optional[float] = None # For sellers: (Market - (Price+Repairs))/Market
-    potential_margin: Optional[float] = None    # For sellers: Estimated dollar profit
-    
+    net_yield_estimate: Optional[float] = None  # For sellers: (Market - (Price+Repairs))/Market
+    potential_margin: Optional[float] = None  # For sellers: Estimated dollar profit
+
     # Phase 5: Autonomous Expansion
-    has_conflicting_intent: bool = False # Flag for HITL escalation
+    has_conflicting_intent: bool = False  # Flag for HITL escalation
 
     # Phase 3: Swarm Consensus
     swarm_consensus_score: Optional[float] = None
@@ -129,10 +130,10 @@ class PredictiveLeadScorerV2:
 
         # Scoring weights for composite score
         self.default_weights = {
-            "qualification": 0.25,    # Traditional qualification
+            "qualification": 0.25,  # Traditional qualification
             "closing_probability": 0.35,  # ML prediction (highest weight)
-            "engagement": 0.20,       # Conversation engagement
-            "urgency": 0.20          # Timeline urgency
+            "engagement": 0.20,  # Conversation engagement
+            "urgency": 0.20,  # Timeline urgency
         }
         self.weights = self.default_weights.copy()
 
@@ -143,7 +144,7 @@ class PredictiveLeadScorerV2:
             LeadPriority.HIGH: 80,
             LeadPriority.MEDIUM: 60,
             LeadPriority.LOW: 35,
-            LeadPriority.COLD: 0
+            LeadPriority.COLD: 0,
         }
 
     async def _load_dynamic_weights(self):
@@ -174,7 +175,7 @@ class PredictiveLeadScorerV2:
             conversation_context = {
                 "conversation_history": [],
                 "extracted_preferences": {},
-                "created_at": datetime.now().isoformat()
+                "created_at": datetime.now().isoformat(),
             }
 
         # Normalize input: if it's a list, wrap it in a dict
@@ -182,7 +183,7 @@ class PredictiveLeadScorerV2:
             conversation_context = {
                 "conversation_history": conversation_context,
                 "extracted_preferences": {},
-                "created_at": datetime.now().isoformat()
+                "created_at": datetime.now().isoformat(),
             }
 
         # Ensure required keys exist
@@ -191,7 +192,7 @@ class PredictiveLeadScorerV2:
             conversation_context = {
                 "conversation_history": [],
                 "extracted_preferences": {},
-                "created_at": datetime.now().isoformat()
+                "created_at": datetime.now().isoformat(),
             }
 
         # Ensure conversation_history key exists
@@ -214,10 +215,12 @@ class PredictiveLeadScorerV2:
 
             # 2. ML-powered closing probability & Swarm Consensus (Parallel)
             lead_id = conversation_context.get("contact_id") or f"lead_{hash(str(conversation_context))}"
-            
+
             ml_task = asyncio.create_task(self.ml_model.predict_closing_probability(conversation_context, location))
-            swarm_task = asyncio.create_task(lead_intelligence_swarm.analyze_lead_comprehensive(lead_id, conversation_context))
-            
+            swarm_task = asyncio.create_task(
+                lead_intelligence_swarm.analyze_lead_comprehensive(lead_id, conversation_context)
+            )
+
             ml_prediction, swarm_consensus = await asyncio.gather(ml_task, swarm_task)
 
             # 3. Extract conversation features for detailed analysis
@@ -237,13 +240,13 @@ class PredictiveLeadScorerV2:
             swarm_weight = 0.15
             ml_weight = self.weights["closing_probability"] - (swarm_weight / 2)
             qual_weight = self.weights["qualification"] - (swarm_weight / 2)
-            
+
             overall_priority_score = (
-                qualification_percentage * qual_weight +
-                ml_prediction.closing_probability * 100 * ml_weight +
-                engagement_score * self.weights["engagement"] +
-                urgency_score * self.weights["urgency"] +
-                swarm_consensus.overall_score * swarm_weight
+                qualification_percentage * qual_weight
+                + ml_prediction.closing_probability * 100 * ml_weight
+                + engagement_score * self.weights["engagement"]
+                + urgency_score * self.weights["urgency"]
+                + swarm_consensus.overall_score * swarm_weight
             )
             overall_priority_score = min(overall_priority_score, 100.0)
 
@@ -265,7 +268,7 @@ class PredictiveLeadScorerV2:
             time_investment = await self._recommend_time_investment(
                 ml_prediction.closing_probability, effort_efficiency
             )
-            
+
             # 12. Phase 5: Conflicting Intent Detection
             has_conflicting_intent = self._detect_conflicting_intent(conversation_context, urgency_score)
 
@@ -273,44 +276,36 @@ class PredictiveLeadScorerV2:
                 # Traditional scoring
                 qualification_score=qualification_score,
                 qualification_percentage=qualification_percentage,
-
                 # ML predictions
                 closing_probability=ml_prediction.closing_probability,
                 closing_confidence_interval=ml_prediction.confidence_interval,
-
                 # Multi-dimensional scores
                 engagement_score=engagement_score,
                 urgency_score=urgency_score,
                 risk_score=risk_score,
-
                 # Composite scoring
                 overall_priority_score=overall_priority_score,
                 priority_level=priority_level,
-
                 # Insights
                 risk_factors=ml_prediction.risk_factors,
                 positive_signals=ml_prediction.positive_signals,
                 recommended_actions=recommended_actions,
                 optimal_contact_timing=optimal_timing,
                 time_investment_recommendation=time_investment,
-
                 # ROI predictions
                 estimated_revenue_potential=estimated_revenue,
                 effort_efficiency_score=effort_efficiency,
                 net_yield_estimate=net_yield,
                 potential_margin=potential_margin,
-
                 # Model metadata
                 model_confidence=ml_prediction.model_confidence,
                 last_updated=datetime.now(),
-                
                 # Phase 5
                 has_conflicting_intent=has_conflicting_intent,
-                
                 # Phase 3
                 swarm_consensus_score=swarm_consensus.overall_score,
                 swarm_consensus_level=swarm_consensus.consensus_level.value,
-                swarm_processing_time_ms=swarm_consensus.processing_time_ms
+                swarm_processing_time_ms=swarm_consensus.processing_time_ms,
             )
 
             # Cache for 30 minutes
@@ -323,9 +318,7 @@ class PredictiveLeadScorerV2:
             return await self._fallback_scoring(conversation_context)
 
     async def generate_lead_insights(
-        self,
-        conversation_context: Dict[str, Any],
-        location: Optional[str] = None
+        self, conversation_context: Dict[str, Any], location: Optional[str] = None
     ) -> LeadInsights:
         """
         Generate deep insights for Jorge's decision making.
@@ -366,7 +359,9 @@ class PredictiveLeadScorerV2:
 
             # Resource allocation
             time_to_close = await self._estimate_time_to_close(score.closing_probability, conv_features)
-            effort_level = await self._recommend_effort_level(score.overall_priority_score, score.effort_efficiency_score)
+            effort_level = await self._recommend_effort_level(
+                score.overall_priority_score, score.effort_efficiency_score
+            )
             churn_probability = await self._calculate_churn_probability(conv_features, score)
 
             insights = LeadInsights(
@@ -374,22 +369,19 @@ class PredictiveLeadScorerV2:
                 response_pattern_analysis=response_pattern,
                 engagement_trend=engagement_trend,
                 conversation_quality_score=conversation_quality,
-
                 # Market context
                 market_timing_advantage=market_timing,
                 competitive_pressure_level=competitive_pressure,
                 inventory_availability_impact=inventory_impact,
-
                 # Action recommendations
                 next_best_action=next_best_action,
                 optimal_communication_channel=optimal_channel,
                 recommended_follow_up_interval=follow_up_interval,
                 pricing_strategy_recommendation=pricing_strategy,
-
                 # Resource allocation
                 estimated_time_to_close=time_to_close,
                 recommended_effort_level=effort_level,
-                probability_of_churn=churn_probability
+                probability_of_churn=churn_probability,
             )
 
             await cache.set(cache_key, insights, self.cache_ttl)
@@ -427,19 +419,19 @@ class PredictiveLeadScorerV2:
 
     async def _calculate_latency_score(self, conv_features) -> float:
         """
-        Analyze response time consistency. 
+        Analyze response time consistency.
         If a hot lead's response time slows down, it indicates interest drift.
         """
         # avg_response_time is in seconds
         avg_time = conv_features.avg_response_time
-        
-        if avg_time < 300: # < 5 minutes
+
+        if avg_time < 300:  # < 5 minutes
             return 10.0
-        elif avg_time < 1800: # < 30 minutes
+        elif avg_time < 1800:  # < 30 minutes
             return 5.0
-        elif avg_time > 86400: # > 24 hours
-            return -20.0 # Significant penalty for slow response
-            
+        elif avg_time > 86400:  # > 24 hours
+            return -20.0  # Significant penalty for slow response
+
         return 0.0
 
     async def _calculate_urgency_score(self, conv_features, context) -> float:
@@ -504,18 +496,14 @@ class PredictiveLeadScorerV2:
         return min(risk_score, 100.0)
 
     def _calculate_composite_score(
-        self,
-        qualification_pct: float,
-        closing_probability_pct: float,
-        engagement_score: float,
-        urgency_score: float
+        self, qualification_pct: float, closing_probability_pct: float, engagement_score: float, urgency_score: float
     ) -> float:
         """Calculate weighted composite priority score."""
         composite = (
-            qualification_pct * self.weights["qualification"] +
-            closing_probability_pct * self.weights["closing_probability"] +
-            engagement_score * self.weights["engagement"] +
-            urgency_score * self.weights["urgency"]
+            qualification_pct * self.weights["qualification"]
+            + closing_probability_pct * self.weights["closing_probability"]
+            + engagement_score * self.weights["engagement"]
+            + urgency_score * self.weights["urgency"]
         )
 
         return min(composite, 100.0)
@@ -528,49 +516,57 @@ class PredictiveLeadScorerV2:
         return LeadPriority.COLD
 
     async def _generate_advanced_recommendations(
-        self,
-        priority: LeadPriority,
-        ml_prediction: ModelPrediction,
-        conv_features,
-        traditional_result: Dict
+        self, priority: LeadPriority, ml_prediction: ModelPrediction, conv_features, traditional_result: Dict
     ) -> List[str]:
         """Generate advanced action recommendations."""
         actions = []
 
         # Temperature-Escalation Logic
-        if priority == LeadPriority.CRITICAL or (priority == LeadPriority.HIGH and conv_features.avg_response_time > 3600):
-            actions.append("🔥 TEMPERATURE ESCALATION: Response latency detected in high-intent lead. Call immediately to re-engage.")
+        if priority == LeadPriority.CRITICAL or (
+            priority == LeadPriority.HIGH and conv_features.avg_response_time > 3600
+        ):
+            actions.append(
+                "🔥 TEMPERATURE ESCALATION: Response latency detected in high-intent lead. Call immediately to re-engage."
+            )
 
         if priority == LeadPriority.CRITICAL:
-            actions.extend([
-                "🚨 IMMEDIATE ACTION: Contact within 1 hour",
-                "📞 Call directly - don't rely on text/email",
-                "🎯 Prepare property showing options",
-                "💰 Ready pre-approval documentation",
-                "🏠 Schedule showing within 24-48 hours"
-            ])
+            actions.extend(
+                [
+                    "🚨 IMMEDIATE ACTION: Contact within 1 hour",
+                    "📞 Call directly - don't rely on text/email",
+                    "🎯 Prepare property showing options",
+                    "💰 Ready pre-approval documentation",
+                    "🏠 Schedule showing within 24-48 hours",
+                ]
+            )
         elif priority == LeadPriority.HIGH:
-            actions.extend([
-                "⏰ High priority: Contact within 2 hours",
-                "📲 SMS first, follow with call",
-                "🏡 Send targeted property recommendations",
-                "📋 Complete qualification questionnaire",
-                "📅 Schedule consultation this week"
-            ])
+            actions.extend(
+                [
+                    "⏰ High priority: Contact within 2 hours",
+                    "📲 SMS first, follow with call",
+                    "🏡 Send targeted property recommendations",
+                    "📋 Complete qualification questionnaire",
+                    "📅 Schedule consultation this week",
+                ]
+            )
         elif priority == LeadPriority.MEDIUM:
-            actions.extend([
-                "📞 Contact within 24 hours",
-                "📧 Send market update and new listings",
-                "❓ Gather missing qualification details",
-                "📊 Provide market analysis for their area"
-            ])
+            actions.extend(
+                [
+                    "📞 Contact within 24 hours",
+                    "📧 Send market update and new listings",
+                    "❓ Gather missing qualification details",
+                    "📊 Provide market analysis for their area",
+                ]
+            )
         else:
-            actions.extend([
-                "📮 Add to nurture email campaign",
-                "📚 Send educational real estate content",
-                "📅 Schedule follow-up in 7-14 days",
-                "🎯 Continue qualification process gradually"
-            ])
+            actions.extend(
+                [
+                    "📮 Add to nurture email campaign",
+                    "📚 Send educational real estate content",
+                    "📅 Schedule follow-up in 7-14 days",
+                    "🎯 Continue qualification process gradually",
+                ]
+            )
 
         # Add ML-specific recommendations
         if ml_prediction.risk_factors:
@@ -590,38 +586,35 @@ class PredictiveLeadScorerV2:
         seller_prefs = context.get("seller_preferences", {})
         if not seller_prefs:
             return False
-            
+
         # Example 1: Urgent timeline but demanding firm top-dollar price
         is_urgent = urgency_score > 70 or seller_prefs.get("timeline_urgency") == "urgent"
         is_firm_on_price = seller_prefs.get("price_flexibility") == "firm"
-        
+
         # In a real system, we'd compare price_expectation to market ARV
         # For now, if both are high, flag as conflicting
         if is_urgent and is_firm_on_price:
             return True
-            
+
         # Example 2: Major repairs needed but expects move-in ready price
         condition = seller_prefs.get("property_condition")
         if condition in ["major repairs", "poor"] and is_firm_on_price:
             return True
-            
+
         return False
 
     async def _calculate_roi_predictions(
-        self,
-        closing_probability: float,
-        conv_features,
-        context: Dict
+        self, closing_probability: float, conv_features, context: Dict
     ) -> Tuple[float, float, Optional[float], Optional[float]]:
         """Calculate ROI predictions for Jorge's time investment."""
 
         # Estimate commission based on budget/market data
         prefs = context.get("extracted_preferences", {})
         seller_prefs = context.get("seller_preferences", {})
-        
+
         # Determine if this is a seller deal
         is_seller = bool(seller_prefs)
-        
+
         budget = prefs.get("budget")
         price_expectation = seller_prefs.get("price_expectation")
         repair_estimate = seller_prefs.get("repair_estimate", 0)
@@ -633,10 +626,11 @@ class PredictiveLeadScorerV2:
             elif isinstance(budget, str):
                 # Extract numeric value
                 import re
-                budget_str = re.sub(r'[^\d.]', '', budget)
-                if 'k' in budget.lower():
+
+                budget_str = re.sub(r"[^\d.]", "", budget)
+                if "k" in budget.lower():
                     estimated_value = float(budget_str) * 1000
-                elif 'm' in budget.lower():
+                elif "m" in budget.lower():
                     estimated_value = float(budget_str) * 1000000
                 else:
                     estimated_value = float(budget_str)
@@ -651,35 +645,38 @@ class PredictiveLeadScorerV2:
 
         # Calculate expected revenue
         expected_revenue = potential_commission * closing_probability
-        
+
         # Calculate Seller-Specific Net Yield & Margin (Jorge System 3.0 Enterprise)
         net_yield = None
         potential_margin = None
-        
+
         if is_seller and price_expectation:
             try:
                 # PHASE 7: FINANCIAL PRECISION
                 # Use data-driven valuation via NationalMarketIntelligence
                 from ghl_real_estate_ai.services.national_market_intelligence import get_national_market_intelligence
+
                 market_intel = get_national_market_intelligence()
-                
+
                 # Fetch refined ARV (Market Valuation)
                 location_str = seller_prefs.get("property_address") or context.get("location_id") or "national"
                 price_val = float(price_expectation)
-                
+
                 # Use the new precise tool
                 arv = await market_intel.get_market_valuation(location_str, price_val)
-                
+
                 repair_cost = float(repair_estimate) if repair_estimate else 0
-                
+
                 # Transactional Costs (Jorge System 3.0 Standard)
                 acquisition_closing = float(price_expectation) * 0.03
                 selling_costs = arv * 0.06
-                holding_costs = arv * 0.008 * 6 # 6 months holding
-                
-                potential_margin = arv - float(price_expectation) - repair_cost - acquisition_closing - selling_costs - holding_costs
+                holding_costs = arv * 0.008 * 6  # 6 months holding
+
+                potential_margin = (
+                    arv - float(price_expectation) - repair_cost - acquisition_closing - selling_costs - holding_costs
+                )
                 net_yield = potential_margin / arv if arv > 0 else 0
-                
+
                 # Revenue Potential: 30% weighting for commission, 70% for investment profit
                 expected_revenue = (expected_revenue * 0.3) + (potential_margin * closing_probability * 0.7)
             except (ValueError, TypeError):
@@ -781,7 +778,7 @@ class PredictiveLeadScorerV2:
             estimated_revenue_potential=15000.0,  # Average commission
             effort_efficiency_score=300.0,
             model_confidence=0.5,
-            last_updated=datetime.now()
+            last_updated=datetime.now(),
         )
 
     # Additional helper methods for insights generation
@@ -814,10 +811,10 @@ class PredictiveLeadScorerV2:
     async def _calculate_conversation_quality(self, conv_features) -> float:
         """Calculate overall conversation quality score."""
         quality = (
-            conv_features.engagement_score * 0.3 +
-            conv_features.qualification_completeness * 0.4 +
-            (conv_features.overall_sentiment + 1) / 2 * 0.2 +
-            min(conv_features.question_asking_frequency, 1.0) * 0.1
+            conv_features.engagement_score * 0.3
+            + conv_features.qualification_completeness * 0.4
+            + (conv_features.overall_sentiment + 1) / 2 * 0.2
+            + min(conv_features.question_asking_frequency, 1.0) * 0.1
         ) * 100
 
         return min(quality, 100.0)
@@ -985,5 +982,5 @@ class PredictiveLeadScorerV2:
             pricing_strategy_recommendation="Market-competitive approach",
             estimated_time_to_close=45,
             recommended_effort_level="standard",
-            probability_of_churn=0.3
+            probability_of_churn=0.3,
         )

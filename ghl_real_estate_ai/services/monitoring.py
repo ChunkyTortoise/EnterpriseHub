@@ -36,9 +36,7 @@ class PerformanceMonitor:
 
     def __init__(self, location_id: str):
         self.location_id = location_id
-        self.metrics_dir = (
-            Path(__file__).parent.parent / "data" / "metrics" / location_id
-        )
+        self.metrics_dir = Path(__file__).parent.parent / "data" / "metrics" / location_id
         self.metrics_dir.mkdir(parents=True, exist_ok=True)
 
         # In-memory metrics storage (last 1000 data points)
@@ -148,11 +146,7 @@ class PerformanceMonitor:
 
         # Filter to time window
         cutoff_time = datetime.now() - timedelta(minutes=time_window_minutes)
-        recent_metrics = [
-            m
-            for m in self.metrics[metric_name]
-            if datetime.fromisoformat(m["timestamp"]) > cutoff_time
-        ]
+        recent_metrics = [m for m in self.metrics[metric_name] if datetime.fromisoformat(m["timestamp"]) > cutoff_time]
 
         if not recent_metrics:
             return {"error": "No data in time window"}
@@ -173,9 +167,7 @@ class PerformanceMonitor:
             "p99": values[int(count * 0.99)] if count >= 100 else values[-1],
         }
 
-    def get_recent_alerts(
-        self, count: int = 10, level: Optional[AlertLevel] = None
-    ) -> List[Dict]:
+    def get_recent_alerts(self, count: int = 10, level: Optional[AlertLevel] = None) -> List[Dict]:
         """Get recent alerts."""
         alerts_file = self.metrics_dir / "alerts.json"
 
@@ -335,9 +327,7 @@ class ErrorTracker:
                             continue
 
         # Get top 10 most common errors
-        top_errors = sorted(
-            error_counts_by_type.items(), key=lambda x: x[1], reverse=True
-        )[:10]
+        top_errors = sorted(error_counts_by_type.items(), key=lambda x: x[1], reverse=True)[:10]
 
         return {
             "total_errors": len(all_errors),
@@ -423,15 +413,9 @@ class SystemHealthDashboard:
             "errors": error_summary,
             "uptime_percentage": uptime_percentage,
             "metrics": {
-                "api_response_time": self.performance_monitor.get_metric_stats(
-                    "api_response_time_ms", 60
-                ),
-                "conversation_count": self.performance_monitor.counters.get(
-                    "conversations_processed", 0
-                ),
-                "messages_sent": self.performance_monitor.counters.get(
-                    "messages_sent", 0
-                ),
+                "api_response_time": self.performance_monitor.get_metric_stats("api_response_time_ms", 60),
+                "conversation_count": self.performance_monitor.counters.get("conversations_processed", 0),
+                "messages_sent": self.performance_monitor.counters.get("messages_sent", 0),
             },
         }
 
@@ -448,9 +432,7 @@ class SystemHealthDashboard:
         # Overall status
         status_emoji = {"healthy": "✅", "degraded": "⚠️", "unhealthy": "❌"}
         status = data["health"]["status"]
-        report.append(
-            f"Overall Status: {status_emoji.get(status, '❓')} {status.upper()}\n"
-        )
+        report.append(f"Overall Status: {status_emoji.get(status, '❓')} {status.upper()}\n")
 
         # Uptime
         report.append(f"Uptime: {data['uptime_percentage']:.2f}%\n")
@@ -481,9 +463,7 @@ class SystemHealthDashboard:
             report.append(f"API Response Time (avg): {api_stats['mean']:.0f}ms")
             report.append(f"API Response Time (p95): {api_stats.get('p95', 0):.0f}ms")
 
-        report.append(
-            f"Conversations Processed: {data['metrics'].get('conversation_count', 0)}"
-        )
+        report.append(f"Conversations Processed: {data['metrics'].get('conversation_count', 0)}")
         report.append(f"Messages Sent: {data['metrics'].get('messages_sent', 0)}")
 
         report.append("\n" + "=" * 60)
@@ -500,9 +480,7 @@ if __name__ == "__main__":
     # Record some metrics
     monitor.record_metric("api_response_time_ms", 250, MetricType.TIMER)
     monitor.record_metric("api_response_time_ms", 300, MetricType.TIMER)
-    monitor.record_metric(
-        "api_response_time_ms", 600, MetricType.TIMER
-    )  # Will trigger alert
+    monitor.record_metric("api_response_time_ms", 600, MetricType.TIMER)  # Will trigger alert
 
     # Get stats
     stats = monitor.get_metric_stats("api_response_time_ms", 60)

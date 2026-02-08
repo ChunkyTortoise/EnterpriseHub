@@ -2,13 +2,16 @@
 Smoke test for Enterprise Hub module structure.
 Verifies that all registered modules exist and are importable.
 """
-import pytest
+
 import importlib
+
+import pytest
 
 try:
     from app import MODULES
 except ImportError:
     pytest.skip("MODULES not available in app", allow_module_level=True)
+
 
 def test_module_registration():
     """Verify all modules in registry have corresponding files in modules/."""
@@ -19,9 +22,11 @@ def test_module_registration():
         except ImportError as e:
             pytest.fail(f"Module '{module_name}' registered as '{key}' could not be imported: {e}")
 
+
 def test_icon_paths():
     """Verify all module icons exist."""
     import os
+
     for key, info in MODULES.items():
         icon_path = info["icon"]
         # Skip remote URLs if any
@@ -29,10 +34,12 @@ def test_icon_paths():
             continue
         assert os.path.exists(icon_path), f"Icon for '{key}' not found at {icon_path}"
 
+
 def test_ui_utils():
     """Verify core UI utilities are available."""
     try:
         import utils.ui as ui
+
         assert hasattr(ui, "setup_interface")
         assert hasattr(ui, "card_metric")
     except ImportError:

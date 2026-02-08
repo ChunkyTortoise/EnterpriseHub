@@ -128,12 +128,8 @@ class MultiModalFusion:
             structured_results = self._normalize_if_not_empty(structured_results)
 
         # Apply modality weights
-        weighted_text = self._apply_modality_weight(
-            text_results, fusion_config.text_weight, "text"
-        )
-        weighted_image = self._apply_modality_weight(
-            image_results, fusion_config.image_weight, "image"
-        )
+        weighted_text = self._apply_modality_weight(text_results, fusion_config.text_weight, "text")
+        weighted_image = self._apply_modality_weight(image_results, fusion_config.image_weight, "image")
         weighted_structured = self._apply_modality_weight(
             structured_results, fusion_config.structured_weight, "structured"
         )
@@ -167,9 +163,7 @@ class MultiModalFusion:
         """
         normalized_text = normalize_scores(text_results) if text_results else []
         normalized_image = normalize_scores(image_results) if image_results else []
-        normalized_structured = (
-            normalize_scores(structured_results) if structured_results else []
-        )
+        normalized_structured = normalize_scores(structured_results) if structured_results else []
 
         return normalized_text, normalized_image, normalized_structured
 
@@ -193,12 +187,8 @@ class MultiModalFusion:
         """
         fusion_config = config or self.config
 
-        weighted_text = self._apply_modality_weight(
-            text_results, fusion_config.text_weight, "text"
-        )
-        weighted_image = self._apply_modality_weight(
-            image_results, fusion_config.image_weight, "image"
-        )
+        weighted_text = self._apply_modality_weight(text_results, fusion_config.text_weight, "text")
+        weighted_image = self._apply_modality_weight(image_results, fusion_config.image_weight, "image")
         weighted_structured = self._apply_modality_weight(
             structured_results, fusion_config.structured_weight, "structured"
         )
@@ -279,9 +269,7 @@ class MultiModalFusion:
 
         # Create fused results
         fused_results = []
-        for rank, (chunk_id, fused_score) in enumerate(
-            sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True), 1
-        ):
+        for rank, (chunk_id, fused_score) in enumerate(sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True), 1):
             if rank > fusion_config.max_results:
                 break
 
@@ -294,16 +282,13 @@ class MultiModalFusion:
                 score=min(fused_score, 1.0),
                 rank=rank,
                 distance=1.0 - min(fused_score, 1.0),
-                explanation=f"RRF fusion score: {fused_score:.4f} "
-                f"(sources: {', '.join(sorted(sources))})",
+                explanation=f"RRF fusion score: {fused_score:.4f} (sources: {', '.join(sorted(sources))})",
             )
             fused_results.append(fused_result)
 
         return fused_results
 
-    def _normalize_if_not_empty(
-        self, results: List[SearchResult]
-    ) -> List[SearchResult]:
+    def _normalize_if_not_empty(self, results: List[SearchResult]) -> List[SearchResult]:
         """Normalize scores if results are not empty.
 
         Args:
@@ -369,20 +354,20 @@ class MultiModalFusion:
         structured_map = {result.chunk.id: result for result in structured_results}
 
         # Get all unique chunk IDs
-        all_chunk_ids = (
-            set(text_map.keys()) | set(image_map.keys()) | set(structured_map.keys())
-        )
+        all_chunk_ids = set(text_map.keys()) | set(image_map.keys()) | set(structured_map.keys())
 
         # Calculate combined scores
         combined_results = []
         for chunk_id in all_chunk_ids:
-            text_score = text_map.get(chunk_id, SearchResult(
-                chunk=list(all_chunk_ids)[0], score=0.0, rank=0, distance=1.0
-            )).score if chunk_id in text_map else 0.0
-            image_score = image_map[chunk_id].score if chunk_id in image_map else 0.0
-            structured_score = (
-                structured_map[chunk_id].score if chunk_id in structured_map else 0.0
+            text_score = (
+                text_map.get(
+                    chunk_id, SearchResult(chunk=list(all_chunk_ids)[0], score=0.0, rank=0, distance=1.0)
+                ).score
+                if chunk_id in text_map
+                else 0.0
             )
+            image_score = image_map[chunk_id].score if chunk_id in image_map else 0.0
+            structured_score = structured_map[chunk_id].score if chunk_id in structured_map else 0.0
 
             # Sum scores across modalities
             combined_score = text_score + image_score + structured_score

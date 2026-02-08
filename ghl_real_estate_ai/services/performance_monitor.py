@@ -21,22 +21,23 @@ Last Updated: 2026-01-18
 """
 
 import asyncio
-import time
+import json
 import logging
+import statistics
 import threading
+import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
-import statistics
-import json
 
 logger = logging.getLogger(__name__)
 
 
 class MetricType(Enum):
     """Types of metrics being tracked"""
+
     API_LATENCY = "api_latency"
     CACHE_HIT = "cache_hit"
     CACHE_MISS = "cache_miss"
@@ -50,6 +51,7 @@ class MetricType(Enum):
 
 class AlertSeverity(Enum):
     """Severity levels for alerts"""
+
     INFO = "info"
     WARNING = "warning"
     CRITICAL = "critical"
@@ -58,6 +60,7 @@ class AlertSeverity(Enum):
 @dataclass
 class PerformanceThresholds:
     """Performance thresholds for alerting"""
+
     # API Performance
     api_p50_ms: float = 50.0
     api_p95_ms: float = 100.0
@@ -89,6 +92,7 @@ class PerformanceThresholds:
 @dataclass
 class Alert:
     """Performance alert"""
+
     alert_id: str
     severity: AlertSeverity
     metric_type: MetricType
@@ -116,6 +120,7 @@ class Alert:
 @dataclass
 class PerformanceSnapshot:
     """Point-in-time performance snapshot"""
+
     timestamp: datetime
 
     # API Metrics
@@ -195,10 +200,7 @@ class MetricCollector:
         self.retention_seconds = retention_minutes * 60
 
         # Metric storage - uses deque for efficient rolling window
-        self._metrics: Dict[MetricType, deque] = {
-            metric_type: deque(maxlen=window_size)
-            for metric_type in MetricType
-        }
+        self._metrics: Dict[MetricType, deque] = {metric_type: deque(maxlen=window_size) for metric_type in MetricType}
 
         # Lock for thread safety
         self._lock = threading.RLock()
@@ -384,8 +386,9 @@ class PerformanceMonitor:
     # JORGE-SPECIFIC PERFORMANCE TRACKING METHODS
     # ========================================================================
 
-    async def track_jorge_performance(self, start_time: float, end_time: float,
-                                    success: bool = True, metadata: Dict = None):
+    async def track_jorge_performance(
+        self, start_time: float, end_time: float, success: bool = True, metadata: Dict = None
+    ):
         """Track Jorge Seller Bot performance (Target: <42ms)"""
         response_time = (end_time - start_time) * 1000  # Convert to ms
 
@@ -398,7 +401,7 @@ class PerformanceMonitor:
             "response_time_ms": response_time,
             "success": success,
             "target_ms": 42,  # Jorge's enterprise target
-            "metadata": metadata or {}
+            "metadata": metadata or {},
         }
 
         # Track as counter for easy access
@@ -414,8 +417,9 @@ class PerformanceMonitor:
 
         logger.info(f"Jorge Performance: {response_time:.2f}ms (target: 42ms)")
 
-    async def track_lead_automation(self, automation_type: str, start_time: float,
-                                  end_time: float, success: bool = True):
+    async def track_lead_automation(
+        self, automation_type: str, start_time: float, end_time: float, success: bool = True
+    ):
         """Track Lead Bot automation performance (Target: <500ms)"""
         latency = (end_time - start_time) * 1000  # Convert to ms
 
@@ -437,8 +441,7 @@ class PerformanceMonitor:
 
         logger.info(f"Lead Automation ({automation_type}): {latency:.2f}ms (target: 500ms)")
 
-    async def track_websocket_delivery(self, start_time: float, end_time: float,
-                                     event_type: str, success: bool = True):
+    async def track_websocket_delivery(self, start_time: float, end_time: float, event_type: str, success: bool = True):
         """Track WebSocket event delivery performance (Target: <10ms)"""
         delivery_time = (end_time - start_time) * 1000  # Convert to ms
 
@@ -462,11 +465,7 @@ class PerformanceMonitor:
 
     async def _jorge_performance_alert(self, metric: str, value: float):
         """Send Jorge-specific performance alert"""
-        target_map = {
-            "jorge_response_time": 42,
-            "lead_automation_latency": 500,
-            "websocket_delivery_time": 10
-        }
+        target_map = {"jorge_response_time": 42, "lead_automation_latency": 500, "websocket_delivery_time": 10}
         target = target_map.get(metric, 100)
 
         logger.warning(f"🚨 JORGE PERFORMANCE ALERT: {metric} = {value:.2f}ms (target: {target}ms)")
@@ -488,16 +487,16 @@ class PerformanceMonitor:
                 "p50_ms": api_stats.get("p50", 0),
                 "p95_ms": api_stats.get("p95", 0),
                 "p99_ms": api_stats.get("p99", 0),
-                "target_ms": 42
+                "target_ms": 42,
             },
             "requests": {
                 "total": jorge_requests,
                 "successes": jorge_successes,
                 "failures": jorge_failures,
-                "success_rate": jorge_successes / max(jorge_requests, 1)
+                "success_rate": jorge_successes / max(jorge_requests, 1),
             },
             "health_status": self._get_jorge_health_status(api_stats.get("p95", 0)),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     def get_lead_automation_metrics(self, since_seconds: int = 60) -> Dict[str, Any]:
@@ -519,17 +518,17 @@ class PerformanceMonitor:
                 "avg_ms": api_stats.get("mean", 0),
                 "p50_ms": api_stats.get("p50", 0),
                 "p95_ms": api_stats.get("p95", 0),
-                "target_ms": 500
+                "target_ms": 500,
             },
             "automation_counts": automation_breakdown,
             "totals": {
                 "total_automations": total_automations,
                 "successes": successes,
                 "failures": failures,
-                "success_rate": successes / max(total_automations, 1)
+                "success_rate": successes / max(total_automations, 1),
             },
             "health_status": self._get_lead_automation_health_status(api_stats.get("p95", 0)),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     def get_websocket_metrics(self, since_seconds: int = 60) -> Dict[str, Any]:
@@ -545,16 +544,16 @@ class PerformanceMonitor:
                 "avg_ms": api_stats.get("mean", 0),
                 "p50_ms": api_stats.get("p50", 0),
                 "p95_ms": api_stats.get("p95", 0),
-                "target_ms": 10
+                "target_ms": 10,
             },
             "deliveries": {
                 "total": total_deliveries,
                 "successes": successes,
                 "failures": failures,
-                "success_rate": successes / max(total_deliveries, 1)
+                "success_rate": successes / max(total_deliveries, 1),
             },
             "health_status": self._get_websocket_health_status(api_stats.get("p95", 0)),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     def _get_jorge_health_status(self, p95_ms: float) -> str:
@@ -606,17 +605,17 @@ class PerformanceMonitor:
                     "status": system_health["status"],
                     "active_alerts": len(self._active_alerts),
                     "uptime": "99.5%",  # TODO: Implement actual uptime tracking
-                }
+                },
             },
             "enterprise_targets": {
                 "jorge_response_time": "< 42ms",
                 "lead_automation": "< 500ms",
                 "websocket_delivery": "< 10ms",
                 "cache_hit_rate": "> 95%",
-                "system_availability": "> 99.5%"
+                "system_availability": "> 99.5%",
             },
             "performance_grade": self._calculate_enterprise_grade(jorge_metrics, lead_metrics, websocket_metrics),
-            "generated_at": datetime.now().isoformat()
+            "generated_at": datetime.now().isoformat(),
         }
 
     def _calculate_enterprise_grade(self, jorge_metrics: Dict, lead_metrics: Dict, websocket_metrics: Dict) -> str:
@@ -625,17 +624,12 @@ class PerformanceMonitor:
         lead_health = lead_metrics["health_status"]
         websocket_health = websocket_metrics["health_status"]
 
-        health_scores = {
-            "excellent": 4,
-            "good": 3,
-            "warning": 2,
-            "critical": 1
-        }
+        health_scores = {"excellent": 4, "good": 3, "warning": 2, "critical": 1}
 
         avg_score = (
-            health_scores.get(jorge_health, 1) +
-            health_scores.get(lead_health, 1) +
-            health_scores.get(websocket_health, 1)
+            health_scores.get(jorge_health, 1)
+            + health_scores.get(lead_health, 1)
+            + health_scores.get(websocket_health, 1)
         ) / 3
 
         if avg_score >= 3.5:
@@ -755,32 +749,46 @@ class PerformanceMonitor:
         # Check API P95
         if snapshot.api_p95_ms > self.thresholds.api_p99_ms:
             status = "critical"
-            issues.append(f"API P95 ({snapshot.api_p95_ms:.0f}ms) exceeds critical threshold ({self.thresholds.api_p99_ms}ms)")
+            issues.append(
+                f"API P95 ({snapshot.api_p95_ms:.0f}ms) exceeds critical threshold ({self.thresholds.api_p99_ms}ms)"
+            )
         elif snapshot.api_p95_ms > self.thresholds.api_p95_ms:
             status = "warning" if status == "healthy" else status
-            issues.append(f"API P95 ({snapshot.api_p95_ms:.0f}ms) exceeds warning threshold ({self.thresholds.api_p95_ms}ms)")
+            issues.append(
+                f"API P95 ({snapshot.api_p95_ms:.0f}ms) exceeds warning threshold ({self.thresholds.api_p95_ms}ms)"
+            )
 
         # Check Cache Hit Rate
         if snapshot.cache_hit_rate < self.thresholds.cache_hit_rate_critical and snapshot.cache_total_requests > 0:
             status = "critical"
-            issues.append(f"Cache hit rate ({snapshot.cache_hit_rate:.1%}) below critical threshold ({self.thresholds.cache_hit_rate_critical:.0%})")
+            issues.append(
+                f"Cache hit rate ({snapshot.cache_hit_rate:.1%}) below critical threshold ({self.thresholds.cache_hit_rate_critical:.0%})"
+            )
         elif snapshot.cache_hit_rate < self.thresholds.cache_hit_rate_warning and snapshot.cache_total_requests > 0:
             status = "warning" if status == "healthy" else status
-            issues.append(f"Cache hit rate ({snapshot.cache_hit_rate:.1%}) below warning threshold ({self.thresholds.cache_hit_rate_warning:.0%})")
+            issues.append(
+                f"Cache hit rate ({snapshot.cache_hit_rate:.1%}) below warning threshold ({self.thresholds.cache_hit_rate_warning:.0%})"
+            )
 
         # Check DB P95
         if snapshot.db_p95_ms > self.thresholds.db_p99_ms:
             status = "critical"
-            issues.append(f"DB P95 ({snapshot.db_p95_ms:.0f}ms) exceeds critical threshold ({self.thresholds.db_p99_ms}ms)")
+            issues.append(
+                f"DB P95 ({snapshot.db_p95_ms:.0f}ms) exceeds critical threshold ({self.thresholds.db_p99_ms}ms)"
+            )
         elif snapshot.db_p95_ms > self.thresholds.db_p95_ms:
             status = "warning" if status == "healthy" else status
-            issues.append(f"DB P95 ({snapshot.db_p95_ms:.0f}ms) exceeds warning threshold ({self.thresholds.db_p95_ms}ms)")
+            issues.append(
+                f"DB P95 ({snapshot.db_p95_ms:.0f}ms) exceeds warning threshold ({self.thresholds.db_p95_ms}ms)"
+            )
 
         # Check capacity
         capacity_usage = snapshot.concurrent_users / self.thresholds.max_concurrent_users
         if capacity_usage > 1.0:
             status = "critical"
-            issues.append(f"Concurrent users ({snapshot.concurrent_users}) exceeds max capacity ({self.thresholds.max_concurrent_users})")
+            issues.append(
+                f"Concurrent users ({snapshot.concurrent_users}) exceeds max capacity ({self.thresholds.max_concurrent_users})"
+            )
         elif capacity_usage > self.thresholds.concurrent_users_warning:
             status = "warning" if status == "healthy" else status
             issues.append(f"Concurrent users at {capacity_usage:.0%} of max capacity")
@@ -812,7 +820,9 @@ class PerformanceMonitor:
         if snapshot.api_p95_ms > self.thresholds.api_p95_ms and snapshot.api_request_count > 0:
             alert = self._create_alert(
                 metric_type=MetricType.API_LATENCY,
-                severity=AlertSeverity.WARNING if snapshot.api_p95_ms <= self.thresholds.api_p99_ms else AlertSeverity.CRITICAL,
+                severity=AlertSeverity.WARNING
+                if snapshot.api_p95_ms <= self.thresholds.api_p99_ms
+                else AlertSeverity.CRITICAL,
                 message=f"API P95 latency ({snapshot.api_p95_ms:.0f}ms) exceeds threshold",
                 current_value=snapshot.api_p95_ms,
                 threshold_value=self.thresholds.api_p95_ms,
@@ -824,7 +834,9 @@ class PerformanceMonitor:
         if snapshot.cache_hit_rate < self.thresholds.cache_hit_rate_warning and snapshot.cache_total_requests > 10:
             alert = self._create_alert(
                 metric_type=MetricType.CACHE_HIT,
-                severity=AlertSeverity.WARNING if snapshot.cache_hit_rate >= self.thresholds.cache_hit_rate_critical else AlertSeverity.CRITICAL,
+                severity=AlertSeverity.WARNING
+                if snapshot.cache_hit_rate >= self.thresholds.cache_hit_rate_critical
+                else AlertSeverity.CRITICAL,
                 message=f"Cache hit rate ({snapshot.cache_hit_rate:.1%}) below threshold",
                 current_value=snapshot.cache_hit_rate,
                 threshold_value=self.thresholds.cache_hit_rate_warning,
@@ -836,7 +848,9 @@ class PerformanceMonitor:
         if snapshot.db_p95_ms > self.thresholds.db_p95_ms and snapshot.db_query_count > 0:
             alert = self._create_alert(
                 metric_type=MetricType.DB_QUERY,
-                severity=AlertSeverity.WARNING if snapshot.db_p95_ms <= self.thresholds.db_p99_ms else AlertSeverity.CRITICAL,
+                severity=AlertSeverity.WARNING
+                if snapshot.db_p95_ms <= self.thresholds.db_p99_ms
+                else AlertSeverity.CRITICAL,
                 message=f"Database P95 latency ({snapshot.db_p95_ms:.0f}ms) exceeds threshold",
                 current_value=snapshot.db_p95_ms,
                 threshold_value=self.thresholds.db_p95_ms,
@@ -846,12 +860,14 @@ class PerformanceMonitor:
 
         return alerts
 
-    def _create_alert(self,
-                      metric_type: MetricType,
-                      severity: AlertSeverity,
-                      message: str,
-                      current_value: float,
-                      threshold_value: float) -> Optional[Alert]:
+    def _create_alert(
+        self,
+        metric_type: MetricType,
+        severity: AlertSeverity,
+        message: str,
+        current_value: float,
+        threshold_value: float,
+    ) -> Optional[Alert]:
         """Create an alert if not already active"""
         alert_key = f"{metric_type.value}:{severity.value}"
 
@@ -973,8 +989,10 @@ def get_performance_monitor() -> PerformanceMonitor:
 # DECORATORS FOR EASY INTEGRATION
 # ============================================================================
 
+
 def monitor_api_latency(endpoint: str = ""):
     """Decorator to monitor API endpoint latency"""
+
     def decorator(func):
         async def async_wrapper(*args, **kwargs):
             monitor = get_performance_monitor()
@@ -1013,6 +1031,7 @@ def monitor_api_latency(endpoint: str = ""):
 
 def monitor_db_query(query_type: str = ""):
     """Decorator to monitor database query latency"""
+
     def decorator(func):
         async def async_wrapper(*args, **kwargs):
             monitor = get_performance_monitor()
@@ -1046,6 +1065,7 @@ def monitor_db_query(query_type: str = ""):
 # ============================================================================
 
 if __name__ == "__main__":
+
     async def test_performance_monitor():
         """Test the performance monitor"""
         monitor = get_performance_monitor()
@@ -1089,9 +1109,15 @@ if __name__ == "__main__":
         print(f"   Issues: {health['issues'] if health['issues'] else 'None'}")
 
         print("\n7. Metrics Summary:")
-        print(f"   API P95: {health['metrics']['api']['p95_ms']:.1f}ms (threshold: {health['thresholds']['api_p95_ms']}ms)")
-        print(f"   Cache Hit Rate: {health['metrics']['cache']['hit_rate']:.1%} (threshold: {health['thresholds']['cache_hit_rate_warning']:.0%})")
-        print(f"   DB P95: {health['metrics']['database']['p95_ms']:.1f}ms (threshold: {health['thresholds']['db_p95_ms']}ms)")
+        print(
+            f"   API P95: {health['metrics']['api']['p95_ms']:.1f}ms (threshold: {health['thresholds']['api_p95_ms']}ms)"
+        )
+        print(
+            f"   Cache Hit Rate: {health['metrics']['cache']['hit_rate']:.1%} (threshold: {health['thresholds']['cache_hit_rate_warning']:.0%})"
+        )
+        print(
+            f"   DB P95: {health['metrics']['database']['p95_ms']:.1f}ms (threshold: {health['thresholds']['db_p95_ms']}ms)"
+        )
         print(f"   Concurrent Users: {health['metrics']['capacity']['concurrent_users']}")
 
         # Check alerts

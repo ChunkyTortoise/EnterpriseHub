@@ -26,9 +26,7 @@ class StageTransition(BaseModel):
     """Request model for stage transition."""
 
     contact_id: str
-    new_stage: str = Field(
-        ..., description="Target stage (cold, warm, hot, qualified, lost)"
-    )
+    new_stage: str = Field(..., description="Target stage (cold, warm, hot, qualified, lost)")
     reason: Optional[str] = Field(default=None, description="Reason for transition")
     notes: Optional[str] = Field(default=None, description="Additional notes")
 
@@ -36,16 +34,10 @@ class StageTransition(BaseModel):
 class ReengagementRequest(BaseModel):
     """Request model for re-engagement campaign."""
 
-    contact_ids: Optional[List[str]] = Field(
-        default=None, description="Specific contacts to re-engage"
-    )
-    filters: Optional[Dict[str, Any]] = Field(
-        default=None, description="Filters for auto-selecting contacts"
-    )
+    contact_ids: Optional[List[str]] = Field(default=None, description="Specific contacts to re-engage")
+    filters: Optional[Dict[str, Any]] = Field(default=None, description="Filters for auto-selecting contacts")
     template: str = Field(..., description="Message template to use")
-    schedule_at: Optional[str] = Field(
-        default=None, description="ISO timestamp to schedule"
-    )
+    schedule_at: Optional[str] = Field(default=None, description="ISO timestamp to schedule")
 
 
 class LeadHealth(BaseModel):
@@ -73,9 +65,7 @@ class LifecycleMetrics(BaseModel):
 
 # Lead Stage Management
 @router.post("/stages/transition")
-async def transition_lead_stage(
-    location_id: str, transition: StageTransition, background_tasks: BackgroundTasks
-):
+async def transition_lead_stage(location_id: str, transition: StageTransition, background_tasks: BackgroundTasks):
     """
     Manually transition a lead to a new stage.
 
@@ -103,9 +93,7 @@ async def transition_lead_stage(
             "journey_id": journey_id,
         }
 
-        logger.info(
-            f"Transitioned contact {transition.contact_id} to stage {transition.new_stage}"
-        )
+        logger.info(f"Transitioned contact {transition.contact_id} to stage {transition.new_stage}")
 
         return {
             "success": True,
@@ -117,9 +105,7 @@ async def transition_lead_stage(
 
     except Exception as e:
         logger.error(f"Error transitioning lead stage: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail=f"Failed to transition stage: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to transition stage: {str(e)}")
 
 
 @router.get("/stages/{location_id}/{contact_id}/history")
@@ -153,9 +139,7 @@ async def get_stage_history(location_id: str, contact_id: str):
 
     except Exception as e:
         logger.error(f"Error fetching stage history: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail=f"Failed to fetch history: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to fetch history: {str(e)}")
 
 
 # Lead Health Monitoring
@@ -177,24 +161,24 @@ async def get_lead_health(location_id: str, contact_id: str):
         health = {
             "contact_id": contact_id,
             "health_score": summary.get("progression_rate", 0.0),
-            "last_interaction": summary.get(
-                "last_event_time", datetime.now().isoformat()
-            ),
+            "last_interaction": summary.get("last_event_time", datetime.now().isoformat()),
             "days_since_contact": summary.get("duration_days", 0),
             "engagement_level": (
                 "high"
                 if summary.get("progression_rate", 0) > 0.7
-                else "medium" if summary.get("progression_rate", 0) > 0.4 else "low"
+                else "medium"
+                if summary.get("progression_rate", 0) > 0.4
+                else "low"
             ),
             "risk_level": (
                 "low"
                 if summary.get("progression_rate", 0) > 0.7
-                else "medium" if summary.get("progression_rate", 0) > 0.4 else "high"
+                else "medium"
+                if summary.get("progression_rate", 0) > 0.4
+                else "high"
             ),
             "recommended_action": (
-                "Continue nurturing"
-                if summary.get("progression_rate", 0) > 0.5
-                else "Re-engage immediately"
+                "Continue nurturing" if summary.get("progression_rate", 0) > 0.5 else "Re-engage immediately"
             ),
         }
 
@@ -204,9 +188,7 @@ async def get_lead_health(location_id: str, contact_id: str):
         raise
     except Exception as e:
         logger.error(f"Error calculating lead health: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail=f"Failed to calculate health: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to calculate health: {str(e)}")
 
 
 @router.get("/health/{location_id}/at-risk")
@@ -236,9 +218,7 @@ async def get_at_risk_leads(
 
     except Exception as e:
         logger.error(f"Error identifying at-risk leads: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail=f"Failed to identify at-risk leads: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to identify at-risk leads: {str(e)}")
 
 
 # Re-engagement Campaigns
@@ -261,13 +241,9 @@ async def create_reengagement_campaign(
 
         # In production, this would trigger actual re-engagement
         # For now, just log the campaign creation
-        logger.info(
-            f"Re-engagement campaign {campaign_id} created for {len(request.contact_ids or [])} contacts"
-        )
+        logger.info(f"Re-engagement campaign {campaign_id} created for {len(request.contact_ids or [])} contacts")
 
-        logger.info(
-            f"Created re-engagement campaign {campaign_id} for location {location_id}"
-        )
+        logger.info(f"Created re-engagement campaign {campaign_id} for location {location_id}")
 
         return {
             "campaign_id": campaign_id,
@@ -277,9 +253,7 @@ async def create_reengagement_campaign(
 
     except Exception as e:
         logger.error(f"Error creating re-engagement campaign: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail=f"Failed to create campaign: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to create campaign: {str(e)}")
 
 
 @router.get("/reengage/{location_id}/eligible")
@@ -308,9 +282,7 @@ async def get_eligible_for_reengagement(
 
     except Exception as e:
         logger.error(f"Error finding eligible leads: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail=f"Failed to find eligible leads: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to find eligible leads: {str(e)}")
 
 
 # Lifecycle Metrics
@@ -332,9 +304,7 @@ async def get_lifecycle_metrics(
         metrics = {
             "total_leads": sum(stage_data.get("stage_distribution", {}).values()),
             "by_stage": stage_data.get("stage_distribution", {}),
-            "avg_time_to_qualified": stage_data.get("avg_time_in_stage", {}).get(
-                "qualified", 0.0
-            ),
+            "avg_time_to_qualified": stage_data.get("avg_time_in_stage", {}).get("qualified", 0.0),
             "conversion_rate": funnel.get("overall_conversion_rate", 0.0),
             "churn_rate": 0.0,  # Not tracked yet
             "active_nurture_sequences": 0,  # Not tracked yet
@@ -344,9 +314,7 @@ async def get_lifecycle_metrics(
 
     except Exception as e:
         logger.error(f"Error fetching lifecycle metrics: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail=f"Failed to fetch metrics: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to fetch metrics: {str(e)}")
 
 
 # Automated Nurture Sequences
@@ -382,9 +350,7 @@ async def start_nurture_sequence(
 
     except Exception as e:
         logger.error(f"Error starting nurture sequence: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail=f"Failed to start sequence: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to start sequence: {str(e)}")
 
 
 @router.post("/nurture/{sequence_id}/stop")
@@ -407,9 +373,7 @@ async def stop_nurture_sequence(location_id: str, sequence_id: str):
 
     except Exception as e:
         logger.error(f"Error stopping nurture sequence: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail=f"Failed to stop sequence: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to stop sequence: {str(e)}")
 
 
 # Health check

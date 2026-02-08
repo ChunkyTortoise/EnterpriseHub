@@ -9,13 +9,13 @@ This module provides advanced temporal understanding capabilities including:
 
 from __future__ import annotations
 
-import re
-from typing import Dict, List, Optional, Set, Tuple, Any, Union
-from dataclasses import dataclass, field
-from enum import Enum, auto
-from datetime import datetime, timedelta
-from collections import defaultdict
 import math
+import re
+from collections import defaultdict
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum, auto
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 
@@ -211,29 +211,21 @@ class TemporalProcessor:
             "ago": re.compile(r"\b(\d+)\s+(day|week|month|year)s?\s+ago\b", re.IGNORECASE),
             "from_now": re.compile(r"\b(in\s+)?(\d+)\s+(day|week|month|year)s?(\s+from\s+now)?\b", re.IGNORECASE),
             # Recency indicators
-            "recent": re.compile(
-                r"\b(recent|recently|latest|new|newest|current|fresh|just|lately)\b", re.IGNORECASE
-            ),
-            "historical": re.compile(
-                r"\b(historical|archive|all\s+time|old|older|past\s+data)\b", re.IGNORECASE
-            ),
+            "recent": re.compile(r"\b(recent|recently|latest|new|newest|current|fresh|just|lately)\b", re.IGNORECASE),
+            "historical": re.compile(r"\b(historical|archive|all\s+time|old|older|past\s+data)\b", re.IGNORECASE),
             # Duration
             "within": re.compile(r"\bwithin\s+(the\s+)?(last\s+)?(\d+)\s+(day|week|month|year)s?\b", re.IGNORECASE),
             "for_duration": re.compile(r"\bfor\s+(the\s+)?(last\s+)?(\d+)\s+(day|week|month|year)s?\b", re.IGNORECASE),
             # Periodic
             "periodic": re.compile(r"\b(daily|weekly|monthly|yearly|quarterly|annually)\b", re.IGNORECASE),
             # Seasonal
-            "season": re.compile(
-                r"\b(spring|summer|fall|autumn|winter)\s+(of\s+)?(\d{4})?\b", re.IGNORECASE
-            ),
+            "season": re.compile(r"\b(spring|summer|fall|autumn|winter)\s+(of\s+)?(\d{4})?\b", re.IGNORECASE),
             "quarter": re.compile(r"\b(Q[1-4]|quarter\s+[1-4])(\s+(of\s+)?(\d{4}))?\b", re.IGNORECASE),
             # Ongoing
             "ongoing": re.compile(r"\b(current|ongoing|present|now|today|active)\b", re.IGNORECASE),
             # Ranges
             "since": re.compile(r"\bsince\s+(\w+)\b", re.IGNORECASE),
-            "between": re.compile(
-                r"\b(between|from)\s+(.+?)\s+(and|to)\s+(.+?)\b", re.IGNORECASE
-            ),
+            "between": re.compile(r"\b(between|from)\s+(.+?)\s+(and|to)\s+(.+?)\b", re.IGNORECASE),
         }
 
     def _build_relative_expressions(self) -> Dict[str, Tuple[int, str]]:
@@ -422,9 +414,7 @@ class TemporalProcessor:
 
                 constraints.append(
                     TemporalConstraint(
-                        constraint_type=TemporalConstraintType.FUTURE
-                        if is_future
-                        else TemporalConstraintType.RELATIVE,
+                        constraint_type=TemporalConstraintType.FUTURE if is_future else TemporalConstraintType.RELATIVE,
                         start_date=start_date,
                         end_date=end_date,
                         raw_text=expr,
@@ -593,9 +583,7 @@ class TemporalProcessor:
 
         return constraints
 
-    def _calculate_relative_range(
-        self, amount: int, unit: str
-    ) -> Tuple[datetime, datetime]:
+    def _calculate_relative_range(self, amount: int, unit: str) -> Tuple[datetime, datetime]:
         """Calculate date range from relative expression.
 
         Args:
@@ -623,9 +611,7 @@ class TemporalProcessor:
 
         return start_date, end_date
 
-    def _determine_temporal_focus(
-        self, query: str, constraints: List[TemporalConstraint]
-    ) -> str:
+    def _determine_temporal_focus(self, query: str, constraints: List[TemporalConstraint]) -> str:
         """Determine overall temporal focus of query."""
         query_lower = query.lower()
 
@@ -657,9 +643,7 @@ class TemporalProcessor:
 
         return "present"
 
-    def _calculate_recency_preference(
-        self, query: str, constraints: List[TemporalConstraint]
-    ) -> float:
+    def _calculate_recency_preference(self, query: str, constraints: List[TemporalConstraint]) -> float:
         """Calculate recency preference score (0-1)."""
         query_lower = query.lower()
 
@@ -889,18 +873,14 @@ class TimeAwareRetriever:
                     continue
 
             # Check all constraints
-            satisfies_all = all(
-                constraint.is_satisfied_by(doc_date) for constraint in constraints
-            )
+            satisfies_all = all(constraint.is_satisfied_by(doc_date) for constraint in constraints)
 
             if satisfies_all:
                 filtered.append(doc)
 
         return filtered
 
-    def get_temporal_stats(
-        self, documents: List[Dict[str, Any]], time_field: str = "created_at"
-    ) -> Dict[str, Any]:
+    def get_temporal_stats(self, documents: List[Dict[str, Any]], time_field: str = "created_at") -> Dict[str, Any]:
         """Get temporal statistics for a document set.
 
         Args:
@@ -934,7 +914,5 @@ class TimeAwareRetriever:
             "newest": dates[-1].isoformat(),
             "median_age_days": np.median(ages) if ages else 0,
             "mean_age_days": np.mean(ages) if ages else 0,
-            "time_span_days": (dates[-1] - dates[0]).total_seconds() / (24 * 3600)
-            if len(dates) > 1
-            else 0,
+            "time_span_days": (dates[-1] - dates[0]).total_seconds() / (24 * 3600) if len(dates) > 1 else 0,
         }

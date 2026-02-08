@@ -24,30 +24,33 @@ Based on agent a94695b's complete architecture including:
 import asyncio
 import hashlib
 import json
+import logging
+import math
+import re
 import statistics
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union, Tuple
-import logging
-import math
-import re
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import asyncpg
+import scipy.stats as stats
+from asyncpg import Connection, Pool
 
 # Third-party imports
-from jinja2 import Environment, Template as JinjaTemplate, select_autoescape, DictLoader
+from jinja2 import DictLoader, Environment, select_autoescape
+from jinja2 import Template as JinjaTemplate
 from jinja2.exceptions import TemplateError
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-import scipy.stats as stats
-import asyncpg
-from asyncpg import Pool, Connection
+
+from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 # Internal imports
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.database_service import DatabaseService
 from ghl_real_estate_ai.services.security_framework import SecurityFramework, SecurityLevel
-from ghl_real_estate_ai.ghl_utils.config import settings
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -55,43 +58,54 @@ logger = get_logger(__name__)
 # Enums and Constants
 # ============================================================================
 
+
 class TemplateStatus(Enum):
     """Template status enumeration."""
+
     DRAFT = "draft"
     ACTIVE = "active"
     ARCHIVED = "archived"
     DEPRECATED = "deprecated"
 
+
 class TemplateType(Enum):
     """Template type enumeration."""
+
     EMAIL = "email"
     SMS = "sms"
     PHONE_SCRIPT = "phone_script"
     WEBHOOK = "webhook"
     MULTI_CHANNEL = "multi_channel"
 
+
 class ABTestStatus(Enum):
     """A/B test status enumeration."""
+
     DRAFT = "draft"
     RUNNING = "running"
     COMPLETED = "completed"
     PAUSED = "paused"
     CANCELLED = "cancelled"
 
+
 class PerformanceMetric(Enum):
     """Performance metric types."""
+
     OPEN_RATE = "open_rate"
     CLICK_RATE = "click_rate"
     RESPONSE_RATE = "response_rate"
     CONVERSION_RATE = "conversion_rate"
     ENGAGEMENT_SCORE = "engagement_score"
 
+
 # ============================================================================
 # Pydantic Models
 # ============================================================================
 
+
 class TemplateVariable(BaseModel):
     """Template variable definition."""
+
     name: str
     type: str = Field(default="string", pattern="^(Union[string, number]|Union[boolean, date]|Union[list, object])$")
     default_value: Optional[Any] = None
@@ -100,15 +114,17 @@ class TemplateVariable(BaseModel):
     validation_pattern: Optional[str] = None
     choices: Optional[List[str]] = None
 
-    @field_validator('name')
+    @field_validator("name")
     @classmethod
     def validate_name(cls, v):
-        if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', v):
-            raise ValueError('Variable name must be a valid identifier')
+        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", v):
+            raise ValueError("Variable name must be a valid identifier")
         return v
+
 
 class TemplateMetadata(BaseModel):
     """Template metadata model."""
+
     category: str = "general"
     tags: List[str] = []
     industry: Optional[str] = None
@@ -118,8 +134,10 @@ class TemplateMetadata(BaseModel):
     author: Optional[str] = None
     documentation_url: Optional[str] = None
 
+
 class Template(BaseModel):
     """Template model with comprehensive validation."""
+
     id: Optional[str] = None
     name: str = Field(..., min_length=1, max_length=200)
     description: str = Field(..., min_length=10, max_length=1000)
@@ -135,22 +153,24 @@ class Template(BaseModel):
     created_by: Optional[str] = None
     performance_data: Optional[Dict[str, Any]] = {}
 
-    @field_validator('content')
+    @field_validator("content")
     @classmethod
     def validate_content(cls, v):
         if not v or not v.strip():
-            raise ValueError('Template content cannot be empty')
+            raise ValueError("Template content cannot be empty")
         return v.strip()
 
-    @field_validator('version')
+    @field_validator("version")
     @classmethod
     def validate_version(cls, v):
-        if not re.match(r'^\d+\.\d+\.\d+$', v):
-            raise ValueError('Version must follow semantic versioning (x.y.z)')
+        if not re.match(r"^\d+\.\d+\.\d+$", v):
+            raise ValueError("Version must follow semantic versioning (x.y.z)")
         return v
+
 
 class ABTestConfig(BaseModel):
     """A/B test configuration model."""
+
     id: Optional[str] = None
     name: str = Field(..., min_length=1, max_length=200)
     description: str = ""
@@ -167,8 +187,10 @@ class ABTestConfig(BaseModel):
     winner_template_id: Optional[str] = None
     confidence_level: Optional[float] = None
 
+
 class TemplateUsageMetrics(BaseModel):
     """Template usage and performance metrics."""
+
     template_id: str
     total_sends: int = 0
     successful_sends: int = 0
@@ -201,6 +223,7 @@ class TemplateUsageMetrics(BaseModel):
     def conversion_rate(self) -> float:
         return self.conversions / self.successful_sends if self.successful_sends > 0 else 0.0
 
+
 class TemplateLibraryService:
     """
     Comprehensive template library service for Enterprise Hub.
@@ -218,7 +241,7 @@ class TemplateLibraryService:
         self,
         database_service: Optional[DatabaseService] = None,
         cache_service: Optional[CacheService] = None,
-        security_framework: Optional[SecurityFramework] = None
+        security_framework: Optional[SecurityFramework] = None,
     ):
         """Initialize template library service."""
         self.db = database_service or DatabaseService()
@@ -227,10 +250,7 @@ class TemplateLibraryService:
 
         # Initialize Jinja2 environment
         self.jinja_env = Environment(
-            loader=DictLoader({}),
-            autoescape=select_autoescape(['html', 'xml']),
-            trim_blocks=True,
-            lstrip_blocks=True
+            loader=DictLoader({}), autoescape=select_autoescape(["html", "xml"]), trim_blocks=True, lstrip_blocks=True
         )
 
         self._initialized = False
@@ -371,10 +391,7 @@ class TemplateLibraryService:
     # ============================================================================
 
     async def create_template(
-        self,
-        template_data: Dict[str, Any],
-        created_by: Optional[str] = None,
-        auto_version: bool = True
+        self, template_data: Dict[str, Any], created_by: Optional[str] = None, auto_version: bool = True
     ) -> str:
         """
         Create a new template with validation and versioning.
@@ -396,7 +413,8 @@ class TemplateLibraryService:
                 template_id = str(uuid.uuid4())
 
                 # Insert template
-                await conn.execute("""
+                await conn.execute(
+                    """
                     INSERT INTO templates (
                         id, name, description, type, status, version, content, subject,
                         variables, metadata, created_by
@@ -413,14 +431,12 @@ class TemplateLibraryService:
                     template.subject,
                     json.dumps([var.dict() for var in template.variables]),
                     template.metadata.dict(),
-                    created_by
+                    created_by,
                 )
 
                 # Create version record if auto_version is enabled
                 if auto_version:
-                    await self._create_version_record(
-                        conn, template_id, template, created_by, "Initial version"
-                    )
+                    await self._create_version_record(conn, template_id, template, created_by, "Initial version")
 
                 logger.info(f"Created template {template_id}: {template.name}")
 
@@ -444,9 +460,7 @@ class TemplateLibraryService:
 
         try:
             async with self.db.get_connection() as conn:
-                row = await conn.fetchrow(
-                    "SELECT * FROM templates WHERE id = $1", template_id
-                )
+                row = await conn.fetchrow("SELECT * FROM templates WHERE id = $1", template_id)
 
                 if not row:
                     return None
@@ -454,12 +468,10 @@ class TemplateLibraryService:
                 template_dict = dict(row)
 
                 # Parse JSON fields
-                template_dict['variables'] = [
-                    TemplateVariable(**var) for var in template_dict.get('variables', [])
-                ]
-                template_dict['metadata'] = TemplateMetadata(**template_dict.get('metadata', {}))
-                template_dict['type'] = TemplateType(template_dict['type'])
-                template_dict['status'] = TemplateStatus(template_dict['status'])
+                template_dict["variables"] = [TemplateVariable(**var) for var in template_dict.get("variables", [])]
+                template_dict["metadata"] = TemplateMetadata(**template_dict.get("metadata", {}))
+                template_dict["type"] = TemplateType(template_dict["type"])
+                template_dict["status"] = TemplateStatus(template_dict["status"])
 
                 template = Template(**template_dict)
 
@@ -478,7 +490,7 @@ class TemplateLibraryService:
         updates: Dict[str, Any],
         updated_by: Optional[str] = None,
         create_version: bool = True,
-        change_notes: str = ""
+        change_notes: str = "",
     ) -> bool:
         """
         Update template with optional versioning.
@@ -506,20 +518,20 @@ class TemplateLibraryService:
                 param_count = 1
 
                 for field, value in updates.items():
-                    if field == 'variables':
+                    if field == "variables":
                         # Validate and serialize variables
                         validated_vars = [TemplateVariable(**var) for var in value]
                         set_clauses.append(f"{field} = ${param_count}")
                         values.append(json.dumps([var.dict() for var in validated_vars]))
-                    elif field == 'metadata':
+                    elif field == "metadata":
                         # Validate metadata
                         validated_metadata = TemplateMetadata(**value)
                         set_clauses.append(f"{field} = ${param_count}")
                         values.append(validated_metadata.dict())
-                    elif field in ['type', 'status']:
+                    elif field in ["type", "status"]:
                         # Handle enum fields
                         set_clauses.append(f"{field} = ${param_count}")
-                        values.append(value.value if hasattr(value, 'value') else value)
+                        values.append(value.value if hasattr(value, "value") else value)
                     else:
                         set_clauses.append(f"{field} = ${param_count}")
                         values.append(value)
@@ -529,7 +541,7 @@ class TemplateLibraryService:
 
                 query = f"""
                     UPDATE templates
-                    SET {', '.join(set_clauses)}
+                    SET {", ".join(set_clauses)}
                     WHERE id = ${param_count}
                 """
 
@@ -541,9 +553,7 @@ class TemplateLibraryService:
 
                 # Create version record if requested
                 if create_version and current_template:
-                    await self._create_version_record(
-                        conn, template_id, current_template, updated_by, change_notes
-                    )
+                    await self._create_version_record(conn, template_id, current_template, updated_by, change_notes)
 
                 logger.info(f"Updated template {template_id}")
 
@@ -571,16 +581,17 @@ class TemplateLibraryService:
             async with self.db.transaction() as conn:
                 if soft_delete:
                     # Soft delete - mark as archived
-                    result = await conn.execute("""
+                    result = await conn.execute(
+                        """
                         UPDATE templates
                         SET status = 'archived', updated_at = NOW()
                         WHERE id = $1
-                    """, template_id)
+                    """,
+                        template_id,
+                    )
                 else:
                     # Hard delete - remove from database
-                    result = await conn.execute(
-                        "DELETE FROM templates WHERE id = $1", template_id
-                    )
+                    result = await conn.execute("DELETE FROM templates WHERE id = $1", template_id)
 
                 rows_affected = int(result.split()[-1])
 
@@ -601,7 +612,7 @@ class TemplateLibraryService:
         sort_by: str = "updated_at",
         sort_order: str = "DESC",
         limit: int = 50,
-        offset: int = 0
+        offset: int = 0,
     ) -> List[Template]:
         """
         Search templates with filtering and sorting.
@@ -664,12 +675,10 @@ class TemplateLibraryService:
                 templates = []
                 for row in rows:
                     template_dict = dict(row)
-                    template_dict['variables'] = [
-                        TemplateVariable(**var) for var in template_dict.get('variables', [])
-                    ]
-                    template_dict['metadata'] = TemplateMetadata(**template_dict.get('metadata', {}))
-                    template_dict['type'] = TemplateType(template_dict['type'])
-                    template_dict['status'] = TemplateStatus(template_dict['status'])
+                    template_dict["variables"] = [TemplateVariable(**var) for var in template_dict.get("variables", [])]
+                    template_dict["metadata"] = TemplateMetadata(**template_dict.get("metadata", {}))
+                    template_dict["type"] = TemplateType(template_dict["type"])
+                    template_dict["status"] = TemplateStatus(template_dict["status"])
                     templates.append(Template(**template_dict))
 
                 return templates
@@ -683,17 +692,13 @@ class TemplateLibraryService:
     # ============================================================================
 
     async def _create_version_record(
-        self,
-        conn: Connection,
-        template_id: str,
-        template: Template,
-        created_by: Optional[str],
-        change_notes: str = ""
+        self, conn: Connection, template_id: str, template: Template, created_by: Optional[str], change_notes: str = ""
     ) -> str:
         """Create a version record for template history."""
         version_id = str(uuid.uuid4())
 
-        await conn.execute("""
+        await conn.execute(
+            """
             INSERT INTO template_versions (
                 id, template_id, version, content, subject, variables,
                 metadata, created_by, change_notes
@@ -708,7 +713,7 @@ class TemplateLibraryService:
             json.dumps([var.dict() for var in template.variables]),
             template.metadata.dict(),
             created_by,
-            change_notes
+            change_notes,
         )
 
         return version_id
@@ -717,11 +722,14 @@ class TemplateLibraryService:
         """Get version history for a template."""
         try:
             async with self.db.get_connection() as conn:
-                rows = await conn.fetch("""
+                rows = await conn.fetch(
+                    """
                     SELECT * FROM template_versions
                     WHERE template_id = $1
                     ORDER BY created_at DESC
-                """, template_id)
+                """,
+                    template_id,
+                )
 
                 return [dict(row) for row in rows]
 
@@ -734,10 +742,14 @@ class TemplateLibraryService:
         try:
             async with self.db.transaction() as conn:
                 # Get version data
-                version_row = await conn.fetchrow("""
+                version_row = await conn.fetchrow(
+                    """
                     SELECT * FROM template_versions
                     WHERE template_id = $1 AND version = $2
-                """, template_id, version)
+                """,
+                    template_id,
+                    version,
+                )
 
                 if not version_row:
                     return False
@@ -745,25 +757,25 @@ class TemplateLibraryService:
                 version_data = dict(version_row)
 
                 # Update template with version data
-                await conn.execute("""
+                await conn.execute(
+                    """
                     UPDATE templates
                     SET content = $1, subject = $2, variables = $3,
                         metadata = $4, updated_at = NOW()
                     WHERE id = $5
                 """,
-                    version_data['content'],
-                    version_data['subject'],
-                    version_data['variables'],
-                    version_data['metadata'],
-                    template_id
+                    version_data["content"],
+                    version_data["subject"],
+                    version_data["variables"],
+                    version_data["metadata"],
+                    template_id,
                 )
 
                 # Create new version record for the rollback
                 current_template = await self.get_template(template_id)
                 if current_template:
                     await self._create_version_record(
-                        conn, template_id, current_template, updated_by,
-                        f"Rollback to version {version}"
+                        conn, template_id, current_template, updated_by, f"Rollback to version {version}"
                     )
 
                 logger.info(f"Rolled back template {template_id} to version {version}")
@@ -780,10 +792,7 @@ class TemplateLibraryService:
     # ============================================================================
 
     async def render_template(
-        self,
-        template_id: str,
-        variables: Dict[str, Any],
-        validate_variables: bool = True
+        self, template_id: str, variables: Dict[str, Any], validate_variables: bool = True
     ) -> Dict[str, str]:
         """
         Render template with provided variables using Jinja2.
@@ -821,10 +830,7 @@ class TemplateLibraryService:
                 subject_template = self.jinja_env.from_string(template.subject)
                 rendered_subject = subject_template.render(**variables)
 
-            return {
-                "content": rendered_content,
-                "subject": rendered_subject
-            }
+            return {"content": rendered_content, "subject": rendered_subject}
 
         except TemplateError as e:
             logger.error(f"Template rendering error for {template_id}: {e}")
@@ -863,8 +869,8 @@ class TemplateLibraryService:
         # Extract variables from content
         try:
             content_ast = self.jinja_env.parse(content)
-            variables = list(content_ast.find_all_nodes(lambda n: hasattr(n, 'name')))
-            variable_names = [var.name for var in variables if hasattr(var, 'name')]
+            variables = list(content_ast.find_all_nodes(lambda n: hasattr(n, "name")))
+            variable_names = [var.name for var in variables if hasattr(var, "name")]
         except:
             variable_names = []
 
@@ -872,18 +878,14 @@ class TemplateLibraryService:
             "is_valid": len(errors) == 0,
             "errors": errors,
             "warnings": warnings,
-            "extracted_variables": variable_names
+            "extracted_variables": variable_names,
         }
 
     # ============================================================================
     # A/B Testing Framework
     # ============================================================================
 
-    async def create_ab_test(
-        self,
-        test_config: Dict[str, Any],
-        created_by: Optional[str] = None
-    ) -> str:
+    async def create_ab_test(self, test_config: Dict[str, Any], created_by: Optional[str] = None) -> str:
         """
         Create a new A/B test configuration.
 
@@ -908,7 +910,8 @@ class TemplateLibraryService:
             async with self.db.transaction() as conn:
                 test_id = str(uuid.uuid4())
 
-                await conn.execute("""
+                await conn.execute(
+                    """
                     INSERT INTO ab_tests (
                         id, name, description, template_a_id, template_b_id,
                         traffic_split, target_metric, min_sample_size,
@@ -926,7 +929,7 @@ class TemplateLibraryService:
                     ab_test.min_sample_size,
                     ab_test.significance_level,
                     ab_test.status.value,
-                    created_by
+                    created_by,
                 )
 
                 logger.info(f"Created A/B test {test_id}: {ab_test.name}")
@@ -954,11 +957,16 @@ class TemplateLibraryService:
                 if duration_days:
                     end_date = start_date + timedelta(days=duration_days)
 
-                result = await conn.execute("""
+                result = await conn.execute(
+                    """
                     UPDATE ab_tests
                     SET status = 'running', start_date = $1, end_date = $2, updated_at = NOW()
                     WHERE id = $3 AND status = 'draft'
-                """, start_date, end_date, test_id)
+                """,
+                    start_date,
+                    end_date,
+                    test_id,
+                )
 
                 rows_affected = int(result.split()[-1])
 
@@ -986,35 +994,32 @@ class TemplateLibraryService:
         try:
             # Get test configuration
             async with self.db.get_connection() as conn:
-                test_row = await conn.fetchrow("""
+                test_row = await conn.fetchrow(
+                    """
                     SELECT template_a_id, template_b_id, traffic_split, status
                     FROM ab_tests
                     WHERE id = $1
-                """, test_id)
+                """,
+                    test_id,
+                )
 
-                if not test_row or test_row['status'] != 'running':
+                if not test_row or test_row["status"] != "running":
                     return None
 
                 # Use consistent hashing to assign template
                 hash_value = int(hashlib.md5(f"{test_id}:{user_hash}".encode()).hexdigest(), 16)
                 normalized_hash = (hash_value % 100) / 100.0
 
-                if normalized_hash < test_row['traffic_split']:
-                    return test_row['template_a_id']
+                if normalized_hash < test_row["traffic_split"]:
+                    return test_row["template_a_id"]
                 else:
-                    return test_row['template_b_id']
+                    return test_row["template_b_id"]
 
         except Exception as e:
             logger.error(f"Failed to assign template for A/B test {test_id}: {e}")
             return None
 
-    async def record_ab_test_event(
-        self,
-        test_id: str,
-        template_id: str,
-        event_type: str,
-        count: int = 1
-    ) -> bool:
+    async def record_ab_test_event(self, test_id: str, template_id: str, event_type: str, count: int = 1) -> bool:
         """
         Record an event for A/B testing.
 
@@ -1030,7 +1035,8 @@ class TemplateLibraryService:
         try:
             async with self.db.transaction() as conn:
                 # Update or insert usage metrics
-                await conn.execute(f"""
+                await conn.execute(
+                    f"""
                     INSERT INTO template_usage_metrics (
                         template_id, ab_test_id, {event_type}s
                     )
@@ -1039,7 +1045,11 @@ class TemplateLibraryService:
                     DO UPDATE SET
                         {event_type}s = template_usage_metrics.{event_type}s + $3,
                         updated_at = NOW()
-                """, template_id, test_id, count)
+                """,
+                    template_id,
+                    test_id,
+                    count,
+                )
 
                 return True
 
@@ -1060,9 +1070,12 @@ class TemplateLibraryService:
         try:
             async with self.db.get_connection() as conn:
                 # Get test configuration
-                test_row = await conn.fetchrow("""
+                test_row = await conn.fetchrow(
+                    """
                     SELECT * FROM ab_tests WHERE id = $1
-                """, test_id)
+                """,
+                    test_id,
+                )
 
                 if not test_row:
                     return {"error": "A/B test not found"}
@@ -1070,7 +1083,8 @@ class TemplateLibraryService:
                 test_data = dict(test_row)
 
                 # Get metrics for both templates
-                metrics_rows = await conn.fetch("""
+                metrics_rows = await conn.fetch(
+                    """
                     SELECT
                         template_id,
                         SUM(total_sends) as total_sends,
@@ -1082,7 +1096,9 @@ class TemplateLibraryService:
                     FROM template_usage_metrics
                     WHERE ab_test_id = $1
                     GROUP BY template_id
-                """, test_id)
+                """,
+                    test_id,
+                )
 
                 if len(metrics_rows) != 2:
                     return {"error": "Insufficient data for analysis"}
@@ -1092,66 +1108,90 @@ class TemplateLibraryService:
                 metrics_b = None
 
                 for row in metrics_rows:
-                    if row['template_id'] == test_data['template_a_id']:
+                    if row["template_id"] == test_data["template_a_id"]:
                         metrics_a = dict(row)
-                    elif row['template_id'] == test_data['template_b_id']:
+                    elif row["template_id"] == test_data["template_b_id"]:
                         metrics_b = dict(row)
 
                 if not metrics_a or not metrics_b:
                     return {"error": "Missing metrics for one or both templates"}
 
                 # Calculate conversion rates based on target metric
-                target_metric = test_data['target_metric']
+                target_metric = test_data["target_metric"]
 
-                if target_metric == 'open_rate':
-                    rate_a = metrics_a['opens'] / metrics_a['successful_sends'] if metrics_a['successful_sends'] > 0 else 0
-                    rate_b = metrics_b['opens'] / metrics_b['successful_sends'] if metrics_b['successful_sends'] > 0 else 0
-                elif target_metric == 'click_rate':
-                    rate_a = metrics_a['clicks'] / metrics_a['successful_sends'] if metrics_a['successful_sends'] > 0 else 0
-                    rate_b = metrics_b['clicks'] / metrics_b['successful_sends'] if metrics_b['successful_sends'] > 0 else 0
-                elif target_metric == 'response_rate':
-                    rate_a = metrics_a['responses'] / metrics_a['successful_sends'] if metrics_a['successful_sends'] > 0 else 0
-                    rate_b = metrics_b['responses'] / metrics_b['successful_sends'] if metrics_b['successful_sends'] > 0 else 0
-                elif target_metric == 'conversion_rate':
-                    rate_a = metrics_a['conversions'] / metrics_a['successful_sends'] if metrics_a['successful_sends'] > 0 else 0
-                    rate_b = metrics_b['conversions'] / metrics_b['successful_sends'] if metrics_b['successful_sends'] > 0 else 0
+                if target_metric == "open_rate":
+                    rate_a = (
+                        metrics_a["opens"] / metrics_a["successful_sends"] if metrics_a["successful_sends"] > 0 else 0
+                    )
+                    rate_b = (
+                        metrics_b["opens"] / metrics_b["successful_sends"] if metrics_b["successful_sends"] > 0 else 0
+                    )
+                elif target_metric == "click_rate":
+                    rate_a = (
+                        metrics_a["clicks"] / metrics_a["successful_sends"] if metrics_a["successful_sends"] > 0 else 0
+                    )
+                    rate_b = (
+                        metrics_b["clicks"] / metrics_b["successful_sends"] if metrics_b["successful_sends"] > 0 else 0
+                    )
+                elif target_metric == "response_rate":
+                    rate_a = (
+                        metrics_a["responses"] / metrics_a["successful_sends"]
+                        if metrics_a["successful_sends"] > 0
+                        else 0
+                    )
+                    rate_b = (
+                        metrics_b["responses"] / metrics_b["successful_sends"]
+                        if metrics_b["successful_sends"] > 0
+                        else 0
+                    )
+                elif target_metric == "conversion_rate":
+                    rate_a = (
+                        metrics_a["conversions"] / metrics_a["successful_sends"]
+                        if metrics_a["successful_sends"] > 0
+                        else 0
+                    )
+                    rate_b = (
+                        metrics_b["conversions"] / metrics_b["successful_sends"]
+                        if metrics_b["successful_sends"] > 0
+                        else 0
+                    )
                 else:
                     return {"error": f"Unknown target metric: {target_metric}"}
 
                 # Statistical significance testing
                 significance_result = self._calculate_statistical_significance(
-                    metrics_a['successful_sends'],
+                    metrics_a["successful_sends"],
                     rate_a,
-                    metrics_b['successful_sends'],
+                    metrics_b["successful_sends"],
                     rate_b,
-                    test_data['significance_level']
+                    test_data["significance_level"],
                 )
 
                 # Determine winner
                 winner_template_id = None
-                if significance_result['is_significant']:
-                    winner_template_id = test_data['template_a_id'] if rate_a > rate_b else test_data['template_b_id']
+                if significance_result["is_significant"]:
+                    winner_template_id = test_data["template_a_id"] if rate_a > rate_b else test_data["template_b_id"]
 
                 analysis = {
                     "test_id": test_id,
-                    "test_name": test_data['name'],
+                    "test_name": test_data["name"],
                     "target_metric": target_metric,
                     "template_a": {
-                        "template_id": test_data['template_a_id'],
-                        "sample_size": metrics_a['successful_sends'],
+                        "template_id": test_data["template_a_id"],
+                        "sample_size": metrics_a["successful_sends"],
                         "rate": rate_a,
-                        "events": metrics_a
+                        "events": metrics_a,
                     },
                     "template_b": {
-                        "template_id": test_data['template_b_id'],
-                        "sample_size": metrics_b['successful_sends'],
+                        "template_id": test_data["template_b_id"],
+                        "sample_size": metrics_b["successful_sends"],
                         "rate": rate_b,
-                        "events": metrics_b
+                        "events": metrics_b,
                     },
                     "statistical_analysis": significance_result,
                     "winner_template_id": winner_template_id,
                     "improvement": abs(rate_a - rate_b) / max(rate_a, rate_b, 0.001) if rate_a != rate_b else 0,
-                    "recommendation": self._get_ab_test_recommendation(significance_result, rate_a, rate_b)
+                    "recommendation": self._get_ab_test_recommendation(significance_result, rate_a, rate_b),
                 }
 
                 return analysis
@@ -1161,12 +1201,7 @@ class TemplateLibraryService:
             return {"error": str(e)}
 
     def _calculate_statistical_significance(
-        self,
-        n_a: int,
-        rate_a: float,
-        n_b: int,
-        rate_b: float,
-        alpha: float = 0.05
+        self, n_a: int, rate_a: float, n_b: int, rate_b: float, alpha: float = 0.05
     ) -> Dict[str, Any]:
         """Calculate statistical significance using z-test for proportions."""
         try:
@@ -1175,19 +1210,19 @@ class TemplateLibraryService:
                     "is_significant": False,
                     "p_value": None,
                     "confidence_interval": None,
-                    "error": "Insufficient sample size"
+                    "error": "Insufficient sample size",
                 }
 
             # Z-test for two proportions
             pooled_rate = (rate_a * n_a + rate_b * n_b) / (n_a + n_b)
-            pooled_se = math.sqrt(pooled_rate * (1 - pooled_rate) * (1/n_a + 1/n_b))
+            pooled_se = math.sqrt(pooled_rate * (1 - pooled_rate) * (1 / n_a + 1 / n_b))
 
             if pooled_se == 0:
                 return {
                     "is_significant": False,
                     "p_value": None,
                     "confidence_interval": None,
-                    "error": "Zero standard error"
+                    "error": "Zero standard error",
                 }
 
             z_score = (rate_a - rate_b) / pooled_se
@@ -1195,7 +1230,7 @@ class TemplateLibraryService:
 
             # Confidence interval for difference
             se_diff = math.sqrt((rate_a * (1 - rate_a) / n_a) + (rate_b * (1 - rate_b) / n_b))
-            margin_error = stats.norm.ppf(1 - alpha/2) * se_diff
+            margin_error = stats.norm.ppf(1 - alpha / 2) * se_diff
             diff = rate_a - rate_b
             ci_lower = diff - margin_error
             ci_upper = diff + margin_error
@@ -1207,23 +1242,13 @@ class TemplateLibraryService:
                 "confidence_interval": [ci_lower, ci_upper],
                 "confidence_level": 1 - alpha,
                 "sample_size_a": n_a,
-                "sample_size_b": n_b
+                "sample_size_b": n_b,
             }
 
         except Exception as e:
-            return {
-                "is_significant": False,
-                "p_value": None,
-                "confidence_interval": None,
-                "error": str(e)
-            }
+            return {"is_significant": False, "p_value": None, "confidence_interval": None, "error": str(e)}
 
-    def _get_ab_test_recommendation(
-        self,
-        significance_result: Dict[str, Any],
-        rate_a: float,
-        rate_b: float
-    ) -> str:
+    def _get_ab_test_recommendation(self, significance_result: Dict[str, Any], rate_a: float, rate_b: float) -> str:
         """Get recommendation based on A/B test results."""
         if significance_result.get("error"):
             return f"Cannot make recommendation: {significance_result['error']}"
@@ -1248,12 +1273,16 @@ class TemplateLibraryService:
                     winner_template_id = analysis.get("winner_template_id")
 
                 # Update test status
-                result = await conn.execute("""
+                result = await conn.execute(
+                    """
                     UPDATE ab_tests
                     SET status = 'completed', end_date = NOW(),
                         winner_template_id = $1, updated_at = NOW()
                     WHERE id = $2 AND status = 'running'
-                """, winner_template_id, test_id)
+                """,
+                    winner_template_id,
+                    test_id,
+                )
 
                 rows_affected = int(result.split()[-1])
 
@@ -1271,17 +1300,14 @@ class TemplateLibraryService:
     # Performance Analytics
     # ============================================================================
 
-    async def get_template_performance(
-        self,
-        template_id: str,
-        days: int = 30
-    ) -> TemplateUsageMetrics:
+    async def get_template_performance(self, template_id: str, days: int = 30) -> TemplateUsageMetrics:
         """Get performance metrics for a template."""
         try:
             async with self.db.get_connection() as conn:
                 cutoff_date = datetime.utcnow().date() - timedelta(days=days)
 
-                row = await conn.fetchrow("""
+                row = await conn.fetchrow(
+                    """
                     SELECT
                         template_id,
                         SUM(total_sends) as total_sends,
@@ -1297,7 +1323,10 @@ class TemplateLibraryService:
                     FROM template_usage_metrics
                     WHERE template_id = $1 AND date >= $2
                     GROUP BY template_id
-                """, template_id, cutoff_date)
+                """,
+                    template_id,
+                    cutoff_date,
+                )
 
                 if row:
                     metrics_dict = dict(row)
@@ -1310,11 +1339,7 @@ class TemplateLibraryService:
             return TemplateUsageMetrics(template_id=template_id)
 
     async def record_template_usage(
-        self,
-        template_id: str,
-        event_type: str,
-        count: int = 1,
-        ab_test_id: Optional[str] = None
+        self, template_id: str, event_type: str, count: int = 1, ab_test_id: Optional[str] = None
     ) -> bool:
         """Record template usage event."""
         try:
@@ -1331,7 +1356,7 @@ class TemplateLibraryService:
                     "conversion": "conversions",
                     "bounce": "bounces",
                     "complaint": "complaints",
-                    "unsubscribe": "unsubscribes"
+                    "unsubscribe": "unsubscribes",
                 }
 
                 if event_type not in event_mapping:
@@ -1340,7 +1365,8 @@ class TemplateLibraryService:
 
                 column_name = event_mapping[event_type]
 
-                await conn.execute(f"""
+                await conn.execute(
+                    f"""
                     INSERT INTO template_usage_metrics (
                         template_id, ab_test_id, date, {column_name}
                     )
@@ -1349,7 +1375,12 @@ class TemplateLibraryService:
                     DO UPDATE SET
                         {column_name} = template_usage_metrics.{column_name} + $4,
                         updated_at = NOW()
-                """, template_id, ab_test_id, date_today, count)
+                """,
+                    template_id,
+                    ab_test_id,
+                    date_today,
+                    count,
+                )
 
                 return True
 
@@ -1357,11 +1388,7 @@ class TemplateLibraryService:
             logger.error(f"Failed to record template usage: {e}")
             return False
 
-    async def get_performance_dashboard(
-        self,
-        user_id: Optional[str] = None,
-        days: int = 30
-    ) -> Dict[str, Any]:
+    async def get_performance_dashboard(self, user_id: Optional[str] = None, days: int = 30) -> Dict[str, Any]:
         """Get comprehensive performance dashboard data."""
         try:
             async with self.db.get_connection() as conn:
@@ -1380,7 +1407,8 @@ class TemplateLibraryService:
                 where_clause = " AND ".join(where_conditions)
 
                 # Overall metrics
-                overall_row = await conn.fetchrow(f"""
+                overall_row = await conn.fetchrow(
+                    f"""
                     SELECT
                         COUNT(DISTINCT t.id) as total_templates,
                         COUNT(DISTINCT CASE WHEN t.status = 'active' THEN t.id END) as active_templates,
@@ -1394,10 +1422,13 @@ class TemplateLibraryService:
                     FROM templates t
                     LEFT JOIN template_usage_metrics m ON t.id = m.template_id
                     WHERE {where_clause}
-                """, *params)
+                """,
+                    *params,
+                )
 
                 # Top performing templates
-                top_templates = await conn.fetch(f"""
+                top_templates = await conn.fetch(
+                    f"""
                     SELECT
                         t.id, t.name, t.type,
                         SUM(m.total_sends) as total_sends,
@@ -1415,10 +1446,13 @@ class TemplateLibraryService:
                     HAVING SUM(m.successful_sends) >= 10
                     ORDER BY conversion_rate DESC, open_rate DESC
                     LIMIT 10
-                """, *params)
+                """,
+                    *params,
+                )
 
                 # Daily metrics for trend analysis
-                daily_metrics = await conn.fetch(f"""
+                daily_metrics = await conn.fetch(
+                    f"""
                     SELECT
                         m.date,
                         SUM(m.total_sends) as total_sends,
@@ -1432,10 +1466,13 @@ class TemplateLibraryService:
                     GROUP BY m.date
                     ORDER BY m.date DESC
                     LIMIT 30
-                """, *params)
+                """,
+                    *params,
+                )
 
                 # A/B tests summary
-                ab_tests = await conn.fetch(f"""
+                ab_tests = await conn.fetch(
+                    f"""
                     SELECT
                         ab.id, ab.name, ab.status, ab.target_metric,
                         ab.start_date, ab.end_date, ab.winner_template_id,
@@ -1447,7 +1484,9 @@ class TemplateLibraryService:
                     WHERE ab.created_at >= ${param_count}
                     ORDER BY ab.created_at DESC
                     LIMIT 10
-                """, *(params + [datetime.utcnow() - timedelta(days=days)]))
+                """,
+                    *(params + [datetime.utcnow() - timedelta(days=days)]),
+                )
 
                 dashboard = {
                     "summary": dict(overall_row) if overall_row else {},
@@ -1455,7 +1494,7 @@ class TemplateLibraryService:
                     "daily_trends": [dict(row) for row in daily_metrics],
                     "ab_tests": [dict(row) for row in ab_tests],
                     "period_days": days,
-                    "generated_at": datetime.utcnow().isoformat()
+                    "generated_at": datetime.utcnow().isoformat(),
                 }
 
                 return dashboard
@@ -1474,7 +1513,7 @@ class TemplateLibraryService:
             cache_keys = [
                 f"template:{template_id}",
                 f"template_performance:{template_id}",
-                f"template_versions:{template_id}"
+                f"template_versions:{template_id}",
             ]
 
             for key in cache_keys:
@@ -1515,7 +1554,7 @@ class TemplateLibraryService:
                 return {
                     "templates": dict(stats_row) if stats_row else {},
                     "ab_tests": dict(ab_stats_row) if ab_stats_row else {},
-                    "generated_at": datetime.utcnow().isoformat()
+                    "generated_at": datetime.utcnow().isoformat(),
                 }
 
         except Exception as e:
@@ -1529,13 +1568,17 @@ class TemplateLibraryService:
 
             async with self.db.transaction() as conn:
                 # Clean up old usage metrics
-                result1 = await conn.execute("""
+                result1 = await conn.execute(
+                    """
                     DELETE FROM template_usage_metrics
                     WHERE date < $1
-                """, cutoff_date.date())
+                """,
+                    cutoff_date.date(),
+                )
 
                 # Clean up old template versions (keep at least 5 versions per template)
-                result2 = await conn.execute("""
+                result2 = await conn.execute(
+                    """
                     DELETE FROM template_versions tv1
                     WHERE tv1.created_at < $1
                     AND (
@@ -1544,25 +1587,32 @@ class TemplateLibraryService:
                         WHERE tv2.template_id = tv1.template_id
                         AND tv2.created_at > tv1.created_at
                     ) >= 5
-                """, cutoff_date)
+                """,
+                    cutoff_date,
+                )
 
                 # Clean up completed A/B tests older than retention period
-                result3 = await conn.execute("""
+                result3 = await conn.execute(
+                    """
                     DELETE FROM ab_tests
                     WHERE status = 'completed'
                     AND end_date < $1
-                """, cutoff_date)
+                """,
+                    cutoff_date,
+                )
 
                 metrics_deleted = int(result1.split()[-1])
                 versions_deleted = int(result2.split()[-1])
                 tests_deleted = int(result3.split()[-1])
 
-                logger.info(f"Cleanup completed: {metrics_deleted} metrics, {versions_deleted} versions, {tests_deleted} tests deleted")
+                logger.info(
+                    f"Cleanup completed: {metrics_deleted} metrics, {versions_deleted} versions, {tests_deleted} tests deleted"
+                )
 
                 return {
                     "metrics_deleted": metrics_deleted,
                     "versions_deleted": versions_deleted,
-                    "ab_tests_deleted": tests_deleted
+                    "ab_tests_deleted": tests_deleted,
                 }
 
         except Exception as e:
@@ -1573,6 +1623,7 @@ class TemplateLibraryService:
 # ============================================================================
 # Factory Function
 # ============================================================================
+
 
 async def get_template_library_service() -> TemplateLibraryService:
     """Factory function to get initialized template library service."""
@@ -1586,6 +1637,7 @@ async def get_template_library_service() -> TemplateLibraryService:
 # ============================================================================
 
 if __name__ == "__main__":
+
     async def demo_template_library():
         """Demonstrate template library capabilities."""
         print("🚀 Template Library Service Demo")
@@ -1602,30 +1654,31 @@ if __name__ == "__main__":
                 "subject": "Welcome {{ first_name }} - Let's Find Your Dream Home!",
                 "variables": [
                     {"name": "first_name", "type": "string", "required": True, "description": "Lead's first name"},
-                    {"name": "company_name", "type": "string", "required": True, "description": "Company name"}
+                    {"name": "company_name", "type": "string", "required": True, "description": "Company name"},
                 ],
                 "metadata": {
                     "category": "welcome",
                     "tags": ["welcome", "email", "personalization"],
-                    "difficulty": "beginner"
-                }
+                    "difficulty": "beginner",
+                },
             }
 
             template_id = await service.create_template(template_data, created_by="demo-user")
             print(f"✅ Created template: {template_id}")
 
             # Test rendering
-            rendered = await service.render_template(template_id, {
-                "first_name": "John",
-                "company_name": "Dream Homes Realty"
-            })
+            rendered = await service.render_template(
+                template_id, {"first_name": "John", "company_name": "Dream Homes Realty"}
+            )
             print(f"📧 Rendered content: {rendered['content']}")
             print(f"📧 Rendered subject: {rendered['subject']}")
 
             # Create second template for A/B testing
             template_b_data = template_data.copy()
             template_b_data["name"] = "Welcome Email Template B"
-            template_b_data["content"] = "Hi {{ first_name }}! Thanks for choosing {{ company_name }}. Let's start your home buying journey!"
+            template_b_data["content"] = (
+                "Hi {{ first_name }}! Thanks for choosing {{ company_name }}. Let's start your home buying journey!"
+            )
 
             template_b_id = await service.create_template(template_b_data, created_by="demo-user")
             print(f"✅ Created template B: {template_b_id}")
@@ -1637,7 +1690,7 @@ if __name__ == "__main__":
                 "template_a_id": template_id,
                 "template_b_id": template_b_id,
                 "target_metric": "open_rate",
-                "traffic_split": 0.5
+                "traffic_split": 0.5,
             }
 
             test_id = await service.create_ab_test(ab_test_data, created_by="demo-user")

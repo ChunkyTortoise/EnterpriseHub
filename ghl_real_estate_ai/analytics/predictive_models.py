@@ -36,40 +36,50 @@ Created: January 2026
 
 import asyncio
 import json
-import numpy as np
-import pandas as pd
-from datetime import datetime, timedelta, date
-from dataclasses import dataclass, asdict
-from typing import Dict, List, Optional, Tuple, Any, Union
-from enum import Enum
-from abc import ABC, abstractmethod
 import logging
-import joblib
 import pickle
-from pathlib import Path
 
 # Machine Learning imports
 import warnings
-warnings.filterwarnings('ignore')
+from abc import ABC, abstractmethod
+from dataclasses import asdict, dataclass
+from datetime import date, datetime, timedelta
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-from sklearn.ensemble import (
-    RandomForestRegressor, GradientBoostingRegressor, IsolationForest,
-    RandomForestClassifier, GradientBoostingClassifier
-)
-from sklearn.linear_model import LogisticRegression, LinearRegression
-from sklearn.cluster import KMeans, DBSCAN
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, LabelEncoder
-from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
-from sklearn.metrics import (
-    mean_squared_error, mean_absolute_error, r2_score,
-    classification_report, roc_auc_score, silhouette_score
-)
-from sklearn.feature_selection import SelectFromModel, RFE
+import joblib
+import numpy as np
+import pandas as pd
+
+warnings.filterwarnings("ignore")
+
 import xgboost as xgb
+from sklearn.cluster import DBSCAN, KMeans
+from sklearn.ensemble import (
+    GradientBoostingClassifier,
+    GradientBoostingRegressor,
+    IsolationForest,
+    RandomForestClassifier,
+    RandomForestRegressor,
+)
+from sklearn.feature_selection import RFE, SelectFromModel
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.metrics import (
+    classification_report,
+    mean_absolute_error,
+    mean_squared_error,
+    r2_score,
+    roc_auc_score,
+    silhouette_score,
+)
+from sklearn.model_selection import GridSearchCV, cross_val_score, train_test_split
+from sklearn.preprocessing import LabelEncoder, MinMaxScaler, StandardScaler
 
 # Time series forecasting
 try:
     from prophet import Prophet
+
     PROPHET_AVAILABLE = True
 except ImportError:
     PROPHET_AVAILABLE = False
@@ -79,20 +89,22 @@ try:
     import statsmodels.api as sm
     from statsmodels.tsa.arima.model import ARIMA
     from statsmodels.tsa.seasonal import seasonal_decompose
+
     STATSMODELS_AVAILABLE = True
 except ImportError:
     STATSMODELS_AVAILABLE = False
     print("Statsmodels not available. Install with: pip install statsmodels")
 
 # Service integrations
-from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import CacheService
 
 logger = get_logger(__name__)
 
 
 class ModelType(str, Enum):
     """Types of predictive models."""
+
     REVENUE_FORECASTING = "revenue_forecasting"
     CHURN_PREDICTION = "churn_prediction"
     CLV_PREDICTION = "clv_prediction"
@@ -104,6 +116,7 @@ class ModelType(str, Enum):
 
 class ModelStatus(str, Enum):
     """Model status types."""
+
     TRAINING = "training"
     TRAINED = "trained"
     DEPLOYED = "deployed"
@@ -115,6 +128,7 @@ class ModelStatus(str, Enum):
 @dataclass
 class ModelMetrics:
     """Model performance metrics."""
+
     model_id: str
     model_type: ModelType
 
@@ -149,6 +163,7 @@ class ModelMetrics:
 @dataclass
 class ModelPrediction:
     """Model prediction result."""
+
     model_id: str
     prediction_id: str
     input_features: Dict[str, Any]
@@ -203,16 +218,16 @@ class BaseModel(ABC):
         """Save model to disk."""
         try:
             model_data = {
-                'model': self.model,
-                'scaler': self.scaler,
-                'feature_columns': self.feature_columns,
-                'metrics': self.metrics,
-                'metadata': {
-                    'model_id': self.model_id,
-                    'model_type': self.model_type.value,
-                    'created_at': self.created_at.isoformat(),
-                    'last_trained': self.last_trained.isoformat() if self.last_trained else None
-                }
+                "model": self.model,
+                "scaler": self.scaler,
+                "feature_columns": self.feature_columns,
+                "metrics": self.metrics,
+                "metadata": {
+                    "model_id": self.model_id,
+                    "model_type": self.model_type.value,
+                    "created_at": self.created_at.isoformat(),
+                    "last_trained": self.last_trained.isoformat() if self.last_trained else None,
+                },
             }
 
             Path(model_path).parent.mkdir(parents=True, exist_ok=True)
@@ -229,14 +244,14 @@ class BaseModel(ABC):
         try:
             model_data = joblib.load(model_path)
 
-            self.model = model_data['model']
-            self.scaler = model_data['scaler']
-            self.feature_columns = model_data['feature_columns']
-            self.metrics = model_data['metrics']
+            self.model = model_data["model"]
+            self.scaler = model_data["scaler"]
+            self.feature_columns = model_data["feature_columns"]
+            self.metrics = model_data["metrics"]
 
-            metadata = model_data.get('metadata', {})
-            self.model_id = metadata.get('model_id', self.model_id)
-            self.model_type = ModelType(metadata.get('model_type', self.model_type.value))
+            metadata = model_data.get("metadata", {})
+            self.model_id = metadata.get("model_id", self.model_id)
+            self.model_type = ModelType(metadata.get("model_type", self.model_type.value))
 
             self.status = ModelStatus.DEPLOYED
             logger.info(f"Model {self.model_id} loaded from {model_path}")
@@ -286,11 +301,9 @@ class RevenueForecaster(BaseModel):
 
             # Create ensemble if both models available
             if prophet_predictions is not None and xgb_predictions is not None:
-                self.ensemble_weights = self._optimize_ensemble_weights(
-                    y_val, prophet_predictions, xgb_predictions
-                )
+                self.ensemble_weights = self._optimize_ensemble_weights(y_val, prophet_predictions, xgb_predictions)
             else:
-                self.ensemble_weights = {'xgb': 1.0, 'prophet': 0.0}
+                self.ensemble_weights = {"xgb": 1.0, "prophet": 0.0}
 
             # Calculate metrics
             predictions = self._ensemble_predict(X_val, prophet_predictions, xgb_predictions)
@@ -311,7 +324,7 @@ class RevenueForecaster(BaseModel):
                 mape=mape,
                 training_samples=len(X_train),
                 features_count=X_train.shape[1],
-                training_time_seconds=training_time
+                training_time_seconds=training_time,
             )
 
             self.status = ModelStatus.TRAINED
@@ -332,11 +345,7 @@ class RevenueForecaster(BaseModel):
                 raise ValueError("Model must be trained before making predictions")
 
             # Generate future feature data (simplified)
-            future_dates = pd.date_range(
-                start=datetime.utcnow().date(),
-                periods=future_periods,
-                freq='D'
-            )
+            future_dates = pd.date_range(start=datetime.utcnow().date(), periods=future_periods, freq="D")
 
             predictions = []
 
@@ -350,8 +359,7 @@ class RevenueForecaster(BaseModel):
                     xgb_pred = self._xgb_predict_single(features)
 
                     ensemble_pred = (
-                        self.ensemble_weights['prophet'] * prophet_pred +
-                        self.ensemble_weights['xgb'] * xgb_pred
+                        self.ensemble_weights["prophet"] * prophet_pred + self.ensemble_weights["xgb"] * xgb_pred
                     )
                 elif self.xgb_model:
                     ensemble_pred = self._xgb_predict_single(features)
@@ -367,7 +375,7 @@ class RevenueForecaster(BaseModel):
                     input_features=features,
                     prediction=max(0, ensemble_pred),  # Ensure non-negative revenue
                     confidence=confidence,
-                    explanation=f"Revenue forecast for {future_date.strftime('%Y-%m-%d')}"
+                    explanation=f"Revenue forecast for {future_date.strftime('%Y-%m-%d')}",
                 )
 
                 predictions.append(prediction)
@@ -381,48 +389,51 @@ class RevenueForecaster(BaseModel):
     def _prepare_features(self, revenue_data: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]:
         """Prepare features for training."""
         # Ensure date column is datetime
-        revenue_data['date'] = pd.to_datetime(revenue_data['date'])
-        revenue_data = revenue_data.sort_values('date')
+        revenue_data["date"] = pd.to_datetime(revenue_data["date"])
+        revenue_data = revenue_data.sort_values("date")
 
         # Create time-based features
-        revenue_data['year'] = revenue_data['date'].dt.year
-        revenue_data['month'] = revenue_data['date'].dt.month
-        revenue_data['day'] = revenue_data['date'].dt.day
-        revenue_data['dayofweek'] = revenue_data['date'].dt.dayofweek
-        revenue_data['quarter'] = revenue_data['date'].dt.quarter
+        revenue_data["year"] = revenue_data["date"].dt.year
+        revenue_data["month"] = revenue_data["date"].dt.month
+        revenue_data["day"] = revenue_data["date"].dt.day
+        revenue_data["dayofweek"] = revenue_data["date"].dt.dayofweek
+        revenue_data["quarter"] = revenue_data["date"].dt.quarter
 
         # Create lag features
-        revenue_data['revenue_lag1'] = revenue_data['revenue'].shift(1)
-        revenue_data['revenue_lag7'] = revenue_data['revenue'].shift(7)
-        revenue_data['revenue_ma7'] = revenue_data['revenue'].rolling(window=7).mean()
-        revenue_data['revenue_ma30'] = revenue_data['revenue'].rolling(window=30).mean()
+        revenue_data["revenue_lag1"] = revenue_data["revenue"].shift(1)
+        revenue_data["revenue_lag7"] = revenue_data["revenue"].shift(7)
+        revenue_data["revenue_ma7"] = revenue_data["revenue"].rolling(window=7).mean()
+        revenue_data["revenue_ma30"] = revenue_data["revenue"].rolling(window=30).mean()
 
         # Create trend features
-        revenue_data['days_since_start'] = (revenue_data['date'] - revenue_data['date'].min()).dt.days
+        revenue_data["days_since_start"] = (revenue_data["date"] - revenue_data["date"].min()).dt.days
 
         # Drop rows with NaN values (due to lags and rolling windows)
         revenue_data = revenue_data.dropna()
 
         # Separate features and target
         feature_cols = [
-            'year', 'month', 'day', 'dayofweek', 'quarter',
-            'revenue_lag1', 'revenue_lag7', 'revenue_ma7', 'revenue_ma30',
-            'days_since_start'
+            "year",
+            "month",
+            "day",
+            "dayofweek",
+            "quarter",
+            "revenue_lag1",
+            "revenue_lag7",
+            "revenue_ma7",
+            "revenue_ma30",
+            "days_since_start",
         ]
 
         X = revenue_data[feature_cols]
-        y = revenue_data['revenue']
+        y = revenue_data["revenue"]
 
         # Store feature columns for future predictions
         self.feature_columns = feature_cols
 
         # Scale features
         self.scaler = StandardScaler()
-        X_scaled = pd.DataFrame(
-            self.scaler.fit_transform(X),
-            columns=feature_cols,
-            index=X.index
-        )
+        X_scaled = pd.DataFrame(self.scaler.fit_transform(X), columns=feature_cols, index=X.index)
 
         return X_scaled, y
 
@@ -430,15 +441,12 @@ class RevenueForecaster(BaseModel):
         """Train Prophet model for time series forecasting."""
         try:
             # Prepare data for Prophet
-            prophet_data = revenue_data[['date', 'revenue']].copy()
-            prophet_data.columns = ['ds', 'y']
+            prophet_data = revenue_data[["date", "revenue"]].copy()
+            prophet_data.columns = ["ds", "y"]
 
             # Initialize and train Prophet model
             self.prophet_model = Prophet(
-                daily_seasonality=True,
-                weekly_seasonality=True,
-                yearly_seasonality=True,
-                changepoint_prior_scale=0.05
+                daily_seasonality=True, weekly_seasonality=True, yearly_seasonality=True, changepoint_prior_scale=0.05
             )
 
             self.prophet_model.fit(prophet_data)
@@ -447,7 +455,7 @@ class RevenueForecaster(BaseModel):
             future = self.prophet_model.make_future_dataframe(periods=0)
             forecast = self.prophet_model.predict(future)
 
-            return forecast['yhat'].values
+            return forecast["yhat"].values
 
         except Exception as e:
             logger.error(f"Error training Prophet model: {e}")
@@ -458,12 +466,7 @@ class RevenueForecaster(BaseModel):
         try:
             # Initialize XGBoost regressor
             self.xgb_model = xgb.XGBRegressor(
-                n_estimators=100,
-                max_depth=6,
-                learning_rate=0.1,
-                subsample=0.8,
-                colsample_bytree=0.8,
-                random_state=42
+                n_estimators=100, max_depth=6, learning_rate=0.1, subsample=0.8, colsample_bytree=0.8, random_state=42
             )
 
             # Train model
@@ -479,15 +482,12 @@ class RevenueForecaster(BaseModel):
             raise
 
     def _optimize_ensemble_weights(
-        self,
-        y_true: pd.Series,
-        prophet_pred: np.ndarray,
-        xgb_pred: np.ndarray
+        self, y_true: pd.Series, prophet_pred: np.ndarray, xgb_pred: np.ndarray
     ) -> Dict[str, float]:
         """Optimize ensemble weights based on validation performance."""
         try:
-            best_mse = float('inf')
-            best_weights = {'prophet': 0.5, 'xgb': 0.5}
+            best_mse = float("inf")
+            best_weights = {"prophet": 0.5, "xgb": 0.5}
 
             # Try different weight combinations
             for prophet_weight in np.arange(0, 1.1, 0.1):
@@ -504,19 +504,16 @@ class RevenueForecaster(BaseModel):
 
                 if mse < best_mse:
                     best_mse = mse
-                    best_weights = {'prophet': prophet_weight, 'xgb': xgb_weight}
+                    best_weights = {"prophet": prophet_weight, "xgb": xgb_weight}
 
             return best_weights
 
         except Exception as e:
             logger.error(f"Error optimizing ensemble weights: {e}")
-            return {'prophet': 0.3, 'xgb': 0.7}  # Default weights
+            return {"prophet": 0.3, "xgb": 0.7}  # Default weights
 
     def _ensemble_predict(
-        self,
-        X: pd.DataFrame,
-        prophet_pred: Optional[np.ndarray],
-        xgb_pred: np.ndarray
+        self, X: pd.DataFrame, prophet_pred: Optional[np.ndarray], xgb_pred: np.ndarray
     ) -> np.ndarray:
         """Make ensemble predictions."""
         if prophet_pred is not None and len(prophet_pred) > 0:
@@ -524,10 +521,7 @@ class RevenueForecaster(BaseModel):
             prophet_subset = prophet_pred[:min_len]
             xgb_subset = xgb_pred[:min_len]
 
-            return (
-                self.ensemble_weights['prophet'] * prophet_subset +
-                self.ensemble_weights['xgb'] * xgb_subset
-            )
+            return self.ensemble_weights["prophet"] * prophet_subset + self.ensemble_weights["xgb"] * xgb_subset
         else:
             return xgb_pred
 
@@ -537,16 +531,16 @@ class RevenueForecaster(BaseModel):
         mock_recent_revenue = 1000 * (1 + 0.1 * np.sin(period_index / 7))  # Weekly seasonality
 
         return {
-            'year': future_date.year,
-            'month': future_date.month,
-            'day': future_date.day,
-            'dayofweek': future_date.weekday(),
-            'quarter': (future_date.month - 1) // 3 + 1,
-            'revenue_lag1': mock_recent_revenue,
-            'revenue_lag7': mock_recent_revenue * 0.95,
-            'revenue_ma7': mock_recent_revenue,
-            'revenue_ma30': mock_recent_revenue * 1.02,
-            'days_since_start': 365 + period_index  # Mock days since start
+            "year": future_date.year,
+            "month": future_date.month,
+            "day": future_date.day,
+            "dayofweek": future_date.weekday(),
+            "quarter": (future_date.month - 1) // 3 + 1,
+            "revenue_lag1": mock_recent_revenue,
+            "revenue_lag7": mock_recent_revenue * 0.95,
+            "revenue_ma7": mock_recent_revenue,
+            "revenue_ma30": mock_recent_revenue * 1.02,
+            "days_since_start": 365 + period_index,  # Mock days since start
         }
 
     def _prophet_predict_single(self, future_date: datetime) -> float:
@@ -555,9 +549,9 @@ class RevenueForecaster(BaseModel):
             return 0.0
 
         try:
-            future_df = pd.DataFrame({'ds': [future_date]})
+            future_df = pd.DataFrame({"ds": [future_date]})
             forecast = self.prophet_model.predict(future_df)
-            return forecast['yhat'].iloc[0]
+            return forecast["yhat"].iloc[0]
         except Exception:
             return 0.0
 
@@ -610,9 +604,7 @@ class ChurnPredictor(BaseModel):
             X, y = self._prepare_churn_features(customer_data)
 
             # Split data
-            X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=0.2, random_state=42, stratify=y
-            )
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
             # Scale features
             self.scaler = StandardScaler()
@@ -621,19 +613,13 @@ class ChurnPredictor(BaseModel):
 
             # Feature selection
             self.feature_selector = SelectFromModel(
-                RandomForestClassifier(n_estimators=50, random_state=42),
-                threshold='median'
+                RandomForestClassifier(n_estimators=50, random_state=42), threshold="median"
             )
             X_train_selected = self.feature_selector.fit_transform(X_train_scaled, y_train)
             X_test_selected = self.feature_selector.transform(X_test_scaled)
 
             # Train Gradient Boosting model
-            self.model = GradientBoostingClassifier(
-                n_estimators=100,
-                learning_rate=0.1,
-                max_depth=6,
-                random_state=42
-            )
+            self.model = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, max_depth=6, random_state=42)
 
             self.model.fit(X_train_selected, y_train)
 
@@ -646,7 +632,8 @@ class ChurnPredictor(BaseModel):
 
             # Calculate detailed classification metrics
             from sklearn.metrics import precision_recall_fscore_support
-            precision, recall, f1, _ = precision_recall_fscore_support(y_test, y_pred, average='binary')
+
+            precision, recall, f1, _ = precision_recall_fscore_support(y_test, y_pred, average="binary")
 
             training_time = (datetime.utcnow() - start_time).total_seconds()
 
@@ -660,7 +647,7 @@ class ChurnPredictor(BaseModel):
                 training_samples=len(X_train),
                 features_count=X_train_selected.shape[1],
                 training_time_seconds=training_time,
-                business_impact_score=auc_score  # Use AUC as business impact
+                business_impact_score=auc_score,  # Use AUC as business impact
             )
 
             self.status = ModelStatus.TRAINED
@@ -713,9 +700,11 @@ class ChurnPredictor(BaseModel):
                     prediction_id=f"{self.model_id}_{customer_id}_{int(datetime.utcnow().timestamp())}",
                     input_features=X.iloc[i].to_dict(),
                     prediction=float(churn_prob),
-                    confidence=min(0.95, max(0.6, 1.0 - abs(churn_prob - 0.5) * 2)),  # Higher confidence for extreme probabilities
+                    confidence=min(
+                        0.95, max(0.6, 1.0 - abs(churn_prob - 0.5) * 2)
+                    ),  # Higher confidence for extreme probabilities
                     feature_importance=feature_importance,
-                    explanation=f"Churn risk: {risk_level} ({churn_prob:.1%} probability)"
+                    explanation=f"Churn risk: {risk_level} ({churn_prob:.1%} probability)",
                 )
 
                 predictions.append(prediction)
@@ -727,9 +716,7 @@ class ChurnPredictor(BaseModel):
             return []
 
     def _prepare_churn_features(
-        self,
-        customer_data: pd.DataFrame,
-        is_prediction: bool = False
+        self, customer_data: pd.DataFrame, is_prediction: bool = False
     ) -> Tuple[pd.DataFrame, Optional[pd.Series]]:
         """Prepare features for churn prediction."""
 
@@ -737,48 +724,50 @@ class ChurnPredictor(BaseModel):
         features = customer_data.copy()
 
         # Recency features
-        if 'last_purchase_date' in features.columns:
-            features['days_since_last_purchase'] = (
-                datetime.utcnow() - pd.to_datetime(features['last_purchase_date'])
+        if "last_purchase_date" in features.columns:
+            features["days_since_last_purchase"] = (
+                datetime.utcnow() - pd.to_datetime(features["last_purchase_date"])
             ).dt.days
         else:
-            features['days_since_last_purchase'] = 30  # Default value
+            features["days_since_last_purchase"] = 30  # Default value
 
         # Frequency features
-        if 'total_purchases' in features.columns and 'tenure_days' in features.columns:
-            features['purchase_frequency'] = features['total_purchases'] / np.maximum(features['tenure_days'], 1) * 30
+        if "total_purchases" in features.columns and "tenure_days" in features.columns:
+            features["purchase_frequency"] = features["total_purchases"] / np.maximum(features["tenure_days"], 1) * 30
         else:
-            features['purchase_frequency'] = 1.0  # Default value
+            features["purchase_frequency"] = 1.0  # Default value
 
         # Monetary features
-        if 'total_revenue' in features.columns:
-            features['avg_order_value'] = features['total_revenue'] / np.maximum(features.get('total_purchases', 1), 1)
+        if "total_revenue" in features.columns:
+            features["avg_order_value"] = features["total_revenue"] / np.maximum(features.get("total_purchases", 1), 1)
         else:
-            features['avg_order_value'] = 100.0  # Default value
+            features["avg_order_value"] = 100.0  # Default value
 
         # Engagement features
-        if 'email_opens' in features.columns and 'email_sends' in features.columns:
-            features['email_open_rate'] = features['email_opens'] / np.maximum(features['email_sends'], 1)
+        if "email_opens" in features.columns and "email_sends" in features.columns:
+            features["email_open_rate"] = features["email_opens"] / np.maximum(features["email_sends"], 1)
         else:
-            features['email_open_rate'] = 0.2  # Default value
+            features["email_open_rate"] = 0.2  # Default value
 
         # Support interaction features
-        if 'support_tickets' in features.columns:
-            features['support_intensity'] = features['support_tickets'] / np.maximum(features.get('tenure_days', 1), 1) * 30
+        if "support_tickets" in features.columns:
+            features["support_intensity"] = (
+                features["support_tickets"] / np.maximum(features.get("tenure_days", 1), 1) * 30
+            )
         else:
-            features['support_intensity'] = 0.0  # Default value
+            features["support_intensity"] = 0.0  # Default value
 
         # Select relevant features
         feature_columns = [
-            'days_since_last_purchase',
-            'purchase_frequency',
-            'avg_order_value',
-            'email_open_rate',
-            'support_intensity'
+            "days_since_last_purchase",
+            "purchase_frequency",
+            "avg_order_value",
+            "email_open_rate",
+            "support_intensity",
         ]
 
         # Add existing numerical features if available
-        existing_numerical = ['tenure_days', 'total_purchases', 'total_revenue']
+        existing_numerical = ["tenure_days", "total_purchases", "total_revenue"]
         for col in existing_numerical:
             if col in features.columns:
                 feature_columns.append(col)
@@ -791,30 +780,29 @@ class ChurnPredictor(BaseModel):
         X = features[feature_columns].fillna(0)
 
         # Store feature columns for future use
-        if not hasattr(self, 'feature_columns') or self.feature_columns is None:
+        if not hasattr(self, "feature_columns") or self.feature_columns is None:
             self.feature_columns = feature_columns
 
         # Target variable (for training)
         y = None
-        if not is_prediction and 'churned' in customer_data.columns:
-            y = customer_data['churned']
+        if not is_prediction and "churned" in customer_data.columns:
+            y = customer_data["churned"]
         elif not is_prediction:
             # Create churned label based on recency (simplified)
-            y = (features['days_since_last_purchase'] > 90).astype(int)
+            y = (features["days_since_last_purchase"] > 90).astype(int)
 
         return X, y
 
     def get_feature_importance(self) -> Dict[str, float]:
         """Get feature importance from the trained model."""
-        if not self.model or not hasattr(self, 'feature_columns'):
+        if not self.model or not hasattr(self, "feature_columns"):
             return {}
 
         try:
             # Get selected features
             selected_features = self.feature_selector.get_support()
             selected_feature_names = [
-                name for name, selected in zip(self.feature_columns, selected_features)
-                if selected
+                name for name, selected in zip(self.feature_columns, selected_features) if selected
             ]
 
             importance_scores = self.model.feature_importances_
@@ -850,12 +838,7 @@ class ModelManager:
 
         return None
 
-    async def train_model(
-        self,
-        model_id: str,
-        model_type: ModelType,
-        training_data: pd.DataFrame
-    ) -> ModelMetrics:
+    async def train_model(self, model_id: str, model_type: ModelType, training_data: pd.DataFrame) -> ModelMetrics:
         """Train a new model."""
         try:
             model = self._create_model(model_id, model_type)
@@ -885,10 +868,7 @@ class ModelManager:
             raise
 
     async def predict(
-        self,
-        model_id: str,
-        model_type: ModelType,
-        input_data: Union[pd.DataFrame, int]
+        self, model_id: str, model_type: ModelType, input_data: Union[pd.DataFrame, int]
     ) -> List[ModelPrediction]:
         """Make predictions using a trained model."""
         try:
@@ -937,27 +917,31 @@ class ModelManager:
 
             # Check memory models
             for model_id, model in self.models.items():
-                models_info.append({
-                    "model_id": model_id,
-                    "model_type": model.model_type.value,
-                    "status": model.status.value,
-                    "created_at": model.created_at.isoformat(),
-                    "last_trained": model.last_trained.isoformat() if model.last_trained else None,
-                    "metrics": asdict(model.metrics) if model.metrics else None
-                })
+                models_info.append(
+                    {
+                        "model_id": model_id,
+                        "model_type": model.model_type.value,
+                        "status": model.status.value,
+                        "created_at": model.created_at.isoformat(),
+                        "last_trained": model.last_trained.isoformat() if model.last_trained else None,
+                        "metrics": asdict(model.metrics) if model.metrics else None,
+                    }
+                )
 
             # Check disk models
             for model_file in self.model_store_path.glob("*.joblib"):
                 model_id = model_file.stem
                 if model_id not in self.models:
-                    models_info.append({
-                        "model_id": model_id,
-                        "model_type": "unknown",
-                        "status": "saved",
-                        "file_path": str(model_file),
-                        "file_size": model_file.stat().st_size,
-                        "modified_at": datetime.fromtimestamp(model_file.stat().st_mtime).isoformat()
-                    })
+                    models_info.append(
+                        {
+                            "model_id": model_id,
+                            "model_type": "unknown",
+                            "status": "saved",
+                            "file_path": str(model_file),
+                            "file_size": model_file.stat().st_size,
+                            "modified_at": datetime.fromtimestamp(model_file.stat().st_mtime).isoformat(),
+                        }
+                    )
 
             return models_info
 
@@ -974,12 +958,7 @@ class ModelManager:
         else:
             raise ValueError(f"Unsupported model type: {model_type}")
 
-    async def retrain_model(
-        self,
-        model_id: str,
-        model_type: ModelType,
-        training_data: pd.DataFrame
-    ) -> ModelMetrics:
+    async def retrain_model(self, model_id: str, model_type: ModelType, training_data: pd.DataFrame) -> ModelMetrics:
         """Retrain an existing model with new data."""
         try:
             # Remove old model from memory

@@ -11,14 +11,14 @@ Provides comprehensive Rancho Cucamonga/Inland Empire real estate market data in
 
 import asyncio
 import json
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass
-from enum import Enum
 import logging
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)
 
@@ -41,6 +41,7 @@ class MarketCondition(Enum):
 @dataclass
 class RanchoCucamongaNeighborhood:
     """Rancho Cucamonga neighborhood with comprehensive market data."""
+
     name: str
     zone: str  # Central RC, Alta Loma, Etiwanda, North RC, South RC
     median_price: float
@@ -58,6 +59,7 @@ class RanchoCucamongaNeighborhood:
 @dataclass
 class PropertyListing:
     """Rancho Cucamonga/Inland Empire MLS property listing."""
+
     mls_id: str
     address: str
     price: float
@@ -83,6 +85,7 @@ class PropertyListing:
 @dataclass
 class MarketMetrics:
     """Rancho Cucamonga/Inland Empire market performance metrics."""
+
     median_price: float
     average_days_on_market: int
     inventory_count: int
@@ -114,7 +117,7 @@ class RanchoCucamongaMarketService:
         self,
         neighborhood: Optional[str] = None,
         property_type: Optional[PropertyType] = None,
-        price_range: Optional[Tuple[float, float]] = None
+        price_range: Optional[Tuple[float, float]] = None,
     ) -> MarketMetrics:
         """Get real-time Rancho Cucamonga/Inland Empire market metrics with optional filtering."""
         cache_key = f"market_metrics:{neighborhood}:{property_type}:{price_range}"
@@ -134,11 +137,7 @@ class RanchoCucamongaMarketService:
 
         return metrics
 
-    async def search_properties(
-        self,
-        criteria: Dict[str, Any],
-        limit: int = 50
-    ) -> List[PropertyListing]:
+    async def search_properties(self, criteria: Dict[str, Any], limit: int = 50) -> List[PropertyListing]:
         """
         Search Rancho Cucamonga/Inland Empire MLS properties with comprehensive criteria.
 
@@ -205,9 +204,7 @@ class RanchoCucamongaMarketService:
         return district_info
 
     async def get_corporate_relocation_insights(
-        self,
-        employer: Optional[str] = None,
-        position_level: Optional[str] = None
+        self, employer: Optional[str] = None, position_level: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Get insights for corporate relocations to Rancho Cucamonga/Inland Empire.
@@ -227,11 +224,7 @@ class RanchoCucamongaMarketService:
 
         return insights
 
-    async def get_commute_analysis(
-        self,
-        property_coords: Tuple[float, float],
-        work_location: str
-    ) -> Dict[str, Any]:
+    async def get_commute_analysis(self, property_coords: Tuple[float, float], work_location: str) -> Dict[str, Any]:
         """Analyze commute times and routes from property to work location."""
         cache_key = f"commute:{property_coords}:{work_location}"
 
@@ -250,7 +243,7 @@ class RanchoCucamongaMarketService:
         self,
         transaction_type: str,  # "buy" or "sell"
         property_type: PropertyType,
-        neighborhood: Optional[str] = None
+        neighborhood: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Get market timing recommendations for Rancho Cucamonga/Inland Empire market."""
         current_metrics = await self.get_market_metrics(neighborhood, property_type)
@@ -260,7 +253,7 @@ class RanchoCucamongaMarketService:
             "market_condition": current_metrics.market_condition.value,
             "recommendations": [],
             "seasonal_factors": self._get_seasonal_factors(),
-            "urgency_level": "low"  # low, medium, high
+            "urgency_level": "low",  # low, medium, high
         }
 
         # Analyze market conditions for timing
@@ -281,8 +274,13 @@ class RanchoCucamongaMarketService:
                 "school_rating": 8.9,
                 "walkability_score": 45,
                 "logistics_healthcare_appeal": 75,
-                "amenities": ["Victoria Gardens", "Alta Loma Community Center", "Red Hill Country Club", "Luxury Homes"],
-                "demographics": {"age_median": 42, "income_median": 125000, "logistics_healthcare": 0.25}
+                "amenities": [
+                    "Victoria Gardens",
+                    "Alta Loma Community Center",
+                    "Red Hill Country Club",
+                    "Luxury Homes",
+                ],
+                "demographics": {"age_median": 42, "income_median": 125000, "logistics_healthcare": 0.25},
             },
             "etiwanda": {
                 "name": "Etiwanda",
@@ -292,7 +290,7 @@ class RanchoCucamongaMarketService:
                 "walkability_score": 55,
                 "logistics_healthcare_appeal": 90,
                 "amenities": ["Etiwanda Creek Park", "Top Schools", "Family Communities", "Day Creek Golf Course"],
-                "demographics": {"age_median": 38, "income_median": 115000, "logistics_healthcare": 0.35}
+                "demographics": {"age_median": 38, "income_median": 115000, "logistics_healthcare": 0.35},
             },
             "central_rc": {
                 "name": "Central Rancho Cucamonga",
@@ -302,7 +300,7 @@ class RanchoCucamongaMarketService:
                 "walkability_score": 65,
                 "logistics_healthcare_appeal": 85,
                 "amenities": ["Victoria Gardens Mall", "Central Park", "Restaurants", "Shopping Centers"],
-                "demographics": {"age_median": 35, "income_median": 95000, "logistics_healthcare": 0.30}
+                "demographics": {"age_median": 35, "income_median": 95000, "logistics_healthcare": 0.30},
             },
             "north_rc": {
                 "name": "North Rancho Cucamonga",
@@ -312,7 +310,7 @@ class RanchoCucamongaMarketService:
                 "walkability_score": 50,
                 "logistics_healthcare_appeal": 80,
                 "amenities": ["Lewis Family Playfields", "New Construction", "Commuter Friendly", "Family Oriented"],
-                "demographics": {"age_median": 36, "income_median": 105000, "logistics_healthcare": 0.28}
+                "demographics": {"age_median": 36, "income_median": 105000, "logistics_healthcare": 0.28},
             },
             "south_rc": {
                 "name": "South Rancho Cucamonga",
@@ -322,7 +320,7 @@ class RanchoCucamongaMarketService:
                 "walkability_score": 60,
                 "logistics_healthcare_appeal": 88,
                 "amenities": ["Cucamonga Peak Trail", "Historic Route 66", "Starter Homes", "Commuter Access"],
-                "demographics": {"age_median": 32, "income_median": 85000, "logistics_healthcare": 0.40}
+                "demographics": {"age_median": 32, "income_median": 85000, "logistics_healthcare": 0.40},
             },
             "victoria_gardens": {
                 "name": "Victoria Gardens Area",
@@ -332,7 +330,7 @@ class RanchoCucamongaMarketService:
                 "walkability_score": 75,
                 "logistics_healthcare_appeal": 82,
                 "amenities": ["Victoria Gardens Mall", "Dining", "Entertainment", "Shopping"],
-                "demographics": {"age_median": 34, "income_median": 98000, "logistics_healthcare": 0.32}
+                "demographics": {"age_median": 34, "income_median": 98000, "logistics_healthcare": 0.32},
             },
             "terra_vista": {
                 "name": "Terra Vista",
@@ -342,7 +340,7 @@ class RanchoCucamongaMarketService:
                 "walkability_score": 40,
                 "logistics_healthcare_appeal": 70,
                 "amenities": ["Luxury Homes", "Golf Course Views", "Gated Communities", "Mountain Views"],
-                "demographics": {"age_median": 45, "income_median": 165000, "logistics_healthcare": 0.20}
+                "demographics": {"age_median": 45, "income_median": 165000, "logistics_healthcare": 0.20},
             },
             "day_creek": {
                 "name": "Day Creek",
@@ -352,8 +350,8 @@ class RanchoCucamongaMarketService:
                 "walkability_score": 55,
                 "logistics_healthcare_appeal": 85,
                 "amenities": ["Day Creek Golf Course", "Family Neighborhoods", "Parks", "Schools"],
-                "demographics": {"age_median": 37, "income_median": 108000, "logistics_healthcare": 0.30}
-            }
+                "demographics": {"age_median": 37, "income_median": 108000, "logistics_healthcare": 0.30},
+            },
         }
 
     def _load_corporate_headquarters(self) -> Dict[str, Dict[str, Any]]:
@@ -366,7 +364,7 @@ class RanchoCucamongaMarketService:
                 "employees": 12000,
                 "expansion_plans": "Continued logistics expansion",
                 "avg_salary": 85000,
-                "preferred_neighborhoods": ["South RC", "Central RC", "Etiwanda", "North RC"]
+                "preferred_neighborhoods": ["South RC", "Central RC", "Etiwanda", "North RC"],
             },
             "kaiser_permanente": {
                 "name": "Kaiser Permanente",
@@ -375,7 +373,7 @@ class RanchoCucamongaMarketService:
                 "employees": 8500,
                 "expansion_plans": "Healthcare expansion across IE",
                 "avg_salary": 95000,
-                "preferred_neighborhoods": ["Central RC", "Etiwanda", "Alta Loma", "Victoria Gardens"]
+                "preferred_neighborhoods": ["Central RC", "Etiwanda", "Alta Loma", "Victoria Gardens"],
             },
             "fedex": {
                 "name": "FedEx Ground",
@@ -384,7 +382,7 @@ class RanchoCucamongaMarketService:
                 "employees": 5000,
                 "expansion_plans": "Logistics hub expansion",
                 "avg_salary": 75000,
-                "preferred_neighborhoods": ["South RC", "Central RC", "North RC", "Day Creek"]
+                "preferred_neighborhoods": ["South RC", "Central RC", "North RC", "Day Creek"],
             },
             "ups": {
                 "name": "UPS Logistics",
@@ -393,7 +391,7 @@ class RanchoCucamongaMarketService:
                 "employees": 4500,
                 "expansion_plans": "Distribution center growth",
                 "avg_salary": 78000,
-                "preferred_neighborhoods": ["Central RC", "South RC", "Victoria Gardens", "Day Creek"]
+                "preferred_neighborhoods": ["Central RC", "South RC", "Victoria Gardens", "Day Creek"],
             },
             "san_antonio_regional": {
                 "name": "San Antonio Regional Hospital",
@@ -402,7 +400,7 @@ class RanchoCucamongaMarketService:
                 "employees": 3500,
                 "expansion_plans": "Healthcare services expansion",
                 "avg_salary": 85000,
-                "preferred_neighborhoods": ["Etiwanda", "Alta Loma", "Central RC", "Terra Vista"]
+                "preferred_neighborhoods": ["Etiwanda", "Alta Loma", "Central RC", "Terra Vista"],
             },
             "chino_valley_medical": {
                 "name": "Chino Valley Medical Center",
@@ -411,15 +409,15 @@ class RanchoCucamongaMarketService:
                 "employees": 2800,
                 "expansion_plans": "Regional healthcare expansion",
                 "avg_salary": 90000,
-                "preferred_neighborhoods": ["Chino Hills", "South RC", "Central RC", "Day Creek"]
-            }
+                "preferred_neighborhoods": ["Chino Hills", "South RC", "Central RC", "Day Creek"],
+            },
         }
 
     async def _fetch_market_metrics(
         self,
         neighborhood: Optional[str],
         property_type: Optional[PropertyType],
-        price_range: Optional[Tuple[float, float]]
+        price_range: Optional[Tuple[float, float]],
     ) -> MarketMetrics:
         """Fetch real-time market metrics from MLS and market data sources."""
         # Simulate MLS API call - in production, integrate with actual MLS
@@ -437,7 +435,7 @@ class RanchoCucamongaMarketService:
             "closed_sales_30d": 975,
             "pending_sales": 750,
             "absorption_rate": 82.3,
-            "market_condition": MarketCondition.BALANCED
+            "market_condition": MarketCondition.BALANCED,
         }
 
         # Adjust based on neighborhood
@@ -453,7 +451,7 @@ class RanchoCucamongaMarketService:
                 PropertyType.CONDO: {"median_price": 0.75, "average_days_on_market": 1.2},
                 PropertyType.TOWNHOME: {"median_price": 0.85, "average_days_on_market": 0.9},
                 PropertyType.LAND: {"median_price": 0.4, "average_days_on_market": 2.5},
-                PropertyType.MULTI_FAMILY: {"median_price": 1.8, "average_days_on_market": 1.8}
+                PropertyType.MULTI_FAMILY: {"median_price": 1.8, "average_days_on_market": 1.8},
             }
 
             adjustments = type_adjustments.get(property_type, {})
@@ -463,11 +461,7 @@ class RanchoCucamongaMarketService:
 
         return MarketMetrics(**base_metrics)
 
-    async def _search_mls_properties(
-        self,
-        criteria: Dict[str, Any],
-        limit: int
-    ) -> List[PropertyListing]:
+    async def _search_mls_properties(self, criteria: Dict[str, Any], limit: int) -> List[PropertyListing]:
         """Search MLS properties - integrate with actual MLS API in production."""
         # Simulate MLS search results
         # In production, this would connect to Inland Empire MLS API
@@ -493,7 +487,7 @@ class RanchoCucamongaMarketService:
                 "photos": ["photo1.jpg", "photo2.jpg"],
                 "description": "Beautiful family home in prestigious Etiwanda area",
                 "listing_agent": {"name": "Jorge Martinez", "phone": "(909) 555-0123"},
-                "last_updated": datetime.now()
+                "last_updated": datetime.now(),
             }
         ]
 
@@ -538,7 +532,7 @@ class RanchoCucamongaMarketService:
             corporate_proximity=corporate_proximity,
             amenities=base_data["amenities"],
             demographics=base_data["demographics"],
-            market_condition=metrics.market_condition
+            market_condition=metrics.market_condition,
         )
 
     async def _fetch_school_district_data(self, district_name: str) -> Dict[str, Any]:
@@ -555,10 +549,10 @@ class RanchoCucamongaMarketService:
                 "top_schools": [
                     {"name": "Etiwanda High School", "rating": 9.5, "type": "High School"},
                     {"name": "George Washington High School", "rating": 9.2, "type": "High School"},
-                    {"name": "Eleanor Roosevelt High School", "rating": 9.0, "type": "High School"}
+                    {"name": "Eleanor Roosevelt High School", "rating": 9.0, "type": "High School"},
                 ],
                 "special_programs": ["AVID", "AP", "STEM", "Dual Enrollment"],
-                "boundaries": "North Rancho Cucamonga, Etiwanda area"
+                "boundaries": "North Rancho Cucamonga, Etiwanda area",
             },
             "central elementary school district": {
                 "name": "Central Elementary School District",
@@ -570,19 +564,17 @@ class RanchoCucamongaMarketService:
                 "top_schools": [
                     {"name": "Rancho Cucamonga High School", "rating": 8.8, "type": "High School"},
                     {"name": "Los Osos High School", "rating": 8.5, "type": "High School"},
-                    {"name": "Alta Loma High School", "rating": 8.9, "type": "High School"}
+                    {"name": "Alta Loma High School", "rating": 8.9, "type": "High School"},
                 ],
                 "special_programs": ["IB Programme", "Career Technical Education", "GATE"],
-                "boundaries": "Central Rancho Cucamonga, Alta Loma"
-            }
+                "boundaries": "Central Rancho Cucamonga, Alta Loma",
+            },
         }
 
         return districts.get(district_name.lower(), {})
 
     async def _generate_corporate_insights(
-        self,
-        employer: Optional[str],
-        position_level: Optional[str]
+        self, employer: Optional[str], position_level: Optional[str]
     ) -> Dict[str, Any]:
         """Generate insights for corporate relocations."""
         insights = {
@@ -590,12 +582,12 @@ class RanchoCucamongaMarketService:
                 "total_logistics_healthcare_workers": 45000,
                 "growth_rate_annual": 8.5,
                 "median_salary": 85000,
-                "housing_demand": "High"
+                "housing_demand": "High",
             },
             "top_employers": list(self.corporate_hqs.values()),
             "recommended_neighborhoods": [],
             "budget_guidance": {},
-            "timing_advice": {}
+            "timing_advice": {},
         }
 
         if employer and employer.lower().replace(" ", "_") in self.corporate_hqs:
@@ -606,13 +598,13 @@ class RanchoCucamongaMarketService:
                 insights["recommended_neighborhoods"] = [
                     {"name": "South RC", "commute": "10 mins", "appeal": "Direct access to fulfillment centers"},
                     {"name": "Central RC", "commute": "15 mins", "appeal": "Family-friendly, good schools"},
-                    {"name": "Etiwanda", "commute": "20 mins", "appeal": "Top schools, family community"}
+                    {"name": "Etiwanda", "commute": "20 mins", "appeal": "Top schools, family community"},
                 ]
             elif employer.lower() == "kaiser_permanente" or "kaiser" in employer.lower():
                 insights["recommended_neighborhoods"] = [
                     {"name": "Central RC", "commute": "15 mins", "appeal": "Healthcare community, amenities"},
                     {"name": "Etiwanda", "commute": "20 mins", "appeal": "Excellent schools for healthcare families"},
-                    {"name": "Alta Loma", "commute": "25 mins", "appeal": "Luxury community, professional appeal"}
+                    {"name": "Alta Loma", "commute": "25 mins", "appeal": "Luxury community, professional appeal"},
                 ]
 
             # Budget guidance based on salary
@@ -623,15 +615,13 @@ class RanchoCucamongaMarketService:
                 "recommended_max": recommended_budget,
                 "comfortable_range": f"${recommended_budget * 0.7:.0f} - ${recommended_budget:.0f}",
                 "monthly_payment_target": f"${recommended_budget * 0.28 / 12:.0f}",
-                "down_payment_suggestion": f"${recommended_budget * 0.2:.0f} (20%)"
+                "down_payment_suggestion": f"${recommended_budget * 0.2:.0f} (20%)",
             }
 
         return insights
 
     async def _calculate_commute_analysis(
-        self,
-        property_coords: Tuple[float, float],
-        work_location: str
+        self, property_coords: Tuple[float, float], work_location: str
     ) -> Dict[str, Any]:
         """Calculate comprehensive commute analysis."""
         # In production, integrate with Google Maps API or similar
@@ -646,22 +636,22 @@ class RanchoCucamongaMarketService:
                 "time_typical": "25 minutes",
                 "time_rush_hour": "35 minutes",
                 "distance": "15.2 miles",
-                "cost_monthly": "$180 (gas + parking)"
+                "cost_monthly": "$180 (gas + parking)",
             },
             "public_transit": {
                 "time_typical": "45 minutes",
                 "cost_monthly": "$41.25 (CapMetro)",
                 "routes": ["Bus + Light Rail"],
-                "walkability_to_transit": "8/10"
+                "walkability_to_transit": "8/10",
             },
             "bike": {
                 "time_typical": "45 minutes",
                 "distance": "12.8 miles",
                 "safety_rating": "7/10",
-                "bike_lanes": "Partially protected"
+                "bike_lanes": "Partially protected",
             },
             "overall_score": 8.5,
-            "recommendation": "Excellent commute with multiple transportation options"
+            "recommendation": "Excellent commute with multiple transportation options",
         }
 
     def _analyze_buy_timing(self, metrics: MarketMetrics) -> Dict[str, Any]:
@@ -702,7 +692,7 @@ class RanchoCucamongaMarketService:
         return {
             "timing_score": max(0, min(100, timing_score)),
             "recommendations": recommendations,
-            "urgency_level": urgency
+            "urgency_level": urgency,
         }
 
     def _analyze_sell_timing(self, metrics: MarketMetrics) -> Dict[str, Any]:
@@ -743,7 +733,7 @@ class RanchoCucamongaMarketService:
         return {
             "timing_score": max(0, min(100, timing_score)),
             "recommendations": recommendations,
-            "urgency_level": urgency
+            "urgency_level": urgency,
         }
 
     def _get_seasonal_factors(self) -> Dict[str, Any]:
@@ -756,29 +746,29 @@ class RanchoCucamongaMarketService:
                 "activity_level": "Peak",
                 "buyer_behavior": "High activity, competitive",
                 "seller_behavior": "Highest listing volume",
-                "recommendation": "Best time for sellers, competitive for buyers"
+                "recommendation": "Best time for sellers, competitive for buyers",
             },
             "summer": {
                 "months": [6, 7, 8],
                 "activity_level": "High",
                 "buyer_behavior": "Sustained activity, family moves",
                 "seller_behavior": "Continued strong inventory",
-                "recommendation": "Good for both buyers and sellers"
+                "recommendation": "Good for both buyers and sellers",
             },
             "fall": {
                 "months": [9, 10, 11],
                 "activity_level": "Moderate",
                 "buyer_behavior": "More selective, school considerations",
                 "seller_behavior": "Inventory begins to decline",
-                "recommendation": "Balanced market conditions"
+                "recommendation": "Balanced market conditions",
             },
             "winter": {
                 "months": [12, 1, 2],
                 "activity_level": "Slower",
                 "buyer_behavior": "Serious buyers, less competition",
                 "seller_behavior": "Limited inventory",
-                "recommendation": "Opportunities for motivated buyers"
-            }
+                "recommendation": "Opportunities for motivated buyers",
+            },
         }
 
         # Determine current season
@@ -795,13 +785,14 @@ class RanchoCucamongaMarketService:
                 "Logistics hiring peaks in Q4 for holiday season",
                 "Healthcare hiring increases in summer months",
                 "Family moves align with school calendar",
-                "Weather allows year-round showing activity"
-            ]
+                "Weather allows year-round showing activity",
+            ],
         }
 
 
 # Global service instance
 _rancho_cucamonga_market_service = None
+
 
 def get_rancho_cucamonga_market_service() -> RanchoCucamongaMarketService:
     """Get singleton instance of Rancho Cucamonga Market Service."""

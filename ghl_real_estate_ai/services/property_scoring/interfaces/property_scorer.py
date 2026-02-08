@@ -5,12 +5,13 @@ Defines the contract for all property scoring algorithms
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
 
 class ConfidenceLevel(Enum):
     """Confidence level classifications"""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -24,6 +25,7 @@ class ScoringResult:
 
     This standardizes the output across all scoring strategies
     """
+
     overall_score: float  # 0-100 scale
     confidence_level: ConfidenceLevel
 
@@ -49,18 +51,18 @@ class ScoringResult:
     def to_legacy_format(self) -> Dict[str, Any]:
         """Convert to legacy format for backward compatibility"""
         return {
-            'match_score': int(self.overall_score),
-            'budget_match': self.budget_score > 80,
-            'location_match': self.location_score > 80,
-            'features_match': self.feature_score > 80,
-            'match_reasons': self.reasoning[:5],  # Limit for UI
-            'confidence_level': self.confidence_level.value,
-            'ml_breakdown': {
-                'budget_confidence': self.budget_score,
-                'location_confidence': self.location_score,
-                'feature_confidence': self.feature_score,
-                'market_confidence': self.market_score
-            }
+            "match_score": int(self.overall_score),
+            "budget_match": self.budget_score > 80,
+            "location_match": self.location_score > 80,
+            "features_match": self.feature_score > 80,
+            "match_reasons": self.reasoning[:5],  # Limit for UI
+            "confidence_level": self.confidence_level.value,
+            "ml_breakdown": {
+                "budget_confidence": self.budget_score,
+                "location_confidence": self.location_score,
+                "feature_confidence": self.feature_score,
+                "market_confidence": self.market_score,
+            },
         }
 
 
@@ -86,8 +88,7 @@ class PropertyScorer(ABC):
         self.metadata = {}
 
     @abstractmethod
-    def calculate_score(self, property_data: Dict[str, Any],
-                       lead_preferences: Dict[str, Any]) -> ScoringResult:
+    def calculate_score(self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any]) -> ScoringResult:
         """
         Calculate comprehensive property score for a lead
 
@@ -104,8 +105,7 @@ class PropertyScorer(ABC):
         pass
 
     @abstractmethod
-    def validate_inputs(self, property_data: Dict[str, Any],
-                       lead_preferences: Dict[str, Any]) -> bool:
+    def validate_inputs(self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any]) -> bool:
         """
         Validate that inputs meet scorer requirements
 
@@ -140,30 +140,22 @@ class PropertyScorer(ABC):
         Returns:
             Dict with 'property' and 'preferences' field lists
         """
-        return {
-            'property': ['price', 'bedrooms', 'address'],
-            'preferences': ['budget']
-        }
+        return {"property": ["price", "bedrooms", "address"], "preferences": ["budget"]}
 
     def get_metadata(self) -> Dict[str, Any]:
         """Get scorer metadata and capabilities"""
         return {
-            'name': self.name,
-            'version': self.version,
-            'is_trained': self.is_trained,
-            'supported_features': self.get_supported_features(),
-            'required_fields': self.get_required_fields(),
-            **self.metadata
+            "name": self.name,
+            "version": self.version,
+            "is_trained": self.is_trained,
+            "supported_features": self.get_supported_features(),
+            "required_fields": self.get_required_fields(),
+            **self.metadata,
         }
 
     def get_supported_features(self) -> List[str]:
         """Get list of supported features"""
-        return [
-            'budget_matching',
-            'location_matching',
-            'feature_matching',
-            'basic_reasoning'
-        ]
+        return ["budget_matching", "location_matching", "feature_matching", "basic_reasoning"]
 
     def set_metadata(self, key: str, value: Any) -> None:
         """Set custom metadata for this scorer"""
@@ -190,8 +182,9 @@ class TrainableScorer(PropertyScorer):
     """
 
     @abstractmethod
-    def train(self, training_data: List[Dict[str, Any]],
-              validation_data: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
+    def train(
+        self, training_data: List[Dict[str, Any]], validation_data: Optional[List[Dict[str, Any]]] = None
+    ) -> Dict[str, Any]:
         """
         Train the scoring model
 
@@ -216,11 +209,7 @@ class TrainableScorer(PropertyScorer):
 
     def get_model_info(self) -> Dict[str, Any]:
         """Get information about the trained model"""
-        return {
-            'is_trained': self.is_trained,
-            'model_type': self.__class__.__name__,
-            'version': self.version
-        }
+        return {"is_trained": self.is_trained, "model_type": self.__class__.__name__, "version": self.version}
 
 
 class AdaptiveScorer(TrainableScorer):
@@ -229,9 +218,9 @@ class AdaptiveScorer(TrainableScorer):
     """
 
     @abstractmethod
-    def update_from_feedback(self, property_id: str,
-                           lead_preferences: Dict[str, Any],
-                           feedback: Dict[str, Any]) -> None:
+    def update_from_feedback(
+        self, property_id: str, lead_preferences: Dict[str, Any], feedback: Dict[str, Any]
+    ) -> None:
         """
         Update scoring based on lead feedback
 

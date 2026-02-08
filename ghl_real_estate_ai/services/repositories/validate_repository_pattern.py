@@ -5,14 +5,15 @@ Validates the Repository Pattern implementation with basic tests
 to ensure it's working correctly before integration.
 """
 
-import sys
-from pathlib import Path
 import json
+import sys
 import tempfile
+from pathlib import Path
 
 # Add parent path for imports
 current_dir = Path(__file__).parent
 sys.path.insert(0, str(current_dir))
+
 
 def create_test_data():
     """Create sample property data for testing"""
@@ -33,7 +34,7 @@ def create_test_data():
             "amenities": ["garage", "updated_kitchen", "hardwood_floors"],
             "days_on_market": 12,
             "latitude": 30.2672,
-            "longitude": -97.7431
+            "longitude": -97.7431,
         },
         {
             "id": "test-002",
@@ -51,10 +52,11 @@ def create_test_data():
             "amenities": ["garage", "outdoor_space"],
             "days_on_market": 20,
             "latitude": 30.2943,
-            "longitude": -97.7073
-        }
+            "longitude": -97.7073,
+        },
     ]
     return test_properties
+
 
 def test_interfaces():
     """Test core interfaces"""
@@ -62,8 +64,12 @@ def test_interfaces():
 
     try:
         from interfaces import (
-            IPropertyRepository, PropertyQuery, RepositoryResult,
-            QueryOperator, SortOrder, QueryFilter
+            IPropertyRepository,
+            PropertyQuery,
+            QueryFilter,
+            QueryOperator,
+            RepositoryResult,
+            SortOrder,
         )
 
         # Test enum values
@@ -71,11 +77,7 @@ def test_interfaces():
         print(f"   ✓ SortOrder.DESC: {SortOrder.DESC.value}")
 
         # Test QueryFilter creation
-        filter_obj = QueryFilter(
-            field="price",
-            operator=QueryOperator.LESS_THAN,
-            value=800000
-        )
+        filter_obj = QueryFilter(field="price", operator=QueryOperator.LESS_THAN, value=800000)
         print(f"   ✓ QueryFilter created: {filter_obj.field} {filter_obj.operator.value} {filter_obj.value}")
 
         print("   ✅ Core interfaces: PASSED")
@@ -85,17 +87,18 @@ def test_interfaces():
         print(f"   ❌ Interface test failed: {e}")
         return False
 
+
 def test_json_repository():
     """Test JsonPropertyRepository with temporary file"""
     print("\n📄 Testing JSON Repository...")
 
     try:
-        from json_repository import JsonPropertyRepository
         from interfaces import PropertyQuery, QueryFilter, QueryOperator
+        from json_repository import JsonPropertyRepository
 
         # Create temporary JSON file
         test_data = create_test_data()
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(test_data, f, indent=2)
             temp_file_path = f.name
 
@@ -107,15 +110,7 @@ def test_json_repository():
         print(f"   ✓ Found {len(all_properties.properties)} total properties")
 
         # Test query with filter
-        query = PropertyQuery(
-            filters=[
-                QueryFilter(
-                    field="price",
-                    operator=QueryOperator.LESS_THAN,
-                    value=700000
-                )
-            ]
-        )
+        query = PropertyQuery(filters=[QueryFilter(field="price", operator=QueryOperator.LESS_THAN, value=700000)])
 
         filtered_results = repo.find_by_query(query)
         print(f"   ✓ Found {len(filtered_results.properties)} properties under $700k")
@@ -129,26 +124,29 @@ def test_json_repository():
     except Exception as e:
         print(f"   ❌ JSON Repository test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 def test_query_builder():
     """Test PropertyQueryBuilder"""
     print("\n🔨 Testing Query Builder...")
 
     try:
-        from query_builder import PropertyQueryBuilder
         from interfaces import QueryOperator
+        from query_builder import PropertyQueryBuilder
 
         # Test fluent interface
         builder = PropertyQueryBuilder()
-        query = (builder
-                .price_range(500000, 800000)
-                .bedrooms(3)
-                .location("Austin")
-                .sort_by_price(descending=True)
-                .limit(10)
-                .build())
+        query = (
+            builder.price_range(500000, 800000)
+            .bedrooms(3)
+            .location("Austin")
+            .sort_by_price(descending=True)
+            .limit(10)
+            .build()
+        )
 
         print(f"   ✓ Query built with {len(query.filters)} filters")
         print(f"   ✓ Sort field: {query.sort_field}")
@@ -165,8 +163,10 @@ def test_query_builder():
     except Exception as e:
         print(f"   ❌ Query Builder test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 def test_repository_factory():
     """Test RepositoryFactory"""
@@ -179,18 +179,17 @@ def test_repository_factory():
 
         # Test JSON repository creation
         test_data = create_test_data()
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(test_data, f, indent=2)
             temp_file_path = f.name
 
-        json_repo = factory.create_json_repository({
-            "file_paths": [temp_file_path]
-        })
+        json_repo = factory.create_json_repository({"file_paths": [temp_file_path]})
 
         print(f"   ✓ JSON Repository created: {type(json_repo).__name__}")
 
         # Test caching wrapper
         from caching_repository import CachingRepository
+
         cached_repo = CachingRepository(json_repo)
 
         print(f"   ✓ Cached Repository created: {type(cached_repo).__name__}")
@@ -204,21 +203,23 @@ def test_repository_factory():
     except Exception as e:
         print(f"   ❌ Repository Factory test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 def test_strategy_integration():
     """Test integration with Strategy Pattern"""
     print("\n🔄 Testing Strategy Pattern Integration...")
 
     try:
-        from strategy_integration import RepositoryPropertyMatcher
-        from property_data_service import PropertyDataService
         from json_repository import JsonPropertyRepository
+        from property_data_service import PropertyDataService
+        from strategy_integration import RepositoryPropertyMatcher
 
         # Create test data
         test_data = create_test_data()
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(test_data, f, indent=2)
             temp_file_path = f.name
 
@@ -229,18 +230,13 @@ def test_strategy_integration():
         # Test RepositoryPropertyMatcher creation
         matcher = RepositoryPropertyMatcher(
             property_data_service=data_service,
-            strategy_name="basic"  # Use basic strategy to avoid complex dependencies
+            strategy_name="basic",  # Use basic strategy to avoid complex dependencies
         )
 
         print(f"   ✓ RepositoryPropertyMatcher created")
 
         # Test preferences
-        test_preferences = {
-            'budget': 800000,
-            'location': ['Austin'],
-            'bedrooms': 3,
-            'work_location': 'downtown'
-        }
+        test_preferences = {"budget": 800000, "location": ["Austin"], "bedrooms": 3, "work_location": "downtown"}
 
         # Note: Since this might need async or complex setup, we just test creation
         print(f"   ✓ Matcher configured with preferences")
@@ -254,8 +250,10 @@ def test_strategy_integration():
     except Exception as e:
         print(f"   ❌ Strategy Integration test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 def main():
     """Run all Repository Pattern validation tests"""
@@ -284,13 +282,14 @@ def main():
         if result:
             passed += 1
 
-    print(f"\nOverall: {passed}/{total} tests passed ({passed/total*100:.0f}%)")
+    print(f"\nOverall: {passed}/{total} tests passed ({passed / total * 100:.0f}%)")
 
     if passed == total:
         print("\n🎉 Repository Pattern Implementation: VALIDATED")
         print("🚀 Ready for Strategy Pattern integration!")
     else:
         print(f"\n⚠️ {total - passed} test(s) failed - review implementation")
+
 
 if __name__ == "__main__":
     main()

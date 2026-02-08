@@ -7,13 +7,14 @@ summary generation from pipeline data.
 
 import logging
 from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.commission_forecast_engine import (
     get_forecast_engine,
 )
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -27,11 +28,14 @@ router = APIRouter(
 # Request / Response Models
 # ---------------------------------------------------------------------------
 
+
 class PipelineDealInput(BaseModel):
     deal_id: str = Field(..., description="Deal identifier")
     contact_name: str = Field("", description="Contact name")
     property_value: int = Field(..., gt=0, description="Property value in dollars")
-    stage: str = Field("prospect", description="Deal stage: prospect, qualified, showing, offer, under_contract, closed")
+    stage: str = Field(
+        "prospect", description="Deal stage: prospect, qualified, showing, offer, under_contract, closed"
+    )
     expected_close_month: int = Field(..., ge=1, le=12, description="Expected close month (1-12)")
     deal_type: str = Field("buyer", description="Deal type: buyer or seller")
     commission_rate: Optional[float] = Field(None, ge=0, le=0.10)
@@ -106,6 +110,7 @@ class ExecutiveSummaryResponse(BaseModel):
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
 
 @router.post("/forecast", response_model=ForecastResponse)
 async def forecast_revenue(request: ForecastRequest):

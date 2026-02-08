@@ -2,11 +2,12 @@
 Claude Enhanced Lead Scorer - Unified Intelligence Layer
 Combines quantitative scoring with Claude AI reasoning for comprehensive lead analysis
 """
+
 import asyncio
-from datetime import datetime
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, asdict
 import json
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.services.memory_service import MemoryService
 
@@ -17,6 +18,7 @@ class UnifiedScoringResult:
     Comprehensive scoring result that combines all scoring dimensions
     with Claude AI reasoning and strategic insights
     """
+
     # Identity
     lead_id: str
     lead_name: str
@@ -69,18 +71,16 @@ class ClaudeEnhancedLeadScorer:
     Provides comprehensive lead intelligence with actionable insights.
     """
 
-    def __init__(self,
-                 claude_orchestrator: Optional[Any] = None,
-                 memory_service: Optional[MemoryService] = None):
+    def __init__(self, claude_orchestrator: Optional[Any] = None, memory_service: Optional[MemoryService] = None):
         # Local imports to avoid circular dependencies
+        from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
+        from ghl_real_estate_ai.services.behavioral_triggers import BehavioralTriggerEngine
+        from ghl_real_estate_ai.services.churn_prediction_engine import ChurnPredictionEngine
         from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
+        from ghl_real_estate_ai.services.lead_lifecycle import LeadLifecycleTracker
         from ghl_real_estate_ai.services.lead_scorer import LeadScorer
         from ghl_real_estate_ai.services.predictive_lead_scorer import PredictiveLeadScorer
-        from ghl_real_estate_ai.services.churn_prediction_engine import ChurnPredictionEngine
-        from ghl_real_estate_ai.services.lead_lifecycle import LeadLifecycleTracker
-        from ghl_real_estate_ai.services.behavioral_triggers import BehavioralTriggerEngine
         from ghl_real_estate_ai.services.scoring.voss_scoring_engine import get_voss_scoring_engine
-        from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
 
         # Core services
         self.claude = claude_orchestrator or get_claude_orchestrator()
@@ -91,33 +91,26 @@ class ClaudeEnhancedLeadScorer:
         self.ml_scorer = PredictiveLeadScorer()
         self.voss_engine = get_voss_scoring_engine()
         self.intent_decoder = LeadIntentDecoder()
-        
+
         # Initialize dependencies for ChurnPredictionEngine
         try:
             self.lifecycle_tracker = LeadLifecycleTracker(location_id="demo_location")
             self.behavioral_engine = BehavioralTriggerEngine()
-            
+
             self.churn_predictor = ChurnPredictionEngine(
                 memory_service=self.memory,
                 lifecycle_tracker=self.lifecycle_tracker,
                 behavioral_engine=self.behavioral_engine,
-                lead_scorer=self.jorge_scorer
+                lead_scorer=self.jorge_scorer,
             )
         except Exception as e:
             print(f"Warning: ChurnPredictionEngine initialization failed in ClaudeEnhancedLeadScorer: {e}")
             self.churn_predictor = None
 
         # Performance tracking
-        self.metrics = {
-            "analyses_completed": 0,
-            "avg_analysis_time_ms": 0,
-            "avg_claude_time_ms": 0,
-            "errors": 0
-        }
+        self.metrics = {"analyses_completed": 0, "avg_analysis_time_ms": 0, "avg_claude_time_ms": 0, "errors": 0}
 
-    async def analyze_lead_comprehensive(self,
-                                       lead_id: str,
-                                       lead_context: Dict[str, Any]) -> UnifiedScoringResult:
+    async def analyze_lead_comprehensive(self, lead_id: str, lead_context: Dict[str, Any]) -> UnifiedScoringResult:
         """
         Comprehensive lead analysis combining all scoring systems with Claude reasoning.
 
@@ -137,7 +130,7 @@ class ClaudeEnhancedLeadScorer:
                 self._run_ml_scoring(lead_context),
                 self._run_churn_analysis(lead_id, lead_context),
                 self._get_memory_context(lead_id),
-                return_exceptions=True
+                return_exceptions=True,
             )
 
             # Handle exceptions gracefully
@@ -151,16 +144,14 @@ class ClaudeEnhancedLeadScorer:
                 memory_context = {"relevant_knowledge": "", "conversation_history": []}
 
             # Step 2: Calculate unified scores
-            unified_scores = self._calculate_unified_scores(
-                jorge_result, ml_result, churn_result
-            )
+            unified_scores = self._calculate_unified_scores(jorge_result, ml_result, churn_result)
 
             # Step 2.5: Calculate Voss High-Stakes Scores (Enhanced with IntentDecoder)
             # Use conversation history if available, else last_message
             history = memory_context.get("conversation_history", [])
             if not history and lead_context.get("last_message"):
                 history = [{"role": "user", "content": lead_context.get("last_message")}]
-            
+
             intent_profile = self.intent_decoder.analyze_lead(lead_id, history)
             frs_score = intent_profile.frs_score
             pcs_score = intent_profile.pcs_score
@@ -174,7 +165,7 @@ class ClaudeEnhancedLeadScorer:
                 ml_result=ml_result,
                 churn_result=churn_result,
                 memory_context=memory_context,
-                unified_scores=unified_scores
+                unified_scores=unified_scores,
             )
             claude_time = (datetime.now() - claude_start).total_seconds() * 1000
 
@@ -184,47 +175,41 @@ class ClaudeEnhancedLeadScorer:
             result = UnifiedScoringResult(
                 # Identity
                 lead_id=lead_id,
-                lead_name=lead_context.get('name', 'Unknown Lead'),
+                lead_name=lead_context.get("name", "Unknown Lead"),
                 scored_at=datetime.now(),
-
                 # Unified Scoring
-                final_score=unified_scores['final_score'],
-                confidence_score=unified_scores['confidence_score'],
-                classification=unified_scores['classification'],
-
+                final_score=unified_scores["final_score"],
+                confidence_score=unified_scores["confidence_score"],
+                classification=unified_scores["classification"],
                 # Component Scores
-                jorge_score=jorge_result['score'],
-                ml_conversion_score=ml_result.get('score', 0),
-                churn_risk_score=churn_result.get('risk_score_7d', 50),
+                jorge_score=jorge_result["score"],
+                ml_conversion_score=ml_result.get("score", 0),
+                churn_risk_score=churn_result.get("risk_score_7d", 50),
                 engagement_score=self._calculate_engagement_score(lead_context, memory_context),
                 frs_score=frs_score,
                 pcs_score=pcs_score,
-
                 # Claude Analysis
-                strategic_summary=claude_analysis.get('strategic_summary', ''),
-                behavioral_insights=claude_analysis.get('behavioral_insights', ''),
-                reasoning=claude_analysis.get('reasoning', ''),
-                risk_factors=claude_analysis.get('risk_factors', []),
-                opportunities=claude_analysis.get('opportunities', []),
-
+                strategic_summary=claude_analysis.get("strategic_summary", ""),
+                behavioral_insights=claude_analysis.get("behavioral_insights", ""),
+                reasoning=claude_analysis.get("reasoning", ""),
+                risk_factors=claude_analysis.get("risk_factors", []),
+                opportunities=claude_analysis.get("opportunities", []),
                 # Actionable Intelligence
-                recommended_actions=claude_analysis.get('recommended_actions', []),
-                next_best_action=claude_analysis.get('next_best_action', ''),
-                expected_timeline=claude_analysis.get('expected_timeline', 'Unknown'),
-                success_probability=claude_analysis.get('success_probability', 50.0),
-
+                recommended_actions=claude_analysis.get("recommended_actions", []),
+                next_best_action=claude_analysis.get("next_best_action", ""),
+                expected_timeline=claude_analysis.get("expected_timeline", "Unknown"),
+                success_probability=claude_analysis.get("success_probability", 50.0),
                 # Supporting Data
                 feature_breakdown={
-                    "jorge_factors": jorge_result.get('reasoning', ''),
-                    "ml_factors": ml_result.get('reasoning', []),
-                    "churn_factors": churn_result.get('top_risk_factors', []),
+                    "jorge_factors": jorge_result.get("reasoning", ""),
+                    "ml_factors": ml_result.get("reasoning", []),
+                    "churn_factors": churn_result.get("top_risk_factors", []),
                 },
                 conversation_context=memory_context,
-                sources=claude_analysis.get('sources', []),
-
+                sources=claude_analysis.get("sources", []),
                 # Performance
                 analysis_time_ms=int(total_time),
-                claude_reasoning_time_ms=int(claude_time)
+                claude_reasoning_time_ms=int(claude_time),
             )
 
             # Update metrics
@@ -234,6 +219,7 @@ class ClaudeEnhancedLeadScorer:
 
         except Exception as e:
             import traceback
+
             error_msg = f"Analysis failed: {str(e)}\n{traceback.format_exc()}"
             print(f"CRITICAL ERROR in Lead Analysis: {error_msg}")
             self._update_metrics(0, 0, success=False)
@@ -241,7 +227,7 @@ class ClaudeEnhancedLeadScorer:
             # Return error result with minimal data
             return UnifiedScoringResult(
                 lead_id=lead_id,
-                lead_name=lead_context.get('name', 'Unknown Lead'),
+                lead_name=lead_context.get("name", "Unknown Lead"),
                 scored_at=datetime.now(),
                 final_score=0,
                 confidence_score=0.1,
@@ -265,7 +251,7 @@ class ClaudeEnhancedLeadScorer:
                 conversation_context={},
                 sources=[],
                 analysis_time_ms=0,
-                claude_reasoning_time_ms=0
+                claude_reasoning_time_ms=0,
             )
 
     async def _run_jorge_scoring(self, lead_context: Dict[str, Any]) -> Dict[str, Any]:
@@ -279,14 +265,14 @@ class ClaudeEnhancedLeadScorer:
     async def _run_ml_scoring(self, lead_context: Dict[str, Any]) -> Dict[str, Any]:
         """Run ML predictive scoring"""
         try:
-            lead_id = lead_context.get('lead_id', 'unknown')
+            lead_id = lead_context.get("lead_id", "unknown")
             # score_lead is synchronous and returns a LeadScore dataclass
             score_result = self.ml_scorer.score_lead(lead_id, lead_context)
             return {
                 "score": score_result.score,
                 "confidence": score_result.confidence,
                 "reasoning": score_result.reasoning,
-                "tier": score_result.tier
+                "tier": score_result.tier,
             }
         except Exception as e:
             return {"score": 0, "confidence": 0.5, "reasoning": f"ML scoring error: {e}"}
@@ -308,10 +294,9 @@ class ClaudeEnhancedLeadScorer:
         except Exception as e:
             return {"relevant_knowledge": "", "conversation_history": [], "error": str(e)}
 
-    def _calculate_unified_scores(self,
-                                jorge_result: Dict[str, Any],
-                                ml_result: Dict[str, Any],
-                                churn_result: Dict[str, Any]) -> Dict[str, Any]:
+    def _calculate_unified_scores(
+        self, jorge_result: Dict[str, Any], ml_result: Dict[str, Any], churn_result: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Calculate unified scores from component systems.
 
@@ -322,27 +307,25 @@ class ClaudeEnhancedLeadScorer:
         - Final score is weighted average with confidence adjustment
         """
         # Normalize Jorge score to 0-100
-        jorge_normalized = (jorge_result.get('score', 0) / 7.0) * 100
+        jorge_normalized = (jorge_result.get("score", 0) / 7.0) * 100
 
         # Get ML score
-        ml_score = ml_result.get('score', 0)
-        ml_confidence = ml_result.get('confidence', 0.5)
+        ml_score = ml_result.get("score", 0)
+        ml_confidence = ml_result.get("confidence", 0.5)
 
         # Get churn risk (invert since high risk = bad)
-        churn_risk = churn_result.get('risk_score_7d', 50)
+        churn_risk = churn_result.get("risk_score_7d", 50)
         churn_adjusted = 100 - churn_risk  # Invert
 
         # Weighted average with confidence adjustment
         weights = {
-            'jorge': 0.3,  # 30% weight on qualification questions
-            'ml': 0.5,     # 50% weight on ML prediction
-            'churn': 0.2   # 20% weight on churn risk
+            "jorge": 0.3,  # 30% weight on qualification questions
+            "ml": 0.5,  # 50% weight on ML prediction
+            "churn": 0.2,  # 20% weight on churn risk
         }
 
         final_score = (
-            (jorge_normalized * weights['jorge']) +
-            (ml_score * weights['ml']) +
-            (churn_adjusted * weights['churn'])
+            (jorge_normalized * weights["jorge"]) + (ml_score * weights["ml"]) + (churn_adjusted * weights["churn"])
         )
 
         # Adjust confidence based on component confidences
@@ -357,23 +340,21 @@ class ClaudeEnhancedLeadScorer:
             classification = "cold"
 
         return {
-            'final_score': round(final_score, 1),
-            'confidence_score': round(confidence_score, 2),
-            'classification': classification
+            "final_score": round(final_score, 1),
+            "confidence_score": round(confidence_score, 2),
+            "classification": classification,
         }
 
-    def _calculate_engagement_score(self,
-                                  lead_context: Dict[str, Any],
-                                  memory_context: Dict[str, Any]) -> float:
+    def _calculate_engagement_score(self, lead_context: Dict[str, Any], memory_context: Dict[str, Any]) -> float:
         """Calculate engagement score from conversation history"""
-        history = memory_context.get('conversation_history', [])
+        history = memory_context.get("conversation_history", [])
 
         if not history:
             return 0.0
 
         # Simple engagement scoring
         message_count = len(history)
-        user_messages = [msg for msg in history if msg.get('role') == 'user']
+        user_messages = [msg for msg in history if msg.get("role") == "user"]
 
         # Score based on message count and recency
         base_score = min(message_count * 10, 70)  # Up to 70 points for activity
@@ -381,7 +362,7 @@ class ClaudeEnhancedLeadScorer:
         # Bonus for recent activity
         try:
             last_message = history[-1]
-            last_time = datetime.fromisoformat(last_message.get('timestamp', datetime.now().isoformat()))
+            last_time = datetime.fromisoformat(last_message.get("timestamp", datetime.now().isoformat()))
             hours_since = (datetime.now() - last_time).total_seconds() / 3600
 
             if hours_since < 24:
@@ -393,14 +374,16 @@ class ClaudeEnhancedLeadScorer:
 
         return min(base_score, 100.0)
 
-    async def _generate_claude_reasoning(self,
-                                       lead_id: str,
-                                       lead_context: Dict[str, Any],
-                                       jorge_result: Dict[str, Any],
-                                       ml_result: Dict[str, Any],
-                                       churn_result: Dict[str, Any],
-                                       memory_context: Dict[str, Any],
-                                       unified_scores: Dict[str, Any]) -> Dict[str, Any]:
+    async def _generate_claude_reasoning(
+        self,
+        lead_id: str,
+        lead_context: Dict[str, Any],
+        jorge_result: Dict[str, Any],
+        ml_result: Dict[str, Any],
+        churn_result: Dict[str, Any],
+        memory_context: Dict[str, Any],
+        unified_scores: Dict[str, Any],
+    ) -> Dict[str, Any]:
         """Generate comprehensive Claude reasoning for the lead analysis"""
 
         analysis_context = {
@@ -411,7 +394,7 @@ class ClaudeEnhancedLeadScorer:
             "churn_result": churn_result,
             "memory_context": memory_context,
             "unified_scores": unified_scores,
-            "analysis_timestamp": datetime.now().isoformat()
+            "analysis_timestamp": datetime.now().isoformat(),
         }
 
         prompt = f"""Analyze this comprehensive lead intelligence data and provide strategic insights:
@@ -447,7 +430,7 @@ Focus on actionable insights Jorge can use to improve conversion outcomes."""
             claude_response = await self.claude.analyze_lead(
                 lead_id=lead_id,
                 include_scoring=False,  # We already have scores
-                include_churn_analysis=False  # We already have churn data
+                include_churn_analysis=False,  # We already have churn data
             )
 
             # Parse Claude response into structured format
@@ -464,9 +447,9 @@ Focus on actionable insights Jorge can use to improve conversion outcomes."""
                 "recommended_actions": [{"action": "Manual review required", "priority": "medium"}],
                 "next_best_action": "Review lead manually due to system error",
                 "expected_timeline": "Unknown due to analysis error",
-                "success_probability": unified_scores['final_score'],
+                "success_probability": unified_scores["final_score"],
                 "sources": ["Jorge Scorer", "ML Predictor", "Churn Engine"],
-                "error": str(e)
+                "error": str(e),
             }
 
     def _parse_claude_response(self, response_content: str) -> Dict[str, Any]:
@@ -483,46 +466,43 @@ Focus on actionable insights Jorge can use to improve conversion outcomes."""
             "next_best_action": "",
             "expected_timeline": "",
             "success_probability": 50.0,
-            "sources": []
+            "sources": [],
         }
 
         try:
             # Basic parsing logic - extract sections
-            sections = response_content.split('\n\n')
+            sections = response_content.split("\n\n")
 
             for section in sections:
-                if section.startswith('STRATEGIC SUMMARY:'):
-                    result['strategic_summary'] = section.replace('STRATEGIC SUMMARY:', '').strip()
-                elif section.startswith('BEHAVIORAL INSIGHTS:'):
-                    result['behavioral_insights'] = section.replace('BEHAVIORAL INSIGHTS:', '').strip()
-                elif section.startswith('REASONING:'):
-                    result['reasoning'] = section.replace('REASONING:', '').strip()
-                elif section.startswith('NEXT BEST ACTION:'):
-                    result['next_best_action'] = section.replace('NEXT BEST ACTION:', '').strip()
-                elif section.startswith('EXPECTED TIMELINE:'):
-                    result['expected_timeline'] = section.replace('EXPECTED TIMELINE:', '').strip()
-                elif section.startswith('SUCCESS PROBABILITY:'):
-                    prob_text = section.replace('SUCCESS PROBABILITY:', '').strip()
+                if section.startswith("STRATEGIC SUMMARY:"):
+                    result["strategic_summary"] = section.replace("STRATEGIC SUMMARY:", "").strip()
+                elif section.startswith("BEHAVIORAL INSIGHTS:"):
+                    result["behavioral_insights"] = section.replace("BEHAVIORAL INSIGHTS:", "").strip()
+                elif section.startswith("REASONING:"):
+                    result["reasoning"] = section.replace("REASONING:", "").strip()
+                elif section.startswith("NEXT BEST ACTION:"):
+                    result["next_best_action"] = section.replace("NEXT BEST ACTION:", "").strip()
+                elif section.startswith("EXPECTED TIMELINE:"):
+                    result["expected_timeline"] = section.replace("EXPECTED TIMELINE:", "").strip()
+                elif section.startswith("SUCCESS PROBABILITY:"):
+                    prob_text = section.replace("SUCCESS PROBABILITY:", "").strip()
                     # Extract number from text
                     import re
-                    prob_match = re.search(r'(\d+(?:\.\d+)?)', prob_text)
+
+                    prob_match = re.search(r"(\d+(?:\.\d+)?)", prob_text)
                     if prob_match:
-                        result['success_probability'] = float(prob_match.group(1))
+                        result["success_probability"] = float(prob_match.group(1))
 
             # For lists, this would need more sophisticated parsing
             # For now, use the full response as reasoning
-            if not result['reasoning']:
-                result['reasoning'] = response_content
+            if not result["reasoning"]:
+                result["reasoning"] = response_content
 
             return result
 
         except Exception as e:
             # Return basic result if parsing fails
-            return {
-                **result,
-                "reasoning": response_content,
-                "error": f"Parsing error: {e}"
-            }
+            return {**result, "reasoning": response_content, "error": f"Parsing error: {e}"}
 
     def _update_metrics(self, total_time: int, claude_time: int, success: bool):
         """Update performance metrics"""
@@ -531,13 +511,11 @@ Focus on actionable insights Jorge can use to improve conversion outcomes."""
             self.metrics["analyses_completed"] += 1
 
             # Update averages
-            self.metrics["avg_analysis_time_ms"] = (
-                (self.metrics["avg_analysis_time_ms"] * count + total_time) /
-                (count + 1)
+            self.metrics["avg_analysis_time_ms"] = (self.metrics["avg_analysis_time_ms"] * count + total_time) / (
+                count + 1
             )
-            self.metrics["avg_claude_time_ms"] = (
-                (self.metrics["avg_claude_time_ms"] * count + claude_time) /
-                (count + 1)
+            self.metrics["avg_claude_time_ms"] = (self.metrics["avg_claude_time_ms"] * count + claude_time) / (
+                count + 1
             )
         else:
             self.metrics["errors"] += 1
@@ -547,11 +525,10 @@ Focus on actionable insights Jorge can use to improve conversion outcomes."""
         return {
             **self.metrics,
             "success_rate": (
-                self.metrics["analyses_completed"] /
-                (self.metrics["analyses_completed"] + self.metrics["errors"])
+                self.metrics["analyses_completed"] / (self.metrics["analyses_completed"] + self.metrics["errors"])
                 if (self.metrics["analyses_completed"] + self.metrics["errors"]) > 0
                 else 0
-            )
+            ),
         }
 
 

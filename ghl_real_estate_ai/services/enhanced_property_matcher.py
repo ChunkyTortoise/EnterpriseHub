@@ -18,27 +18,27 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.matching_models import (
+    DEFAULT_SEGMENT_WEIGHTS,
+    FACTOR_WEIGHTS_BASE,
     AdaptiveWeights,
     BehavioralProfile,
     ContextualScores,
     FactorScore,
     LeadSegment,
     LifestyleScores,
+    MarketTimingScore,
     MatchingContext,
     MatchReasoning,
     MatchScoreBreakdown,
-    MarketTimingScore,
     PropertyMatch,
     TraditionalScores,
-    DEFAULT_SEGMENT_WEIGHTS,
-    FACTOR_WEIGHTS_BASE
 )
-from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
-from ghl_real_estate_ai.services.predictive_buyer_scoring import PredictiveBuyerScoring
-from ghl_real_estate_ai.services.lifestyle_intelligence_service import LifestyleIntelligenceService
 from ghl_real_estate_ai.services.behavioral_weighting_engine import BehavioralWeightingEngine
+from ghl_real_estate_ai.services.lifestyle_intelligence_service import LifestyleIntelligenceService
 from ghl_real_estate_ai.services.market_timing_service import MarketTimingService
 from ghl_real_estate_ai.services.match_reasoning_engine import MatchReasoningEngine
+from ghl_real_estate_ai.services.predictive_buyer_scoring import PredictiveBuyerScoring
+from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
 
 logger = get_logger(__name__)
 
@@ -74,7 +74,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
         behavioral_profile: Optional[BehavioralProfile] = None,
         segment: Optional[LeadSegment] = None,
         limit: int = 10,
-        min_score: float = 0.6
+        min_score: float = 0.6,
     ) -> List[PropertyMatch]:
         """
         Find property matches using enhanced 15-factor algorithm.
@@ -111,13 +111,11 @@ class EnhancedPropertyMatcher(PropertyMatcher):
             try:
                 # Apply strict budget filter if budget is specified
                 budget = context.preferences.get("budget")
-                if budget and property_data.get("price", 0) > budget * 1.15: # allow 15% stretch for matches
+                if budget and property_data.get("price", 0) > budget * 1.15:  # allow 15% stretch for matches
                     continue
 
                 # Calculate comprehensive score using specialized services
-                score_breakdown = self._calculate_comprehensive_score(
-                    property_data, context, adaptive_weights
-                )
+                score_breakdown = self._calculate_comprehensive_score(property_data, context, adaptive_weights)
 
                 # Skip if below minimum threshold
                 if score_breakdown.overall_score < min_score:
@@ -140,7 +138,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
                     preferences_used=preferences,
                     predicted_engagement=self._predict_engagement(score_breakdown),
                     predicted_showing_request=self._predict_showing_probability(score_breakdown),
-                    confidence_interval=self._calculate_confidence_interval(score_breakdown)
+                    confidence_interval=self._calculate_confidence_interval(score_breakdown),
                 )
 
                 matches.append(match)
@@ -158,10 +156,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
         return matches[:limit]
 
     def _calculate_comprehensive_score(
-        self,
-        property_data: Dict[str, Any],
-        context: MatchingContext,
-        adaptive_weights: AdaptiveWeights
+        self, property_data: Dict[str, Any], context: MatchingContext, adaptive_weights: AdaptiveWeights
     ) -> MatchScoreBreakdown:
         """Calculate comprehensive 15-factor score breakdown using specialized services."""
 
@@ -183,22 +178,20 @@ class EnhancedPropertyMatcher(PropertyMatcher):
 
         # 4. Market Timing (days on market, pricing trends)
         # Use specialized market timing service
-        market_timing_score = self.market_timing_service.calculate_market_timing_score(
-            property_data
-        )
+        market_timing_score = self.market_timing_service.calculate_market_timing_score(property_data)
 
         # Calculate weighted overall score
         # Using weights from adaptive_weights
         overall_score = (
-            traditional_scores.budget.weighted_score +
-            traditional_scores.location.weighted_score +
-            traditional_scores.bedrooms.weighted_score +
-            traditional_scores.bathrooms.weighted_score +
-            traditional_scores.property_type.weighted_score +
-            traditional_scores.sqft.weighted_score +
-            lifestyle_scores.overall_score * 0.25 + # Lifestyle weight 25%
-            contextual_scores.overall_score * 0.10 + # Contextual weight 10%
-            market_timing_score.optimal_timing_score * adaptive_weights.market_timing_weight
+            traditional_scores.budget.weighted_score
+            + traditional_scores.location.weighted_score
+            + traditional_scores.bedrooms.weighted_score
+            + traditional_scores.bathrooms.weighted_score
+            + traditional_scores.property_type.weighted_score
+            + traditional_scores.sqft.weighted_score
+            + lifestyle_scores.overall_score * 0.25  # Lifestyle weight 25%
+            + contextual_scores.overall_score * 0.10  # Contextual weight 10%
+            + market_timing_score.optimal_timing_score * adaptive_weights.market_timing_weight
         )
 
         # Calculate confidence and data completeness
@@ -206,9 +199,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
             traditional_scores, lifestyle_scores, contextual_scores, market_timing_score
         )
 
-        data_completeness = self._calculate_data_completeness(
-            property_data, context.preferences
-        )
+        data_completeness = self._calculate_data_completeness(property_data, context.preferences)
 
         return MatchScoreBreakdown(
             traditional_scores=traditional_scores,
@@ -218,50 +209,39 @@ class EnhancedPropertyMatcher(PropertyMatcher):
             adaptive_weights=adaptive_weights,
             overall_score=min(overall_score, 1.0),
             confidence_level=confidence_level,
-            data_completeness=data_completeness
+            data_completeness=data_completeness,
         )
 
     def _score_traditional_factors(
-        self,
-        property_data: Dict[str, Any],
-        preferences: Dict[str, Any],
-        weights: Dict[str, float]
+        self, property_data: Dict[str, Any], preferences: Dict[str, Any], weights: Dict[str, float]
     ) -> TraditionalScores:
         """Score traditional real estate factors."""
 
         # Budget scoring with stretch tolerance
         budget_score = self._score_budget_match(
-            property_data.get("price", 0),
-            preferences.get("budget", 0),
-            weights.get("budget", 0.20)
+            property_data.get("price", 0), preferences.get("budget", 0), weights.get("budget", 0.20)
         )
 
         # Location scoring with fuzzy matching
         location_score = self._score_location_match(
-            property_data.get("address", {}),
-            preferences.get("location", ""),
-            weights.get("location", 0.15)
+            property_data.get("address", {}), preferences.get("location", ""), weights.get("location", 0.15)
         )
 
         # Bedroom scoring with tolerance
         bedrooms_score = self._score_bedrooms_match(
-            property_data.get("bedrooms", 0),
-            preferences.get("bedrooms", 0),
-            weights.get("bedrooms", 0.10)
+            property_data.get("bedrooms", 0), preferences.get("bedrooms", 0), weights.get("bedrooms", 0.10)
         )
 
         # Bathroom scoring
         bathrooms_score = self._score_bathrooms_match(
-            property_data.get("bathrooms", 0),
-            preferences.get("bathrooms", 0),
-            weights.get("bathrooms", 0.05)
+            property_data.get("bathrooms", 0), preferences.get("bathrooms", 0), weights.get("bathrooms", 0.05)
         )
 
         # Property type matching
         property_type_score = self._score_property_type_match(
             property_data.get("property_type", ""),
             preferences.get("property_type", ""),
-            weights.get("property_type", 0.05)
+            weights.get("property_type", 0.05),
         )
 
         # Square footage scoring
@@ -269,7 +249,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
             property_data.get("sqft", 0),
             preferences.get("min_sqft", 0),
             preferences.get("max_sqft", 0),
-            weights.get("sqft", 0.05)
+            weights.get("sqft", 0.05),
         )
 
         return TraditionalScores(
@@ -278,14 +258,11 @@ class EnhancedPropertyMatcher(PropertyMatcher):
             bedrooms=bedrooms_score,
             bathrooms=bathrooms_score,
             property_type=property_type_score,
-            sqft=sqft_score
+            sqft=sqft_score,
         )
 
     def _score_lifestyle_factors(
-        self,
-        property_data: Dict[str, Any],
-        context: MatchingContext,
-        weights: Dict[str, float]
+        self, property_data: Dict[str, Any], context: MatchingContext, weights: Dict[str, float]
     ) -> LifestyleScores:
         """Score lifestyle compatibility factors."""
 
@@ -305,8 +282,11 @@ class EnhancedPropertyMatcher(PropertyMatcher):
 
         # Overall lifestyle score
         overall_score = (
-            schools_score + commute_score + walkability_score +
-            safety_score + weights.get("amenities_proximity", 0.02) * 0.5
+            schools_score
+            + commute_score
+            + walkability_score
+            + safety_score
+            + weights.get("amenities_proximity", 0.02) * 0.5
         )
 
         # Placeholder objects - will implement full versions with dedicated services
@@ -316,52 +296,41 @@ class EnhancedPropertyMatcher(PropertyMatcher):
             walkability=self._create_placeholder_walkability_score(property_data, walkability_score),
             safety=self._create_placeholder_safety_score(property_data, safety_score),
             amenities_proximity=0.5,  # Placeholder
-            overall_score=overall_score
+            overall_score=overall_score,
         )
 
     def _score_contextual_factors(
-        self,
-        property_data: Dict[str, Any],
-        preferences: Dict[str, Any],
-        weights: Dict[str, float]
+        self, property_data: Dict[str, Any], preferences: Dict[str, Any], weights: Dict[str, float]
     ) -> ContextualScores:
         """Score contextual property factors."""
 
         # HOA fee scoring
         hoa_score = self._score_hoa_fee(
-            property_data.get("hoa_fee", 0),
-            preferences.get("max_hoa", 9999),
-            weights.get("hoa_fee", 0.03)
+            property_data.get("hoa_fee", 0), preferences.get("max_hoa", 9999), weights.get("hoa_fee", 0.03)
         )
 
         # Lot size scoring
         lot_score = self._score_lot_size(
-            property_data.get("lot_size_sqft", 0),
-            preferences.get("min_lot_size", 0),
-            weights.get("lot_size", 0.03)
+            property_data.get("lot_size_sqft", 0), preferences.get("min_lot_size", 0), weights.get("lot_size", 0.03)
         )
 
         # Home age scoring
         age_score = self._score_home_age(
-            property_data.get("year_built", 2000),
-            preferences.get("max_age", 999),
-            weights.get("home_age", 0.02)
+            property_data.get("year_built", 2000), preferences.get("max_age", 999), weights.get("home_age", 0.02)
         )
 
         # Parking scoring (basic implementation)
-        parking_score = self._score_parking_basic(
-            property_data, weights.get("parking", 0.02)
-        )
+        parking_score = self._score_parking_basic(property_data, weights.get("parking", 0.02))
 
         # Property condition (inferred from age and features)
-        condition_score = self._score_property_condition(
-            property_data, weights.get("property_condition", 0.02)
-        )
+        condition_score = self._score_property_condition(property_data, weights.get("property_condition", 0.02))
 
         overall_score = (
-            hoa_score.weighted_score + lot_score.weighted_score +
-            age_score.weighted_score + parking_score.weighted_score +
-            condition_score.weighted_score
+            hoa_score.weighted_score
+            + lot_score.weighted_score
+            + age_score.weighted_score
+            + parking_score.weighted_score
+            + condition_score.weighted_score
         )
 
         return ContextualScores(
@@ -370,14 +339,10 @@ class EnhancedPropertyMatcher(PropertyMatcher):
             home_age_score=age_score,
             parking_score=parking_score,
             property_condition_score=condition_score,
-            overall_score=overall_score
+            overall_score=overall_score,
         )
 
-    def _score_market_timing(
-        self,
-        property_data: Dict[str, Any],
-        weight: float
-    ) -> MarketTimingScore:
+    def _score_market_timing(self, property_data: Dict[str, Any], weight: float) -> MarketTimingScore:
         """Score market timing and opportunity factors."""
 
         days_on_market = property_data.get("days_on_market", 0)
@@ -399,7 +364,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
             competition_level = "high"
 
         # Overall timing score
-        optimal_timing_score = (dom_score * 0.6 + price_trend_score * 0.3 + inventory_score * 0.1)
+        optimal_timing_score = dom_score * 0.6 + price_trend_score * 0.3 + inventory_score * 0.1
 
         # Urgency indicator
         urgency_indicator = "can_wait"
@@ -408,9 +373,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
         elif days_on_market < 21:
             urgency_indicator = "good_time"
 
-        reasoning = self._generate_timing_reasoning(
-            days_on_market, competition_level, urgency_indicator
-        )
+        reasoning = self._generate_timing_reasoning(days_on_market, competition_level, urgency_indicator)
 
         return MarketTimingScore(
             days_on_market_score=dom_score,
@@ -419,7 +382,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
             competition_level=competition_level,
             optimal_timing_score=optimal_timing_score,
             urgency_indicator=urgency_indicator,
-            reasoning=reasoning
+            reasoning=reasoning,
         )
 
     # Helper methods for scoring individual factors
@@ -445,7 +408,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
             confidence = 0.6
         else:
             raw_score = 0.1
-            reasoning = f"${price:,} exceeds budget by {((price/budget - 1) * 100):.0f}%"
+            reasoning = f"${price:,} exceeds budget by {((price / budget - 1) * 100):.0f}%"
             confidence = 0.9
 
         return FactorScore(
@@ -455,7 +418,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
             weight=weight,
             confidence=confidence,
             reasoning=reasoning,
-            data_quality="high"
+            data_quality="high",
         )
 
     def _score_location_match(self, address: Dict[str, Any], preferred_location: str, weight: float) -> FactorScore:
@@ -495,7 +458,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
             weight=weight,
             confidence=confidence,
             reasoning=reasoning,
-            data_quality="high"
+            data_quality="high",
         )
 
     def _score_bedrooms_match(self, property_beds: int, preferred_beds: int, weight: float) -> FactorScore:
@@ -532,7 +495,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
             weight=weight,
             confidence=confidence,
             reasoning=reasoning,
-            data_quality="high"
+            data_quality="high",
         )
 
     # Additional scoring methods (implementing basic versions)
@@ -561,7 +524,9 @@ class EnhancedPropertyMatcher(PropertyMatcher):
     def _score_property_type_match(self, property_type: str, preferred_type: str, weight: float) -> FactorScore:
         """Score property type compatibility."""
         if not preferred_type:
-            return FactorScore("property_type", 0.5, 0.5 * weight, weight, 0.3, "Property type not specified", "missing")
+            return FactorScore(
+                "property_type", 0.5, 0.5 * weight, weight, 0.3, "Property type not specified", "missing"
+            )
 
         prop_lower = property_type.lower()
         pref_lower = preferred_type.lower()
@@ -706,9 +671,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
 
         parking_indicators = ["garage", "parking", "carport", "driveway"]
         has_parking = any(
-            indicator in text.lower()
-            for text in features + [description]
-            for indicator in parking_indicators
+            indicator in text.lower() for text in features + [description] for indicator in parking_indicators
         )
 
         raw_score = 0.8 if has_parking else 0.3
@@ -735,11 +698,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
 
         # Bonus for updates/renovations
         update_indicators = ["updated", "new", "renovated", "remodeled", "upgraded"]
-        updates = sum(
-            1 for feature in features
-            for indicator in update_indicators
-            if indicator in feature.lower()
-        )
+        updates = sum(1 for feature in features for indicator in update_indicators if indicator in feature.lower())
 
         update_bonus = min(0.3, updates * 0.1)
         raw_score = min(1.0, base_score + update_bonus)
@@ -759,13 +718,13 @@ class EnhancedPropertyMatcher(PropertyMatcher):
             "schools": FACTOR_WEIGHTS_BASE["schools"],
             "commute": FACTOR_WEIGHTS_BASE["commute"],
             "walkability": FACTOR_WEIGHTS_BASE["walkability"],
-            "safety": FACTOR_WEIGHTS_BASE["safety"]
+            "safety": FACTOR_WEIGHTS_BASE["safety"],
         }
         contextual_weights = {
             "hoa_fee": FACTOR_WEIGHTS_BASE["hoa_fee"],
             "lot_size": FACTOR_WEIGHTS_BASE["lot_size"],
             "home_age": FACTOR_WEIGHTS_BASE["home_age"],
-            "parking": FACTOR_WEIGHTS_BASE["parking"]
+            "parking": FACTOR_WEIGHTS_BASE["parking"],
         }
         market_timing_weight = FACTOR_WEIGHTS_BASE["market_timing"]
 
@@ -792,14 +751,14 @@ class EnhancedPropertyMatcher(PropertyMatcher):
             market_timing_weight=market_timing_weight,
             confidence_level=0.8,  # Will improve with ML
             learning_iterations=0,
-            last_updated=datetime.utcnow()
+            last_updated=datetime.utcnow(),
         )
 
     def _create_matching_context(
         self,
         preferences: Dict[str, Any],
         behavioral_profile: Optional[BehavioralProfile],
-        segment: Optional[LeadSegment]
+        segment: Optional[LeadSegment],
     ) -> MatchingContext:
         """Create matching context for the session."""
 
@@ -818,14 +777,10 @@ class EnhancedPropertyMatcher(PropertyMatcher):
             min_score_threshold=0.6,
             max_results=10,
             require_explanation=True,
-            fallback_to_basic=True
+            fallback_to_basic=True,
         )
 
-    def _detect_lead_segment(
-        self,
-        preferences: Dict[str, Any],
-        behavioral_profile: BehavioralProfile
-    ) -> LeadSegment:
+    def _detect_lead_segment(self, preferences: Dict[str, Any], behavioral_profile: BehavioralProfile) -> LeadSegment:
         """Auto-detect lead segment from preferences and behavior."""
 
         # Family indicators
@@ -864,12 +819,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
         else:
             return 1.0  # High negotiation potential
 
-    def _generate_timing_reasoning(
-        self,
-        days_on_market: int,
-        competition_level: str,
-        urgency_indicator: str
-    ) -> str:
+    def _generate_timing_reasoning(self, days_on_market: int, competition_level: str, urgency_indicator: str) -> str:
         """Generate market timing reasoning."""
         if days_on_market < 7:
             return f"Hot property ({days_on_market} days on market) - expect multiple offers"
@@ -885,6 +835,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
     def _create_placeholder_school_score(self, property_data: Dict[str, Any], score: float):
         """Create placeholder school score object."""
         from ghl_real_estate_ai.models.matching_models import SchoolScore
+
         schools = property_data.get("schools", [])
         avg_rating = sum(s.get("rating", 5) for s in schools) / max(len(schools), 1)
 
@@ -896,24 +847,26 @@ class EnhancedPropertyMatcher(PropertyMatcher):
             distance_penalty=0.1,
             overall_score=score,
             top_school_name=schools[0].get("name") if schools else None,
-            reasoning=f"Average school rating: {avg_rating:.1f}/10"
+            reasoning=f"Average school rating: {avg_rating:.1f}/10",
         )
 
     def _create_placeholder_commute_score(self, property_data: Dict[str, Any], score: float):
         """Create placeholder commute score object."""
         from ghl_real_estate_ai.models.matching_models import CommuteScore
+
         return CommuteScore(
             to_downtown_minutes=None,
             to_workplace_minutes=None,
             public_transit_access=0.5,
             highway_access=0.5,
             overall_score=score,
-            reasoning="Commute analysis pending integration with mapping API"
+            reasoning="Commute analysis pending integration with mapping API",
         )
 
     def _create_placeholder_walkability_score(self, property_data: Dict[str, Any], score: float):
         """Create placeholder walkability score object."""
         from ghl_real_estate_ai.models.matching_models import WalkabilityScore
+
         return WalkabilityScore(
             walk_score=None,
             nearby_amenities_count=0,
@@ -921,18 +874,19 @@ class EnhancedPropertyMatcher(PropertyMatcher):
             restaurant_density=0.5,
             park_access=0.5,
             overall_score=score,
-            reasoning="Walkability analysis pending amenities data integration"
+            reasoning="Walkability analysis pending amenities data integration",
         )
 
     def _create_placeholder_safety_score(self, property_data: Dict[str, Any], score: float):
         """Create placeholder safety score object."""
         from ghl_real_estate_ai.models.matching_models import SafetyScore
+
         return SafetyScore(
             crime_rate_per_1000=None,
             neighborhood_safety_rating=None,
             police_response_time=None,
             overall_score=score,
-            reasoning="Safety analysis pending crime data integration"
+            reasoning="Safety analysis pending crime data integration",
         )
 
     # Confidence and quality methods
@@ -945,17 +899,21 @@ class EnhancedPropertyMatcher(PropertyMatcher):
             traditional.location.confidence,
             traditional.bedrooms.confidence,
             0.5,  # lifestyle factors - medium confidence with basic implementation
-            0.7   # contextual and timing factors
+            0.7,  # contextual and timing factors
         ]
         return sum(confidences) / len(confidences)
 
     def _calculate_data_completeness(self, property_data: Dict[str, Any], preferences: Dict[str, Any]) -> float:
         """Calculate what percentage of factors have good data quality."""
         required_property_fields = ["price", "bedrooms", "bathrooms", "address", "property_type", "sqft"]
-        property_completeness = sum(1 for field in required_property_fields if property_data.get(field)) / len(required_property_fields)
+        property_completeness = sum(1 for field in required_property_fields if property_data.get(field)) / len(
+            required_property_fields
+        )
 
         required_preference_fields = ["budget", "location", "bedrooms"]
-        preference_completeness = sum(1 for field in required_preference_fields if preferences.get(field)) / len(required_preference_fields)
+        preference_completeness = sum(1 for field in required_preference_fields if preferences.get(field)) / len(
+            required_preference_fields
+        )
 
         return (property_completeness + preference_completeness) / 2
 
@@ -988,10 +946,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
     # Reasoning generation
 
     def _generate_match_reasoning(
-        self,
-        property_data: Dict[str, Any],
-        score_breakdown: MatchScoreBreakdown,
-        context: MatchingContext
+        self, property_data: Dict[str, Any], score_breakdown: MatchScoreBreakdown, context: MatchingContext
     ) -> MatchReasoning:
         """Generate comprehensive match reasoning."""
 
@@ -1006,12 +961,14 @@ class EnhancedPropertyMatcher(PropertyMatcher):
             ("location", score_breakdown.traditional_scores.location),
             ("bedrooms", score_breakdown.traditional_scores.bedrooms),
             ("schools", score_breakdown.lifestyle_scores.overall_score, "lifestyle"),
-            ("market_timing", score_breakdown.market_timing_score.optimal_timing_score, "timing")
+            ("market_timing", score_breakdown.market_timing_score.optimal_timing_score, "timing"),
         ]
 
         # Sort by weighted score to find strengths
-        scored_factors = [(name, factor.weighted_score if hasattr(factor, 'weighted_score') else factor, category)
-                         for name, factor, *category in all_factors]
+        scored_factors = [
+            (name, factor.weighted_score if hasattr(factor, "weighted_score") else factor, category)
+            for name, factor, *category in all_factors
+        ]
         scored_factors.sort(key=lambda x: x[1], reverse=True)
 
         # Build primary strengths from top factors
@@ -1036,11 +993,13 @@ class EnhancedPropertyMatcher(PropertyMatcher):
             potential_concerns.append("Bedroom count may not fully meet needs")
 
         # Generate agent talking points
-        agent_talking_points.extend([
-            f"Overall match score: {score_breakdown.overall_score:.1%}",
-            f"Key strength: {primary_strengths[0] if primary_strengths else 'Good overall fit'}",
-            f"Market timing: {score_breakdown.market_timing_score.urgency_indicator.replace('_', ' ')}"
-        ])
+        agent_talking_points.extend(
+            [
+                f"Overall match score: {score_breakdown.overall_score:.1%}",
+                f"Key strength: {primary_strengths[0] if primary_strengths else 'Good overall fit'}",
+                f"Market timing: {score_breakdown.market_timing_score.urgency_indicator.replace('_', ' ')}",
+            ]
+        )
 
         return MatchReasoning(
             primary_strengths=primary_strengths,
@@ -1049,7 +1008,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
             agent_talking_points=agent_talking_points,
             comparison_to_past_likes=None,  # Will implement with behavioral analysis
             lifestyle_fit_summary=f"Lifestyle compatibility: {score_breakdown.lifestyle_scores.overall_score:.1%}",
-            market_opportunity_summary=score_breakdown.market_timing_score.reasoning
+            market_opportunity_summary=score_breakdown.market_timing_score.reasoning,
         )
 
     # Data loading methods
@@ -1069,12 +1028,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
 
     # Backward compatibility method
 
-    def find_matches(
-        self,
-        preferences: Dict[str, Any],
-        limit: int = 3,
-        min_score: float = 0.5
-    ) -> List[Dict[str, Any]]:
+    def find_matches(self, preferences: Dict[str, Any], limit: int = 3, min_score: float = 0.5) -> List[Dict[str, Any]]:
         """
         Backward compatibility method that falls back to basic matching.
 
@@ -1084,11 +1038,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
 
         try:
             # Try enhanced matching first
-            enhanced_matches = self.find_enhanced_matches(
-                preferences=preferences,
-                limit=limit,
-                min_score=min_score
-            )
+            enhanced_matches = self.find_enhanced_matches(preferences=preferences, limit=limit, min_score=min_score)
 
             # Convert to legacy format
             legacy_matches = []
@@ -1121,15 +1071,11 @@ def demo_enhanced_matching():
         "bathrooms": 2,
         "property_type": "Single Family",
         "min_sqft": 1500,
-        "max_hoa": 200
+        "max_hoa": 200,
     }
 
     # Test enhanced matching
-    matches = matcher.find_enhanced_matches(
-        preferences=test_preferences,
-        limit=5,
-        min_score=0.4
-    )
+    matches = matcher.find_enhanced_matches(preferences=test_preferences, limit=5, min_score=0.4)
 
     print(f"Found {len(matches)} enhanced matches:")
     print("=" * 80)

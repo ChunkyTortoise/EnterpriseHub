@@ -8,14 +8,15 @@ Author: Lead Scoring 2.0 Implementation
 Date: 2026-01-18
 """
 
-import pytest
 from unittest.mock import Mock, patch
 
+import pytest
+
 from ghl_real_estate_ai.ml.behavioral_signal_processor import (
-    BehavioralSignalProcessor,
     BehavioralSignal,
+    BehavioralSignalProcessor,
+    EngagementPattern,
     SignalCategory,
-    EngagementPattern
 )
 
 
@@ -43,7 +44,7 @@ class TestBehavioralSignalProcessor:
             "source": "organic",
             "days_since_first_contact": 5,
             "unique_sessions": 7,
-            "search_terms": ["Austin homes", "tech corridor properties", "home office space"]
+            "search_terms": ["Austin homes", "tech corridor properties", "home office space"],
         }
 
     @pytest.fixture
@@ -54,26 +55,26 @@ class TestBehavioralSignalProcessor:
                 "text": "Hi, I'm looking for a house in Austin with a good home office setup",
                 "timestamp": "2026-01-15T10:00:00Z",
                 "sender": "lead",
-                "response_time_seconds": 1800
+                "response_time_seconds": 1800,
             },
             {
                 "text": "I'm pre-approved for $600K and work as a software engineer at Apple. Need to move ASAP for relocation.",
                 "timestamp": "2026-01-15T10:30:00Z",
                 "sender": "lead",
-                "response_time_seconds": 900
+                "response_time_seconds": 900,
             },
             {
                 "text": "Cash buyer option available if we find the right property quickly. When can we schedule viewings?",
                 "timestamp": "2026-01-15T11:00:00Z",
                 "sender": "lead",
-                "response_time_seconds": 600
+                "response_time_seconds": 600,
             },
             {
                 "text": "Also need fiber internet for remote work days. What areas have the best connectivity?",
                 "timestamp": "2026-01-15T11:30:00Z",
                 "sender": "lead",
-                "response_time_seconds": 3600
-            }
+                "response_time_seconds": 3600,
+            },
         ]
 
     def test_processor_initialization(self, processor):
@@ -112,7 +113,7 @@ class TestBehavioralSignalProcessor:
         assert "email_open_rate" in signals
         assert "email_click_rate" in signals
         expected_open_rate = 10 / 12  # opens / sent
-        expected_click_rate = 6 / 12   # clicks / sent
+        expected_click_rate = 6 / 12  # clicks / sent
         assert abs(signals["email_open_rate"] - expected_open_rate) < 0.1
         assert abs(signals["email_click_rate"] - expected_click_rate) < 0.1
 
@@ -184,7 +185,7 @@ class TestBehavioralSignalProcessor:
             {"text": "The price seems too expensive for what we're getting"},
             {"text": "The area is too far from work, commute would be terrible"},
             {"text": "House needs too much work and updating"},
-            {"text": "Market seems overheated, maybe we should wait"}
+            {"text": "Market seems overheated, maybe we should wait"},
         ]
 
         signals = processor._extract_objection_signals(objection_conversation)
@@ -304,10 +305,10 @@ class TestBehavioralSignalProcessor:
             "valid_signal": 0.75,
             "over_range": 1.5,  # Should be clamped to 1.0
             "under_range": -0.2,  # Should be clamped to 0.0
-            "none_value": None,   # Should become 0.0
-            "bool_true": True,    # Should become 1.0
+            "none_value": None,  # Should become 0.0
+            "bool_true": True,  # Should become 1.0
             "bool_false": False,  # Should become 0.0
-            "string_value": "invalid"  # Should become 0.0
+            "string_value": "invalid",  # Should become 0.0
         }
 
         normalized = processor._normalize_signals(test_signals)
@@ -362,10 +363,7 @@ class TestBehavioralSignalProcessor:
         assert len(signals) > 0  # Should return defaults
 
         # Invalid conversation history
-        signals = processor.extract_signals(
-            {"budget": 500000},
-            [{"invalid": "data"}]
-        )
+        signals = processor.extract_signals({"budget": 500000}, [{"invalid": "data"}])
         assert isinstance(signals, dict)
 
     def test_performance_with_large_conversation(self, processor):
@@ -375,10 +373,12 @@ class TestBehavioralSignalProcessor:
         # Create large conversation history
         large_conversation = []
         for i in range(100):
-            large_conversation.append({
-                "text": f"Message {i} with various content about real estate and buying homes",
-                "timestamp": f"2026-01-15T{10 + i % 14:02d}:00:00Z"
-            })
+            large_conversation.append(
+                {
+                    "text": f"Message {i} with various content about real estate and buying homes",
+                    "timestamp": f"2026-01-15T{10 + i % 14:02d}:00:00Z",
+                }
+            )
 
         lead_data = {"budget": 500000, "email_opens": 5, "emails_sent": 10}
 
@@ -395,7 +395,7 @@ class TestBehavioralSignalProcessor:
         # Test financial keywords
         conversation_with_financial = [
             {"text": "I am pre-approved for a mortgage and have excellent credit score"},
-            {"text": "Cash buyer with 20% down payment ready"}
+            {"text": "Cash buyer with 20% down payment ready"},
         ]
 
         financial_signals = processor._extract_financial_signals({}, conversation_with_financial)
@@ -408,7 +408,7 @@ class TestBehavioralSignalProcessor:
         # Test urgency keywords
         conversation_with_urgency = [
             {"text": "Need to buy ASAP, relocating for work next month"},
-            {"text": "Urgent timeline, lease expires in 2 weeks"}
+            {"text": "Urgent timeline, lease expires in 2 weeks"},
         ]
 
         urgency_signals = processor._extract_urgency_signals({}, conversation_with_urgency)

@@ -6,25 +6,26 @@ Enterprise-grade monitoring dashboard with real-time system health visualization
 import asyncio
 import json
 import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
-import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import streamlit as st
 from plotly.subplots import make_subplots
 
-from ..services.database_service import DatabaseService
 from ..services.cache_service import CacheService
-from .service6_metrics_collector import Service6MetricsCollector, MetricType
-from .service6_alerting_engine import Service6AlertingEngine, AlertLevel
+from ..services.database_service import DatabaseService
+from .service6_alerting_engine import AlertLevel, Service6AlertingEngine
+from .service6_metrics_collector import MetricType, Service6MetricsCollector
 
 
 class HealthStatus(Enum):
     """System health status levels."""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     CRITICAL = "critical"
@@ -34,6 +35,7 @@ class HealthStatus(Enum):
 @dataclass
 class SystemHealthMetrics:
     """Comprehensive system health metrics."""
+
     overall_status: HealthStatus
     agent_orchestration_health: float  # 0-100
     database_performance_health: float  # 0-100
@@ -61,8 +63,8 @@ class Service6HealthDashboard:
 
         # Dashboard refresh intervals (seconds)
         self.REAL_TIME_REFRESH = 10  # Critical metrics
-        self.STANDARD_REFRESH = 60   # Standard metrics
-        self.SLOW_REFRESH = 300      # Historical trends
+        self.STANDARD_REFRESH = 60  # Standard metrics
+        self.SLOW_REFRESH = 300  # Historical trends
 
     @st.cache_data(ttl=10, show_spinner=False)
     def get_real_time_health_metrics(self) -> SystemHealthMetrics:
@@ -86,9 +88,7 @@ class Service6HealthDashboard:
                 status = HealthStatus.OFFLINE
 
             # Revenue impact calculation
-            revenue_impact = self._calculate_revenue_impact_score(
-                agent_health, db_health, lead_health
-            )
+            revenue_impact = self._calculate_revenue_impact_score(agent_health, db_health, lead_health)
 
             return SystemHealthMetrics(
                 overall_status=status,
@@ -101,7 +101,7 @@ class Service6HealthDashboard:
                 revenue_pipeline_health=self._get_revenue_pipeline_health(),
                 system_uptime_hours=self._get_system_uptime(),
                 error_rate_percentage=self._get_error_rate(),
-                response_time_p95_ms=self._get_response_time_p95()
+                response_time_p95_ms=self._get_response_time_p95(),
             )
 
         except Exception as e:
@@ -179,36 +179,40 @@ class Service6HealthDashboard:
             HealthStatus.HEALTHY: "🟢",
             HealthStatus.DEGRADED: "🟡",
             HealthStatus.CRITICAL: "🟠",
-            HealthStatus.OFFLINE: "🔴"
+            HealthStatus.OFFLINE: "🔴",
         }
 
         status_text = {
             HealthStatus.HEALTHY: "All Systems Operational",
             HealthStatus.DEGRADED: "Performance Degraded",
             HealthStatus.CRITICAL: "Critical Issues Detected",
-            HealthStatus.OFFLINE: "System Offline"
+            HealthStatus.OFFLINE: "System Offline",
         }
 
         icon = status_colors[metrics.overall_status]
         text = status_text[metrics.overall_status]
 
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div style="text-align: center; padding: 20px; background-color: #f0f2f6; border-radius: 10px; margin-bottom: 20px;">
             <h2>{icon} {text}</h2>
             <p>Overall System Health: {(metrics.agent_orchestration_health + metrics.database_performance_health + metrics.lead_processing_health) / 3:.1f}%</p>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     def _render_revenue_impact_card(self, metrics: SystemHealthMetrics) -> None:
         """Render revenue impact metric card."""
-        impact_color = "green" if metrics.revenue_impact_score >= 90 else \
-                     "orange" if metrics.revenue_impact_score >= 70 else "red"
+        impact_color = (
+            "green" if metrics.revenue_impact_score >= 90 else "orange" if metrics.revenue_impact_score >= 70 else "red"
+        )
 
         st.metric(
             label="💰 Revenue Impact Score",
             value=f"{metrics.revenue_impact_score:.1f}%",
             delta=f"{self._get_revenue_impact_delta():.1f}%",
-            delta_color=impact_color
+            delta_color=impact_color,
         )
 
         # Revenue projection
@@ -221,7 +225,7 @@ class Service6HealthDashboard:
             label="📈 Leads Processed (Last Hour)",
             value=f"{metrics.leads_processed_last_hour:,}",
             delta=f"{self._get_leads_processed_delta()}",
-            delta_color="normal"
+            delta_color="normal",
         )
 
         # Processing velocity
@@ -230,14 +234,19 @@ class Service6HealthDashboard:
 
     def _render_pipeline_health_card(self, metrics: SystemHealthMetrics) -> None:
         """Render revenue pipeline health card."""
-        pipeline_color = "green" if metrics.revenue_pipeline_health >= 90 else \
-                        "orange" if metrics.revenue_pipeline_health >= 70 else "red"
+        pipeline_color = (
+            "green"
+            if metrics.revenue_pipeline_health >= 90
+            else "orange"
+            if metrics.revenue_pipeline_health >= 70
+            else "red"
+        )
 
         st.metric(
             label="🎯 Pipeline Health",
             value=f"{metrics.revenue_pipeline_health:.1f}%",
             delta=f"{self._get_pipeline_health_delta():.1f}%",
-            delta_color=pipeline_color
+            delta_color=pipeline_color,
         )
 
         # Conversion insights
@@ -252,7 +261,7 @@ class Service6HealthDashboard:
             label="⏱️ System Uptime",
             value=f"{uptime_days:.1f} days",
             delta=f"{metrics.error_rate_percentage:.2f}% error rate",
-            delta_color="inverse"
+            delta_color="inverse",
         )
 
         # SLA compliance
@@ -268,15 +277,15 @@ class Service6HealthDashboard:
 
         # Create subplots for multiple metrics
         fig = make_subplots(
-            rows=2, cols=2,
+            rows=2,
+            cols=2,
             subplot_titles=[
                 "Lead Processing Rate",
                 "Agent Response Times",
                 "Database Query Performance",
-                "Revenue Pipeline Velocity"
+                "Revenue Pipeline Velocity",
             ],
-            specs=[[{"secondary_y": True}, {"secondary_y": True}],
-                   [{"secondary_y": True}, {"secondary_y": True}]]
+            specs=[[{"secondary_y": True}, {"secondary_y": True}], [{"secondary_y": True}, {"secondary_y": True}]],
         )
 
         # Lead processing rate
@@ -285,9 +294,10 @@ class Service6HealthDashboard:
                 x=performance_data["timestamps"],
                 y=performance_data["leads_per_minute"],
                 name="Leads/Min",
-                line=dict(color="blue", width=2)
+                line=dict(color="blue", width=2),
             ),
-            row=1, col=1
+            row=1,
+            col=1,
         )
 
         # Agent response times
@@ -296,9 +306,10 @@ class Service6HealthDashboard:
                 x=performance_data["timestamps"],
                 y=performance_data["agent_response_times"],
                 name="Response Time (ms)",
-                line=dict(color="green", width=2)
+                line=dict(color="green", width=2),
             ),
-            row=1, col=2
+            row=1,
+            col=2,
         )
 
         # Database performance
@@ -307,9 +318,10 @@ class Service6HealthDashboard:
                 x=performance_data["timestamps"],
                 y=performance_data["db_query_times"],
                 name="Query Time (ms)",
-                line=dict(color="orange", width=2)
+                line=dict(color="orange", width=2),
             ),
-            row=2, col=1
+            row=2,
+            col=1,
         )
 
         # Revenue pipeline velocity
@@ -318,9 +330,10 @@ class Service6HealthDashboard:
                 x=performance_data["timestamps"],
                 y=performance_data["pipeline_velocity"],
                 name="Pipeline Velocity",
-                line=dict(color="purple", width=2)
+                line=dict(color="purple", width=2),
             ),
-            row=2, col=2
+            row=2,
+            col=2,
         )
 
         fig.update_layout(height=400, showlegend=False)
@@ -342,11 +355,7 @@ class Service6HealthDashboard:
         with col2:
             # Top performing agents
             st.write("**Top Performing Agents:**")
-            top_agents = sorted(
-                agent_performance.items(),
-                key=lambda x: x[1]["success_rate"],
-                reverse=True
-            )[:5]
+            top_agents = sorted(agent_performance.items(), key=lambda x: x[1]["success_rate"], reverse=True)[:5]
 
             for agent, perf in top_agents:
                 success_rate = perf["success_rate"]
@@ -380,7 +389,7 @@ class Service6HealthDashboard:
                 if avg_response_time > 5000:  # 5 seconds
                     response_penalty = min(20, (avg_response_time - 5000) / 1000 * 2)
 
-            health_score = (avg_success_rate * 0.7 + (100 - response_penalty) * 0.3)
+            health_score = avg_success_rate * 0.7 + (100 - response_penalty) * 0.3
             return max(0, min(100, health_score))
 
         except Exception as e:
@@ -426,13 +435,9 @@ class Service6HealthDashboard:
 
             # Key lead processing indicators
             processing_rate = next(
-                (m.value for m in business_metrics if m.metric_name == "leads_processed_per_hour"),
-                0
+                (m.value for m in business_metrics if m.metric_name == "leads_processed_per_hour"), 0
             )
-            error_rate = next(
-                (m.value for m in business_metrics if m.metric_name == "lead_processing_error_rate"),
-                0
-            )
+            error_rate = next((m.value for m in business_metrics if m.metric_name == "lead_processing_error_rate"), 0)
 
             # Expected processing rate baseline (leads per hour)
             expected_rate = 100  # Configurable baseline
@@ -450,7 +455,7 @@ class Service6HealthDashboard:
     def _calculate_revenue_impact_score(self, agent_health: float, db_health: float, lead_health: float) -> float:
         """Calculate revenue impact score based on system health."""
         # Revenue impact weights: Lead processing (50%), Agent health (30%), DB health (20%)
-        weighted_score = (lead_health * 0.5 + agent_health * 0.3 + db_health * 0.2)
+        weighted_score = lead_health * 0.5 + agent_health * 0.3 + db_health * 0.2
 
         # Apply revenue multipliers for high-performing systems
         if weighted_score >= 95:
@@ -473,7 +478,7 @@ class Service6HealthDashboard:
             revenue_pipeline_health=0.0,
             system_uptime_hours=0.0,
             error_rate_percentage=100.0,
-            response_time_p95_ms=999999.0
+            response_time_p95_ms=999999.0,
         )
 
     # Additional helper methods would continue here...

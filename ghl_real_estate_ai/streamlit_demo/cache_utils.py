@@ -7,14 +7,16 @@ Implements Streamlit best practices from 2026:
 - Smart TTL management
 - Session state integration
 """
-import streamlit as st
+
+import asyncio
 import hashlib
+import logging
 import pickle
-from typing import Any, Callable, Optional, Dict, List
 from datetime import datetime, timedelta
 from functools import wraps
-import asyncio
-import logging
+from typing import Any, Callable, Dict, List, Optional
+
+import streamlit as st
 
 logger = logging.getLogger(__name__)
 
@@ -41,9 +43,7 @@ def st_cache_data_enhanced(
     """
 
     def decorator(func: Callable) -> Callable:
-        @st.cache_data(
-            ttl=ttl, max_entries=max_entries, show_spinner=show_spinner
-        )
+        @st.cache_data(ttl=ttl, max_entries=max_entries, show_spinner=show_spinner)
         @wraps(func)
         def wrapper(*args, **kwargs):
             return func(*args, **kwargs)
@@ -108,9 +108,7 @@ class CacheWarmer:
             return
 
         total = len(self.warm_functions)
-        for idx, (name, (func, args, kwargs)) in enumerate(
-            self.warm_functions.items(), 1
-        ):
+        for idx, (name, (func, args, kwargs)) in enumerate(self.warm_functions.items(), 1):
             try:
                 if progress_callback:
                     progress_callback(idx, total, name)
@@ -141,9 +139,7 @@ def get_cache_warmer() -> CacheWarmer:
     return _cache_warmer
 
 
-def warm_cache_on_startup(
-    warm_functions: Dict[str, tuple[Callable, tuple, dict]]
-):
+def warm_cache_on_startup(warm_functions: Dict[str, tuple[Callable, tuple, dict]]):
     """
     Warm cache on Streamlit app startup.
 
@@ -203,9 +199,7 @@ def create_session_cache_key(*args, prefix: str = "") -> str:
     return f"{prefix}_{key_hash}" if prefix else key_hash
 
 
-def get_or_compute_session_cache(
-    key: str, compute_func: Callable, *args, **kwargs
-) -> Any:
+def get_or_compute_session_cache(key: str, compute_func: Callable, *args, **kwargs) -> Any:
     """
     Get value from session state cache or compute if missing.
 
@@ -252,9 +246,7 @@ def invalidate_session_cache(pattern: Optional[str] = None):
 
     import fnmatch
 
-    keys_to_remove = [
-        key for key in st.session_state.keys() if fnmatch.fnmatch(key, pattern)
-    ]
+    keys_to_remove = [key for key in st.session_state.keys() if fnmatch.fnmatch(key, pattern)]
 
     for key in keys_to_remove:
         del st.session_state[key]
@@ -347,9 +339,7 @@ if __name__ == "__main__":
     )
 
     # Example 3: Session cache
-    lead_data = get_or_compute_session_cache(
-        "lead_123", load_leads_example, status="active"
-    )
+    lead_data = get_or_compute_session_cache("lead_123", load_leads_example, status="active")
 
     # Example 4: Display metrics
     StreamlitCacheMetrics.display()

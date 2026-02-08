@@ -102,9 +102,7 @@ class DealPredictor:
         positive_factors = self._identify_positive_factors(deal_data, probability)
 
         # Generate recommendations
-        recommendations = self._generate_recommendations(
-            deal_data, probability, risk_factors
-        )
+        recommendations = self._generate_recommendations(deal_data, probability, risk_factors)
 
         return DealPrediction(
             deal_id=deal_id,
@@ -157,9 +155,7 @@ class DealPredictor:
 
         # Agent responsiveness
         agent_response = deal_data.get("agent_response_time", 24)  # hours
-        response_score = (
-            1.0 if agent_response < 2 else max(0, 1 - (agent_response / 48))
-        )
+        response_score = 1.0 if agent_response < 2 else max(0, 1 - (agent_response / 48))
         score += self.feature_weights["agent_responsiveness"] * response_score
 
         # Deal age (very old deals are less likely to close)
@@ -187,9 +183,7 @@ class DealPredictor:
             # Linear decay after benchmark
             return max(0, 1 - ((days_in_stage - benchmark) / (benchmark * 2)))
 
-    def _predict_close_date(
-        self, deal_data: Dict, probability: float
-    ) -> Tuple[datetime, Tuple[datetime, datetime]]:
+    def _predict_close_date(self, deal_data: Dict, probability: float) -> Tuple[datetime, Tuple[datetime, datetime]]:
         """Predict expected close date with confidence range"""
         current_stage = deal_data.get("current_stage", "lead")
         days_in_stage = deal_data.get("days_in_current_stage", 0)
@@ -311,9 +305,7 @@ class DealPredictor:
 
         return risks[:5]  # Top 5 risks
 
-    def _identify_positive_factors(
-        self, deal_data: Dict, probability: float
-    ) -> List[str]:
+    def _identify_positive_factors(self, deal_data: Dict, probability: float) -> List[str]:
         """Identify positive factors supporting close"""
         positives = []
 
@@ -348,16 +340,12 @@ class DealPredictor:
 
         return positives[:5]
 
-    def _generate_recommendations(
-        self, deal_data: Dict, probability: float, risk_factors: List[str]
-    ) -> List[str]:
+    def _generate_recommendations(self, deal_data: Dict, probability: float, risk_factors: List[str]) -> List[str]:
         """Generate actionable recommendations"""
         recommendations = []
 
         if probability >= 0.7:
-            recommendations.append(
-                "🎯 High close probability - prepare closing documents"
-            )
+            recommendations.append("🎯 High close probability - prepare closing documents")
             recommendations.append("Schedule final walkthrough")
         elif probability >= 0.5:
             recommendations.append("📈 Good potential - maintain momentum")
@@ -410,7 +398,7 @@ if __name__ == "__main__":
     prediction = predictor.predict_deal("deal_789", deal_data)
 
     print(f"\n📈 Deal Prediction for deal_789")
-    print(f"   Close Probability: {prediction.close_probability*100:.1f}%")
+    print(f"   Close Probability: {prediction.close_probability * 100:.1f}%")
     print(f"   Predicted Close: {prediction.predicted_close_date.strftime('%Y-%m-%d')}")
     print(
         f"   Date Range: {prediction.date_range_start.strftime('%Y-%m-%d')} to {prediction.date_range_end.strftime('%Y-%m-%d')}"

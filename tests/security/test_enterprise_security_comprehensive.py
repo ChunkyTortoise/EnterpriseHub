@@ -10,29 +10,23 @@ COVERAGE:
 - Compliance & Auditing
 """
 
-import pytest
 import asyncio
-import hmac
 import hashlib
+import hmac
 import time
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import jwt as pyjwt
+import pytest
+import redis.asyncio as aioredis
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
-import jwt as pyjwt
-import redis.asyncio as aioredis
 
 from ghl_real_estate_ai.api.main import app
-from ghl_real_estate_ai.api.middleware.enhanced_auth import (
-    EnhancedJWTAuth,
-    AuthenticationError,
-    RateLimitError
-)
+from ghl_real_estate_ai.api.middleware.enhanced_auth import AuthenticationError, EnhancedJWTAuth, RateLimitError
+from ghl_real_estate_ai.security.enterprise_security_config import EnterpriseSecurityConfig, SecurityLevel
 from ghl_real_estate_ai.services.security_framework import SecurityFramework
-from ghl_real_estate_ai.security.enterprise_security_config import (
-    EnterpriseSecurityConfig,
-    SecurityLevel
-)
 
 
 class TestAuthenticationSecurity:
@@ -45,14 +39,14 @@ class TestAuthenticationSecurity:
     def test_jwt_secret_validation(self):
         """Test JWT secret key validation."""
         # Should raise error if secret too short
-        with patch.dict('os.environ', {'JWT_SECRET_KEY': 'short'}):
+        with patch.dict("os.environ", {"JWT_SECRET_KEY": "short"}):
             with pytest.raises(ValueError, match="at least 32 characters"):
                 EnhancedJWTAuth()
 
     def test_jwt_secret_required_in_production(self):
         """Test JWT secret required in production."""
-        with patch.dict('os.environ', {}, clear=True):
-            with patch('ghl_real_estate_ai.ghl_utils.config.settings.environment', 'production'):
+        with patch.dict("os.environ", {}, clear=True):
+            with patch("ghl_real_estate_ai.ghl_utils.config.settings.environment", "production"):
                 with pytest.raises(ValueError, match="required in production"):
                     EnhancedJWTAuth()
 
@@ -81,10 +75,7 @@ class TestAuthenticationSecurity:
     async def test_jwt_expiration(self):
         """Test JWT tokens expire correctly."""
         # Create token that expires immediately
-        token = self.auth.create_access_token(
-            {"sub": "user123"},
-            expires_delta=timedelta(seconds=1)
-        )
+        token = self.auth.create_access_token({"sub": "user123"}, expires_delta=timedelta(seconds=1))
 
         # Wait for expiration
         await asyncio.sleep(2)
@@ -101,7 +92,7 @@ class TestAuthenticationSecurity:
             "sub": "user123",
             "exp": datetime.utcnow() + timedelta(hours=1),
             "aud": "wrong-audience",
-            "iss": "enterprisehub-api"
+            "iss": "enterprisehub-api",
         }
         token = pyjwt.encode(payload, self.auth.secret_key, algorithm="HS256")
 
@@ -117,7 +108,7 @@ class TestAuthenticationSecurity:
             "sub": "user123",
             "exp": datetime.utcnow() + timedelta(hours=1),
             "aud": "enterprisehub-client",
-            "iss": "wrong-issuer"
+            "iss": "wrong-issuer",
         }
         token = pyjwt.encode(payload, self.auth.secret_key, algorithm="HS256")
 
@@ -133,7 +124,7 @@ class TestAuthenticationSecurity:
         mock_request.client = Mock(host="127.0.0.1")
 
         # Mock Redis
-        with patch.object(self.auth, '_get_redis') as mock_redis:
+        with patch.object(self.auth, "_get_redis") as mock_redis:
             mock_redis_instance = AsyncMock()
             mock_redis.return_value = mock_redis_instance
 
@@ -153,19 +144,16 @@ class TestAuthenticationSecurity:
             self.auth.secret_key,
             algorithms=["HS256"],
             audience="enterprisehub-client",
-            issuer="enterprisehub-api"
+            issuer="enterprisehub-api",
         )
 
         # Mock Redis for blacklist
-        with patch.object(self.auth, '_get_redis') as mock_redis:
+        with patch.object(self.auth, "_get_redis") as mock_redis:
             mock_redis_instance = AsyncMock()
             mock_redis.return_value = mock_redis_instance
 
             # Blacklist token
-            await self.auth.blacklist_token(
-                payload["jti"],
-                datetime.fromtimestamp(payload["exp"])
-            )
+            await self.auth.blacklist_token(payload["jti"], datetime.fromtimestamp(payload["exp"]))
 
             # Verify Redis was called
             mock_redis_instance.setex.assert_called_once()
@@ -176,7 +164,7 @@ class TestAuthenticationSecurity:
         token = self.auth.create_access_token({"sub": "user123"})
 
         # Mock Redis to return blacklisted
-        with patch.object(self.auth, '_get_redis') as mock_redis:
+        with patch.object(self.auth, "_get_redis") as mock_redis:
             mock_redis_instance = AsyncMock()
             mock_redis.return_value = mock_redis_instance
             mock_redis_instance.exists.return_value = 1  # Token is blacklisted
@@ -190,7 +178,7 @@ class TestAuthenticationSecurity:
         hashed = self.auth.hash_password(password)
 
         # bcrypt hashes start with $2b$ or $2a$
-        assert hashed.startswith('$2') or hashed.startswith('$2a') or hashed.startswith('$2b')
+        assert hashed.startswith("$2") or hashed.startswith("$2a") or hashed.startswith("$2b")
 
         # Verify password
         assert self.auth.verify_password(password, hashed)
@@ -201,7 +189,7 @@ class TestAuthenticationSecurity:
         # Password over 72 bytes should log warning
         long_password = "a" * 100
 
-        with patch('ghl_real_estate_ai.ghl_utils.logger.get_logger') as mock_logger:
+        with patch("ghl_real_estate_ai.ghl_utils.logger.get_logger") as mock_logger:
             logger_instance = Mock()
             mock_logger.return_value = logger_instance
 
@@ -223,10 +211,7 @@ class TestAPISecurityHardening:
         """Test rate limiting blocks excessive requests."""
         # This would need actual rate limiting configured
         # For now, verify middleware is present
-        assert any(
-            "RateLimitMiddleware" in str(m)
-            for m in app.user_middleware
-        )
+        assert any("RateLimitMiddleware" in str(m) for m in app.user_middleware)
 
     def test_security_headers_present(self):
         """Test security headers are added to responses."""
@@ -241,10 +226,7 @@ class TestAPISecurityHardening:
 
     def test_cors_restrictions(self):
         """Test CORS blocks unauthorized origins."""
-        response = self.client.get(
-            "/api/health",
-            headers={"Origin": "https://malicious-site.com"}
-        )
+        response = self.client.get("/api/health", headers={"Origin": "https://malicious-site.com"})
 
         # Should not have CORS headers for unauthorized origin
         # (Implementation depends on CORS middleware configuration)
@@ -252,7 +234,7 @@ class TestAPISecurityHardening:
     def test_https_redirect_in_production(self):
         """Test HTTPS redirect is enabled in production."""
         # Verify HTTPSRedirectMiddleware is present when ENVIRONMENT=production
-        with patch.dict('os.environ', {'ENVIRONMENT': 'production'}):
+        with patch.dict("os.environ", {"ENVIRONMENT": "production"}):
             # Would need to reload app, but verify logic exists
             pass
 
@@ -260,9 +242,7 @@ class TestAPISecurityHardening:
         """Test endpoints validate input with Pydantic."""
         # Test with invalid data
         response = self.client.post(
-            "/api/leads",
-            json={"invalid_field": "value"},
-            headers={"Authorization": "Bearer test_token"}
+            "/api/leads", json={"invalid_field": "value"}, headers={"Authorization": "Bearer test_token"}
         )
 
         # Should return validation error (401 for missing auth or 422 for validation)
@@ -273,8 +253,7 @@ class TestAPISecurityHardening:
         malicious_input = "'; DROP TABLE leads; --"
 
         response = self.client.get(
-            f"/api/leads?search={malicious_input}",
-            headers={"Authorization": "Bearer test_token"}
+            f"/api/leads?search={malicious_input}", headers={"Authorization": "Bearer test_token"}
         )
 
         # Should not execute SQL injection
@@ -299,18 +278,14 @@ class TestAPISecurityHardening:
         secret = "test_webhook_secret"
 
         # Calculate correct signature
-        expected_signature = hmac.new(
-            secret.encode(),
-            webhook_body,
-            hashlib.sha256
-        ).hexdigest()
+        expected_signature = hmac.new(secret.encode(), webhook_body, hashlib.sha256).hexdigest()
 
         # Mock request
         mock_request = Mock()
         mock_request.headers = {"X-GHL-Signature": expected_signature}
 
         # Mock config
-        with patch.object(self.security.config, 'webhook_signing_secrets', {"ghl": secret}):
+        with patch.object(self.security.config, "webhook_signing_secrets", {"ghl": secret}):
             # Verify signature
             is_valid = self.security._verify_ghl_signature(mock_request, webhook_body)
             assert is_valid
@@ -328,7 +303,7 @@ class TestAPISecurityHardening:
         mock_request.headers = {"X-GHL-Signature": wrong_signature}
         mock_request.client = Mock(host="127.0.0.1")
 
-        with patch.object(self.security.config, 'webhook_signing_secrets', {"ghl": secret}):
+        with patch.object(self.security.config, "webhook_signing_secrets", {"ghl": secret}):
             # Should reject
             is_valid = self.security._verify_ghl_signature(mock_request, webhook_body)
             assert not is_valid
@@ -343,7 +318,7 @@ class TestAPISecurityHardening:
         mock_request.headers = {}
         mock_request.client = Mock(host="127.0.0.1")
 
-        with patch.object(self.security.config, 'webhook_signing_secrets', {"ghl": "secret"}):
+        with patch.object(self.security.config, "webhook_signing_secrets", {"ghl": "secret"}):
             # Should raise exception
             with pytest.raises(HTTPException) as exc_info:
                 self.security._verify_ghl_signature(mock_request, webhook_body)
@@ -377,18 +352,9 @@ class TestDataProtection:
 
     def test_email_validation(self):
         """Test email validation."""
-        valid_emails = [
-            "user@example.com",
-            "test.user@domain.co.uk",
-            "user+tag@example.com"
-        ]
+        valid_emails = ["user@example.com", "test.user@domain.co.uk", "user+tag@example.com"]
 
-        invalid_emails = [
-            "not-an-email",
-            "@example.com",
-            "user@",
-            "user@domain"
-        ]
+        invalid_emails = ["not-an-email", "@example.com", "user@", "user@domain"]
 
         for email in valid_emails:
             assert self.security.validate_email(email), f"{email} should be valid"
@@ -398,17 +364,12 @@ class TestDataProtection:
 
     def test_phone_validation(self):
         """Test phone number validation."""
-        valid_phones = [
-            "555-123-4567",
-            "(555) 123-4567",
-            "5551234567",
-            "+1-555-123-4567"
-        ]
+        valid_phones = ["555-123-4567", "(555) 123-4567", "5551234567", "+1-555-123-4567"]
 
         invalid_phones = [
             "123",
             "not-a-phone",
-            "555-12-345"  # Too short
+            "555-12-345",  # Too short
         ]
 
         for phone in valid_phones:
@@ -446,7 +407,7 @@ class TestInfrastructureSecurity:
         config = EnterpriseSecurityConfig(SecurityLevel.PRODUCTION)
 
         # Validation should identify missing environment variables
-        with patch.dict('os.environ', {}, clear=True):
+        with patch.dict("os.environ", {}, clear=True):
             issues = config.validate_configuration()
 
             # Should have issues about missing JWT secret
@@ -500,16 +461,13 @@ class TestComplianceAndAuditing:
         mock_request.state = Mock(request_id="test-123")
 
         # Mock Redis
-        with patch.object(self.security, '_get_redis') as mock_redis:
+        with patch.object(self.security, "_get_redis") as mock_redis:
             mock_redis_instance = AsyncMock()
             mock_redis.return_value = mock_redis_instance
 
             # Log audit event
             await self.security._audit_log(
-                event="test_security_event",
-                user_id="user123",
-                details={"test": "data"},
-                request=mock_request
+                event="test_security_event", user_id="user123", details={"test": "data"}, request=mock_request
             )
 
             # Verify Redis was called to store log
@@ -550,7 +508,7 @@ class TestComplianceAndAuditing:
         mock_request.url = Mock(path="/api/test")
         mock_request.method = "GET"
 
-        with patch.object(self.security, '_get_redis') as mock_redis:
+        with patch.object(self.security, "_get_redis") as mock_redis:
             mock_redis_instance = AsyncMock()
             mock_redis.return_value = mock_redis_instance
 
@@ -578,7 +536,7 @@ class TestSecurityMonitoring:
         mock_request.client = Mock(host="127.0.0.1")
 
         # Simulate multiple failed attempts
-        with patch.object(auth, '_get_redis') as mock_redis:
+        with patch.object(auth, "_get_redis") as mock_redis:
             mock_redis_instance = AsyncMock()
             mock_redis.return_value = mock_redis_instance
 
@@ -594,7 +552,8 @@ class TestSecurityMonitoring:
         # This would test the actual logger format
         # For now, verify audit logger exists
         from ghl_real_estate_ai.security import audit_logger
-        assert hasattr(audit_logger, 'AuditLogger')
+
+        assert hasattr(audit_logger, "AuditLogger")
 
 
 class TestOWASPTop10Compliance:

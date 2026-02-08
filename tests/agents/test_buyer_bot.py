@@ -4,15 +4,17 @@ Tests JorgeBuyerBot, BuyerIntentDecoder, and buyer-specific workflows.
 Follows proven testing patterns from seller bot tests.
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import Mock, MagicMock, AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
+import pytest
+
 from ghl_real_estate_ai.agents.buyer_intent_decoder import BuyerIntentDecoder
+from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
 from ghl_real_estate_ai.models.buyer_bot_state import BuyerBotState
 from ghl_real_estate_ai.models.lead_scoring import BuyerIntentProfile
+
 
 class TestJorgeBuyerBot:
     """Test suite for JorgeBuyerBot implementation."""
@@ -27,7 +29,7 @@ class TestJorgeBuyerBot:
             "conversation_history": [
                 {"role": "user", "content": "Looking for a 3br house under $400k"},
                 {"role": "assistant", "content": "I can help you find that. What's your timeline?"},
-                {"role": "user", "content": "Need to move in 3 months, pre-approved for $380k"}
+                {"role": "user", "content": "Need to move in 3 months, pre-approved for $380k"},
             ],
             "intent_profile": None,
             "budget_range": None,
@@ -44,7 +46,7 @@ class TestJorgeBuyerBot:
             "is_qualified": False,
             "current_journey_stage": "discovery",
             "properties_viewed_count": 0,
-            "last_action_timestamp": None
+            "last_action_timestamp": None,
         }
 
     @pytest.fixture
@@ -68,21 +70,21 @@ class TestJorgeBuyerBot:
                 "mentions_financing": True,
                 "has_clear_preferences": True,
                 "shows_urgency": True,
-                "decision_maker_identified": True
+                "decision_maker_identified": True,
             },
-            next_qualification_step="preferences"
+            next_qualification_step="preferences",
         )
 
     @pytest.fixture
     def mock_dependencies(self):
         """Mock all external dependencies."""
         with patch.multiple(
-            'ghl_real_estate_ai.agents.jorge_buyer_bot',
+            "ghl_real_estate_ai.agents.jorge_buyer_bot",
             BuyerIntentDecoder=AsyncMock,
             ClaudeAssistant=AsyncMock,
             get_event_publisher=Mock,
             PropertyMatcher=AsyncMock,
-            get_ml_analytics_engine=Mock
+            get_ml_analytics_engine=Mock,
         ) as mocks:
             yield mocks
 
@@ -110,8 +112,7 @@ class TestJorgeBuyerBot:
 
         # Verify intent decoder was called correctly
         buyer_bot.intent_decoder.analyze_buyer.assert_called_once_with(
-            mock_buyer_state["buyer_id"],
-            mock_buyer_state["conversation_history"]
+            mock_buyer_state["buyer_id"], mock_buyer_state["conversation_history"]
         )
 
         # Verify event was published
@@ -140,10 +141,7 @@ class TestJorgeBuyerBot:
     async def test_qualify_property_needs(self, mock_dependencies, mock_buyer_state, mock_buyer_intent_profile):
         """Test property needs qualification workflow node."""
         buyer_bot = JorgeBuyerBot()
-        buyer_bot._extract_property_preferences = AsyncMock(return_value={
-            "bedrooms": 3,
-            "features": ["garage"]
-        })
+        buyer_bot._extract_property_preferences = AsyncMock(return_value={"bedrooms": 3, "features": ["garage"]})
         mock_buyer_state["intent_profile"] = mock_buyer_intent_profile
 
         result = await buyer_bot.qualify_property_needs(mock_buyer_state)
@@ -159,7 +157,7 @@ class TestJorgeBuyerBot:
         buyer_bot = JorgeBuyerBot()
         mock_properties = [
             {"id": "prop1", "price": 350000, "bedrooms": 3},
-            {"id": "prop2", "price": 375000, "bedrooms": 3}
+            {"id": "prop2", "price": 375000, "bedrooms": 3},
         ]
         buyer_bot.property_matcher.find_matches = AsyncMock(return_value=mock_properties)
         buyer_bot.event_publisher.publish_property_match_update = AsyncMock()
@@ -171,10 +169,7 @@ class TestJorgeBuyerBot:
         result = await buyer_bot.match_properties(mock_buyer_state)
 
         # Verify property matcher was called correctly
-        buyer_bot.property_matcher.find_matches.assert_called_once_with(
-            preferences={"bedrooms": 3},
-            limit=5
-        )
+        buyer_bot.property_matcher.find_matches.assert_called_once_with(preferences={"bedrooms": 3}, limit=5)
 
         # Verify event was published
         buyer_bot.event_publisher.publish_property_match_update.assert_called_once()
@@ -204,9 +199,9 @@ class TestJorgeBuyerBot:
     async def test_generate_buyer_response(self, mock_dependencies, mock_buyer_state, mock_buyer_intent_profile):
         """Test buyer response generation workflow node."""
         buyer_bot = JorgeBuyerBot()
-        buyer_bot.claude.generate_response = AsyncMock(return_value={
-            "content": "Based on your budget and timeline, I have 3 great properties to show you."
-        })
+        buyer_bot.claude.generate_response = AsyncMock(
+            return_value={"content": "Based on your budget and timeline, I have 3 great properties to show you."}
+        )
 
         mock_buyer_state["intent_profile"] = mock_buyer_intent_profile
         mock_buyer_state["matched_properties"] = [{"id": "prop1"}, {"id": "prop2"}]
@@ -237,7 +232,7 @@ class TestJorgeBuyerBot:
         buyer_bot._schedule_follow_up.assert_called_once_with(
             mock_buyer_state["buyer_id"],
             "schedule_property_tour",
-            2  # Hot leads get 2 hour follow-up
+            2,  # Hot leads get 2 hour follow-up
         )
 
         assert result["next_action"] == "schedule_property_tour"
@@ -272,24 +267,18 @@ class TestJorgeBuyerBot:
         buyer_bot = JorgeBuyerBot()
 
         # Test with range
-        conversation = [
-            {"role": "user", "content": "Looking for something between $300,000 and $450,000"}
-        ]
+        conversation = [{"role": "user", "content": "Looking for something between $300,000 and $450,000"}]
         budget = await buyer_bot._extract_budget_range(conversation)
         assert budget == {"min": 300000, "max": 450000}
 
         # Test with single amount
-        conversation = [
-            {"role": "user", "content": "My max budget is $350,000"}
-        ]
+        conversation = [{"role": "user", "content": "My max budget is $350,000"}]
         budget = await buyer_bot._extract_budget_range(conversation)
         assert budget["max"] == 350000
         assert budget["min"] == int(350000 * 0.8)
 
         # Test with no amounts
-        conversation = [
-            {"role": "user", "content": "Looking for a house"}
-        ]
+        conversation = [{"role": "user", "content": "Looking for a house"}]
         budget = await buyer_bot._extract_budget_range(conversation)
         assert budget is None
 
@@ -298,9 +287,7 @@ class TestJorgeBuyerBot:
         """Test property preferences extraction from conversation."""
         buyer_bot = JorgeBuyerBot()
 
-        conversation = [
-            {"role": "user", "content": "Need a 3 bedroom, 2 bathroom house with a garage and pool"}
-        ]
+        conversation = [{"role": "user", "content": "Need a 3 bedroom, 2 bathroom house with a garage and pool"}]
 
         preferences = await buyer_bot._extract_property_preferences(conversation)
 
@@ -324,7 +311,7 @@ class TestJorgeBuyerBot:
             "response_content": "Great! Let me show you some properties.",
             "matched_properties": [{"id": "prop1"}, {"id": "prop2"}],
             "current_qualification_step": "property_search",
-            "next_action": "respond"
+            "next_action": "respond",
         }
 
         buyer_bot.workflow.ainvoke = AsyncMock(return_value=mock_workflow_result)
@@ -332,13 +319,11 @@ class TestJorgeBuyerBot:
 
         conversation_history = [
             {"role": "user", "content": "Looking for a 3br house under $400k"},
-            {"role": "user", "content": "Pre-approved for $380k, need to move in 3 months"}
+            {"role": "user", "content": "Pre-approved for $380k, need to move in 3 months"},
         ]
 
         result = await buyer_bot.process_buyer_conversation(
-            buyer_id="test_buyer_123",
-            buyer_name="John Doe",
-            conversation_history=conversation_history
+            buyer_id="test_buyer_123", buyer_name="John Doe", conversation_history=conversation_history
         )
 
         # Verify workflow was invoked
@@ -349,7 +334,7 @@ class TestJorgeBuyerBot:
             contact_id="test_buyer_123",
             qualification_status="qualified",
             final_score=70.0,  # (75 + 65) / 2
-            properties_matched=2
+            properties_matched=2,
         )
 
         # Verify result structure
@@ -364,9 +349,7 @@ class TestJorgeBuyerBot:
         buyer_bot.workflow.ainvoke = AsyncMock(side_effect=Exception("Workflow error"))
 
         result = await buyer_bot.process_buyer_conversation(
-            buyer_id="test_buyer_123",
-            buyer_name="John Doe",
-            conversation_history=[]
+            buyer_id="test_buyer_123", buyer_name="John Doe", conversation_history=[]
         )
 
         # Verify error handling
@@ -387,7 +370,7 @@ class TestBuyerIntentDecoder:
         return [
             {"role": "user", "content": "I'm pre-approved for $400k and need to move by March"},
             {"role": "user", "content": "Looking for 3 bedrooms, 2 bathrooms with a garage"},
-            {"role": "user", "content": "My wife and I are ready to make a decision this week"}
+            {"role": "user", "content": "My wife and I are ready to make a decision this week"},
         ]
 
     @pytest.fixture
@@ -395,7 +378,7 @@ class TestBuyerIntentDecoder:
         return [
             {"role": "user", "content": "Just browsing, not sure if I want to buy"},
             {"role": "user", "content": "Maybe someday when prices come down"},
-            {"role": "user", "content": "I'll need to talk to my parents about financing"}
+            {"role": "user", "content": "I'll need to talk to my parents about financing"},
         ]
 
     def test_score_financial_readiness(self, buyer_intent_decoder):
@@ -537,21 +520,19 @@ class TestRetryMechanism:
     def mock_dependencies(self):
         """Mock all external dependencies."""
         with patch.multiple(
-            'ghl_real_estate_ai.agents.jorge_buyer_bot',
+            "ghl_real_estate_ai.agents.jorge_buyer_bot",
             BuyerIntentDecoder=AsyncMock,
             ClaudeAssistant=AsyncMock,
             get_event_publisher=Mock,
             PropertyMatcher=AsyncMock,
-            get_ml_analytics_engine=Mock
+            get_ml_analytics_engine=Mock,
         ) as mocks:
             yield mocks
 
     @pytest.mark.asyncio
     async def test_retry_succeeds_on_second_attempt(self, mock_dependencies):
         """Retry mechanism recovers on second attempt after transient failure."""
-        from ghl_real_estate_ai.agents.jorge_buyer_bot import (
-            async_retry_with_backoff, RetryConfig, NetworkError
-        )
+        from ghl_real_estate_ai.agents.jorge_buyer_bot import NetworkError, RetryConfig, async_retry_with_backoff
 
         call_count = 0
 
@@ -571,9 +552,7 @@ class TestRetryMechanism:
     @pytest.mark.asyncio
     async def test_retry_fails_after_max_retries(self, mock_dependencies):
         """Retry mechanism raises after exhausting all retries."""
-        from ghl_real_estate_ai.agents.jorge_buyer_bot import (
-            async_retry_with_backoff, RetryConfig, ClaudeAPIError
-        )
+        from ghl_real_estate_ai.agents.jorge_buyer_bot import ClaudeAPIError, RetryConfig, async_retry_with_backoff
 
         call_count = 0
 
@@ -592,7 +571,9 @@ class TestRetryMechanism:
     async def test_retry_does_not_retry_non_retryable_errors(self, mock_dependencies):
         """Non-retryable exceptions propagate immediately without retry."""
         from ghl_real_estate_ai.agents.jorge_buyer_bot import (
-            async_retry_with_backoff, RetryConfig, BuyerIntentAnalysisError
+            BuyerIntentAnalysisError,
+            RetryConfig,
+            async_retry_with_backoff,
         )
 
         call_count = 0
@@ -615,12 +596,12 @@ class TestEscalateToHumanReview:
     @pytest.fixture
     def mock_dependencies(self):
         with patch.multiple(
-            'ghl_real_estate_ai.agents.jorge_buyer_bot',
+            "ghl_real_estate_ai.agents.jorge_buyer_bot",
             BuyerIntentDecoder=AsyncMock,
             ClaudeAssistant=AsyncMock,
             get_event_publisher=Mock,
             PropertyMatcher=AsyncMock,
-            get_ml_analytics_engine=Mock
+            get_ml_analytics_engine=Mock,
         ) as mocks:
             yield mocks
 
@@ -639,9 +620,7 @@ class TestEscalateToHumanReview:
         buyer_bot.event_publisher.publish_bot_status_update = AsyncMock()
 
         result = await buyer_bot.escalate_to_human_review(
-            buyer_id="buyer_123",
-            reason="intent_analysis_failure",
-            context={"error": "test error"}
+            buyer_id="buyer_123", reason="intent_analysis_failure", context={"error": "test error"}
         )
 
         assert result["escalation_id"] is not None
@@ -668,15 +647,9 @@ class TestEscalateToHumanReview:
         buyer_bot.ghl_client.base_url = "https://test.api"
         buyer_bot.ghl_client.headers = {"Authorization": "Bearer test"}
         # Event publisher also fails
-        buyer_bot.event_publisher.publish_bot_status_update = AsyncMock(
-            side_effect=Exception("CRM unavailable")
-        )
+        buyer_bot.event_publisher.publish_bot_status_update = AsyncMock(side_effect=Exception("CRM unavailable"))
 
-        result = await buyer_bot.escalate_to_human_review(
-            buyer_id="buyer_456",
-            reason="system_failure",
-            context={}
-        )
+        result = await buyer_bot.escalate_to_human_review(buyer_id="buyer_456", reason="system_failure", context={})
 
         assert result["status"] == "queued"
         assert result["tag_added"] is False
@@ -690,12 +663,12 @@ class TestFallbackFinancialAssessment:
     @pytest.fixture
     def mock_dependencies(self):
         with patch.multiple(
-            'ghl_real_estate_ai.agents.jorge_buyer_bot',
+            "ghl_real_estate_ai.agents.jorge_buyer_bot",
             BuyerIntentDecoder=AsyncMock,
             ClaudeAssistant=AsyncMock,
             get_event_publisher=Mock,
             PropertyMatcher=AsyncMock,
-            get_ml_analytics_engine=Mock
+            get_ml_analytics_engine=Mock,
         ) as mocks:
             yield mocks
 
@@ -707,9 +680,7 @@ class TestFallbackFinancialAssessment:
 
         state = {
             "buyer_id": "buyer_pre",
-            "conversation_history": [
-                {"role": "user", "content": "I'm pre-approved for $400k through Wells Fargo"}
-            ]
+            "conversation_history": [{"role": "user", "content": "I'm pre-approved for $400k through Wells Fargo"}],
         }
 
         result = await buyer_bot._fallback_financial_assessment(state)
@@ -726,9 +697,7 @@ class TestFallbackFinancialAssessment:
 
         state = {
             "buyer_id": "buyer_cash",
-            "conversation_history": [
-                {"role": "user", "content": "I'm a cash buyer, no financing needed"}
-            ]
+            "conversation_history": [{"role": "user", "content": "I'm a cash buyer, no financing needed"}],
         }
 
         result = await buyer_bot._fallback_financial_assessment(state)
@@ -744,9 +713,7 @@ class TestFallbackFinancialAssessment:
 
         state = {
             "buyer_id": "buyer_unknown",
-            "conversation_history": [
-                {"role": "user", "content": "Hi, looking at houses"}
-            ]
+            "conversation_history": [{"role": "user", "content": "Hi, looking at houses"}],
         }
 
         result = await buyer_bot._fallback_financial_assessment(state)
@@ -762,10 +729,7 @@ class TestFallbackFinancialAssessment:
         """Fallback always returns valid result, never raises."""
         buyer_bot = JorgeBuyerBot()
 
-        state = {
-            "buyer_id": "buyer_empty",
-            "conversation_history": []
-        }
+        state = {"buyer_id": "buyer_empty", "conversation_history": []}
 
         result = await buyer_bot._fallback_financial_assessment(state)
 
@@ -780,12 +744,12 @@ class TestComplianceViolationEscalation:
     @pytest.fixture
     def mock_dependencies(self):
         with patch.multiple(
-            'ghl_real_estate_ai.agents.jorge_buyer_bot',
+            "ghl_real_estate_ai.agents.jorge_buyer_bot",
             BuyerIntentDecoder=AsyncMock,
             ClaudeAssistant=AsyncMock,
             get_event_publisher=Mock,
             PropertyMatcher=AsyncMock,
-            get_ml_analytics_engine=Mock
+            get_ml_analytics_engine=Mock,
         ) as mocks:
             yield mocks
 
@@ -799,7 +763,7 @@ class TestComplianceViolationEscalation:
         result = await buyer_bot.escalate_compliance_violation(
             buyer_id="buyer_789",
             violation_type="fair_housing",
-            evidence={"summary": "Discriminatory language detected", "message_id": "msg_001"}
+            evidence={"summary": "Discriminatory language detected", "message_id": "msg_001"},
         )
 
         assert result["compliance_ticket_id"] is not None
@@ -819,9 +783,7 @@ class TestComplianceViolationEscalation:
         buyer_bot.event_publisher.publish_bot_status_update = AsyncMock()
 
         result = await buyer_bot.escalate_compliance_violation(
-            buyer_id="buyer_crm",
-            violation_type="privacy",
-            evidence={"summary": "PII handling violation"}
+            buyer_id="buyer_crm", violation_type="privacy", evidence={"summary": "PII handling violation"}
         )
 
         assert result["crm_flagged"] is True
@@ -840,7 +802,7 @@ class TestComplianceViolationEscalation:
         result = await buyer_bot.escalate_compliance_violation(
             buyer_id="buyer_pause",
             violation_type="financial_regulation",
-            evidence={"summary": "Loan fraud risk indicators"}
+            evidence={"summary": "Loan fraud risk indicators"},
         )
 
         assert result["bot_paused"] is True
@@ -857,9 +819,7 @@ class TestComplianceViolationEscalation:
         buyer_bot.event_publisher.publish_bot_status_update = AsyncMock()
 
         result = await buyer_bot.escalate_compliance_violation(
-            buyer_id="buyer_lic",
-            violation_type="licensing",
-            evidence={"summary": "Agent credential issue"}
+            buyer_id="buyer_lic", violation_type="licensing", evidence={"summary": "Agent credential issue"}
         )
 
         assert result["severity"] == "medium"
@@ -875,12 +835,12 @@ class TestStreamARequiredCoverage:
     @pytest.fixture
     def mock_dependencies(self):
         with patch.multiple(
-            'ghl_real_estate_ai.agents.jorge_buyer_bot',
+            "ghl_real_estate_ai.agents.jorge_buyer_bot",
             BuyerIntentDecoder=AsyncMock,
             ClaudeAssistant=AsyncMock,
             get_event_publisher=Mock,
             PropertyMatcher=AsyncMock,
-            get_ml_analytics_engine=Mock
+            get_ml_analytics_engine=Mock,
         ) as mocks:
             yield mocks
 
@@ -889,9 +849,7 @@ class TestStreamARequiredCoverage:
     @pytest.mark.asyncio
     async def test_retry_mechanism_succeeds_on_second_attempt(self, mock_dependencies):
         """Retry recovers from a transient NetworkError on the second call."""
-        from ghl_real_estate_ai.agents.jorge_buyer_bot import (
-            async_retry_with_backoff, RetryConfig, NetworkError
-        )
+        from ghl_real_estate_ai.agents.jorge_buyer_bot import NetworkError, RetryConfig, async_retry_with_backoff
 
         attempts = 0
 
@@ -911,9 +869,7 @@ class TestStreamARequiredCoverage:
     @pytest.mark.asyncio
     async def test_retry_mechanism_fails_after_max_retries(self, mock_dependencies):
         """All retries exhausted raises the final exception."""
-        from ghl_real_estate_ai.agents.jorge_buyer_bot import (
-            async_retry_with_backoff, RetryConfig, ClaudeAPIError
-        )
+        from ghl_real_estate_ai.agents.jorge_buyer_bot import ClaudeAPIError, RetryConfig, async_retry_with_backoff
 
         attempts = 0
 
@@ -931,10 +887,9 @@ class TestStreamARequiredCoverage:
     @pytest.mark.asyncio
     async def test_retry_mechanism_respects_backoff_timing(self, mock_dependencies):
         """Backoff sleep is called with increasing delay between retries."""
-        from ghl_real_estate_ai.agents.jorge_buyer_bot import (
-            async_retry_with_backoff, RetryConfig, NetworkError
-        )
         import time
+
+        from ghl_real_estate_ai.agents.jorge_buyer_bot import NetworkError, RetryConfig, async_retry_with_backoff
 
         timestamps = []
 
@@ -970,7 +925,7 @@ class TestStreamARequiredCoverage:
         result = await buyer_bot.escalate_to_human_review(
             buyer_id="buyer_ticket_test",
             reason="high_value_lead_confusion",
-            context={"conversation_summary": "Buyer asked complex questions about financing."}
+            context={"conversation_summary": "Buyer asked complex questions about financing."},
         )
 
         assert result["escalation_id"] is not None
@@ -982,9 +937,7 @@ class TestStreamARequiredCoverage:
         assert result["timestamp"] is not None
 
         # Verify GHL tag was applied
-        buyer_bot.ghl_client.add_tags.assert_called_once_with(
-            "buyer_ticket_test", ["Escalation"]
-        )
+        buyer_bot.ghl_client.add_tags.assert_called_once_with("buyer_ticket_test", ["Escalation"])
 
     @pytest.mark.asyncio
     async def test_escalate_to_human_review_queues_on_total_failure(self, mock_dependencies):
@@ -996,14 +949,10 @@ class TestStreamARequiredCoverage:
         buyer_bot.ghl_client.update_custom_field = AsyncMock(side_effect=Exception("GHL down"))
         buyer_bot.ghl_client.base_url = "https://mock.api"
         buyer_bot.ghl_client.headers = {"Authorization": "Bearer mock"}
-        buyer_bot.event_publisher.publish_bot_status_update = AsyncMock(
-            side_effect=Exception("Event bus down")
-        )
+        buyer_bot.event_publisher.publish_bot_status_update = AsyncMock(side_effect=Exception("Event bus down"))
 
         result = await buyer_bot.escalate_to_human_review(
-            buyer_id="buyer_total_fail",
-            reason="system_failure",
-            context={}
+            buyer_id="buyer_total_fail", reason="system_failure", context={}
         )
 
         assert result["status"] == "queued"
@@ -1021,9 +970,7 @@ class TestStreamARequiredCoverage:
 
         state = {
             "buyer_id": "buyer_heuristic",
-            "conversation_history": [
-                {"role": "user", "content": "I got pre-approved last week for $500k"}
-            ]
+            "conversation_history": [{"role": "user", "content": "I got pre-approved last week for $500k"}],
         }
 
         result = await buyer_bot._fallback_financial_assessment(state)
@@ -1040,9 +987,7 @@ class TestStreamARequiredCoverage:
 
         state = {
             "buyer_id": "buyer_no_signal",
-            "conversation_history": [
-                {"role": "user", "content": "I might want to look at some neighborhoods."}
-            ]
+            "conversation_history": [{"role": "user", "content": "I might want to look at some neighborhoods."}],
         }
 
         result = await buyer_bot._fallback_financial_assessment(state)
@@ -1061,9 +1006,7 @@ class TestStreamARequiredCoverage:
 
         state = {
             "buyer_id": "buyer_budget",
-            "conversation_history": [
-                {"role": "user", "content": "Our budget is around $600k, max price we can do"}
-            ]
+            "conversation_history": [{"role": "user", "content": "Our budget is around $600k, max price we can do"}],
         }
 
         result = await buyer_bot._fallback_financial_assessment(state)
@@ -1086,8 +1029,8 @@ class TestStreamARequiredCoverage:
             violation_type="fair_housing",
             evidence={
                 "summary": "Discriminatory language about neighborhood demographics",
-                "message_id": "msg_fair_001"
-            }
+                "message_id": "msg_fair_001",
+            },
         )
 
         assert result["compliance_ticket_id"] is not None
@@ -1116,7 +1059,7 @@ class TestStreamARequiredCoverage:
         result = await buyer_bot.escalate_compliance_violation(
             buyer_id="buyer_pause_test",
             violation_type="privacy",
-            evidence={"summary": "Unauthorized PII disclosure to third party"}
+            evidence={"summary": "Unauthorized PII disclosure to third party"},
         )
 
         assert result["bot_paused"] is True
@@ -1125,10 +1068,7 @@ class TestStreamARequiredCoverage:
 
         # Verify bot_paused step was published
         status_calls = buyer_bot.event_publisher.publish_bot_status_update.call_args_list
-        paused_calls = [
-            c for c in status_calls
-            if c.kwargs.get("current_step") == "bot_paused"
-        ]
+        paused_calls = [c for c in status_calls if c.kwargs.get("current_step") == "bot_paused"]
         assert len(paused_calls) >= 1
 
     @pytest.mark.asyncio
@@ -1141,9 +1081,7 @@ class TestStreamARequiredCoverage:
         buyer_bot.event_publisher.publish_bot_status_update = AsyncMock()
 
         result = await buyer_bot.escalate_compliance_violation(
-            buyer_id="buyer_audit_fail",
-            violation_type="fair_housing",
-            evidence={"summary": "Test audit failure"}
+            buyer_id="buyer_audit_fail", violation_type="fair_housing", evidence={"summary": "Test audit failure"}
         )
 
         assert result["audit_logged"] is False

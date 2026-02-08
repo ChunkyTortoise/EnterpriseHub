@@ -10,16 +10,17 @@ This module provides:
 - Partner onboarding and certification automation
 """
 
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, Callable
-from datetime import datetime, timedelta
-from enum import Enum
-import logging
 import asyncio
 import json
+import logging
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from decimal import Decimal
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
+
 
 class PartnerType(Enum):
     MLS_PROVIDER = "mls_provider"
@@ -30,33 +31,39 @@ class PartnerType(Enum):
     SERVICE_PROVIDER = "service_provider"
     REGIONAL_DISTRIBUTOR = "regional_distributor"
 
+
 class PartnerTier(Enum):
-    STRATEGIC = "strategic"           # Top-tier partnerships with full integration
-    PREFERRED = "preferred"           # Preferred partners with enhanced benefits
-    STANDARD = "standard"             # Standard partnership terms
-    PILOT = "pilot"                  # Trial partnership phase
+    STRATEGIC = "strategic"  # Top-tier partnerships with full integration
+    PREFERRED = "preferred"  # Preferred partners with enhanced benefits
+    STANDARD = "standard"  # Standard partnership terms
+    PILOT = "pilot"  # Trial partnership phase
+
 
 class IntegrationType(Enum):
-    NATIVE_API = "native_api"         # Full API integration
-    WEBHOOK = "webhook"               # Event-based integration
-    MANUAL_SYNC = "manual_sync"       # Manual data synchronization
-    WHITE_LABEL = "white_label"       # White-label deployment
-    REVENUE_SHARE = "revenue_share"   # Revenue sharing only
+    NATIVE_API = "native_api"  # Full API integration
+    WEBHOOK = "webhook"  # Event-based integration
+    MANUAL_SYNC = "manual_sync"  # Manual data synchronization
+    WHITE_LABEL = "white_label"  # White-label deployment
+    REVENUE_SHARE = "revenue_share"  # Revenue sharing only
+
 
 @dataclass
 class CommissionStructure:
     """Revenue sharing and commission structure"""
-    jorge_percentage: float           # Jorge's revenue share
-    partner_percentage: float         # Partner's revenue share
+
+    jorge_percentage: float  # Jorge's revenue share
+    partner_percentage: float  # Partner's revenue share
     transaction_fee: Optional[float] = None
     monthly_minimum: Optional[float] = None
     volume_tiers: Dict[str, float] = field(default_factory=dict)
-    payment_terms: int = 30          # Days
+    payment_terms: int = 30  # Days
     currency: str = "USD"
+
 
 @dataclass
 class IntegrationConfiguration:
     """Technical integration configuration"""
+
     integration_type: IntegrationType
     api_endpoints: List[str] = field(default_factory=list)
     webhook_urls: List[str] = field(default_factory=list)
@@ -66,9 +73,11 @@ class IntegrationConfiguration:
     rate_limits: Dict[str, int] = field(default_factory=dict)
     sla_requirements: Dict[str, Any] = field(default_factory=dict)
 
+
 @dataclass
 class PartnerConfiguration:
     """Complete partner configuration and relationship"""
+
     partner_id: str
     company_name: str
     partner_type: PartnerType
@@ -83,9 +92,11 @@ class PartnerConfiguration:
     is_active: bool = True
     certification_status: str = "pending"
 
+
 @dataclass
 class FranchiseInfo:
     """Franchise partner specific information"""
+
     franchise_brand: str
     master_franchise_id: Optional[str] = None
     territory: str = ""
@@ -95,9 +106,11 @@ class FranchiseInfo:
     existing_technology: List[str] = field(default_factory=list)
     migration_timeline: Optional[datetime] = None
 
+
 @dataclass
 class MLSConfiguration:
     """MLS provider specific configuration"""
+
     mls_system_name: str
     coverage_areas: List[str]
     data_fields_available: List[str]
@@ -105,6 +118,7 @@ class MLSConfiguration:
     historical_data_years: int = 5
     api_version: str = "v1"
     compliance_requirements: Dict[str, Any] = field(default_factory=dict)
+
 
 class PartnershipEcosystem:
     """
@@ -119,10 +133,9 @@ class PartnershipEcosystem:
         self.revenue_tracking: Dict[str, List[Dict]] = {}
         self.performance_metrics: Dict[str, Dict] = {}
 
-    async def onboard_franchise_partner(self,
-                                      franchise_info: FranchiseInfo,
-                                      commission_structure: CommissionStructure,
-                                      territory_rights: List[str]) -> str:
+    async def onboard_franchise_partner(
+        self, franchise_info: FranchiseInfo, commission_structure: CommissionStructure, territory_rights: List[str]
+    ) -> str:
         """
         Onboard new franchise partner with complete configuration
         """
@@ -138,14 +151,14 @@ class PartnershipEcosystem:
                     "predictive_intelligence",
                     "mobile_app",
                     "white_label_branding",
-                    "franchise_reporting"
+                    "franchise_reporting",
                 ],
                 data_sync_frequency="real_time",
                 sla_requirements={
                     "uptime": 0.999,
                     "response_time": 200,
-                    "support_response": 4  # hours
-                }
+                    "support_response": 4,  # hours
+                },
             )
 
             # Create partner configuration
@@ -161,8 +174,8 @@ class PartnershipEcosystem:
                     "territory_rights": territory_rights,
                     "exclusive_territory": True,
                     "contract_duration": 36,  # months
-                    "renewal_terms": "automatic"
-                }
+                    "renewal_terms": "automatic",
+                },
             )
 
             # Store configurations
@@ -182,9 +195,7 @@ class PartnershipEcosystem:
             logger.error(f"Failed to onboard franchise partner {franchise_info.franchise_brand}: {str(e)}")
             raise
 
-    async def _initialize_franchise_infrastructure(self,
-                                                 partner_id: str,
-                                                 franchise_info: FranchiseInfo):
+    async def _initialize_franchise_infrastructure(self, partner_id: str, franchise_info: FranchiseInfo):
         """Initialize infrastructure for franchise partner"""
         try:
             # Create white-label tenant for franchise
@@ -199,11 +210,11 @@ class PartnershipEcosystem:
                     "features": {
                         "white_label_branding": True,
                         "franchise_reporting": True,
-                        "territory_management": True
+                        "territory_management": True,
                     },
                     "territory": franchise_info.territory,
-                    "agent_limit": franchise_info.agent_count * 2  # Allow room for growth
-                }
+                    "agent_limit": franchise_info.agent_count * 2,  # Allow room for growth
+                },
             )
 
             # Set up franchise-specific analytics
@@ -223,10 +234,9 @@ class PartnershipEcosystem:
         # Provide onboarding materials
         logger.info(f"Scheduled training for franchise partner: {partner_id}")
 
-    async def integrate_mls_provider(self,
-                                   mls_config: MLSConfiguration,
-                                   commission_structure: CommissionStructure,
-                                   coverage_priority: int = 1) -> str:
+    async def integrate_mls_provider(
+        self, mls_config: MLSConfiguration, commission_structure: CommissionStructure, coverage_priority: int = 1
+    ) -> str:
         """
         Integrate new MLS provider into partnership network
         """
@@ -239,12 +249,12 @@ class PartnershipEcosystem:
                 api_endpoints=[
                     f"https://{mls_config.mls_system_name.lower()}.api.com/v1/properties",
                     f"https://{mls_config.mls_system_name.lower()}.api.com/v1/listings",
-                    f"https://{mls_config.mls_system_name.lower()}.api.com/v1/market_data"
+                    f"https://{mls_config.mls_system_name.lower()}.api.com/v1/market_data",
                 ],
                 webhook_urls=[
                     "/webhooks/mls/property_updates",
                     "/webhooks/mls/new_listings",
-                    "/webhooks/mls/status_changes"
+                    "/webhooks/mls/status_changes",
                 ],
                 authentication_method="oauth2",
                 data_sync_frequency="real_time",
@@ -252,17 +262,14 @@ class PartnershipEcosystem:
                     "property_search",
                     "listing_management",
                     "market_analytics",
-                    "compliance_reporting"
+                    "compliance_reporting",
                 ],
-                rate_limits={
-                    "requests_per_minute": 1000,
-                    "daily_requests": 50000
-                },
+                rate_limits={"requests_per_minute": 1000, "daily_requests": 50000},
                 sla_requirements={
                     "uptime": 0.995,
                     "response_time": 500,
-                    "data_freshness": 5  # minutes
-                }
+                    "data_freshness": 5,  # minutes
+                },
             )
 
             # Create partner configuration
@@ -277,8 +284,8 @@ class PartnershipEcosystem:
                 contract_terms={
                     "data_usage_rights": "platform_wide",
                     "exclusivity": False,
-                    "compliance_requirements": mls_config.compliance_requirements
-                }
+                    "compliance_requirements": mls_config.compliance_requirements,
+                },
             )
 
             # Store configurations
@@ -298,9 +305,7 @@ class PartnershipEcosystem:
             logger.error(f"Failed to integrate MLS provider {mls_config.mls_system_name}: {str(e)}")
             raise
 
-    async def _initialize_mls_integration(self,
-                                        partner_id: str,
-                                        mls_config: MLSConfiguration):
+    async def _initialize_mls_integration(self, partner_id: str, mls_config: MLSConfiguration):
         """Initialize technical integration with MLS provider"""
         try:
             # Set up API clients
@@ -319,10 +324,9 @@ class PartnershipEcosystem:
             logger.error(f"Failed to initialize MLS integration for {partner_id}: {str(e)}")
             raise
 
-    async def setup_revenue_sharing(self,
-                                  partner_id: str,
-                                  commission_structure: CommissionStructure,
-                                  billing_frequency: str = "monthly") -> bool:
+    async def setup_revenue_sharing(
+        self, partner_id: str, commission_structure: CommissionStructure, billing_frequency: str = "monthly"
+    ) -> bool:
         """
         Set up revenue sharing structure with partner
         """
@@ -350,20 +354,18 @@ class PartnershipEcosystem:
             logger.error(f"Failed to setup revenue sharing for partner {partner_id}: {str(e)}")
             return False
 
-    async def _setup_automated_billing(self,
-                                     partner_id: str,
-                                     commission_structure: CommissionStructure,
-                                     frequency: str):
+    async def _setup_automated_billing(
+        self, partner_id: str, commission_structure: CommissionStructure, frequency: str
+    ):
         """Set up automated revenue sharing calculations and payments"""
         # Configure billing schedule
         # Set up payment processing
         # Create invoice generation automation
         pass
 
-    async def deploy_white_label_instance(self,
-                                        partner_id: str,
-                                        deployment_config: Dict[str, Any],
-                                        custom_branding: Optional[Dict[str, Any]] = None) -> bool:
+    async def deploy_white_label_instance(
+        self, partner_id: str, deployment_config: Dict[str, Any], custom_branding: Optional[Dict[str, Any]] = None
+    ) -> bool:
         """
         Deploy white-label instance for partner
         """
@@ -385,7 +387,7 @@ class PartnershipEcosystem:
                 "region": deployment_config.get("region", "us-east-1"),
                 "features": partner_config.integration_config.supported_features,
                 "branding": custom_branding or {},
-                "sla_requirements": partner_config.integration_config.sla_requirements
+                "sla_requirements": partner_config.integration_config.sla_requirements,
             }
 
             # Deploy infrastructure
@@ -407,8 +409,8 @@ class PartnershipEcosystem:
     def _has_white_label_rights(self, partner_config: PartnerConfiguration) -> bool:
         """Check if partner has white-label deployment rights"""
         return (
-            partner_config.partner_tier in [PartnerTier.STRATEGIC, PartnerTier.PREFERRED] and
-            "white_label_branding" in partner_config.integration_config.supported_features
+            partner_config.partner_tier in [PartnerTier.STRATEGIC, PartnerTier.PREFERRED]
+            and "white_label_branding" in partner_config.integration_config.supported_features
         )
 
     async def track_partner_performance(self, partner_id: str) -> Dict[str, Any]:
@@ -436,7 +438,7 @@ class PartnershipEcosystem:
                 "metrics": metrics,
                 "calculated_at": datetime.now(),
                 "partner_type": partner_config.partner_type.value,
-                "partner_tier": partner_config.partner_tier.value
+                "partner_tier": partner_config.partner_tier.value,
             }
 
             return metrics
@@ -460,7 +462,7 @@ class PartnershipEcosystem:
             "customer_satisfaction": 4.6,
             "training_completion_rate": 0.85,
             "territory_coverage": 0.75,
-            "growth_rate": 0.12
+            "growth_rate": 0.12,
         }
 
     async def _calculate_mls_performance(self, partner_id: str) -> Dict[str, Any]:
@@ -473,7 +475,7 @@ class PartnershipEcosystem:
             "data_coverage": 0.92,
             "integration_health": 0.95,
             "error_rate": 0.002,
-            "partnership_revenue": 25000.0
+            "partnership_revenue": 25000.0,
         }
 
     async def get_partnership_dashboard(self) -> Dict[str, Any]:
@@ -508,7 +510,7 @@ class PartnershipEcosystem:
                 "average_performance": avg_performance,
                 "top_performing_partners": await self._get_top_performing_partners(),
                 "partnership_opportunities": await self._identify_partnership_opportunities(),
-                "ecosystem_health": await self._assess_ecosystem_health()
+                "ecosystem_health": await self._assess_ecosystem_health(),
             }
 
         except Exception as e:
@@ -519,8 +521,11 @@ class PartnershipEcosystem:
         """Calculate total revenue from all partnerships"""
         total_revenue = 0.0
         for partner_id, revenue_records in self.revenue_tracking.items():
-            monthly_revenue = sum(record.get("amount", 0) for record in revenue_records
-                                if record.get("date", datetime.min).month == datetime.now().month)
+            monthly_revenue = sum(
+                record.get("amount", 0)
+                for record in revenue_records
+                if record.get("date", datetime.min).month == datetime.now().month
+            )
             total_revenue += monthly_revenue
         return total_revenue
 
@@ -534,15 +539,15 @@ class PartnershipEcosystem:
                 "company_name": "Century 21 Main Street",
                 "partner_type": "franchise",
                 "performance_score": 0.94,
-                "monthly_revenue": 45000.0
+                "monthly_revenue": 45000.0,
             },
             {
                 "partner_id": "mls_flexmls_primary",
                 "company_name": "FlexMLS",
                 "partner_type": "mls_provider",
                 "performance_score": 0.92,
-                "monthly_revenue": 15000.0
-            }
+                "monthly_revenue": 15000.0,
+            },
         ]
 
     async def _identify_partnership_opportunities(self) -> List[Dict[str, Any]]:
@@ -553,15 +558,15 @@ class PartnershipEcosystem:
                 "target": "RE/MAX International",
                 "potential_revenue": 200000.0,
                 "market_size": "Large",
-                "priority": "High"
+                "priority": "High",
             },
             {
                 "opportunity_type": "mls_integration",
                 "target": "MRED (Midwest Real Estate Data)",
                 "potential_revenue": 50000.0,
                 "market_size": "Medium",
-                "priority": "Medium"
-            }
+                "priority": "Medium",
+            },
         ]
 
     async def _assess_ecosystem_health(self) -> Dict[str, Any]:
@@ -573,7 +578,7 @@ class PartnershipEcosystem:
             "revenue_growth": 0.22,
             "integration_stability": 0.96,
             "market_coverage": 0.35,
-            "expansion_readiness": 0.78
+            "expansion_readiness": 0.78,
         }
 
     async def generate_partner_report(self, partner_id: str) -> Dict[str, Any]:
@@ -596,13 +601,13 @@ class PartnershipEcosystem:
                     "partner_tier": partner_config.partner_tier.value,
                     "created_at": partner_config.created_at.isoformat(),
                     "is_active": partner_config.is_active,
-                    "certification_status": partner_config.certification_status
+                    "certification_status": partner_config.certification_status,
                 },
                 "performance_metrics": performance_metrics,
                 "revenue_summary": revenue_summary,
                 "integration_health": await self._assess_partner_integration_health(partner_id),
                 "recommendations": await self._generate_partner_recommendations(partner_id),
-                "generated_at": datetime.now().isoformat()
+                "generated_at": datetime.now().isoformat(),
             }
 
             return report
@@ -619,18 +624,24 @@ class PartnershipEcosystem:
         current_year = datetime.now().year
 
         monthly_revenue = sum(
-            record.get("amount", 0) for record in revenue_records
-            if (record.get("date", datetime.min).month == current_month and
-                record.get("date", datetime.min).year == current_year)
+            record.get("amount", 0)
+            for record in revenue_records
+            if (
+                record.get("date", datetime.min).month == current_month
+                and record.get("date", datetime.min).year == current_year
+            )
         )
 
         return {
             "monthly_revenue": monthly_revenue,
-            "ytd_revenue": sum(record.get("amount", 0) for record in revenue_records
-                             if record.get("date", datetime.min).year == current_year),
+            "ytd_revenue": sum(
+                record.get("amount", 0)
+                for record in revenue_records
+                if record.get("date", datetime.min).year == current_year
+            ),
             "total_revenue": sum(record.get("amount", 0) for record in revenue_records),
             "average_monthly": monthly_revenue if monthly_revenue > 0 else 0,
-            "commission_structure": self.partners[partner_id].commission_structure.__dict__
+            "commission_structure": self.partners[partner_id].commission_structure.__dict__,
         }
 
     async def _assess_partner_integration_health(self, partner_id: str) -> Dict[str, Any]:
@@ -641,7 +652,7 @@ class PartnershipEcosystem:
             "error_rate": 0.03,
             "average_response_time": 180.0,
             "uptime": 0.998,
-            "last_successful_sync": datetime.now().isoformat()
+            "last_successful_sync": datetime.now().isoformat(),
         }
 
     async def _generate_partner_recommendations(self, partner_id: str) -> List[str]:
@@ -650,21 +661,26 @@ class PartnershipEcosystem:
         recommendations = []
 
         if partner_config.partner_type == PartnerType.FRANCHISE:
-            recommendations.extend([
-                "Increase platform adoption rate through additional agent training",
-                "Implement advanced predictive intelligence features",
-                "Consider territory expansion opportunities",
-                "Enhance mobile app usage among field agents"
-            ])
+            recommendations.extend(
+                [
+                    "Increase platform adoption rate through additional agent training",
+                    "Implement advanced predictive intelligence features",
+                    "Consider territory expansion opportunities",
+                    "Enhance mobile app usage among field agents",
+                ]
+            )
         elif partner_config.partner_type == PartnerType.MLS_PROVIDER:
-            recommendations.extend([
-                "Optimize API response times for better user experience",
-                "Expand data coverage to include additional property types",
-                "Implement real-time webhook notifications",
-                "Consider premium data partnerships for enhanced analytics"
-            ])
+            recommendations.extend(
+                [
+                    "Optimize API response times for better user experience",
+                    "Expand data coverage to include additional property types",
+                    "Implement real-time webhook notifications",
+                    "Consider premium data partnerships for enhanced analytics",
+                ]
+            )
 
         return recommendations
+
 
 # Global partnership ecosystem instance
 partnership_ecosystem = PartnershipEcosystem()

@@ -5,11 +5,12 @@ Extracts advanced features from conversation data, market conditions,
 and historical patterns to predict closing probability.
 """
 
-import re
 import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
+import re
 from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
 import pandas as pd
 from textblob import TextBlob
@@ -32,7 +33,7 @@ class ConversationFeatures:
 
     # Sentiment and engagement
     overall_sentiment: float  # -1 to 1
-    urgency_score: float     # 0 to 1
+    urgency_score: float  # 0 to 1
     engagement_score: float  # 0 to 1
 
     # Content analysis
@@ -60,10 +61,10 @@ class ConversationFeatures:
 class MarketFeatures:
     """Market condition features for lead scoring."""
 
-    inventory_level: float     # 0 to 1 (0 = low inventory, high competition)
+    inventory_level: float  # 0 to 1 (0 = low inventory, high competition)
     average_days_on_market: int
-    price_trend: float        # -1 to 1 (negative = declining, positive = rising)
-    seasonal_factor: float    # 0 to 1 based on month
+    price_trend: float  # -1 to 1 (negative = declining, positive = rising)
+    seasonal_factor: float  # 0 to 1 based on month
     competition_level: float  # 0 to 1 in target areas
     interest_rate_level: float  # Current mortgage rates
 
@@ -74,10 +75,7 @@ class FeatureEngineer:
     def __init__(self):
         self.cache_ttl = 3600  # 1 hour for feature cache
 
-    async def extract_conversation_features(
-        self,
-        conversation_context: Dict[str, Any]
-    ) -> ConversationFeatures:
+    async def extract_conversation_features(self, conversation_context: Dict[str, Any]) -> ConversationFeatures:
         """
         Extract comprehensive features from conversation data.
 
@@ -121,26 +119,21 @@ class FeatureEngineer:
                 message_count=features["message_count"],
                 avg_response_time=features["avg_response_time"],
                 conversation_duration_minutes=features["duration_minutes"],
-
                 # Sentiment and engagement
                 overall_sentiment=sentiment_features["sentiment"],
                 urgency_score=sentiment_features["urgency"],
                 engagement_score=sentiment_features["engagement"],
-
                 # Content analysis
                 question_asking_frequency=content_features["question_frequency"],
                 price_mention_count=content_features["price_mentions"],
                 timeline_urgency_signals=content_features["urgency_signals"],
                 location_specificity=content_features["location_specificity"],
-
                 # Budget alignment
                 budget_to_market_ratio=budget_features["budget_ratio"],
                 budget_confidence=budget_features["confidence"],
-
                 # Qualification completeness
                 qualification_completeness=qualification_features["completeness"],
                 missing_critical_info=qualification_features["missing_info"],
-
                 # Behavioral patterns
                 message_length_variance=behavioral_features["length_variance"],
                 response_consistency=behavioral_features["consistency"],
@@ -175,37 +168,29 @@ class FeatureEngineer:
                 late_night_activity=False,
             )
 
-    async def _extract_basic_metrics(
-        self,
-        messages: List[Dict],
-        created_at: datetime
-    ) -> Dict[str, float]:
+    async def _extract_basic_metrics(self, messages: List[Dict], created_at: datetime) -> Dict[str, float]:
         """Extract basic conversation metrics."""
         message_count = len(messages)
 
         if message_count == 0:
-            return {
-                "message_count": 0,
-                "avg_response_time": 300.0,
-                "duration_minutes": 0.0
-            }
+            return {"message_count": 0, "avg_response_time": 300.0, "duration_minutes": 0.0}
 
         # Calculate conversation duration
         now = datetime.now()
         if isinstance(created_at, str):
             # Handle possible ISO formats with 'Z' or offsets
             try:
-                if created_at.endswith('Z'):
-                    created_at = created_at[:-1] + '+00:00'
+                if created_at.endswith("Z"):
+                    created_at = created_at[:-1] + "+00:00"
                 created_at = datetime.fromisoformat(created_at)
             except ValueError:
                 # Fallback if parsing fails
                 created_at = now
-        
+
         # Ensure we're comparing naive datetimes
         if created_at.tzinfo is not None:
             created_at = created_at.replace(tzinfo=None)
-            
+
         duration_minutes = (now - created_at).total_seconds() / 60
 
         # Calculate average response time (simplified)
@@ -215,7 +200,7 @@ class FeatureEngineer:
         return {
             "message_count": message_count,
             "avg_response_time": avg_response_time,
-            "duration_minutes": duration_minutes
+            "duration_minutes": duration_minutes,
         }
 
     async def _analyze_sentiment_engagement(self, messages: List[Dict]) -> Dict[str, float]:
@@ -224,10 +209,13 @@ class FeatureEngineer:
             return {"sentiment": 0.0, "urgency": 0.5, "engagement": 0.5}
 
         # Combine all messages for sentiment analysis
-        all_text = " ".join([
-            msg.get("text", "") for msg in messages
-            if msg.get("role") == "user"  # Only analyze user messages
-        ])
+        all_text = " ".join(
+            [
+                msg.get("text", "")
+                for msg in messages
+                if msg.get("role") == "user"  # Only analyze user messages
+            ]
+        )
 
         if not all_text.strip():
             return {"sentiment": 0.0, "urgency": 0.5, "engagement": 0.5}
@@ -238,8 +226,16 @@ class FeatureEngineer:
 
         # Urgency analysis based on keywords
         urgency_keywords = [
-            "asap", "urgent", "quickly", "soon", "immediately", "now",
-            "this week", "this month", "deadline", "time sensitive"
+            "asap",
+            "urgent",
+            "quickly",
+            "soon",
+            "immediately",
+            "now",
+            "this week",
+            "this month",
+            "deadline",
+            "time sensitive",
         ]
         urgency_score = sum(1 for keyword in urgency_keywords if keyword in all_text.lower())
         urgency_score = min(urgency_score / 3, 1.0)  # Normalize to 0-1
@@ -249,21 +245,12 @@ class FeatureEngineer:
         avg_message_length = len(all_text) / len(messages) if messages else 0
         engagement_score = min((question_marks * 0.1 + avg_message_length / 100) / 2, 1.0)
 
-        return {
-            "sentiment": sentiment,
-            "urgency": urgency_score,
-            "engagement": engagement_score
-        }
+        return {"sentiment": sentiment, "urgency": urgency_score, "engagement": engagement_score}
 
     async def _analyze_conversation_content(self, messages: List[Dict]) -> Dict[str, Any]:
         """Analyze conversation content for specific patterns."""
         if not messages:
-            return {
-                "question_frequency": 0.0,
-                "price_mentions": 0,
-                "urgency_signals": 0,
-                "location_specificity": 0.0
-            }
+            return {"question_frequency": 0.0, "price_mentions": 0, "urgency_signals": 0, "location_specificity": 0.0}
 
         all_text = " ".join([msg.get("text", "") for msg in messages])
 
@@ -273,42 +260,53 @@ class FeatureEngineer:
 
         # Price mentions
         price_patterns = [
-            r'\$[\d,]+',  # $500,000
-            r'[\d,]+\s*k',  # 500k
-            r'[\d,]+\s*thousand',  # 500 thousand
-            r'[\d,]+\s*million',  # 1.5 million
+            r"\$[\d,]+",  # $500,000
+            r"[\d,]+\s*k",  # 500k
+            r"[\d,]+\s*thousand",  # 500 thousand
+            r"[\d,]+\s*million",  # 1.5 million
         ]
-        price_mentions = sum(
-            len(re.findall(pattern, all_text, re.IGNORECASE))
-            for pattern in price_patterns
-        )
+        price_mentions = sum(len(re.findall(pattern, all_text, re.IGNORECASE)) for pattern in price_patterns)
 
         # Urgency signals
         urgency_patterns = [
-            "need to move", "relocating", "job transfer", "school district",
-            "lease ending", "rent increase", "growing family", "divorce",
-            "retirement", "downsize", "investment opportunity"
+            "need to move",
+            "relocating",
+            "job transfer",
+            "school district",
+            "lease ending",
+            "rent increase",
+            "growing family",
+            "divorce",
+            "retirement",
+            "downsize",
+            "investment opportunity",
         ]
-        urgency_signals = sum(
-            1 for pattern in urgency_patterns
-            if pattern in all_text.lower()
-        )
+        urgency_signals = sum(1 for pattern in urgency_patterns if pattern in all_text.lower())
 
         # Location specificity (check for specific neighborhoods, schools, etc.)
         location_indicators = [
-            "school", "district", "neighborhood", "area", "zip", "code",
-            "commute", "work", "downtown", "suburb", "highway", "metro"
+            "school",
+            "district",
+            "neighborhood",
+            "area",
+            "zip",
+            "code",
+            "commute",
+            "work",
+            "downtown",
+            "suburb",
+            "highway",
+            "metro",
         ]
         location_specificity = min(
-            sum(1 for indicator in location_indicators if indicator in all_text.lower()) / 5,
-            1.0
+            sum(1 for indicator in location_indicators if indicator in all_text.lower()) / 5, 1.0
         )
 
         return {
             "question_frequency": question_frequency,
             "price_mentions": price_mentions,
             "urgency_signals": urgency_signals,
-            "location_specificity": location_specificity
+            "location_specificity": location_specificity,
         }
 
     async def _analyze_budget_alignment(self, prefs: Dict[str, Any]) -> Dict[str, Any]:
@@ -323,10 +321,10 @@ class FeatureEngineer:
             # Extract numeric budget
             if isinstance(budget, str):
                 # Parse budget from string like "$500,000" or "500k"
-                budget_str = re.sub(r'[^\d.]', '', budget)
-                if 'k' in budget.lower():
+                budget_str = re.sub(r"[^\d.]", "", budget)
+                if "k" in budget.lower():
                     budget_num = float(budget_str) * 1000
-                elif 'm' in budget.lower():
+                elif "m" in budget.lower():
                     budget_num = float(budget_str) * 1000000
                 else:
                     budget_num = float(budget_str)
@@ -341,7 +339,7 @@ class FeatureEngineer:
                 "urban": 750000,
                 "rural": 400000,
                 "luxury": 1200000,
-                "default": 650000
+                "default": 650000,
             }
 
             estimated_market_price = market_estimates.get("default", 650000)
@@ -356,20 +354,14 @@ class FeatureEngineer:
             # Calculate confidence based on budget clarity
             confidence = 1.0 if isinstance(budget, (int, float)) else 0.7
 
-            return {
-                "budget_ratio": budget_ratio,
-                "confidence": confidence
-            }
+            return {"budget_ratio": budget_ratio, "confidence": confidence}
 
         except (ValueError, TypeError):
             return {"budget_ratio": None, "confidence": 0.0}
 
     async def _analyze_qualification_completeness(self, prefs: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze how complete the lead qualification is."""
-        required_fields = [
-            "budget", "location", "timeline", "bedrooms",
-            "financing", "motivation", "must_haves"
-        ]
+        required_fields = ["budget", "location", "timeline", "bedrooms", "financing", "motivation", "must_haves"]
 
         completed_fields = 0
         missing_info = []
@@ -382,20 +374,12 @@ class FeatureEngineer:
 
         completeness = completed_fields / len(required_fields)
 
-        return {
-            "completeness": completeness,
-            "missing_info": missing_info
-        }
+        return {"completeness": completeness, "missing_info": missing_info}
 
     async def _analyze_behavioral_patterns(self, messages: List[Dict]) -> Dict[str, Any]:
         """Analyze behavioral patterns in conversation."""
         if not messages:
-            return {
-                "length_variance": 0.0,
-                "consistency": 1.0,
-                "weekend_activity": False,
-                "late_night_activity": False
-            }
+            return {"length_variance": 0.0, "consistency": 1.0, "weekend_activity": False, "late_night_activity": False}
 
         # Message length variance
         message_lengths = [len(msg.get("text", "")) for msg in messages]
@@ -413,7 +397,7 @@ class FeatureEngineer:
             "length_variance": length_variance,
             "consistency": consistency,
             "weekend_activity": weekend_activity,
-            "late_night_activity": late_night_activity
+            "late_night_activity": late_night_activity,
         }
 
     async def extract_market_features(self, location: str = None) -> MarketFeatures:
@@ -439,8 +423,18 @@ class FeatureEngineer:
 
             # Seasonal factor (higher in spring/summer)
             seasonal_factors = {
-                1: 0.3, 2: 0.4, 3: 0.6, 4: 0.8, 5: 1.0, 6: 0.9,
-                7: 0.8, 8: 0.7, 9: 0.6, 10: 0.5, 11: 0.4, 12: 0.3
+                1: 0.3,
+                2: 0.4,
+                3: 0.6,
+                4: 0.8,
+                5: 1.0,
+                6: 0.9,
+                7: 0.8,
+                8: 0.7,
+                9: 0.6,
+                10: 0.5,
+                11: 0.4,
+                12: 0.3,
             }
             seasonal_factor = seasonal_factors.get(current_month, 0.5)
 
@@ -451,7 +445,7 @@ class FeatureEngineer:
                 price_trend=0.1,  # 10% price appreciation
                 seasonal_factor=seasonal_factor,
                 competition_level=0.6,  # 60% competition
-                interest_rate_level=7.2  # Current mortgage rates
+                interest_rate_level=7.2,  # Current mortgage rates
             )
 
             # Cache for 4 hours (market data doesn't change frequently)
@@ -466,14 +460,10 @@ class FeatureEngineer:
                 price_trend=0.0,
                 seasonal_factor=0.5,
                 competition_level=0.5,
-                interest_rate_level=7.0
+                interest_rate_level=7.0,
             )
 
-    def create_feature_vector(
-        self,
-        conv_features: ConversationFeatures,
-        market_features: MarketFeatures
-    ) -> np.ndarray:
+    def create_feature_vector(self, conv_features: ConversationFeatures, market_features: MarketFeatures) -> np.ndarray:
         """
         Create a feature vector for ML model input.
 
@@ -489,31 +479,25 @@ class FeatureEngineer:
             min(conv_features.message_count / 50, 1.0),  # Normalize to 0-1
             min(conv_features.avg_response_time / 3600, 1.0),  # Hours, max 1
             min(conv_features.conversation_duration_minutes / 1440, 1.0),  # Days, max 1
-
             # Sentiment and engagement (already 0-1)
             (conv_features.overall_sentiment + 1) / 2,  # Convert -1,1 to 0,1
             conv_features.urgency_score,
             conv_features.engagement_score,
-
             # Content analysis
             min(conv_features.question_asking_frequency, 1.0),
             min(conv_features.price_mention_count / 10, 1.0),  # Normalize
             min(conv_features.timeline_urgency_signals / 5, 1.0),  # Normalize
             conv_features.location_specificity,
-
             # Budget alignment
             min(conv_features.budget_to_market_ratio or 0.5, 2.0) / 2.0,  # Normalize, cap at 2x
             conv_features.budget_confidence,
-
             # Qualification
             conv_features.qualification_completeness,
-
             # Behavioral patterns
             min(conv_features.message_length_variance / 10000, 1.0),  # Normalize
             conv_features.response_consistency,
             float(conv_features.weekend_activity),
             float(conv_features.late_night_activity),
-
             # Market features
             market_features.inventory_level,
             min(market_features.average_days_on_market / 120, 1.0),  # Normalize
@@ -550,5 +534,5 @@ class FeatureEngineer:
             "price_trend_norm",
             "seasonal_factor",
             "competition_level",
-            "interest_rate_norm"
+            "interest_rate_norm",
         ]

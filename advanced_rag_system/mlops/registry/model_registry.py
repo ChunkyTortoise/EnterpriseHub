@@ -2,20 +2,22 @@
 Enterprise Model Registry for RAG System
 Demonstrates MLOps model lifecycle management and versioning
 """
+
+import hashlib
 import json
 import logging
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
-from dataclasses import dataclass, asdict
-import hashlib
 
 logger = logging.getLogger(__name__)
 
 
 class ModelStage(Enum):
     """Model lifecycle stages for MLOps governance"""
+
     DEVELOPMENT = "development"
     STAGING = "staging"
     PRODUCTION = "production"
@@ -25,6 +27,7 @@ class ModelStage(Enum):
 
 class ModelType(Enum):
     """Supported model types in RAG system"""
+
     EMBEDDING = "embedding"
     RETRIEVAL = "retrieval"
     GENERATION = "generation"
@@ -35,6 +38,7 @@ class ModelType(Enum):
 @dataclass
 class ModelMetadata:
     """Model metadata for enterprise tracking"""
+
     name: str
     version: str
     model_type: ModelType
@@ -56,24 +60,24 @@ class ModelMetadata:
         """Convert to dictionary for serialization"""
         data = asdict(self)
         # Convert enums and datetime objects
-        data['model_type'] = self.model_type.value
-        data['stage'] = self.stage.value
-        data['created_at'] = self.created_at.isoformat()
-        data['updated_at'] = self.updated_at.isoformat()
+        data["model_type"] = self.model_type.value
+        data["stage"] = self.stage.value
+        data["created_at"] = self.created_at.isoformat()
+        data["updated_at"] = self.updated_at.isoformat()
         if self.approved_at:
-            data['approved_at'] = self.approved_at.isoformat()
+            data["approved_at"] = self.approved_at.isoformat()
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ModelMetadata':
+    def from_dict(cls, data: Dict[str, Any]) -> "ModelMetadata":
         """Create from dictionary"""
         # Convert back from serialized format
-        data['model_type'] = ModelType(data['model_type'])
-        data['stage'] = ModelStage(data['stage'])
-        data['created_at'] = datetime.fromisoformat(data['created_at'])
-        data['updated_at'] = datetime.fromisoformat(data['updated_at'])
-        if data.get('approved_at'):
-            data['approved_at'] = datetime.fromisoformat(data['approved_at'])
+        data["model_type"] = ModelType(data["model_type"])
+        data["stage"] = ModelStage(data["stage"])
+        data["created_at"] = datetime.fromisoformat(data["created_at"])
+        data["updated_at"] = datetime.fromisoformat(data["updated_at"])
+        if data.get("approved_at"):
+            data["approved_at"] = datetime.fromisoformat(data["approved_at"])
         return cls(**data)
 
 
@@ -105,14 +109,11 @@ class ModelRegistry:
         """Load existing registry metadata"""
         try:
             if self.metadata_file.exists():
-                with open(self.metadata_file, 'r') as f:
+                with open(self.metadata_file, "r") as f:
                     data = json.load(f)
 
                 for model_name, versions in data.items():
-                    self.models[model_name] = [
-                        ModelMetadata.from_dict(version)
-                        for version in versions
-                    ]
+                    self.models[model_name] = [ModelMetadata.from_dict(version) for version in versions]
             logger.info(f"Loaded {len(self.models)} models from registry")
         except Exception as e:
             logger.error(f"Error loading registry: {e}")
@@ -122,11 +123,10 @@ class ModelRegistry:
         """Persist registry metadata"""
         try:
             data = {
-                model_name: [version.to_dict() for version in versions]
-                for model_name, versions in self.models.items()
+                model_name: [version.to_dict() for version in versions] for model_name, versions in self.models.items()
             }
 
-            with open(self.metadata_file, 'w') as f:
+            with open(self.metadata_file, "w") as f:
                 json.dump(data, f, indent=2, default=str)
             logger.info(f"Saved registry with {len(self.models)} models")
         except Exception as e:
@@ -136,7 +136,7 @@ class ModelRegistry:
     def _calculate_checksum(self, artifact_path: Union[str, Path]) -> str:
         """Calculate SHA256 checksum for artifact validation"""
         try:
-            with open(artifact_path, 'rb') as f:
+            with open(artifact_path, "rb") as f:
                 return hashlib.sha256(f.read()).hexdigest()
         except Exception as e:
             logger.warning(f"Could not calculate checksum for {artifact_path}: {e}")
@@ -153,7 +153,7 @@ class ModelRegistry:
         author: str,
         tags: Optional[Dict[str, str]] = None,
         dependencies: Optional[List[str]] = None,
-        stage: ModelStage = ModelStage.DEVELOPMENT
+        stage: ModelStage = ModelStage.DEVELOPMENT,
     ) -> ModelMetadata:
         """
         Register a new model version
@@ -201,7 +201,7 @@ class ModelRegistry:
             dependencies=dependencies or [],
             checksum=json.dumps(checksums, sort_keys=True),
             author=author,
-            approval_required=(stage != ModelStage.DEVELOPMENT)
+            approval_required=(stage != ModelStage.DEVELOPMENT),
         )
 
         # Add to registry
@@ -217,11 +217,7 @@ class ModelRegistry:
         return metadata
 
     def promote_model(
-        self,
-        name: str,
-        version: str,
-        target_stage: ModelStage,
-        approved_by: Optional[str] = None
+        self, name: str, version: str, target_stage: ModelStage, approved_by: Optional[str] = None
     ) -> ModelMetadata:
         """
         Promote model to higher stage
@@ -240,11 +236,7 @@ class ModelRegistry:
             raise ValueError(f"Model {name}:{version} not found")
 
         # Validate stage transition
-        stage_order = [
-            ModelStage.DEVELOPMENT,
-            ModelStage.STAGING,
-            ModelStage.PRODUCTION
-        ]
+        stage_order = [ModelStage.DEVELOPMENT, ModelStage.STAGING, ModelStage.PRODUCTION]
 
         if target_stage in stage_order:
             current_idx = stage_order.index(model.stage) if model.stage in stage_order else -1
@@ -332,9 +324,7 @@ class ModelRegistry:
             # Check checksum if available
             if artifact_name in stored_checksums:
                 current_checksum = self._calculate_checksum(path)
-                validation_results[artifact_name] = (
-                    current_checksum == stored_checksums[artifact_name]
-                )
+                validation_results[artifact_name] = current_checksum == stored_checksums[artifact_name]
                 if not validation_results[artifact_name]:
                     logger.error(f"Checksum mismatch for {artifact_name}")
             else:
@@ -349,17 +339,19 @@ class ModelRegistry:
 
         trail = []
         for model in self.models[name]:
-            trail.append({
-                "version": model.version,
-                "stage": model.stage.value,
-                "created_at": model.created_at.isoformat(),
-                "updated_at": model.updated_at.isoformat(),
-                "author": model.author,
-                "approved_by": model.approved_by,
-                "approved_at": model.approved_at.isoformat() if model.approved_at else None,
-                "metrics": model.metrics,
-                "description": model.description
-            })
+            trail.append(
+                {
+                    "version": model.version,
+                    "stage": model.stage.value,
+                    "created_at": model.created_at.isoformat(),
+                    "updated_at": model.updated_at.isoformat(),
+                    "author": model.author,
+                    "approved_by": model.approved_by,
+                    "approved_at": model.approved_at.isoformat() if model.approved_at else None,
+                    "metrics": model.metrics,
+                    "description": model.description,
+                }
+            )
 
         return sorted(trail, key=lambda x: x["created_at"], reverse=True)
 
@@ -367,13 +359,10 @@ class ModelRegistry:
         """Export entire registry for backup/migration"""
         export_data = {
             "exported_at": datetime.utcnow().isoformat(),
-            "models": {
-                name: [version.to_dict() for version in versions]
-                for name, versions in self.models.items()
-            }
+            "models": {name: [version.to_dict() for version in versions] for name, versions in self.models.items()},
         }
 
-        with open(export_path, 'w') as f:
+        with open(export_path, "w") as f:
             json.dump(export_data, f, indent=2)
 
         logger.info(f"Exported registry to {export_path}")
@@ -392,20 +381,12 @@ def create_rag_model_registry() -> ModelRegistry:
         description="OpenAI text-embedding-3-large for RAG document embeddings",
         artifacts={
             "config": "configs/embedding_config.json",
-            "benchmark_results": "benchmark_results/embedding_perf.json"
+            "benchmark_results": "benchmark_results/embedding_perf.json",
         },
-        metrics={
-            "embedding_latency_ms": 15.2,
-            "throughput_docs_per_sec": 150.0,
-            "cosine_similarity_avg": 0.847
-        },
+        metrics={"embedding_latency_ms": 15.2, "throughput_docs_per_sec": 150.0, "cosine_similarity_avg": 0.847},
         author="ai-engineer",
-        tags={
-            "embedding_dim": "3072",
-            "context_length": "8192",
-            "use_case": "rag_retrieval"
-        },
-        dependencies=["openai>=1.6.0"]
+        tags={"embedding_dim": "3072", "context_length": "8192", "use_case": "rag_retrieval"},
+        dependencies=["openai>=1.6.0"],
     )
 
     return registry

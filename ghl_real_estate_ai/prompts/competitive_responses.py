@@ -6,17 +6,18 @@ value proposition reinforcement, and differentiation tactics without
 disparaging competitors.
 """
 
-from typing import Dict, List, Optional, Any
-from enum import Enum
+import random
 from dataclasses import dataclass
 from datetime import datetime
-import random
+from enum import Enum
+from typing import Any, Dict, List, Optional
 
-from ghl_real_estate_ai.services.competitor_intelligence import RiskLevel, CompetitorMention
+from ghl_real_estate_ai.services.competitor_intelligence import CompetitorMention, RiskLevel
 
 
 class ResponseType(Enum):
     """Types of competitive responses"""
+
     POSITIONING = "positioning"
     VALUE_PROP = "value_proposition"
     URGENCY = "urgency"
@@ -27,6 +28,7 @@ class ResponseType(Enum):
 
 class LeadProfile(Enum):
     """Lead profile types for targeted messaging"""
+
     FIRST_TIME_BUYER = "first_time_buyer"
     INVESTOR = "investor"
     LUXURY_BUYER = "luxury_buyer"
@@ -38,6 +40,7 @@ class LeadProfile(Enum):
 @dataclass
 class ResponseTemplate:
     """Template for competitive response messages"""
+
     message: str
     response_type: ResponseType
     risk_level: RiskLevel
@@ -78,7 +81,7 @@ class CompetitiveResponseSystem:
                         urgency_level=1,
                         follow_up_required=False,
                         tags=["discovery", "needs_assessment"],
-                        success_rate=0.75
+                        success_rate=0.75,
                     ),
                     ResponseTemplate(
                         message="Great question! I focus on combining cutting-edge technology with personalized service. Every client gets real-time market insights and my full attention throughout the process.",
@@ -88,8 +91,8 @@ class CompetitiveResponseSystem:
                         urgency_level=2,
                         follow_up_required=False,
                         tags=["technology", "personalized_service"],
-                        success_rate=0.72
-                    )
+                        success_rate=0.72,
+                    ),
                 ],
                 ResponseType.VALUE_PROP: [
                     ResponseTemplate(
@@ -100,11 +103,10 @@ class CompetitiveResponseSystem:
                         urgency_level=2,
                         follow_up_required=False,
                         tags=["ai_technology", "market_insights", "rc_expertise"],
-                        success_rate=0.78
+                        success_rate=0.78,
                     )
-                ]
+                ],
             },
-
             RiskLevel.MEDIUM: {
                 ResponseType.POSITIONING: [
                     ResponseTemplate(
@@ -115,7 +117,7 @@ class CompetitiveResponseSystem:
                         urgency_level=3,
                         follow_up_required=True,
                         tags=["validation", "differentiation"],
-                        success_rate=0.65
+                        success_rate=0.65,
                     ),
                     ResponseTemplate(
                         message="Smart to shop around! Most agents use the same old playbook. I combine AI technology with 24/7 availability to find opportunities others miss. Want to see how this works?",
@@ -125,8 +127,8 @@ class CompetitiveResponseSystem:
                         urgency_level=3,
                         follow_up_required=True,
                         tags=["technology_edge", "availability"],
-                        success_rate=0.68
-                    )
+                        success_rate=0.68,
+                    ),
                 ],
                 ResponseType.DIFFERENTIATION: [
                     ResponseTemplate(
@@ -137,7 +139,7 @@ class CompetitiveResponseSystem:
                         urgency_level=3,
                         follow_up_required=True,
                         tags=["market_data", "off_market", "investor_focus"],
-                        success_rate=0.71
+                        success_rate=0.71,
                     ),
                     ResponseTemplate(
                         message="What makes me unique in Rancho Cucamonga is my specialization in Amazon logistics and healthcare worker relocations. I understand the timeline pressures and housing preferences better than traditional agents.",
@@ -147,8 +149,8 @@ class CompetitiveResponseSystem:
                         urgency_level=4,
                         follow_up_required=True,
                         tags=["amazon_relocations", "healthcare_workers", "timeline_pressure"],
-                        success_rate=0.74
-                    )
+                        success_rate=0.74,
+                    ),
                 ],
                 ResponseType.URGENCY: [
                     ResponseTemplate(
@@ -159,11 +161,10 @@ class CompetitiveResponseSystem:
                         urgency_level=4,
                         follow_up_required=True,
                         tags=["market_speed", "opportunity_alerts"],
-                        success_rate=0.69
+                        success_rate=0.69,
                     )
-                ]
+                ],
             },
-
             RiskLevel.HIGH: {
                 ResponseType.RECOVERY: [
                     ResponseTemplate(
@@ -174,7 +175,7 @@ class CompetitiveResponseSystem:
                         urgency_level=2,
                         follow_up_required=True,
                         tags=["respectful", "backup_option"],
-                        success_rate=0.45
+                        success_rate=0.45,
                     ),
                     ResponseTemplate(
                         message="Even with an agent, would you like a second opinion on any properties or market analysis? I provide complimentary insights - no strings attached.",
@@ -184,8 +185,8 @@ class CompetitiveResponseSystem:
                         urgency_level=3,
                         follow_up_required=True,
                         tags=["second_opinion", "complimentary_service"],
-                        success_rate=0.52
-                    )
+                        success_rate=0.52,
+                    ),
                 ],
                 ResponseType.VALUE_PROP: [
                     ResponseTemplate(
@@ -196,7 +197,7 @@ class CompetitiveResponseSystem:
                         urgency_level=3,
                         follow_up_required=True,
                         tags=["investor_specialist", "off_market", "value_add"],
-                        success_rate=0.48
+                        success_rate=0.48,
                     )
                 ],
                 ResponseType.NURTURE: [
@@ -208,11 +209,10 @@ class CompetitiveResponseSystem:
                         urgency_level=1,
                         follow_up_required=True,
                         tags=["market_insights", "long_term_nurture"],
-                        success_rate=0.35
+                        success_rate=0.35,
                     )
-                ]
+                ],
             },
-
             RiskLevel.CRITICAL: {
                 ResponseType.RECOVERY: [
                     ResponseTemplate(
@@ -223,7 +223,7 @@ class CompetitiveResponseSystem:
                         urgency_level=1,
                         follow_up_required=True,
                         tags=["respectful_exit", "door_open"],
-                        success_rate=0.25
+                        success_rate=0.25,
                     )
                 ],
                 ResponseType.NURTURE: [
@@ -235,10 +235,10 @@ class CompetitiveResponseSystem:
                         urgency_level=1,
                         follow_up_required=True,
                         tags=["quarterly_updates", "property_owner_value"],
-                        success_rate=0.22
+                        success_rate=0.22,
                     )
-                ]
-            }
+                ],
+            },
         }
 
     def _load_jorge_value_propositions(self) -> Dict[str, Dict]:
@@ -251,9 +251,9 @@ class CompetitiveResponseSystem:
                     "Instant property valuation updates",
                     "Predictive market trend analysis",
                     "Off-market opportunity alerts",
-                    "Automated comparable analysis"
+                    "Automated comparable analysis",
                 ],
-                "competitor_advantage": "While others rely on outdated MLS data, I provide live market intelligence"
+                "competitor_advantage": "While others rely on outdated MLS data, I provide live market intelligence",
             },
             "rc_expertise": {
                 "headline": "Native Inland Empire Market Knowledge",
@@ -262,9 +262,9 @@ class CompetitiveResponseSystem:
                     "Neighborhood micro-trend analysis",
                     "School district impact predictions",
                     "Development pipeline insights",
-                    "Local business impact on values"
+                    "Local business impact on values",
                 ],
-                "competitor_advantage": "Transplant agents learn Inland Empire - I live and breathe it"
+                "competitor_advantage": "Transplant agents learn Inland Empire - I live and breathe it",
             },
             "amazon_specialization": {
                 "headline": "Amazon Logistics Specialist",
@@ -273,9 +273,9 @@ class CompetitiveResponseSystem:
                     "Amazon fulfillment center proximity analysis",
                     "Shift worker-friendly neighborhoods",
                     "Timeline-compressed searches",
-                    "Healthcare benefit timing strategies"
+                    "Healthcare benefit timing strategies",
                 ],
-                "competitor_advantage": "Traditional agents don't understand logistics/healthcare industry nuances"
+                "competitor_advantage": "Traditional agents don't understand logistics/healthcare industry nuances",
             },
             "investor_focus": {
                 "headline": "Investment Property Expert",
@@ -284,9 +284,9 @@ class CompetitiveResponseSystem:
                     "Cash flow projections",
                     "Appreciation potential modeling",
                     "Rental market analysis",
-                    "Tax strategy coordination"
+                    "Tax strategy coordination",
                 ],
-                "competitor_advantage": "Most agents focus on emotions - I focus on numbers"
+                "competitor_advantage": "Most agents focus on emotions - I focus on numbers",
             },
             "response_speed": {
                 "headline": "24/7 Availability & Instant Response",
@@ -295,10 +295,10 @@ class CompetitiveResponseSystem:
                     "Sub-60-minute property alerts",
                     "Same-day showing coordination",
                     "Real-time offer strategy",
-                    "Weekend and evening availability"
+                    "Weekend and evening availability",
                 ],
-                "competitor_advantage": "Traditional agents work business hours - markets don't"
-            }
+                "competitor_advantage": "Traditional agents work business hours - markets don't",
+            },
         }
 
     def _load_rc_market_advantages(self) -> Dict[str, Any]:
@@ -307,7 +307,7 @@ class CompetitiveResponseSystem:
             "market_timing": {
                 "current_conditions": "Inventory increasing, buyer opportunity window",
                 "jorge_insight": "Perfect time for strategic buyers with proper market analysis",
-                "urgency_creator": "Interest rates stabilizing - act before next wave of buyers"
+                "urgency_creator": "Interest rates stabilizing - act before next wave of buyers",
             },
             "neighborhood_expertise": {
                 "specialties": [
@@ -315,9 +315,9 @@ class CompetitiveResponseSystem:
                     "Etiwanda investment opportunities",
                     "North Rancho Cucamonga family homes",
                     "Town Center area condos",
-                    "Victoria Gardens district properties"
+                    "Victoria Gardens district properties",
                 ],
-                "unique_knowledge": "Micro-market trends that MLS data doesn't capture"
+                "unique_knowledge": "Micro-market trends that MLS data doesn't capture",
             },
             "development_pipeline": {
                 "insight": "Upcoming development impact on property values",
@@ -325,14 +325,14 @@ class CompetitiveResponseSystem:
                 "examples": [
                     "Metrolink expansion effects",
                     "New logistics hub announcements",
-                    "School district boundary changes"
-                ]
+                    "School district boundary changes",
+                ],
             },
             "local_connections": {
                 "network": "Direct relationships with investors, developers, and off-market opportunities",
                 "access": "Properties that never hit the open market",
-                "speed": "24-48 hour advance notice on upcoming listings"
-            }
+                "speed": "24-48 hour advance notice on upcoming listings",
+            },
         }
 
     def _load_success_stories(self) -> Dict[str, List[Dict]]:
@@ -343,29 +343,29 @@ class CompetitiveResponseSystem:
                     "situation": "Client was working with Keller Williams agent for 3 months without finding the right property",
                     "jorge_solution": "Used AI analysis to identify off-market opportunity in preferred neighborhood",
                     "outcome": "Closed in 21 days, $15k under ask price",
-                    "timeframe": "3 weeks vs 3 months of searching"
+                    "timeframe": "3 weeks vs 3 months of searching",
                 },
                 {
                     "situation": "Amazon logistics employee needed to close before benefit enrollment deadline",
                     "jorge_solution": "Leveraged technology for instant property analysis and same-day showings",
                     "outcome": "Found perfect home and closed in 14 days",
-                    "timeframe": "2 weeks vs typical 30-45 days"
+                    "timeframe": "2 weeks vs typical 30-45 days",
                 },
                 {
                     "situation": "Investor was getting generic properties from traditional agent",
                     "jorge_solution": "Provided ROI analysis and cash flow projections for every property",
                     "outcome": "Found property with 12% cap rate in emerging neighborhood",
-                    "timeframe": "Data-driven decision in 1 week"
-                }
+                    "timeframe": "Data-driven decision in 1 week",
+                },
             ],
             "recovery_success": [
                 {
                     "situation": "Lead initially chose discount brokerage for lower fees",
                     "jorge_approach": "Demonstrated value through complimentary market analysis",
                     "outcome": "Switched to Jorge after seeing quality difference",
-                    "value_created": "Saved $25k through better negotiation and market timing"
+                    "value_created": "Saved $25k through better negotiation and market timing",
                 }
-            ]
+            ],
         }
 
     def get_competitive_response(
@@ -373,7 +373,7 @@ class CompetitiveResponseSystem:
         risk_level: RiskLevel,
         competitor_mentions: List[CompetitorMention],
         lead_profile: Optional[LeadProfile] = None,
-        conversation_context: Optional[Dict] = None
+        conversation_context: Optional[Dict] = None,
     ) -> Dict[str, Any]:
         """
         Generate appropriate competitive response based on situation
@@ -425,10 +425,12 @@ class CompetitiveResponseSystem:
             "tags": template.tags,
             "success_rate": template.success_rate,
             "escalation_recommended": risk_level in [RiskLevel.HIGH, RiskLevel.CRITICAL],
-            "human_intervention": risk_level == RiskLevel.CRITICAL
+            "human_intervention": risk_level == RiskLevel.CRITICAL,
         }
 
-    def _determine_response_type(self, risk_level: RiskLevel, competitor_mentions: List[CompetitorMention]) -> ResponseType:
+    def _determine_response_type(
+        self, risk_level: RiskLevel, competitor_mentions: List[CompetitorMention]
+    ) -> ResponseType:
         """Determine the most appropriate response type"""
 
         if risk_level == RiskLevel.LOW:
@@ -449,7 +451,7 @@ class CompetitiveResponseSystem:
             RiskLevel.LOW: "I'd love to learn more about what you're looking for to see how I can best help you.",
             RiskLevel.MEDIUM: "I understand you're exploring options. Let me show you what makes my approach different.",
             RiskLevel.HIGH: "I respect your current relationship. I'm here if anything changes.",
-            RiskLevel.CRITICAL: "I understand completely. Wishing you the best with your search!"
+            RiskLevel.CRITICAL: "I understand completely. Wishing you the best with your search!",
         }
 
         return {
@@ -462,7 +464,7 @@ class CompetitiveResponseSystem:
             "tags": ["fallback"],
             "success_rate": 0.3,
             "escalation_recommended": True,
-            "human_intervention": True
+            "human_intervention": True,
         }
 
     def _personalize_message(self, message: str, context: Optional[Dict]) -> str:
@@ -483,7 +485,9 @@ class CompetitiveResponseSystem:
 
         return message
 
-    def _get_relevant_value_prop(self, competitor_mentions: List[CompetitorMention], lead_profile: Optional[LeadProfile]) -> Optional[Dict]:
+    def _get_relevant_value_prop(
+        self, competitor_mentions: List[CompetitorMention], lead_profile: Optional[LeadProfile]
+    ) -> Optional[Dict]:
         """Get most relevant value proposition based on competitive situation"""
 
         # Profile-based value props
@@ -500,36 +504,46 @@ class CompetitiveResponseSystem:
         # Default to RC expertise
         return self.jorge_value_props["rc_expertise"]
 
-    def _generate_follow_up_strategy(self, template: ResponseTemplate, competitor_mentions: List[CompetitorMention]) -> List[str]:
+    def _generate_follow_up_strategy(
+        self, template: ResponseTemplate, competitor_mentions: List[CompetitorMention]
+    ) -> List[str]:
         """Generate follow-up strategy based on competitive situation"""
         strategy = []
 
         if template.follow_up_required:
             if template.risk_level == RiskLevel.LOW:
-                strategy.extend([
-                    "Send personalized market analysis within 24 hours",
-                    "Follow up with relevant property opportunities",
-                    "Share success story relevant to their situation"
-                ])
+                strategy.extend(
+                    [
+                        "Send personalized market analysis within 24 hours",
+                        "Follow up with relevant property opportunities",
+                        "Share success story relevant to their situation",
+                    ]
+                )
             elif template.risk_level == RiskLevel.MEDIUM:
-                strategy.extend([
-                    "Provide immediate value (market insights, property analysis)",
-                    "Schedule consultation to demonstrate technology advantage",
-                    "Send case study showing competitive wins"
-                ])
+                strategy.extend(
+                    [
+                        "Provide immediate value (market insights, property analysis)",
+                        "Schedule consultation to demonstrate technology advantage",
+                        "Send case study showing competitive wins",
+                    ]
+                )
             elif template.risk_level == RiskLevel.HIGH:
-                strategy.extend([
-                    "Add to long-term nurture campaign",
-                    "Send monthly market updates",
-                    "Alert to off-market opportunities",
-                    "Check in quarterly with market insights"
-                ])
+                strategy.extend(
+                    [
+                        "Add to long-term nurture campaign",
+                        "Send monthly market updates",
+                        "Alert to off-market opportunities",
+                        "Check in quarterly with market insights",
+                    ]
+                )
             else:  # CRITICAL
-                strategy.extend([
-                    "Add to quarterly touch-base campaign",
-                    "Send bi-annual market reports",
-                    "Monitor for future opportunities"
-                ])
+                strategy.extend(
+                    [
+                        "Add to quarterly touch-base campaign",
+                        "Send bi-annual market reports",
+                        "Monitor for future opportunities",
+                    ]
+                )
 
         return strategy
 
@@ -558,9 +572,9 @@ class CompetitiveResponseSystem:
 
         urgency_messages = {
             "inventory": f"Rancho Cucamonga inventory is {rc_urgency['current_conditions']}. This is {rc_urgency['jorge_insight']}.",
-            "rates": rc_urgency['urgency_creator'],
+            "rates": rc_urgency["urgency_creator"],
             "competition": "Three other buyers are looking at similar properties in this price range this week.",
-            "seasonal": "Spring buying season is starting - best selection is available now before the rush."
+            "seasonal": "Spring buying season is starting - best selection is available now before the rush.",
         }
 
         return urgency_messages.get(market_context, urgency_messages["inventory"])
@@ -573,7 +587,7 @@ class CompetitiveResponseSystem:
             "24/7 availability in fast-moving Inland Empire market",
             "Specialization in logistics/healthcare worker and investor needs",
             "Real-time off-market opportunity access",
-            "Native Inland Empire knowledge with data-driven approach"
+            "Native Inland Empire knowledge with data-driven approach",
         ]
 
         if competitor_name:
@@ -581,7 +595,7 @@ class CompetitiveResponseSystem:
             competitor_weaknesses = {
                 "keller_williams": "Unlike high-volume brokerages, you get personal attention and customized service",
                 "remax": "While franchises follow corporate playbooks, I adapt to your specific needs",
-                "coldwell_banker": "I combine traditional service with modern technology for best of both worlds"
+                "coldwell_banker": "I combine traditional service with modern technology for best of both worlds",
             }
 
             if competitor_name in competitor_weaknesses:
@@ -592,6 +606,7 @@ class CompetitiveResponseSystem:
 
 # Singleton instance
 _competitive_response_system = None
+
 
 def get_competitive_response_system() -> CompetitiveResponseSystem:
     """Get singleton competitive response system"""

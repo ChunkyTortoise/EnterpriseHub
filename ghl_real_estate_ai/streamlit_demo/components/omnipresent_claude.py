@@ -6,31 +6,35 @@ Claude is aware of all platform activity and can provide strategic recommendatio
 as bot workflows progress.
 """
 
-import streamlit as st
 import asyncio
 import json
 import time
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
+import streamlit as st
+
+from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 
 # Import services
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
-from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
-from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 
 # Import WebSocket integration for real-time event monitoring
 try:
     from ghl_real_estate_ai.streamlit_demo.components.websocket_integration import (
-        get_seller_qualification_updates,
-        get_buyer_qualification_updates,
         get_bot_status_updates,
-        get_property_alerts,
+        get_buyer_qualification_updates,
         get_claude_concierge_updates,
-        get_sms_compliance_updates
+        get_property_alerts,
+        get_seller_qualification_updates,
+        get_sms_compliance_updates,
     )
+
     WEBSOCKET_AVAILABLE = True
 except ImportError:
     WEBSOCKET_AVAILABLE = False
+
 
 class OmnipresentClaude:
     """
@@ -47,19 +51,19 @@ class OmnipresentClaude:
 
     def _initialize_state(self):
         """Initialize session state for omnipresent Claude."""
-        if 'omnipresent_claude_active' not in st.session_state:
+        if "omnipresent_claude_active" not in st.session_state:
             st.session_state.omnipresent_claude_active = True
 
-        if 'claude_coaching_history' not in st.session_state:
+        if "claude_coaching_history" not in st.session_state:
             st.session_state.claude_coaching_history = []
 
-        if 'last_bot_event_processed' not in st.session_state:
+        if "last_bot_event_processed" not in st.session_state:
             st.session_state.last_bot_event_processed = 0
 
-        if 'claude_tour_mode' not in st.session_state:
+        if "claude_tour_mode" not in st.session_state:
             st.session_state.claude_tour_mode = False
 
-        if 'claude_monitoring_alerts' not in st.session_state:
+        if "claude_monitoring_alerts" not in st.session_state:
             st.session_state.claude_monitoring_alerts = []
 
     def render_omnipresent_interface(self):
@@ -72,7 +76,7 @@ class OmnipresentClaude:
         self._render_sidebar_presence()
 
         # Modal coaching interface
-        if st.session_state.get('show_claude_coaching', False):
+        if st.session_state.get("show_claude_coaching", False):
             self._render_coaching_modal()
 
         # Real-time event monitoring and proactive coaching
@@ -80,7 +84,8 @@ class OmnipresentClaude:
 
     def _render_floating_toggle(self):
         """Render floating Claude toggle button."""
-        st.markdown("""
+        st.markdown(
+            """
         <style>
         .omnipresent-claude-toggle {
             position: fixed;
@@ -135,7 +140,9 @@ class OmnipresentClaude:
             to { transform: scale(1.2); }
         }
         </style>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
         # Check for new coaching opportunities
         coaching_alerts = self._get_coaching_alerts()
@@ -147,19 +154,24 @@ class OmnipresentClaude:
 
             with col2:
                 if has_alerts:
-                    if st.button(f"🧠", key="claude_omnipresent_toggle",
-                               help=f"Claude has {len(coaching_alerts)} insights for you!",
-                               type="primary"):
-                        st.session_state.show_claude_coaching = not st.session_state.get('show_claude_coaching', False)
+                    if st.button(
+                        f"🧠",
+                        key="claude_omnipresent_toggle",
+                        help=f"Claude has {len(coaching_alerts)} insights for you!",
+                        type="primary",
+                    ):
+                        st.session_state.show_claude_coaching = not st.session_state.get("show_claude_coaching", False)
                         st.rerun()
                 else:
-                    if st.button("🧠", key="claude_omnipresent_toggle_normal",
-                               help="Claude is monitoring platform activity"):
-                        st.session_state.show_claude_coaching = not st.session_state.get('show_claude_coaching', False)
+                    if st.button(
+                        "🧠", key="claude_omnipresent_toggle_normal", help="Claude is monitoring platform activity"
+                    ):
+                        st.session_state.show_claude_coaching = not st.session_state.get("show_claude_coaching", False)
                         st.rerun()
 
         # Position the button
-        st.markdown("""
+        st.markdown(
+            """
         <script>
         // Position the Claude toggle button
         setTimeout(function() {
@@ -177,7 +189,9 @@ class OmnipresentClaude:
             });
         }, 100);
         </script>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     def _render_sidebar_presence(self):
         """Render Claude's presence in sidebar."""
@@ -202,18 +216,22 @@ class OmnipresentClaude:
                 st.metric("Bot Activity", monitored_bots)
 
             # Tour mode toggle
-            tour_mode = st.checkbox("🎯 Guided Tour Mode",
-                                  value=st.session_state.get('claude_tour_mode', False),
-                                  help="Claude provides step-by-step guidance")
+            tour_mode = st.checkbox(
+                "🎯 Guided Tour Mode",
+                value=st.session_state.get("claude_tour_mode", False),
+                help="Claude provides step-by-step guidance",
+            )
 
-            if tour_mode != st.session_state.get('claude_tour_mode', False):
+            if tour_mode != st.session_state.get("claude_tour_mode", False):
                 st.session_state.claude_tour_mode = tour_mode
                 if tour_mode:
-                    st.session_state.claude_coaching_history.append({
-                        'type': 'tour_start',
-                        'content': "🎯 Tour mode activated! I'll guide you through the platform features as you navigate.",
-                        'timestamp': datetime.now().isoformat()
-                    })
+                    st.session_state.claude_coaching_history.append(
+                        {
+                            "type": "tour_start",
+                            "content": "🎯 Tour mode activated! I'll guide you through the platform features as you navigate.",
+                            "timestamp": datetime.now().isoformat(),
+                        }
+                    )
 
             # Quick action buttons
             if st.button("💡 Get Platform Status", use_container_width=True):
@@ -229,12 +247,7 @@ class OmnipresentClaude:
         st.markdown("### 🧠 Claude's Strategic Command Center")
 
         # Tabs for different coaching modes
-        tab1, tab2, tab3, tab4 = st.tabs([
-            "🎯 Live Coaching",
-            "📊 Platform Guide",
-            "💡 Insights",
-            "🤖 Bot Status"
-        ])
+        tab1, tab2, tab3, tab4 = st.tabs(["🎯 Live Coaching", "📊 Platform Guide", "💡 Insights", "🤖 Bot Status"])
 
         with tab1:
             self._render_live_coaching_tab()
@@ -283,19 +296,21 @@ class OmnipresentClaude:
             with st.spinner("Claude is analyzing..."):
                 response = self._generate_contextual_response(prompt)
 
-                st.session_state.claude_coaching_history.append({
-                    'type': 'manual_query',
-                    'prompt': prompt,
-                    'response': response,
-                    'timestamp': datetime.now().isoformat()
-                })
+                st.session_state.claude_coaching_history.append(
+                    {
+                        "type": "manual_query",
+                        "prompt": prompt,
+                        "response": response,
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                )
 
         # Show recent coaching history
         if st.session_state.claude_coaching_history:
             st.markdown("#### 📜 Recent Coaching")
             for entry in st.session_state.claude_coaching_history[-3:]:
                 with st.expander(f"{entry.get('type', 'coaching')} - {entry.get('timestamp', '')[:16]}"):
-                    if entry.get('prompt'):
+                    if entry.get("prompt"):
                         st.markdown(f"**You:** {entry['prompt']}")
                     st.markdown(f"**Claude:** {entry.get('response', entry.get('content', 'No content'))}")
 
@@ -303,7 +318,7 @@ class OmnipresentClaude:
         """Render guided tour and platform explanation."""
         st.markdown("#### 🗺️ Platform Overview")
 
-        current_hub = st.session_state.get('current_hub', 'Unknown')
+        current_hub = st.session_state.get("current_hub", "Unknown")
 
         # Provide hub-specific guidance
         hub_guidance = self._get_hub_guidance(current_hub)
@@ -342,13 +357,16 @@ class OmnipresentClaude:
 
         for insight in insights:
             with st.container():
-                st.markdown(f"""
+                st.markdown(
+                    f"""
                 <div style="padding: 1rem; border-left: 4px solid #00E5FF; background: rgba(0, 229, 255, 0.1); margin: 1rem 0; border-radius: 4px;">
-                    <strong>{insight['title']}</strong><br>
-                    {insight['content']}<br>
-                    <small style="color: #8B949E;">Confidence: {insight['confidence']}%</small>
+                    <strong>{insight["title"]}</strong><br>
+                    {insight["content"]}<br>
+                    <small style="color: #8B949E;">Confidence: {insight["confidence"]}%</small>
                 </div>
-                """, unsafe_allow_html=True)
+                """,
+                    unsafe_allow_html=True,
+                )
 
     def _render_bot_status_tab(self):
         """Render comprehensive bot status and health."""
@@ -358,9 +376,9 @@ class OmnipresentClaude:
             bot_statuses = get_bot_status_updates()
 
             # Group by bot type
-            seller_bot_events = [e for e in bot_statuses if e.get('bot_type') == 'jorge-seller']
-            buyer_bot_events = [e for e in bot_statuses if e.get('bot_type') == 'jorge-buyer']
-            lead_bot_events = [e for e in bot_statuses if e.get('bot_type') == 'lead-bot']
+            seller_bot_events = [e for e in bot_statuses if e.get("bot_type") == "jorge-seller"]
+            buyer_bot_events = [e for e in bot_statuses if e.get("bot_type") == "jorge-buyer"]
+            lead_bot_events = [e for e in bot_statuses if e.get("bot_type") == "lead-bot"]
 
             # Display status for each bot
             col1, col2, col3 = st.columns(3)
@@ -383,56 +401,56 @@ class OmnipresentClaude:
 
     def _render_coaching_card(self, advice: Dict[str, Any]):
         """Render individual coaching advice card."""
-        priority_colors = {
-            'high': '#FF4757',
-            'medium': '#FFA500',
-            'low': '#00E5FF'
-        }
+        priority_colors = {"high": "#FF4757", "medium": "#FFA500", "low": "#00E5FF"}
 
-        color = priority_colors.get(advice.get('priority', 'medium'), '#00E5FF')
+        color = priority_colors.get(advice.get("priority", "medium"), "#00E5FF")
 
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div style="padding: 1.5rem; border-left: 4px solid {color}; background: rgba(255, 255, 255, 0.05); margin: 1rem 0; border-radius: 8px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                <strong style="color: {color};">{advice.get('title', 'Strategic Advice')}</strong>
-                <span style="font-size: 0.8rem; color: #8B949E;">{advice.get('priority', 'medium').upper()}</span>
+                <strong style="color: {color};">{advice.get("title", "Strategic Advice")}</strong>
+                <span style="font-size: 0.8rem; color: #8B949E;">{advice.get("priority", "medium").upper()}</span>
             </div>
-            <div style="margin-bottom: 1rem;">{advice.get('content', '')}</div>
-            {f'<div style="font-size: 0.9rem; color: #8B949E;"><strong>Next Step:</strong> {advice.get("action", "Continue monitoring")}</div>' if advice.get('action') else ''}
+            <div style="margin-bottom: 1rem;">{advice.get("content", "")}</div>
+            {f'<div style="font-size: 0.9rem; color: #8B949E;"><strong>Next Step:</strong> {advice.get("action", "Continue monitoring")}</div>' if advice.get("action") else ""}
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     def _render_bot_health_card(self, bot_name: str, events: List[Dict[str, Any]]):
         """Render bot health status card."""
         if events:
             latest_event = events[0]
-            status = latest_event.get('status', 'unknown')
+            status = latest_event.get("status", "unknown")
 
-            status_colors = {
-                'processing': '#00E5FF',
-                'completed': '#00FF00',
-                'error': '#FF4757',
-                'idle': '#8B949E'
-            }
+            status_colors = {"processing": "#00E5FF", "completed": "#00FF00", "error": "#FF4757", "idle": "#8B949E"}
 
-            color = status_colors.get(status, '#8B949E')
+            color = status_colors.get(status, "#8B949E")
 
-            st.markdown(f"""
+            st.markdown(
+                f"""
             <div style="text-align: center; padding: 1rem; border: 1px solid {color}; border-radius: 8px; background: rgba(255, 255, 255, 0.02);">
                 <div style="font-size: 0.9rem; font-weight: bold;">{bot_name}</div>
                 <div style="font-size: 1.2rem; color: {color}; margin: 0.5rem 0;">●</div>
                 <div style="font-size: 0.8rem; color: {color};">{status.title()}</div>
                 <div style="font-size: 0.7rem; color: #8B949E;">{len(events)} events</div>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
         else:
-            st.markdown(f"""
+            st.markdown(
+                f"""
             <div style="text-align: center; padding: 1rem; border: 1px solid #8B949E; border-radius: 8px; background: rgba(255, 255, 255, 0.02);">
                 <div style="font-size: 0.9rem; font-weight: bold;">{bot_name}</div>
                 <div style="font-size: 1.2rem; color: #8B949E; margin: 0.5rem 0;">○</div>
                 <div style="font-size: 0.8rem; color: #8B949E;">No Activity</div>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
     def _monitor_bot_events(self):
         """Monitor bot events and trigger proactive coaching."""
@@ -441,7 +459,7 @@ class OmnipresentClaude:
 
         # Check for new events
         current_time = int(time.time())
-        last_check = st.session_state.get('last_bot_event_processed', 0)
+        last_check = st.session_state.get("last_bot_event_processed", 0)
 
         if current_time - last_check > 5:  # Check every 5 seconds
             # Get recent events
@@ -453,11 +471,9 @@ class OmnipresentClaude:
 
             if new_coaching:
                 for coaching in new_coaching:
-                    st.session_state.claude_coaching_history.append({
-                        'type': 'proactive_coaching',
-                        'content': coaching,
-                        'timestamp': datetime.now().isoformat()
-                    })
+                    st.session_state.claude_coaching_history.append(
+                        {"type": "proactive_coaching", "content": coaching, "timestamp": datetime.now().isoformat()}
+                    )
 
             st.session_state.last_bot_event_processed = current_time
 
@@ -467,46 +483,54 @@ class OmnipresentClaude:
 
         # Analyze seller qualifications
         for update in seller_updates[-3:]:  # Last 3 updates
-            contact_id = update.get('contact_id', 'Unknown')
-            temperature = update.get('seller_temperature', 'unknown')
-            current_q = update.get('current_question', 0)
-            scores = update.get('qualification_scores', {})
+            contact_id = update.get("contact_id", "Unknown")
+            temperature = update.get("seller_temperature", "unknown")
+            current_q = update.get("current_question", 0)
+            scores = update.get("qualification_scores", {})
 
-            if temperature == 'hot':
-                coaching.append({
-                    'title': f'🔥 HOT SELLER ALERT: {contact_id}',
-                    'content': f'This seller is showing high commitment (Q{current_q}). They are likely ready to list immediately.',
-                    'action': 'Schedule listing appointment within 24 hours. Use take-away close if they hesitate.',
-                    'priority': 'high'
-                })
-            elif temperature == 'cold' and current_q >= 2:
-                coaching.append({
-                    'title': f'❄️ Cold Seller Strategy: {contact_id}',
-                    'content': f'After {current_q} questions, they are still cold. Time for confrontational approach.',
-                    'action': 'Deploy take-away close: "It sounds like now isn\'t the right time for you. I\'ll focus on motivated sellers."',
-                    'priority': 'medium'
-                })
+            if temperature == "hot":
+                coaching.append(
+                    {
+                        "title": f"🔥 HOT SELLER ALERT: {contact_id}",
+                        "content": f"This seller is showing high commitment (Q{current_q}). They are likely ready to list immediately.",
+                        "action": "Schedule listing appointment within 24 hours. Use take-away close if they hesitate.",
+                        "priority": "high",
+                    }
+                )
+            elif temperature == "cold" and current_q >= 2:
+                coaching.append(
+                    {
+                        "title": f"❄️ Cold Seller Strategy: {contact_id}",
+                        "content": f"After {current_q} questions, they are still cold. Time for confrontational approach.",
+                        "action": "Deploy take-away close: \"It sounds like now isn't the right time for you. I'll focus on motivated sellers.\"",
+                        "priority": "medium",
+                    }
+                )
 
         # Analyze buyer qualifications
         for update in buyer_updates[-2:]:  # Last 2 updates
-            buyer_id = update.get('buyer_id', 'Unknown')
-            frs_score = update.get('frs_score', 0)
-            buyer_temp = update.get('buyer_temperature', 'unknown')
+            buyer_id = update.get("buyer_id", "Unknown")
+            frs_score = update.get("frs_score", 0)
+            buyer_temp = update.get("buyer_temperature", "unknown")
 
-            if frs_score > 80 and buyer_temp in ['hot', 'warm']:
-                coaching.append({
-                    'title': f'💰 QUALIFIED BUYER: {buyer_id}',
-                    'content': f'High financial readiness ({frs_score}%) and strong motivation. This buyer can close quickly.',
-                    'action': 'Show premium properties first. They have the means and motivation to buy.',
-                    'priority': 'high'
-                })
+            if frs_score > 80 and buyer_temp in ["hot", "warm"]:
+                coaching.append(
+                    {
+                        "title": f"💰 QUALIFIED BUYER: {buyer_id}",
+                        "content": f"High financial readiness ({frs_score}%) and strong motivation. This buyer can close quickly.",
+                        "action": "Show premium properties first. They have the means and motivation to buy.",
+                        "priority": "high",
+                    }
+                )
             elif frs_score < 40:
-                coaching.append({
-                    'title': f'⚠️ Pre-Approval Needed: {buyer_id}',
-                    'content': f'Low financial readiness ({frs_score}%). They need financing help before property search.',
-                    'action': 'Connect with lender immediately. Do not show properties until pre-approved.',
-                    'priority': 'medium'
-                })
+                coaching.append(
+                    {
+                        "title": f"⚠️ Pre-Approval Needed: {buyer_id}",
+                        "content": f"Low financial readiness ({frs_score}%). They need financing help before property search.",
+                        "action": "Connect with lender immediately. Do not show properties until pre-approved.",
+                        "priority": "medium",
+                    }
+                )
 
         return coaching
 
@@ -518,21 +542,25 @@ class OmnipresentClaude:
             # Check for recent high-priority events
             seller_updates = get_seller_qualification_updates()
             for update in seller_updates[:2]:  # Check last 2 updates
-                if update.get('seller_temperature') == 'hot':
-                    alerts.append({
-                        'type': 'hot_seller',
-                        'contact_id': update.get('contact_id'),
-                        'message': 'Hot seller needs immediate attention'
-                    })
+                if update.get("seller_temperature") == "hot":
+                    alerts.append(
+                        {
+                            "type": "hot_seller",
+                            "contact_id": update.get("contact_id"),
+                            "message": "Hot seller needs immediate attention",
+                        }
+                    )
 
             buyer_updates = get_buyer_qualification_updates()
             for update in buyer_updates[:2]:
-                if update.get('frs_score', 0) > 80:
-                    alerts.append({
-                        'type': 'qualified_buyer',
-                        'buyer_id': update.get('buyer_id'),
-                        'message': 'Highly qualified buyer ready to purchase'
-                    })
+                if update.get("frs_score", 0) > 80:
+                    alerts.append(
+                        {
+                            "type": "qualified_buyer",
+                            "buyer_id": update.get("buyer_id"),
+                            "message": "Highly qualified buyer ready to purchase",
+                        }
+                    )
 
         return alerts
 
@@ -545,8 +573,8 @@ class OmnipresentClaude:
         active_bots = set()
 
         for update in bot_updates[-10:]:  # Check recent updates
-            if update.get('status') == 'processing':
-                active_bots.add(update.get('bot_type', 'unknown'))
+            if update.get("status") == "processing":
+                active_bots.add(update.get("bot_type", "unknown"))
 
         return len(active_bots)
 
@@ -568,11 +596,9 @@ class OmnipresentClaude:
         - Real-time intelligence provides strategic edge over competitors
         """
 
-        st.session_state.claude_coaching_history.append({
-            'type': 'platform_status',
-            'content': status_content,
-            'timestamp': datetime.now().isoformat()
-        })
+        st.session_state.claude_coaching_history.append(
+            {"type": "platform_status", "content": status_content, "timestamp": datetime.now().isoformat()}
+        )
 
     def _generate_quick_wins(self):
         """Generate quick win strategies for Jorge."""
@@ -595,17 +621,15 @@ class OmnipresentClaude:
         - Time is money - qualify fast, move fast
         """
 
-        st.session_state.claude_coaching_history.append({
-            'type': 'quick_wins',
-            'content': quick_wins,
-            'timestamp': datetime.now().isoformat()
-        })
+        st.session_state.claude_coaching_history.append(
+            {"type": "quick_wins", "content": quick_wins, "timestamp": datetime.now().isoformat()}
+        )
 
     def _generate_contextual_response(self, prompt: str) -> str:
         """Generate contextual response using Claude Assistant."""
         try:
             # Get current platform context
-            current_hub = st.session_state.get('current_hub', 'Unknown')
+            current_hub = st.session_state.get("current_hub", "Unknown")
 
             # Create context-rich prompt
             context_prompt = f"""
@@ -621,10 +645,9 @@ class OmnipresentClaude:
             """
 
             # Use async processing
-            response = run_async(self.claude.generate_contextual_response(
-                query=context_prompt,
-                context_type="omnipresent_assistant"
-            ))
+            response = run_async(
+                self.claude.generate_contextual_response(query=context_prompt, context_type="omnipresent_assistant")
+            )
 
             return response
 
@@ -645,7 +668,6 @@ class OmnipresentClaude:
 
             **Jorge's focus:** Use this to identify which areas need your personal attention
             """,
-
             "Seller Command": """
             💼 **Seller Command** - Jorge's confrontational qualification engine
 
@@ -657,7 +679,6 @@ class OmnipresentClaude:
 
             **Jorge's edge:** This system eliminates time-wasters automatically
             """,
-
             "Buyer Journey Hub": """
             🏠 **Buyer Journey Hub** - Consultative buyer qualification
 
@@ -668,29 +689,31 @@ class OmnipresentClaude:
             - Temperature = urgency level
 
             **Strategy:** Focus on qualified buyers first, refer others to lenders
-            """
+            """,
         }
 
-        return guidance_map.get(hub_name, f"📍 **{hub_name}** - Specialized platform functionality for Jorge's real estate operations")
+        return guidance_map.get(
+            hub_name, f"📍 **{hub_name}** - Specialized platform functionality for Jorge's real estate operations"
+        )
 
     def _generate_strategic_insights(self) -> List[Dict[str, Any]]:
         """Generate strategic insights based on current platform data."""
         insights = [
             {
-                'title': '🎯 Qualification Efficiency',
-                'content': 'Jorge\'s confrontational methodology is filtering out unmotivated sellers early, saving time for high-probability prospects.',
-                'confidence': 92
+                "title": "🎯 Qualification Efficiency",
+                "content": "Jorge's confrontational methodology is filtering out unmotivated sellers early, saving time for high-probability prospects.",
+                "confidence": 92,
             },
             {
-                'title': '💰 Revenue Pipeline',
-                'content': 'Current hot sellers in the pipeline represent significant commission potential. Focus on rapid conversion.',
-                'confidence': 88
+                "title": "💰 Revenue Pipeline",
+                "content": "Current hot sellers in the pipeline represent significant commission potential. Focus on rapid conversion.",
+                "confidence": 88,
             },
             {
-                'title': '🤖 Bot Performance',
-                'content': 'The three-bot ecosystem is providing comprehensive lead coverage with minimal manual intervention.',
-                'confidence': 95
-            }
+                "title": "🤖 Bot Performance",
+                "content": "The three-bot ecosystem is providing comprehensive lead coverage with minimal manual intervention.",
+                "confidence": 95,
+            },
         ]
 
         return insights
@@ -763,11 +786,9 @@ class OmnipresentClaude:
         **Integration:** All bots feed data to this dashboard for Jorge's strategic oversight
         """
 
-        st.session_state.claude_coaching_history.append({
-            'type': 'bot_explanation',
-            'content': explanation,
-            'timestamp': datetime.now().isoformat()
-        })
+        st.session_state.claude_coaching_history.append(
+            {"type": "bot_explanation", "content": explanation, "timestamp": datetime.now().isoformat()}
+        )
 
     def _explain_metrics(self):
         """Explain the key metrics Jorge should focus on."""
@@ -795,11 +816,9 @@ class OmnipresentClaude:
         - **Deal Velocity:** Faster qualification = faster closings
         """
 
-        st.session_state.claude_coaching_history.append({
-            'type': 'metrics_explanation',
-            'content': explanation,
-            'timestamp': datetime.now().isoformat()
-        })
+        st.session_state.claude_coaching_history.append(
+            {"type": "metrics_explanation", "content": explanation, "timestamp": datetime.now().isoformat()}
+        )
 
     def _provide_jorge_best_practices(self):
         """Provide Jorge-specific best practices."""
@@ -829,15 +848,14 @@ class OmnipresentClaude:
         - 24/7 bot monitoring captures leads others miss
         """
 
-        st.session_state.claude_coaching_history.append({
-            'type': 'best_practices',
-            'content': best_practices,
-            'timestamp': datetime.now().isoformat()
-        })
+        st.session_state.claude_coaching_history.append(
+            {"type": "best_practices", "content": best_practices, "timestamp": datetime.now().isoformat()}
+        )
 
 
 # Global instance for easy access
 _omnipresent_claude = None
+
 
 def get_omnipresent_claude():
     """Get global instance of Omnipresent Claude."""
@@ -846,22 +864,24 @@ def get_omnipresent_claude():
         _omnipresent_claude = OmnipresentClaude()
     return _omnipresent_claude
 
+
 def setup_omnipresent_claude():
     """Setup omnipresent Claude across the entire platform."""
     claude = get_omnipresent_claude()
     claude.render_omnipresent_interface()
 
+
 def get_claude_coaching_summary():
     """Get summary of recent Claude coaching for display in other components."""
-    coaching_history = st.session_state.get('claude_coaching_history', [])
+    coaching_history = st.session_state.get("claude_coaching_history", [])
 
     if coaching_history:
         recent_coaching = coaching_history[-1]
         return {
-            'has_coaching': True,
-            'latest_type': recent_coaching.get('type', 'unknown'),
-            'latest_content': recent_coaching.get('content', '')[:100] + '...',
-            'count': len(coaching_history)
+            "has_coaching": True,
+            "latest_type": recent_coaching.get("type", "unknown"),
+            "latest_content": recent_coaching.get("content", "")[:100] + "...",
+            "count": len(coaching_history),
         }
 
-    return {'has_coaching': False, 'count': 0}
+    return {"has_coaching": False, "count": 0}

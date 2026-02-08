@@ -14,48 +14,50 @@ Research-based optimizations:
 Expected cost savings: 40-60% on multi-turn conversations
 """
 
-import tiktoken
 import json
-from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
+import tiktoken
+
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 
 class MessageImportance(Enum):
     """Message importance levels for pruning decisions."""
-    CRITICAL = 4    # System prompts, first message, data extraction results
-    HIGH = 3        # User preferences, contact info, property matches
-    MEDIUM = 2      # General conversation, questions, clarifications
-    LOW = 1         # Greetings, confirmations, small talk
+
+    CRITICAL = 4  # System prompts, first message, data extraction results
+    HIGH = 3  # User preferences, contact info, property matches
+    MEDIUM = 2  # General conversation, questions, clarifications
+    LOW = 1  # Greetings, confirmations, small talk
 
 
 @dataclass
 class TokenBudget:
     """Token budget management for conversation optimization."""
-    max_total_tokens: int = 7000      # Leave room for response (Claude 3.5 context: 200k)
+
+    max_total_tokens: int = 7000  # Leave room for response (Claude 3.5 context: 200k)
     system_prompt_tokens: int = 2000  # Typical system prompt size
-    user_message_tokens: int = 500    # Current user message estimate
-    response_buffer_tokens: int = 1000 # Space for Claude response
+    user_message_tokens: int = 500  # Current user message estimate
+    response_buffer_tokens: int = 1000  # Space for Claude response
 
     @property
     def available_history_tokens(self) -> int:
         """Calculate tokens available for conversation history."""
         return self.max_total_tokens - (
-            self.system_prompt_tokens +
-            self.user_message_tokens +
-            self.response_buffer_tokens
+            self.system_prompt_tokens + self.user_message_tokens + self.response_buffer_tokens
         )
 
 
 @dataclass
 class MessageAnalysis:
     """Analysis result for a conversation message."""
+
     content: str
     role: str
     timestamp: datetime
@@ -120,19 +122,23 @@ class ConversationOptimizer:
         is_cacheable = False
 
         # Critical importance indicators
-        if (role == "system" or
-            "budget" in content_lower or
-            "preference" in content_lower or
-            "timeline" in content_lower or
-            any(keyword in content_lower for keyword in ["beds", "bath", "location", "price", "must have"])):
+        if (
+            role == "system"
+            or "budget" in content_lower
+            or "preference" in content_lower
+            or "timeline" in content_lower
+            or any(keyword in content_lower for keyword in ["beds", "bath", "location", "price", "must have"])
+        ):
             importance = MessageImportance.CRITICAL
             contains_preferences = True
             is_cacheable = token_count > self.cache_boundary_tokens
 
         # High importance indicators
-        elif (any(keyword in content_lower for keyword in ["name", "phone", "email", "contact"]) or
-              any(keyword in content_lower for keyword in ["property", "house", "condo", "apartment"]) or
-              any(keyword in content_lower for keyword in ["mortgage", "financing", "pre-approved", "cash"])):
+        elif (
+            any(keyword in content_lower for keyword in ["name", "phone", "email", "contact"])
+            or any(keyword in content_lower for keyword in ["property", "house", "condo", "apartment"])
+            or any(keyword in content_lower for keyword in ["mortgage", "financing", "pre-approved", "cash"])
+        ):
             importance = MessageImportance.HIGH
             contains_contact_info = "phone" in content_lower or "email" in content_lower
 
@@ -144,8 +150,10 @@ class ConversationOptimizer:
                 importance = MessageImportance.HIGH
 
         # Low importance indicators (can be pruned first)
-        elif (any(keyword in content_lower for keyword in ["hi", "hello", "thanks", "ok", "yes", "no"]) and
-              len(content) < 50):
+        elif (
+            any(keyword in content_lower for keyword in ["hi", "hello", "thanks", "ok", "yes", "no"])
+            and len(content) < 50
+        ):
             importance = MessageImportance.LOW
 
         return MessageAnalysis(
@@ -157,14 +165,11 @@ class ConversationOptimizer:
             contains_preferences=contains_preferences,
             contains_contact_info=contains_contact_info,
             contains_timeline=contains_timeline,
-            is_cacheable=is_cacheable
+            is_cacheable=is_cacheable,
         )
 
     def optimize_conversation_history(
-        self,
-        conversation_history: List[Dict[str, Any]],
-        token_budget: TokenBudget,
-        preserve_preferences: bool = True
+        self, conversation_history: List[Dict[str, Any]], token_budget: TokenBudget, preserve_preferences: bool = True
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         """
         Optimize conversation history for token efficiency.
@@ -181,10 +186,7 @@ class ConversationOptimizer:
             return [], {"tokens_saved": 0, "messages_removed": 0}
 
         # Analyze all messages
-        analyzed_messages = [
-            (i, self.analyze_message(msg))
-            for i, msg in enumerate(conversation_history)
-        ]
+        analyzed_messages = [(i, self.analyze_message(msg)) for i, msg in enumerate(conversation_history)]
 
         total_tokens = sum(analysis.token_count for _, analysis in analyzed_messages)
         available_tokens = token_budget.available_history_tokens
@@ -197,7 +199,7 @@ class ConversationOptimizer:
                 "tokens_saved": 0,
                 "messages_removed": 0,
                 "total_tokens": total_tokens,
-                "budget_utilization": total_tokens / available_tokens
+                "budget_utilization": total_tokens / available_tokens,
             }
 
         # Strategy 1: Always keep most recent messages (recency bias)
@@ -207,9 +209,11 @@ class ConversationOptimizer:
         # Strategy 2: Always keep critical messages (importance bias)
         if preserve_preferences:
             for i, analysis in analyzed_messages:
-                if (analysis.importance == MessageImportance.CRITICAL or
-                    analysis.contains_preferences or
-                    analysis.contains_contact_info):
+                if (
+                    analysis.importance == MessageImportance.CRITICAL
+                    or analysis.contains_preferences
+                    or analysis.contains_contact_info
+                ):
                     must_keep_indices.add(i)
 
         # Strategy 3: Keep cache-friendly boundaries for prompt caching
@@ -219,11 +223,7 @@ class ConversationOptimizer:
                 cacheable_indices.add(i)
 
         # Calculate tokens for must-keep messages
-        must_keep_tokens = sum(
-            analysis.token_count
-            for i, analysis in analyzed_messages
-            if i in must_keep_indices
-        )
+        must_keep_tokens = sum(analysis.token_count for i, analysis in analyzed_messages if i in must_keep_indices)
 
         # If must-keep messages already exceed budget, keep only most recent
         if must_keep_tokens > available_tokens:
@@ -244,16 +244,10 @@ class ConversationOptimizer:
         else:
             # Normal optimization: add additional messages by importance
             remaining_budget = available_tokens - must_keep_tokens
-            optional_messages = [
-                (i, analysis) for i, analysis in analyzed_messages
-                if i not in must_keep_indices
-            ]
+            optional_messages = [(i, analysis) for i, analysis in analyzed_messages if i not in must_keep_indices]
 
             # Sort by importance (high first), then by recency (recent first)
-            optional_messages.sort(
-                key=lambda x: (x[1].importance.value, x[0]),
-                reverse=True
-            )
+            optional_messages.sort(key=lambda x: (x[1].importance.value, x[0]), reverse=True)
 
             # Add optional messages until budget exhausted
             additional_indices = set()
@@ -268,18 +262,12 @@ class ConversationOptimizer:
             keep_indices = must_keep_indices.union(additional_indices)
 
             # Build optimized history maintaining chronological order
-            optimized_history = [
-                conversation_history[i]
-                for i in sorted(keep_indices)
-            ]
+            optimized_history = [conversation_history[i] for i in sorted(keep_indices)]
 
         # Calculate optimization stats
         original_messages = len(conversation_history)
         optimized_messages = len(optimized_history)
-        optimized_tokens = sum(
-            self.count_tokens(msg.get("content", ""))
-            for msg in optimized_history
-        )
+        optimized_tokens = sum(self.count_tokens(msg.get("content", "")) for msg in optimized_history)
         tokens_saved = total_tokens - optimized_tokens
 
         stats = {
@@ -292,7 +280,7 @@ class ConversationOptimizer:
             "savings_percentage": (tokens_saved / total_tokens) * 100 if total_tokens > 0 else 0,
             "budget_utilization": optimized_tokens / available_tokens,
             "kept_critical_messages": len([i for i in must_keep_indices if i < len(analyzed_messages)]),
-            "kept_cacheable_messages": len(cacheable_indices.intersection(keep_indices))
+            "kept_cacheable_messages": len(cacheable_indices.intersection(keep_indices)),
         }
 
         logger.info(f"Conversation optimized: {stats['savings_percentage']:.1f}% tokens saved")
@@ -300,10 +288,7 @@ class ConversationOptimizer:
         return optimized_history, stats
 
     def prepare_cached_context(
-        self,
-        conversation_history: List[Dict[str, Any]],
-        system_prompt: str,
-        extracted_preferences: Dict[str, Any]
+        self, conversation_history: List[Dict[str, Any]], system_prompt: str, extracted_preferences: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         Prepare conversation context with cache-control annotations.
@@ -338,7 +323,7 @@ This context contains stable user preferences and system instructions that remai
             "stable_tokens": stable_tokens,
             "conversation_history": conversation_history,
             "use_cache_control": use_cache,
-            "cache_strategy": "ephemeral" if use_cache else "none"
+            "cache_strategy": "ephemeral" if use_cache else "none",
         }
 
         if use_cache:
@@ -347,9 +332,7 @@ This context contains stable user preferences and system instructions that remai
         return cached_context
 
     def create_conversation_summary(
-        self,
-        removed_messages: List[Dict[str, Any]],
-        max_summary_tokens: int = 200
+        self, removed_messages: List[Dict[str, Any]], max_summary_tokens: int = 200
     ) -> Optional[str]:
         """
         Create a concise summary of removed conversation context.
@@ -385,15 +368,12 @@ This context contains stable user preferences and system instructions that remai
 
         # Ensure summary fits within token budget
         if self.count_tokens(summary) > max_summary_tokens:
-            summary = summary[:max_summary_tokens * 4] + "..."  # Rough char limit
+            summary = summary[: max_summary_tokens * 4] + "..."  # Rough char limit
 
         return summary
 
     def calculate_token_budget(
-        self,
-        system_prompt: str,
-        current_message: str,
-        max_context_tokens: int = 7000
+        self, system_prompt: str, current_message: str, max_context_tokens: int = 7000
     ) -> TokenBudget:
         """
         Calculate optimal token budget based on current request.
@@ -413,7 +393,7 @@ This context contains stable user preferences and system instructions that remai
             max_total_tokens=max_context_tokens,
             system_prompt_tokens=system_tokens,
             user_message_tokens=message_tokens,
-            response_buffer_tokens=1500  # Claude response space
+            response_buffer_tokens=1500,  # Claude response space
         )
 
 

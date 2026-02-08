@@ -1,12 +1,12 @@
 """Pytest configuration and shared fixtures for agentic RAG tests."""
 
-import pytest
 from unittest.mock import Mock
 
-from src.agents.query_planner import QueryPlanner, QueryPlan, IntentAnalysis, QueryIntent
-from src.agents.tool_registry import ToolRegistry, CalculatorTool, VectorSearchTool
-from src.agents.reflection import ReflectionEngine
+import pytest
 from src.agents.agentic_rag import AgenticRAG
+from src.agents.query_planner import IntentAnalysis, QueryIntent, QueryPlan, QueryPlanner
+from src.agents.reflection import ReflectionEngine
+from src.agents.tool_registry import CalculatorTool, ToolRegistry, VectorSearchTool
 
 
 @pytest.fixture
@@ -55,7 +55,7 @@ def mock_query_plan():
 def sample_tool_results():
     """Provide sample tool results for testing."""
     from src.agents.tool_registry import ToolResult
-    
+
     return [
         ToolResult(
             tool_name="vector_search",

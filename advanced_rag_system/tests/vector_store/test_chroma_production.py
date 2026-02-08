@@ -1,12 +1,15 @@
 """Tests for production ChromaDB vector store."""
 
 import asyncio
-import pytest
-import tempfile
 import shutil
+import tempfile
 from pathlib import Path
 from uuid import uuid4
 
+import pytest
+from src.core.exceptions import NotFoundError, VectorStoreError
+from src.core.types import DocumentChunk, Metadata
+from src.vector_store.base import SearchOptions, VectorStoreConfig
 from src.vector_store.chroma_production import (
     BackupConfig,
     BackupManager,
@@ -22,15 +25,11 @@ from src.vector_store.chroma_production import (
     MigrationStatus,
     ProductionChromaStore,
     ProductionVectorStoreConfig,
+    RetryableError,
     RetryConfig,
     RetryExhaustedError,
     RetryManager,
-    RetryableError,
 )
-from src.vector_store.base import VectorStoreConfig, SearchOptions
-from src.core.types import DocumentChunk, Metadata
-from src.core.exceptions import NotFoundError, VectorStoreError
-
 
 # ============================================================================
 # Fixtures
@@ -231,6 +230,7 @@ class TestRetryManager:
     @pytest.mark.asyncio
     async def test_successful_operation(self, retry_manager):
         """Test operation that succeeds immediately."""
+
         async def operation():
             return "success"
 
@@ -264,6 +264,7 @@ class TestRetryManager:
     @pytest.mark.asyncio
     async def test_retry_exhausted(self, retry_manager):
         """Test operation that always fails."""
+
         async def operation():
             raise RetryableError("Persistent failure")
 
@@ -276,6 +277,7 @@ class TestRetryManager:
     @pytest.mark.asyncio
     async def test_non_retryable_error(self, retry_manager):
         """Test that non-retryable errors are not retried."""
+
         async def operation():
             raise ValueError("Non-retryable")
 
@@ -347,6 +349,7 @@ class TestConnectionPool:
         def factory():
             # Slow factory
             import time
+
             time.sleep(1)
             return {"status": "connected"}
 
@@ -502,6 +505,7 @@ class TestMigrationManager:
     @pytest.mark.asyncio
     async def test_register_migration(self, migration_manager):
         """Test registering a migration."""
+
         async def apply():
             pass
 
@@ -521,6 +525,7 @@ class TestMigrationManager:
     @pytest.mark.asyncio
     async def test_register_duplicate_migration(self, migration_manager):
         """Test registering duplicate migration version."""
+
         async def apply():
             pass
 
@@ -545,12 +550,8 @@ class TestMigrationManager:
         async def apply2():
             applied.append(2)
 
-        migration_manager.register(
-            Migration(version=1, name="first", apply=apply1, rollback=apply1)
-        )
-        migration_manager.register(
-            Migration(version=2, name="second", apply=apply2, rollback=apply2)
-        )
+        migration_manager.register(Migration(version=1, name="first", apply=apply1, rollback=apply1))
+        migration_manager.register(Migration(version=2, name="second", apply=apply2, rollback=apply2))
 
         records = await migration_manager.migrate()
 
@@ -564,12 +565,11 @@ class TestMigrationManager:
     @pytest.mark.asyncio
     async def test_get_status(self, migration_manager):
         """Test getting migration status."""
+
         async def apply():
             pass
 
-        migration_manager.register(
-            Migration(version=1, name="test", apply=apply, rollback=apply)
-        )
+        migration_manager.register(Migration(version=1, name="test", apply=apply, rollback=apply))
 
         status = migration_manager.get_status()
 

@@ -16,13 +16,14 @@ Key components tested:
 - executive_dashboard (critical analytics)
 - All 57+ components via parameterized tests
 """
+
 import pytest
 from playwright.sync_api import Page, expect
-
 
 # ============================================================================
 # Individual Component Tests (Critical Components)
 # ============================================================================
+
 
 def test_property_card_snapshot(streamlit_app: Page, freeze_dynamic_content: callable):
     """
@@ -46,13 +47,13 @@ def test_property_card_snapshot(streamlit_app: Page, freeze_dynamic_content: cal
     freeze_dynamic_content('[data-testid="property-card"]')
 
     # Wait for images to load
-    property_card.locator('img').first.wait_for(state='visible', timeout=5000)
+    property_card.locator("img").first.wait_for(state="visible", timeout=5000)
 
     # Take screenshot and compare to baseline
     expect(property_card).to_have_screenshot(
-        'property_card_baseline.png',
+        "property_card_baseline.png",
         max_diff_pixels=100,  # Allow minor anti-aliasing differences
-        animations='disabled',
+        animations="disabled",
         timeout=10000,
     )
 
@@ -83,9 +84,9 @@ def test_lead_intelligence_hub_snapshot(streamlit_app: Page, freeze_dynamic_cont
 
     # Take screenshot with larger tolerance due to complexity
     expect(hub).to_have_screenshot(
-        'lead_intelligence_hub_baseline.png',
+        "lead_intelligence_hub_baseline.png",
         max_diff_pixels=200,  # Larger tolerance for complex charts/visualizations
-        animations='disabled',
+        animations="disabled",
         timeout=15000,
     )
 
@@ -111,9 +112,9 @@ def test_executive_dashboard_snapshot(streamlit_app: Page, freeze_dynamic_conten
     streamlit_app.wait_for_timeout(2000)
 
     expect(dashboard).to_have_screenshot(
-        'executive_dashboard_baseline.png',
+        "executive_dashboard_baseline.png",
         max_diff_pixels=150,
-        animations='disabled',
+        animations="disabled",
         timeout=15000,
     )
 
@@ -138,9 +139,9 @@ def test_property_matcher_ai_enhanced_snapshot(streamlit_app: Page, freeze_dynam
     streamlit_app.wait_for_timeout(2000)
 
     expect(matcher).to_have_screenshot(
-        'property_matcher_ai_enhanced_baseline.png',
+        "property_matcher_ai_enhanced_baseline.png",
         max_diff_pixels=150,
-        animations='disabled',
+        animations="disabled",
         timeout=15000,
     )
 
@@ -151,72 +152,68 @@ def test_property_matcher_ai_enhanced_snapshot(streamlit_app: Page, freeze_dynam
 
 # All 57 Streamlit components
 COMPONENTS = [
-    'agent_os',
-    'ai_behavioral_tuning',
-    'ai_performance_metrics',
-    'ai_training_feedback',
-    'ai_training_sandbox',
-    'alert_center',
-    'automation_studio',
-    'buyer_journey',
-    'buyer_portal_manager',
-    'calculators',
-    'chat_interface',
-    'churn_early_warning_dashboard',
-    'claude_panel',
-    'contact_timing',
-    'conversation_simulator',
-    'conversion_predictor',
-    'deep_research',
-    'elite_refinements',
-    'enhanced_services',
-    'executive_dashboard',
-    'executive_hub',
-    'financing_calculator',
-    'floating_claude',
-    'ghl_status_panel',
-    'global_header',
-    'interactive_analytics',
-    'interactive_lead_map',
-    'journey_orchestrator_ui',
-    'knowledge_base_uploader',
-    'lead_dashboard',
-    'lead_intelligence_hub',
-    'listing_architect',
-    'live_lead_scoreboard',
-    'mobile_responsive_layout',
-    'neighborhood_intelligence',
-    'neural_uplink',
-    'ops_optimization',
-    'payload_monitor',
-    'performance_dashboard',
-    'personalization_engine',
-    'proactive_intelligence_dashboard',
-    'project_copilot',
-    'property_cards',
-    'property_matcher_ai',
-    'property_matcher_ai_enhanced',
-    'property_swipe',
-    'property_valuation',
-    'sales_copilot',
-    'security_governance',
-    'segmentation_pulse',
-    'seller_journey',
-    'seller_portal_manager',
-    'swarm_visualizer',
-    'ui_elements',
-    'voice_claude_interface',
-    'voice_intelligence',
-    'workflow_designer',
+    "agent_os",
+    "ai_behavioral_tuning",
+    "ai_performance_metrics",
+    "ai_training_feedback",
+    "ai_training_sandbox",
+    "alert_center",
+    "automation_studio",
+    "buyer_journey",
+    "buyer_portal_manager",
+    "calculators",
+    "chat_interface",
+    "churn_early_warning_dashboard",
+    "claude_panel",
+    "contact_timing",
+    "conversation_simulator",
+    "conversion_predictor",
+    "deep_research",
+    "elite_refinements",
+    "enhanced_services",
+    "executive_dashboard",
+    "executive_hub",
+    "financing_calculator",
+    "floating_claude",
+    "ghl_status_panel",
+    "global_header",
+    "interactive_analytics",
+    "interactive_lead_map",
+    "journey_orchestrator_ui",
+    "knowledge_base_uploader",
+    "lead_dashboard",
+    "lead_intelligence_hub",
+    "listing_architect",
+    "live_lead_scoreboard",
+    "mobile_responsive_layout",
+    "neighborhood_intelligence",
+    "neural_uplink",
+    "ops_optimization",
+    "payload_monitor",
+    "performance_dashboard",
+    "personalization_engine",
+    "proactive_intelligence_dashboard",
+    "project_copilot",
+    "property_cards",
+    "property_matcher_ai",
+    "property_matcher_ai_enhanced",
+    "property_swipe",
+    "property_valuation",
+    "sales_copilot",
+    "security_governance",
+    "segmentation_pulse",
+    "seller_journey",
+    "seller_portal_manager",
+    "swarm_visualizer",
+    "ui_elements",
+    "voice_claude_interface",
+    "voice_intelligence",
+    "workflow_designer",
 ]
 
 
-@pytest.mark.parametrize('component_id', COMPONENTS)
-def test_all_components_snapshot(
-    streamlit_app: Page,
-    freeze_dynamic_content: callable,
-    component_id: str
-):
+@pytest.mark.parametrize("component_id", COMPONENTS)
+def test_all_components_snapshot(streamlit_app: Page, freeze_dynamic_content: callable, component_id: str):
     """
     Parameterized visual regression test for all components.
 
@@ -250,9 +247,9 @@ def test_all_components_snapshot(
 
     # Take screenshot and compare
     expect(component).to_have_screenshot(
-        f'{component_id}_baseline.png',
+        f"{component_id}_baseline.png",
         max_diff_pixels=100,
-        animations='disabled',
+        animations="disabled",
         timeout=10000,
     )
 
@@ -261,11 +258,15 @@ def test_all_components_snapshot(
 # Responsive Design Tests
 # ============================================================================
 
-@pytest.mark.parametrize('viewport', [
-    {'width': 375, 'height': 667, 'name': 'mobile'},      # iPhone SE
-    {'width': 768, 'height': 1024, 'name': 'tablet'},     # iPad
-    {'width': 1920, 'height': 1080, 'name': 'desktop'},   # Full HD
-])
+
+@pytest.mark.parametrize(
+    "viewport",
+    [
+        {"width": 375, "height": 667, "name": "mobile"},  # iPhone SE
+        {"width": 768, "height": 1024, "name": "tablet"},  # iPad
+        {"width": 1920, "height": 1080, "name": "desktop"},  # Full HD
+    ],
+)
 def test_responsive_property_card(browser, viewport: dict):
     """
     Test property card responsiveness across different viewports.
@@ -279,10 +280,7 @@ def test_responsive_property_card(browser, viewport: dict):
 
     """
     # Create context with specific viewport
-    context = browser.new_context(viewport={
-        'width': viewport['width'],
-        'height': viewport['height']
-    })
+    context = browser.new_context(viewport={"width": viewport["width"], "height": viewport["height"]})
     page = context.new_page()
 
     try:
@@ -296,9 +294,9 @@ def test_responsive_property_card(browser, viewport: dict):
 
         # Take screenshot with viewport name
         expect(card).to_have_screenshot(
-            f'property_card_{viewport["name"]}.png',
+            f"property_card_{viewport['name']}.png",
             max_diff_pixels=100,
-            animations='disabled',
+            animations="disabled",
         )
     finally:
         context.close()
@@ -307,6 +305,7 @@ def test_responsive_property_card(browser, viewport: dict):
 # ============================================================================
 # State-Based Tests (Different App States)
 # ============================================================================
+
 
 def test_empty_state_snapshot(streamlit_app: Page):
     """
@@ -323,7 +322,7 @@ def test_empty_state_snapshot(streamlit_app: Page):
 
     if empty_state.count() > 0:
         expect(empty_state.first).to_have_screenshot(
-            'empty_state_baseline.png',
+            "empty_state_baseline.png",
             max_diff_pixels=50,
         )
     else:
@@ -346,7 +345,7 @@ def test_loading_state_snapshot(streamlit_app: Page):
 
     if loading_spinner.count() > 0:
         expect(loading_spinner.first).to_have_screenshot(
-            'loading_state_baseline.png',
+            "loading_state_baseline.png",
             max_diff_pixels=50,
         )
     else:

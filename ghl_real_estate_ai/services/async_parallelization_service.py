@@ -18,21 +18,22 @@ Expected Results:
 """
 
 import asyncio
-from typing import List, Dict, Any, Optional, Callable, Awaitable, TypeVar, Tuple
+import time
 from dataclasses import dataclass
 from datetime import datetime
-import time
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, TypeVar
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 @dataclass
 class ParallelizationMetrics:
     """Metrics for parallel operation performance."""
+
     operation_name: str
     parallel_tasks: int
     total_time_seconds: float
@@ -62,7 +63,7 @@ class AsyncParallelizationService:
         leads: List[Any],
         signal_processor: Any,
         lead_router: Any,
-        post_processing_functions: Dict[str, Callable]
+        post_processing_functions: Dict[str, Callable],
     ) -> List[Dict[str, Any]]:
         """
         CRITICAL OPTIMIZATION: Parallelize batch scoring post-processing.
@@ -90,11 +91,11 @@ class AsyncParallelizationService:
             """Process a single result with parallel post-processing operations."""
             try:
                 # Extract post-processing functions
-                get_signal_summary = post_processing_functions.get('get_signal_summary')
-                recommend_routing = post_processing_functions.get('recommend_routing')
-                generate_actions = post_processing_functions.get('generate_actions')
-                identify_risks = post_processing_functions.get('identify_risks')
-                identify_signals = post_processing_functions.get('identify_signals')
+                get_signal_summary = post_processing_functions.get("get_signal_summary")
+                recommend_routing = post_processing_functions.get("recommend_routing")
+                generate_actions = post_processing_functions.get("generate_actions")
+                identify_risks = post_processing_functions.get("identify_risks")
+                identify_signals = post_processing_functions.get("identify_signals")
 
                 # Prepare parallel tasks for this result
                 tasks = []
@@ -103,48 +104,51 @@ class AsyncParallelizationService:
                 # Task 1: Signal summary (if available)
                 if get_signal_summary and result.behavioral_signals:
                     tasks.append(get_signal_summary(result.behavioral_signals))
-                    task_names.append('signal_summary')
+                    task_names.append("signal_summary")
                 else:
                     tasks.append(asyncio.create_task(asyncio.coroutine(lambda: None)()))
-                    task_names.append('signal_summary')
+                    task_names.append("signal_summary")
 
                 # Task 2: Routing recommendation
                 if recommend_routing:
                     tasks.append(recommend_routing(result, lead))
-                    task_names.append('routing')
+                    task_names.append("routing")
                 else:
                     tasks.append(asyncio.create_task(asyncio.coroutine(lambda: None)()))
-                    task_names.append('routing')
+                    task_names.append("routing")
 
                 # Task 3: Action recommendations
                 if generate_actions:
-                    tasks.append(generate_actions(result, result.behavioral_signals if result.behavioral_signals else {}))
-                    task_names.append('actions')
+                    tasks.append(
+                        generate_actions(result, result.behavioral_signals if result.behavioral_signals else {})
+                    )
+                    task_names.append("actions")
                 else:
                     tasks.append(asyncio.create_task(asyncio.coroutine(lambda: [])()))
-                    task_names.append('actions')
+                    task_names.append("actions")
 
                 # Task 4: Risk factors
                 if identify_risks:
                     tasks.append(identify_risks(result, result.behavioral_signals if result.behavioral_signals else {}))
-                    task_names.append('risks')
+                    task_names.append("risks")
                 else:
                     tasks.append(asyncio.create_task(asyncio.coroutine(lambda: [])()))
-                    task_names.append('risks')
+                    task_names.append("risks")
 
                 # Task 5: Positive signals
                 if identify_signals:
-                    tasks.append(identify_signals(result, result.behavioral_signals if result.behavioral_signals else {}))
-                    task_names.append('positive_signals')
+                    tasks.append(
+                        identify_signals(result, result.behavioral_signals if result.behavioral_signals else {})
+                    )
+                    task_names.append("positive_signals")
                 else:
                     tasks.append(asyncio.create_task(asyncio.coroutine(lambda: [])()))
-                    task_names.append('positive_signals')
+                    task_names.append("positive_signals")
 
                 # Execute all tasks in parallel with timeout
                 try:
                     parallel_results = await asyncio.wait_for(
-                        asyncio.gather(*tasks, return_exceptions=True),
-                        timeout=self.timeout_seconds
+                        asyncio.gather(*tasks, return_exceptions=True), timeout=self.timeout_seconds
                     )
                 except asyncio.TimeoutError:
                     logger.error(f"Timeout processing result {index}")
@@ -171,7 +175,7 @@ class AsyncParallelizationService:
                     "action_recommendations": actions,
                     "risk_factors": risks,
                     "positive_signals": positive_signals,
-                    "processing_time_ms": (time.time() - start_time) * 1000
+                    "processing_time_ms": (time.time() - start_time) * 1000,
                 }
 
             except Exception as e:
@@ -185,22 +189,21 @@ class AsyncParallelizationService:
                     "routing_recommendation": None,
                     "action_recommendations": [],
                     "risk_factors": [],
-                    "positive_signals": []
+                    "positive_signals": [],
                 }
 
         # Create tasks for all results (outer parallelization)
-        batch_tasks = [
-            process_single_result(results[i], leads[i], i)
-            for i in range(len(results))
-        ]
+        batch_tasks = [process_single_result(results[i], leads[i], i) for i in range(len(results))]
 
         # Process batches to avoid overwhelming the system
         batch_size = min(self.max_concurrent_tasks, len(batch_tasks))
         final_results = []
 
         for i in range(0, len(batch_tasks), batch_size):
-            batch = batch_tasks[i:i + batch_size]
-            logger.info(f"Processing batch {i//batch_size + 1}/{(len(batch_tasks) + batch_size - 1)//batch_size} ({len(batch)} items)")
+            batch = batch_tasks[i : i + batch_size]
+            logger.info(
+                f"Processing batch {i // batch_size + 1}/{(len(batch_tasks) + batch_size - 1) // batch_size} ({len(batch)} items)"
+            )
 
             try:
                 batch_results = await asyncio.gather(*batch, return_exceptions=True)
@@ -232,7 +235,7 @@ class AsyncParallelizationService:
             sequential_estimate_seconds=sequential_estimate,
             speedup_ratio=speedup,
             throughput_improvement=throughput_improvement,
-            created_at=datetime.now()
+            created_at=datetime.now(),
         )
         self.metrics_history.append(metrics)
 
@@ -249,7 +252,7 @@ class AsyncParallelizationService:
         contact_id: str,
         user_message: str,
         assistant_message: str,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
     ) -> Tuple[bool, bool]:
         """
         HIGH PRIORITY: Parallelize memory operations for chat endpoints.
@@ -275,10 +278,7 @@ class AsyncParallelizationService:
             """Store user interaction."""
             try:
                 await memory_service.add_interaction(
-                    contact_id=contact_id,
-                    message=user_message,
-                    role="user",
-                    location_id=location_id
+                    contact_id=contact_id, message=user_message, role="user", location_id=location_id
                 )
                 return True
             except Exception as e:
@@ -289,10 +289,7 @@ class AsyncParallelizationService:
             """Store assistant interaction."""
             try:
                 await memory_service.add_interaction(
-                    contact_id=contact_id,
-                    message=assistant_message,
-                    role="assistant",
-                    location_id=location_id
+                    contact_id=contact_id, message=assistant_message, role="assistant", location_id=location_id
                 )
                 return True
             except Exception as e:
@@ -302,9 +299,7 @@ class AsyncParallelizationService:
         # Execute both operations in parallel
         try:
             user_success, assistant_success = await asyncio.gather(
-                store_user_interaction(),
-                store_assistant_interaction(),
-                return_exceptions=False
+                store_user_interaction(), store_assistant_interaction(), return_exceptions=False
             )
 
             total_time = time.time() - start_time
@@ -318,13 +313,12 @@ class AsyncParallelizationService:
                 sequential_estimate_seconds=sequential_estimate,
                 speedup_ratio=sequential_estimate / total_time if total_time > 0 else 1,
                 throughput_improvement=((sequential_estimate - total_time) / sequential_estimate) * 100,
-                created_at=datetime.now()
+                created_at=datetime.now(),
             )
             self.metrics_history.append(metrics)
 
             logger.info(
-                f"Memory operations completed in {total_time:.3f}s "
-                f"(estimated {metrics.speedup_ratio:.1f}x speedup)"
+                f"Memory operations completed in {total_time:.3f}s (estimated {metrics.speedup_ratio:.1f}x speedup)"
             )
 
             return user_success, assistant_success
@@ -334,8 +328,7 @@ class AsyncParallelizationService:
             return False, False
 
     async def parallelize_independent_service_calls(
-        self,
-        service_calls: List[Tuple[str, Callable[[], Awaitable[T]]]]
+        self, service_calls: List[Tuple[str, Callable[[], Awaitable[T]]]]
     ) -> Dict[str, Any]:
         """
         GENERAL PURPOSE: Parallelize independent service calls.
@@ -370,10 +363,11 @@ class AsyncParallelizationService:
             try:
                 # Ensure the callable is awaitable
                 task = callable_func()
-                if not hasattr(task, '__await__'):
+                if not hasattr(task, "__await__"):
                     # If not awaitable, wrap in a coroutine
                     async def wrapper():
                         return callable_func()
+
                     task = wrapper()
 
                 tasks[operation_name] = task
@@ -388,8 +382,7 @@ class AsyncParallelizationService:
             task_coroutines = list(tasks.values())
 
             results = await asyncio.wait_for(
-                asyncio.gather(*task_coroutines, return_exceptions=True),
-                timeout=self.timeout_seconds
+                asyncio.gather(*task_coroutines, return_exceptions=True), timeout=self.timeout_seconds
             )
 
             # Build result dictionary
@@ -411,8 +404,10 @@ class AsyncParallelizationService:
                 total_time_seconds=total_time,
                 sequential_estimate_seconds=sequential_estimate,
                 speedup_ratio=sequential_estimate / total_time if total_time > 0 else 1,
-                throughput_improvement=((sequential_estimate - total_time) / sequential_estimate) * 100 if sequential_estimate > 0 else 0,
-                created_at=datetime.now()
+                throughput_improvement=((sequential_estimate - total_time) / sequential_estimate) * 100
+                if sequential_estimate > 0
+                else 0,
+                created_at=datetime.now(),
             )
             self.metrics_history.append(metrics)
 
@@ -431,10 +426,7 @@ class AsyncParallelizationService:
             return {name: None for name in operation_names}
 
     async def parallelize_with_semaphore(
-        self,
-        tasks: List[Awaitable[T]],
-        max_concurrent: int = 10,
-        operation_name: str = "semaphore_limited"
+        self, tasks: List[Awaitable[T]], max_concurrent: int = 10, operation_name: str = "semaphore_limited"
     ) -> List[T]:
         """
         Resource-constrained parallelization with semaphore.
@@ -485,8 +477,10 @@ class AsyncParallelizationService:
                 total_time_seconds=total_time,
                 sequential_estimate_seconds=sequential_estimate,
                 speedup_ratio=sequential_estimate / total_time if total_time > 0 else 1,
-                throughput_improvement=((sequential_estimate - total_time) / sequential_estimate) * 100 if sequential_estimate > 0 else 0,
-                created_at=datetime.now()
+                throughput_improvement=((sequential_estimate - total_time) / sequential_estimate) * 100
+                if sequential_estimate > 0
+                else 0,
+                created_at=datetime.now(),
             )
             self.metrics_history.append(metrics)
 
@@ -524,27 +518,19 @@ class AsyncParallelizationService:
         total_operations = len(self.metrics_history)
         avg_speedup = sum(m.speedup_ratio for m in self.metrics_history) / total_operations
         avg_improvement = sum(m.throughput_improvement for m in self.metrics_history) / total_operations
-        total_time_saved = sum(
-            m.sequential_estimate_seconds - m.total_time_seconds
-            for m in self.metrics_history
-        )
+        total_time_saved = sum(m.sequential_estimate_seconds - m.total_time_seconds for m in self.metrics_history)
 
         # Group by operation type
         operation_stats = {}
         for metric in self.metrics_history:
             op = metric.operation_name
             if op not in operation_stats:
-                operation_stats[op] = {
-                    "count": 0,
-                    "total_speedup": 0,
-                    "total_improvement": 0,
-                    "total_time_saved": 0
-                }
+                operation_stats[op] = {"count": 0, "total_speedup": 0, "total_improvement": 0, "total_time_saved": 0}
 
             operation_stats[op]["count"] += 1
             operation_stats[op]["total_speedup"] += metric.speedup_ratio
             operation_stats[op]["total_improvement"] += metric.throughput_improvement
-            operation_stats[op]["total_time_saved"] += (metric.sequential_estimate_seconds - metric.total_time_seconds)
+            operation_stats[op]["total_time_saved"] += metric.sequential_estimate_seconds - metric.total_time_seconds
 
         # Calculate averages
         for op_stats in operation_stats.values():
@@ -558,10 +544,10 @@ class AsyncParallelizationService:
                 "average_speedup": avg_speedup,
                 "average_throughput_improvement": avg_improvement,
                 "total_time_saved_seconds": total_time_saved,
-                "estimated_monthly_time_saved_hours": (total_time_saved * 30 * 24) / 3600
+                "estimated_monthly_time_saved_hours": (total_time_saved * 30 * 24) / 3600,
             },
             "by_operation": operation_stats,
-            "recommendations": self._get_performance_recommendations()
+            "recommendations": self._get_performance_recommendations(),
         }
 
     def _get_performance_recommendations(self) -> List[str]:
@@ -574,30 +560,22 @@ class AsyncParallelizationService:
         # Check for low-performing operations
         low_performers = [m for m in self.metrics_history if m.speedup_ratio < 1.5]
         if low_performers:
-            recommendations.append(
-                f"Consider optimizing {len(low_performers)} operations with <1.5x speedup"
-            )
+            recommendations.append(f"Consider optimizing {len(low_performers)} operations with <1.5x speedup")
 
         # Check for high-error operations
         error_prone = [m for m in self.metrics_history if "error" in m.operation_name.lower()]
         if error_prone:
-            recommendations.append(
-                f"Monitor {len(error_prone)} operations showing error patterns"
-            )
+            recommendations.append(f"Monitor {len(error_prone)} operations showing error patterns")
 
         # Check for resource constraints
         avg_tasks_per_op = sum(m.parallel_tasks for m in self.metrics_history) / len(self.metrics_history)
         if avg_tasks_per_op > 20:
-            recommendations.append(
-                "Consider implementing semaphore limits for high-concurrency operations"
-            )
+            recommendations.append("Consider implementing semaphore limits for high-concurrency operations")
 
         # Check for timeout issues
         timeout_candidates = [m for m in self.metrics_history if m.total_time_seconds > 10]
         if timeout_candidates:
-            recommendations.append(
-                f"Review timeout settings for {len(timeout_candidates)} long-running operations"
-            )
+            recommendations.append(f"Review timeout settings for {len(timeout_candidates)} long-running operations")
 
         if not recommendations:
             recommendations.append("Performance optimization is working well!")

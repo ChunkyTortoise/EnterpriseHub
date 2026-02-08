@@ -242,10 +242,7 @@ class StructuredRetriever:
             parts.append("Sample data summary:")
             for col in df.select_dtypes(include=["number"]).columns:
                 stats = df[col].describe()
-                parts.append(
-                    f"  - {col}: min={stats['min']:.2f}, "
-                    f"max={stats['max']:.2f}, mean={stats['mean']:.2f}"
-                )
+                parts.append(f"  - {col}: min={stats['min']:.2f}, max={stats['max']:.2f}, mean={stats['mean']:.2f}")
 
         if source:
             parts.append(f"Source: {source}")
@@ -452,7 +449,7 @@ class StructuredRetriever:
             chunk_df = df.iloc[start_idx:end_idx]
 
             # Generate description for this chunk
-            chunk_desc = f"Rows {start_idx} to {end_idx-1} from {source}\n\n"
+            chunk_desc = f"Rows {start_idx} to {end_idx - 1} from {source}\n\n"
             chunk_desc += table_desc + "\n\n"
             chunk_desc += "Chunk data:\n"
 
@@ -475,7 +472,7 @@ class StructuredRetriever:
                 embedding=embedding,
                 metadata=Metadata(
                     source=source,
-                    title=f"{Path(source).name} (rows {start_idx}-{end_idx-1})",
+                    title=f"{Path(source).name} (rows {start_idx}-{end_idx - 1})",
                     custom={
                         "modality": "structured",
                         "format": "table",
@@ -596,8 +593,7 @@ class StructuredRetriever:
             if query.sort_by and results:
                 reverse = query.sort_order == "desc"
                 results.sort(
-                    key=lambda r: r.metadata.custom.get(query.sort_by, "")
-                    if r.metadata else "",
+                    key=lambda r: r.metadata.custom.get(query.sort_by, "") if r.metadata else "",
                     reverse=reverse,
                 )
 
@@ -700,9 +696,7 @@ class StructuredRetriever:
             RetrievalError: If not initialized
         """
         if not self._initialized:
-            raise RetrievalError(
-                "Structured retriever not initialized. Call initialize() first."
-            )
+            raise RetrievalError("Structured retriever not initialized. Call initialize() first.")
 
     async def health_check(self) -> bool:
         """Check if retriever is healthy.
@@ -714,7 +708,7 @@ class StructuredRetriever:
             return False
 
         try:
-            if hasattr(self._embedding_provider, 'health_check'):
+            if hasattr(self._embedding_provider, "health_check"):
                 provider_healthy = await self._embedding_provider.health_check()
                 if not provider_healthy:
                     return False

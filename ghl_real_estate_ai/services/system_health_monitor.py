@@ -14,20 +14,21 @@ Features:
 
 import asyncio
 import time
-from typing import Dict, Any, Optional, List
-from datetime import datetime, timezone
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 
 logger = get_logger(__name__)
 
 
 class ComponentStatus(Enum):
     """Component health status levels."""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     DOWN = "down"
@@ -38,6 +39,7 @@ class ComponentStatus(Enum):
 @dataclass
 class ComponentHealth:
     """Health information for a system component."""
+
     component: str
     status: ComponentStatus
     response_time_ms: float
@@ -67,19 +69,17 @@ class SystemHealthMonitor:
 
         # Component registry
         self.components = [
-            'redis',
-            'ghl_api',
-            'claude_api',
-            'database',
-            'jorge_seller_bot',
-            'lead_bot',
-            'intent_decoder'
+            "redis",
+            "ghl_api",
+            "claude_api",
+            "database",
+            "jorge_seller_bot",
+            "lead_bot",
+            "intent_decoder",
         ]
 
         # Health tracking
-        self.health_history: Dict[str, List[ComponentHealth]] = {
-            component: [] for component in self.components
-        }
+        self.health_history: Dict[str, List[ComponentHealth]] = {component: [] for component in self.components}
         self.last_health_check: Dict[str, ComponentHealth] = {}
 
         # Background task
@@ -139,7 +139,7 @@ class SystemHealthMonitor:
                     status=health.status.value,
                     response_time_ms=health.response_time_ms,
                     error_message=health.error_message,
-                    additional_metrics=health.additional_metrics or {}
+                    additional_metrics=health.additional_metrics or {},
                 )
 
                 # Check for status changes requiring alerts
@@ -159,19 +159,19 @@ class SystemHealthMonitor:
         start_time = time.time()
 
         try:
-            if component == 'redis':
+            if component == "redis":
                 return await self._check_redis_health(start_time)
-            elif component == 'ghl_api':
+            elif component == "ghl_api":
                 return await self._check_ghl_api_health(start_time)
-            elif component == 'claude_api':
+            elif component == "claude_api":
                 return await self._check_claude_api_health(start_time)
-            elif component == 'database':
+            elif component == "database":
                 return await self._check_database_health(start_time)
-            elif component == 'jorge_seller_bot':
+            elif component == "jorge_seller_bot":
                 return await self._check_jorge_bot_health(start_time)
-            elif component == 'lead_bot':
+            elif component == "lead_bot":
                 return await self._check_lead_bot_health(start_time)
-            elif component == 'intent_decoder':
+            elif component == "intent_decoder":
                 return await self._check_intent_decoder_health(start_time)
             else:
                 return ComponentHealth(
@@ -179,7 +179,7 @@ class SystemHealthMonitor:
                     status=ComponentStatus.UNKNOWN,
                     response_time_ms=0,
                     error_message="Unknown component",
-                    last_check=datetime.now(timezone.utc)
+                    last_check=datetime.now(timezone.utc),
                 )
 
         except Exception as e:
@@ -190,7 +190,7 @@ class SystemHealthMonitor:
                 response_time_ms=response_time_ms,
                 error_message=str(e),
                 last_check=datetime.now(timezone.utc),
-                health_score=0.0
+                health_score=0.0,
             )
 
     async def _check_redis_health(self, start_time: float) -> ComponentHealth:
@@ -212,7 +212,7 @@ class SystemHealthMonitor:
                     response_time_ms=response_time_ms,
                     last_check=datetime.now(timezone.utc),
                     additional_metrics={"connection_pool_size": 10},  # Mock metric
-                    health_score=self._calculate_health_score(status, response_time_ms)
+                    health_score=self._calculate_health_score(status, response_time_ms),
                 )
             else:
                 return ComponentHealth(
@@ -221,7 +221,7 @@ class SystemHealthMonitor:
                     response_time_ms=response_time_ms,
                     error_message="Redis ping test failed",
                     last_check=datetime.now(timezone.utc),
-                    health_score=0.6
+                    health_score=0.6,
                 )
 
         except Exception as e:
@@ -232,7 +232,7 @@ class SystemHealthMonitor:
                 response_time_ms=response_time_ms,
                 error_message=f"Redis connection failed: {str(e)}",
                 last_check=datetime.now(timezone.utc),
-                health_score=0.0
+                health_score=0.0,
             )
 
     async def _check_ghl_api_health(self, start_time: float) -> ComponentHealth:
@@ -249,11 +249,8 @@ class SystemHealthMonitor:
                 status=status,
                 response_time_ms=response_time_ms,
                 last_check=datetime.now(timezone.utc),
-                additional_metrics={
-                    "rate_limit_remaining": 95,
-                    "daily_quota_used": 245
-                },
-                health_score=self._calculate_health_score(status, response_time_ms)
+                additional_metrics={"rate_limit_remaining": 95, "daily_quota_used": 245},
+                health_score=self._calculate_health_score(status, response_time_ms),
             )
 
         except Exception as e:
@@ -264,7 +261,7 @@ class SystemHealthMonitor:
                 response_time_ms=response_time_ms,
                 error_message=f"GHL API error: {str(e)}",
                 last_check=datetime.now(timezone.utc),
-                health_score=0.0
+                health_score=0.0,
             )
 
     async def _check_claude_api_health(self, start_time: float) -> ComponentHealth:
@@ -281,11 +278,8 @@ class SystemHealthMonitor:
                 status=status,
                 response_time_ms=response_time_ms,
                 last_check=datetime.now(timezone.utc),
-                additional_metrics={
-                    "tokens_used_today": 125000,
-                    "rate_limit_remaining": 98
-                },
-                health_score=self._calculate_health_score(status, response_time_ms)
+                additional_metrics={"tokens_used_today": 125000, "rate_limit_remaining": 98},
+                health_score=self._calculate_health_score(status, response_time_ms),
             )
 
         except Exception as e:
@@ -296,7 +290,7 @@ class SystemHealthMonitor:
                 response_time_ms=response_time_ms,
                 error_message=f"Claude API error: {str(e)}",
                 last_check=datetime.now(timezone.utc),
-                health_score=0.0
+                health_score=0.0,
             )
 
     async def _check_database_health(self, start_time: float) -> ComponentHealth:
@@ -316,9 +310,9 @@ class SystemHealthMonitor:
                 additional_metrics={
                     "active_connections": 12,
                     "connection_pool_size": 20,
-                    "query_cache_hit_ratio": 0.94
+                    "query_cache_hit_ratio": 0.94,
                 },
-                health_score=self._calculate_health_score(status, response_time_ms)
+                health_score=self._calculate_health_score(status, response_time_ms),
             )
 
         except Exception as e:
@@ -329,7 +323,7 @@ class SystemHealthMonitor:
                 response_time_ms=response_time_ms,
                 error_message=f"Database error: {str(e)}",
                 last_check=datetime.now(timezone.utc),
-                health_score=0.0
+                health_score=0.0,
             )
 
     async def _check_jorge_bot_health(self, start_time: float) -> ComponentHealth:
@@ -346,12 +340,8 @@ class SystemHealthMonitor:
                 status=status,
                 response_time_ms=response_time_ms,
                 last_check=datetime.now(timezone.utc),
-                additional_metrics={
-                    "active_conversations": 5,
-                    "qualification_rate": 0.78,
-                    "avg_response_time": 245
-                },
-                health_score=self._calculate_health_score(status, response_time_ms)
+                additional_metrics={"active_conversations": 5, "qualification_rate": 0.78, "avg_response_time": 245},
+                health_score=self._calculate_health_score(status, response_time_ms),
             )
 
         except Exception as e:
@@ -362,7 +352,7 @@ class SystemHealthMonitor:
                 response_time_ms=response_time_ms,
                 error_message=f"Jorge bot error: {str(e)}",
                 last_check=datetime.now(timezone.utc),
-                health_score=0.3
+                health_score=0.3,
             )
 
     async def _check_lead_bot_health(self, start_time: float) -> ComponentHealth:
@@ -381,9 +371,9 @@ class SystemHealthMonitor:
                 additional_metrics={
                     "active_sequences": 18,
                     "sequence_completion_rate": 0.85,
-                    "cma_generation_success": 0.96
+                    "cma_generation_success": 0.96,
                 },
-                health_score=self._calculate_health_score(status, response_time_ms)
+                health_score=self._calculate_health_score(status, response_time_ms),
             )
 
         except Exception as e:
@@ -394,7 +384,7 @@ class SystemHealthMonitor:
                 response_time_ms=response_time_ms,
                 error_message=f"Lead bot error: {str(e)}",
                 last_check=datetime.now(timezone.utc),
-                health_score=0.3
+                health_score=0.3,
             )
 
     async def _check_intent_decoder_health(self, start_time: float) -> ComponentHealth:
@@ -413,9 +403,9 @@ class SystemHealthMonitor:
                 additional_metrics={
                     "analysis_accuracy": 0.95,
                     "avg_processing_time": 42.3,
-                    "confidence_threshold_met": 0.92
+                    "confidence_threshold_met": 0.92,
                 },
-                health_score=self._calculate_health_score(status, response_time_ms)
+                health_score=self._calculate_health_score(status, response_time_ms),
             )
 
         except Exception as e:
@@ -426,7 +416,7 @@ class SystemHealthMonitor:
                 response_time_ms=response_time_ms,
                 error_message=f"Intent decoder error: {str(e)}",
                 last_check=datetime.now(timezone.utc),
-                health_score=0.3
+                health_score=0.3,
             )
 
     def _determine_status(self, response_time_ms: float) -> ComponentStatus:
@@ -445,7 +435,7 @@ class SystemHealthMonitor:
             ComponentStatus.DEGRADED: 0.6,
             ComponentStatus.RECOVERING: 0.4,
             ComponentStatus.DOWN: 0.0,
-            ComponentStatus.UNKNOWN: 0.1
+            ComponentStatus.UNKNOWN: 0.1,
         }
 
         base_score = status_scores.get(status, 0.5)
@@ -471,16 +461,14 @@ class SystemHealthMonitor:
 
         # Keep only recent history
         if len(self.health_history[component]) > self.health_history_size:
-            self.health_history[component] = self.health_history[component][-self.health_history_size:]
+            self.health_history[component] = self.health_history[component][-self.health_history_size :]
 
     def _should_alert_status_change(self, previous: ComponentHealth, current: ComponentHealth) -> bool:
         """Determine if status change warrants an alert."""
         # Alert on status degradation or improvement after being down
-        return (
-            previous.status != current.status and (
-                current.status in [ComponentStatus.DOWN, ComponentStatus.DEGRADED] or
-                (previous.status == ComponentStatus.DOWN and current.status == ComponentStatus.HEALTHY)
-            )
+        return previous.status != current.status and (
+            current.status in [ComponentStatus.DOWN, ComponentStatus.DEGRADED]
+            or (previous.status == ComponentStatus.DOWN and current.status == ComponentStatus.HEALTHY)
         )
 
     async def _emit_status_change_alert(self, component: str, previous: ComponentHealth, current: ComponentHealth):
@@ -491,6 +479,7 @@ class SystemHealthMonitor:
 
         # Use the existing system alert publisher
         from ghl_real_estate_ai.services.event_publisher import publish_system_alert
+
         await publish_system_alert(
             alert_type="component_status_change",
             message=message,
@@ -500,8 +489,8 @@ class SystemHealthMonitor:
                 "previous_status": previous.status.value,
                 "current_status": current.status.value,
                 "response_time_ms": current.response_time_ms,
-                "error_message": current.error_message
-            }
+                "error_message": current.error_message,
+            },
         )
 
     def get_overall_health(self) -> Dict[str, Any]:
@@ -510,7 +499,9 @@ class SystemHealthMonitor:
             return {"status": "unknown", "message": "No health data available"}
 
         component_statuses = [health.status for health in self.last_health_check.values()]
-        overall_score = sum(health.health_score for health in self.last_health_check.values()) / len(self.last_health_check)
+        overall_score = sum(health.health_score for health in self.last_health_check.values()) / len(
+            self.last_health_check
+        )
 
         # Determine overall status
         if any(status == ComponentStatus.DOWN for status in component_statuses):
@@ -527,7 +518,9 @@ class SystemHealthMonitor:
             "healthy_components": sum(1 for s in component_statuses if s == ComponentStatus.HEALTHY),
             "degraded_components": sum(1 for s in component_statuses if s == ComponentStatus.DEGRADED),
             "down_components": sum(1 for s in component_statuses if s == ComponentStatus.DOWN),
-            "last_check": max(h.last_check for h in self.last_health_check.values()).isoformat() if self.last_health_check else None
+            "last_check": max(h.last_check for h in self.last_health_check.values()).isoformat()
+            if self.last_health_check
+            else None,
         }
 
     def get_component_health(self, component: str) -> Optional[ComponentHealth]:

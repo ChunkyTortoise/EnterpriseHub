@@ -221,9 +221,7 @@ class BehavioralTriggerEngine:
             )
         )
 
-    def track_behavior(
-        self, lead_id: str, behavior_type: str, metadata: Dict = None
-    ) -> List[Dict]:
+    def track_behavior(self, lead_id: str, behavior_type: str, metadata: Dict = None) -> List[Dict]:
         """Track a behavior and check for triggered patterns"""
 
         # Create behavior event
@@ -255,9 +253,7 @@ class BehavioralTriggerEngine:
             return triggered_actions
 
         # Sort rules by priority
-        sorted_rules = sorted(
-            self.trigger_rules, key=lambda r: r.priority, reverse=True
-        )
+        sorted_rules = sorted(self.trigger_rules, key=lambda r: r.priority, reverse=True)
 
         for rule in sorted_rules:
             if not rule.enabled:
@@ -285,11 +281,7 @@ class BehavioralTriggerEngine:
         # Apply timeframe filter
         if timeframe_hours:
             cutoff = datetime.utcnow() - timedelta(hours=timeframe_hours)
-            matching_events = [
-                e
-                for e in matching_events
-                if datetime.fromisoformat(e.timestamp) > cutoff
-            ]
+            matching_events = [e for e in matching_events if datetime.fromisoformat(e.timestamp) > cutoff]
 
         # Check count
         if len(matching_events) < count_required:
@@ -340,9 +332,7 @@ class BehavioralTriggerEngine:
         # Count by behavior type
         behavior_counts = {}
         for event in history:
-            behavior_counts[event.behavior_type] = (
-                behavior_counts.get(event.behavior_type, 0) + 1
-            )
+            behavior_counts[event.behavior_type] = behavior_counts.get(event.behavior_type, 0) + 1
 
         # Calculate engagement score
         engagement_score = min(len(history) * 5, 100)
@@ -380,21 +370,15 @@ def demo_behavioral_triggers():
     print("📊 Simulating lead behavior...\n")
 
     # Day 1: Initial interest
-    triggered = engine.track_behavior(
-        lead_id, BehaviorType.PROPERTY_VIEW.value, {"property_id": "prop_123"}
-    )
+    triggered = engine.track_behavior(lead_id, BehaviorType.PROPERTY_VIEW.value, {"property_id": "prop_123"})
     print(f"✓ Tracked: Property view")
 
     # Same day: Views again
-    triggered = engine.track_behavior(
-        lead_id, BehaviorType.PROPERTY_VIEW.value, {"property_id": "prop_123"}
-    )
+    triggered = engine.track_behavior(lead_id, BehaviorType.PROPERTY_VIEW.value, {"property_id": "prop_123"})
     print(f"✓ Tracked: Second property view")
 
     # Third view - should trigger!
-    triggered = engine.track_behavior(
-        lead_id, BehaviorType.PROPERTY_VIEW.value, {"property_id": "prop_123"}
-    )
+    triggered = engine.track_behavior(lead_id, BehaviorType.PROPERTY_VIEW.value, {"property_id": "prop_123"})
     print(f"✓ Tracked: Third property view")
 
     if triggered:

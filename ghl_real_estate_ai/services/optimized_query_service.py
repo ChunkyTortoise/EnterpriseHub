@@ -16,20 +16,20 @@ Performance Targets:
 """
 
 import asyncio
-import time
 import hashlib
 import json
-from typing import Dict, List, Optional, Any, Tuple, Union
-from datetime import datetime, timedelta
+import time
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import asyncpg
 from pydantic import BaseModel
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.database.connection_manager import get_db_pool
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)
 
@@ -44,12 +44,14 @@ BATCH_SIZE = 100
 
 class SortDirection(Enum):
     """Query sort direction."""
+
     ASC = "ASC"
     DESC = "DESC"
 
 
 class QueryType(Enum):
     """Type of database query for optimization tracking."""
+
     LEAD_SEARCH = "lead_search"
     PROPERTY_SEARCH = "property_search"
     CONVERSATION_HISTORY = "conversation_history"
@@ -73,29 +75,31 @@ class PaginationCursor:
     def to_string(self) -> str:
         """Encode cursor as base64 string for API responses."""
         import base64
+
         cursor_data = {
-            'sort_field': self.sort_field,
-            'sort_value': str(self.sort_value),
-            'unique_id': self.unique_id,
-            'page_size': self.page_size,
-            'sort_direction': self.sort_direction.value
+            "sort_field": self.sort_field,
+            "sort_value": str(self.sort_value),
+            "unique_id": self.unique_id,
+            "page_size": self.page_size,
+            "sort_direction": self.sort_direction.value,
         }
         cursor_json = json.dumps(cursor_data)
         return base64.b64encode(cursor_json.encode()).decode()
 
     @classmethod
-    def from_string(cls, cursor_str: str) -> 'PaginationCursor':
+    def from_string(cls, cursor_str: str) -> "PaginationCursor":
         """Decode cursor from base64 string."""
         import base64
+
         cursor_json = base64.b64decode(cursor_str).decode()
         cursor_data = json.loads(cursor_json)
 
         return cls(
-            sort_field=cursor_data['sort_field'],
-            sort_value=cursor_data['sort_value'],
-            unique_id=cursor_data['unique_id'],
-            page_size=cursor_data['page_size'],
-            sort_direction=SortDirection(cursor_data['sort_direction'])
+            sort_field=cursor_data["sort_field"],
+            sort_value=cursor_data["sort_value"],
+            unique_id=cursor_data["unique_id"],
+            page_size=cursor_data["page_size"],
+            sort_direction=SortDirection(cursor_data["sort_direction"]),
         )
 
 
@@ -138,12 +142,12 @@ class OptimizedQueryService:
 
         # Performance tracking
         self.query_stats = {
-            'total_queries': 0,
-            'slow_queries': 0,
-            'cache_hits': 0,
-            'cache_misses': 0,
-            'avg_query_time_ms': 0.0,
-            'total_query_time_ms': 0.0
+            "total_queries": 0,
+            "slow_queries": 0,
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "avg_query_time_ms": 0.0,
+            "total_query_time_ms": 0.0,
         }
 
     async def initialize(self):
@@ -160,7 +164,7 @@ class OptimizedQueryService:
         query_type: QueryType,
         cursor: Optional[PaginationCursor] = None,
         cache_key: Optional[str] = None,
-        tenant_id: Optional[str] = None
+        tenant_id: Optional[str] = None,
     ) -> QueryResult:
         """
         Execute paginated query with cursor-based pagination.
@@ -181,14 +185,12 @@ class OptimizedQueryService:
             cached_result = await self._get_cached_result(cache_key, tenant_id)
             if cached_result:
                 cached_result.cache_hit = True
-                self.query_stats['cache_hits'] += 1
+                self.query_stats["cache_hits"] += 1
                 return cached_result
 
         try:
             # Build paginated query
-            paginated_query, paginated_params = self._build_paginated_query(
-                query, params, cursor
-            )
+            paginated_query, paginated_params = self._build_paginated_query(query, params, cursor)
 
             # Execute query
             async with self.pool.acquire() as conn:
@@ -204,14 +206,14 @@ class OptimizedQueryService:
             if has_more:
                 items = items[:-1]  # Remove extra item
                 last_item = items[-1]
-                sort_field = cursor.sort_field if cursor else 'id'
+                sort_field = cursor.sort_field if cursor else "id"
 
                 next_cursor = PaginationCursor(
                     sort_field=sort_field,
                     sort_value=last_item.get(sort_field),
-                    unique_id=str(last_item.get('id', last_item.get('uuid', ''))),
+                    unique_id=str(last_item.get("id", last_item.get("uuid", ""))),
                     page_size=page_size,
-                    sort_direction=cursor.sort_direction if cursor else SortDirection.DESC
+                    sort_direction=cursor.sort_direction if cursor else SortDirection.DESC,
                 )
             else:
                 next_cursor = None
@@ -221,7 +223,7 @@ class OptimizedQueryService:
 
             # Log slow queries
             if query_time_ms > SLOW_QUERY_THRESHOLD_MS:
-                self.query_stats['slow_queries'] += 1
+                self.query_stats["slow_queries"] += 1
                 logger.warning(f"Slow query detected ({query_time_ms:.2f}ms): {query_type.value}")
                 logger.debug(f"Query: {paginated_query}")
                 logger.debug(f"Params: {paginated_params}")
@@ -230,17 +232,13 @@ class OptimizedQueryService:
             self._update_query_stats(query_time_ms, cache_hit=False)
 
             result = QueryResult(
-                items=items,
-                next_cursor=next_cursor,
-                has_more=has_more,
-                query_time_ms=query_time_ms,
-                cache_hit=False
+                items=items, next_cursor=next_cursor, has_more=has_more, query_time_ms=query_time_ms, cache_hit=False
             )
 
             # Cache result if cache_key provided
             if cache_key and tenant_id:
                 await self._cache_result(cache_key, result, tenant_id)
-                self.query_stats['cache_misses'] += 1
+                self.query_stats["cache_misses"] += 1
 
             return result
 
@@ -250,15 +248,12 @@ class OptimizedQueryService:
             raise
 
     def _build_paginated_query(
-        self,
-        base_query: str,
-        params: List[Any],
-        cursor: Optional[PaginationCursor]
+        self, base_query: str, params: List[Any], cursor: Optional[PaginationCursor]
     ) -> Tuple[str, List[Any]]:
         """Build paginated query with cursor conditions."""
 
         # Default pagination settings
-        sort_field = cursor.sort_field if cursor else 'id'
+        sort_field = cursor.sort_field if cursor else "id"
         sort_direction = cursor.sort_direction if cursor else SortDirection.DESC
         page_size = cursor.page_size if cursor else DEFAULT_PAGE_SIZE
 
@@ -276,19 +271,19 @@ class OptimizedQueryService:
             param_index = len(paginated_params) + 1
 
             if sort_direction == SortDirection.DESC:
-                if cursor.sort_field == 'id':
+                if cursor.sort_field == "id":
                     pagination_clause = f"WHERE id < ${param_index}"
                 else:
                     pagination_clause = f"WHERE ({sort_field} < ${param_index} OR ({sort_field} = ${param_index} AND id > ${param_index + 1}))"
                     paginated_params.append(cursor.unique_id)
             else:
-                if cursor.sort_field == 'id':
+                if cursor.sort_field == "id":
                     pagination_clause = f"WHERE id > ${param_index}"
                 else:
                     pagination_clause = f"WHERE ({sort_field} > ${param_index} OR ({sort_field} = ${param_index} AND id > ${param_index + 1}))"
                     paginated_params.append(cursor.unique_id)
 
-            paginated_params.insert(-1 if cursor.sort_field != 'id' else -1, cursor.sort_value)
+            paginated_params.insert(-1 if cursor.sort_field != "id" else -1, cursor.sort_value)
 
         # Handle existing WHERE clause
         if "WHERE" in base_query.upper():
@@ -312,7 +307,7 @@ class OptimizedQueryService:
         tenant_id: str,
         filters: Dict[str, Any] = None,
         cursor: Optional[PaginationCursor] = None,
-        cache_duration: int = CACHE_TTL_QUERY_RESULTS
+        cache_duration: int = CACHE_TTL_QUERY_RESULTS,
     ) -> QueryResult:
         """Optimized lead search with pagination."""
 
@@ -323,31 +318,31 @@ class OptimizedQueryService:
 
         # Apply filters
         if filters:
-            if 'phone' in filters:
+            if "phone" in filters:
                 where_conditions.append(f"phone ILIKE ${param_index}")
                 params.append(f"%{filters['phone']}%")
                 param_index += 1
 
-            if 'email' in filters:
+            if "email" in filters:
                 where_conditions.append(f"email ILIKE ${param_index}")
                 params.append(f"%{filters['email']}%")
                 param_index += 1
 
-            if 'lead_score_min' in filters:
+            if "lead_score_min" in filters:
                 where_conditions.append(f"lead_score >= ${param_index}")
-                params.append(filters['lead_score_min'])
+                params.append(filters["lead_score_min"])
                 param_index += 1
 
-            if 'created_after' in filters:
+            if "created_after" in filters:
                 where_conditions.append(f"created_at >= ${param_index}")
-                params.append(filters['created_after'])
+                params.append(filters["created_after"])
                 param_index += 1
 
         base_query = f"""
         SELECT id, phone, email, lead_score, created_at, updated_at,
                first_name, last_name, status, source
         FROM leads
-        WHERE {' AND '.join(where_conditions)}
+        WHERE {" AND ".join(where_conditions)}
         """
 
         # Generate cache key
@@ -359,14 +354,11 @@ class OptimizedQueryService:
             query_type=QueryType.LEAD_SEARCH,
             cursor=cursor,
             cache_key=cache_key,
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
 
     async def search_properties(
-        self,
-        tenant_id: str,
-        filters: Dict[str, Any] = None,
-        cursor: Optional[PaginationCursor] = None
+        self, tenant_id: str, filters: Dict[str, Any] = None, cursor: Optional[PaginationCursor] = None
     ) -> QueryResult:
         """Optimized property search with pagination."""
 
@@ -376,31 +368,31 @@ class OptimizedQueryService:
 
         # Apply filters
         if filters:
-            if 'min_price' in filters:
+            if "min_price" in filters:
                 where_conditions.append(f"price >= ${param_index}")
-                params.append(filters['min_price'])
+                params.append(filters["min_price"])
                 param_index += 1
 
-            if 'max_price' in filters:
+            if "max_price" in filters:
                 where_conditions.append(f"price <= ${param_index}")
-                params.append(filters['max_price'])
+                params.append(filters["max_price"])
                 param_index += 1
 
-            if 'bedrooms' in filters:
+            if "bedrooms" in filters:
                 where_conditions.append(f"bedrooms >= ${param_index}")
-                params.append(filters['bedrooms'])
+                params.append(filters["bedrooms"])
                 param_index += 1
 
-            if 'zip_code' in filters:
+            if "zip_code" in filters:
                 where_conditions.append(f"zip_code = ${param_index}")
-                params.append(filters['zip_code'])
+                params.append(filters["zip_code"])
                 param_index += 1
 
         base_query = f"""
         SELECT id, address, price, bedrooms, bathrooms, sqft,
                zip_code, listing_status, created_at
         FROM properties
-        WHERE {' AND '.join(where_conditions)}
+        WHERE {" AND ".join(where_conditions)}
         """
 
         cache_key = self._generate_cache_key("properties_search", filters or {}, cursor)
@@ -411,14 +403,11 @@ class OptimizedQueryService:
             query_type=QueryType.PROPERTY_SEARCH,
             cursor=cursor,
             cache_key=cache_key,
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
 
     async def get_conversation_history(
-        self,
-        tenant_id: str,
-        lead_id: Optional[str] = None,
-        cursor: Optional[PaginationCursor] = None
+        self, tenant_id: str, lead_id: Optional[str] = None, cursor: Optional[PaginationCursor] = None
     ) -> QueryResult:
         """Get conversation history with efficient pagination."""
 
@@ -435,16 +424,13 @@ class OptimizedQueryService:
         SELECT id, lead_id, message_content, sender, timestamp,
                conversation_stage, ai_confidence
         FROM conversations
-        WHERE {' AND '.join(where_conditions)}
+        WHERE {" AND ".join(where_conditions)}
         """
 
         # Default cursor for conversations (newest first)
         if not cursor:
             cursor = PaginationCursor(
-                sort_field='timestamp',
-                sort_value=None,
-                unique_id='',
-                sort_direction=SortDirection.DESC
+                sort_field="timestamp", sort_value=None, unique_id="", sort_direction=SortDirection.DESC
             )
 
         cache_key = self._generate_cache_key("conversations", {"lead_id": lead_id}, cursor)
@@ -455,16 +441,12 @@ class OptimizedQueryService:
             query_type=QueryType.CONVERSATION_HISTORY,
             cursor=cursor,
             cache_key=cache_key,
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
 
     # BATCH OPERATIONS
 
-    async def batch_update_lead_scores(
-        self,
-        tenant_id: str,
-        score_updates: List[Dict[str, Any]]
-    ) -> int:
+    async def batch_update_lead_scores(self, tenant_id: str, score_updates: List[Dict[str, Any]]) -> int:
         """Batch update lead scores for performance."""
         await self.initialize()
 
@@ -478,15 +460,15 @@ class OptimizedQueryService:
             async with self.pool.acquire() as conn:
                 async with conn.transaction():
                     for batch_start in range(0, len(score_updates), BATCH_SIZE):
-                        batch = score_updates[batch_start:batch_start + BATCH_SIZE]
+                        batch = score_updates[batch_start : batch_start + BATCH_SIZE]
 
                         # Build batch update query
                         update_queries = []
                         update_params = []
 
                         for i, update in enumerate(batch):
-                            lead_id = update['lead_id']
-                            new_score = update['lead_score']
+                            lead_id = update["lead_id"]
+                            new_score = update["lead_score"]
 
                             param_base = i * 3 + 1
                             update_queries.append(f"""
@@ -495,16 +477,12 @@ class OptimizedQueryService:
                                 WHERE id = ${param_base + 2} AND tenant_id = $1
                             """)
 
-                            update_params.extend([
-                                new_score,
-                                datetime.utcnow(),
-                                lead_id
-                            ])
+                            update_params.extend([new_score, datetime.utcnow(), lead_id])
 
                         # Execute batch
                         for query in update_queries:
                             result = await conn.execute(query, tenant_id, *update_params[:3])
-                            if result.split()[-1] == '1':  # "UPDATE 1"
+                            if result.split()[-1] == "1":  # "UPDATE 1"
                                 updated_count += 1
                             update_params = update_params[3:]  # Next set of params
 
@@ -532,16 +510,16 @@ class OptimizedQueryService:
             if cached_data:
                 # Reconstruct QueryResult from cached data
                 next_cursor = None
-                if cached_data.get('next_cursor_data'):
-                    next_cursor = PaginationCursor(**cached_data['next_cursor_data'])
+                if cached_data.get("next_cursor_data"):
+                    next_cursor = PaginationCursor(**cached_data["next_cursor_data"])
 
                 return QueryResult(
-                    items=cached_data['items'],
+                    items=cached_data["items"],
                     next_cursor=next_cursor,
-                    has_more=cached_data['has_more'],
-                    total_count=cached_data.get('total_count'),
-                    query_time_ms=cached_data['query_time_ms'],
-                    cache_hit=True
+                    has_more=cached_data["has_more"],
+                    total_count=cached_data.get("total_count"),
+                    query_time_ms=cached_data["query_time_ms"],
+                    cache_hit=True,
                 )
         except Exception as e:
             logger.warning(f"Cache retrieval failed: {e}")
@@ -555,21 +533,21 @@ class OptimizedQueryService:
 
             # Prepare data for caching
             cache_data = {
-                'items': result.items,
-                'has_more': result.has_more,
-                'total_count': result.total_count,
-                'query_time_ms': result.query_time_ms,
-                'cached_at': datetime.utcnow().isoformat()
+                "items": result.items,
+                "has_more": result.has_more,
+                "total_count": result.total_count,
+                "query_time_ms": result.query_time_ms,
+                "cached_at": datetime.utcnow().isoformat(),
             }
 
             # Include cursor data if present
             if result.next_cursor:
-                cache_data['next_cursor_data'] = {
-                    'sort_field': result.next_cursor.sort_field,
-                    'sort_value': result.next_cursor.sort_value,
-                    'unique_id': result.next_cursor.unique_id,
-                    'page_size': result.next_cursor.page_size,
-                    'sort_direction': result.next_cursor.sort_direction.value
+                cache_data["next_cursor_data"] = {
+                    "sort_field": result.next_cursor.sort_field,
+                    "sort_value": result.next_cursor.sort_value,
+                    "unique_id": result.next_cursor.unique_id,
+                    "page_size": result.next_cursor.page_size,
+                    "sort_direction": result.next_cursor.sort_direction.value,
                 }
 
             await self.cache.set(scoped_key, cache_data, CACHE_TTL_QUERY_RESULTS)
@@ -579,11 +557,7 @@ class OptimizedQueryService:
 
     def _generate_cache_key(self, query_type: str, filters: Dict[str, Any], cursor: Optional[PaginationCursor]) -> str:
         """Generate deterministic cache key."""
-        cache_data = {
-            'query_type': query_type,
-            'filters': filters,
-            'cursor': cursor.to_string() if cursor else None
-        }
+        cache_data = {"query_type": query_type, "filters": filters, "cursor": cursor.to_string() if cursor else None}
         cache_str = json.dumps(cache_data, sort_keys=True, default=str)
         return hashlib.md5(cache_str.encode()).hexdigest()
 
@@ -594,10 +568,10 @@ class OptimizedQueryService:
 
     def _update_query_stats(self, query_time_ms: float, cache_hit: bool):
         """Update query performance statistics."""
-        self.query_stats['total_queries'] += 1
-        self.query_stats['total_query_time_ms'] += query_time_ms
-        self.query_stats['avg_query_time_ms'] = (
-            self.query_stats['total_query_time_ms'] / self.query_stats['total_queries']
+        self.query_stats["total_queries"] += 1
+        self.query_stats["total_query_time_ms"] += query_time_ms
+        self.query_stats["avg_query_time_ms"] = (
+            self.query_stats["total_query_time_ms"] / self.query_stats["total_queries"]
         )
 
     # MONITORING AND STATS
@@ -608,35 +582,34 @@ class OptimizedQueryService:
 
         return {
             **self.query_stats,
-            'slow_query_threshold_ms': SLOW_QUERY_THRESHOLD_MS,
-            'slow_query_rate': (
-                self.query_stats['slow_queries'] / max(self.query_stats['total_queries'], 1)
-            ) * 100,
-            'cache_hit_rate': (
-                self.query_stats['cache_hits'] / max(
-                    self.query_stats['cache_hits'] + self.query_stats['cache_misses'], 1
-                )
-            ) * 100,
-            'cache_performance': cache_stats
+            "slow_query_threshold_ms": SLOW_QUERY_THRESHOLD_MS,
+            "slow_query_rate": (self.query_stats["slow_queries"] / max(self.query_stats["total_queries"], 1)) * 100,
+            "cache_hit_rate": (
+                self.query_stats["cache_hits"]
+                / max(self.query_stats["cache_hits"] + self.query_stats["cache_misses"], 1)
+            )
+            * 100,
+            "cache_performance": cache_stats,
         }
 
     async def get_slow_query_report(self, hours: int = 24) -> Dict[str, Any]:
         """Generate slow query report for optimization."""
         return {
-            'period_hours': hours,
-            'slow_queries_detected': self.query_stats['slow_queries'],
-            'threshold_ms': SLOW_QUERY_THRESHOLD_MS,
-            'optimization_recommendations': [
+            "period_hours": hours,
+            "slow_queries_detected": self.query_stats["slow_queries"],
+            "threshold_ms": SLOW_QUERY_THRESHOLD_MS,
+            "optimization_recommendations": [
                 "Consider adding database indexes for frequently filtered columns",
                 "Review query patterns for N+1 issues",
                 "Implement query result caching for repeated searches",
-                "Consider database query plan analysis for complex queries"
-            ]
+                "Consider database query plan analysis for complex queries",
+            ],
         }
 
 
 # Global service instance
 _query_service = None
+
 
 def get_optimized_query_service() -> OptimizedQueryService:
     """Get singleton optimized query service."""

@@ -20,27 +20,24 @@ Created: 2026-01-18
 import asyncio
 import json
 import logging
-from datetime import datetime, timedelta, date
-from typing import Dict, List, Optional, Any, Tuple
+import uuid
 from dataclasses import dataclass, field
+from datetime import date, datetime, timedelta
 from enum import Enum
 from pathlib import Path
-import uuid
+from typing import Any, Dict, List, Optional, Tuple
 
-from ..markets.national_registry import (
-    get_national_market_registry,
-    CorporateHeadquarters,
-    CorporatePartnerTier
-)
+from ..ghl_utils.logger import get_logger
+from ..markets.national_registry import CorporateHeadquarters, CorporatePartnerTier, get_national_market_registry
 from ..services.cache_service import get_cache_service
 from ..services.claude_assistant import ClaudeAssistant
-from ..ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 
 class RelocationStatus(Enum):
     """Status stages for corporate relocations"""
+
     INITIATED = "initiated"
     NEEDS_ASSESSMENT = "needs_assessment"
     MARKET_ANALYSIS = "market_analysis"
@@ -54,6 +51,7 @@ class RelocationStatus(Enum):
 
 class EmployeeLevel(Enum):
     """Employee levels for tiered relocation services"""
+
     C_SUITE = "c_suite"
     VP_DIRECTOR = "vp_director"
     SENIOR_MANAGER = "senior_manager"
@@ -65,6 +63,7 @@ class EmployeeLevel(Enum):
 @dataclass
 class RelocationRequest:
     """Corporate employee relocation request"""
+
     request_id: str
     company_name: str
     employee_name: str
@@ -90,6 +89,7 @@ class RelocationRequest:
 @dataclass
 class CorporateContract:
     """Corporate relocation contract and pricing"""
+
     contract_id: str
     company_name: str
     partnership_tier: CorporatePartnerTier
@@ -109,6 +109,7 @@ class CorporateContract:
 @dataclass
 class MultiCityCoordination:
     """Multi-city relocation coordination"""
+
     coordination_id: str
     company_name: str
     project_name: str
@@ -174,12 +175,12 @@ class CorporateRelocationService:
                     "Cultural adaptation support",
                     "Executive home search",
                     "Closing coordination",
-                    "Post-move support (90 days)"
+                    "Post-move support (90 days)",
                 ],
                 "response_time_hours": 1,
                 "employee_levels": [EmployeeLevel.C_SUITE],
                 "base_fee": 25000,
-                "commission_rate": 0.025
+                "commission_rate": 0.025,
             },
             "gold_executive": {
                 "description": "Executive-level relocation management",
@@ -191,12 +192,12 @@ class CorporateRelocationService:
                     "Spouse career assistance",
                     "Moving logistics coordination",
                     "Temporary housing (30 days)",
-                    "Post-move support (30 days)"
+                    "Post-move support (30 days)",
                 ],
                 "response_time_hours": 4,
                 "employee_levels": [EmployeeLevel.VP_DIRECTOR, EmployeeLevel.SENIOR_MANAGER],
                 "base_fee": 12000,
-                "commission_rate": 0.02
+                "commission_rate": 0.02,
             },
             "silver_professional": {
                 "description": "Professional relocation services",
@@ -207,12 +208,12 @@ class CorporateRelocationService:
                     "Moving logistics support",
                     "School information",
                     "Area orientation",
-                    "Post-move check-in"
+                    "Post-move check-in",
                 ],
                 "response_time_hours": 8,
                 "employee_levels": [EmployeeLevel.MANAGER],
                 "base_fee": 7500,
-                "commission_rate": 0.015
+                "commission_rate": 0.015,
             },
             "bronze_standard": {
                 "description": "Standard corporate relocation",
@@ -221,13 +222,13 @@ class CorporateRelocationService:
                     "Market information",
                     "Basic moving coordination",
                     "Local area resources",
-                    "Standard response time"
+                    "Standard response time",
                 ],
                 "response_time_hours": 24,
                 "employee_levels": [EmployeeLevel.INDIVIDUAL_CONTRIBUTOR, EmployeeLevel.NEW_GRADUATE],
                 "base_fee": 3500,
-                "commission_rate": 0.01
-            }
+                "commission_rate": 0.01,
+            },
         }
 
     def _initialize_pricing_structure(self) -> Dict[str, float]:
@@ -235,23 +236,23 @@ class CorporateRelocationService:
         return {
             "base_relocation_fee": 5000,
             "volume_discounts": {
-                "tier_1": {"min_volume": 50, "discount": 0.05},   # 5% for 50+ relocations
+                "tier_1": {"min_volume": 50, "discount": 0.05},  # 5% for 50+ relocations
                 "tier_2": {"min_volume": 100, "discount": 0.10},  # 10% for 100+ relocations
                 "tier_3": {"min_volume": 200, "discount": 0.15},  # 15% for 200+ relocations
-                "tier_4": {"min_volume": 500, "discount": 0.20}   # 20% for 500+ relocations
+                "tier_4": {"min_volume": 500, "discount": 0.20},  # 20% for 500+ relocations
             },
             "rush_fees": {
-                "urgent": 0.25,      # 25% surcharge for <30 days
-                "expedited": 0.15    # 15% surcharge for 30-60 days
+                "urgent": 0.25,  # 25% surcharge for <30 days
+                "expedited": 0.15,  # 15% surcharge for 30-60 days
             },
             "additional_services": {
-                "temporary_housing": 250,    # per day
+                "temporary_housing": 250,  # per day
                 "spouse_career_assistance": 2500,
                 "private_school_search": 1500,
                 "cultural_integration": 3500,
                 "tax_consulting": 1000,
-                "pet_relocation": 750
-            }
+                "pet_relocation": 750,
+            },
         }
 
     def _load_data(self) -> None:
@@ -259,55 +260,60 @@ class CorporateRelocationService:
         try:
             # Load relocation requests
             if self.requests_file.exists():
-                with open(self.requests_file, 'r') as f:
+                with open(self.requests_file, "r") as f:
                     data = json.load(f)
                     for req_id, req_data in data.items():
                         # Convert date strings back to date objects
-                        req_data['start_date'] = datetime.strptime(req_data['start_date'], '%Y-%m-%d').date()
-                        req_data['completion_target'] = datetime.strptime(req_data['completion_target'], '%Y-%m-%d').date()
-                        req_data['created_at'] = datetime.fromisoformat(req_data['created_at'])
-                        req_data['updated_at'] = datetime.fromisoformat(req_data['updated_at'])
-                        req_data['employee_level'] = EmployeeLevel(req_data['employee_level'])
-                        req_data['status'] = RelocationStatus(req_data['status'])
+                        req_data["start_date"] = datetime.strptime(req_data["start_date"], "%Y-%m-%d").date()
+                        req_data["completion_target"] = datetime.strptime(
+                            req_data["completion_target"], "%Y-%m-%d"
+                        ).date()
+                        req_data["created_at"] = datetime.fromisoformat(req_data["created_at"])
+                        req_data["updated_at"] = datetime.fromisoformat(req_data["updated_at"])
+                        req_data["employee_level"] = EmployeeLevel(req_data["employee_level"])
+                        req_data["status"] = RelocationStatus(req_data["status"])
 
                         self.active_requests[req_id] = RelocationRequest(**req_data)
 
             # Load corporate contracts
             if self.contracts_file.exists():
-                with open(self.contracts_file, 'r') as f:
+                with open(self.contracts_file, "r") as f:
                     data = json.load(f)
                     for contract_id, contract_data in data.items():
-                        contract_data['partnership_tier'] = CorporatePartnerTier(contract_data['partnership_tier'])
-                        contract_data['contract_start_date'] = datetime.strptime(contract_data['contract_start_date'], '%Y-%m-%d').date()
-                        contract_data['contract_end_date'] = datetime.strptime(contract_data['contract_end_date'], '%Y-%m-%d').date()
-                        contract_data['last_review_date'] = datetime.fromisoformat(contract_data['last_review_date'])
+                        contract_data["partnership_tier"] = CorporatePartnerTier(contract_data["partnership_tier"])
+                        contract_data["contract_start_date"] = datetime.strptime(
+                            contract_data["contract_start_date"], "%Y-%m-%d"
+                        ).date()
+                        contract_data["contract_end_date"] = datetime.strptime(
+                            contract_data["contract_end_date"], "%Y-%m-%d"
+                        ).date()
+                        contract_data["last_review_date"] = datetime.fromisoformat(contract_data["last_review_date"])
 
                         self.corporate_contracts[contract_id] = CorporateContract(**contract_data)
 
             # Load multi-city coordination projects
             if self.coordination_file.exists():
-                with open(self.coordination_file, 'r') as f:
+                with open(self.coordination_file, "r") as f:
                     data = json.load(f)
                     for coord_id, coord_data in data.items():
                         # Convert date strings in timeline
-                        for key, date_str in coord_data['timeline'].items():
-                            coord_data['timeline'][key] = datetime.strptime(date_str, '%Y-%m-%d').date()
-                        coord_data['created_at'] = datetime.fromisoformat(coord_data['created_at'])
+                        for key, date_str in coord_data["timeline"].items():
+                            coord_data["timeline"][key] = datetime.strptime(date_str, "%Y-%m-%d").date()
+                        coord_data["created_at"] = datetime.fromisoformat(coord_data["created_at"])
 
                         self.multi_city_projects[coord_id] = MultiCityCoordination(**coord_data)
 
-            logger.info(f"Loaded {len(self.active_requests)} active requests, "
-                       f"{len(self.corporate_contracts)} contracts, "
-                       f"{len(self.multi_city_projects)} multi-city projects")
+            logger.info(
+                f"Loaded {len(self.active_requests)} active requests, "
+                f"{len(self.corporate_contracts)} contracts, "
+                f"{len(self.multi_city_projects)} multi-city projects"
+            )
 
         except Exception as e:
             logger.error(f"Failed to load relocation data: {str(e)}")
 
     async def create_relocation_request(
-        self,
-        company_name: str,
-        employee_details: Dict[str, Any],
-        relocation_requirements: Dict[str, Any]
+        self, company_name: str, employee_details: Dict[str, Any], relocation_requirements: Dict[str, Any]
     ) -> str:
         """
         Create a new corporate relocation request
@@ -324,16 +330,16 @@ class CorporateRelocationService:
         request_id = f"CR-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8]}"
 
         # Determine service tier based on employee level
-        employee_level = EmployeeLevel(employee_details.get('level', 'individual_contributor'))
+        employee_level = EmployeeLevel(employee_details.get("level", "individual_contributor"))
         service_tier = self._determine_service_tier(employee_level)
 
         # Calculate completion target based on timeline
-        timeline_req = relocation_requirements.get('timeline_requirement', 'flexible')
-        start_date = datetime.strptime(relocation_requirements['start_date'], '%Y-%m-%d').date()
+        timeline_req = relocation_requirements.get("timeline_requirement", "flexible")
+        start_date = datetime.strptime(relocation_requirements["start_date"], "%Y-%m-%d").date()
 
-        if timeline_req == 'urgent':
+        if timeline_req == "urgent":
             completion_target = start_date - timedelta(days=14)
-        elif timeline_req == 'expedited':
+        elif timeline_req == "expedited":
             completion_target = start_date - timedelta(days=45)
         else:
             completion_target = start_date - timedelta(days=90)
@@ -342,24 +348,24 @@ class CorporateRelocationService:
         request = RelocationRequest(
             request_id=request_id,
             company_name=company_name,
-            employee_name=employee_details['name'],
-            employee_email=employee_details['email'],
+            employee_name=employee_details["name"],
+            employee_email=employee_details["email"],
             employee_level=employee_level,
-            source_location=employee_details.get('current_location'),
-            target_market=relocation_requirements['target_market'],
+            source_location=employee_details.get("current_location"),
+            target_market=relocation_requirements["target_market"],
             start_date=start_date,
             timeline_requirement=timeline_req,
-            budget_range=(relocation_requirements['budget_min'], relocation_requirements['budget_max']),
-            family_size=employee_details.get('family_size', 1),
-            special_requirements=relocation_requirements.get('special_requirements', []),
-            housing_preferences=relocation_requirements.get('housing_preferences', {}),
+            budget_range=(relocation_requirements["budget_min"], relocation_requirements["budget_max"]),
+            family_size=employee_details.get("family_size", 1),
+            special_requirements=relocation_requirements.get("special_requirements", []),
+            housing_preferences=relocation_requirements.get("housing_preferences", {}),
             relocation_package_tier=service_tier,
             status=RelocationStatus.INITIATED,
             assigned_specialist=None,
             created_at=datetime.now(),
             updated_at=datetime.now(),
             completion_target=completion_target,
-            notes=[]
+            notes=[],
         )
 
         # Store request
@@ -380,7 +386,7 @@ class CorporateRelocationService:
     def _determine_service_tier(self, employee_level: EmployeeLevel) -> str:
         """Determine appropriate service tier based on employee level"""
         for tier_name, tier_config in self.service_tiers.items():
-            if employee_level in tier_config['employee_levels']:
+            if employee_level in tier_config["employee_levels"]:
                 return tier_name
 
         return "bronze_standard"  # Default fallback
@@ -397,7 +403,7 @@ class CorporateRelocationService:
             "platinum_concierge": "Sarah Johnson (Senior Executive Specialist)",
             "gold_executive": "Michael Chen (Executive Coordinator)",
             "silver_professional": "Jennifer Davis (Professional Coordinator)",
-            "bronze_standard": "David Rodriguez (Standard Coordinator)"
+            "bronze_standard": "David Rodriguez (Standard Coordinator)",
         }
 
         specialist = specialist_assignments.get(request.relocation_package_tier)
@@ -406,12 +412,14 @@ class CorporateRelocationService:
             request.updated_at = datetime.now()
 
             # Add assignment note
-            request.notes.append({
-                "timestamp": datetime.now().isoformat(),
-                "type": "specialist_assignment",
-                "message": f"Assigned specialist: {specialist}",
-                "author": "System"
-            })
+            request.notes.append(
+                {
+                    "timestamp": datetime.now().isoformat(),
+                    "type": "specialist_assignment",
+                    "message": f"Assigned specialist: {specialist}",
+                    "author": "System",
+                }
+            )
 
     async def _send_welcome_communication(self, request_id: str) -> None:
         """Send welcome communication to employee and corporate contact"""
@@ -426,23 +434,22 @@ class CorporateRelocationService:
             "target_market": request.target_market,
             "service_tier": request.relocation_package_tier,
             "assigned_specialist": request.assigned_specialist,
-            "timeline": request.timeline_requirement
+            "timeline": request.timeline_requirement,
         }
 
-        welcome_message = await self.claude_assistant.generate_welcome_message(
-            "corporate_relocation",
-            context
-        )
+        welcome_message = await self.claude_assistant.generate_welcome_message("corporate_relocation", context)
 
         # In a real implementation, this would send actual emails
         # For now, we'll log the communication and add to notes
-        request.notes.append({
-            "timestamp": datetime.now().isoformat(),
-            "type": "welcome_communication",
-            "message": f"Welcome communication sent to {request.employee_email}",
-            "content": welcome_message,
-            "author": "System"
-        })
+        request.notes.append(
+            {
+                "timestamp": datetime.now().isoformat(),
+                "type": "welcome_communication",
+                "message": f"Welcome communication sent to {request.employee_email}",
+                "content": welcome_message,
+                "author": "System",
+            }
+        )
 
         logger.info(f"Sent welcome communication for request {request_id}")
 
@@ -475,29 +482,29 @@ class CorporateRelocationService:
             "employee": {
                 "name": request.employee_name,
                 "email": request.employee_email,
-                "level": request.employee_level.value
+                "level": request.employee_level.value,
             },
             "relocation_details": {
                 "source_location": request.source_location,
                 "target_market": request.target_market,
                 "start_date": request.start_date.isoformat(),
                 "timeline_requirement": request.timeline_requirement,
-                "completion_target": request.completion_target.isoformat()
+                "completion_target": request.completion_target.isoformat(),
             },
             "service_details": {
                 "package_tier": request.relocation_package_tier,
                 "assigned_specialist": request.assigned_specialist,
-                "service_features": self.service_tiers.get(request.relocation_package_tier, {}).get('features', [])
+                "service_features": self.service_tiers.get(request.relocation_package_tier, {}).get("features", []),
             },
             "budget_information": {
                 "budget_range": request.budget_range,
                 "estimated_total_cost": self._estimate_total_cost(request),
-                "volume_discount": contract.volume_discount_percentage if contract else 0
+                "volume_discount": contract.volume_discount_percentage if contract else 0,
             },
             "market_insights": market_insights,
             "recent_notes": request.notes[-5:],  # Last 5 notes
             "next_steps": self._generate_next_steps(request),
-            "last_updated": request.updated_at.isoformat()
+            "last_updated": request.updated_at.isoformat(),
         }
 
         # Cache for 30 minutes
@@ -523,7 +530,7 @@ class CorporateRelocationService:
             RelocationStatus.OFFER_NEGOTIATION: 80,
             RelocationStatus.CLOSING_PROCESS: 95,
             RelocationStatus.COMPLETED: 100,
-            RelocationStatus.CANCELLED: 0
+            RelocationStatus.CANCELLED: 0,
         }
 
         return status_progress.get(request.status, 0)
@@ -531,23 +538,23 @@ class CorporateRelocationService:
     def _estimate_total_cost(self, request: RelocationRequest) -> float:
         """Estimate total cost for relocation"""
         tier_config = self.service_tiers.get(request.relocation_package_tier, {})
-        base_fee = tier_config.get('base_fee', 5000)
+        base_fee = tier_config.get("base_fee", 5000)
 
         # Add rush fees if applicable
         days_until_start = (request.start_date - date.today()).days
         rush_multiplier = 1.0
 
         if days_until_start < 30:
-            rush_multiplier = 1 + self.pricing_structure['rush_fees']['urgent']
+            rush_multiplier = 1 + self.pricing_structure["rush_fees"]["urgent"]
         elif days_until_start < 60:
-            rush_multiplier = 1 + self.pricing_structure['rush_fees']['expedited']
+            rush_multiplier = 1 + self.pricing_structure["rush_fees"]["expedited"]
 
         estimated_cost = base_fee * rush_multiplier
 
         # Add special service costs
         for requirement in request.special_requirements:
-            if requirement in self.pricing_structure['additional_services']:
-                estimated_cost += self.pricing_structure['additional_services'][requirement]
+            if requirement in self.pricing_structure["additional_services"]:
+                estimated_cost += self.pricing_structure["additional_services"][requirement]
 
         return estimated_cost
 
@@ -557,52 +564,48 @@ class CorporateRelocationService:
             RelocationStatus.INITIATED: [
                 "Schedule initial consultation with assigned specialist",
                 "Complete needs assessment questionnaire",
-                "Review corporate relocation benefits package"
+                "Review corporate relocation benefits package",
             ],
             RelocationStatus.NEEDS_ASSESSMENT: [
                 "Finalize housing requirements and preferences",
                 "Begin market analysis for target location",
-                "Schedule virtual market orientation"
+                "Schedule virtual market orientation",
             ],
             RelocationStatus.MARKET_ANALYSIS: [
                 "Review neighborhood recommendations",
                 "Schedule property viewings",
-                "Coordinate visit logistics"
+                "Coordinate visit logistics",
             ],
             RelocationStatus.PROPERTY_SEARCH: [
                 "Attend scheduled property viewings",
                 "Provide feedback on viewed properties",
-                "Prepare offer strategy with specialist"
+                "Prepare offer strategy with specialist",
             ],
             RelocationStatus.VIEWING_SCHEDULED: [
                 "Complete property viewings",
                 "Make offer decision",
-                "Begin offer negotiation process"
+                "Begin offer negotiation process",
             ],
             RelocationStatus.OFFER_NEGOTIATION: [
                 "Finalize purchase terms",
                 "Schedule home inspection",
-                "Begin closing process"
+                "Begin closing process",
             ],
             RelocationStatus.CLOSING_PROCESS: [
                 "Complete final walkthrough",
                 "Attend closing",
-                "Begin move coordination"
+                "Begin move coordination",
             ],
             RelocationStatus.COMPLETED: [
                 "Complete post-move checklist",
                 "Provide feedback on services",
-                "Access ongoing support resources"
-            ]
+                "Access ongoing support resources",
+            ],
         }
 
         return next_steps_map.get(request.status, ["Contact assigned specialist for status update"])
 
-    async def create_multi_city_coordination(
-        self,
-        company_name: str,
-        project_details: Dict[str, Any]
-    ) -> str:
+    async def create_multi_city_coordination(self, company_name: str, project_details: Dict[str, Any]) -> str:
         """
         Create multi-city relocation coordination project
 
@@ -617,23 +620,23 @@ class CorporateRelocationService:
 
         # Parse timeline requirements
         timeline = {}
-        for phase, date_str in project_details.get('timeline', {}).items():
-            timeline[phase] = datetime.strptime(date_str, '%Y-%m-%d').date()
+        for phase, date_str in project_details.get("timeline", {}).items():
+            timeline[phase] = datetime.strptime(date_str, "%Y-%m-%d").date()
 
         coordination = MultiCityCoordination(
             coordination_id=coordination_id,
             company_name=company_name,
-            project_name=project_details['project_name'],
-            affected_markets=project_details['affected_markets'],
-            employee_count=project_details['employee_count'],
-            coordination_type=project_details['coordination_type'],
+            project_name=project_details["project_name"],
+            affected_markets=project_details["affected_markets"],
+            employee_count=project_details["employee_count"],
+            coordination_type=project_details["coordination_type"],
             timeline=timeline,
-            budget_total=project_details['budget_total'],
-            project_manager=project_details.get('project_manager', 'TBD'),
+            budget_total=project_details["budget_total"],
+            project_manager=project_details.get("project_manager", "TBD"),
             status="initiated",
             market_coordinators={},
-            progress_tracking={market: 0.0 for market in project_details['affected_markets']},
-            created_at=datetime.now()
+            progress_tracking={market: 0.0 for market in project_details["affected_markets"]},
+            created_at=datetime.now(),
         )
 
         # Assign market coordinators
@@ -660,7 +663,7 @@ class CorporateRelocationService:
             "austin": "Rachel Green",
             "dallas": "Mark Wilson",
             "houston": "Sandra Kim",
-            "san_antonio": "Carlos Rodriguez"
+            "san_antonio": "Carlos Rodriguez",
         }
 
         for market in coordination.affected_markets:
@@ -676,20 +679,22 @@ class CorporateRelocationService:
             return cached
 
         # Get all requests for this company
-        company_requests = [r for r in self.active_requests.values()
-                          if r.company_name.lower() == company_name.lower()]
+        company_requests = [r for r in self.active_requests.values() if r.company_name.lower() == company_name.lower()]
 
         # Get corporate contract
         contract = self._find_corporate_contract(company_name)
 
         # Get multi-city projects
-        company_projects = [p for p in self.multi_city_projects.values()
-                          if p.company_name.lower() == company_name.lower()]
+        company_projects = [
+            p for p in self.multi_city_projects.values() if p.company_name.lower() == company_name.lower()
+        ]
 
         # Calculate metrics
         total_relocations = len(company_requests)
         completed_relocations = len([r for r in company_requests if r.status == RelocationStatus.COMPLETED])
-        active_relocations = len([r for r in company_requests if r.status not in [RelocationStatus.COMPLETED, RelocationStatus.CANCELLED]])
+        active_relocations = len(
+            [r for r in company_requests if r.status not in [RelocationStatus.COMPLETED, RelocationStatus.CANCELLED]]
+        )
 
         dashboard = {
             "company_name": company_name,
@@ -697,14 +702,14 @@ class CorporateRelocationService:
                 "partnership_tier": contract.partnership_tier.value if contract else "none",
                 "volume_discount": contract.volume_discount_percentage if contract else 0,
                 "annual_commitment": contract.annual_volume_commitment if contract else 0,
-                "dedicated_specialist": contract.dedicated_specialist if contract else None
+                "dedicated_specialist": contract.dedicated_specialist if contract else None,
             },
             "relocation_metrics": {
                 "total_relocations": total_relocations,
                 "completed_relocations": completed_relocations,
                 "active_relocations": active_relocations,
                 "success_rate": (completed_relocations / total_relocations * 100) if total_relocations > 0 else 0,
-                "average_timeline": self._calculate_average_timeline(company_requests)
+                "average_timeline": self._calculate_average_timeline(company_requests),
             },
             "active_requests": [
                 {
@@ -713,7 +718,7 @@ class CorporateRelocationService:
                     "target_market": r.target_market,
                     "status": r.status.value,
                     "progress": self._calculate_progress(r),
-                    "completion_target": r.completion_target.isoformat()
+                    "completion_target": r.completion_target.isoformat(),
                 }
                 for r in company_requests
                 if r.status not in [RelocationStatus.COMPLETED, RelocationStatus.CANCELLED]
@@ -725,7 +730,9 @@ class CorporateRelocationService:
                     "affected_markets": p.affected_markets,
                     "employee_count": p.employee_count,
                     "status": p.status,
-                    "overall_progress": sum(p.progress_tracking.values()) / len(p.progress_tracking) if p.progress_tracking else 0
+                    "overall_progress": sum(p.progress_tracking.values()) / len(p.progress_tracking)
+                    if p.progress_tracking
+                    else 0,
                 }
                 for p in company_projects
             ],
@@ -733,9 +740,9 @@ class CorporateRelocationService:
             "cost_summary": {
                 "total_spent": self._calculate_total_spent(company_requests),
                 "projected_savings": self._calculate_projected_savings(company_requests, contract),
-                "cost_per_relocation": self._calculate_cost_per_relocation(company_requests)
+                "cost_per_relocation": self._calculate_cost_per_relocation(company_requests),
             },
-            "last_updated": datetime.now().isoformat()
+            "last_updated": datetime.now().isoformat(),
         }
 
         # Cache for 1 hour
@@ -766,21 +773,17 @@ class CorporateRelocationService:
 
     def _calculate_total_spent(self, requests: List[RelocationRequest]) -> float:
         """Calculate total amount spent on relocations"""
-        return sum(self._estimate_total_cost(r) for r in requests
-                  if r.status == RelocationStatus.COMPLETED)
+        return sum(self._estimate_total_cost(r) for r in requests if r.status == RelocationStatus.COMPLETED)
 
     def _calculate_projected_savings(
-        self,
-        requests: List[RelocationRequest],
-        contract: Optional[CorporateContract]
+        self, requests: List[RelocationRequest], contract: Optional[CorporateContract]
     ) -> float:
         """Calculate projected savings from volume discounts"""
         if not contract:
             return 0.0
 
         total_base_cost = sum(
-            self.service_tiers.get(r.relocation_package_tier, {}).get('base_fee', 5000)
-            for r in requests
+            self.service_tiers.get(r.relocation_package_tier, {}).get("base_fee", 5000) for r in requests
         )
 
         savings = total_base_cost * contract.volume_discount_percentage
@@ -799,15 +802,15 @@ class CorporateRelocationService:
         serializable_data = {}
         for req_id, request in self.active_requests.items():
             data_dict = request.__dict__.copy()
-            data_dict['start_date'] = request.start_date.isoformat()
-            data_dict['completion_target'] = request.completion_target.isoformat()
-            data_dict['created_at'] = request.created_at.isoformat()
-            data_dict['updated_at'] = request.updated_at.isoformat()
-            data_dict['employee_level'] = request.employee_level.value
-            data_dict['status'] = request.status.value
+            data_dict["start_date"] = request.start_date.isoformat()
+            data_dict["completion_target"] = request.completion_target.isoformat()
+            data_dict["created_at"] = request.created_at.isoformat()
+            data_dict["updated_at"] = request.updated_at.isoformat()
+            data_dict["employee_level"] = request.employee_level.value
+            data_dict["status"] = request.status.value
             serializable_data[req_id] = data_dict
 
-        with open(self.requests_file, 'w') as f:
+        with open(self.requests_file, "w") as f:
             json.dump(serializable_data, f, indent=2)
 
     def _save_coordination_data(self) -> None:
@@ -819,11 +822,11 @@ class CorporateRelocationService:
             timeline_str = {}
             for key, date_obj in coordination.timeline.items():
                 timeline_str[key] = date_obj.isoformat()
-            data_dict['timeline'] = timeline_str
-            data_dict['created_at'] = coordination.created_at.isoformat()
+            data_dict["timeline"] = timeline_str
+            data_dict["created_at"] = coordination.created_at.isoformat()
             serializable_data[coord_id] = data_dict
 
-        with open(self.coordination_file, 'w') as f:
+        with open(self.coordination_file, "w") as f:
             json.dump(serializable_data, f, indent=2)
 
     def health_check(self) -> Dict[str, Any]:
@@ -836,22 +839,18 @@ class CorporateRelocationService:
                     "active_requests": len(self.active_requests),
                     "corporate_contracts": len(self.corporate_contracts),
                     "multi_city_projects": len(self.multi_city_projects),
-                    "service_tiers": len(self.service_tiers)
+                    "service_tiers": len(self.service_tiers),
                 },
                 "data_files": {
                     "requests_file": self.requests_file.exists(),
                     "contracts_file": self.contracts_file.exists(),
-                    "coordination_file": self.coordination_file.exists()
+                    "coordination_file": self.coordination_file.exists(),
                 },
-                "last_check": datetime.now().isoformat()
+                "last_check": datetime.now().isoformat(),
             }
 
         except Exception as e:
-            return {
-                "status": "unhealthy",
-                "error": str(e),
-                "last_check": datetime.now().isoformat()
-            }
+            return {"status": "unhealthy", "error": str(e), "last_check": datetime.now().isoformat()}
 
 
 # Global service instance

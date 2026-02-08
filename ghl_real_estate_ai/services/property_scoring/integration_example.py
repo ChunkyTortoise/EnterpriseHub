@@ -6,17 +6,11 @@ property scoring system with the existing PropertyMatcher implementation.
 """
 
 import logging
-from typing import Dict, List, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 # Import the new strategy pattern components
-from . import (
-    PropertyMatcherContext,
-    ScoringFactory,
-    EnhancedPropertyScorer,
-    ScoringContext,
-    LeadPreferences
-)
+from . import EnhancedPropertyScorer, LeadPreferences, PropertyMatcherContext, ScoringContext, ScoringFactory
 
 logger = logging.getLogger(__name__)
 
@@ -51,9 +45,7 @@ class EnhancedPropertyMatcherAI:
 
         logger.info(f"Initialized PropertyMatcher with {strategy_name} strategy")
 
-    def generate_property_matches(self, lead_context: Dict,
-                                 limit: int = 5,
-                                 min_confidence: float = 60.0) -> List[Dict]:
+    def generate_property_matches(self, lead_context: Dict, limit: int = 5, min_confidence: float = 60.0) -> List[Dict]:
         """
         Enhanced property matching using Strategy Pattern
 
@@ -70,24 +62,19 @@ class EnhancedPropertyMatcherAI:
         """
         try:
             # Extract preferences from lead context
-            extracted_prefs = lead_context.get('extracted_preferences', {})
+            extracted_prefs = lead_context.get("extracted_preferences", {})
 
             # Load properties (integrate with existing property loading)
             properties = self._load_properties()
 
             # Create enhanced scoring context
             scoring_context = ScoringContext(
-                quality_threshold=min_confidence / 100.0,
-                scoring_purpose="lead_matching",
-                enable_caching=True
+                quality_threshold=min_confidence / 100.0, scoring_purpose="lead_matching", enable_caching=True
             )
 
             # Score properties using strategy pattern
             scored_properties = self.scoring_context.score_multiple_properties(
-                properties=properties,
-                lead_preferences=extracted_prefs,
-                context=scoring_context,
-                limit=limit
+                properties=properties, lead_preferences=extracted_prefs, context=scoring_context, limit=limit
             )
 
             # Convert to legacy format for UI compatibility
@@ -104,8 +91,9 @@ class EnhancedPropertyMatcherAI:
             # Fallback to basic strategy
             return self._fallback_matching(lead_context, limit)
 
-    def _convert_to_legacy_format(self, scored_property: Dict[str, Any],
-                                 lead_preferences: Dict[str, Any]) -> Dict[str, Any]:
+    def _convert_to_legacy_format(
+        self, scored_property: Dict[str, Any], lead_preferences: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Convert new scoring format to legacy format for UI compatibility
 
@@ -116,55 +104,56 @@ class EnhancedPropertyMatcherAI:
         Returns:
             Property in legacy format
         """
-        scoring_result = scored_property['scoring_result']
+        scoring_result = scored_property["scoring_result"]
 
         # Extract original property data
-        property_data = {k: v for k, v in scored_property.items()
-                        if k not in ['scoring_result', 'confidence_score', 'match_score', 'match_reasons']}
+        property_data = {
+            k: v
+            for k, v in scored_property.items()
+            if k not in ["scoring_result", "confidence_score", "match_score", "match_reasons"]
+        }
 
         # Create legacy format
         legacy_property = {
-            'address': property_data.get('address', {}).get('street', 'Unknown Address'),
-            'price': property_data.get('price', 0),
-            'beds': property_data.get('bedrooms', 0),
-            'baths': property_data.get('bathrooms', 0),
-            'sqft': property_data.get('sqft', 0),
-            'neighborhood': property_data.get('address', {}).get('neighborhood', 'Unknown'),
-            'icon': self._get_property_icon(property_data),
-            'match_score': int(scoring_result.overall_score),
-            'budget_match': scoring_result.budget_score > 80,
-            'location_match': scoring_result.location_score > 80,
-            'features_match': scoring_result.feature_score > 80,
-            'match_reasons': scoring_result.reasoning[:5],  # Limit for UI
-            'confidence_level': scoring_result.confidence_level.value,
-
+            "address": property_data.get("address", {}).get("street", "Unknown Address"),
+            "price": property_data.get("price", 0),
+            "beds": property_data.get("bedrooms", 0),
+            "baths": property_data.get("bathrooms", 0),
+            "sqft": property_data.get("sqft", 0),
+            "neighborhood": property_data.get("address", {}).get("neighborhood", "Unknown"),
+            "icon": self._get_property_icon(property_data),
+            "match_score": int(scoring_result.overall_score),
+            "budget_match": scoring_result.budget_score > 80,
+            "location_match": scoring_result.location_score > 80,
+            "features_match": scoring_result.feature_score > 80,
+            "match_reasons": scoring_result.reasoning[:5],  # Limit for UI
+            "confidence_level": scoring_result.confidence_level.value,
             # Enhanced fields from new system
-            'ml_breakdown': {
-                'budget_confidence': scoring_result.budget_score,
-                'location_confidence': scoring_result.location_score,
-                'feature_confidence': scoring_result.feature_score,
-                'market_confidence': scoring_result.market_score
+            "ml_breakdown": {
+                "budget_confidence": scoring_result.budget_score,
+                "location_confidence": scoring_result.location_score,
+                "feature_confidence": scoring_result.feature_score,
+                "market_confidence": scoring_result.market_score,
             },
-
             # Risk and opportunity insights
-            'risk_factors': scoring_result.risk_factors,
-            'opportunities': scoring_result.opportunities,
-            'match_insights': scoring_result.match_insights
+            "risk_factors": scoring_result.risk_factors,
+            "opportunities": scoring_result.opportunities,
+            "match_insights": scoring_result.match_insights,
         }
 
         return legacy_property
 
     def _get_property_icon(self, property_data: Dict) -> str:
         """Get appropriate icon for property type"""
-        property_type = property_data.get('property_type', '').lower()
-        if 'condo' in property_type:
-            return '🏢'
-        elif 'townhome' in property_type:
-            return '🏘️'
-        elif 'multi' in property_type:
-            return '🏬'
+        property_type = property_data.get("property_type", "").lower()
+        if "condo" in property_type:
+            return "🏢"
+        elif "townhome" in property_type:
+            return "🏘️"
+        elif "multi" in property_type:
+            return "🏬"
         else:
-            return '🏡'  # Default single family
+            return "🏡"  # Default single family
 
     def _load_properties(self) -> List[Dict[str, Any]]:
         """
@@ -179,12 +168,7 @@ class EnhancedPropertyMatcherAI:
             {
                 "id": "prop_001",
                 "price": 750000,
-                "address": {
-                    "street": "123 Oak Street",
-                    "neighborhood": "Downtown",
-                    "city": "Austin",
-                    "zip": "78701"
-                },
+                "address": {"street": "123 Oak Street", "neighborhood": "Downtown", "city": "Austin", "zip": "78701"},
                 "bedrooms": 3,
                 "bathrooms": 2.5,
                 "sqft": 2100,
@@ -195,17 +179,12 @@ class EnhancedPropertyMatcherAI:
                 "crime_score": 7.2,
                 "walkability_score": 85,
                 "days_on_market": 15,
-                "price_per_sqft": 357.14
+                "price_per_sqft": 357.14,
             },
             {
                 "id": "prop_002",
                 "price": 680000,
-                "address": {
-                    "street": "456 Maple Avenue",
-                    "neighborhood": "Mueller",
-                    "city": "Austin",
-                    "zip": "78723"
-                },
+                "address": {"street": "456 Maple Avenue", "neighborhood": "Mueller", "city": "Austin", "zip": "78723"},
                 "bedrooms": 3,
                 "bathrooms": 2,
                 "sqft": 1950,
@@ -216,17 +195,12 @@ class EnhancedPropertyMatcherAI:
                 "crime_score": 8.1,
                 "walkability_score": 78,
                 "days_on_market": 8,
-                "price_per_sqft": 348.72
+                "price_per_sqft": 348.72,
             },
             {
                 "id": "prop_003",
                 "price": 825000,
-                "address": {
-                    "street": "789 Cedar Lane",
-                    "neighborhood": "Westlake",
-                    "city": "Austin",
-                    "zip": "78746"
-                },
+                "address": {"street": "789 Cedar Lane", "neighborhood": "Westlake", "city": "Austin", "zip": "78746"},
                 "bedrooms": 4,
                 "bathrooms": 3,
                 "sqft": 2800,
@@ -237,8 +211,8 @@ class EnhancedPropertyMatcherAI:
                 "crime_score": 9.5,
                 "walkability_score": 65,
                 "days_on_market": 22,
-                "price_per_sqft": 294.64
-            }
+                "price_per_sqft": 294.64,
+            },
         ]
 
     def _fallback_matching(self, lead_context: Dict, limit: int) -> List[Dict]:
@@ -260,17 +234,14 @@ class EnhancedPropertyMatcherAI:
             self.scoring_context.set_strategy(basic_strategy)
 
             # Retry with basic strategy
-            extracted_prefs = lead_context.get('extracted_preferences', {})
+            extracted_prefs = lead_context.get("extracted_preferences", {})
             properties = self._load_properties()
 
             scored_properties = self.scoring_context.score_multiple_properties(
-                properties=properties,
-                lead_preferences=extracted_prefs,
-                limit=limit
+                properties=properties, lead_preferences=extracted_prefs, limit=limit
             )
 
-            return [self._convert_to_legacy_format(prop, extracted_prefs)
-                   for prop in scored_properties]
+            return [self._convert_to_legacy_format(prop, extracted_prefs) for prop in scored_properties]
 
         except Exception as e:
             logger.error(f"Fallback matching also failed: {e}")
@@ -314,29 +285,29 @@ class EnhancedPropertyMatcherAI:
         Returns:
             List of recommended strategy names
         """
-        extracted_prefs = lead_context.get('extracted_preferences', {})
+        extracted_prefs = lead_context.get("extracted_preferences", {})
 
         requirements = {
-            'performance_priority': 'balanced',
-            'complexity_tolerance': 'medium',
-            'features_needed': [],
-            'data_availability': 'medium'
+            "performance_priority": "balanced",
+            "complexity_tolerance": "medium",
+            "features_needed": [],
+            "data_availability": "medium",
         }
 
         # Analyze lead preferences to adjust requirements
-        budget = extracted_prefs.get('budget', 0)
-        must_haves = extracted_prefs.get('must_haves', [])
+        budget = extracted_prefs.get("budget", 0)
+        must_haves = extracted_prefs.get("must_haves", [])
 
         if budget > 1_000_000:
-            requirements['complexity_tolerance'] = 'high'
-            requirements['performance_priority'] = 'accuracy'
+            requirements["complexity_tolerance"] = "high"
+            requirements["performance_priority"] = "accuracy"
 
         if len(must_haves) > 3:
-            requirements['features_needed'] = ['weighted_feature_matching']
+            requirements["features_needed"] = ["weighted_feature_matching"]
 
         # Get recommendation from factory
         recommended_strategy = self.factory.recommend_strategy(requirements)
-        available_strategies = [s['name'] for s in self.factory.list_strategies()]
+        available_strategies = [s["name"] for s in self.factory.list_strategies()]
 
         return [recommended_strategy] + [s for s in available_strategies if s != recommended_strategy]
 
@@ -351,57 +322,52 @@ class EnhancedPropertyMatcherAI:
         Returns:
             Comparison results
         """
-        extracted_prefs = lead_context.get('extracted_preferences', {})
+        extracted_prefs = lead_context.get("extracted_preferences", {})
         properties = self._load_properties()
 
         # Use first property if no specific ID provided
         test_property = properties[0] if properties and not property_id else None
         if property_id:
-            test_property = next((p for p in properties if p.get('id') == property_id), None)
+            test_property = next((p for p in properties if p.get("id") == property_id), None)
 
         if not test_property:
-            return {'error': 'No property found for comparison'}
+            return {"error": "No property found for comparison"}
 
         # Get all available strategies
-        available_strategies = [
-            self.factory.create_strategy(s['name'])
-            for s in self.factory.list_strategies()
-        ]
+        available_strategies = [self.factory.create_strategy(s["name"]) for s in self.factory.list_strategies()]
 
         # Compare strategies
         comparison_results = self.scoring_context.compare_strategies(
-            property_data=test_property,
-            lead_preferences=extracted_prefs,
-            strategies=available_strategies
+            property_data=test_property, lead_preferences=extracted_prefs, strategies=available_strategies
         )
 
         # Format results for analysis
         formatted_results = {}
         for strategy_name, result in comparison_results.items():
             formatted_results[strategy_name] = {
-                'overall_score': result.overall_score,
-                'confidence_level': result.confidence_level.value,
-                'component_scores': {
-                    'budget': result.budget_score,
-                    'location': result.location_score,
-                    'features': result.feature_score,
-                    'market': result.market_score
+                "overall_score": result.overall_score,
+                "confidence_level": result.confidence_level.value,
+                "component_scores": {
+                    "budget": result.budget_score,
+                    "location": result.location_score,
+                    "features": result.feature_score,
+                    "market": result.market_score,
                 },
-                'reasoning_count': len(result.reasoning),
-                'risk_factors_count': len(result.risk_factors),
-                'opportunities_count': len(result.opportunities)
+                "reasoning_count": len(result.reasoning),
+                "risk_factors_count": len(result.risk_factors),
+                "opportunities_count": len(result.opportunities),
             }
 
         return {
-            'property_tested': test_property.get('id'),
-            'lead_budget': extracted_prefs.get('budget'),
-            'strategy_results': formatted_results,
-            'best_strategy': max(comparison_results.items(),
-                               key=lambda x: x[1].overall_score)[0]
+            "property_tested": test_property.get("id"),
+            "lead_budget": extracted_prefs.get("budget"),
+            "strategy_results": formatted_results,
+            "best_strategy": max(comparison_results.items(), key=lambda x: x[1].overall_score)[0],
         }
 
 
 # Integration utility functions
+
 
 def upgrade_existing_property_matcher():
     """
@@ -461,18 +427,15 @@ def benchmark_strategies(sample_leads: List[Dict], sample_properties: List[Dict]
     factory = ScoringFactory()
     available_strategies = factory.list_strategies()
 
-    results = {
-        'strategy_performance': {},
-        'accuracy_metrics': {},
-        'timing_results': {}
-    }
+    results = {"strategy_performance": {}, "accuracy_metrics": {}, "timing_results": {}}
 
     for strategy_info in available_strategies:
-        strategy_name = strategy_info['name']
+        strategy_name = strategy_info["name"]
         matcher = EnhancedPropertyMatcherAI(strategy_name=strategy_name)
 
         # Benchmark timing and accuracy
         import time
+
         start_time = time.time()
 
         total_scores = 0
@@ -481,15 +444,15 @@ def benchmark_strategies(sample_leads: List[Dict], sample_properties: List[Dict]
         for lead_context in sample_leads[:10]:  # Limit for benchmark
             matches = matcher.generate_property_matches(lead_context, limit=3)
             total_matches += len(matches)
-            total_scores += sum(m['match_score'] for m in matches)
+            total_scores += sum(m["match_score"] for m in matches)
 
         end_time = time.time()
 
-        results['strategy_performance'][strategy_name] = {
-            'total_time': end_time - start_time,
-            'avg_time_per_lead': (end_time - start_time) / len(sample_leads[:10]),
-            'total_matches': total_matches,
-            'avg_score': total_scores / total_matches if total_matches > 0 else 0
+        results["strategy_performance"][strategy_name] = {
+            "total_time": end_time - start_time,
+            "avg_time_per_lead": (end_time - start_time) / len(sample_leads[:10]),
+            "total_matches": total_matches,
+            "avg_score": total_scores / total_matches if total_matches > 0 else 0,
         }
 
     return results
@@ -499,13 +462,13 @@ def benchmark_strategies(sample_leads: List[Dict], sample_properties: List[Dict]
 if __name__ == "__main__":
     # Example lead context (matches existing format)
     example_lead_context = {
-        'extracted_preferences': {
-            'budget': 800000,
-            'location': 'Downtown',
-            'bedrooms': 3,
-            'property_type': 'Single Family',
-            'must_haves': ['garage', 'pool'],
-            'nice_to_haves': ['good_schools', 'walkable']
+        "extracted_preferences": {
+            "budget": 800000,
+            "location": "Downtown",
+            "bedrooms": 3,
+            "property_type": "Single Family",
+            "must_haves": ["garage", "pool"],
+            "nice_to_haves": ["good_schools", "walkable"],
         }
     }
 
@@ -517,21 +480,23 @@ if __name__ == "__main__":
 
     print(f"Found {len(matches)} property matches:")
     for i, match in enumerate(matches[:3]):
-        print(f"\n{i+1}. {match['address']} - {match['match_score']}% match")
-        print(f"   Budget: {'✓' if match['budget_match'] else '✗'}, "
-              f"Location: {'✓' if match['location_match'] else '✗'}, "
-              f"Features: {'✓' if match['features_match'] else '✗'}")
+        print(f"\n{i + 1}. {match['address']} - {match['match_score']}% match")
+        print(
+            f"   Budget: {'✓' if match['budget_match'] else '✗'}, "
+            f"Location: {'✓' if match['location_match'] else '✗'}, "
+            f"Features: {'✓' if match['features_match'] else '✗'}"
+        )
         print(f"   Reasons: {match['match_reasons'][:2]}")
 
     # Demonstrate strategy comparison
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("Strategy Comparison:")
     comparison = matcher.compare_strategies(example_lead_context)
-    for strategy, results in comparison['strategy_results'].items():
+    for strategy, results in comparison["strategy_results"].items():
         print(f"{strategy}: {results['overall_score']:.1f}% ({results['confidence_level']})")
 
     # Show performance metrics
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("Performance Metrics:")
     metrics = matcher.get_performance_metrics()
     for strategy, perf in metrics.items():

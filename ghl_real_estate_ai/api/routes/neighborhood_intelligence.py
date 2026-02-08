@@ -21,61 +21,60 @@ Integration: GHL webhook compatible, Pydantic validation
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Union
-from fastapi import APIRouter, HTTPException, Query, Path, Body, Depends, status
+from typing import Any, Dict, List, Optional, Union
+
+import numpy as np
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
-import numpy as np
 
-from ghl_real_estate_ai.services.neighborhood_intelligence_service import (
-    get_neighborhood_intelligence_service,
-    NeighborhoodIntelligenceService,
-    MarketTrend,
-    InvestmentGrade,
-    MarketSegment
-)
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ml.price_prediction_engine import (
-    get_price_prediction_engine,
     PredictionFeatures,
-    PredictionTimeframe
+    PredictionTimeframe,
+    get_price_prediction_engine,
 )
 from ghl_real_estate_ai.services.geospatial_analysis_service import (
-    get_geospatial_analysis_service,
+    AnalysisType,
     GeographicPoint,
     TransportationType,
-    AnalysisType
+    get_geospatial_analysis_service,
 )
 from ghl_real_estate_ai.services.inventory_alert_system import (
-    get_inventory_alert_system,
-    AlertType,
+    AlertRule,
     AlertSeverity,
-    AlertRule
+    AlertType,
+    get_inventory_alert_system,
 )
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.neighborhood_intelligence_service import (
+    InvestmentGrade,
+    MarketSegment,
+    MarketTrend,
+    NeighborhoodIntelligenceService,
+    get_neighborhood_intelligence_service,
+)
 
 logger = get_logger(__name__)
 
 # Create router
-router = APIRouter(
-    prefix="/api/v1",
-    tags=["neighborhood-intelligence"],
-    responses={404: {"description": "Not found"}}
-)
+router = APIRouter(prefix="/api/v1", tags=["neighborhood-intelligence"], responses={404: {"description": "Not found"}})
 
 # Request/Response models
 
+
 class NeighborhoodIntelligenceRequest(BaseModel):
     """Request model for neighborhood intelligence."""
+
     include_predictions: bool = Field(True, description="Include ML price predictions")
     include_alerts: bool = Field(True, description="Include active market alerts")
     prediction_timeframes: List[str] = Field(
-        default=["1m", "3m", "6m", "12m"],
-        description="Prediction timeframes to include"
+        default=["1m", "3m", "6m", "12m"], description="Prediction timeframes to include"
     )
 
 
 class NeighborhoodSearchRequest(BaseModel):
     """Request model for neighborhood search."""
+
     criteria: Dict[str, Any] = Field(..., description="Search criteria")
     max_results: int = Field(20, ge=1, le=100, description="Maximum results to return")
     sort_by: str = Field("relevance", description="Sort criteria")
@@ -84,16 +83,15 @@ class NeighborhoodSearchRequest(BaseModel):
 
 class PricePredictionRequest(BaseModel):
     """Request model for price predictions."""
+
     property_type: Optional[str] = Field(None, description="Property type filter")
     custom_features: Optional[Dict[str, Any]] = Field(None, description="Custom property features")
-    timeframes: List[str] = Field(
-        default=["1m", "3m", "6m", "12m"],
-        description="Prediction timeframes"
-    )
+    timeframes: List[str] = Field(default=["1m", "3m", "6m", "12m"], description="Prediction timeframes")
 
 
 class AlertRuleRequest(BaseModel):
     """Request model for creating alert rules."""
+
     name: str = Field(..., min_length=1, max_length=200)
     description: str = Field(..., min_length=1, max_length=1000)
     alert_type: str = Field(..., description="Type of alert")
@@ -105,7 +103,7 @@ class AlertRuleRequest(BaseModel):
     delivery_channels: List[str] = Field(default=["email"], description="Delivery channels")
     throttle_minutes: int = Field(60, ge=5, le=1440, description="Throttle period in minutes")
 
-    @field_validator('alert_type')
+    @field_validator("alert_type")
     @classmethod
     def validate_alert_type(cls, v):
         valid_types = [alert_type.value for alert_type in AlertType]
@@ -113,7 +111,7 @@ class AlertRuleRequest(BaseModel):
             raise ValueError(f"Invalid alert type. Must be one of: {valid_types}")
         return v
 
-    @field_validator('severity')
+    @field_validator("severity")
     @classmethod
     def validate_severity(cls, v):
         valid_severities = [severity.value for severity in AlertSeverity]
@@ -124,6 +122,7 @@ class AlertRuleRequest(BaseModel):
 
 class InvestmentAnalysisRequest(BaseModel):
     """Request model for investment analysis."""
+
     criteria: Dict[str, Any] = Field(..., description="Investment criteria")
     max_results: int = Field(20, ge=1, le=100, description="Maximum opportunities to return")
     risk_tolerance: str = Field("medium", description="Risk tolerance level")
@@ -132,18 +131,19 @@ class InvestmentAnalysisRequest(BaseModel):
 
 class GeospatialAnalysisRequest(BaseModel):
     """Request model for geospatial analysis."""
+
     locations: List[Dict[str, float]] = Field(..., description="Locations to analyze")
     analysis_type: str = Field("accessibility", description="Type of analysis")
     analysis_radius_km: float = Field(2.0, ge=0.1, le=50, description="Analysis radius")
     include_demographics: bool = Field(True, description="Include demographic data")
 
-    @field_validator('locations')
+    @field_validator("locations")
     @classmethod
     def validate_locations(cls, v):
         for location in v:
-            if 'latitude' not in location or 'longitude' not in location:
+            if "latitude" not in location or "longitude" not in location:
                 raise ValueError("Each location must have latitude and longitude")
-            lat, lng = location['latitude'], location['longitude']
+            lat, lng = location["latitude"], location["longitude"]
             if not (-90 <= lat <= 90) or not (-180 <= lng <= 180):
                 raise ValueError("Invalid coordinates")
         return v
@@ -151,6 +151,7 @@ class GeospatialAnalysisRequest(BaseModel):
 
 class PropertyClusterRequest(BaseModel):
     """Request model for property clustering."""
+
     properties: List[Dict[str, Any]] = Field(..., description="Properties to cluster")
     cluster_criteria: str = Field("investment_potential", description="Clustering criteria")
     max_clusters: int = Field(10, ge=2, le=20, description="Maximum clusters")
@@ -159,11 +160,12 @@ class PropertyClusterRequest(BaseModel):
 
 class HeatmapRequest(BaseModel):
     """Request model for investment heatmap."""
+
     bounds: List[float] = Field(..., min_items=4, max_items=4, description="[min_lat, min_lng, max_lat, max_lng]")
     grid_resolution_km: float = Field(0.5, ge=0.1, le=5.0, description="Grid resolution in km")
     scoring_factors: Optional[List[str]] = Field(None, description="Factors to include in scoring")
 
-    @field_validator('bounds')
+    @field_validator("bounds")
     @classmethod
     def validate_bounds(cls, v):
         if len(v) != 4:
@@ -178,8 +180,10 @@ class HeatmapRequest(BaseModel):
 
 # Response models
 
+
 class APIResponse(BaseModel):
     """Standard API response wrapper."""
+
     success: bool = True
     data: Any = None
     message: str = "Request completed successfully"
@@ -189,6 +193,7 @@ class APIResponse(BaseModel):
 
 class ErrorResponse(BaseModel):
     """Error response model."""
+
     success: bool = False
     error: str
     message: str
@@ -196,6 +201,7 @@ class ErrorResponse(BaseModel):
 
 
 # Dependency injection
+
 
 async def get_intelligence_service() -> NeighborhoodIntelligenceService:
     """Get neighborhood intelligence service."""
@@ -219,39 +225,27 @@ async def get_alert_system():
 
 # Utility functions
 
+
 def create_success_response(data: Any, message: str = "Success", execution_time: float = None) -> JSONResponse:
     """Create standardized success response."""
-    response = APIResponse(
-        success=True,
-        data=data,
-        message=message,
-        execution_time_ms=execution_time
-    )
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content=response.dict()
-    )
+    response = APIResponse(success=True, data=data, message=message, execution_time_ms=execution_time)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response.dict())
 
 
 def create_error_response(error: str, message: str, status_code: int = 400) -> JSONResponse:
     """Create standardized error response."""
-    response = ErrorResponse(
-        error=error,
-        message=message
-    )
-    return JSONResponse(
-        status_code=status_code,
-        content=response.dict()
-    )
+    response = ErrorResponse(error=error, message=message)
+    return JSONResponse(status_code=status_code, content=response.dict())
 
 
 # Main API endpoints
+
 
 @router.get("/neighborhoods/{neighborhood_id}/intelligence")
 async def get_neighborhood_intelligence(
     neighborhood_id: str = Path(..., description="Neighborhood identifier"),
     request: NeighborhoodIntelligenceRequest = Depends(),
-    intelligence_service: NeighborhoodIntelligenceService = Depends(get_intelligence_service)
+    intelligence_service: NeighborhoodIntelligenceService = Depends(get_intelligence_service),
 ):
     """
     Get comprehensive neighborhood intelligence report.
@@ -263,48 +257,36 @@ async def get_neighborhood_intelligence(
     try:
         # Validate neighborhood ID
         if len(neighborhood_id.strip()) == 0:
-            return create_error_response(
-                "invalid_input",
-                "Neighborhood ID cannot be empty",
-                400
-            )
+            return create_error_response("invalid_input", "Neighborhood ID cannot be empty", 400)
 
         # Get comprehensive intelligence
         intelligence = await intelligence_service.get_neighborhood_intelligence(
             neighborhood_id=neighborhood_id,
             include_predictions=request.include_predictions,
-            include_alerts=request.include_alerts
+            include_alerts=request.include_alerts,
         )
 
         if not intelligence:
-            return create_error_response(
-                "not_found",
-                f"Neighborhood {neighborhood_id} not found",
-                404
-            )
+            return create_error_response("not_found", f"Neighborhood {neighborhood_id} not found", 404)
 
         execution_time = (datetime.now() - start_time).total_seconds() * 1000
 
         return create_success_response(
             data=intelligence,
             message=f"Intelligence report generated for {neighborhood_id}",
-            execution_time=execution_time
+            execution_time=execution_time,
         )
 
     except Exception as e:
         logger.error(f"Failed to get neighborhood intelligence for {neighborhood_id}: {e}")
-        return create_error_response(
-            "internal_error",
-            "Failed to generate intelligence report",
-            500
-        )
+        return create_error_response("internal_error", "Failed to generate intelligence report", 500)
 
 
 @router.get("/neighborhoods/{neighborhood_id}/metrics")
 async def get_neighborhood_metrics(
     neighborhood_id: str = Path(..., description="Neighborhood identifier"),
     timeframe: str = Query("current", description="Metrics timeframe"),
-    intelligence_service: NeighborhoodIntelligenceService = Depends(get_intelligence_service)
+    intelligence_service: NeighborhoodIntelligenceService = Depends(get_intelligence_service),
 ):
     """
     Get detailed neighborhood market metrics.
@@ -315,40 +297,27 @@ async def get_neighborhood_metrics(
     start_time = datetime.now()
 
     try:
-        metrics = await intelligence_service.get_market_metrics(
-            neighborhood_id=neighborhood_id,
-            timeframe=timeframe
-        )
+        metrics = await intelligence_service.get_market_metrics(neighborhood_id=neighborhood_id, timeframe=timeframe)
 
         if not metrics:
-            return create_error_response(
-                "not_found",
-                f"Metrics not available for neighborhood {neighborhood_id}",
-                404
-            )
+            return create_error_response("not_found", f"Metrics not available for neighborhood {neighborhood_id}", 404)
 
         execution_time = (datetime.now() - start_time).total_seconds() * 1000
 
         return create_success_response(
-            data=metrics.__dict__,
-            message="Metrics retrieved successfully",
-            execution_time=execution_time
+            data=metrics.__dict__, message="Metrics retrieved successfully", execution_time=execution_time
         )
 
     except Exception as e:
         logger.error(f"Failed to get metrics for {neighborhood_id}: {e}")
-        return create_error_response(
-            "internal_error",
-            "Failed to retrieve metrics",
-            500
-        )
+        return create_error_response("internal_error", "Failed to retrieve metrics", 500)
 
 
 @router.post("/neighborhoods/{neighborhood_id}/predictions")
 async def get_price_predictions(
     neighborhood_id: str = Path(..., description="Neighborhood identifier"),
     request: PricePredictionRequest = Body(...),
-    prediction_engine = Depends(get_prediction_engine)
+    prediction_engine=Depends(get_prediction_engine),
 ):
     """
     Get ML-powered price predictions for neighborhood.
@@ -365,22 +334,14 @@ async def get_price_predictions(
             try:
                 timeframes.append(PredictionTimeframe(tf))
             except ValueError:
-                return create_error_response(
-                    "invalid_input",
-                    f"Invalid timeframe: {tf}",
-                    400
-                )
+                return create_error_response("invalid_input", f"Invalid timeframe: {tf}", 400)
 
         # Get intelligence service to fetch neighborhood data
         intelligence_service = await get_neighborhood_intelligence_service()
         metrics = await intelligence_service.get_market_metrics(neighborhood_id)
 
         if not metrics:
-            return create_error_response(
-                "not_found",
-                f"Neighborhood {neighborhood_id} not found",
-                404
-            )
+            return create_error_response("not_found", f"Neighborhood {neighborhood_id} not found", 404)
 
         # Create prediction features from neighborhood data
         prediction_features = PredictionFeatures(
@@ -415,7 +376,7 @@ async def get_price_predictions(
             comps_median_price=metrics.median_home_value,
             comps_price_per_sqft=metrics.price_per_sqft,
             comps_count=10,
-            comps_days_old_avg=30
+            comps_days_old_avg=30,
         )
 
         # Override with custom features if provided
@@ -428,9 +389,7 @@ async def get_price_predictions(
         predictions = {}
         for timeframe in timeframes:
             prediction_result = await prediction_engine.predict_price(
-                features=prediction_features,
-                timeframe=timeframe,
-                include_uncertainty=True
+                features=prediction_features, timeframe=timeframe, include_uncertainty=True
             )
             predictions[timeframe.value] = prediction_result.__dict__
 
@@ -440,25 +399,21 @@ async def get_price_predictions(
             data={
                 "neighborhood_id": neighborhood_id,
                 "predictions": predictions,
-                "base_features": prediction_features.__dict__
+                "base_features": prediction_features.__dict__,
             },
             message="Price predictions generated successfully",
-            execution_time=execution_time
+            execution_time=execution_time,
         )
 
     except Exception as e:
         logger.error(f"Failed to get predictions for {neighborhood_id}: {e}")
-        return create_error_response(
-            "internal_error",
-            "Failed to generate price predictions",
-            500
-        )
+        return create_error_response("internal_error", "Failed to generate price predictions", 500)
 
 
 @router.post("/neighborhoods/search")
 async def search_neighborhoods(
     request: NeighborhoodSearchRequest = Body(...),
-    intelligence_service: NeighborhoodIntelligenceService = Depends(get_intelligence_service)
+    intelligence_service: NeighborhoodIntelligenceService = Depends(get_intelligence_service),
 ):
     """
     Search neighborhoods based on criteria.
@@ -471,11 +426,7 @@ async def search_neighborhoods(
     try:
         # Validate search criteria
         if not request.criteria:
-            return create_error_response(
-                "invalid_input",
-                "Search criteria cannot be empty",
-                400
-            )
+            return create_error_response("invalid_input", "Search criteria cannot be empty", 400)
 
         # Perform search (simplified implementation)
         # In production, this would query actual neighborhood database
@@ -486,7 +437,7 @@ async def search_neighborhoods(
                 "median_price": 750000,
                 "investment_grade": "A",
                 "walk_score": 92,
-                "match_score": 95.5
+                "match_score": 95.5,
             },
             {
                 "neighborhood_id": "austin_tech_corridor",
@@ -494,8 +445,8 @@ async def search_neighborhoods(
                 "median_price": 680000,
                 "investment_grade": "A-",
                 "walk_score": 78,
-                "match_score": 88.3
-            }
+                "match_score": 88.3,
+            },
         ]
 
         # Apply basic filtering
@@ -516,7 +467,7 @@ async def search_neighborhoods(
                 neighborhood["basic_metrics"] = {
                     "appreciation_12m": 12.5,
                     "inventory_months": 2.1,
-                    "school_rating": 8.4
+                    "school_rating": 8.4,
                 }
 
             filtered_results.append(neighborhood)
@@ -530,27 +481,19 @@ async def search_neighborhoods(
             filtered_results.sort(key=lambda x: x["match_score"], reverse=True)
 
         # Limit results
-        filtered_results = filtered_results[:request.max_results]
+        filtered_results = filtered_results[: request.max_results]
 
         execution_time = (datetime.now() - start_time).total_seconds() * 1000
 
         return create_success_response(
-            data={
-                "results": filtered_results,
-                "total_matches": len(filtered_results),
-                "criteria": request.criteria
-            },
+            data={"results": filtered_results, "total_matches": len(filtered_results), "criteria": request.criteria},
             message=f"Found {len(filtered_results)} matching neighborhoods",
-            execution_time=execution_time
+            execution_time=execution_time,
         )
 
     except Exception as e:
         logger.error(f"Neighborhood search failed: {e}")
-        return create_error_response(
-            "internal_error",
-            "Failed to search neighborhoods",
-            500
-        )
+        return create_error_response("internal_error", "Failed to search neighborhoods", 500)
 
 
 @router.get("/market/alerts")
@@ -559,7 +502,7 @@ async def get_market_alerts(
     alert_types: Optional[str] = Query(None, description="Comma-separated alert types"),
     min_severity: str = Query("medium", description="Minimum alert severity"),
     limit: int = Query(50, ge=1, le=200, description="Maximum alerts to return"),
-    alert_system = Depends(get_alert_system)
+    alert_system=Depends(get_alert_system),
 ):
     """
     Get active market alerts.
@@ -583,13 +526,12 @@ async def get_market_alerts(
         alerts = await alert_system.get_active_alerts(
             severity_filter=AlertSeverity(min_severity) if min_severity else None,
             type_filter=None,  # Would apply type filter if provided
-            area_filter=None
+            area_filter=None,
         )
 
         # Apply filters
         if neighborhood_filter:
-            alerts = [alert for alert in alerts
-                     if any(area in neighborhood_filter for area in alert.affected_areas)]
+            alerts = [alert for alert in alerts if any(area in neighborhood_filter for area in alert.affected_areas)]
 
         if alert_type_filter:
             alerts = [alert for alert in alerts if alert.alert_type.value in alert_type_filter]
@@ -613,7 +555,7 @@ async def get_market_alerts(
                 "urgency_score": alert.urgency_score,
                 "triggered_at": alert.triggered_at.isoformat(),
                 "expires_at": alert.expires_at.isoformat() if alert.expires_at else None,
-                "recommended_actions": alert.recommended_actions
+                "recommended_actions": alert.recommended_actions,
             }
             alert_data.append(alert_dict)
 
@@ -626,27 +568,20 @@ async def get_market_alerts(
                 "filters_applied": {
                     "neighborhoods": neighborhood_filter,
                     "alert_types": alert_type_filter,
-                    "min_severity": min_severity
-                }
+                    "min_severity": min_severity,
+                },
             },
             message=f"Retrieved {len(alert_data)} active alerts",
-            execution_time=execution_time
+            execution_time=execution_time,
         )
 
     except Exception as e:
         logger.error(f"Failed to get market alerts: {e}")
-        return create_error_response(
-            "internal_error",
-            "Failed to retrieve market alerts",
-            500
-        )
+        return create_error_response("internal_error", "Failed to retrieve market alerts", 500)
 
 
 @router.post("/market/alerts/rules")
-async def create_alert_rule(
-    request: AlertRuleRequest = Body(...),
-    alert_system = Depends(get_alert_system)
-):
+async def create_alert_rule(request: AlertRuleRequest = Body(...), alert_system=Depends(get_alert_system)):
     """
     Create a new market alert rule.
 
@@ -672,50 +607,34 @@ async def create_alert_rule(
             delivery_channels=[],  # Would convert from string list
             throttle_minutes=request.throttle_minutes,
             created_by="api_user",
-            created_at=datetime.now()
+            created_at=datetime.now(),
         )
 
         # Save the rule
         success = await alert_system.create_alert_rule(alert_rule)
 
         if not success:
-            return create_error_response(
-                "creation_failed",
-                "Failed to create alert rule",
-                500
-            )
+            return create_error_response("creation_failed", "Failed to create alert rule", 500)
 
         execution_time = (datetime.now() - start_time).total_seconds() * 1000
 
         return create_success_response(
-            data={
-                "rule_id": rule_id,
-                "name": request.name,
-                "status": "created"
-            },
+            data={"rule_id": rule_id, "name": request.name, "status": "created"},
             message="Alert rule created successfully",
-            execution_time=execution_time
+            execution_time=execution_time,
         )
 
     except ValueError as e:
-        return create_error_response(
-            "invalid_input",
-            str(e),
-            400
-        )
+        return create_error_response("invalid_input", str(e), 400)
     except Exception as e:
         logger.error(f"Failed to create alert rule: {e}")
-        return create_error_response(
-            "internal_error",
-            "Failed to create alert rule",
-            500
-        )
+        return create_error_response("internal_error", "Failed to create alert rule", 500)
 
 
 @router.post("/investment/opportunities")
 async def get_investment_opportunities(
     request: InvestmentAnalysisRequest = Body(...),
-    intelligence_service: NeighborhoodIntelligenceService = Depends(get_intelligence_service)
+    intelligence_service: NeighborhoodIntelligenceService = Depends(get_intelligence_service),
 ):
     """
     Analyze investment opportunities based on criteria.
@@ -727,8 +646,7 @@ async def get_investment_opportunities(
 
     try:
         opportunities = await intelligence_service.analyze_investment_opportunities(
-            criteria=request.criteria,
-            max_results=request.max_results
+            criteria=request.criteria, max_results=request.max_results
         )
 
         execution_time = (datetime.now() - start_time).total_seconds() * 1000
@@ -738,25 +656,21 @@ async def get_investment_opportunities(
                 "opportunities": opportunities,
                 "analysis_criteria": request.criteria,
                 "risk_tolerance": request.risk_tolerance,
-                "investment_horizon": request.investment_horizon
+                "investment_horizon": request.investment_horizon,
             },
             message=f"Found {len(opportunities)} investment opportunities",
-            execution_time=execution_time
+            execution_time=execution_time,
         )
 
     except Exception as e:
         logger.error(f"Investment opportunity analysis failed: {e}")
-        return create_error_response(
-            "internal_error",
-            "Failed to analyze investment opportunities",
-            500
-        )
+        return create_error_response("internal_error", "Failed to analyze investment opportunities", 500)
 
 
 @router.post("/investment/heatmap")
 async def generate_investment_heatmap(
     request: HeatmapRequest = Body(...),
-    intelligence_service: NeighborhoodIntelligenceService = Depends(get_intelligence_service)
+    intelligence_service: NeighborhoodIntelligenceService = Depends(get_intelligence_service),
 ):
     """
     Generate investment opportunity heatmap.
@@ -773,30 +687,23 @@ async def generate_investment_heatmap(
         heatmap = await geospatial_service.generate_investment_heatmap(
             analysis_bounds=tuple(request.bounds),
             grid_resolution_km=request.grid_resolution_km,
-            scoring_factors=request.scoring_factors
+            scoring_factors=request.scoring_factors,
         )
 
         execution_time = (datetime.now() - start_time).total_seconds() * 1000
 
         return create_success_response(
-            data=heatmap.__dict__,
-            message="Investment heatmap generated successfully",
-            execution_time=execution_time
+            data=heatmap.__dict__, message="Investment heatmap generated successfully", execution_time=execution_time
         )
 
     except Exception as e:
         logger.error(f"Heatmap generation failed: {e}")
-        return create_error_response(
-            "internal_error",
-            "Failed to generate investment heatmap",
-            500
-        )
+        return create_error_response("internal_error", "Failed to generate investment heatmap", 500)
 
 
 @router.post("/geospatial/accessibility")
 async def analyze_accessibility(
-    request: GeospatialAnalysisRequest = Body(...),
-    geospatial_service = Depends(get_geospatial_service)
+    request: GeospatialAnalysisRequest = Body(...), geospatial_service=Depends(get_geospatial_service)
 ):
     """
     Analyze accessibility scores for locations.
@@ -808,25 +715,18 @@ async def analyze_accessibility(
 
     try:
         # Convert request locations to GeographicPoint objects
-        locations = [
-            GeographicPoint(latitude=loc["latitude"], longitude=loc["longitude"])
-            for loc in request.locations
-        ]
+        locations = [GeographicPoint(latitude=loc["latitude"], longitude=loc["longitude"]) for loc in request.locations]
 
         # Perform accessibility analysis
         accessibility_scores = await geospatial_service.calculate_accessibility_scores(
-            locations=locations,
-            analysis_radius_km=request.analysis_radius_km
+            locations=locations, analysis_radius_km=request.analysis_radius_km
         )
 
         # Convert results to JSON-serializable format
         results = []
         for score in accessibility_scores:
             result = {
-                "location": {
-                    "latitude": score.location.latitude,
-                    "longitude": score.location.longitude
-                },
+                "location": {"latitude": score.location.latitude, "longitude": score.location.longitude},
                 "walk_score": score.walk_score,
                 "transit_score": score.transit_score,
                 "bike_score": score.bike_score,
@@ -836,7 +736,7 @@ async def analyze_accessibility(
                 "bike_infrastructure": score.bike_infrastructure,
                 "walkability_factors": score.walkability_factors,
                 "commute_scores": score.commute_scores,
-                "calculated_at": score.calculated_at.isoformat()
+                "calculated_at": score.calculated_at.isoformat(),
             }
             results.append(result)
 
@@ -845,28 +745,20 @@ async def analyze_accessibility(
         return create_success_response(
             data={
                 "accessibility_analysis": results,
-                "analysis_parameters": {
-                    "radius_km": request.analysis_radius_km,
-                    "locations_analyzed": len(locations)
-                }
+                "analysis_parameters": {"radius_km": request.analysis_radius_km, "locations_analyzed": len(locations)},
             },
             message=f"Accessibility analysis completed for {len(locations)} locations",
-            execution_time=execution_time
+            execution_time=execution_time,
         )
 
     except Exception as e:
         logger.error(f"Accessibility analysis failed: {e}")
-        return create_error_response(
-            "internal_error",
-            "Failed to analyze accessibility",
-            500
-        )
+        return create_error_response("internal_error", "Failed to analyze accessibility", 500)
 
 
 @router.post("/geospatial/cluster")
 async def cluster_properties(
-    request: PropertyClusterRequest = Body(...),
-    geospatial_service = Depends(get_geospatial_service)
+    request: PropertyClusterRequest = Body(...), geospatial_service=Depends(get_geospatial_service)
 ):
     """
     Perform spatial clustering analysis on properties.
@@ -879,9 +771,7 @@ async def cluster_properties(
     try:
         # Perform property clustering
         clusters = await geospatial_service.cluster_properties(
-            properties=request.properties,
-            cluster_criteria=request.cluster_criteria,
-            max_clusters=request.max_clusters
+            properties=request.properties, cluster_criteria=request.cluster_criteria, max_clusters=request.max_clusters
         )
 
         # Convert results to JSON-serializable format
@@ -892,13 +782,13 @@ async def cluster_properties(
                 "cluster_type": cluster.cluster_type,
                 "center_point": {
                     "latitude": cluster.center_point.latitude,
-                    "longitude": cluster.center_point.longitude
+                    "longitude": cluster.center_point.longitude,
                 },
                 "radius_km": cluster.radius_km,
                 "property_count": cluster.property_count,
                 "cluster_characteristics": cluster.cluster_characteristics,
                 "similarity_score": cluster.similarity_score,
-                "market_homogeneity": cluster.market_homogeneity
+                "market_homogeneity": cluster.market_homogeneity,
             }
             cluster_results.append(cluster_result)
 
@@ -910,24 +800,20 @@ async def cluster_properties(
                 "clustering_parameters": {
                     "criteria": request.cluster_criteria,
                     "max_clusters": request.max_clusters,
-                    "properties_analyzed": len(request.properties)
+                    "properties_analyzed": len(request.properties),
                 },
                 "summary": {
                     "clusters_generated": len(cluster_results),
-                    "total_properties": sum(c["property_count"] for c in cluster_results)
-                }
+                    "total_properties": sum(c["property_count"] for c in cluster_results),
+                },
             },
             message=f"Generated {len(cluster_results)} property clusters",
-            execution_time=execution_time
+            execution_time=execution_time,
         )
 
     except Exception as e:
         logger.error(f"Property clustering failed: {e}")
-        return create_error_response(
-            "internal_error",
-            "Failed to perform property clustering",
-            500
-        )
+        return create_error_response("internal_error", "Failed to perform property clustering", 500)
 
 
 @router.get("/health")
@@ -948,20 +834,13 @@ async def health_check():
                 "intelligence_service": intelligence_service.is_initialized,
                 "prediction_engine": prediction_engine.is_initialized,
                 "geospatial_service": geospatial_service.is_initialized,
-                "alert_system": alert_system.is_initialized
+                "alert_system": alert_system.is_initialized,
             },
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
-        return create_success_response(
-            data=health_status,
-            message="All services operational"
-        )
+        return create_success_response(data=health_status, message="All services operational")
 
     except Exception as e:
         logger.error(f"Health check failed: {e}")
-        return create_error_response(
-            "service_unavailable",
-            "One or more services are not available",
-            503
-        )
+        return create_error_response("service_unavailable", "One or more services are not available", 503)

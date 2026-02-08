@@ -38,7 +38,6 @@ from ghl_real_estate_ai.compliance_platform.models.compliance_models import (
     ViolationSeverity,
 )
 
-
 # ============================================================================
 # FIXTURES - Common test data and mock clients
 # ============================================================================
@@ -241,9 +240,7 @@ class TestModelRegistrationAPI:
         mock_compliance_service.register_model.return_value = sample_model_registration
 
         # Act
-        result = await mock_compliance_service.register_model(
-            **sample_model_registration_payload
-        )
+        result = await mock_compliance_service.register_model(**sample_model_registration_payload)
 
         # Assert
         assert result is not None
@@ -335,9 +332,7 @@ class TestModelRegistrationAPI:
         mock_compliance_service.list_models.return_value = [sample_model_registration]
 
         # Act
-        result = mock_compliance_service.list_models(
-            compliance_status=ComplianceStatus.UNDER_REVIEW
-        )
+        result = mock_compliance_service.list_models(compliance_status=ComplianceStatus.UNDER_REVIEW)
 
         # Assert
         assert len(result) == 1
@@ -564,9 +559,7 @@ class TestViolationsAPI:
     ):
         """Test listing all violations"""
         # Arrange
-        mock_compliance_service.policy_enforcer.get_active_violations.return_value = (
-            sample_violations_list
-        )
+        mock_compliance_service.policy_enforcer.get_active_violations.return_value = sample_violations_list
 
         # Act
         result = mock_compliance_service.policy_enforcer.get_active_violations()
@@ -634,17 +627,11 @@ class TestViolationsAPI:
     ):
         """Test filtering violations by severity"""
         # Arrange
-        high_severity_violations = [
-            v for v in sample_violations_list if v.severity == ViolationSeverity.HIGH
-        ]
-        mock_compliance_service.policy_enforcer.get_active_violations.return_value = (
-            high_severity_violations
-        )
+        high_severity_violations = [v for v in sample_violations_list if v.severity == ViolationSeverity.HIGH]
+        mock_compliance_service.policy_enforcer.get_active_violations.return_value = high_severity_violations
 
         # Act
-        result = mock_compliance_service.policy_enforcer.get_active_violations(
-            severity=ViolationSeverity.HIGH
-        )
+        result = mock_compliance_service.policy_enforcer.get_active_violations(severity=ViolationSeverity.HIGH)
 
         # Assert
         assert len(result) == 1
@@ -658,17 +645,11 @@ class TestViolationsAPI:
     ):
         """Test filtering violations by regulation"""
         # Arrange
-        gdpr_violations = [
-            v for v in sample_violations_list if v.regulation == RegulationType.GDPR
-        ]
-        mock_compliance_service.policy_enforcer.get_active_violations.return_value = (
-            gdpr_violations
-        )
+        gdpr_violations = [v for v in sample_violations_list if v.regulation == RegulationType.GDPR]
+        mock_compliance_service.policy_enforcer.get_active_violations.return_value = gdpr_violations
 
         # Act
-        result = mock_compliance_service.policy_enforcer.get_active_violations(
-            regulation=RegulationType.GDPR
-        )
+        result = mock_compliance_service.policy_enforcer.get_active_violations(regulation=RegulationType.GDPR)
 
         # Assert
         assert len(result) == 1
@@ -682,14 +663,10 @@ class TestViolationsAPI:
     ):
         """Test filtering violations by model ID"""
         # Arrange
-        mock_compliance_service.policy_enforcer.get_active_violations.return_value = (
-            sample_violations_list
-        )
+        mock_compliance_service.policy_enforcer.get_active_violations.return_value = sample_violations_list
 
         # Act
-        result = mock_compliance_service.policy_enforcer.get_active_violations(
-            model_id="model_001"
-        )
+        result = mock_compliance_service.policy_enforcer.get_active_violations(model_id="model_001")
 
         # Assert
         assert all("model_001" in v.affected_systems for v in result)
@@ -701,9 +678,7 @@ class TestViolationsAPI:
     ):
         """Test resolving a violation"""
         # Arrange
-        mock_compliance_service.policy_enforcer.resolve_violation = MagicMock(
-            return_value=True
-        )
+        mock_compliance_service.policy_enforcer.resolve_violation = MagicMock(return_value=True)
 
         # Act
         result = mock_compliance_service.policy_enforcer.resolve_violation(
@@ -837,9 +812,7 @@ class TestReportsAPI:
             return_value={
                 "job_id": job_id,
                 "status": "queued",
-                "estimated_completion": (
-                    datetime.now(timezone.utc) + timedelta(minutes=5)
-                ).isoformat(),
+                "estimated_completion": (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat(),
             }
         )
 
@@ -909,9 +882,7 @@ class TestWebhooksAPI:
     ):
         """Test webhook subscription with invalid URL"""
         # Arrange
-        mock_webhook_service.subscribe.side_effect = ValueError(
-            "Invalid webhook URL: must be HTTPS"
-        )
+        mock_webhook_service.subscribe.side_effect = ValueError("Invalid webhook URL: must be HTTPS")
 
         # Act & Assert
         with pytest.raises(ValueError) as exc_info:
@@ -1005,11 +976,13 @@ class TestWebhooksAPI:
     ):
         """Test webhook signature verification"""
         # Arrange
-        payload = json.dumps({
-            "event_type": "violation.detected",
-            "model_id": "model_001",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        })
+        payload = json.dumps(
+            {
+                "event_type": "violation.detected",
+                "model_id": "model_001",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        )
         timestamp = str(int(time.time()))
 
         # Create signature
@@ -1071,9 +1044,7 @@ class TestWebhooksAPI:
             hashlib.sha256,
         ).hexdigest()
 
-        mock_webhook_service.verify_signature.side_effect = ValueError(
-            "Webhook timestamp expired"
-        )
+        mock_webhook_service.verify_signature.side_effect = ValueError("Webhook timestamp expired")
 
         # Act & Assert
         with pytest.raises(ValueError) as exc_info:
@@ -1119,18 +1090,15 @@ class TestAPIErrorHandling:
     ):
         """Test API rate limiting"""
         # Arrange
-        mock_compliance_service.assess_compliance.side_effect = [
-            (MagicMock(), MagicMock(), [])
-            for _ in range(5)
-        ] + [Exception("Rate limit exceeded")]
+        mock_compliance_service.assess_compliance.side_effect = [(MagicMock(), MagicMock(), []) for _ in range(5)] + [
+            Exception("Rate limit exceeded")
+        ]
 
         # Act
         results = []
         for i in range(6):
             try:
-                result = await mock_compliance_service.assess_compliance(
-                    model_id="model_001"
-                )
+                result = await mock_compliance_service.assess_compliance(model_id="model_001")
                 results.append(("success", result))
             except Exception as e:
                 results.append(("error", str(e)))
@@ -1167,9 +1135,7 @@ class TestAPIErrorHandling:
     ):
         """Test internal server error handling"""
         # Arrange
-        mock_compliance_service.assess_compliance.side_effect = RuntimeError(
-            "Database connection failed"
-        )
+        mock_compliance_service.assess_compliance.side_effect = RuntimeError("Database connection failed")
 
         # Act & Assert
         with pytest.raises(RuntimeError) as exc_info:

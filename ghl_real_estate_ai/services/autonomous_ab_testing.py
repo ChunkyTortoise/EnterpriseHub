@@ -17,20 +17,21 @@ Status: Production-Ready Autonomous Testing Intelligence
 """
 
 import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
 import json
-import numpy as np
-import random
-from scipy import stats
 import logging
+import random
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
+import numpy as np
+from scipy import stats
+
 from ghl_real_estate_ai.core.llm_client import get_llm_client
-from ghl_real_estate_ai.services.advanced_analytics_engine import get_advanced_analytics_engine
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.advanced_analytics_engine import get_advanced_analytics_engine
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.database_service import get_database
 
 logger = get_logger(__name__)
@@ -207,7 +208,7 @@ class AutonomousABTesting:
             "graduated_tests_count": 0,
             "average_test_duration": 0.0,
             "total_participants": 0,
-            "average_lift_achieved": 0.0
+            "average_lift_achieved": 0.0,
         }
 
         # Test monitoring
@@ -251,7 +252,7 @@ class AutonomousABTesting:
         variants: List[Dict[str, Any]],
         target_metrics: List[str],
         success_criteria: Dict[str, float],
-        **kwargs
+        **kwargs,
     ) -> TestConfiguration:
         """
         Create a new A/B test with autonomous optimization.
@@ -279,7 +280,7 @@ class AutonomousABTesting:
                     variant_id=f"{test_id}_variant_{i}",
                     variant_name=variant_config.get("name", f"Variant {chr(65 + i)}"),  # A, B, C, etc.
                     configuration=variant_config,
-                    traffic_allocation=equal_allocation
+                    traffic_allocation=equal_allocation,
                 )
                 test_variants.append(variant)
 
@@ -299,7 +300,7 @@ class AutonomousABTesting:
                 minimum_detectable_effect=kwargs.get("minimum_detectable_effect", self.default_minimum_effect),
                 target_audience=kwargs.get("target_audience", {}),
                 exclusion_criteria=kwargs.get("exclusion_criteria", {}),
-                max_duration_days=kwargs.get("max_duration_days", 30)
+                max_duration_days=kwargs.get("max_duration_days", 30),
             )
 
             # Initialize multi-armed bandit
@@ -313,9 +314,7 @@ class AutonomousABTesting:
             self.testing_metrics["total_tests_created"] += 1
             self.testing_metrics["active_tests_count"] = len(self.active_tests)
 
-            logger.info(
-                f"✅ Created A/B test: {test_name} ({test_id}) with {len(variants)} variants"
-            )
+            logger.info(f"✅ Created A/B test: {test_name} ({test_id}) with {len(variants)} variants")
 
             return test_config
 
@@ -324,10 +323,7 @@ class AutonomousABTesting:
             raise
 
     async def allocate_participant(
-        self,
-        test_id: str,
-        participant_id: str,
-        context: Dict[str, Any] = None
+        self, test_id: str, participant_id: str, context: Dict[str, Any] = None
     ) -> Optional[TestVariant]:
         """
         Allocate participant to test variant using intelligent allocation.
@@ -358,8 +354,7 @@ class AutonomousABTesting:
                 await self._track_allocation(test_id, variant.variant_id, participant_id, context)
 
                 logger.debug(
-                    f"🎯 Allocated participant {participant_id} to variant {variant.variant_name} "
-                    f"in test {test_id}"
+                    f"🎯 Allocated participant {participant_id} to variant {variant.variant_name} in test {test_id}"
                 )
 
             return variant
@@ -368,12 +363,7 @@ class AutonomousABTesting:
             logger.error(f"❌ Error allocating participant to test {test_id}: {e}")
             return None
 
-    async def record_conversion(
-        self,
-        test_id: str,
-        participant_id: str,
-        conversion_data: Dict[str, Any]
-    ):
+    async def record_conversion(self, test_id: str, participant_id: str, conversion_data: Dict[str, Any]):
         """
         Record a conversion event for A/B test analysis.
 
@@ -396,11 +386,13 @@ class AutonomousABTesting:
             for variant in test_config.variants:
                 if variant.variant_id == variant_id:
                     variant.conversion_count += 1
-                    variant.success_events.append({
-                        "participant_id": participant_id,
-                        "timestamp": datetime.now().isoformat(),
-                        "data": conversion_data
-                    })
+                    variant.success_events.append(
+                        {
+                            "participant_id": participant_id,
+                            "timestamp": datetime.now().isoformat(),
+                            "data": conversion_data,
+                        }
+                    )
 
                     # Update performance metrics
                     conversion_rate = variant.conversion_count / variant.participant_count
@@ -443,8 +435,10 @@ class AutonomousABTesting:
                     "name": variant.variant_name,
                     "participants": variant.participant_count,
                     "conversions": variant.conversion_count,
-                    "conversion_rate": variant.conversion_count / variant.participant_count if variant.participant_count > 0 else 0,
-                    "performance_metrics": variant.performance_metrics
+                    "conversion_rate": variant.conversion_count / variant.participant_count
+                    if variant.participant_count > 0
+                    else 0,
+                    "performance_metrics": variant.performance_metrics,
                 }
 
             # Perform statistical analysis
@@ -468,7 +462,7 @@ class AutonomousABTesting:
                 recommendation=insights.get("recommendation", "Continue monitoring"),
                 next_actions=insights.get("next_actions", []),
                 insights=insights.get("insights", []),
-                test_duration_days=self._calculate_test_duration(test_config)
+                test_duration_days=self._calculate_test_duration(test_config),
             )
 
             # Store result
@@ -530,8 +524,7 @@ class AutonomousABTesting:
             # Update metrics
             self.testing_metrics["graduated_tests_count"] += 1
             self.testing_metrics["average_lift_achieved"] = (
-                self.testing_metrics["average_lift_achieved"] * 0.9 +
-                test_result.lift_percentage * 0.1
+                self.testing_metrics["average_lift_achieved"] * 0.9 + test_result.lift_percentage * 0.1
             )
 
             logger.info(
@@ -546,9 +539,7 @@ class AutonomousABTesting:
             return False
 
     async def get_optimization_recommendations(
-        self,
-        channel: str = None,
-        test_type: TestType = None
+        self, channel: str = None, test_type: TestType = None
     ) -> List[Dict[str, Any]]:
         """
         Get AI-powered optimization recommendations based on test learnings.
@@ -565,9 +556,7 @@ class AutonomousABTesting:
             historical_data = await self._gather_test_history(channel, test_type)
 
             # Generate Claude-powered recommendations
-            recommendations = await self._generate_optimization_recommendations(
-                historical_data, channel, test_type
-            )
+            recommendations = await self._generate_optimization_recommendations(historical_data, channel, test_type)
 
             # Add cross-test pattern insights
             pattern_insights = await self._identify_cross_test_patterns(historical_data)
@@ -606,10 +595,7 @@ class AutonomousABTesting:
             logger.error(f"❌ Error in A/B testing monitoring loop: {e}")
 
     async def _allocate_variant(
-        self,
-        test_config: TestConfiguration,
-        participant_id: str,
-        context: Dict[str, Any] = None
+        self, test_config: TestConfiguration, participant_id: str, context: Dict[str, Any] = None
     ) -> Optional[TestVariant]:
         """Allocate variant using configured allocation method."""
 
@@ -628,11 +614,7 @@ class AutonomousABTesting:
         else:  # DYNAMIC_ALLOCATION
             return await self._dynamic_allocation(test_config, context)
 
-    async def _bandit_allocation(
-        self,
-        test_config: TestConfiguration,
-        context: Dict[str, Any] = None
-    ) -> TestVariant:
+    async def _bandit_allocation(self, test_config: TestConfiguration, context: Dict[str, Any] = None) -> TestVariant:
         """Allocate using multi-armed bandit algorithm."""
         try:
             bandit_data = self.bandit_arms.get(test_config.test_id, {})
@@ -669,9 +651,7 @@ class AutonomousABTesting:
             return random.choice(test_config.variants)
 
     async def _perform_statistical_analysis(
-        self,
-        test_config: TestConfiguration,
-        variant_data: Dict[str, Dict[str, Any]]
+        self, test_config: TestConfiguration, variant_data: Dict[str, Dict[str, Any]]
     ) -> Dict[str, Any]:
         """Perform statistical significance analysis."""
         try:
@@ -684,11 +664,13 @@ class AutonomousABTesting:
 
             for variant_id, data in variant_data.items():
                 if data["participants"] > 0:
-                    variant_metrics.append({
-                        "participants": data["participants"],
-                        "conversions": data["conversions"],
-                        "rate": data["conversion_rate"]
-                    })
+                    variant_metrics.append(
+                        {
+                            "participants": data["participants"],
+                            "conversions": data["conversions"],
+                            "rate": data["conversion_rate"],
+                        }
+                    )
                     variant_ids.append(variant_id)
 
             if len(variant_metrics) < 2:
@@ -705,10 +687,7 @@ class AutonomousABTesting:
             return {"significant": False, "error": str(e)}
 
     async def _bayesian_analysis(
-        self,
-        variant_metrics: List[Dict[str, Any]],
-        variant_ids: List[str],
-        test_config: TestConfiguration
+        self, variant_metrics: List[Dict[str, Any]], variant_ids: List[str], test_config: TestConfiguration
     ) -> Dict[str, Any]:
         """Perform Bayesian statistical analysis."""
         try:
@@ -716,7 +695,7 @@ class AutonomousABTesting:
             # This is simplified - production would use more sophisticated Bayesian methods
 
             alpha_prior = 1  # Prior alpha (successes)
-            beta_prior = 1   # Prior beta (failures)
+            beta_prior = 1  # Prior beta (failures)
 
             posteriors = []
             for metrics in variant_metrics:
@@ -758,14 +737,16 @@ class AutonomousABTesting:
 
             return {
                 "significant": winner_probability >= test_config.confidence_level,
-                "winning_variant": variant_ids[winner_idx] if winner_probability >= test_config.confidence_level else None,
+                "winning_variant": variant_ids[winner_idx]
+                if winner_probability >= test_config.confidence_level
+                else None,
                 "confidence": winner_probability,
                 "p_value": 1 - winner_probability,  # Approximate
                 "effect_size": lift_percentage / 100,
                 "lift_percentage": lift_percentage,
                 "credible_interval": credible_interval.tolist(),
                 "lift_credible_interval": lift_credible.tolist(),
-                "all_probabilities": {variant_ids[i]: prob for i, prob in enumerate(probabilities)}
+                "all_probabilities": {variant_ids[i]: prob for i, prob in enumerate(probabilities)},
             }
 
         except Exception as e:
@@ -776,7 +757,7 @@ class AutonomousABTesting:
         self,
         test_config: TestConfiguration,
         variant_data: Dict[str, Dict[str, Any]],
-        statistical_result: Dict[str, Any]
+        statistical_result: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Generate insights using Claude analysis."""
         try:
@@ -804,11 +785,7 @@ class AutonomousABTesting:
             Focus on actionable insights for real estate follow-up optimization.
             """
 
-            response = await self.llm_client.generate(
-                prompt=prompt,
-                max_tokens=500,
-                temperature=0.3
-            )
+            response = await self.llm_client.generate(prompt=prompt, max_tokens=500, temperature=0.3)
 
             # Parse Claude's response (simplified)
             insights_content = response.content if response.content else "Continue monitoring test progress."
@@ -818,10 +795,10 @@ class AutonomousABTesting:
                 "next_actions": [
                     "Deploy winning variant" if statistical_result.get("significant") else "Continue data collection",
                     "Monitor key metrics",
-                    "Document learnings"
+                    "Document learnings",
                 ],
                 "insights": [insights_content],
-                "claude_analysis": insights_content
+                "claude_analysis": insights_content,
             }
 
         except Exception as e:
@@ -830,7 +807,7 @@ class AutonomousABTesting:
                 "recommendation": "Manual review required",
                 "next_actions": ["Review test manually"],
                 "insights": ["Error in analysis"],
-                "error": str(e)
+                "error": str(e),
             }
 
     async def _check_test_significance(self, test_id: str):
@@ -857,9 +834,10 @@ class AutonomousABTesting:
                 )
 
             # Auto-graduate if significant and configured for auto-graduation
-            if (test_result.statistical_significance and
-                test_result.lift_percentage > test_config.minimum_detectable_effect * 100):
-
+            if (
+                test_result.statistical_significance
+                and test_result.lift_percentage > test_config.minimum_detectable_effect * 100
+            ):
                 await self.graduate_winning_variant(test_id)
 
         except Exception as e:
@@ -869,11 +847,7 @@ class AutonomousABTesting:
         """Initialize multi-armed bandit for test."""
         self.bandit_arms[test_config.test_id] = {}
         for variant in test_config.variants:
-            self.bandit_arms[test_config.test_id][variant.variant_id] = {
-                "pulls": 0,
-                "rewards": 0.0,
-                "total_value": 0.0
-            }
+            self.bandit_arms[test_config.test_id][variant.variant_id] = {"pulls": 0, "rewards": 0.0, "total_value": 0.0}
 
     def _calculate_test_duration(self, test_config: TestConfiguration) -> float:
         """Calculate test duration in days."""
@@ -884,10 +858,7 @@ class AutonomousABTesting:
         return (end_time - test_config.start_time).total_seconds() / 86400
 
     async def _is_participant_eligible(
-        self,
-        test_config: TestConfiguration,
-        participant_id: str,
-        context: Dict[str, Any] = None
+        self, test_config: TestConfiguration, participant_id: str, context: Dict[str, Any] = None
     ) -> bool:
         """Check if participant is eligible for test."""
         # Basic eligibility checks
@@ -923,7 +894,7 @@ class AutonomousABTesting:
                 "conversions": total_conversions,
                 "conversion_rate": total_conversions / total_participants if total_participants > 0 else 0,
                 "duration_days": self._calculate_test_duration(config),
-                "variants": len(config.variants)
+                "variants": len(config.variants),
             }
 
         return {
@@ -933,7 +904,7 @@ class AutonomousABTesting:
             "total_insights_generated": len(self.test_insights),
             "bandit_arms_active": len(self.bandit_arms),
             "completed_tests": len(self.test_results),
-            "last_updated": datetime.now().isoformat()
+            "last_updated": datetime.now().isoformat(),
         }
 
     async def _save_test_configuration(self, test_config: TestConfiguration):
@@ -944,7 +915,7 @@ class AutonomousABTesting:
                 "test_id": test_config.test_id,
                 "test_name": test_config.test_name,
                 "status": test_config.status.value,
-                "created_at": test_config.created_at.isoformat()
+                "created_at": test_config.created_at.isoformat(),
             }
             await self.cache.set(f"ab_test_config:{test_config.test_id}", json.dumps(data), ttl=86400)
         except Exception as e:
@@ -952,7 +923,7 @@ class AutonomousABTesting:
 
     async def _load_active_tests(self):
         """Load active tests from cache."""
-        pass # Implementation depends on environment
+        pass  # Implementation depends on environment
 
     async def _save_active_tests(self):
         """Save all active tests state."""
@@ -966,7 +937,7 @@ class AutonomousABTesting:
     async def _track_allocation(self, test_id: str, variant_id: str, participant_id: str, context: Dict):
         """Track variant allocation for a participant."""
         cache_key = f"ab_participant:{test_id}:{participant_id}"
-        await self.cache.set(cache_key, variant_id, ttl=2592000) # 30 days
+        await self.cache.set(cache_key, variant_id, ttl=2592000)  # 30 days
 
     async def _update_bandit_metrics(self, test_id: str, variant_id: str, conversion_data: Dict):
         """Update metrics for bandit algorithm."""
@@ -974,7 +945,7 @@ class AutonomousABTesting:
             self.bandit_arms[test_id] = {}
         if variant_id not in self.bandit_arms[test_id]:
             self.bandit_arms[test_id][variant_id] = {"pulls": 0, "rewards": 0.0}
-        
+
         self.bandit_arms[test_id][variant_id]["rewards"] += 1.0
 
     async def _check_test_status(self, test_id: str):
@@ -1015,11 +986,13 @@ class AutonomousABTesting:
             # Gather current variant performance
             performance_data = []
             for v in test_config.variants:
-                performance_data.append({
-                    "name": v.variant_name,
-                    "conv_rate": v.performance_metrics.get("conversion_rate", 0.0),
-                    "description": v.configuration.get("description", "")
-                })
+                performance_data.append(
+                    {
+                        "name": v.variant_name,
+                        "conv_rate": v.performance_metrics.get("conversion_rate", 0.0),
+                        "description": v.configuration.get("description", ""),
+                    }
+                )
 
             prompt = f"""You are an Autonomous Optimization Engine. 
             Analyze the following A/B test results for a Real Estate Bot and generate 2 NEW variants to try.
@@ -1039,14 +1012,14 @@ class AutonomousABTesting:
             response = await self.llm_client.agenerate(
                 prompt=prompt,
                 system_prompt="You are an elite marketing scientist. Focus on high-conversion real estate linguistics.",
-                temperature=0.7
+                temperature=0.7,
             )
 
             # Parse and sanitize variants
             content = response.content.strip()
             if "```json" in content:
                 content = content.split("```json")[1].split("```")[0].strip()
-            
+
             new_variants = json.loads(content)
             logger.info(f"🧬 Generated {len(new_variants)} new variants for test {test_id}")
             return new_variants
@@ -1062,20 +1035,25 @@ class AutonomousABTesting:
         and automatically applies them to another (e.g., Buyer).
         """
         logger.info("🧠 Running Neural Cross-Pollination analysis...")
-        
+
         candidates = []
         for test_id, result in self.test_results.items():
             if result.statistical_significance and result.lift_percentage > 10.0:
                 test_config = self.active_tests.get(test_id)
-                if not test_config: continue
-                
-                winning_variant = next((v for v in test_config.variants if v.variant_id == result.winning_variant), None)
+                if not test_config:
+                    continue
+
+                winning_variant = next(
+                    (v for v in test_config.variants if v.variant_id == result.winning_variant), None
+                )
                 if winning_variant and "Educational" in winning_variant.variant_name:
-                    candidates.append({
-                        "source": "Seller" if "Seller" in test_config.test_name else "Generic",
-                        "variant": winning_variant,
-                        "lift": result.lift_percentage
-                    })
+                    candidates.append(
+                        {
+                            "source": "Seller" if "Seller" in test_config.test_name else "Generic",
+                            "variant": winning_variant,
+                            "lift": result.lift_percentage,
+                        }
+                    )
 
         for candidate in candidates:
             target_domain = "Buyer" if candidate["source"] == "Seller" else "Seller"
@@ -1090,7 +1068,7 @@ class AutonomousABTesting:
         try:
             prompt = f"""Adapt this successful real estate hook for the {target_domain} domain.
             ORIGINAL HOOK: {variant.variant_name}
-            STRATEGY: {variant.configuration.get('description', 'Educational insight')}
+            STRATEGY: {variant.configuration.get("description", "Educational insight")}
             ORIGINAL CONFIG: {json.dumps(variant.configuration)}
             
             GOAL: Maintain the winning linguistic pattern (the 'hook') but swap the context (e.g. from Seller ROI to Buyer Value).
@@ -1102,45 +1080,45 @@ class AutonomousABTesting:
                 "configuration": {{ ... adapted configuration ... }}
             }}
             """
-            
+
             response = await self.llm_client.agenerate(
                 prompt=prompt,
                 system_prompt="You are an elite marketing scientist. Focus on high-conversion real estate linguistics.",
-                temperature=0.3
+                temperature=0.3,
             )
-            
+
             content = response.content.strip()
             if "```json" in content:
                 content = content.split("```json")[1].split("```")[0].strip()
-            
+
             adapted_variant_config = json.loads(content)
-            
+
             # Create a new test for the target domain
             test_name = f"Neural Cross-Pollination: {variant.variant_name} -> {target_domain}"
-            
+
             # Define variants: we test the adapted hook against a baseline
             variants = [
                 {
                     "name": f"{target_domain} Baseline Control",
                     "description": f"Standard {target_domain} messaging control.",
-                    "configuration": {"template_type": "standard", "domain": target_domain.lower()}
+                    "configuration": {"template_type": "standard", "domain": target_domain.lower()},
                 },
-                adapted_variant_config
+                adapted_variant_config,
             ]
-            
+
             test_config = await self.create_test(
                 test_name=test_name,
                 test_type=TestType.MESSAGE_CONTENT,
                 variants=variants,
                 target_metrics=["conversion_rate", "response_rate"],
                 success_criteria={"conversion_rate": 0.05},
-                description=f"Autonomous cross-pollination from successful {variant.variant_name}."
+                description=f"Autonomous cross-pollination from successful {variant.variant_name}.",
             )
-            
+
             # Activate the test immediately
             test_config.status = TestStatus.ACTIVE
             await self._save_test_configuration(test_config)
-            
+
             logger.info(f"✅ Neural Cross-Pollination active: {test_config.test_id} ({target_domain})")
             return test_config
 

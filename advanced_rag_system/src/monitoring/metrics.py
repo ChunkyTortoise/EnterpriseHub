@@ -32,12 +32,12 @@ from contextlib import contextmanager
 from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 
 from prometheus_client import (
+    CONTENT_TYPE_LATEST,
     Counter,
     Gauge,
     Histogram,
     Info,
     generate_latest,
-    CONTENT_TYPE_LATEST,
 )
 from prometheus_client.core import CollectorRegistry
 
@@ -185,11 +185,13 @@ class MetricsCollector:
             return
 
         try:
-            self._app_info.info({
-                "name": self.settings.app_name,
-                "version": self.settings.app_version,
-                "debug": str(self.settings.debug),
-            })
+            self._app_info.info(
+                {
+                    "name": self.settings.app_name,
+                    "version": self.settings.app_version,
+                    "debug": str(self.settings.debug),
+                }
+            )
             self._initialized = True
             logger.info("metrics_collector_initialized")
         except Exception as e:
@@ -461,6 +463,7 @@ def track_latency(
             return await perform_search(query)
         ```
     """
+
     def decorator(func: F) -> F:
         is_async = asyncio.iscoroutinefunction(func)
 
@@ -537,6 +540,7 @@ def count_tokens(
     Returns:
         Decorated function
     """
+
     def decorator(func: F) -> F:
         is_async = asyncio.iscoroutinefunction(func)
 
@@ -601,6 +605,7 @@ def record_accuracy(
     Returns:
         Decorated function
     """
+
     def decorator(func: F) -> F:
         is_async = asyncio.iscoroutinefunction(func)
 

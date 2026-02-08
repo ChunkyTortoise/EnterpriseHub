@@ -5,14 +5,15 @@ Tests the "Tinder-style" swipe logic for the branded client portal.
 """
 
 import json
-import pytest
 from datetime import datetime, timedelta
 from pathlib import Path
 
+import pytest
+
 from ghl_real_estate_ai.services.portal_swipe_manager import (
+    FeedbackCategory,
     PortalSwipeManager,
     SwipeAction,
-    FeedbackCategory,
 )
 
 
@@ -84,7 +85,7 @@ async def test_high_intent_detection(swipe_manager):
     # First two likes should not trigger high intent
     assert results[0]["high_intent"] == False
     assert results[1]["high_intent"] == False
-    
+
     # Third like should trigger high intent (3+ likes total)
     assert results[2]["high_intent"] == True
     assert results[2]["trigger_sms"] == True
@@ -132,7 +133,7 @@ async def test_pass_with_price_feedback(swipe_manager):
     )
 
     assert result["status"] == "preference_updated"
-    
+
     # Verify feedback was logged
     interaction = swipe_manager.interactions[0]
     assert interaction["meta_data"]["feedback_category"] == "price_too_high"
@@ -173,14 +174,14 @@ async def test_get_lead_stats(swipe_manager):
         action=SwipeAction.LIKE,
         location_id=location_id,
     )
-    
+
     await swipe_manager.handle_swipe(
         lead_id=lead_id,
         property_id="mls_011",
         action=SwipeAction.LIKE,
         location_id=location_id,
     )
-    
+
     await swipe_manager.handle_swipe(
         lead_id=lead_id,
         property_id="mls_012",
@@ -231,7 +232,7 @@ def test_log_interaction_structure(swipe_manager):
     )
 
     interaction = swipe_manager.interactions[0]
-    
+
     # Check required fields
     assert "interaction_id" in interaction
     assert "lead_id" in interaction
@@ -239,10 +240,10 @@ def test_log_interaction_structure(swipe_manager):
     assert "action" in interaction
     assert "timestamp" in interaction
     assert "meta_data" in interaction
-    
+
     # Check UUID format
     assert len(interaction["interaction_id"]) == 36  # UUID4 format
-    
+
     # Check timestamp is ISO format
     datetime.fromisoformat(interaction["timestamp"].replace("Z", "+00:00"))
 
@@ -258,7 +259,7 @@ def test_feedback_categories_enum():
         FeedbackCategory.SIZE_TOO_LARGE,
         FeedbackCategory.OTHER,
     ]
-    
+
     assert len(categories) == 7
     assert FeedbackCategory.PRICE_TOO_HIGH.value == "price_too_high"
     assert FeedbackCategory.LOCATION.value == "location"
@@ -268,7 +269,7 @@ def test_feedback_categories_enum():
 async def test_multiple_leads_isolation(swipe_manager):
     """Test that statistics are properly isolated between leads."""
     location_id = "loc_test"
-    
+
     # Lead 1: 2 likes
     await swipe_manager.handle_swipe(
         lead_id="lead_1",
@@ -282,7 +283,7 @@ async def test_multiple_leads_isolation(swipe_manager):
         action=SwipeAction.LIKE,
         location_id=location_id,
     )
-    
+
     # Lead 2: 1 like, 1 pass
     await swipe_manager.handle_swipe(
         lead_id="lead_2",
@@ -296,15 +297,15 @@ async def test_multiple_leads_isolation(swipe_manager):
         action=SwipeAction.PASS,
         location_id=location_id,
     )
-    
+
     # Check stats are isolated
     stats_1 = swipe_manager.get_lead_stats("lead_1")
     stats_2 = swipe_manager.get_lead_stats("lead_2")
-    
+
     assert stats_1["total_interactions"] == 2
     assert stats_1["likes"] == 2
     assert stats_1["passes"] == 0
-    
+
     assert stats_2["total_interactions"] == 2
     assert stats_2["likes"] == 1
     assert stats_2["passes"] == 1
@@ -314,7 +315,7 @@ async def test_multiple_leads_isolation(swipe_manager):
 async def test_interaction_persistence(temp_interactions_file):
     """Test that interactions are persisted to file."""
     manager1 = PortalSwipeManager(interactions_path=temp_interactions_file)
-    
+
     # Add an interaction
     await manager1.handle_swipe(
         lead_id="test_persist",
@@ -322,10 +323,10 @@ async def test_interaction_persistence(temp_interactions_file):
         action=SwipeAction.LIKE,
         location_id="loc_test",
     )
-    
+
     # Create a new manager instance (simulating restart)
     manager2 = PortalSwipeManager(interactions_path=temp_interactions_file)
-    
+
     # Verify interaction was loaded
     assert len(manager2.interactions) == 1
     assert manager2.interactions[0]["lead_id"] == "test_persist"
@@ -342,7 +343,7 @@ async def test_time_on_card_tracking(swipe_manager):
         location_id="loc_test",
         time_on_card=25.7,
     )
-    
+
     interaction = swipe_manager.interactions[0]
     assert interaction["meta_data"]["time_on_card"] == 25.7
 
@@ -352,7 +353,7 @@ async def test_swipe_action_enum():
     """Test SwipeAction enum values."""
     assert SwipeAction.LIKE.value == "like"
     assert SwipeAction.PASS.value == "pass"
-    
+
     # Test creating from string
     assert SwipeAction("like") == SwipeAction.LIKE
     assert SwipeAction("pass") == SwipeAction.PASS

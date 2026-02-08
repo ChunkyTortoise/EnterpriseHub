@@ -106,11 +106,13 @@ class MLSClient:
                     curr_price = Decimal(str(sale_history[i].get("sale", {}).get("amount", {}).get("saleamt", 0)))
                     if curr_price < prev_price and prev_price > 0:
                         pct = float((prev_price - curr_price) / prev_price * 100)
-                        price_drops.append({
-                            "old_price": float(prev_price),
-                            "new_price": float(curr_price),
-                            "percentage": round(pct, 1),
-                        })
+                        price_drops.append(
+                            {
+                                "old_price": float(prev_price),
+                                "new_price": float(curr_price),
+                                "percentage": round(pct, 1),
+                            }
+                        )
 
             dom = int(listing_info.get("calculation", {}).get("daysonmarket", 0))
 
@@ -166,9 +168,7 @@ class MLSClient:
             logger.warning(f"Property valuation failed for {property_address}: {e}")
             return None
 
-    async def get_comparable_sales(
-        self, property_address: str, radius_miles: float = 1.0
-    ) -> List[ComparableSale]:
+    async def get_comparable_sales(self, property_address: str, radius_miles: float = 1.0) -> List[ComparableSale]:
         """Fetch recent comparable sales for CMA generation."""
         if not self.enabled or not self.attom_api_key:
             return []
@@ -198,16 +198,18 @@ class MLSClient:
                 if not price:
                     continue
 
-                comps.append(ComparableSale(
-                    address=addr,
-                    sale_price=price,
-                    sale_date=sale.get("saleTransDate", ""),
-                    bedrooms=int(building.get("beds", 0)),
-                    bathrooms=float(building.get("bathstotal", 0)),
-                    sqft=int(prop.get("building", {}).get("size", {}).get("livingsize", 0)),
-                    distance_miles=0.0,  # Attom doesn't return distance directly
-                    days_on_market=int(sale.get("calculation", {}).get("daysonmarket", 0)),
-                ))
+                comps.append(
+                    ComparableSale(
+                        address=addr,
+                        sale_price=price,
+                        sale_date=sale.get("saleTransDate", ""),
+                        bedrooms=int(building.get("beds", 0)),
+                        bathrooms=float(building.get("bathstotal", 0)),
+                        sqft=int(prop.get("building", {}).get("size", {}).get("livingsize", 0)),
+                        distance_miles=0.0,  # Attom doesn't return distance directly
+                        days_on_market=int(sale.get("calculation", {}).get("daysonmarket", 0)),
+                    )
+                )
 
             return comps
 

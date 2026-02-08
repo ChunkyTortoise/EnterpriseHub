@@ -1,15 +1,15 @@
 """Tests for RedisCacheBackend with mocked redis.asyncio — no running Redis needed."""
 
 import pickle
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from src.embeddings.cache import RedisCacheBackend
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def mock_redis_client():
@@ -37,8 +37,8 @@ def backend():
 # Tests: Initialization & Connection Lifecycle
 # ---------------------------------------------------------------------------
 
-class TestInitialization:
 
+class TestInitialization:
     @pytest.mark.asyncio
     async def test_initialize_success(self, backend, mock_redis_client):
         with patch("redis.asyncio.from_url", return_value=mock_redis_client):
@@ -79,8 +79,8 @@ class TestInitialization:
 # Tests: GET
 # ---------------------------------------------------------------------------
 
-class TestGet:
 
+class TestGet:
     @pytest.mark.asyncio
     async def test_get_hit(self, backend, mock_redis_client):
         value = [1.0, 2.0, 3.0]
@@ -123,8 +123,8 @@ class TestGet:
 # Tests: SET
 # ---------------------------------------------------------------------------
 
-class TestSet:
 
+class TestSet:
     @pytest.mark.asyncio
     async def test_set_with_ttl(self, backend, mock_redis_client):
         with patch("redis.asyncio.from_url", return_value=mock_redis_client):
@@ -132,9 +132,7 @@ class TestSet:
 
         value = [0.1, 0.2]
         await backend.set("k", value, ttl=60)
-        mock_redis_client.setex.assert_awaited_once_with(
-            "test:k", 60, pickle.dumps(value)
-        )
+        mock_redis_client.setex.assert_awaited_once_with("test:k", 60, pickle.dumps(value))
 
     @pytest.mark.asyncio
     async def test_set_uses_default_ttl_when_zero(self, backend, mock_redis_client):
@@ -163,8 +161,8 @@ class TestSet:
 # Tests: DELETE
 # ---------------------------------------------------------------------------
 
-class TestDelete:
 
+class TestDelete:
     @pytest.mark.asyncio
     async def test_delete_existing(self, backend, mock_redis_client):
         mock_redis_client.delete = AsyncMock(return_value=1)
@@ -191,8 +189,8 @@ class TestDelete:
 # Tests: CLEAR
 # ---------------------------------------------------------------------------
 
-class TestClear:
 
+class TestClear:
     @pytest.mark.asyncio
     async def test_clear_scans_and_deletes(self, backend, mock_redis_client):
         keys_batch = [b"test:a", b"test:b"]

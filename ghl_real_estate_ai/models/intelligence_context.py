@@ -14,11 +14,12 @@ Features:
 Author: Jorge's Real Estate AI Platform - Phase 3.3 Bot Workflow Integration
 """
 
-from typing import Dict, List, Optional, Any, Union
-from dataclasses import dataclass, field, asdict
-from datetime import datetime, timezone
 import json
 import time
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Union
+
 
 @dataclass
 class PropertyIntelligence:
@@ -36,12 +37,12 @@ class PropertyIntelligence:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'PropertyIntelligence':
+    def from_dict(cls, data: Dict[str, Any]) -> "PropertyIntelligence":
         """Create instance from dictionary."""
         return cls(**data)
 
     @classmethod
-    def create_empty(cls) -> 'PropertyIntelligence':
+    def create_empty(cls) -> "PropertyIntelligence":
         """Create empty property intelligence for fallback scenarios."""
         return cls(
             top_matches=[],
@@ -49,7 +50,7 @@ class PropertyIntelligence:
             best_match_score=0.0,
             presentation_strategy=None,
             optimal_presentation_time=None,
-            behavioral_reasoning="No property intelligence available"
+            behavioral_reasoning="No property intelligence available",
         )
 
 
@@ -71,12 +72,12 @@ class ConversationIntelligence:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ConversationIntelligence':
+    def from_dict(cls, data: Dict[str, Any]) -> "ConversationIntelligence":
         """Create instance from dictionary."""
         return cls(**data)
 
     @classmethod
-    def create_empty(cls) -> 'ConversationIntelligence':
+    def create_empty(cls) -> "ConversationIntelligence":
         """Create empty conversation intelligence for fallback scenarios."""
         return cls(
             objections_detected=[],
@@ -86,7 +87,7 @@ class ConversationIntelligence:
             coaching_opportunities=[],
             response_recommendations=[],
             next_best_action=None,
-            urgency_indicators=[]
+            urgency_indicators=[],
         )
 
 
@@ -109,12 +110,12 @@ class PreferenceIntelligence:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'PreferenceIntelligence':
+    def from_dict(cls, data: Dict[str, Any]) -> "PreferenceIntelligence":
         """Create instance from dictionary."""
         return cls(**data)
 
     @classmethod
-    def create_empty(cls) -> 'PreferenceIntelligence':
+    def create_empty(cls) -> "PreferenceIntelligence":
         """Create empty preference intelligence for fallback scenarios."""
         return cls(
             preference_profile={},
@@ -125,7 +126,7 @@ class PreferenceIntelligence:
             feature_preferences={},
             timeline_preference=None,
             confidence_score=0.0,
-            preference_gaps=["No preference data available"]
+            preference_gaps=["No preference data available"],
         )
 
 
@@ -153,18 +154,18 @@ class IntelligencePerformanceMetrics:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         data = asdict(self)
-        data['started_at'] = self.started_at.isoformat() if self.started_at else None
-        data['completed_at'] = self.completed_at.isoformat() if self.completed_at else None
+        data["started_at"] = self.started_at.isoformat() if self.started_at else None
+        data["completed_at"] = self.completed_at.isoformat() if self.completed_at else None
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'IntelligencePerformanceMetrics':
+    def from_dict(cls, data: Dict[str, Any]) -> "IntelligencePerformanceMetrics":
         """Create instance from dictionary."""
         # Convert ISO strings back to datetime objects
-        if data.get('started_at'):
-            data['started_at'] = datetime.fromisoformat(data['started_at'].replace('Z', '+00:00'))
-        if data.get('completed_at'):
-            data['completed_at'] = datetime.fromisoformat(data['completed_at'].replace('Z', '+00:00'))
+        if data.get("started_at"):
+            data["started_at"] = datetime.fromisoformat(data["started_at"].replace("Z", "+00:00"))
+        if data.get("completed_at"):
+            data["completed_at"] = datetime.fromisoformat(data["completed_at"].replace("Z", "+00:00"))
         return cls(**data)
 
 
@@ -200,62 +201,58 @@ class BotIntelligenceContext:
     def to_json(self) -> str:
         """Serialize to JSON for caching."""
         data = {
-            'lead_id': self.lead_id,
-            'location_id': self.location_id,
-            'bot_type': self.bot_type,
-            'property_intelligence': self.property_intelligence.to_dict(),
-            'conversation_intelligence': self.conversation_intelligence.to_dict(),
-            'preference_intelligence': self.preference_intelligence.to_dict(),
-            'performance_metrics': self.performance_metrics.to_dict(),
-            'cache_hit': self.cache_hit,
-            'generated_at': self.generated_at.isoformat(),
-            'composite_engagement_score': self.composite_engagement_score,
-            'recommended_approach': self.recommended_approach,
-            'priority_insights': self.priority_insights
+            "lead_id": self.lead_id,
+            "location_id": self.location_id,
+            "bot_type": self.bot_type,
+            "property_intelligence": self.property_intelligence.to_dict(),
+            "conversation_intelligence": self.conversation_intelligence.to_dict(),
+            "preference_intelligence": self.preference_intelligence.to_dict(),
+            "performance_metrics": self.performance_metrics.to_dict(),
+            "cache_hit": self.cache_hit,
+            "generated_at": self.generated_at.isoformat(),
+            "composite_engagement_score": self.composite_engagement_score,
+            "recommended_approach": self.recommended_approach,
+            "priority_insights": self.priority_insights,
         }
         return json.dumps(data, default=str)
 
     @classmethod
-    def from_json(cls, json_str: str) -> 'BotIntelligenceContext':
+    def from_json(cls, json_str: str) -> "BotIntelligenceContext":
         """Deserialize from JSON."""
         data = json.loads(json_str)
 
         # Reconstruct nested objects
-        data['property_intelligence'] = PropertyIntelligence.from_dict(data['property_intelligence'])
-        data['conversation_intelligence'] = ConversationIntelligence.from_dict(data['conversation_intelligence'])
-        data['preference_intelligence'] = PreferenceIntelligence.from_dict(data['preference_intelligence'])
-        data['performance_metrics'] = IntelligencePerformanceMetrics.from_dict(data['performance_metrics'])
+        data["property_intelligence"] = PropertyIntelligence.from_dict(data["property_intelligence"])
+        data["conversation_intelligence"] = ConversationIntelligence.from_dict(data["conversation_intelligence"])
+        data["preference_intelligence"] = PreferenceIntelligence.from_dict(data["preference_intelligence"])
+        data["performance_metrics"] = IntelligencePerformanceMetrics.from_dict(data["performance_metrics"])
 
         # Convert ISO string back to datetime
-        data['generated_at'] = datetime.fromisoformat(data['generated_at'].replace('Z', '+00:00'))
+        data["generated_at"] = datetime.fromisoformat(data["generated_at"].replace("Z", "+00:00"))
 
         return cls(**data)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for API responses."""
         return {
-            'lead_id': self.lead_id,
-            'location_id': self.location_id,
-            'bot_type': self.bot_type,
-            'property_intelligence': self.property_intelligence.to_dict(),
-            'conversation_intelligence': self.conversation_intelligence.to_dict(),
-            'preference_intelligence': self.preference_intelligence.to_dict(),
-            'performance_metrics': self.performance_metrics.to_dict(),
-            'cache_hit': self.cache_hit,
-            'generated_at': self.generated_at.isoformat(),
-            'composite_engagement_score': self.composite_engagement_score,
-            'recommended_approach': self.recommended_approach,
-            'priority_insights': self.priority_insights
+            "lead_id": self.lead_id,
+            "location_id": self.location_id,
+            "bot_type": self.bot_type,
+            "property_intelligence": self.property_intelligence.to_dict(),
+            "conversation_intelligence": self.conversation_intelligence.to_dict(),
+            "preference_intelligence": self.preference_intelligence.to_dict(),
+            "performance_metrics": self.performance_metrics.to_dict(),
+            "cache_hit": self.cache_hit,
+            "generated_at": self.generated_at.isoformat(),
+            "composite_engagement_score": self.composite_engagement_score,
+            "recommended_approach": self.recommended_approach,
+            "priority_insights": self.priority_insights,
         }
 
     @classmethod
     def create_fallback(
-        cls,
-        lead_id: str,
-        location_id: str,
-        bot_type: str,
-        error_context: Optional[str] = None
-    ) -> 'BotIntelligenceContext':
+        cls, lead_id: str, location_id: str, bot_type: str, error_context: Optional[str] = None
+    ) -> "BotIntelligenceContext":
         """
         Create fallback intelligence context when services fail.
 
@@ -264,7 +261,7 @@ class BotIntelligenceContext:
         """
         # Create performance metrics with failure recorded
         performance_metrics = IntelligencePerformanceMetrics()
-        performance_metrics.service_failures = ['fallback_context_created']
+        performance_metrics.service_failures = ["fallback_context_created"]
         if error_context:
             performance_metrics.service_failures.append(error_context)
         performance_metrics.mark_completion()
@@ -280,7 +277,7 @@ class BotIntelligenceContext:
             cache_hit=False,
             composite_engagement_score=0.5,  # Neutral engagement level
             recommended_approach="standard",  # Safe default approach
-            priority_insights=["Enhanced intelligence temporarily unavailable"]
+            priority_insights=["Enhanced intelligence temporarily unavailable"],
         )
 
     def calculate_composite_scores(self):
@@ -320,7 +317,9 @@ class BotIntelligenceContext:
 
         # Conversation insights
         if len(self.conversation_intelligence.objections_detected) > 0:
-            insights.append(f"Detected {len(self.conversation_intelligence.objections_detected)} objections requiring attention")
+            insights.append(
+                f"Detected {len(self.conversation_intelligence.objections_detected)} objections requiring attention"
+            )
 
         # Preference insights
         if self.preference_intelligence.profile_completeness > 0.7:

@@ -7,15 +7,9 @@ This module provides comprehensive re-ranking capabilities including:
 - Mock re-ranker for development and testing
 """
 
-from .base import (
-    BaseReRanker,
-    ReRankingConfig,
-    ReRankingResult,
-    ReRankingStrategy,
-    MockReRanker
-)
+from .base import BaseReRanker, MockReRanker, ReRankingConfig, ReRankingResult, ReRankingStrategy
+from .cohere_reranker import CohereConfig, CohereReRanker
 from .cross_encoder import CrossEncoderReRanker
-from .cohere_reranker import CohereReRanker, CohereConfig
 
 __all__ = [
     # Base classes and utilities
@@ -24,10 +18,8 @@ __all__ = [
     "ReRankingResult",
     "ReRankingStrategy",
     "MockReRanker",
-
     # Cross-encoder re-ranker
     "CrossEncoderReRanker",
-
     # Cohere API re-ranker
     "CohereReRanker",
     "CohereConfig",

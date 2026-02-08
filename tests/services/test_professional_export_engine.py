@@ -3,8 +3,8 @@
 import pytest
 
 from ghl_real_estate_ai.services.professional_export_engine import (
-    ProfessionalExportEngine,
     BrandingConfig,
+    ProfessionalExportEngine,
     ReportFormat,
     ReportType,
 )
@@ -67,6 +67,7 @@ def sample_property():
 # Market reports
 # -------------------------------------------------------------------------
 
+
 class TestMarketReports:
     @pytest.mark.asyncio
     async def test_html_report_generated(self, engine):
@@ -106,9 +107,7 @@ class TestMarketReports:
     @pytest.mark.asyncio
     async def test_custom_market_data(self, engine):
         data = {"median_price": 999_999, "avg_dom": 10, "inventory": 20}
-        result = await engine.generate_market_report(
-            "victoria", market_data=data, format="text"
-        )
+        result = await engine.generate_market_report("victoria", market_data=data, format="text")
         assert "999,999" in result.content
 
 
@@ -116,51 +115,43 @@ class TestMarketReports:
 # CMA reports
 # -------------------------------------------------------------------------
 
+
 class TestCMAReports:
     @pytest.mark.asyncio
     async def test_cma_html(self, engine, sample_property, sample_comparables):
-        result = await engine.generate_cma_report(
-            "456 Haven Ave", sample_property, sample_comparables, format="html"
-        )
+        result = await engine.generate_cma_report("456 Haven Ave", sample_property, sample_comparables, format="html")
         assert "Comparative Market Analysis" in result.content
         assert "456 Haven Ave" in result.content
         assert result.report_type == ReportType.CMA
 
     @pytest.mark.asyncio
     async def test_cma_contains_comparables(self, engine, sample_property, sample_comparables):
-        result = await engine.generate_cma_report(
-            "456 Haven Ave", sample_property, sample_comparables
-        )
+        result = await engine.generate_cma_report("456 Haven Ave", sample_property, sample_comparables)
         assert "100 Victoria St" in result.content
         assert "200 Haven Ave" in result.content
 
     @pytest.mark.asyncio
     async def test_cma_value_range(self, engine, sample_property, sample_comparables):
-        result = await engine.generate_cma_report(
-            "456 Haven Ave", sample_property, sample_comparables
-        )
+        result = await engine.generate_cma_report("456 Haven Ave", sample_property, sample_comparables)
         # Should contain dollar amounts for low/mid/high
         assert "$" in result.content
 
     @pytest.mark.asyncio
     async def test_cma_text_format(self, engine, sample_property, sample_comparables):
-        result = await engine.generate_cma_report(
-            "456 Haven Ave", sample_property, sample_comparables, format="text"
-        )
+        result = await engine.generate_cma_report("456 Haven Ave", sample_property, sample_comparables, format="text")
         assert "CMA Report" in result.content
         assert "456 Haven Ave" in result.content
 
     @pytest.mark.asyncio
     async def test_cma_metadata(self, engine, sample_property, sample_comparables):
-        result = await engine.generate_cma_report(
-            "456 Haven Ave", sample_property, sample_comparables
-        )
+        result = await engine.generate_cma_report("456 Haven Ave", sample_property, sample_comparables)
         assert result.metadata["comparables_count"] == 3
 
 
 # -------------------------------------------------------------------------
 # Lead export
 # -------------------------------------------------------------------------
+
 
 class TestLeadExport:
     @pytest.mark.asyncio
@@ -197,6 +188,7 @@ class TestLeadExport:
 # Client presentations
 # -------------------------------------------------------------------------
 
+
 class TestPresentations:
     @pytest.mark.asyncio
     async def test_presentation_generated(self, engine):
@@ -219,6 +211,7 @@ class TestPresentations:
 # -------------------------------------------------------------------------
 # Branding
 # -------------------------------------------------------------------------
+
 
 class TestBranding:
     def test_custom_branding(self):

@@ -7,8 +7,8 @@ GDPR, and other frameworks with automated compliance gap analysis.
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Set
 from enum import Enum
+from typing import Any, Dict, List, Optional, Set
 
 from ..models.compliance_models import (
     AIModelRegistration,
@@ -20,6 +20,7 @@ from ..models.compliance_models import (
 
 class RequirementStatus(str, Enum):
     """Status of a regulatory requirement"""
+
     NOT_APPLICABLE = "not_applicable"
     NOT_STARTED = "not_started"
     IN_PROGRESS = "in_progress"
@@ -31,6 +32,7 @@ class RequirementStatus(str, Enum):
 @dataclass
 class RegulatoryRequirement:
     """Definition of a regulatory requirement"""
+
     requirement_id: str
     regulation: RegulationType
     article_reference: str
@@ -63,6 +65,7 @@ class RegulatoryRequirement:
 @dataclass
 class ComplianceGap:
     """Identified compliance gap"""
+
     gap_id: str
     requirement: RegulatoryRequirement
     model_id: str
@@ -122,11 +125,11 @@ class RegulatoryMapper:
                 max_penalty_eur=35_000_000,
                 penalty_description="Up to €35M or 7% of worldwide annual turnover",
             ),
-            # ... (truncated for brevity, maintaining existing requirements logic if I could see them all, 
+            # ... (truncated for brevity, maintaining existing requirements logic if I could see them all,
             # but I'm rewriting based on previous read_file. I will include key ones from before + new ones)
             # Since I am overwriting, I should include the previous ones I read.
             # I will include the ones from the previous read_file output.
-             RegulatoryRequirement(
+            RegulatoryRequirement(
                 requirement_id="EUAI-ART5-2",
                 regulation=RegulationType.EU_AI_ACT,
                 article_reference="Article 5(1)(b)",
@@ -157,7 +160,7 @@ class RegulatoryMapper:
                 max_penalty_eur=15_000_000,
                 penalty_description="Up to €15M or 3% of worldwide annual turnover",
             ),
-             RegulatoryRequirement(
+            RegulatoryRequirement(
                 requirement_id="EUAI-ART10",
                 regulation=RegulationType.EU_AI_ACT,
                 article_reference="Article 10",
@@ -190,7 +193,7 @@ class RegulatoryMapper:
                 ],
                 max_penalty_eur=15_000_000,
             ),
-             RegulatoryRequirement(
+            RegulatoryRequirement(
                 requirement_id="EUAI-ART52",
                 regulation=RegulationType.EU_AI_ACT,
                 article_reference="Article 52",
@@ -214,7 +217,7 @@ class RegulatoryMapper:
     def _load_hipaa(self):
         """Load HIPAA requirements"""
         requirements = [
-             RegulatoryRequirement(
+            RegulatoryRequirement(
                 requirement_id="HIPAA-164.312-A1",
                 regulation=RegulationType.HIPAA,
                 article_reference="45 CFR 164.312(a)(1)",
@@ -342,7 +345,7 @@ class RegulatoryMapper:
     def _load_iso_42001(self):
         """Load ISO 42001 requirements"""
         requirements = [
-             RegulatoryRequirement(
+            RegulatoryRequirement(
                 requirement_id="ISO-42001-6",
                 regulation=RegulationType.ISO_42001,
                 article_reference="Clause 6",
@@ -418,7 +421,7 @@ class RegulatoryMapper:
     ) -> Set[RegulationType]:
         """Determine which regulations apply to a model"""
         regulations = set()
-        
+
         # Helper for region check
         def in_region(regions, target):
             return any(target.lower() in r.lower() for r in regions)
@@ -441,13 +444,15 @@ class RegulatoryMapper:
 
         # NYC AEDT
         if model.use_case_category.lower() in ["hr", "employment", "hiring"] and in_region(model.data_residency, "us"):
-             regulations.add(RegulationType.NYC_AEDT)
+            regulations.add(RegulationType.NYC_AEDT)
 
         # Colorado
-        if in_region(model.data_residency, "colorado") or (in_region(model.data_residency, "us") and model.risk_level == RiskLevel.HIGH):
-             # Simplified trigger for Colorado
-             regulations.add(RegulationType.COLORADO_AI_ACT)
-             
+        if in_region(model.data_residency, "colorado") or (
+            in_region(model.data_residency, "us") and model.risk_level == RiskLevel.HIGH
+        ):
+            # Simplified trigger for Colorado
+            regulations.add(RegulationType.COLORADO_AI_ACT)
+
         # ISO 42001 - voluntary/global
         regulations.add(RegulationType.ISO_42001)
         regulations.add(RegulationType.NIST_AI_RMF)
@@ -489,7 +494,10 @@ class RegulatoryMapper:
         from uuid import uuid4
 
         priority = 3
-        if req.regulation in [RegulationType.EU_AI_ACT, RegulationType.HIPAA, RegulationType.NYC_AEDT] and model.risk_level == RiskLevel.HIGH:
+        if (
+            req.regulation in [RegulationType.EU_AI_ACT, RegulationType.HIPAA, RegulationType.NYC_AEDT]
+            and model.risk_level == RiskLevel.HIGH
+        ):
             priority = 1
         elif req.mandatory and status == RequirementStatus.NON_COMPLIANT:
             priority = 2
@@ -542,33 +550,47 @@ class RegulatoryMapper:
         phases = []
 
         if critical_gaps:
-            phases.append({
-                "phase": 1,
-                "name": "Critical Remediation",
-                "duration_weeks": 4,
-                "gaps": [{"requirement": g.requirement.title, "regulation": g.requirement.regulation.value} for g in critical_gaps],
-            })
+            phases.append(
+                {
+                    "phase": 1,
+                    "name": "Critical Remediation",
+                    "duration_weeks": 4,
+                    "gaps": [
+                        {"requirement": g.requirement.title, "regulation": g.requirement.regulation.value}
+                        for g in critical_gaps
+                    ],
+                }
+            )
         if high_gaps:
-             phases.append({
-                "phase": 2,
-                "name": "High Priority Compliance",
-                "duration_weeks": 8,
-                "gaps": [{"requirement": g.requirement.title, "regulation": g.requirement.regulation.value} for g in high_gaps],
-            })
+            phases.append(
+                {
+                    "phase": 2,
+                    "name": "High Priority Compliance",
+                    "duration_weeks": 8,
+                    "gaps": [
+                        {"requirement": g.requirement.title, "regulation": g.requirement.regulation.value}
+                        for g in high_gaps
+                    ],
+                }
+            )
         if medium_gaps:
-             phases.append({
-                "phase": 3,
-                "name": "Standard Compliance",
-                "duration_weeks": 12,
-                "gaps": [{"requirement": g.requirement.title} for g in medium_gaps],
-            })
+            phases.append(
+                {
+                    "phase": 3,
+                    "name": "Standard Compliance",
+                    "duration_weeks": 12,
+                    "gaps": [{"requirement": g.requirement.title} for g in medium_gaps],
+                }
+            )
         if low_gaps:
-             phases.append({
-                "phase": 4,
-                "name": "Continuous Improvement",
-                "duration_weeks": 0,
-                "gaps": [{"requirement": g.requirement.title} for g in low_gaps],
-            })
+            phases.append(
+                {
+                    "phase": 4,
+                    "name": "Continuous Improvement",
+                    "duration_weeks": 0,
+                    "gaps": [{"requirement": g.requirement.title} for g in low_gaps],
+                }
+            )
 
         return {
             "model_id": model.model_id,

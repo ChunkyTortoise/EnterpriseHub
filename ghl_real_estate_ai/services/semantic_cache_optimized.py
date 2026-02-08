@@ -9,15 +9,16 @@ OPTIMIZATIONS:
 4. Multi-layer caching (L1: memory, L2: Redis)
 5. Fast variation matching
 """
+
+import asyncio
 import hashlib
 import json
 import time
-import asyncio
-from typing import Dict, List, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)
 
@@ -46,7 +47,7 @@ class SemanticResponseCacheOptimized:
         self.similarity_threshold = 0.87
         self.fast_similarity_threshold = 0.95
         self.embedding_cache_ttl = 7200  # 2 hours
-        self.response_cache_ttl = 1800   # 30 minutes
+        self.response_cache_ttl = 1800  # 30 minutes
 
         # Lazy load embeddings model
         self._embeddings_model = None
@@ -69,7 +70,8 @@ class SemanticResponseCacheOptimized:
         if self._embeddings_model is None:
             try:
                 from sentence_transformers import SentenceTransformer
-                self._embeddings_model = SentenceTransformer('all-MiniLM-L6-v2')
+
+                self._embeddings_model = SentenceTransformer("all-MiniLM-L6-v2")
                 logger.info("Sentence transformer model loaded successfully")
             except ImportError:
                 logger.warning("sentence-transformers not available, falling back to hash-based caching")
@@ -78,7 +80,7 @@ class SemanticResponseCacheOptimized:
 
     def _normalize_query(self, query: str) -> str:
         """Normalize query for better caching."""
-        normalized = ' '.join(query.lower().strip().split())
+        normalized = " ".join(query.lower().strip().split())
 
         # Remove common variations
         replacements = {
@@ -88,7 +90,7 @@ class SemanticResponseCacheOptimized:
             "i need": "provide",
             "i want": "provide",
             "show me": "provide",
-            "tell me": "provide"
+            "tell me": "provide",
         }
 
         for old, new in replacements.items():
@@ -145,11 +147,7 @@ class SemanticResponseCacheOptimized:
                 self.embeddings_cache[text_hash] = emb
 
                 # Also cache in Redis
-                await self.cache.set(
-                    f"embedding_{text_hash}",
-                    json.dumps(emb),
-                    ttl=self.embedding_cache_ttl
-                )
+                await self.cache.set(f"embedding_{text_hash}", json.dumps(emb), ttl=self.embedding_cache_ttl)
 
             # Manage L1 cache size
             if len(self.embeddings_cache) > self.max_memory_entries:
@@ -186,6 +184,7 @@ class SemanticResponseCacheOptimized:
         """Optimized cosine similarity with NumPy."""
         try:
             import numpy as np
+
             v1, v2 = np.array(vec1), np.array(vec2)
             return float(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
         except ImportError:
@@ -195,12 +194,7 @@ class SemanticResponseCacheOptimized:
             magnitude2 = sum(b * b for b in vec2) ** 0.5
             return dot_product / (magnitude1 * magnitude2) if magnitude1 * magnitude2 > 0 else 0.0
 
-    async def get_similar(
-        self,
-        query: str,
-        context: str = "",
-        threshold: float = None
-    ) -> Optional[Dict[str, Any]]:
+    async def get_similar(self, query: str, context: str = "", threshold: float = None) -> Optional[Dict[str, Any]]:
         """
         PERFORMANCE: Get cached response with optimized similarity search.
         Early exit strategies for maximum speed.
@@ -234,9 +228,9 @@ class SemanticResponseCacheOptimized:
                 self.cache_stats["hits"] += 1
                 self.cache_stats["semantic_matches"] += 1
                 self.cache_stats["avg_similarity"] = (
-                    (self.cache_stats["avg_similarity"] * (self.cache_stats["semantic_matches"] - 1) +
-                     semantic_match["similarity"]) / self.cache_stats["semantic_matches"]
-                )
+                    self.cache_stats["avg_similarity"] * (self.cache_stats["semantic_matches"] - 1)
+                    + semantic_match["similarity"]
+                ) / self.cache_stats["semantic_matches"]
                 return semantic_match["response"]
 
             # Cache miss
@@ -258,7 +252,7 @@ class SemanticResponseCacheOptimized:
             query.replace(".", ""),
             query.replace(",", ""),
             " ".join(query.split()[:5]),  # First 5 words
-            " ".join(query.split()[-5:])  # Last 5 words
+            " ".join(query.split()[-5:]),  # Last 5 words
         ]
 
         for variation in variations:
@@ -267,10 +261,7 @@ class SemanticResponseCacheOptimized:
                 cached = await self.cache.get(f"variation_{var_hash}")
                 if cached:
                     data = json.loads(cached)
-                    matches.append({
-                        "similarity": 0.95,
-                        "response": data
-                    })
+                    matches.append({"similarity": 0.95, "response": data})
             except Exception:
                 continue
 
@@ -306,17 +297,11 @@ class SemanticResponseCacheOptimized:
 
                         # Early exit if very high similarity
                         if similarity >= 0.98:
-                            return {
-                                "similarity": similarity,
-                                "response": data.get("response")
-                            }
+                            return {"similarity": similarity, "response": data.get("response")}
 
                         if similarity > best_similarity and similarity >= threshold:
                             best_similarity = similarity
-                            best_match = {
-                                "similarity": similarity,
-                                "response": data.get("response")
-                            }
+                            best_match = {"similarity": similarity, "response": data.get("response")}
 
                 except Exception:
                     continue
@@ -331,13 +316,7 @@ class SemanticResponseCacheOptimized:
     # OPTIMIZED: Cache Storage
     # ============================================================================
 
-    async def set(
-        self,
-        query: str,
-        response: Any,
-        context: str = "",
-        ttl: int = None
-    ) -> bool:
+    async def set(self, query: str, response: Any, context: str = "", ttl: int = None) -> bool:
         """Cache response with optimized multi-layer storage."""
         ttl = ttl or self.response_cache_ttl
         normalized_query = self._normalize_query(query)
@@ -363,36 +342,23 @@ class SemanticResponseCacheOptimized:
                     "response": response_data,
                     "embedding": query_embedding,
                     "timestamp": datetime.now().isoformat(),
-                    "context": context
+                    "context": context,
                 }
 
-                await self.cache.set(
-                    f"semantic_query_{query_hash}",
-                    json.dumps(semantic_data),
-                    ttl=ttl
-                )
+                await self.cache.set(f"semantic_query_{query_hash}", json.dumps(semantic_data), ttl=ttl)
 
                 # Store variations for fast matching
                 variations = [normalized_query.replace("?", ""), normalized_query.replace(".", "")]
                 for variation in variations:
                     var_hash = hashlib.sha256(variation.encode()).hexdigest()
-                    await self.cache.set(
-                        f"variation_{var_hash}",
-                        json.dumps(response_data),
-                        ttl=ttl//2
-                    )
+                    await self.cache.set(f"variation_{var_hash}", json.dumps(response_data), ttl=ttl // 2)
 
             # Update L1 cache
-            self.memory_cache[query_hash] = {
-                "response": response_data,
-                "timestamp": time.time(),
-                "ttl": ttl
-            }
+            self.memory_cache[query_hash] = {"response": response_data, "timestamp": time.time(), "ttl": ttl}
 
             # Manage L1 cache size
             if len(self.memory_cache) > self.max_memory_entries:
-                oldest_key = min(self.memory_cache.keys(),
-                               key=lambda k: self.memory_cache[k]["timestamp"])
+                oldest_key = min(self.memory_cache.keys(), key=lambda k: self.memory_cache[k]["timestamp"])
                 del self.memory_cache[oldest_key]
 
             logger.debug(f"Cached response for query: {normalized_query[:50]}...")
@@ -468,7 +434,7 @@ class SemanticResponseCacheOptimized:
             "hit_rate": hit_rate,
             "total_requests": total_requests,
             "memory_cache_size": len(self.memory_cache),
-            "embeddings_cache_size": len(self.embeddings_cache)
+            "embeddings_cache_size": len(self.embeddings_cache),
         }
 
     async def clear_semantic_cache(self) -> bool:

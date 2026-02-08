@@ -9,27 +9,28 @@ from __future__ import annotations
 import asyncio
 import time
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum, auto
 from typing import Any, Callable, Dict, Generic, List, Optional, Set, TypeVar, Union
-from collections import defaultdict
 
+from src.personalization.profile_store import InMemoryProfileStore, ProfileStore
 from src.personalization.user_profile import (
-    UserProfile,
     Interaction,
-    Preference,
     Interest,
-    PreferenceSource,
-    PreferenceCategory,
     InterestModel,
+    Preference,
+    PreferenceCategory,
+    PreferenceSource,
     ProfileManager,
+    UserProfile,
 )
-from src.personalization.profile_store import ProfileStore, InMemoryProfileStore
 
 
 class FeedbackType(Enum):
     """Types of feedback that can be collected."""
+
     EXPLICIT_RATING = auto()
     THUMBS_UP = auto()
     THUMBS_DOWN = auto()
@@ -45,6 +46,7 @@ class FeedbackType(Enum):
 @dataclass
 class FeedbackContext:
     """Context information for feedback events."""
+
     query: Optional[str] = None
     position: Optional[int] = None
     page_type: Optional[str] = None
@@ -53,7 +55,7 @@ class FeedbackContext:
     session_id: Optional[str] = None
     ab_test_group: Optional[str] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert context to dictionary."""
         return {
@@ -66,7 +68,7 @@ class FeedbackContext:
             "ab_test_group": self.ab_test_group,
             "metadata": self.metadata,
         }
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> FeedbackContext:
         """Create context from dictionary."""
@@ -85,6 +87,7 @@ class FeedbackContext:
 @dataclass
 class ExplicitFeedback:
     """Explicit user feedback (ratings, likes, etc.)."""
+
     user_id: str
     item_id: str
     feedback_type: FeedbackType
@@ -92,13 +95,13 @@ class ExplicitFeedback:
     context: FeedbackContext = field(default_factory=FeedbackContext)
     timestamp: datetime = field(default_factory=datetime.utcnow)
     weight: float = 1.0
-    
+
     def __post_init__(self):
         if not 0.0 <= self.value <= 1.0:
             raise ValueError(f"Feedback value must be between 0.0 and 1.0, got {self.value}")
         if not 0.0 <= self.weight <= 1.0:
             raise ValueError(f"Feedback weight must be between 0.0 and 1.0, got {self.weight}")
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
@@ -110,7 +113,7 @@ class ExplicitFeedback:
             "timestamp": self.timestamp.isoformat(),
             "weight": self.weight,
         }
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> ExplicitFeedback:
         """Create from dictionary."""
@@ -128,6 +131,7 @@ class ExplicitFeedback:
 @dataclass
 class ImplicitFeedback:
     """Implicit user feedback (clicks, dwell time, etc.)."""
+
     user_id: str
     item_id: str
     feedback_type: FeedbackType
@@ -136,11 +140,11 @@ class ImplicitFeedback:
     context: FeedbackContext = field(default_factory=FeedbackContext)
     timestamp: datetime = field(default_factory=datetime.utcnow)
     confidence: float = 0.5
-    
+
     def __post_init__(self):
         if not 0.0 <= self.confidence <= 1.0:
             raise ValueError(f"Confidence must be between 0.0 and 1.0, got {self.confidence}")
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
@@ -153,7 +157,7 @@ class ImplicitFeedback:
             "timestamp": self.timestamp.isoformat(),
             "confidence": self.confidence,
         }
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> ImplicitFeedback:
         """Create from dictionary."""
@@ -171,7 +175,7 @@ class ImplicitFeedback:
 
 class FeedbackProcessor:
     """Process feedback and update user profiles."""
-    
+
     def __init__(
         self,
         interest_model: Optional[InterestModel] = None,
@@ -191,28 +195,28 @@ class FeedbackProcessor:
             FeedbackType.SCROLL_DEPTH: 0.3,
             FeedbackType.DISMISS: 0.6,
         }
-    
+
     def calculate_feedback_weight(
         self,
         feedback: Union[ExplicitFeedback, ImplicitFeedback],
     ) -> float:
         """Calculate effective weight for feedback considering decay."""
         base_weight = self._feedback_weights.get(feedback.feedback_type, 0.5)
-        
+
         # Apply time decay
         days_old = (datetime.utcnow() - feedback.timestamp).total_seconds() / 86400
         decay_factor = 0.5 ** (days_old / self.decay_half_life_days)
-        
+
         # Apply explicit weight for explicit feedback
         if isinstance(feedback, ExplicitFeedback):
             base_weight *= feedback.weight
-        
+
         # Apply confidence for implicit feedback
         if isinstance(feedback, ImplicitFeedback):
             base_weight *= feedback.confidence
-        
+
         return base_weight * decay_factor
-    
+
     async def process_explicit_feedback(
         self,
         profile: UserProfile,
@@ -221,7 +225,7 @@ class FeedbackProcessor:
     ) -> None:
         """Process explicit feedback and update profile."""
         weight = self.calculate_feedback_weight(feedback)
-        
+
         # Create interaction record
         interaction = Interaction(
             item_id=feedback.item_id,
@@ -234,7 +238,7 @@ class FeedbackProcessor:
             },
         )
         profile.add_interaction(interaction)
-        
+
         # Update interests if topics provided
         if item_topics:
             interest_score = feedback.value * weight
@@ -244,13 +248,13 @@ class FeedbackProcessor:
                 item_topics,
                 interest_score,
             )
-        
+
         # Update explicit preferences based on feedback type
         if feedback.feedback_type == FeedbackType.THUMBS_UP:
             await self._process_positive_feedback(profile, feedback, weight)
         elif feedback.feedback_type == FeedbackType.THUMBS_DOWN:
             await self._process_negative_feedback(profile, feedback, weight)
-    
+
     async def process_implicit_feedback(
         self,
         profile: UserProfile,
@@ -259,7 +263,7 @@ class FeedbackProcessor:
     ) -> None:
         """Process implicit feedback and update profile."""
         weight = self.calculate_feedback_weight(feedback)
-        
+
         # Create interaction record
         interaction = Interaction(
             item_id=feedback.item_id,
@@ -274,7 +278,7 @@ class FeedbackProcessor:
             },
         )
         profile.add_interaction(interaction)
-        
+
         # Update interests if topics provided
         if item_topics:
             # Adjust score based on feedback type
@@ -287,14 +291,14 @@ class FeedbackProcessor:
                 interest_score = feedback.value * weight * 0.8
             else:
                 interest_score = feedback.value * weight
-            
+
             await self.interest_model.update_from_interaction(
                 profile,
                 interaction,
                 item_topics,
                 interest_score,
             )
-    
+
     async def _process_positive_feedback(
         self,
         profile: UserProfile,
@@ -315,7 +319,7 @@ class FeedbackProcessor:
                 source=PreferenceSource.IMPLICIT,
                 confidence=new_confidence,
             )
-    
+
     async def _process_negative_feedback(
         self,
         profile: UserProfile,
@@ -335,7 +339,7 @@ class FeedbackProcessor:
                 source=PreferenceSource.IMPLICIT,
                 confidence=new_confidence,
             )
-    
+
     async def batch_process(
         self,
         profile: UserProfile,
@@ -347,7 +351,7 @@ class FeedbackProcessor:
             item_topics = None
             if item_topics_map and feedback.item_id in item_topics_map:
                 item_topics = item_topics_map[feedback.item_id]
-            
+
             if isinstance(feedback, ExplicitFeedback):
                 await self.process_explicit_feedback(profile, feedback, item_topics)
             else:
@@ -356,7 +360,7 @@ class FeedbackProcessor:
 
 class FeedbackCollector:
     """Collect and manage user feedback."""
-    
+
     def __init__(
         self,
         store: Optional[ProfileStore] = None,
@@ -372,31 +376,31 @@ class FeedbackCollector:
         self._flush_interval = 60  # seconds
         self._running = False
         self._flush_task: Optional[asyncio.Task] = None
-    
+
     async def start(self) -> None:
         """Start the feedback collector background tasks."""
         if self._running:
             return
-        
+
         self._running = True
         await self.store.connect()
         self._flush_task = asyncio.create_task(self._flush_loop())
-    
+
     async def stop(self) -> None:
         """Stop the feedback collector and flush remaining feedback."""
         self._running = False
-        
+
         if self._flush_task:
             self._flush_task.cancel()
             try:
                 await self._flush_task
             except asyncio.CancelledError:
                 pass
-        
+
         # Final flush
         await self._flush_buffer()
         await self.store.disconnect()
-    
+
     async def _flush_loop(self) -> None:
         """Background task to periodically flush feedback buffer."""
         while self._running:
@@ -408,21 +412,21 @@ class FeedbackCollector:
             except Exception:
                 # Log error but continue
                 continue
-    
+
     async def _flush_buffer(self) -> None:
         """Flush buffered feedback to profiles."""
         async with self._buffer_lock:
             if not self._buffer:
                 return
-            
+
             feedbacks = self._buffer[:]
             self._buffer = []
-        
+
         # Group feedback by user
         by_user: Dict[str, List[Union[ExplicitFeedback, ImplicitFeedback]]] = defaultdict(list)
         for feedback in feedbacks:
             by_user[feedback.user_id].append(feedback)
-        
+
         # Process for each user
         for user_id, user_feedbacks in by_user.items():
             try:
@@ -432,7 +436,7 @@ class FeedbackCollector:
             except Exception:
                 # Log error but continue with other users
                 continue
-    
+
     async def collect_explicit(
         self,
         user_id: str,
@@ -451,7 +455,7 @@ class FeedbackCollector:
             value=value,
             context=context or FeedbackContext(),
         )
-        
+
         if immediate:
             # Process immediately
             profile = await self.store.get_or_create(user_id)
@@ -463,9 +467,9 @@ class FeedbackCollector:
                 self._buffer.append(feedback)
                 if len(self._buffer) >= self._buffer_size:
                     asyncio.create_task(self._flush_buffer())
-        
+
         return feedback
-    
+
     async def collect_implicit(
         self,
         user_id: str,
@@ -486,7 +490,7 @@ class FeedbackCollector:
             duration_ms=duration_ms,
             context=context or FeedbackContext(),
         )
-        
+
         if immediate:
             # Process immediately
             profile = await self.store.get_or_create(user_id)
@@ -498,9 +502,9 @@ class FeedbackCollector:
                 self._buffer.append(feedback)
                 if len(self._buffer) >= self._buffer_size:
                     asyncio.create_task(self._flush_buffer())
-        
+
         return feedback
-    
+
     async def record_click(
         self,
         user_id: str,
@@ -513,7 +517,7 @@ class FeedbackCollector:
         ctx = context or FeedbackContext()
         ctx.position = position
         ctx.query = query or ctx.query
-        
+
         return await self.collect_implicit(
             user_id=user_id,
             item_id=item_id,
@@ -521,7 +525,7 @@ class FeedbackCollector:
             value=1.0,
             context=ctx,
         )
-    
+
     async def record_dwell_time(
         self,
         user_id: str,
@@ -533,10 +537,10 @@ class FeedbackCollector:
         """Record dwell time on an item."""
         ctx = context or FeedbackContext()
         ctx.query = query or ctx.query
-        
+
         # Normalize dwell time to 0-1 range (assuming 5 minutes is max engaged time)
         normalized_value = min(1.0, duration_ms / 300000)
-        
+
         return await self.collect_implicit(
             user_id=user_id,
             item_id=item_id,
@@ -545,7 +549,7 @@ class FeedbackCollector:
             duration_ms=duration_ms,
             context=ctx,
         )
-    
+
     async def record_rating(
         self,
         user_id: str,
@@ -557,7 +561,7 @@ class FeedbackCollector:
         """Record an explicit rating."""
         ctx = context or FeedbackContext()
         ctx.query = query or ctx.query
-        
+
         return await self.collect_explicit(
             user_id=user_id,
             item_id=item_id,
@@ -565,7 +569,7 @@ class FeedbackCollector:
             value=rating / 5.0,  # Normalize 5-star to 0-1
             context=ctx,
         )
-    
+
     async def record_thumbs(
         self,
         user_id: str,
@@ -577,10 +581,10 @@ class FeedbackCollector:
         """Record a thumbs up/down."""
         ctx = context or FeedbackContext()
         ctx.query = query or ctx.query
-        
+
         feedback_type = FeedbackType.THUMBS_UP if is_up else FeedbackType.THUMBS_DOWN
         value = 1.0 if is_up else 0.0
-        
+
         return await self.collect_explicit(
             user_id=user_id,
             item_id=item_id,
@@ -588,7 +592,7 @@ class FeedbackCollector:
             value=value,
             context=ctx,
         )
-    
+
     async def get_feedback_stats(
         self,
         user_id: str,
@@ -602,26 +606,26 @@ class FeedbackCollector:
                 "feedback_types": {},
                 "average_rating": None,
             }
-        
+
         since = since or datetime.utcnow() - timedelta(days=30)
         interactions = profile.get_recent_interactions(since=since)
-        
+
         stats = {
             "total_interactions": len(interactions),
             "feedback_types": {},
             "ratings": [],
         }
-        
+
         for interaction in interactions:
             feedback_type = interaction.interaction_type
             stats["feedback_types"][feedback_type] = stats["feedback_types"].get(feedback_type, 0) + 1
-            
+
             if "value" in interaction.metadata:
                 stats["ratings"].append(interaction.metadata["value"])
-        
+
         if stats["ratings"]:
             stats["average_rating"] = sum(stats["ratings"]) / len(stats["ratings"])
         else:
             stats["average_rating"] = None
-        
+
         return stats

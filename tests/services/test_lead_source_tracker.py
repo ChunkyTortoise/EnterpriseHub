@@ -4,17 +4,18 @@ Tests for LeadSourceTracker service.
 Comprehensive test suite for lead source attribution, tracking, and performance analysis.
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from ghl_real_estate_ai.services.lead_source_tracker import (
-    LeadSourceTracker,
     LeadSource,
+    LeadSourceTracker,
     SourceAttribution,
     SourcePerformance,
-    SourceQuality
+    SourceQuality,
 )
 
 
@@ -29,15 +30,11 @@ class TestLeadSourceTracker:
     async def test_analyze_lead_source_zillow(self):
         """Test source analysis for Zillow leads."""
         contact_data = {
-            "custom_fields": {
-                "utm_source": "zillow",
-                "utm_medium": "referral",
-                "lead_source": "Zillow"
-            },
+            "custom_fields": {"utm_source": "zillow", "utm_medium": "referral", "lead_source": "Zillow"},
             "first_name": "John",
             "last_name": "Doe",
             "phone": "+1234567890",
-            "email": "john@example.com"
+            "email": "john@example.com",
         }
 
         attribution = await self.tracker.analyze_lead_source(contact_data)
@@ -56,7 +53,7 @@ class TestLeadSourceTracker:
                 "utm_source": "facebook",
                 "utm_medium": "cpc",
                 "utm_campaign": "spring-real-estate-2024",
-                "utm_content": "listing-ad"
+                "utm_content": "listing-ad",
             }
         }
 
@@ -75,7 +72,7 @@ class TestLeadSourceTracker:
             "custom_fields": {
                 "referrer": "https://google.com/search?q=real+estate+agent+austin",
                 "utm_source": "google",
-                "utm_medium": "organic"
+                "utm_medium": "organic",
             }
         }
 
@@ -88,12 +85,7 @@ class TestLeadSourceTracker:
     @pytest.mark.asyncio
     async def test_analyze_lead_source_referral(self):
         """Test source analysis for referrals."""
-        contact_data = {
-            "custom_fields": {
-                "lead_source": "Agent Referral",
-                "referrer_agent": "Jane Smith"
-            }
-        }
+        contact_data = {"custom_fields": {"lead_source": "Agent Referral", "referrer_agent": "Jane Smith"}}
 
         attribution = await self.tracker.analyze_lead_source(contact_data)
 
@@ -103,10 +95,7 @@ class TestLeadSourceTracker:
     @pytest.mark.asyncio
     async def test_analyze_lead_source_direct(self):
         """Test source analysis for direct traffic."""
-        contact_data = {
-            "custom_fields": {},
-            "phone": "+1234567890"
-        }
+        contact_data = {"custom_fields": {}, "phone": "+1234567890"}
 
         # No referrer or UTM parameters
         attribution = await self.tracker.analyze_lead_source(contact_data)
@@ -120,14 +109,11 @@ class TestLeadSourceTracker:
         source = LeadSource.ZILLOW
 
         # Mock cache
-        with patch.object(self.tracker.cache, 'get', return_value=[]) as mock_get, \
-             patch.object(self.tracker.cache, 'set') as mock_set:
-
-            await self.tracker.track_source_performance(
-                source,
-                "lead_created",
-                {"contact_id": "test123", "cost": 25.0}
-            )
+        with (
+            patch.object(self.tracker.cache, "get", return_value=[]) as mock_get,
+            patch.object(self.tracker.cache, "set") as mock_set,
+        ):
+            await self.tracker.track_source_performance(source, "lead_created", {"contact_id": "test123", "cost": 25.0})
 
             # Verify cache was called
             mock_get.assert_called()
@@ -148,10 +134,10 @@ class TestLeadSourceTracker:
             "total_cost": 10000.0,
             "conversion_rate": 0.05,
             "qualification_rate": 0.30,
-            "roi": 4.0
+            "roi": 4.0,
         }
 
-        with patch.object(self.tracker.cache, 'get', return_value=mock_metrics):
+        with patch.object(self.tracker.cache, "get", return_value=mock_metrics):
             performance = await self.tracker.get_source_performance(source)
 
             assert performance is not None
@@ -165,22 +151,18 @@ class TestLeadSourceTracker:
         """Test getting performance for all sources."""
         # Mock cache to return data for multiple sources
         cache_data = {
-            f"source_performance:{LeadSource.ZILLOW.value}": {
-                "total_leads": 50,
-                "qualified_leads": 20,
-                "roi": 2.5
-            },
+            f"source_performance:{LeadSource.ZILLOW.value}": {"total_leads": 50, "qualified_leads": 20, "roi": 2.5},
             f"source_performance:{LeadSource.FACEBOOK_ADS.value}": {
                 "total_leads": 80,
                 "qualified_leads": 25,
-                "roi": 1.8
-            }
+                "roi": 1.8,
+            },
         }
 
         async def mock_get(key):
             return cache_data.get(key)
 
-        with patch.object(self.tracker.cache, 'get', side_effect=mock_get):
+        with patch.object(self.tracker.cache, "get", side_effect=mock_get):
             performances = await self.tracker.get_all_source_performance(min_leads=10)
 
             # Should return data for sources with sufficient leads
@@ -200,7 +182,7 @@ class TestLeadSourceTracker:
                 period_end=datetime.utcnow(),
                 total_leads=50,
                 roi=3.0,
-                conversion_rate=0.08
+                conversion_rate=0.08,
             ),
             SourcePerformance(
                 source=LeadSource.FACEBOOK_ADS,
@@ -208,11 +190,11 @@ class TestLeadSourceTracker:
                 period_end=datetime.utcnow(),
                 total_leads=20,
                 roi=-0.3,  # Underperforming
-                conversion_rate=0.02
-            )
+                conversion_rate=0.02,
+            ),
         ]
 
-        with patch.object(self.tracker, 'get_all_source_performance', return_value=mock_performances):
+        with patch.object(self.tracker, "get_all_source_performance", return_value=mock_performances):
             recommendations = await self.tracker.get_source_recommendations()
 
             assert recommendations["status"] == "success"
@@ -230,7 +212,7 @@ class TestLeadSourceTracker:
             source_quality=SourceQuality.PREMIUM,
             confidence_score=0.95,
             utm_source="zillow",
-            utm_campaign="spring-listings"
+            utm_campaign="spring-listings",
         )
 
         # Mock GHL client
@@ -238,13 +220,11 @@ class TestLeadSourceTracker:
         mock_ghl_client.update_contact_custom_fields = AsyncMock(return_value=True)
 
         # Mock settings
-        with patch('ghl_real_estate_ai.services.lead_source_tracker.settings') as mock_settings:
+        with patch("ghl_real_estate_ai.services.lead_source_tracker.settings") as mock_settings:
             mock_settings.custom_field_lead_source = "lead_source"
             mock_settings.custom_field_utm_source = "utm_source"
 
-            success = await self.tracker.update_ghl_custom_fields(
-                "test_contact_123", attribution, mock_ghl_client
-            )
+            success = await self.tracker.update_ghl_custom_fields("test_contact_123", attribution, mock_ghl_client)
 
             assert success
             mock_ghl_client.update_contact_custom_fields.assert_called_once()
@@ -310,7 +290,7 @@ class TestLeadSourceTracker:
             utm_source="zillow",
             confidence_score=0.95,
             first_touch=datetime.utcnow(),
-            last_touch=datetime.utcnow()
+            last_touch=datetime.utcnow(),
         )
 
         data_dict = self.tracker.to_dict(attribution)
@@ -327,7 +307,7 @@ class TestLeadSourceTracker:
             "utm_source": "zillow",
             "confidence_score": 0.95,
             "source_quality": "premium",
-            "first_touch": datetime.utcnow().isoformat()
+            "first_touch": datetime.utcnow().isoformat(),
         }
 
         attribution = self.tracker.from_dict(data_dict)
@@ -344,7 +324,7 @@ class TestLeadSourceTracker:
             ("https://facebook.com/posts/123", LeadSource.FACEBOOK_ORGANIC),
             ("https://google.com/search?q=homes", LeadSource.GOOGLE_ORGANIC),
             ("https://zillow.com/homedetails/123", LeadSource.ZILLOW),
-            ("https://youtube.com/watch?v=abc", LeadSource.YOUTUBE)
+            ("https://youtube.com/watch?v=abc", LeadSource.YOUTUBE),
         ]
 
         for referrer, expected_source in test_cases:
@@ -360,7 +340,7 @@ class TestLeadSourceTracker:
                 "utm_source": "facebook",
                 "utm_medium": "cpc",
                 "utm_campaign": "austin-homes-2024",
-                "referrer": "https://google.com/search"
+                "referrer": "https://google.com/search",
             }
         }
 
@@ -381,20 +361,19 @@ class TestLeadSourceTracker:
             ("lead_created", {"cost": 15.0}),
             ("lead_scored", {"score": 6}),
             ("lead_qualified", {"qualify_time_hours": 2.5}),
-            ("deal_closed", {"deal_value": 8000.0, "close_time_days": 45})
+            ("deal_closed", {"deal_value": 8000.0, "close_time_days": 45}),
         ]
 
-        with patch.object(self.tracker.cache, 'get', new_callable=AsyncMock) as mock_get, \
-             patch.object(self.tracker.cache, 'set', new_callable=AsyncMock) as mock_set:
-
+        with (
+            patch.object(self.tracker.cache, "get", new_callable=AsyncMock) as mock_get,
+            patch.object(self.tracker.cache, "set", new_callable=AsyncMock) as mock_set,
+        ):
             # Mock existing events as empty list (track_source_performance stores event lists)
             mock_get.return_value = []
 
             # Track all events
             for event_type, metadata in events:
-                await self.tracker.track_source_performance(
-                    source, event_type, metadata
-                )
+                await self.tracker.track_source_performance(source, event_type, metadata)
 
             # Verify cache operations
             assert mock_get.call_count >= len(events)
@@ -412,7 +391,7 @@ class TestLeadSourceTracker:
         contact_data = {
             "custom_fields": {
                 "utm_source": 123,  # Invalid type
-                "referrer": None
+                "referrer": None,
             }
         }
         attribution = await self.tracker.analyze_lead_source(contact_data)
@@ -424,7 +403,7 @@ class TestLeadSourceTracker:
         source = LeadSource.FACEBOOK_ADS
 
         # Mock cache failure
-        with patch.object(self.tracker.cache, 'get', side_effect=Exception("Cache error")):
+        with patch.object(self.tracker.cache, "get", side_effect=Exception("Cache error")):
             performance = await self.tracker.get_source_performance(source)
             assert performance is None  # Should handle gracefully
 
@@ -438,7 +417,7 @@ class TestLeadSourceTracker:
         long_detail = self.tracker._extract_source_detail(
             LeadSource.FACEBOOK_ADS,
             {"utm_campaign": "a" * 100},  # Very long campaign
-            None
+            None,
         )
         assert long_detail is not None
 

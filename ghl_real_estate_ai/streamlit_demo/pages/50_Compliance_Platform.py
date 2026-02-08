@@ -5,15 +5,17 @@ Production-grade compliance management dashboard for EU AI Act, SEC, HIPAA.
 Designed for C-suite presentations and client acquisition.
 """
 
-import streamlit as st
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import pandas as pd
-from datetime import datetime, timedelta, timezone
 import asyncio
 import time
-from typing import Dict, Any, List, Union
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Union
+
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import streamlit as st
+from plotly.subplots import make_subplots
+
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 
 # Page configuration
@@ -27,6 +29,7 @@ st.set_page_config(
 # Import demo data generator
 try:
     from ghl_real_estate_ai.compliance_platform.services.demo_data_generator import DemoDataGenerator
+
     PLATFORM_AVAILABLE = True
 except ImportError:
     PLATFORM_AVAILABLE = False
@@ -34,6 +37,7 @@ except ImportError:
 # Import AI Analyzer (mocked if not available)
 try:
     from ghl_real_estate_ai.compliance_platform.services.compliance_ai_analyzer import ComplianceAIAnalyzer
+
     AI_AVAILABLE = True
 except ImportError:
     AI_AVAILABLE = False
@@ -42,6 +46,7 @@ except ImportError:
 # ============================================================================
 # AI ANALYZER MOCK (when service not available)
 # ============================================================================
+
 
 class MockComplianceAIAnalyzer:
     """Mock AI Analyzer for demo purposes when actual service is unavailable"""
@@ -68,7 +73,6 @@ class MockComplianceAIAnalyzer:
    - Impact: 20M EUR potential fine
    - Root Cause: Data Protection Impact Assessment not conducted for AI processing
    - Recommendation: Complete DPIA for all AI models processing personal data""",
-
             "eu_ai": """To achieve EU AI Act compliance, follow this roadmap:
 
 **Phase 1: Risk Classification (2-4 weeks)**
@@ -93,7 +97,6 @@ class MockComplianceAIAnalyzer:
 
 **Estimated Timeline**: 12-22 weeks
 **Estimated Investment**: 150,000-300,000 EUR""",
-
             "violations": """Your current violations analysis:
 
 **Critical Violations (1)**
@@ -113,7 +116,7 @@ class MockComplianceAIAnalyzer:
 **Recommended Actions**:
 1. Prioritize PHI encryption fix (highest regulatory risk)
 2. Schedule DPIA workshops for data processing AI systems
-3. Implement documentation sprint for undocumented models"""
+3. Implement documentation sprint for undocumented models""",
         }
 
         # Match question to response category
@@ -144,28 +147,28 @@ I recommend focusing on the critical PHI encryption violation first, as it carri
             "transparency": {
                 "score": min(100, score + 5),
                 "assessment": "Model decision pathways are partially documented. Recommend implementing SHAP/LIME explanations for high-stakes decisions.",
-                "priority": "medium"
+                "priority": "medium",
             },
             "fairness": {
                 "score": min(100, score - 3),
                 "assessment": "Bias testing conducted quarterly. Consider expanding demographic parity analysis across protected classes.",
-                "priority": "high" if score < 80 else "medium"
+                "priority": "high" if score < 80 else "medium",
             },
             "accountability": {
                 "score": min(100, score + 8),
                 "assessment": "Audit trails in place. Human escalation paths defined for critical decisions.",
-                "priority": "low"
+                "priority": "low",
             },
             "robustness": {
                 "score": min(100, score - 5),
                 "assessment": "Adversarial testing recommended. Model drift monitoring should be enhanced.",
-                "priority": "high" if risk_level == "high" else "medium"
+                "priority": "high" if risk_level == "high" else "medium",
             },
             "privacy": {
                 "score": min(100, score + 2),
                 "assessment": "Data minimization principles applied. Consider differential privacy for sensitive attributes.",
-                "priority": "medium"
-            }
+                "priority": "medium",
+            },
         }
 
         recommendations = [
@@ -186,7 +189,9 @@ I recommend focusing on the critical PHI encryption violation first, as it carri
             "compliance_gaps": [
                 "Article 14 human oversight requirements partially met",
                 "Technical documentation needs update for Annex IV compliance",
-            ] if score < 85 else []
+            ]
+            if score < 85
+            else [],
         }
 
     async def generate_executive_summary(self, data: dict) -> str:
@@ -209,18 +214,18 @@ I recommend focusing on the critical PHI encryption violation first, as it carri
 |--------|-------|-------|
 | Compliance Score | {score:.1f}% | +5.2% |
 | Active Violations | {violations} | -3 |
-| Potential Exposure | {exposure/1_000_000:.0f}M | -15M |
-| Models Compliant | {metrics.get('compliant_models', 8)}/{metrics.get('total_models', 12)} | +2 |
+| Potential Exposure | {exposure / 1_000_000:.0f}M | -15M |
+| Models Compliant | {metrics.get("compliant_models", 8)}/{metrics.get("total_models", 12)} | +2 |
 
 ---
 
 ### Risk Assessment
 
-**Critical Issues**: {metrics.get('critical_violations', 1)}
+**Critical Issues**: {metrics.get("critical_violations", 1)}
 - PHI Encryption gap requires immediate remediation
 - Estimated resolution: 3-5 business days
 
-**High Priority**: {metrics.get('high_violations', 3)}
+**High Priority**: {metrics.get("high_violations", 3)}
 - EU AI Act human oversight implementation
 - GDPR DPIA completion for AI systems
 - Technical documentation updates
@@ -277,37 +282,67 @@ DEMO_PREDICTIONS = {
         "predicted_score": 82.3,
         "confidence": 0.85,
         "trend": "improving",
-        "risk_factors": ["Minor documentation gaps", "Audit overdue"]
+        "risk_factors": ["Minor documentation gaps", "Audit overdue"],
     },
     "property_matcher": {
         "current_score": 85.2,
         "predicted_score": 87.1,
         "confidence": 0.91,
         "trend": "stable",
-        "risk_factors": ["Data quality monitoring needed"]
+        "risk_factors": ["Data quality monitoring needed"],
     },
     "diagnostic_ai": {
         "current_score": 72.0,
         "predicted_score": 68.5,
         "confidence": 0.78,
         "trend": "declining",
-        "risk_factors": ["Human oversight gaps", "HIPAA compliance risk", "Technical debt"]
+        "risk_factors": ["Human oversight gaps", "HIPAA compliance risk", "Technical debt"],
     },
     "fraud_guard": {
         "current_score": 94.0,
         "predicted_score": 95.2,
         "confidence": 0.93,
         "trend": "improving",
-        "risk_factors": []
-    }
+        "risk_factors": [],
+    },
 }
 
 DEMO_ANOMALIES = [
-    {"model": "Property Matcher", "type": "score_drop", "severity": "high", "detected": "2 hours ago", "description": "Sudden 12% score decrease detected"},
-    {"model": "Lead Scorer", "type": "violation_surge", "severity": "medium", "detected": "1 day ago", "description": "3 new violations in 24h period"},
-    {"model": "DiagnosticAI Pro", "type": "drift_detected", "severity": "high", "detected": "4 hours ago", "description": "Model performance drift exceeds threshold"},
-    {"model": "CreditScore AI", "type": "bias_alert", "severity": "critical", "detected": "30 minutes ago", "description": "Potential bias detected in demographic groups"},
-    {"model": "TalentMatch AI", "type": "data_quality", "severity": "medium", "detected": "6 hours ago", "description": "Input data quality degradation detected"},
+    {
+        "model": "Property Matcher",
+        "type": "score_drop",
+        "severity": "high",
+        "detected": "2 hours ago",
+        "description": "Sudden 12% score decrease detected",
+    },
+    {
+        "model": "Lead Scorer",
+        "type": "violation_surge",
+        "severity": "medium",
+        "detected": "1 day ago",
+        "description": "3 new violations in 24h period",
+    },
+    {
+        "model": "DiagnosticAI Pro",
+        "type": "drift_detected",
+        "severity": "high",
+        "detected": "4 hours ago",
+        "description": "Model performance drift exceeds threshold",
+    },
+    {
+        "model": "CreditScore AI",
+        "type": "bias_alert",
+        "severity": "critical",
+        "detected": "30 minutes ago",
+        "description": "Potential bias detected in demographic groups",
+    },
+    {
+        "model": "TalentMatch AI",
+        "type": "data_quality",
+        "severity": "medium",
+        "detected": "6 hours ago",
+        "description": "Input data quality degradation detected",
+    },
 ]
 
 # ============================================================================
@@ -323,16 +358,20 @@ DEMO_ORGANIZATIONS = [
 DEMO_USER_ROLES = {
     "compliance_officer": {
         "permissions": ["View Models", "Run Assessments", "Acknowledge Violations", "Generate Reports"],
-        "title": "Compliance Officer"
+        "title": "Compliance Officer",
     },
     "admin": {
-        "permissions": ["View Models", "Run Assessments", "Acknowledge Violations", "Generate Reports", "Manage Users", "Configure Settings"],
-        "title": "Administrator"
+        "permissions": [
+            "View Models",
+            "Run Assessments",
+            "Acknowledge Violations",
+            "Generate Reports",
+            "Manage Users",
+            "Configure Settings",
+        ],
+        "title": "Administrator",
     },
-    "viewer": {
-        "permissions": ["View Models", "Generate Reports"],
-        "title": "Viewer"
-    }
+    "viewer": {"permissions": ["View Models", "Generate Reports"], "title": "Viewer"},
 }
 
 # ============================================================================
@@ -347,7 +386,7 @@ DEMO_ALERTS = [
         "type": "threshold_breach",
         "message": "Compliance score dropped below 50%",
         "timestamp": datetime.now() - timedelta(minutes=2),
-        "status": "active"
+        "status": "active",
     },
     {
         "id": "alert-002",
@@ -356,7 +395,7 @@ DEMO_ALERTS = [
         "type": "violation_detected",
         "message": "New GDPR violation detected - missing consent documentation",
         "timestamp": datetime.now() - timedelta(minutes=15),
-        "status": "active"
+        "status": "active",
     },
     {
         "id": "alert-003",
@@ -365,7 +404,7 @@ DEMO_ALERTS = [
         "type": "audit_required",
         "message": "Human oversight checkpoint missed for 3 consecutive decisions",
         "timestamp": datetime.now() - timedelta(minutes=32),
-        "status": "active"
+        "status": "active",
     },
     {
         "id": "alert-004",
@@ -374,7 +413,7 @@ DEMO_ALERTS = [
         "type": "drift_detected",
         "message": "Model drift detected - bias metrics exceeding threshold",
         "timestamp": datetime.now() - timedelta(hours=1, minutes=15),
-        "status": "active"
+        "status": "active",
     },
     {
         "id": "alert-005",
@@ -383,7 +422,7 @@ DEMO_ALERTS = [
         "type": "documentation_gap",
         "message": "Technical documentation outdated by 45+ days",
         "timestamp": datetime.now() - timedelta(hours=2, minutes=8),
-        "status": "active"
+        "status": "active",
     },
     {
         "id": "alert-006",
@@ -392,7 +431,7 @@ DEMO_ALERTS = [
         "type": "maintenance_due",
         "message": "Scheduled compliance review approaching deadline",
         "timestamp": datetime.now() - timedelta(hours=4),
-        "status": "acknowledged"
+        "status": "acknowledged",
     },
     {
         "id": "alert-007",
@@ -401,7 +440,7 @@ DEMO_ALERTS = [
         "type": "phi_exposure",
         "message": "PHI data processing without encryption detected",
         "timestamp": datetime.now() - timedelta(hours=6),
-        "status": "resolved"
+        "status": "resolved",
     },
     {
         "id": "alert-008",
@@ -410,7 +449,7 @@ DEMO_ALERTS = [
         "type": "access_anomaly",
         "message": "Unauthorized access attempt to model configuration",
         "timestamp": datetime.now() - timedelta(hours=12),
-        "status": "resolved"
+        "status": "resolved",
     },
     {
         "id": "alert-009",
@@ -419,7 +458,7 @@ DEMO_ALERTS = [
         "type": "performance_degradation",
         "message": "Model accuracy dropped 8% in last 24 hours",
         "timestamp": datetime.now() - timedelta(days=1),
-        "status": "acknowledged"
+        "status": "acknowledged",
     },
     {
         "id": "alert-010",
@@ -428,7 +467,7 @@ DEMO_ALERTS = [
         "type": "update_available",
         "message": "New compliance rule updates available for SEC guidance",
         "timestamp": datetime.now() - timedelta(days=2),
-        "status": "resolved"
+        "status": "resolved",
     },
 ]
 
@@ -542,9 +581,9 @@ def render_live_alerts_panel(alerts: List[Dict], max_alerts: int = 5):
 
         with col_alert:
             alert_text = f"""
-            {icon} **[{severity.upper()}]** {alert['model']} - {alert['type'].replace('_', ' ').title()}{status_badge}
+            {icon} **[{severity.upper()}]** {alert["model"]} - {alert["type"].replace("_", " ").title()}{status_badge}
 
-            {alert['message']} | _{relative_time}_
+            {alert["message"]} | _{relative_time}_
             """
 
             if severity == "critical":
@@ -576,25 +615,17 @@ def render_alert_history_table(alerts: List[Dict]):
 
     with filter_col1:
         status_filter = st.selectbox(
-            "Filter by Status",
-            ["All", "Active", "Acknowledged", "Resolved"],
-            key="alert_status_filter"
+            "Filter by Status", ["All", "Active", "Acknowledged", "Resolved"], key="alert_status_filter"
         )
 
     with filter_col2:
         severity_filter = st.selectbox(
-            "Filter by Severity",
-            ["All", "Critical", "High", "Medium", "Low"],
-            key="alert_severity_filter"
+            "Filter by Severity", ["All", "Critical", "High", "Medium", "Low"], key="alert_severity_filter"
         )
 
     with filter_col3:
         model_options = ["All"] + list(set(a["model"] for a in alerts))
-        model_filter = st.selectbox(
-            "Filter by Model",
-            model_options,
-            key="alert_model_filter"
-        )
+        model_filter = st.selectbox("Filter by Model", model_options, key="alert_model_filter")
 
     # Apply filters
     filtered_alerts = alerts.copy()
@@ -615,15 +646,17 @@ def render_alert_history_table(alerts: List[Dict]):
     if filtered_alerts:
         df_data = []
         for alert in filtered_alerts:
-            df_data.append({
-                "ID": alert["id"],
-                "Severity": alert["severity"].upper(),
-                "Model": alert["model"],
-                "Type": alert["type"].replace("_", " ").title(),
-                "Message": alert["message"][:50] + "..." if len(alert["message"]) > 50 else alert["message"],
-                "Time": format_relative_time(alert["timestamp"]),
-                "Status": alert["status"].title(),
-            })
+            df_data.append(
+                {
+                    "ID": alert["id"],
+                    "Severity": alert["severity"].upper(),
+                    "Model": alert["model"],
+                    "Type": alert["type"].replace("_", " ").title(),
+                    "Message": alert["message"][:50] + "..." if len(alert["message"]) > 50 else alert["message"],
+                    "Time": format_relative_time(alert["timestamp"]),
+                    "Status": alert["status"].title(),
+                }
+            )
 
         df = pd.DataFrame(df_data)
 
@@ -651,7 +684,7 @@ def render_alert_history_table(alerts: List[Dict]):
                 data=csv_data,
                 file_name=f"compliance_alerts_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
                 mime="text/csv",
-                use_container_width=True
+                use_container_width=True,
             )
     else:
         st.info("No alerts match the current filters.")
@@ -661,9 +694,11 @@ def render_alert_history_table(alerts: List[Dict]):
 # STYLING
 # ============================================================================
 
+
 def inject_custom_css():
     """Inject premium dark theme CSS"""
-    st.markdown("""
+    st.markdown(
+        """
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 
@@ -890,41 +925,34 @@ def inject_custom_css():
             border-radius: 4px;
         }
     </style>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 
 def style_plotly_chart(fig, title: str = None):
     """Apply premium dark theme to Plotly charts"""
     fig.update_layout(
         template="plotly_dark",
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
         font=dict(family="Inter, sans-serif", color="#e2e8f0", size=12),
         title=dict(
-            text=title,
-            font=dict(family="Space Grotesk, sans-serif", size=18, color="#ffffff"),
-            x=0,
-            xanchor='left'
-        ) if title else None,
+            text=title, font=dict(family="Space Grotesk, sans-serif", size=18, color="#ffffff"), x=0, xanchor="left"
+        )
+        if title
+        else None,
         margin=dict(l=20, r=20, t=60 if title else 20, b=20),
         xaxis=dict(
-            gridcolor='rgba(99, 102, 241, 0.1)',
-            zerolinecolor='rgba(99, 102, 241, 0.2)',
+            gridcolor="rgba(99, 102, 241, 0.1)",
+            zerolinecolor="rgba(99, 102, 241, 0.2)",
         ),
         yaxis=dict(
-            gridcolor='rgba(99, 102, 241, 0.1)',
-            zerolinecolor='rgba(99, 102, 241, 0.2)',
+            gridcolor="rgba(99, 102, 241, 0.1)",
+            zerolinecolor="rgba(99, 102, 241, 0.2)",
         ),
-        legend=dict(
-            bgcolor='rgba(30, 30, 46, 0.8)',
-            bordercolor='rgba(99, 102, 241, 0.2)',
-            font=dict(size=11)
-        ),
-        hoverlabel=dict(
-            bgcolor="rgba(30, 30, 46, 0.95)",
-            font_size=13,
-            font_family="Inter"
-        ),
+        legend=dict(bgcolor="rgba(30, 30, 46, 0.8)", bordercolor="rgba(99, 102, 241, 0.2)", font=dict(size=11)),
+        hoverlabel=dict(bgcolor="rgba(30, 30, 46, 0.95)", font_size=13, font_family="Inter"),
     )
     return fig
 
@@ -932,6 +960,7 @@ def style_plotly_chart(fig, title: str = None):
 # ============================================================================
 # DATA LOADING
 # ============================================================================
+
 
 @st.cache_data(ttl=300)
 def load_demo_data() -> Dict[str, Any]:
@@ -947,22 +976,25 @@ def load_demo_data() -> Dict[str, Any]:
 def generate_fallback_data() -> Dict[str, Any]:
     """Generate fallback data if platform not available"""
     import random
+
     random.seed(42)
 
     # Generate 90 days of trend data
     trends = []
     base_score = 75
     for i in range(90):
-        date = datetime.now() - timedelta(days=90-i-1)
+        date = datetime.now() - timedelta(days=90 - i - 1)
         improvement = i * 0.15
         noise = random.uniform(-2, 2)
         score = min(98, base_score + improvement + noise)
-        trends.append({
-            "date": date.strftime("%Y-%m-%d"),
-            "compliance_score": round(score, 1),
-            "active_violations": max(1, int(8 - i*0.05 + random.randint(-1, 1))),
-            "models_assessed": random.randint(8, 12),
-        })
+        trends.append(
+            {
+                "date": date.strftime("%Y-%m-%d"),
+                "compliance_score": round(score, 1),
+                "active_violations": max(1, int(8 - i * 0.05 + random.randint(-1, 1))),
+                "models_assessed": random.randint(8, 12),
+            }
+        )
 
     return {
         "executive_metrics": {
@@ -1005,13 +1037,55 @@ def generate_fallback_data() -> Dict[str, Any]:
             {"category": "Security", "regulation": "GDPR", "risk_score": 32},
         ],
         "violations": [
-            {"severity": "critical", "policy_name": "PHI Encryption", "regulation": "HIPAA", "days_open": 5, "potential_fine": 1500000},
-            {"severity": "high", "policy_name": "Human Oversight", "regulation": "EU AI Act", "days_open": 12, "potential_fine": 15000000},
-            {"severity": "high", "policy_name": "Technical Documentation", "regulation": "EU AI Act", "days_open": 8, "potential_fine": 7500000},
-            {"severity": "high", "policy_name": "DPIA Not Conducted", "regulation": "GDPR", "days_open": 15, "potential_fine": 20000000},
-            {"severity": "medium", "policy_name": "AI System Disclosure", "regulation": "EU AI Act", "days_open": 20, "potential_fine": 7500000},
-            {"severity": "medium", "policy_name": "Audit Controls", "regulation": "HIPAA", "days_open": 18, "potential_fine": 250000},
-            {"severity": "low", "policy_name": "Model Validation", "regulation": "SEC", "days_open": 25, "potential_fine": 0},
+            {
+                "severity": "critical",
+                "policy_name": "PHI Encryption",
+                "regulation": "HIPAA",
+                "days_open": 5,
+                "potential_fine": 1500000,
+            },
+            {
+                "severity": "high",
+                "policy_name": "Human Oversight",
+                "regulation": "EU AI Act",
+                "days_open": 12,
+                "potential_fine": 15000000,
+            },
+            {
+                "severity": "high",
+                "policy_name": "Technical Documentation",
+                "regulation": "EU AI Act",
+                "days_open": 8,
+                "potential_fine": 7500000,
+            },
+            {
+                "severity": "high",
+                "policy_name": "DPIA Not Conducted",
+                "regulation": "GDPR",
+                "days_open": 15,
+                "potential_fine": 20000000,
+            },
+            {
+                "severity": "medium",
+                "policy_name": "AI System Disclosure",
+                "regulation": "EU AI Act",
+                "days_open": 20,
+                "potential_fine": 7500000,
+            },
+            {
+                "severity": "medium",
+                "policy_name": "Audit Controls",
+                "regulation": "HIPAA",
+                "days_open": 18,
+                "potential_fine": 250000,
+            },
+            {
+                "severity": "low",
+                "policy_name": "Model Validation",
+                "regulation": "SEC",
+                "days_open": 25,
+                "potential_fine": 0,
+            },
         ],
         "models": [
             {"name": "DiagnosticAI Pro", "risk_level": "high", "status": "partially_compliant", "score": 72},
@@ -1034,38 +1108,42 @@ def generate_fallback_data() -> Dict[str, Any]:
 # VISUALIZATION COMPONENTS
 # ============================================================================
 
+
 def render_compliance_gauge(score: float, title: str = "Compliance Score"):
     """Render a compliance score gauge"""
     color = "#10b981" if score >= 80 else "#f59e0b" if score >= 60 else "#ef4444"
 
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number+delta",
-        value=score,
-        delta={'reference': 80, 'relative': False, 'increasing': {'color': "#10b981"}, 'decreasing': {'color': "#ef4444"}},
-        title={'text': title, 'font': {'size': 16, 'color': '#e2e8f0'}},
-        number={'font': {'size': 48, 'color': color}, 'suffix': '%'},
-        gauge={
-            'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': '#64748b'},
-            'bar': {'color': color, 'thickness': 0.7},
-            'bgcolor': 'rgba(30, 30, 46, 0.5)',
-            'borderwidth': 2,
-            'bordercolor': 'rgba(99, 102, 241, 0.3)',
-            'steps': [
-                {'range': [0, 60], 'color': 'rgba(239, 68, 68, 0.2)'},
-                {'range': [60, 80], 'color': 'rgba(245, 158, 11, 0.2)'},
-                {'range': [80, 100], 'color': 'rgba(16, 185, 129, 0.2)'}
-            ],
-            'threshold': {
-                'line': {'color': "#6366f1", 'width': 3},
-                'thickness': 0.8,
-                'value': 80
-            }
-        }
-    ))
+    fig = go.Figure(
+        go.Indicator(
+            mode="gauge+number+delta",
+            value=score,
+            delta={
+                "reference": 80,
+                "relative": False,
+                "increasing": {"color": "#10b981"},
+                "decreasing": {"color": "#ef4444"},
+            },
+            title={"text": title, "font": {"size": 16, "color": "#e2e8f0"}},
+            number={"font": {"size": 48, "color": color}, "suffix": "%"},
+            gauge={
+                "axis": {"range": [0, 100], "tickwidth": 1, "tickcolor": "#64748b"},
+                "bar": {"color": color, "thickness": 0.7},
+                "bgcolor": "rgba(30, 30, 46, 0.5)",
+                "borderwidth": 2,
+                "bordercolor": "rgba(99, 102, 241, 0.3)",
+                "steps": [
+                    {"range": [0, 60], "color": "rgba(239, 68, 68, 0.2)"},
+                    {"range": [60, 80], "color": "rgba(245, 158, 11, 0.2)"},
+                    {"range": [80, 100], "color": "rgba(16, 185, 129, 0.2)"},
+                ],
+                "threshold": {"line": {"color": "#6366f1", "width": 3}, "thickness": 0.8, "value": 80},
+            },
+        )
+    )
 
     fig.update_layout(
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
         font=dict(family="Inter"),
         height=280,
         margin=dict(l=30, r=30, t=60, b=30),
@@ -1077,39 +1155,42 @@ def render_compliance_gauge(score: float, title: str = "Compliance Score"):
 def render_risk_heatmap(heatmap_data: List[Dict]):
     """Render risk heatmap visualization"""
     df = pd.DataFrame(heatmap_data)
-    pivot = df.pivot(index='category', columns='regulation', values='risk_score')
+    pivot = df.pivot(index="category", columns="regulation", values="risk_score")
 
     # Define custom colorscale (green to red)
     colorscale = [
-        [0, '#10b981'],      # Green (low risk)
-        [0.4, '#fbbf24'],    # Yellow
-        [0.6, '#f59e0b'],    # Orange
-        [0.8, '#ef4444'],    # Red
-        [1, '#7c3aed']       # Purple (critical)
+        [0, "#10b981"],  # Green (low risk)
+        [0.4, "#fbbf24"],  # Yellow
+        [0.6, "#f59e0b"],  # Orange
+        [0.8, "#ef4444"],  # Red
+        [1, "#7c3aed"],  # Purple (critical)
     ]
 
-    fig = go.Figure(data=go.Heatmap(
-        z=pivot.values,
-        x=pivot.columns,
-        y=pivot.index,
-        colorscale=colorscale,
-        showscale=True,
-        colorbar=dict(
-            title="Risk Score",
-            titleside="right",
-            tickfont=dict(color='#e2e8f0'),
-            titlefont=dict(color='#e2e8f0'),
-        ),
-        hovertemplate="<b>%{y}</b><br>%{x}: %{z}<extra></extra>",
-    ))
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=pivot.values,
+            x=pivot.columns,
+            y=pivot.index,
+            colorscale=colorscale,
+            showscale=True,
+            colorbar=dict(
+                title="Risk Score",
+                titleside="right",
+                tickfont=dict(color="#e2e8f0"),
+                titlefont=dict(color="#e2e8f0"),
+            ),
+            hovertemplate="<b>%{y}</b><br>%{x}: %{z}<extra></extra>",
+        )
+    )
 
     # Add annotations
     for i, cat in enumerate(pivot.index):
         for j, reg in enumerate(pivot.columns):
             val = pivot.iloc[i, j]
-            text_color = '#ffffff' if val > 50 else '#1a1a2e'
+            text_color = "#ffffff" if val > 50 else "#1a1a2e"
             fig.add_annotation(
-                x=reg, y=cat,
+                x=reg,
+                y=cat,
                 text=f"{val:.0f}",
                 showarrow=False,
                 font=dict(color=text_color, size=12, family="Inter"),
@@ -1124,49 +1205,58 @@ def render_risk_heatmap(heatmap_data: List[Dict]):
 def render_compliance_trend(trend_data: List[Dict]):
     """Render compliance trend chart"""
     df = pd.DataFrame(trend_data)
-    df['date'] = pd.to_datetime(df['date'])
+    df["date"] = pd.to_datetime(df["date"])
 
     fig = make_subplots(
-        rows=2, cols=1,
+        rows=2,
+        cols=1,
         shared_xaxes=True,
         vertical_spacing=0.1,
         row_heights=[0.7, 0.3],
-        subplot_titles=("Compliance Score Trend", "Active Violations")
+        subplot_titles=("Compliance Score Trend", "Active Violations"),
     )
 
     # Compliance score area chart
     fig.add_trace(
         go.Scatter(
-            x=df['date'],
-            y=df['compliance_score'],
-            mode='lines',
-            name='Compliance Score',
-            line=dict(color='#6366f1', width=3),
-            fill='tozeroy',
-            fillcolor='rgba(99, 102, 241, 0.2)',
+            x=df["date"],
+            y=df["compliance_score"],
+            mode="lines",
+            name="Compliance Score",
+            line=dict(color="#6366f1", width=3),
+            fill="tozeroy",
+            fillcolor="rgba(99, 102, 241, 0.2)",
             hovertemplate="<b>%{x|%b %d}</b><br>Score: %{y:.1f}%<extra></extra>",
         ),
-        row=1, col=1
+        row=1,
+        col=1,
     )
 
     # Target line
-    fig.add_hline(y=80, line_dash="dash", line_color="#10b981",
-                  annotation_text="Target: 80%", annotation_position="right",
-                  row=1, col=1)
+    fig.add_hline(
+        y=80,
+        line_dash="dash",
+        line_color="#10b981",
+        annotation_text="Target: 80%",
+        annotation_position="right",
+        row=1,
+        col=1,
+    )
 
     # Violations bar chart
     fig.add_trace(
         go.Bar(
-            x=df['date'],
-            y=df['active_violations'],
-            name='Violations',
+            x=df["date"],
+            y=df["active_violations"],
+            name="Violations",
             marker=dict(
-                color=df['active_violations'],
-                colorscale=[[0, '#10b981'], [0.5, '#f59e0b'], [1, '#ef4444']],
+                color=df["active_violations"],
+                colorscale=[[0, "#10b981"], [0.5, "#f59e0b"], [1, "#ef4444"]],
             ),
             hovertemplate="<b>%{x|%b %d}</b><br>Violations: %{y}<extra></extra>",
         ),
-        row=2, col=1
+        row=2,
+        col=1,
     )
 
     fig = style_plotly_chart(fig)
@@ -1186,22 +1276,23 @@ def render_regulation_pie(data: Dict):
     regulations = ["EU AI Act", "HIPAA", "SEC", "GDPR"]
     values = [5, 3, 2, 4]  # Number of models per regulation
 
-    fig = go.Figure(data=[go.Pie(
-        labels=regulations,
-        values=values,
-        hole=0.6,
-        marker=dict(
-            colors=['#6366f1', '#8b5cf6', '#a855f7', '#c084fc'],
-            line=dict(color='#1a1a2e', width=2)
-        ),
-        textinfo='label+percent',
-        textfont=dict(color='#e2e8f0', size=12),
-        hovertemplate="<b>%{label}</b><br>Models: %{value}<br>%{percent}<extra></extra>",
-    )])
+    fig = go.Figure(
+        data=[
+            go.Pie(
+                labels=regulations,
+                values=values,
+                hole=0.6,
+                marker=dict(colors=["#6366f1", "#8b5cf6", "#a855f7", "#c084fc"], line=dict(color="#1a1a2e", width=2)),
+                textinfo="label+percent",
+                textfont=dict(color="#e2e8f0", size=12),
+                hovertemplate="<b>%{label}</b><br>Models: %{value}<br>%{percent}<extra></extra>",
+            )
+        ]
+    )
 
     fig.update_layout(
         showlegend=False,
-        annotations=[dict(text='Regulations', x=0.5, y=0.5, font_size=14, showarrow=False, font_color='#94a3b8')],
+        annotations=[dict(text="Regulations", x=0.5, y=0.5, font_size=14, showarrow=False, font_color="#94a3b8")],
     )
 
     fig = style_plotly_chart(fig, "Regulatory Coverage")
@@ -1213,26 +1304,25 @@ def render_regulation_pie(data: Dict):
 def render_model_scores_bar(models: List[Dict]):
     """Render model scores horizontal bar chart"""
     df = pd.DataFrame(models)
-    df = df.sort_values('score', ascending=True)
+    df = df.sort_values("score", ascending=True)
 
-    colors = df['score'].apply(
-        lambda x: '#10b981' if x >= 80 else '#f59e0b' if x >= 60 else '#ef4444'
-    ).tolist()
+    colors = df["score"].apply(lambda x: "#10b981" if x >= 80 else "#f59e0b" if x >= 60 else "#ef4444").tolist()
 
-    fig = go.Figure(go.Bar(
-        y=df['name'],
-        x=df['score'],
-        orientation='h',
-        marker=dict(color=colors),
-        text=df['score'].apply(lambda x: f"{x}%"),
-        textposition='outside',
-        textfont=dict(color='#e2e8f0', size=11),
-        hovertemplate="<b>%{y}</b><br>Score: %{x}%<extra></extra>",
-    ))
+    fig = go.Figure(
+        go.Bar(
+            y=df["name"],
+            x=df["score"],
+            orientation="h",
+            marker=dict(color=colors),
+            text=df["score"].apply(lambda x: f"{x}%"),
+            textposition="outside",
+            textfont=dict(color="#e2e8f0", size=11),
+            hovertemplate="<b>%{y}</b><br>Score: %{x}%<extra></extra>",
+        )
+    )
 
     # Add target line
-    fig.add_vline(x=80, line_dash="dash", line_color="#6366f1",
-                  annotation_text="Target", annotation_position="top")
+    fig.add_vline(x=80, line_dash="dash", line_color="#6366f1", annotation_text="Target", annotation_position="top")
 
     fig = style_plotly_chart(fig, "AI Model Compliance Scores")
     fig.update_layout(
@@ -1248,6 +1338,7 @@ def render_model_scores_bar(models: List[Dict]):
 # MAIN DASHBOARD
 # ============================================================================
 
+
 def main():
     """Main dashboard function"""
     inject_custom_css()
@@ -1257,12 +1348,15 @@ def main():
     metrics = data["executive_metrics"]
 
     # Header
-    st.markdown("""
+    st.markdown(
+        """
     <div class="compliance-header">
         <h1>🛡️ Enterprise AI Compliance Platform</h1>
         <p>Real-time compliance monitoring for EU AI Act, SEC, HIPAA, and GDPR regulations</p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     # ========================================================================
     # TOP METRICS ROW
@@ -1273,49 +1367,64 @@ def main():
     with col1:
         score = metrics["average_compliance_score"]
         color_class = "" if score >= 80 else "warning" if score >= 60 else "danger"
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="metric-card">
             <div class="metric-value {color_class}">{score:.1f}%</div>
             <div class="metric-label">Compliance Score</div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     with col2:
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="metric-card">
-            <div class="metric-value">{metrics['total_models']}</div>
+            <div class="metric-value">{metrics["total_models"]}</div>
             <div class="metric-label">AI Models Tracked</div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     with col3:
         violations = metrics["total_violations"]
         color_class = "danger" if violations > 5 else "warning" if violations > 2 else ""
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="metric-card">
             <div class="metric-value {color_class}">{violations}</div>
             <div class="metric-label">Active Violations</div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     with col4:
         exposure = metrics["potential_exposure"]
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="metric-card">
-            <div class="metric-value danger">€{exposure/1_000_000:.0f}M</div>
+            <div class="metric-value danger">€{exposure / 1_000_000:.0f}M</div>
             <div class="metric-label">Potential Exposure</div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     with col5:
         trend = metrics["compliance_trend"]
         trend_icon = "📈" if trend > 0 else "📉"
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="metric-card">
             <div class="metric-value">{trend_icon} +{trend:.1f}%</div>
             <div class="metric-label">30-Day Trend</div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -1323,15 +1432,17 @@ def main():
     # MAIN CONTENT TABS
     # ========================================================================
 
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-        "📊 Executive Overview",
-        "⚠️ Violations Center",
-        "🔥 Risk Heatmap",
-        "🤖 AI Models",
-        "📈 Trends & Analytics",
-        "🧠 AI Insights",
-        "📊 Predictive Analytics"
-    ])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
+        [
+            "📊 Executive Overview",
+            "⚠️ Violations Center",
+            "🔥 Risk Heatmap",
+            "🤖 AI Models",
+            "📈 Trends & Analytics",
+            "🧠 AI Insights",
+            "📊 Predictive Analytics",
+        ]
+    )
 
     # ========================================================================
     # TAB 1: EXECUTIVE OVERVIEW
@@ -1364,7 +1475,7 @@ def main():
             st.plotly_chart(
                 render_compliance_gauge(metrics["average_compliance_score"], "Overall Compliance"),
                 use_container_width=True,
-                config={'displayModeBar': False}
+                config={"displayModeBar": False},
             )
 
             # Quick stats
@@ -1375,33 +1486,25 @@ def main():
                 st.metric(
                     "Compliant Models",
                     f"{metrics['compliant_models']}/{metrics['total_models']}",
-                    f"{(metrics['compliant_models']/metrics['total_models']*100):.0f}%"
+                    f"{(metrics['compliant_models'] / metrics['total_models'] * 100):.0f}%",
                 )
                 st.metric(
                     "Audit Readiness",
                     f"{metrics['audit_readiness']:.0f}%",
-                    "+3%" if metrics['audit_readiness'] > 90 else "-2%"
+                    "+3%" if metrics["audit_readiness"] > 90 else "-2%",
                 )
 
             with status_col2:
-                st.metric(
-                    "Remediation Rate",
-                    f"{metrics['remediation_rate']:.0f}%",
-                    "+5%"
-                )
+                st.metric("Remediation Rate", f"{metrics['remediation_rate']:.0f}%", "+5%")
                 st.metric(
                     "Critical Issues",
-                    metrics['critical_violations'],
-                    "-1" if metrics['critical_violations'] <= 1 else "+1",
-                    delta_color="inverse"
+                    metrics["critical_violations"],
+                    "-1" if metrics["critical_violations"] <= 1 else "+1",
+                    delta_color="inverse",
                 )
 
         with col_right:
-            st.plotly_chart(
-                render_regulation_pie(data),
-                use_container_width=True,
-                config={'displayModeBar': False}
-            )
+            st.plotly_chart(render_regulation_pie(data), use_container_width=True, config={"displayModeBar": False})
 
             # Regulation compliance breakdown
             st.markdown("### 🏛️ Regulation Compliance")
@@ -1435,7 +1538,9 @@ def main():
         with v_col2:
             st.warning(f"🟠 High: {metrics['high_violations']}")
         with v_col3:
-            st.info(f"🟡 Medium: {metrics['total_violations'] - metrics['critical_violations'] - metrics['high_violations'] - 1}")
+            st.info(
+                f"🟡 Medium: {metrics['total_violations'] - metrics['critical_violations'] - metrics['high_violations'] - 1}"
+            )
         with v_col4:
             st.success(f"🟢 Low: 1")
 
@@ -1446,12 +1551,9 @@ def main():
 
         for v in violations:
             severity = v.get("severity", "medium")
-            severity_badge = {
-                "critical": "🔴 CRITICAL",
-                "high": "🟠 HIGH",
-                "medium": "🟡 MEDIUM",
-                "low": "🟢 LOW"
-            }.get(severity, "🟡 MEDIUM")
+            severity_badge = {"critical": "🔴 CRITICAL", "high": "🟠 HIGH", "medium": "🟡 MEDIUM", "low": "🟢 LOW"}.get(
+                severity, "🟡 MEDIUM"
+            )
 
             with st.container(border=True):
                 col_info, col_action = st.columns([4, 1])
@@ -1459,7 +1561,9 @@ def main():
                 with col_info:
                     st.markdown(f"**{severity_badge}** | {v.get('regulation', 'Unknown')}")
                     st.markdown(f"### {v.get('policy_name', 'Policy Violation')}")
-                    st.caption(f"📅 Open for {v.get('days_open', 0)} days | 💰 Potential Fine: €{v.get('potential_fine', 0):,}")
+                    st.caption(
+                        f"📅 Open for {v.get('days_open', 0)} days | 💰 Potential Fine: €{v.get('potential_fine', 0):,}"
+                    )
 
                 with col_action:
                     if st.button("🔧 Remediate", key=f"rem_{v.get('policy_name', '')}"):
@@ -1474,9 +1578,7 @@ def main():
         st.caption("Risk scores by compliance category and regulation (0 = Low Risk, 100 = Critical Risk)")
 
         st.plotly_chart(
-            render_risk_heatmap(data["heatmap"]),
-            use_container_width=True,
-            config={'displayModeBar': False}
+            render_risk_heatmap(data["heatmap"]), use_container_width=True, config={"displayModeBar": False}
         )
 
         st.markdown("---")
@@ -1500,9 +1602,7 @@ def main():
         st.markdown("### 🤖 AI Model Registry & Compliance")
 
         st.plotly_chart(
-            render_model_scores_bar(data["models"]),
-            use_container_width=True,
-            config={'displayModeBar': False}
+            render_model_scores_bar(data["models"]), use_container_width=True, config={"displayModeBar": False}
         )
 
         st.markdown("---")
@@ -1514,17 +1614,11 @@ def main():
 
         for i, model in enumerate(models):
             with cols[i % 3]:
-                status_emoji = {
-                    "compliant": "✅",
-                    "partially_compliant": "⚠️",
-                    "non_compliant": "❌"
-                }.get(model.get("status", ""), "❓")
+                status_emoji = {"compliant": "✅", "partially_compliant": "⚠️", "non_compliant": "❌"}.get(
+                    model.get("status", ""), "❓"
+                )
 
-                risk_emoji = {
-                    "high": "🔴",
-                    "limited": "🟡",
-                    "minimal": "🟢"
-                }.get(model.get("risk_level", ""), "⚪")
+                risk_emoji = {"high": "🔴", "limited": "🟡", "minimal": "🟢"}.get(model.get("risk_level", ""), "⚪")
 
                 with st.container(border=True):
                     st.markdown(f"**{model['name']}**")
@@ -1540,9 +1634,7 @@ def main():
         st.markdown("### 📈 Compliance Trends (90 Days)")
 
         st.plotly_chart(
-            render_compliance_trend(data["trends"]),
-            use_container_width=True,
-            config={'displayModeBar': False}
+            render_compliance_trend(data["trends"]), use_container_width=True, config={"displayModeBar": False}
         )
 
         st.markdown("---")
@@ -1583,7 +1675,9 @@ def main():
 
         # Check AI availability status
         if not AI_AVAILABLE:
-            st.info("ℹ️ Running in demo mode with mock AI responses. Connect ComplianceAIAnalyzer service for production use.")
+            st.info(
+                "ℹ️ Running in demo mode with mock AI responses. Connect ComplianceAIAnalyzer service for production use."
+            )
 
         # Create three columns for the main layout
         ai_col1, ai_col2 = st.columns([2, 1])
@@ -1594,9 +1688,7 @@ def main():
             # Context selector
             context_options = ["All Models", "High-Risk Models Only", "Non-Compliant Models", "Specific Regulation"]
             selected_context = st.selectbox(
-                "Select Context",
-                context_options,
-                help="Choose which models/data the AI should focus on when answering"
+                "Select Context", context_options, help="Choose which models/data the AI should focus on when answering"
             )
 
             # Example questions as buttons
@@ -1619,7 +1711,7 @@ def main():
             user_question = st.text_input(
                 "Ask a compliance question",
                 placeholder="e.g., What steps do we need for HIPAA compliance?",
-                key="compliance_question_input"
+                key="compliance_question_input",
             )
 
             # Check for pending question from button click
@@ -1633,18 +1725,19 @@ def main():
                     try:
                         analyzer = get_ai_analyzer()
                         # Run async function
-                        response = run_async(analyzer.answer_compliance_question(
-                            user_question,
-                            context=selected_context
-                        ))
+                        response = run_async(
+                            analyzer.answer_compliance_question(user_question, context=selected_context)
+                        )
 
                         # Add to chat history
-                        st.session_state.compliance_chat_history.append({
-                            "question": user_question,
-                            "response": response,
-                            "timestamp": datetime.now().strftime("%H:%M"),
-                            "context": selected_context
-                        })
+                        st.session_state.compliance_chat_history.append(
+                            {
+                                "question": user_question,
+                                "response": response,
+                                "timestamp": datetime.now().strftime("%H:%M"),
+                                "context": selected_context,
+                            }
+                        )
                     except Exception as e:
                         st.error(f"Error generating response: {str(e)}")
 
@@ -1657,7 +1750,7 @@ def main():
                     with st.expander(f"Q: {chat['question'][:50]}... ({chat['timestamp']})", expanded=(i == 0)):
                         st.markdown(f"**Context**: {chat['context']}")
                         st.markdown("---")
-                        st.markdown(chat['response'])
+                        st.markdown(chat["response"])
 
                 # Clear history button
                 if st.button("🗑️ Clear History", key="clear_chat"):
@@ -1672,15 +1765,13 @@ def main():
             # Model selector for risk analysis
             model_names = [m["name"] for m in data.get("models", [])]
             selected_model = st.selectbox(
-                "Select Model to Analyze",
-                model_names,
-                help="Choose a registered AI model for detailed risk analysis"
+                "Select Model to Analyze", model_names, help="Choose a registered AI model for detailed risk analysis"
             )
 
             # Get selected model data
             selected_model_data = next(
                 (m for m in data.get("models", []) if m["name"] == selected_model),
-                {"name": selected_model, "score": 75, "risk_level": "limited", "status": "partially_compliant"}
+                {"name": selected_model, "score": 75, "risk_level": "limited", "status": "partially_compliant"},
             )
 
             # Generate Analysis button
@@ -1688,10 +1779,7 @@ def main():
                 with st.spinner(f"Analyzing {selected_model}..."):
                     try:
                         analyzer = get_ai_analyzer()
-                        analysis = run_async(analyzer.analyze_model_risks(
-                            selected_model,
-                            selected_model_data
-                        ))
+                        analysis = run_async(analyzer.analyze_model_risks(selected_model, selected_model_data))
 
                         st.session_state.current_model_analysis = analysis
                     except Exception as e:
@@ -1752,7 +1840,7 @@ def main():
                     data=st.session_state.executive_summary,
                     file_name=f"compliance_summary_{datetime.now().strftime('%Y%m%d_%H%M')}.md",
                     mime="text/markdown",
-                    use_container_width=True
+                    use_container_width=True,
                 )
 
         with report_col3:
@@ -1782,21 +1870,19 @@ def main():
                 "lead_scorer": "Lead Scorer",
                 "property_matcher": "Property Matcher",
                 "diagnostic_ai": "DiagnosticAI Pro",
-                "fraud_guard": "FraudGuard ML"
+                "fraud_guard": "FraudGuard ML",
             }
 
             selected_forecast_model = st.selectbox(
                 "Select Model",
                 forecast_models,
                 format_func=lambda x: forecast_model_names.get(x, x),
-                key="forecast_model_select"
+                key="forecast_model_select",
             )
 
             # Timeframe selector
             timeframe = st.selectbox(
-                "Forecast Timeframe",
-                ["1 week", "2 weeks", "1 month", "3 months"],
-                key="forecast_timeframe"
+                "Forecast Timeframe", ["1 week", "2 weeks", "1 month", "3 months"], key="forecast_timeframe"
             )
 
             # Generate Forecast button
@@ -1815,11 +1901,7 @@ def main():
                 with score_col1:
                     current = prediction["current_score"]
                     color = "normal" if current >= 80 else "off" if current >= 60 else "inverse"
-                    st.metric(
-                        "Current Score",
-                        f"{current}%",
-                        delta=None
-                    )
+                    st.metric("Current Score", f"{current}%", delta=None)
 
                 with score_col2:
                     predicted = prediction["predicted_score"]
@@ -1828,16 +1910,12 @@ def main():
                         "Predicted Score",
                         f"{predicted}%",
                         delta=f"{delta:+.1f}%",
-                        delta_color="normal" if delta >= 0 else "inverse"
+                        delta_color="normal" if delta >= 0 else "inverse",
                     )
 
                 with score_col3:
                     confidence = prediction["confidence"]
-                    st.metric(
-                        "Confidence",
-                        f"{confidence*100:.0f}%",
-                        delta=None
-                    )
+                    st.metric("Confidence", f"{confidence * 100:.0f}%", delta=None)
 
                 # Trend indicator
                 trend = prediction["trend"]
@@ -1856,6 +1934,7 @@ def main():
 
                 # Generate demo trend data
                 import random
+
                 random.seed(42)
 
                 base_score = prediction["current_score"]
@@ -1867,7 +1946,7 @@ def main():
                 for i in range(30, 0, -1):
                     dates.append((datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d"))
                     noise = random.uniform(-3, 3)
-                    hist_score = base_score - (30-i) * 0.1 + noise
+                    hist_score = base_score - (30 - i) * 0.1 + noise
                     scores.append(max(50, min(100, hist_score)))
                     is_forecast.append(False)
 
@@ -1889,11 +1968,13 @@ def main():
                     is_forecast.append(True)
 
                 # Create chart
-                trend_df = pd.DataFrame({
-                    "Date": dates,
-                    "Score": scores,
-                    "Type": ["Historical" if not f else "Forecast" for f in is_forecast]
-                })
+                trend_df = pd.DataFrame(
+                    {
+                        "Date": dates,
+                        "Score": scores,
+                        "Type": ["Historical" if not f else "Forecast" for f in is_forecast],
+                    }
+                )
 
                 fig = px.line(
                     trend_df,
@@ -1901,22 +1982,21 @@ def main():
                     y="Score",
                     color="Type",
                     color_discrete_map={"Historical": "#6366f1", "Forecast": "#a855f7"},
-                    markers=True
+                    markers=True,
                 )
 
                 fig.add_hline(y=80, line_dash="dash", line_color="#10b981", annotation_text="Target: 80%")
                 fig = style_plotly_chart(fig)
                 fig.update_layout(height=300)
 
-                st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+                st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
         with col2:
             st.subheader("Risk Forecast")
 
             # Get prediction for selected model
             prediction = DEMO_PREDICTIONS.get(
-                st.session_state.get("forecast_model_select", "lead_scorer"),
-                DEMO_PREDICTIONS["lead_scorer"]
+                st.session_state.get("forecast_model_select", "lead_scorer"), DEMO_PREDICTIONS["lead_scorer"]
             )
 
             # Current vs Predicted risk level
@@ -1996,20 +2076,19 @@ def main():
         # Table of detected anomalies
         anomaly_data = []
         for anomaly in DEMO_ANOMALIES:
-            severity_badge = {
-                "critical": "🔴 CRITICAL",
-                "high": "🟠 HIGH",
-                "medium": "🟡 MEDIUM",
-                "low": "🟢 LOW"
-            }.get(anomaly["severity"], "⚪ UNKNOWN")
+            severity_badge = {"critical": "🔴 CRITICAL", "high": "🟠 HIGH", "medium": "🟡 MEDIUM", "low": "🟢 LOW"}.get(
+                anomaly["severity"], "⚪ UNKNOWN"
+            )
 
-            anomaly_data.append({
-                "Model": anomaly["model"],
-                "Type": anomaly["type"].replace("_", " ").title(),
-                "Severity": severity_badge,
-                "Detected": anomaly["detected"],
-                "Description": anomaly["description"]
-            })
+            anomaly_data.append(
+                {
+                    "Model": anomaly["model"],
+                    "Type": anomaly["type"].replace("_", " ").title(),
+                    "Severity": severity_badge,
+                    "Detected": anomaly["detected"],
+                    "Description": anomaly["description"],
+                }
+            )
 
         anomaly_df = pd.DataFrame(anomaly_data)
 
@@ -2036,11 +2115,15 @@ def main():
 
         if critical_anomalies:
             for anomaly in critical_anomalies:
-                st.error(f"**URGENT**: Investigate {anomaly['model']} - {anomaly['description']}. Immediate action required.")
+                st.error(
+                    f"**URGENT**: Investigate {anomaly['model']} - {anomaly['description']}. Immediate action required."
+                )
 
         if high_anomalies:
             for anomaly in high_anomalies:
-                st.warning(f"**Priority**: Review {anomaly['model']} - {anomaly['description']}. Schedule investigation within 24 hours.")
+                st.warning(
+                    f"**Priority**: Review {anomaly['model']} - {anomaly['description']}. Schedule investigation within 24 hours."
+                )
 
         if not critical_anomalies and not high_anomalies:
             st.success("No critical or high-priority anomalies requiring immediate investigation.")
@@ -2057,16 +2140,11 @@ def main():
 
         # Organization selector
         org_names = [org["name"] for org in DEMO_ORGANIZATIONS]
-        selected_org_name = st.selectbox(
-            "Select Organization",
-            org_names,
-            key="org_selector"
-        )
+        selected_org_name = st.selectbox("Select Organization", org_names, key="org_selector")
 
         # Get selected organization data
         selected_org = next(
-            (org for org in DEMO_ORGANIZATIONS if org["name"] == selected_org_name),
-            DEMO_ORGANIZATIONS[0]
+            (org for org in DEMO_ORGANIZATIONS if org["name"] == selected_org_name), DEMO_ORGANIZATIONS[0]
         )
 
         # Display organization tier
@@ -2140,17 +2218,9 @@ def main():
 
         alert_col1, alert_col2 = st.columns(2)
         with alert_col1:
-            st.metric(
-                "Total Active",
-                alert_metrics["total_active"],
-                delta=None
-            )
+            st.metric("Total Active", alert_metrics["total_active"], delta=None)
         with alert_col2:
-            st.metric(
-                "Models Monitored",
-                alert_metrics["models_monitored"],
-                delta=None
-            )
+            st.metric("Models Monitored", alert_metrics["models_monitored"], delta=None)
 
         # Severity breakdown
         severity_counts = alert_metrics["severity_counts"]
@@ -2168,11 +2238,7 @@ def main():
         st.markdown("---")
 
         st.markdown("### 📅 Reporting Period")
-        period = st.selectbox(
-            "Select Period",
-            ["Last 30 Days", "Last 90 Days", "Last Year", "Custom"],
-            index=1
-        )
+        period = st.selectbox("Select Period", ["Last 30 Days", "Last 90 Days", "Last Year", "Custom"], index=1)
 
         st.markdown("### 🏛️ Regulations")
         eu_ai = st.checkbox("EU AI Act", value=True)

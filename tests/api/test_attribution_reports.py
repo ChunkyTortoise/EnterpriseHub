@@ -4,19 +4,16 @@ Tests for Attribution Reports API endpoints.
 Comprehensive test suite for attribution reporting API endpoints and dashboard integration.
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 from fastapi.testclient import TestClient
 
 from ghl_real_estate_ai.api.main import app
-from ghl_real_estate_ai.services.attribution_analytics import (
-    AttributionReport, PerformanceAlert, AlertType
-)
-from ghl_real_estate_ai.services.lead_source_tracker import (
-    LeadSource, SourcePerformance, SourceQuality
-)
+from ghl_real_estate_ai.services.attribution_analytics import AlertType, AttributionReport, PerformanceAlert
+from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, SourcePerformance, SourceQuality
 
 
 class TestAttributionReportsAPI:
@@ -46,7 +43,7 @@ class TestAttributionReportsAPI:
                 cost_per_qualified_lead=62.50,
                 roi=3.0,
                 avg_lead_score=6.5,
-                avg_budget=450000.0
+                avg_budget=450000.0,
             ),
             SourcePerformance(
                 source=LeadSource.FACEBOOK_ADS,
@@ -63,11 +60,11 @@ class TestAttributionReportsAPI:
                 cost_per_qualified_lead=64.0,
                 roi=1.8,
                 avg_lead_score=5.2,
-                avg_budget=380000.0
-            )
+                avg_budget=380000.0,
+            ),
         ]
 
-        with patch('ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker') as mock_tracker:
+        with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
             mock_tracker.get_all_source_performance.return_value = asyncio.create_task(
                 asyncio.coroutine(lambda: mock_performances)()
             )
@@ -90,10 +87,10 @@ class TestAttributionReportsAPI:
             period_end=datetime.utcnow(),
             total_leads=25,
             qualified_leads=10,
-            roi=2.5
+            roi=2.5,
         )
 
-        with patch('ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker') as mock_tracker:
+        with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
             mock_tracker.get_source_performance.return_value = asyncio.create_task(
                 asyncio.coroutine(lambda: mock_performance)()
             )
@@ -106,8 +103,8 @@ class TestAttributionReportsAPI:
                     "start_date": "2024-01-01",
                     "end_date": "2024-01-31",
                     "sort_by": "roi",
-                    "order": "desc"
-                }
+                    "order": "desc",
+                },
             )
 
             assert response.status_code == 200
@@ -118,10 +115,7 @@ class TestAttributionReportsAPI:
 
     def test_get_source_performance_invalid_source(self):
         """Test error handling for invalid source."""
-        response = self.client.get(
-            f"{self.base_url}/performance",
-            params={"source": "invalid_source"}
-        )
+        response = self.client.get(f"{self.base_url}/performance", params={"source": "invalid_source"})
 
         assert response.status_code == 400
         assert "Invalid source" in response.json()["detail"]
@@ -145,7 +139,7 @@ class TestAttributionReportsAPI:
                     period_end=datetime.utcnow(),
                     total_leads=50,
                     qualified_leads=20,
-                    roi=3.0
+                    roi=3.0,
                 )
             ],
             active_alerts=[
@@ -160,7 +154,7 @@ class TestAttributionReportsAPI:
                     threshold=-0.2,
                     change_percentage=-0.75,
                     recommendations=["Review targeting", "Optimize ad creative"],
-                    created_at=datetime.utcnow()
+                    created_at=datetime.utcnow(),
                 )
             ],
             optimization_recommendations=[
@@ -168,12 +162,12 @@ class TestAttributionReportsAPI:
                     "type": "budget_reallocation",
                     "priority": "high",
                     "title": "Reallocate Budget",
-                    "description": "Move budget to higher ROI sources"
+                    "description": "Move budget to higher ROI sources",
                 }
-            ]
+            ],
         )
 
-        with patch('ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics') as mock_analytics:
+        with patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics:
             mock_analytics.generate_attribution_report.return_value = asyncio.create_task(
                 asyncio.coroutine(lambda: mock_report)()
             )
@@ -197,10 +191,10 @@ class TestAttributionReportsAPI:
             period_end=datetime.utcnow(),
             generated_at=datetime.utcnow(),
             total_leads=25,
-            total_qualified_leads=10
+            total_qualified_leads=10,
         )
 
-        with patch('ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics') as mock_analytics:
+        with patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics:
             mock_analytics.generate_attribution_report.return_value = asyncio.create_task(
                 asyncio.coroutine(lambda: mock_report)()
             )
@@ -212,8 +206,8 @@ class TestAttributionReportsAPI:
                     "end_date": "2024-01-22",
                     "attribution_model": "first_touch",
                     "include_forecasts": "false",
-                    "include_cohorts": "false"
-                }
+                    "include_cohorts": "false",
+                },
             )
 
             assert response.status_code == 200
@@ -228,26 +222,18 @@ class TestAttributionReportsAPI:
         mock_summary = {
             "period": {
                 "start": (datetime.utcnow() - timedelta(days=7)).isoformat(),
-                "end": datetime.utcnow().isoformat()
+                "end": datetime.utcnow().isoformat(),
             },
-            "totals": {
-                "leads": 75,
-                "qualified_leads": 30,
-                "revenue": 125000.0,
-                "cost": 3500.0,
-                "roi": 34.7
-            },
+            "totals": {"leads": 75, "qualified_leads": 30, "revenue": 125000.0, "cost": 3500.0, "roi": 34.7},
             "top_sources": [
                 {"source": "zillow", "leads": 25, "revenue": 60000.0, "roi": 4.2},
-                {"source": "agent_referral", "leads": 15, "revenue": 45000.0, "roi": 8.0}
+                {"source": "agent_referral", "leads": 15, "revenue": 45000.0, "roi": 8.0},
             ],
-            "biggest_changes": [
-                {"source": "facebook_ads", "lead_change": 0.5, "roi_change": -0.3, "magnitude": 0.8}
-            ],
-            "alerts_count": 2
+            "biggest_changes": [{"source": "facebook_ads", "lead_change": 0.5, "roi_change": -0.3, "magnitude": 0.8}],
+            "alerts_count": 2,
         }
 
-        with patch('ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics') as mock_analytics:
+        with patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics:
             mock_analytics.get_weekly_summary.return_value = asyncio.create_task(
                 asyncio.coroutine(lambda: mock_summary)()
             )
@@ -269,18 +255,15 @@ class TestAttributionReportsAPI:
             "totals": {"leads": 25, "qualified_leads": 10},
             "top_sources": [],
             "biggest_changes": [],
-            "alerts_count": 0
+            "alerts_count": 0,
         }
 
-        with patch('ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics') as mock_analytics:
+        with patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics:
             mock_analytics.get_weekly_summary.return_value = asyncio.create_task(
                 asyncio.coroutine(lambda: mock_summary)()
             )
 
-            response = self.client.get(
-                f"{self.base_url}/weekly-summary",
-                params={"location_id": "test_location_123"}
-            )
+            response = self.client.get(f"{self.base_url}/weekly-summary", params={"location_id": "test_location_123"})
 
             assert response.status_code == 200
 
@@ -290,16 +273,16 @@ class TestAttributionReportsAPI:
             "monthly_performance": [
                 {"month": "2024-01", "total_leads": 100, "total_revenue": 150000.0, "roi": 2.8},
                 {"month": "2024-02", "total_leads": 120, "total_revenue": 180000.0, "roi": 3.1},
-                {"month": "2024-03", "total_leads": 110, "total_revenue": 175000.0, "roi": 2.9}
+                {"month": "2024-03", "total_leads": 110, "total_revenue": 175000.0, "roi": 2.9},
             ],
             "growth_rates": {
                 "leads": 0.15,  # 15% growth
                 "revenue": 0.18,  # 18% growth
-                "roi": 0.03  # 3% ROI improvement
-            }
+                "roi": 0.03,  # 3% ROI improvement
+            },
         }
 
-        with patch('ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics') as mock_analytics:
+        with patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics:
             mock_analytics.get_monthly_trends.return_value = asyncio.create_task(
                 asyncio.coroutine(lambda: mock_trends)()
             )
@@ -328,7 +311,7 @@ class TestAttributionReportsAPI:
                 change_percentage=-0.68,
                 recommendations=["Review targeting", "Update ad creative"],
                 created_at=datetime.utcnow(),
-                expires_at=datetime.utcnow() + timedelta(days=7)
+                expires_at=datetime.utcnow() + timedelta(days=7),
             ),
             PerformanceAlert(
                 alert_type=AlertType.VOLUME_DROP,
@@ -341,17 +324,16 @@ class TestAttributionReportsAPI:
                 threshold=-0.25,
                 change_percentage=-0.33,
                 recommendations=["Check budget", "Expand targeting"],
-                created_at=datetime.utcnow()
-            )
+                created_at=datetime.utcnow(),
+            ),
         ]
 
         # Mock performance data and alert generation
-        with patch('ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker') as mock_tracker, \
-             patch('ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics') as mock_analytics:
-
-            mock_tracker.get_all_source_performance.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: [])()
-            )
+        with (
+            patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker,
+            patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics,
+        ):
+            mock_tracker.get_all_source_performance.return_value = asyncio.create_task(asyncio.coroutine(lambda: [])())
             mock_analytics._generate_performance_alerts.return_value = asyncio.create_task(
                 asyncio.coroutine(lambda: mock_alerts)()
             )
@@ -380,25 +362,21 @@ class TestAttributionReportsAPI:
                 threshold=-0.2,
                 change_percentage=-0.95,
                 recommendations=["Immediate action required"],
-                created_at=datetime.utcnow()
+                created_at=datetime.utcnow(),
             )
         ]
 
-        with patch('ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker') as mock_tracker, \
-             patch('ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics') as mock_analytics:
-
-            mock_tracker.get_all_source_performance.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: [])()
-            )
+        with (
+            patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker,
+            patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics,
+        ):
+            mock_tracker.get_all_source_performance.return_value = asyncio.create_task(asyncio.coroutine(lambda: [])())
             mock_analytics._generate_performance_alerts.return_value = asyncio.create_task(
                 asyncio.coroutine(lambda: mock_alerts)()
             )
 
             # Test severity filter
-            response = self.client.get(
-                f"{self.base_url}/alerts",
-                params={"severity": "high", "limit": 5}
-            )
+            response = self.client.get(f"{self.base_url}/alerts", params={"severity": "high", "limit": 5})
 
             assert response.status_code == 200
             data = response.json()
@@ -419,23 +397,23 @@ class TestAttributionReportsAPI:
                     "priority": "high",
                     "title": "Scale Top Performing Sources",
                     "description": "Increase investment in high-ROI sources",
-                    "expected_impact": "25-50% ROI increase"
+                    "expected_impact": "25-50% ROI increase",
                 },
                 {
                     "type": "optimize_or_pause",
                     "priority": "high",
                     "title": "Optimize Underperforming Sources",
                     "description": "Review and optimize low-ROI campaigns",
-                    "expected_impact": "Reduce wasted spend"
-                }
+                    "expected_impact": "Reduce wasted spend",
+                },
             ],
             "top_performers": [
                 {"source": "zillow", "roi": 300, "total_leads": 50, "conversion_rate": 8.0},
-                {"source": "agent_referral", "roi": 450, "total_leads": 25, "conversion_rate": 12.0}
-            ]
+                {"source": "agent_referral", "roi": 450, "total_leads": 25, "conversion_rate": 12.0},
+            ],
         }
 
-        with patch('ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker') as mock_tracker:
+        with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
             mock_tracker.get_source_recommendations.return_value = asyncio.create_task(
                 asyncio.coroutine(lambda: mock_recommendations)()
             )
@@ -473,22 +451,13 @@ class TestAttributionReportsAPI:
 
     def test_track_attribution_event_success(self):
         """Test manual event tracking endpoint."""
-        with patch('ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker') as mock_tracker:
-            mock_tracker.track_source_performance.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: None)()
-            )
+        with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
+            mock_tracker.track_source_performance.return_value = asyncio.create_task(asyncio.coroutine(lambda: None)())
 
             response = self.client.post(
                 f"{self.base_url}/track-event",
-                params={
-                    "source": "zillow",
-                    "event_type": "deal_closed"
-                },
-                json={
-                    "deal_value": 8000.0,
-                    "close_time_days": 45,
-                    "agent_id": "agent_123"
-                }
+                params={"source": "zillow", "event_type": "deal_closed"},
+                json={"deal_value": 8000.0, "close_time_days": 45, "agent_id": "agent_123"},
             )
 
             assert response.status_code == 200
@@ -500,11 +469,7 @@ class TestAttributionReportsAPI:
     def test_track_attribution_event_invalid_source(self):
         """Test event tracking with invalid source."""
         response = self.client.post(
-            f"{self.base_url}/track-event",
-            params={
-                "source": "invalid_source",
-                "event_type": "deal_closed"
-            }
+            f"{self.base_url}/track-event", params={"source": "invalid_source", "event_type": "deal_closed"}
         )
 
         assert response.status_code == 400
@@ -528,11 +493,11 @@ class TestAttributionReportsAPI:
                 cost_per_qualified_lead=62.50,
                 roi=3.0,
                 avg_lead_score=6.5,
-                avg_budget=450000.0
+                avg_budget=450000.0,
             )
         ]
 
-        with patch('ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker') as mock_tracker:
+        with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
             mock_tracker.get_all_source_performance.return_value = asyncio.create_task(
                 asyncio.coroutine(lambda: mock_performances)()
             )
@@ -565,22 +530,18 @@ class TestAttributionReportsAPI:
                 period_start=datetime(2024, 1, 1),
                 period_end=datetime(2024, 1, 31),
                 total_leads=25,
-                roi=2.5
+                roi=2.5,
             )
         ]
 
-        with patch('ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker') as mock_tracker:
+        with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
             mock_tracker.get_all_source_performance.return_value = asyncio.create_task(
                 asyncio.coroutine(lambda: mock_performances)()
             )
 
             response = self.client.get(
                 f"{self.base_url}/export/csv",
-                params={
-                    "start_date": "2024-01-01",
-                    "end_date": "2024-01-31",
-                    "sources": "zillow,facebook_ads"
-                }
+                params={"start_date": "2024-01-01", "end_date": "2024-01-31", "sources": "zillow,facebook_ads"},
             )
 
             assert response.status_code == 200
@@ -592,7 +553,7 @@ class TestAttributionReportsAPI:
     def test_error_handling_500_errors(self):
         """Test handling of internal server errors."""
         # Test report generation failure
-        with patch('ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics') as mock_analytics:
+        with patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics:
             mock_analytics.generate_attribution_report.side_effect = Exception("Database error")
 
             response = self.client.get(f"{self.base_url}/report")
@@ -601,7 +562,7 @@ class TestAttributionReportsAPI:
             assert "Failed to generate report" in response.json()["detail"]
 
         # Test performance data failure
-        with patch('ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker') as mock_tracker:
+        with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
             mock_tracker.get_all_source_performance.side_effect = Exception("Cache error")
 
             response = self.client.get(f"{self.base_url}/performance")
@@ -611,24 +572,18 @@ class TestAttributionReportsAPI:
 
     def test_date_parsing_edge_cases(self):
         """Test date parsing with various formats."""
-        with patch('ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker') as mock_tracker:
-            mock_tracker.get_all_source_performance.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: [])()
-            )
+        with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
+            mock_tracker.get_all_source_performance.return_value = asyncio.create_task(asyncio.coroutine(lambda: [])())
 
             # Test valid ISO date format
             response = self.client.get(
-                f"{self.base_url}/performance",
-                params={"start_date": "2024-01-15", "end_date": "2024-01-22"}
+                f"{self.base_url}/performance", params={"start_date": "2024-01-15", "end_date": "2024-01-22"}
             )
 
             assert response.status_code == 200
 
             # Test invalid date format should still work (will be ignored)
-            response = self.client.get(
-                f"{self.base_url}/performance",
-                params={"start_date": "invalid-date"}
-            )
+            response = self.client.get(f"{self.base_url}/performance", params={"start_date": "invalid-date"})
 
             assert response.status_code in [200, 500]  # Depends on implementation
 
@@ -638,7 +593,7 @@ class TestAttributionReportsAPI:
         # Test that endpoints properly handle async operations
         mock_performances = []
 
-        with patch('ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker') as mock_tracker:
+        with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
             # Mock async method
             async def mock_get_performance(*args, **kwargs):
                 await asyncio.sleep(0.01)  # Simulate async operation
@@ -665,17 +620,16 @@ class TestAttributionReportsAPI:
                 threshold=-0.2,
                 change_percentage=-0.75,
                 recommendations=[],
-                created_at=datetime.utcnow()
+                created_at=datetime.utcnow(),
             )
             for i in range(50)
         ]
 
-        with patch('ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker') as mock_tracker, \
-             patch('ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics') as mock_analytics:
-
-            mock_tracker.get_all_source_performance.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: [])()
-            )
+        with (
+            patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker,
+            patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics,
+        ):
+            mock_tracker.get_all_source_performance.return_value = asyncio.create_task(asyncio.coroutine(lambda: [])())
             mock_analytics._generate_performance_alerts.return_value = asyncio.create_task(
                 asyncio.coroutine(lambda: many_alerts)()
             )

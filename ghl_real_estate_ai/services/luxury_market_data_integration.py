@@ -17,39 +17,40 @@ Features:
 - Luxury inventory monitoring
 """
 
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, Tuple, Union
-from datetime import datetime, timedelta
-from enum import Enum
-import pandas as pd
-import numpy as np
-from decimal import Decimal
 import asyncio
 import json
-import aiohttp
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from decimal import Decimal
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-from ghl_real_estate_ai.services.cache_service import CacheService
-from ghl_real_estate_ai.services.optimized_cache_service import cached
-from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
+import aiohttp
+import numpy as np
+import pandas as pd
+
 from ghl_real_estate_ai.core.llm_client import LLMClient
+from ghl_real_estate_ai.services.cache_service import CacheService
+from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
+from ghl_real_estate_ai.services.optimized_cache_service import cached
 
 
 class DataSource(Enum):
-    MLS_LUXURY = "mls_luxury"              # MLS luxury data feed
+    MLS_LUXURY = "mls_luxury"  # MLS luxury data feed
     PRIVATE_NETWORKS = "private_networks"  # Private broker networks
-    PUBLIC_RECORDS = "public_records"      # County/city public records
+    PUBLIC_RECORDS = "public_records"  # County/city public records
     MARKET_ANALYTICS = "market_analytics"  # Commercial market data
-    SOCIAL_SIGNALS = "social_signals"      # Social media luxury indicators
-    ECONOMIC_DATA = "economic_data"        # Economic indicators
-    AUCTION_DATA = "auction_data"          # Luxury auction results
+    SOCIAL_SIGNALS = "social_signals"  # Social media luxury indicators
+    ECONOMIC_DATA = "economic_data"  # Economic indicators
+    AUCTION_DATA = "auction_data"  # Luxury auction results
 
 
 class PropertyTier(Enum):
-    LUXURY = "luxury"                      # $750K - $2M
-    ULTRA_LUXURY = "ultra_luxury"          # $2M - $5M
-    MEGA_LUXURY = "mega_luxury"            # $5M - $10M
-    ESTATE = "estate"                      # $10M+
+    LUXURY = "luxury"  # $750K - $2M
+    ULTRA_LUXURY = "ultra_luxury"  # $2M - $5M
+    MEGA_LUXURY = "mega_luxury"  # $5M - $10M
+    ESTATE = "estate"  # $10M+
 
 
 class MarketSegment(Enum):
@@ -63,6 +64,7 @@ class MarketSegment(Enum):
 @dataclass
 class LuxuryPropertyData:
     """Comprehensive luxury property data model"""
+
     property_id: str
     mls_id: Optional[str] = None
     address: str = ""
@@ -114,6 +116,7 @@ class LuxuryPropertyData:
 @dataclass
 class MarketAnalytics:
     """Luxury market analytics and trends"""
+
     zip_code: str
     neighborhood: str
     analysis_date: datetime
@@ -125,13 +128,13 @@ class MarketAnalytics:
     inventory_count: int = 0
 
     # Trends
-    price_trend_30d: float = 0.0    # 30-day price trend %
-    price_trend_90d: float = 0.0    # 90-day price trend %
-    price_trend_12m: float = 0.0    # 12-month price trend %
+    price_trend_30d: float = 0.0  # 30-day price trend %
+    price_trend_90d: float = 0.0  # 90-day price trend %
+    price_trend_12m: float = 0.0  # 12-month price trend %
 
     # Luxury metrics
-    luxury_premium: float = 0.0     # Premium over area median
-    luxury_velocity: float = 0.0    # Sales velocity for luxury properties
+    luxury_premium: float = 0.0  # Premium over area median
+    luxury_velocity: float = 0.0  # Sales velocity for luxury properties
     luxury_inventory_ratio: float = 0.0  # Luxury inventory as % of total
 
     # Investment analytics
@@ -148,6 +151,7 @@ class MarketAnalytics:
 @dataclass
 class CompetitiveLandscape:
     """Competitive landscape analysis"""
+
     market_area: str
     analysis_period: Tuple[datetime, datetime]
 
@@ -220,7 +224,7 @@ class MLSLuxuryProvider(DataProvider):
                 days_on_market=45,
                 luxury_score=92.5,
                 data_sources=[DataSource.MLS_LUXURY],
-                data_quality_score=95.0
+                data_quality_score=95.0,
             )
             properties.append(property_data)
 
@@ -248,7 +252,7 @@ class MLSLuxuryProvider(DataProvider):
                 luxury_velocity=1.8,
                 appreciation_forecast=8.5,
                 cap_rate_avg=4.2,
-                investment_attractiveness=85.2
+                investment_attractiveness=85.2,
             )
             analytics.append(market_data)
 
@@ -281,10 +285,10 @@ class PublicRecordsProvider(DataProvider):
                 valuation_confidence=78.5,
                 price_history=[
                     {"date": "2023-01-01", "price": 1_650_000, "event": "sale"},
-                    {"date": "2024-01-01", "price": 1_850_000, "event": "assessment"}
+                    {"date": "2024-01-01", "price": 1_850_000, "event": "assessment"},
                 ],
                 data_sources=[DataSource.PUBLIC_RECORDS],
-                data_quality_score=82.0
+                data_quality_score=82.0,
             )
             properties.append(property_data)
 
@@ -303,7 +307,7 @@ class PublicRecordsProvider(DataProvider):
                 median_price=1_450_000,
                 price_per_sqft_median=425,
                 price_trend_12m=9.8,
-                data_quality_score=75.0
+                data_quality_score=75.0,
             )
             analytics.append(market_data)
 
@@ -333,7 +337,7 @@ class MarketAnalyticsProvider(DataProvider):
                 appreciation_forecast=7.2,
                 investment_score=88.5,
                 data_sources=[DataSource.MARKET_ANALYTICS],
-                data_quality_score=91.0
+                data_quality_score=91.0,
             )
             properties.append(property_data)
 
@@ -356,8 +360,8 @@ class MarketAnalyticsProvider(DataProvider):
                     "avg_net_worth": 5_500_000,
                     "primary_motivation": "investment",
                     "avg_age": 45,
-                    "cash_buyer_percentage": 65
-                }
+                    "cash_buyer_percentage": 65,
+                },
             )
             analytics.append(market_data)
 
@@ -388,7 +392,7 @@ class LuxuryMarketDataIntegrator:
         self.quality_thresholds = {
             "minimum_data_quality": 70.0,
             "luxury_score_threshold": 80.0,
-            "valuation_confidence_threshold": 75.0
+            "valuation_confidence_threshold": 75.0,
         }
 
         # Austin luxury market configuration
@@ -400,7 +404,7 @@ class LuxuryMarketDataIntegrator:
             "78613",  # Cedar Park (luxury areas)
             "78732",  # Lakeway
             "78669",  # Spicewood
-            "78734"   # Lakeway/Bee Cave
+            "78734",  # Lakeway/Bee Cave
         ]
 
     def _initialize_providers(self):
@@ -427,10 +431,7 @@ class LuxuryMarketDataIntegrator:
         # Fetch data from all providers
         property_data_sets = []
 
-        tasks = [
-            provider.fetch_property_data([property_id])
-            for provider in self.providers
-        ]
+        tasks = [provider.fetch_property_data([property_id]) for provider in self.providers]
 
         try:
             results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -508,8 +509,12 @@ class LuxuryMarketDataIntegrator:
 
         # Completeness factors
         essential_fields = [
-            property_data.address, property_data.list_price, property_data.square_footage,
-            property_data.bedrooms, property_data.bathrooms, property_data.neighborhood
+            property_data.address,
+            property_data.list_price,
+            property_data.square_footage,
+            property_data.bedrooms,
+            property_data.bathrooms,
+            property_data.neighborhood,
         ]
 
         completeness = sum(1 for field in essential_fields if field is not None) / len(essential_fields)
@@ -521,7 +526,7 @@ class LuxuryMarketDataIntegrator:
             DataSource.PUBLIC_RECORDS: 25,
             DataSource.MARKET_ANALYTICS: 20,
             DataSource.PRIVATE_NETWORKS: 35,
-            DataSource.AUCTION_DATA: 15
+            DataSource.AUCTION_DATA: 15,
         }
 
         source_quality = sum(source_weights.get(source, 10) for source in property_data.data_sources)
@@ -545,7 +550,7 @@ class LuxuryMarketDataIntegrator:
             "property_tier": property_data.property_tier.value if property_data.property_tier else "unknown",
             "luxury_score": property_data.luxury_score,
             "cap_rate": property_data.cap_rate,
-            "amenities": property_data.luxury_amenities
+            "amenities": property_data.luxury_amenities,
         }
 
         prompt = f"""
@@ -555,9 +560,9 @@ class LuxuryMarketDataIntegrator:
         - Price: {f"${property_data.list_price:,.0f}" if property_data.list_price else "Unknown"}
         - Price/SqFt: {f"${property_data.price_per_sqft:,.2f}" if property_data.price_per_sqft else "Unknown"}
         - Neighborhood: {property_data.neighborhood}
-        - Property Tier: {property_data.property_tier.value if property_data.property_tier else 'Unknown'}
+        - Property Tier: {property_data.property_tier.value if property_data.property_tier else "Unknown"}
         - Luxury Score: {property_data.luxury_score}/100
-        - Luxury Amenities: {', '.join(property_data.luxury_amenities[:5]) if property_data.luxury_amenities else 'None listed'}
+        - Luxury Amenities: {", ".join(property_data.luxury_amenities[:5]) if property_data.luxury_amenities else "None listed"}
 
         Consider these factors for investment scoring:
         1. Location and neighborhood prestige (25%)
@@ -581,7 +586,8 @@ class LuxuryMarketDataIntegrator:
 
             # Extract numeric score
             import re
-            score_match = re.search(r'\d{1,3}', response)
+
+            score_match = re.search(r"\d{1,3}", response)
             if score_match:
                 return min(float(score_match.group()), 100.0)
 
@@ -613,10 +619,7 @@ class LuxuryMarketDataIntegrator:
         # Fetch analytics from all providers
         analytics_sets = []
 
-        tasks = [
-            provider.fetch_market_analytics(zip_codes)
-            for provider in self.providers
-        ]
+        tasks = [provider.fetch_market_analytics(zip_codes) for provider in self.providers]
 
         try:
             results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -655,9 +658,15 @@ class LuxuryMarketDataIntegrator:
 
         # Weighted average for numerical fields
         numeric_fields = [
-            "median_price", "price_per_sqft_median", "avg_days_on_market",
-            "price_trend_30d", "price_trend_90d", "price_trend_12m",
-            "luxury_premium", "appreciation_forecast", "cap_rate_avg"
+            "median_price",
+            "price_per_sqft_median",
+            "avg_days_on_market",
+            "price_trend_30d",
+            "price_trend_90d",
+            "price_trend_12m",
+            "luxury_premium",
+            "appreciation_forecast",
+            "cap_rate_avg",
         ]
 
         for field in numeric_fields:
@@ -686,9 +695,12 @@ class LuxuryMarketDataIntegrator:
                 merged_profile[field] = sum(values) / len(values)
 
         # Most common categorical values
-        motivations = [profile.get("primary_motivation", "") for profile in profiles if profile.get("primary_motivation")]
+        motivations = [
+            profile.get("primary_motivation", "") for profile in profiles if profile.get("primary_motivation")
+        ]
         if motivations:
             from collections import Counter
+
             merged_profile["primary_motivation"] = Counter(motivations).most_common(1)[0][0]
 
         return merged_profile
@@ -708,14 +720,14 @@ class LuxuryMarketDataIntegrator:
         competitive_intelligence = await self._generate_competitive_analysis(market_area, market_analytics)
 
         landscape = CompetitiveLandscape(
-            market_area=market_area,
-            analysis_period=analysis_period,
-            **competitive_intelligence
+            market_area=market_area, analysis_period=analysis_period, **competitive_intelligence
         )
 
         return landscape
 
-    async def _generate_competitive_analysis(self, market_area: str, market_data: List[MarketAnalytics]) -> Dict[str, Any]:
+    async def _generate_competitive_analysis(
+        self, market_area: str, market_data: List[MarketAnalytics]
+    ) -> Dict[str, Any]:
         """Generate AI-powered competitive analysis"""
 
         # Prepare market context
@@ -723,7 +735,7 @@ class LuxuryMarketDataIntegrator:
             "area": market_area,
             "median_price": sum(m.median_price for m in market_data) / len(market_data) if market_data else 0,
             "luxury_premium": sum(m.luxury_premium for m in market_data) / len(market_data) if market_data else 0,
-            "market_momentum": sum(m.market_momentum for m in market_data) / len(market_data) if market_data else 0
+            "market_momentum": sum(m.market_momentum for m in market_data) / len(market_data) if market_data else 0,
         }
 
         prompt = f"""
@@ -731,9 +743,9 @@ class LuxuryMarketDataIntegrator:
 
         Market Context:
         - Area: {market_area}
-        - Median Luxury Price: ${market_summary['median_price']:,.0f}
-        - Luxury Premium: {market_summary['luxury_premium']:.1f}%
-        - Market Momentum: {market_summary['market_momentum']:.1f}
+        - Median Luxury Price: ${market_summary["median_price"]:,.0f}
+        - Luxury Premium: {market_summary["luxury_premium"]:.1f}%
+        - Market Momentum: {market_summary["market_momentum"]:.1f}
 
         Provide competitive analysis including:
         1. Key market gaps and opportunities
@@ -753,32 +765,35 @@ class LuxuryMarketDataIntegrator:
                     "Technology-enhanced luxury service delivery",
                     "Investment-grade property analysis",
                     "UHNW client specialization",
-                    "White-glove service automation"
+                    "White-glove service automation",
                 ],
                 "competitive_advantages": [
                     "AI-powered market intelligence",
                     "Exclusive technology platform",
                     "Premium service delivery tracking",
-                    "Investment advisory integration"
+                    "Investment advisory integration",
                 ],
                 "top_luxury_agents": [
                     {"name": "Elite Luxury Group", "market_share": 0.18, "specialization": "ultra_luxury"},
                     {"name": "Premier Properties", "market_share": 0.15, "specialization": "estates"},
-                    {"name": "Luxury Specialists", "market_share": 0.12, "specialization": "investment"}
+                    {"name": "Luxury Specialists", "market_share": 0.12, "specialization": "investment"},
                 ],
                 "service_offerings": {
                     "Jorge's AI Platform": [
-                        "AI market intelligence", "Investment analysis", "Portfolio management",
-                        "White-glove service tracking", "Premium client experience"
+                        "AI market intelligence",
+                        "Investment analysis",
+                        "Portfolio management",
+                        "White-glove service tracking",
+                        "Premium client experience",
                     ]
-                }
+                },
             }
 
         except Exception:
             # Fallback competitive analysis
             return {
                 "market_gaps": ["Technology differentiation", "Premium service automation"],
-                "competitive_advantages": ["AI integration", "Service excellence tracking"]
+                "competitive_advantages": ["AI integration", "Service excellence tracking"],
             }
 
     async def get_luxury_inventory_summary(self, filters: Dict[str, Any] = None) -> Dict[str, Any]:
@@ -788,7 +803,7 @@ class LuxuryMarketDataIntegrator:
         default_filters = {
             "min_price": 750_000,
             "zip_codes": self.luxury_zip_codes,
-            "property_tiers": [PropertyTier.LUXURY, PropertyTier.ULTRA_LUXURY, PropertyTier.MEGA_LUXURY]
+            "property_tiers": [PropertyTier.LUXURY, PropertyTier.ULTRA_LUXURY, PropertyTier.MEGA_LUXURY],
         }
 
         if filters:
@@ -804,47 +819,43 @@ class LuxuryMarketDataIntegrator:
             "median_luxury_price": 1_850_000,
             "avg_days_on_market": 68,
             "luxury_absorption_rate": 2.3,  # months
-
             "tier_distribution": {
-                PropertyTier.LUXURY.value: 85,      # $750K - $2M
-                PropertyTier.ULTRA_LUXURY.value: 42, # $2M - $5M
+                PropertyTier.LUXURY.value: 85,  # $750K - $2M
+                PropertyTier.ULTRA_LUXURY.value: 42,  # $2M - $5M
                 PropertyTier.MEGA_LUXURY.value: 15,  # $5M - $10M
-                PropertyTier.ESTATE.value: 3         # $10M+
+                PropertyTier.ESTATE.value: 3,  # $10M+
             },
-
             "neighborhood_distribution": {
                 "West Lake Hills": 35,
                 "Tarrytown": 28,
                 "Zilker": 22,
                 "Hyde Park": 18,
                 "Rollingwood": 12,
-                "Others": 30
+                "Others": 30,
             },
-
             "market_trends": {
                 "new_listings_30d": 18,
                 "closed_sales_30d": 23,
                 "under_contract": 34,
                 "price_reductions": 8,
-                "days_on_market_trend": -5.2  # Improving
+                "days_on_market_trend": -5.2,  # Improving
             },
-
             "investment_opportunities": [
                 {
                     "property_id": "LUX-INV-001",
                     "address": "Private Address Available",
                     "price": 2_850_000,
                     "investment_score": 92.5,
-                    "opportunity_type": "undervalued"
+                    "opportunity_type": "undervalued",
                 },
                 {
                     "property_id": "LUX-INV-002",
                     "address": "Executive Estate",
                     "price": 4_200_000,
                     "investment_score": 89.8,
-                    "opportunity_type": "development_potential"
-                }
-            ]
+                    "opportunity_type": "development_potential",
+                },
+            ],
         }
 
         return inventory_summary
@@ -867,39 +878,38 @@ class LuxuryMarketDataIntegrator:
             "report_date": datetime.now().isoformat(),
             "market_coverage": zip_codes,
             "executive_summary": market_insights,
-
             "market_performance": {
                 "luxury_market_value": inventory_summary["total_inventory_value"],
                 "median_luxury_price": inventory_summary["median_luxury_price"],
                 "avg_price_per_sqft": sum(m.price_per_sqft_median for m in market_analytics) / len(market_analytics),
                 "market_appreciation_12m": sum(m.price_trend_12m for m in market_analytics) / len(market_analytics),
-                "luxury_premium": sum(m.luxury_premium for m in market_analytics) / len(market_analytics)
+                "luxury_premium": sum(m.luxury_premium for m in market_analytics) / len(market_analytics),
             },
-
             "investment_outlook": {
                 "appreciation_forecast": sum(m.appreciation_forecast for m in market_analytics) / len(market_analytics),
-                "investment_attractiveness": sum(m.investment_attractiveness for m in market_analytics) / len(market_analytics),
+                "investment_attractiveness": sum(m.investment_attractiveness for m in market_analytics)
+                / len(market_analytics),
                 "cap_rate_avg": sum(m.cap_rate_avg for m in market_analytics) / len(market_analytics),
-                "market_momentum": sum(m.market_momentum for m in market_analytics) / len(market_analytics)
+                "market_momentum": sum(m.market_momentum for m in market_analytics) / len(market_analytics),
             },
-
             "competitive_positioning": {
                 "market_gaps": competitive_landscape.market_gaps,
                 "competitive_advantages": competitive_landscape.competitive_advantages,
-                "service_differentiation_score": 94.2
+                "service_differentiation_score": 94.2,
             },
-
             "client_recommendations": [
                 "Focus acquisition efforts on ultra-luxury tier ($2M-$5M) with highest momentum",
                 "Leverage AI technology differentiation for premium positioning",
                 "Target investment-focused UHNW buyers with sophisticated analysis",
-                "Emphasize white-glove service delivery for commission premium justification"
-            ]
+                "Emphasize white-glove service delivery for commission premium justification",
+            ],
         }
 
         return report
 
-    async def _generate_market_insights_summary(self, market_analytics: List[MarketAnalytics], inventory_summary: Dict[str, Any]) -> str:
+    async def _generate_market_insights_summary(
+        self, market_analytics: List[MarketAnalytics], inventory_summary: Dict[str, Any]
+    ) -> str:
         """Generate AI-powered market insights summary"""
 
         avg_appreciation = sum(m.appreciation_forecast for m in market_analytics) / len(market_analytics)
@@ -909,11 +919,11 @@ class LuxuryMarketDataIntegrator:
         Create an executive market summary for Austin luxury real estate:
 
         Key Metrics:
-        - Total Luxury Inventory: ${inventory_summary['total_inventory_value']:,.0f}
-        - Average Luxury Price: ${inventory_summary['avg_luxury_price']:,.0f}
+        - Total Luxury Inventory: ${inventory_summary["total_inventory_value"]:,.0f}
+        - Average Luxury Price: ${inventory_summary["avg_luxury_price"]:,.0f}
         - Market Appreciation Forecast: {avg_appreciation:.1f}%
         - Market Momentum: {avg_momentum:.1f}/100
-        - Luxury Absorption Rate: {inventory_summary['luxury_absorption_rate']} months
+        - Luxury Absorption Rate: {inventory_summary["luxury_absorption_rate"]} months
 
         Provide a 3-paragraph executive summary focusing on:
         1. Current market strength and luxury positioning
@@ -931,15 +941,16 @@ class LuxuryMarketDataIntegrator:
             return f"""
             Austin Luxury Market Executive Summary:
 
-            The Austin luxury real estate market demonstrates exceptional strength with ${inventory_summary['total_inventory_value']:,.0f} in total luxury inventory and {avg_appreciation:.1f}% projected appreciation. Market momentum of {avg_momentum:.1f}/100 indicates robust buyer demand and continued growth potential.
+            The Austin luxury real estate market demonstrates exceptional strength with ${inventory_summary["total_inventory_value"]:,.0f} in total luxury inventory and {avg_appreciation:.1f}% projected appreciation. Market momentum of {avg_momentum:.1f}/100 indicates robust buyer demand and continued growth potential.
 
-            Investment opportunities remain attractive with luxury properties showing premium positioning and strong fundamentals. The {inventory_summary['luxury_absorption_rate']}-month absorption rate suggests healthy market velocity, creating optimal conditions for strategic acquisitions and portfolio expansion.
+            Investment opportunities remain attractive with luxury properties showing premium positioning and strong fundamentals. The {inventory_summary["luxury_absorption_rate"]}-month absorption rate suggests healthy market velocity, creating optimal conditions for strategic acquisitions and portfolio expansion.
 
             Technology-enhanced service delivery and AI-powered market intelligence provide significant competitive advantages for premium-positioned agents, justifying higher commission rates through superior client value and market insight delivery.
             """
 
 
 # Utility functions and testing
+
 
 async def test_luxury_market_integration():
     """Test the luxury market data integration system"""
@@ -990,7 +1001,7 @@ async def test_luxury_market_integration():
     print(f"Appreciation Forecast: {market_report['investment_outlook']['appreciation_forecast']:.1f}%")
 
     print(f"\nExecutive Summary Preview:")
-    print(market_report['executive_summary'][:200] + "...")
+    print(market_report["executive_summary"][:200] + "...")
 
     return integrator
 

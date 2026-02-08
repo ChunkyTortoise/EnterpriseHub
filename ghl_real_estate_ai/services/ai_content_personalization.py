@@ -59,9 +59,7 @@ class AIContentPersonalizationService:
         else:
             return await self._auto_personalization(lead_id, lead_data)
 
-    async def _property_recommendations(
-        self, lead_id: str, lead_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _property_recommendations(self, lead_id: str, lead_data: Dict[str, Any]) -> Dict[str, Any]:
         """Generate personalized property recommendations"""
 
         preferences = lead_data.get("preferences", {})
@@ -129,9 +127,7 @@ class AIContentPersonalizationService:
             "timestamp": datetime.now().isoformat(),
         }
 
-    async def _email_personalization(
-        self, lead_id: str, lead_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _email_personalization(self, lead_id: str, lead_data: Dict[str, Any]) -> Dict[str, Any]:
         """Personalize email content"""
 
         name = lead_data.get("name", "Valued Client")
@@ -169,9 +165,7 @@ class AIContentPersonalizationService:
             "a_b_test_variant": "A" if engagement > 60 else "B",
         }
 
-    async def _landing_page_personalization(
-        self, lead_id: str, lead_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _landing_page_personalization(self, lead_id: str, lead_data: Dict[str, Any]) -> Dict[str, Any]:
         """Personalize landing page experience"""
 
         source = lead_data.get("source", "organic")
@@ -183,9 +177,7 @@ class AIContentPersonalizationService:
             "page_config": {
                 "hero_headline": f"Find Your Perfect Home in {location}",
                 "hero_subtext": "Personalized property matches based on your preferences",
-                "cta_text": (
-                    "See My Matches" if source == "paid" else "Explore Properties"
-                ),
+                "cta_text": ("See My Matches" if source == "paid" else "Explore Properties"),
                 "featured_properties": 3,
                 "layout": "mobile_optimized" if device == "mobile" else "desktop_full",
                 "testimonial_focus": "local" if location != "Unknown" else "general",
@@ -198,9 +190,7 @@ class AIContentPersonalizationService:
             ],
         }
 
-    async def _messaging_personalization(
-        self, lead_id: str, lead_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _messaging_personalization(self, lead_id: str, lead_data: Dict[str, Any]) -> Dict[str, Any]:
         """Personalize chat/SMS messaging"""
 
         engagement = lead_data.get("engagement_score", 50)
@@ -214,9 +204,7 @@ class AIContentPersonalizationService:
             message = "I have some exciting new listings to share. Interested?"
         else:
             urgency = "low"
-            message = (
-                "Hope you're doing well! Just checking in to see if you need anything."
-            )
+            message = "Hope you're doing well! Just checking in to see if you need anything."
 
         return {
             "lead_id": lead_id,
@@ -226,9 +214,7 @@ class AIContentPersonalizationService:
             "follow_up_timing": f"{response_time} hours",
         }
 
-    async def _auto_personalization(
-        self, lead_id: str, lead_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _auto_personalization(self, lead_id: str, lead_data: Dict[str, Any]) -> Dict[str, Any]:
         """Automatic multi-channel personalization"""
 
         property_recs = await self._property_recommendations(lead_id, lead_data)
@@ -290,12 +276,17 @@ class AIContentPersonalizationService:
         """
         Generate a personalized outreach message using Claude AI.
         """
-        from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator, ClaudeTaskType, ClaudeRequest
         import asyncio
-        
+
+        from ghl_real_estate_ai.services.claude_orchestrator import (
+            ClaudeRequest,
+            ClaudeTaskType,
+            get_claude_orchestrator,
+        )
+
         orchestrator = get_claude_orchestrator()
-        location_id = context.get('location_id', 'unknown')
-        
+        location_id = context.get("location_id", "unknown")
+
         prompt = f"""
         Generate a highly personalized real estate outreach message for {lead_name}.
         
@@ -318,25 +309,27 @@ class AIContentPersonalizationService:
             except RuntimeError:
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
-            
+
             request = ClaudeRequest(
                 task_type=ClaudeTaskType.SCRIPT_GENERATION,
                 context={"lead_name": lead_name, "channel": channel},
                 prompt=prompt,
-                temperature=0.7
+                temperature=0.7,
             )
-            
+
             response = loop.run_until_complete(orchestrator.process_request(request))
-            
+
             # Record usage
-            loop.run_until_complete(self.analytics.track_llm_usage(
-                location_id=location_id,
-                model=response.model or "claude-3-5-sonnet",
-                provider=response.provider or "claude",
-                input_tokens=response.input_tokens or 0,
-                output_tokens=response.output_tokens or 0,
-                cached=False
-            ))
+            loop.run_until_complete(
+                self.analytics.track_llm_usage(
+                    location_id=location_id,
+                    model=response.model or "claude-3-5-sonnet",
+                    provider=response.provider or "claude",
+                    input_tokens=response.input_tokens or 0,
+                    output_tokens=response.output_tokens or 0,
+                    cached=False,
+                )
+            )
 
             return response.content
         except Exception as e:
@@ -346,7 +339,7 @@ class AIContentPersonalizationService:
 
     def _generate_fallback_content(self, lead_name: str, channel: str, tone: str, context: Dict) -> str:
         """Legacy template-based content generation for fallback cases."""
-        first_name = lead_name.split(' ')[0]
+        first_name = lead_name.split(" ")[0]
         if "SMS" in channel:
             return f"Hi {first_name}, it's [Agent]. I've got some new [Market] updates for you. Text me when free!"
         return f"Hello {first_name}, I'm following up on your property search in [Market]..."

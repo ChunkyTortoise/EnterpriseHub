@@ -1,16 +1,16 @@
 """Tests for the EmbeddingProvider abstract base class and EmbeddingConfig."""
 
 import math
-import pytest
 from typing import Any, List
 
+import pytest
 from src.core.exceptions import EmbeddingError
 from src.embeddings.base import EmbeddingConfig, EmbeddingProvider
-
 
 # ---------------------------------------------------------------------------
 # Concrete test implementation
 # ---------------------------------------------------------------------------
+
 
 class ConcreteEmbeddingProvider(EmbeddingProvider):
     """Minimal concrete implementation for testing the ABC."""
@@ -30,6 +30,7 @@ class ConcreteEmbeddingProvider(EmbeddingProvider):
 # ---------------------------------------------------------------------------
 # TestEmbeddingConfig
 # ---------------------------------------------------------------------------
+
 
 class TestEmbeddingConfig:
     """Tests for EmbeddingConfig dataclass."""
@@ -63,6 +64,7 @@ class TestEmbeddingConfig:
 # ---------------------------------------------------------------------------
 # TestEmbeddingProvider
 # ---------------------------------------------------------------------------
+
 
 class TestEmbeddingProvider:
     """Tests for the EmbeddingProvider ABC."""

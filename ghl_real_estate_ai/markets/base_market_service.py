@@ -18,15 +18,15 @@ Created: 2026-01-19
 
 import asyncio
 import json
-from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass
 import logging
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
 
-from ..services.cache_service import get_cache_service
 from ..ghl_utils.logger import get_logger
-from .config_schemas import MarketConfig, PropertyType, MarketCondition
+from ..services.cache_service import get_cache_service
+from .config_schemas import MarketCondition, MarketConfig, PropertyType
 
 logger = get_logger(__name__)
 
@@ -34,6 +34,7 @@ logger = get_logger(__name__)
 @dataclass
 class PropertyListing:
     """Generic property listing structure (market-agnostic)"""
+
     mls_id: str
     address: str
     price: float
@@ -59,6 +60,7 @@ class PropertyListing:
 @dataclass
 class MarketMetrics:
     """Generic market performance metrics (market-agnostic)"""
+
     median_price: float
     average_days_on_market: int
     inventory_count: int
@@ -76,6 +78,7 @@ class MarketMetrics:
 @dataclass
 class NeighborhoodAnalysis:
     """Generic neighborhood analysis (market-agnostic)"""
+
     name: str
     zone: str
     median_price: float
@@ -111,12 +114,8 @@ class BaseMarketService(ABC):
         self.market_name = market_config.market_name
 
         # Create lookup dictionaries from config
-        self.neighborhoods_lookup = {
-            n.name.lower(): n for n in market_config.neighborhoods
-        }
-        self.employers_lookup = {
-            e.employer_id: e for e in market_config.employers
-        }
+        self.neighborhoods_lookup = {n.name.lower(): n for n in market_config.neighborhoods}
+        self.employers_lookup = {e.employer_id: e for e in market_config.employers}
 
         logger.info(f"Initialized {self.__class__.__name__} for {self.market_name}")
 
@@ -128,7 +127,7 @@ class BaseMarketService(ABC):
         self,
         neighborhood: Optional[str] = None,
         property_type: Optional[PropertyType] = None,
-        price_range: Optional[Tuple[float, float]] = None
+        price_range: Optional[Tuple[float, float]] = None,
     ) -> MarketMetrics:
         """Get real-time market metrics with optional filtering"""
         cache_key = f"market_metrics:{self.market_id}:{neighborhood}:{property_type}:{price_range}"
@@ -148,11 +147,7 @@ class BaseMarketService(ABC):
 
         return metrics
 
-    async def search_properties(
-        self,
-        criteria: Dict[str, Any],
-        limit: int = 50
-    ) -> List[PropertyListing]:
+    async def search_properties(self, criteria: Dict[str, Any], limit: int = 50) -> List[PropertyListing]:
         """
         Search MLS properties with comprehensive criteria
 
@@ -206,7 +201,7 @@ class BaseMarketService(ABC):
             amenities=neighborhood_config.amenities,
             demographics=neighborhood_config.demographics,
             market_condition=MarketCondition.BALANCED,  # Default, can be enhanced
-            coordinates=neighborhood_config.coordinates
+            coordinates=neighborhood_config.coordinates,
         )
 
         # Enhance with real-time data
@@ -236,9 +231,7 @@ class BaseMarketService(ABC):
         return district_info
 
     async def get_corporate_relocation_insights(
-        self,
-        employer_id: str,
-        role_level: str = "individual_contributor"
+        self, employer_id: str, role_level: str = "individual_contributor"
     ) -> Dict[str, Any]:
         """Get corporate relocation insights for specific employer"""
         cache_key = f"corporate_insights:{self.market_id}:{employer_id}:{role_level}"
@@ -258,17 +251,14 @@ class BaseMarketService(ABC):
                 "name": employer.name,
                 "industry": employer.industry,
                 "location": employer.location,
-                "employee_count": employer.employee_count
+                "employee_count": employer.employee_count,
             },
             "preferred_neighborhoods": [],
             "salary_context": {
                 "range": employer.average_salary_range,
-                "market_comparison": "competitive"  # Could be enhanced
+                "market_comparison": "competitive",  # Could be enhanced
             },
-            "relocation_timing": {
-                "frequency": employer.relocation_frequency,
-                "peak_seasons": employer.hiring_seasons
-            }
+            "relocation_timing": {"frequency": employer.relocation_frequency, "peak_seasons": employer.hiring_seasons},
         }
 
         # Add neighborhood recommendations
@@ -278,13 +268,15 @@ class BaseMarketService(ABC):
                 # Calculate commute time (placeholder - could be enhanced with real routing)
                 commute_time = neighborhood_config.corporate_proximity.get(employer.employer_id, 25)
 
-                insights["preferred_neighborhoods"].append({
-                    "name": neighborhood_config.name,
-                    "median_price": neighborhood_config.median_price,
-                    "school_rating": neighborhood_config.school_rating,
-                    "commute_minutes": commute_time,
-                    "appeal_scores": neighborhood_config.appeal_scores
-                })
+                insights["preferred_neighborhoods"].append(
+                    {
+                        "name": neighborhood_config.name,
+                        "median_price": neighborhood_config.median_price,
+                        "school_rating": neighborhood_config.school_rating,
+                        "commute_minutes": commute_time,
+                        "appeal_scores": neighborhood_config.appeal_scores,
+                    }
+                )
 
         # Cache for 6 hours
         await self.cache.set(cache_key, insights, ttl=21600)
@@ -293,9 +285,7 @@ class BaseMarketService(ABC):
         return insights
 
     async def get_commute_analysis(
-        self,
-        home_location: Tuple[float, float],
-        work_locations: List[Tuple[float, float]]
+        self, home_location: Tuple[float, float], work_locations: List[Tuple[float, float]]
     ) -> Dict[str, Any]:
         """Analyze commute times and transportation options"""
         cache_key = f"commute_analysis:{self.market_id}:{home_location}:{hash(str(work_locations))}"
@@ -351,15 +341,11 @@ class BaseMarketService(ABC):
                 "neighborhoods_count": len(self.config.neighborhoods),
                 "employers_count": len(self.config.employers),
                 "cache_available": cache_healthy,
-                "last_check": datetime.now().isoformat()
+                "last_check": datetime.now().isoformat(),
             }
 
         except Exception as e:
-            return {
-                "status": "unhealthy",
-                "error": str(e),
-                "last_check": datetime.now().isoformat()
-            }
+            return {"status": "unhealthy", "error": str(e), "last_check": datetime.now().isoformat()}
 
     # =============================================================================
     # ABSTRACT METHODS (Market-Specific Implementation Required)
@@ -370,17 +356,13 @@ class BaseMarketService(ABC):
         self,
         neighborhood: Optional[str] = None,
         property_type: Optional[PropertyType] = None,
-        price_range: Optional[Tuple[float, float]] = None
+        price_range: Optional[Tuple[float, float]] = None,
     ) -> MarketMetrics:
         """Fetch real-time market metrics from MLS or other data sources"""
         pass
 
     @abstractmethod
-    async def _search_mls_properties(
-        self,
-        criteria: Dict[str, Any],
-        limit: int = 50
-    ) -> List[PropertyListing]:
+    async def _search_mls_properties(self, criteria: Dict[str, Any], limit: int = 50) -> List[PropertyListing]:
         """Search MLS properties with market-specific implementation"""
         pass
 
@@ -403,9 +385,7 @@ class BaseMarketService(ABC):
         return analysis
 
     async def _analyze_commute_patterns(
-        self,
-        home_location: Tuple[float, float],
-        work_locations: List[Tuple[float, float]]
+        self, home_location: Tuple[float, float], work_locations: List[Tuple[float, float]]
     ) -> Dict[str, Any]:
         """
         Analyze commute patterns
@@ -414,23 +394,21 @@ class BaseMarketService(ABC):
         Subclasses can override for routing API integration.
         """
         # Basic implementation using straight-line distance
-        commute_data = {
-            "home_location": home_location,
-            "work_locations": work_locations,
-            "estimated_commutes": []
-        }
+        commute_data = {"home_location": home_location, "work_locations": work_locations, "estimated_commutes": []}
 
         for i, work_location in enumerate(work_locations):
             # Simple distance calculation (could be enhanced with real routing)
             distance = self._calculate_distance(home_location, work_location)
             estimated_time = distance * 2  # Rough estimate: 2 minutes per mile
 
-            commute_data["estimated_commutes"].append({
-                "destination_index": i,
-                "distance_miles": round(distance, 1),
-                "estimated_time_minutes": round(estimated_time, 0),
-                "transportation_options": ["driving", "transit"]  # Could be enhanced
-            })
+            commute_data["estimated_commutes"].append(
+                {
+                    "destination_index": i,
+                    "distance_miles": round(distance, 1),
+                    "estimated_time_minutes": round(estimated_time, 0),
+                    "transportation_options": ["driving", "transit"],  # Could be enhanced
+                }
+            )
 
         return commute_data
 
@@ -440,7 +418,7 @@ class BaseMarketService(ABC):
             "scenario": scenario,
             "market_condition": metrics.market_condition.value,
             "recommendations": [],
-            "key_factors": []
+            "key_factors": [],
         }
 
         # Basic timing logic (could be enhanced with more sophisticated analysis)
@@ -477,7 +455,7 @@ class BaseMarketService(ABC):
         # Haversine formula
         dlat = lat2 - lat1
         dlon = lon2 - lon1
-        a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+        a = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
         c = 2 * math.asin(math.sqrt(a))
 
         # Radius of Earth in miles
@@ -488,6 +466,7 @@ class BaseMarketService(ABC):
 # =============================================================================
 # CONCRETE IMPLEMENTATION FOR EXISTING MARKETS
 # =============================================================================
+
 
 class ConfigDrivenMarketService(BaseMarketService):
     """
@@ -501,7 +480,7 @@ class ConfigDrivenMarketService(BaseMarketService):
         self,
         neighborhood: Optional[str] = None,
         property_type: Optional[PropertyType] = None,
-        price_range: Optional[Tuple[float, float]] = None
+        price_range: Optional[Tuple[float, float]] = None,
     ) -> MarketMetrics:
         """Mock implementation - should be overridden with real MLS integration"""
         # For now, return mock data based on market configuration
@@ -519,14 +498,10 @@ class ConfigDrivenMarketService(BaseMarketService):
             closed_sales_30d=120,
             pending_sales=85,
             absorption_rate=0.85,
-            market_condition=MarketCondition.BALANCED
+            market_condition=MarketCondition.BALANCED,
         )
 
-    async def _search_mls_properties(
-        self,
-        criteria: Dict[str, Any],
-        limit: int = 50
-    ) -> List[PropertyListing]:
+    async def _search_mls_properties(self, criteria: Dict[str, Any], limit: int = 50) -> List[PropertyListing]:
         """Mock implementation - should be overridden with real MLS integration"""
         # Return empty list for now - real implementation would connect to MLS
         logger.warning(f"Mock MLS search for {self.market_name} - no real data available")
@@ -541,5 +516,5 @@ class ConfigDrivenMarketService(BaseMarketService):
             "schools": [],
             "boundaries": None,
             "enrollment": None,
-            "note": "Mock data - replace with real school district API"
+            "note": "Mock data - replace with real school district API",
         }

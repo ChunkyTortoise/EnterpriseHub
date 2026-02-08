@@ -5,16 +5,17 @@ Provides configuration-driven service registration with support for
 environment-specific configurations and automatic service discovery.
 """
 
-import os
-import json
-import yaml
-from pathlib import Path
-from typing import Dict, Any, List, Type, Optional, Union, Callable
-from dataclasses import dataclass, field
-from abc import ABC, abstractmethod
 import importlib
 import inspect
+import json
 import logging
+import os
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Type, Union
+
+import yaml
 
 from .container import DIContainer, ServiceLifetime
 
@@ -24,6 +25,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ServiceConfig:
     """Configuration for a single service"""
+
     name: str
     service_type: str  # Full class path or interface name
     implementation: Optional[str] = None  # Full class path
@@ -39,6 +41,7 @@ class ServiceConfig:
 @dataclass
 class EnvironmentConfig:
     """Environment-specific configuration"""
+
     name: str
     services: List[ServiceConfig] = field(default_factory=list)
     variables: Dict[str, Any] = field(default_factory=dict)
@@ -65,14 +68,14 @@ class YamlConfigurationProvider(IServiceConfigurationProvider):
 
     async def load_configuration(self, environment: str = "development") -> EnvironmentConfig:
         """Load YAML configuration"""
-        with open(self.config_path, 'r') as f:
+        with open(self.config_path, "r") as f:
             config_data = yaml.safe_load(f)
 
         # Load environment-specific config
-        env_config = config_data.get('environments', {}).get(environment, {})
+        env_config = config_data.get("environments", {}).get(environment, {})
 
         # Load base configuration
-        base_config = config_data.get('base', {})
+        base_config = config_data.get("base", {})
 
         # Merge configurations
         merged_config = self._merge_configs(base_config, env_config)
@@ -84,17 +87,17 @@ class YamlConfigurationProvider(IServiceConfigurationProvider):
         merged = base.copy()
 
         for key, value in override.items():
-            if key == 'services':
+            if key == "services":
                 # Merge service lists
-                merged_services = {s['name']: s for s in merged.get('services', [])}
+                merged_services = {s["name"]: s for s in merged.get("services", [])}
                 for service in value:
-                    if service['name'] in merged_services:
+                    if service["name"] in merged_services:
                         # Update existing service
-                        merged_services[service['name']].update(service)
+                        merged_services[service["name"]].update(service)
                     else:
                         # Add new service
-                        merged_services[service['name']] = service
-                merged['services'] = list(merged_services.values())
+                        merged_services[service["name"]] = service
+                merged["services"] = list(merged_services.values())
             elif isinstance(value, dict) and key in merged:
                 # Merge dictionaries recursively
                 merged[key] = self._merge_configs(merged[key], value)
@@ -107,27 +110,27 @@ class YamlConfigurationProvider(IServiceConfigurationProvider):
     def _parse_environment_config(self, environment: str, config_data: Dict[str, Any]) -> EnvironmentConfig:
         """Parse configuration data into EnvironmentConfig"""
         services = []
-        for service_data in config_data.get('services', []):
+        for service_data in config_data.get("services", []):
             service_config = ServiceConfig(
-                name=service_data['name'],
-                service_type=service_data['service_type'],
-                implementation=service_data.get('implementation'),
-                lifetime=service_data.get('lifetime', 'singleton'),
-                factory=service_data.get('factory'),
-                tags=service_data.get('tags', []),
-                configuration=service_data.get('configuration', {}),
-                health_check=service_data.get('health_check'),
-                dependencies=service_data.get('dependencies', []),
-                condition=service_data.get('condition')
+                name=service_data["name"],
+                service_type=service_data["service_type"],
+                implementation=service_data.get("implementation"),
+                lifetime=service_data.get("lifetime", "singleton"),
+                factory=service_data.get("factory"),
+                tags=service_data.get("tags", []),
+                configuration=service_data.get("configuration", {}),
+                health_check=service_data.get("health_check"),
+                dependencies=service_data.get("dependencies", []),
+                condition=service_data.get("condition"),
             )
             services.append(service_config)
 
         return EnvironmentConfig(
             name=environment,
             services=services,
-            variables=config_data.get('variables', {}),
-            imports=config_data.get('imports', []),
-            extends=config_data.get('extends')
+            variables=config_data.get("variables", {}),
+            imports=config_data.get("imports", []),
+            extends=config_data.get("extends"),
         )
 
 
@@ -141,24 +144,24 @@ class JsonConfigurationProvider(IServiceConfigurationProvider):
 
     async def load_configuration(self, environment: str = "development") -> EnvironmentConfig:
         """Load JSON configuration"""
-        with open(self.config_path, 'r') as f:
+        with open(self.config_path, "r") as f:
             config_data = json.load(f)
 
-        env_config = config_data.get('environments', {}).get(environment, config_data)
+        env_config = config_data.get("environments", {}).get(environment, config_data)
         return self._parse_environment_config(environment, env_config)
 
     def _parse_environment_config(self, environment: str, config_data: Dict[str, Any]) -> EnvironmentConfig:
         """Parse JSON configuration"""
         services = []
-        for service_data in config_data.get('services', []):
+        for service_data in config_data.get("services", []):
             service_config = ServiceConfig(**service_data)
             services.append(service_config)
 
         return EnvironmentConfig(
             name=environment,
             services=services,
-            variables=config_data.get('variables', {}),
-            imports=config_data.get('imports', [])
+            variables=config_data.get("variables", {}),
+            imports=config_data.get("imports", []),
         )
 
 
@@ -176,11 +179,11 @@ class EnvironmentVariableProvider(IServiceConfigurationProvider):
         # Parse environment variables
         for key, value in os.environ.items():
             if key.startswith(self.prefix):
-                clean_key = key[len(self.prefix):].lower()
+                clean_key = key[len(self.prefix) :].lower()
 
-                if clean_key.startswith('service_'):
+                if clean_key.startswith("service_"):
                     # Service configuration
-                    service_name = clean_key.split('_', 1)[1]
+                    service_name = clean_key.split("_", 1)[1]
                     service_config = self._parse_service_env_var(service_name, value)
                     if service_config:
                         services.append(service_config)
@@ -188,20 +191,13 @@ class EnvironmentVariableProvider(IServiceConfigurationProvider):
                     # General variable
                     variables[clean_key] = value
 
-        return EnvironmentConfig(
-            name=environment,
-            services=services,
-            variables=variables
-        )
+        return EnvironmentConfig(name=environment, services=services, variables=variables)
 
     def _parse_service_env_var(self, service_name: str, config_value: str) -> Optional[ServiceConfig]:
         """Parse service configuration from environment variable"""
         try:
             config_data = json.loads(config_value)
-            return ServiceConfig(
-                name=service_name,
-                **config_data
-            )
+            return ServiceConfig(name=service_name, **config_data)
         except (json.JSONDecodeError, TypeError):
             logger.warning(f"Invalid service configuration for {service_name}: {config_value}")
             return None
@@ -214,8 +210,9 @@ class ServiceRegistrar:
         self.container = container
         self._loaded_modules = set()
 
-    async def register_from_config(self, config_provider: IServiceConfigurationProvider,
-                                  environment: str = "development") -> None:
+    async def register_from_config(
+        self, config_provider: IServiceConfigurationProvider, environment: str = "development"
+    ) -> None:
         """Register services from configuration"""
         config = await config_provider.load_configuration(environment)
 
@@ -270,7 +267,7 @@ class ServiceRegistrar:
             factory=factory,
             tags=config.tags,
             configuration=resolved_config,
-            health_check=health_check
+            health_check=health_check,
         )
 
         logger.debug(f"Registered service '{config.name}' of type {service_type.__name__}")
@@ -290,13 +287,13 @@ class ServiceRegistrar:
 
     def _resolve_type(self, type_path: str) -> Type:
         """Resolve type from string path"""
-        module_path, class_name = type_path.rsplit('.', 1)
+        module_path, class_name = type_path.rsplit(".", 1)
         module = importlib.import_module(module_path)
         return getattr(module, class_name)
 
     def _resolve_callable(self, callable_path: str) -> Callable:
         """Resolve callable from string path"""
-        module_path, func_name = callable_path.rsplit('.', 1)
+        module_path, func_name = callable_path.rsplit(".", 1)
         module = importlib.import_module(module_path)
         return getattr(module, func_name)
 
@@ -330,8 +327,7 @@ class ServiceRegistrar:
                 result[key] = self._substitute_variables(value, variables)
             elif isinstance(value, list):
                 result[key] = [
-                    self._substitute_variables(item, variables) if isinstance(item, dict)
-                    else item for item in value
+                    self._substitute_variables(item, variables) if isinstance(item, dict) else item for item in value
                 ]
             else:
                 result[key] = value
@@ -345,9 +341,9 @@ class ServiceDiscovery:
     def __init__(self, container: DIContainer):
         self.container = container
 
-    async def discover_and_register(self, packages: List[str],
-                                   service_marker: str = "__service__",
-                                   auto_register: bool = True) -> List[str]:
+    async def discover_and_register(
+        self, packages: List[str], service_marker: str = "__service__", auto_register: bool = True
+    ) -> List[str]:
         """Discover and register services from packages"""
         discovered_services = []
 
@@ -376,8 +372,8 @@ class ServiceDiscovery:
                 if inspect.isclass(obj) and hasattr(obj, marker):
                     service_info = getattr(obj, marker)
                     if isinstance(service_info, dict):
-                        service_info['implementation'] = obj
-                        service_info['name'] = service_info.get('name', name)
+                        service_info["implementation"] = obj
+                        service_info["name"] = service_info.get("name", name)
                         services.append(service_info)
 
         except ImportError as e:
@@ -387,15 +383,15 @@ class ServiceDiscovery:
 
     async def _auto_register_service(self, service_info: Dict[str, Any]) -> None:
         """Auto-register discovered service"""
-        implementation = service_info['implementation']
-        name = service_info['name']
+        implementation = service_info["implementation"]
+        name = service_info["name"]
 
         # Determine service type (use first interface or implementation itself)
         service_type = implementation
 
         # Get base classes that look like interfaces
         for base in implementation.__mro__[1:]:  # Skip self
-            if base.__name__.startswith('I') and hasattr(base, '__abstractmethods__'):
+            if base.__name__.startswith("I") and hasattr(base, "__abstractmethods__"):
                 service_type = base
                 break
 
@@ -404,42 +400,51 @@ class ServiceDiscovery:
             service_type=service_type,
             implementation=implementation,
             name=name,
-            tags=service_info.get('tags', []),
-            configuration=service_info.get('configuration', {})
+            tags=service_info.get("tags", []),
+            configuration=service_info.get("configuration", {}),
         )
 
         logger.debug(f"Auto-registered service '{name}' of type {service_type.__name__}")
 
 
 # Decorators for service marking
-def service(name: Optional[str] = None, lifetime: str = "singleton",
-           tags: Optional[List[str]] = None, configuration: Optional[Dict[str, Any]] = None):
+def service(
+    name: Optional[str] = None,
+    lifetime: str = "singleton",
+    tags: Optional[List[str]] = None,
+    configuration: Optional[Dict[str, Any]] = None,
+):
     """Decorator to mark class as a service"""
+
     def decorator(cls):
         cls.__service__ = {
-            'name': name or cls.__name__,
-            'lifetime': lifetime,
-            'tags': tags or [],
-            'configuration': configuration or {}
+            "name": name or cls.__name__,
+            "lifetime": lifetime,
+            "tags": tags or [],
+            "configuration": configuration or {},
         }
         return cls
+
     return decorator
 
 
-def singleton(name: Optional[str] = None, tags: Optional[List[str]] = None,
-             configuration: Optional[Dict[str, Any]] = None):
+def singleton(
+    name: Optional[str] = None, tags: Optional[List[str]] = None, configuration: Optional[Dict[str, Any]] = None
+):
     """Mark class as singleton service"""
     return service(name, "singleton", tags, configuration)
 
 
-def transient(name: Optional[str] = None, tags: Optional[List[str]] = None,
-             configuration: Optional[Dict[str, Any]] = None):
+def transient(
+    name: Optional[str] = None, tags: Optional[List[str]] = None, configuration: Optional[Dict[str, Any]] = None
+):
     """Mark class as transient service"""
     return service(name, "transient", tags, configuration)
 
 
-def scoped(name: Optional[str] = None, tags: Optional[List[str]] = None,
-          configuration: Optional[Dict[str, Any]] = None):
+def scoped(
+    name: Optional[str] = None, tags: Optional[List[str]] = None, configuration: Optional[Dict[str, Any]] = None
+):
     """Mark class as scoped service"""
     return service(name, "scoped", tags, configuration)
 
@@ -455,16 +460,16 @@ class RealEstateServiceRegistrar:
         """Register all property-related services"""
 
         # Register repositories based on configuration
-        await self._register_repositories(config.get('repositories', {}))
+        await self._register_repositories(config.get("repositories", {}))
 
         # Register scoring services
-        await self._register_scoring_services(config.get('scoring', {}))
+        await self._register_scoring_services(config.get("scoring", {}))
 
         # Register caching services
-        await self._register_caching_services(config.get('caching', {}))
+        await self._register_caching_services(config.get("caching", {}))
 
         # Register monitoring services
-        await self._register_monitoring_services(config.get('monitoring', {}))
+        await self._register_monitoring_services(config.get("monitoring", {}))
 
     async def _register_repositories(self, config: Dict[str, Any]) -> None:
         """Register repository services"""
@@ -472,11 +477,7 @@ class RealEstateServiceRegistrar:
         from ..repositories.repository_factory import RepositoryFactory
 
         # Register repository factory as singleton
-        self.container.register_singleton(
-            RepositoryFactory,
-            name="RepositoryFactory",
-            tags=["repository", "factory"]
-        )
+        self.container.register_singleton(RepositoryFactory, name="RepositoryFactory", tags=["repository", "factory"])
 
         # Register specific repositories based on config
         for repo_name, repo_config in config.items():
@@ -486,21 +487,24 @@ class RealEstateServiceRegistrar:
         """Register single repository service"""
         from ..repositories.interfaces import IPropertyRepository
 
-        def repository_factory(factory: 'RepositoryFactory') -> IPropertyRepository:
+        def repository_factory(factory: "RepositoryFactory") -> IPropertyRepository:
             import asyncio
-            return asyncio.run(factory.create(
-                repository_type=config['type'],
-                config=config.get('config', {}),
-                enable_caching=config.get('enable_caching', True),
-                cache_config=config.get('cache_config', {})
-            ))
+
+            return asyncio.run(
+                factory.create(
+                    repository_type=config["type"],
+                    config=config.get("config", {}),
+                    enable_caching=config.get("enable_caching", True),
+                    cache_config=config.get("cache_config", {}),
+                )
+            )
 
         self.container.register_singleton(
             IPropertyRepository,
             name=name,
             factory=repository_factory,
-            tags=["repository", config.get('type', 'unknown')],
-            configuration=config
+            tags=["repository", config.get("type", "unknown")],
+            configuration=config,
         )
 
     async def _register_scoring_services(self, config: Dict[str, Any]) -> None:
@@ -511,15 +515,12 @@ class RealEstateServiceRegistrar:
     async def _register_caching_services(self, config: Dict[str, Any]) -> None:
         """Register caching services"""
         # Register cache backends
-        if config.get('redis', {}).get('enabled', False):
+        if config.get("redis", {}).get("enabled", False):
             from ..repositories.caching_repository import RedisCacheBackend
 
-            redis_config = config['redis']
+            redis_config = config["redis"]
             self.container.register_singleton(
-                RedisCacheBackend,
-                name="RedisCacheBackend",
-                tags=["cache", "redis"],
-                configuration=redis_config
+                RedisCacheBackend, name="RedisCacheBackend", tags=["cache", "redis"], configuration=redis_config
             )
 
     async def _register_monitoring_services(self, config: Dict[str, Any]) -> None:

@@ -10,21 +10,25 @@ import json
 import threading
 import time
 import uuid
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional, Set
-from dataclasses import dataclass, asdict
 from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Set
+
 import streamlit as st
 
 try:
     import websockets
+
     WEBSOCKETS_AVAILABLE = True
 except ImportError:
     WEBSOCKETS_AVAILABLE = False
 
+
 @dataclass
 class RealtimeEvent:
     """Real-time event data structure"""
+
     id: str
     event_type: str
     timestamp: datetime
@@ -33,19 +37,19 @@ class RealtimeEvent:
     source: str = "system"
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
-            **asdict(self),
-            'timestamp': self.timestamp.isoformat()
-        }
+        return {**asdict(self), "timestamp": self.timestamp.isoformat()}
+
 
 class EventType(Enum):
     """Supported real-time event types"""
+
     LEAD_SCORE_UPDATE = "lead_score_update"
     NEW_ALERT = "new_alert"
     PERFORMANCE_UPDATE = "performance_update"
     ANALYTICS_UPDATE = "analytics_update"
     SYSTEM_STATUS = "system_status"
     USER_ACTION = "user_action"
+
 
 class RealtimeDataService:
     """
@@ -79,15 +83,15 @@ class RealtimeDataService:
 
         # Performance metrics
         self.metrics = {
-            'events_processed': 0,
-            'events_sent': 0,
-            'connection_errors': 0,
-            'cache_hits': 0,
-            'cache_misses': 0
+            "events_processed": 0,
+            "events_sent": 0,
+            "connection_errors": 0,
+            "cache_hits": 0,
+            "cache_misses": 0,
         }
 
         # Initialize session state
-        if 'realtime_service' not in st.session_state:
+        if "realtime_service" not in st.session_state:
             st.session_state.realtime_service = self
 
     def start(self) -> bool:
@@ -151,11 +155,11 @@ class RealtimeDataService:
 
                 except Exception as e:
                     self.connection_attempts += 1
-                    self.metrics['connection_errors'] += 1
+                    self.metrics["connection_errors"] += 1
                     print(f"WebSocket connection failed (attempt {self.connection_attempts}): {e}")
 
                     if self.connection_attempts < self.max_reconnect_attempts:
-                        await asyncio.sleep(2 ** self.connection_attempts)  # Exponential backoff
+                        await asyncio.sleep(2**self.connection_attempts)  # Exponential backoff
                         return await websocket_client()
                     else:
                         print("Max WebSocket reconnection attempts reached, falling back to polling")
@@ -177,6 +181,7 @@ class RealtimeDataService:
 
     def _start_polling(self):
         """Start polling fallback"""
+
         def poll_loop():
             while self.is_running:
                 try:
@@ -215,49 +220,55 @@ class RealtimeDataService:
 
         # Lead score update (30% chance)
         if random.random() < 0.3:
-            events.append(RealtimeEvent(
-                id=str(uuid.uuid4()),
-                event_type=EventType.LEAD_SCORE_UPDATE.value,
-                timestamp=current_time,
-                data={
-                    'lead_id': f'lead_{random.randint(1000, 9999)}',
-                    'score': random.randint(60, 95),
-                    'previous_score': random.randint(40, 80),
-                    'factors': ['engagement', 'budget_qualified', 'timeline_ready']
-                },
-                priority=2
-            ))
+            events.append(
+                RealtimeEvent(
+                    id=str(uuid.uuid4()),
+                    event_type=EventType.LEAD_SCORE_UPDATE.value,
+                    timestamp=current_time,
+                    data={
+                        "lead_id": f"lead_{random.randint(1000, 9999)}",
+                        "score": random.randint(60, 95),
+                        "previous_score": random.randint(40, 80),
+                        "factors": ["engagement", "budget_qualified", "timeline_ready"],
+                    },
+                    priority=2,
+                )
+            )
 
         # New alert (15% chance)
         if random.random() < 0.15:
-            alert_types = ['hot_lead', 'stale_lead', 'booking_reminder', 'follow_up_needed']
-            events.append(RealtimeEvent(
-                id=str(uuid.uuid4()),
-                event_type=EventType.NEW_ALERT.value,
-                timestamp=current_time,
-                data={
-                    'alert_type': random.choice(alert_types),
-                    'message': f'New {random.choice(alert_types).replace("_", " ")} detected',
-                    'lead_id': f'lead_{random.randint(1000, 9999)}',
-                    'action_required': True
-                },
-                priority=3
-            ))
+            alert_types = ["hot_lead", "stale_lead", "booking_reminder", "follow_up_needed"]
+            events.append(
+                RealtimeEvent(
+                    id=str(uuid.uuid4()),
+                    event_type=EventType.NEW_ALERT.value,
+                    timestamp=current_time,
+                    data={
+                        "alert_type": random.choice(alert_types),
+                        "message": f"New {random.choice(alert_types).replace('_', ' ')} detected",
+                        "lead_id": f"lead_{random.randint(1000, 9999)}",
+                        "action_required": True,
+                    },
+                    priority=3,
+                )
+            )
 
         # Performance update (20% chance)
         if random.random() < 0.2:
-            events.append(RealtimeEvent(
-                id=str(uuid.uuid4()),
-                event_type=EventType.PERFORMANCE_UPDATE.value,
-                timestamp=current_time,
-                data={
-                    'agent_id': f'agent_{random.randint(1, 10)}',
-                    'metric': random.choice(['calls_made', 'emails_sent', 'meetings_booked']),
-                    'value': random.randint(1, 50),
-                    'trend': random.choice(['up', 'down', 'stable'])
-                },
-                priority=1
-            ))
+            events.append(
+                RealtimeEvent(
+                    id=str(uuid.uuid4()),
+                    event_type=EventType.PERFORMANCE_UPDATE.value,
+                    timestamp=current_time,
+                    data={
+                        "agent_id": f"agent_{random.randint(1, 10)}",
+                        "metric": random.choice(["calls_made", "emails_sent", "meetings_booked"]),
+                        "value": random.randint(1, 50),
+                        "trend": random.choice(["up", "down", "stable"]),
+                    },
+                    priority=1,
+                )
+            )
 
         return events
 
@@ -270,11 +281,11 @@ class RealtimeDataService:
             # Check if this is a duplicate within 30 seconds
             cached_event = self.event_cache[event_key]
             if (event.timestamp - cached_event.timestamp).total_seconds() < 30:
-                self.metrics['cache_hits'] += 1
+                self.metrics["cache_hits"] += 1
                 return  # Skip duplicate
 
-        self.metrics['cache_misses'] += 1
-        self.metrics['events_processed'] += 1
+        self.metrics["cache_misses"] += 1
+        self.metrics["events_processed"] += 1
 
         # Add to queue and cache
         self.event_queue.append(event)
@@ -282,7 +293,7 @@ class RealtimeDataService:
 
         # Maintain queue size
         if len(self.event_queue) > self.max_events:
-            self.event_queue = self.event_queue[-self.max_events:]
+            self.event_queue = self.event_queue[-self.max_events :]
 
         # Notify subscribers
         self._notify_subscribers(event)
@@ -300,16 +311,14 @@ class RealtimeDataService:
                     print(f"Error in subscriber callback: {e}")
 
         # Notify all-events subscribers
-        if 'all' in self.subscribers:
-            for callback in self.subscribers['all']:
+        if "all" in self.subscribers:
+            for callback in self.subscribers["all"]:
                 try:
                     callback(event)
                 except Exception as e:
                     print(f"Error in all-events callback: {e}")
 
-        self.metrics['events_sent'] += len(
-            self.subscribers.get(event_type, []) + self.subscribers.get('all', [])
-        )
+        self.metrics["events_sent"] += len(self.subscribers.get(event_type, []) + self.subscribers.get("all", []))
 
     def subscribe(self, event_type: str, callback: Callable[[RealtimeEvent], None]) -> str:
         """Subscribe to events"""
@@ -329,10 +338,9 @@ class RealtimeDataService:
             except ValueError:
                 pass  # Callback not found
 
-    def get_recent_events(self,
-                         event_type: Optional[str] = None,
-                         limit: int = 50,
-                         since: Optional[datetime] = None) -> List[RealtimeEvent]:
+    def get_recent_events(
+        self, event_type: Optional[str] = None, limit: int = 50, since: Optional[datetime] = None
+    ) -> List[RealtimeEvent]:
         """Get recent events"""
         events = self.event_queue
 
@@ -357,7 +365,7 @@ class RealtimeDataService:
             timestamp=datetime.now(),
             data=data,
             priority=priority,
-            source="user"
+            source="user",
         )
 
         self._process_event(event)
@@ -366,24 +374,25 @@ class RealtimeDataService:
         """Get service performance metrics"""
         return {
             **self.metrics,
-            'is_running': self.is_running,
-            'use_websocket': self.use_websocket,
-            'websockets_available': WEBSOCKETS_AVAILABLE,
-            'queue_size': len(self.event_queue),
-            'cache_size': len(self.event_cache),
-            'subscribers': {k: len(v) for k, v in self.subscribers.items()},
-            'uptime_seconds': (datetime.now() - self.last_poll_time).total_seconds()
+            "is_running": self.is_running,
+            "use_websocket": self.use_websocket,
+            "websockets_available": WEBSOCKETS_AVAILABLE,
+            "queue_size": len(self.event_queue),
+            "cache_size": len(self.event_cache),
+            "subscribers": {k: len(v) for k, v in self.subscribers.items()},
+            "uptime_seconds": (datetime.now() - self.last_poll_time).total_seconds(),
         }
 
     def clear_cache(self):
         """Clear event cache"""
         self.event_cache.clear()
-        self.metrics['cache_hits'] = 0
-        self.metrics['cache_misses'] = 0
+        self.metrics["cache_hits"] = 0
+        self.metrics["cache_misses"] = 0
 
 
 # Singleton instance for global access
 _realtime_service_instance = None
+
 
 def get_realtime_service(use_websocket: bool = True, poll_interval: int = 2) -> RealtimeDataService:
     """Get or create singleton real-time service instance"""
@@ -399,15 +408,16 @@ def get_realtime_service(use_websocket: bool = True, poll_interval: int = 2) -> 
 # Streamlit helper functions
 def init_realtime_dashboard():
     """Initialize real-time dashboard in Streamlit"""
-    if 'realtime_initialized' not in st.session_state:
+    if "realtime_initialized" not in st.session_state:
         st.session_state.realtime_service = get_realtime_service()
         st.session_state.realtime_initialized = True
 
         # Auto-refresh every 2 seconds
-        if 'auto_refresh' not in st.session_state:
+        if "auto_refresh" not in st.session_state:
             st.session_state.auto_refresh = True
 
     return st.session_state.realtime_service
+
 
 @st.cache_data(ttl=1)  # Cache for 1 second to prevent excessive API calls
 def get_cached_events(event_type: Optional[str] = None, limit: int = 50):
@@ -428,18 +438,27 @@ class DemoDataGenerator:
         leads = []
         for i in range(count):
             score = random.randint(30, 95)
-            leads.append({
-                'id': f'lead_{1000 + i}',
-                'name': f'Lead {i + 1}',
-                'score': score,
-                'previous_score': score + random.randint(-15, 15),
-                'status': 'hot' if score > 80 else 'warm' if score > 60 else 'cold',
-                'factors': random.sample([
-                    'budget_qualified', 'timeline_ready', 'decision_maker',
-                    'high_engagement', 'referral_source', 'repeat_customer'
-                ], random.randint(2, 4)),
-                'last_activity': datetime.now() - timedelta(minutes=random.randint(1, 60))
-            })
+            leads.append(
+                {
+                    "id": f"lead_{1000 + i}",
+                    "name": f"Lead {i + 1}",
+                    "score": score,
+                    "previous_score": score + random.randint(-15, 15),
+                    "status": "hot" if score > 80 else "warm" if score > 60 else "cold",
+                    "factors": random.sample(
+                        [
+                            "budget_qualified",
+                            "timeline_ready",
+                            "decision_maker",
+                            "high_engagement",
+                            "referral_source",
+                            "repeat_customer",
+                        ],
+                        random.randint(2, 4),
+                    ),
+                    "last_activity": datetime.now() - timedelta(minutes=random.randint(1, 60)),
+                }
+            )
 
         return leads
 
@@ -449,25 +468,27 @@ class DemoDataGenerator:
         import random
 
         alert_types = [
-            {'type': 'hot_lead', 'message': 'Hot lead needs immediate attention', 'priority': 4},
-            {'type': 'stale_lead', 'message': 'Lead has been inactive for 7 days', 'priority': 2},
-            {'type': 'booking_reminder', 'message': 'Upcoming appointment in 30 minutes', 'priority': 3},
-            {'type': 'follow_up_needed', 'message': 'Follow-up call scheduled for today', 'priority': 2},
-            {'type': 'budget_qualified', 'message': 'Lead confirmed budget over $500k', 'priority': 3}
+            {"type": "hot_lead", "message": "Hot lead needs immediate attention", "priority": 4},
+            {"type": "stale_lead", "message": "Lead has been inactive for 7 days", "priority": 2},
+            {"type": "booking_reminder", "message": "Upcoming appointment in 30 minutes", "priority": 3},
+            {"type": "follow_up_needed", "message": "Follow-up call scheduled for today", "priority": 2},
+            {"type": "budget_qualified", "message": "Lead confirmed budget over $500k", "priority": 3},
         ]
 
         alerts = []
         for i in range(count):
             alert_type = random.choice(alert_types)
-            alerts.append({
-                'id': f'alert_{i + 1}',
-                'type': alert_type['type'],
-                'message': alert_type['message'],
-                'priority': alert_type['priority'],
-                'timestamp': datetime.now() - timedelta(minutes=random.randint(1, 30)),
-                'lead_id': f'lead_{random.randint(1000, 1100)}',
-                'read': random.choice([True, False])
-            })
+            alerts.append(
+                {
+                    "id": f"alert_{i + 1}",
+                    "type": alert_type["type"],
+                    "message": alert_type["message"],
+                    "priority": alert_type["priority"],
+                    "timestamp": datetime.now() - timedelta(minutes=random.randint(1, 30)),
+                    "lead_id": f"lead_{random.randint(1000, 1100)}",
+                    "read": random.choice([True, False]),
+                }
+            )
 
         return alerts
 
@@ -477,13 +498,13 @@ class DemoDataGenerator:
         import random
 
         return {
-            'total_leads': random.randint(150, 300),
-            'hot_leads': random.randint(20, 50),
-            'conversion_rate': round(random.uniform(15, 35), 1),
-            'avg_response_time': random.randint(5, 45),
-            'calls_made_today': random.randint(25, 100),
-            'emails_sent_today': random.randint(50, 200),
-            'meetings_booked_today': random.randint(3, 15),
-            'revenue_pipeline': random.randint(500000, 2000000),
-            'deals_closed_this_month': random.randint(5, 25)
+            "total_leads": random.randint(150, 300),
+            "hot_leads": random.randint(20, 50),
+            "conversion_rate": round(random.uniform(15, 35), 1),
+            "avg_response_time": random.randint(5, 45),
+            "calls_made_today": random.randint(25, 100),
+            "emails_sent_today": random.randint(50, 200),
+            "meetings_booked_today": random.randint(3, 15),
+            "revenue_pipeline": random.randint(500000, 2000000),
+            "deals_closed_this_month": random.randint(5, 25),
         }

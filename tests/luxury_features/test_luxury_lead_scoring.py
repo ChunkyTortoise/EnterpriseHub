@@ -11,22 +11,23 @@ Tests cover:
 - Master scoring algorithm
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, AsyncMock
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 from ghl_real_estate_ai.services.luxury_lead_scoring_engine import (
-    LuxuryLeadScoringEngine,
-    LuxuryLead,
-    WealthTier,
-    LuxuryBuyingSignal,
-    NetWorthIndicators,
-    LuxuryLifestyleProfile,
-    InvestmentCapacityAnalysis,
     CompetitiveIntelligence,
-    create_sample_luxury_lead_data
+    InvestmentCapacityAnalysis,
+    LuxuryBuyingSignal,
+    LuxuryLead,
+    LuxuryLeadScoringEngine,
+    LuxuryLifestyleProfile,
+    NetWorthIndicators,
+    WealthTier,
+    create_sample_luxury_lead_data,
 )
 
 
@@ -34,10 +35,10 @@ from ghl_real_estate_ai.services.luxury_lead_scoring_engine import (
 def luxury_scoring_engine():
     """Initialize luxury lead scoring engine for testing"""
     with patch.multiple(
-        'ghl_real_estate_ai.services.luxury_lead_scoring_engine',
+        "ghl_real_estate_ai.services.luxury_lead_scoring_engine",
         CacheService=Mock(),
         ClaudeAssistant=Mock(),
-        LLMClient=Mock()
+        LLMClient=Mock(),
     ):
         engine = LuxuryLeadScoringEngine()
         # Mock the Claude response
@@ -59,7 +60,7 @@ def uhnw_lead_data():
         "contact_info": {
             "email": "founder@mega-corp.com",
             "phone": "+1-512-555-0100",
-            "address": "1000 West Lake Hills Pkwy, Austin, TX 78746"
+            "address": "1000 West Lake Hills Pkwy, Austin, TX 78746",
         },
         "source": "private_referral",
         "profession": "Founder & CEO",
@@ -71,16 +72,16 @@ def uhnw_lead_data():
                 "max_price": 15_000_000,
                 "location": "West Lake Hills",
                 "property_type": "estate",
-                "amenities": ["private_dock", "helicopter_pad", "wine_cellar", "home_theater", "spa", "guest_quarters"]
+                "amenities": ["private_dock", "helicopter_pad", "wine_cellar", "home_theater", "spa", "guest_quarters"],
             }
         ],
         "communication_history": [
             {
                 "date": datetime.now().isoformat(),
                 "content": "Looking for an estate property with significant investment potential. Budget is very flexible for the right opportunity. Need comprehensive due diligence and investment analysis. Prefer off-market opportunities with privacy.",
-                "type": "email"
+                "type": "email",
             }
-        ]
+        ],
     }
 
 
@@ -130,25 +131,19 @@ class TestNetWorthAnalysis:
         assert luxury_score >= 7.0
 
         # Non-luxury area
-        standard_score = luxury_scoring_engine._analyze_address_luxury_indicators(
-            "456 Regular St, Austin, TX 78702"
-        )
+        standard_score = luxury_scoring_engine._analyze_address_luxury_indicators("456 Regular St, Austin, TX 78702")
         assert standard_score < 5.0
 
     @pytest.mark.asyncio
     async def test_analyze_professional_indicators(self, luxury_scoring_engine):
         """Test professional indicator analysis"""
         # Executive profession
-        exec_analysis = await luxury_scoring_engine._analyze_professional_indicators(
-            "CEO", "Tech Corporation"
-        )
+        exec_analysis = await luxury_scoring_engine._analyze_professional_indicators("CEO", "Tech Corporation")
         assert exec_analysis["net_worth_contribution"] > 1_000_000
         assert exec_analysis["investment_sophistication"] >= 80
 
         # Professional
-        prof_analysis = await luxury_scoring_engine._analyze_professional_indicators(
-            "Doctor", "Medical Practice"
-        )
+        prof_analysis = await luxury_scoring_engine._analyze_professional_indicators("Doctor", "Medical Practice")
         assert exec_analysis["net_worth_contribution"] > 500_000
 
     def test_wealth_tier_determination(self, luxury_scoring_engine):
@@ -186,7 +181,7 @@ class TestLuxuryLifestyleAnalysis:
             {"location": "West Lake Hills"},
             {"location": "Tarrytown"},
             {"location": "West Lake Hills"},
-            {"location": "Zilker"}
+            {"location": "Zilker"},
         ]
 
         neighborhoods = luxury_scoring_engine._extract_neighborhood_preferences(search_history)
@@ -198,7 +193,7 @@ class TestLuxuryLifestyleAnalysis:
         search_history = [
             {"amenities": ["pool", "wine_cellar", "home_theater"]},
             {"amenities": ["pool", "spa", "guest_house"]},
-            {"amenities": ["tennis_court", "pool"]}
+            {"amenities": ["tennis_court", "pool"]},
         ]
 
         amenities = luxury_scoring_engine._extract_amenity_preferences(search_history)
@@ -239,10 +234,10 @@ class TestBuyingSignalDetection:
                 {
                     "date": datetime.now().isoformat(),
                     "content": "Ready to buy immediately. Cash buyer. Need to close within 30 days.",
-                    "type": "email"
+                    "type": "email",
                 }
             ],
-            "property_search_history": []
+            "property_search_history": [],
         }
 
         signal = await luxury_scoring_engine._detect_luxury_buying_signals(immediate_lead_data)
@@ -256,10 +251,10 @@ class TestBuyingSignalDetection:
                 {
                     "date": datetime.now().isoformat(),
                     "content": "Looking for investment properties with strong cash flow and appreciation potential.",
-                    "type": "email"
+                    "type": "email",
                 }
             ],
-            "property_search_history": []
+            "property_search_history": [],
         }
 
         signal = await luxury_scoring_engine._detect_luxury_buying_signals(investment_lead_data)
@@ -313,7 +308,7 @@ class TestMasterScoringAlgorithm:
             source="test",
             created_date=datetime.now(),
             wealth_tier=WealthTier.UHNW,
-            buying_signal=LuxuryBuyingSignal.IMMEDIATE
+            buying_signal=LuxuryBuyingSignal.IMMEDIATE,
         )
 
         # Set component scores
@@ -337,7 +332,7 @@ class TestMasterScoringAlgorithm:
             source="test",
             created_date=datetime.now(),
             wealth_tier=WealthTier.ULTRA_UHNW,
-            overall_luxury_score=90.0
+            overall_luxury_score=90.0,
         )
 
         ultra_status = luxury_scoring_engine._determine_qualification_status(ultra_lead)
@@ -350,7 +345,7 @@ class TestMasterScoringAlgorithm:
             source="test",
             created_date=datetime.now(),
             wealth_tier=WealthTier.UHNW,
-            overall_luxury_score=80.0
+            overall_luxury_score=80.0,
         )
 
         premium_status = luxury_scoring_engine._determine_qualification_status(premium_lead)
@@ -365,7 +360,7 @@ class TestMasterScoringAlgorithm:
             source="test",
             created_date=datetime.now(),
             qualification_status="ultra_premium",
-            buying_signal=LuxuryBuyingSignal.IMMEDIATE
+            buying_signal=LuxuryBuyingSignal.IMMEDIATE,
         )
 
         high_value_lead.investment_capacity.estimated_buying_budget = 5_000_000
@@ -382,7 +377,7 @@ class TestMasterScoringAlgorithm:
             source="test",
             created_date=datetime.now(),
             wealth_tier=WealthTier.ULTRA_UHNW,
-            overall_luxury_score=85.0
+            overall_luxury_score=85.0,
         )
 
         service_level = luxury_scoring_engine._recommend_service_level(white_glove_lead)
@@ -440,7 +435,7 @@ class TestEndToEndScoring:
                 wealth_tier=WealthTier.UHNW,
                 overall_luxury_score=85.0,
                 qualification_status="premium",
-                commission_potential=150_000
+                commission_potential=150_000,
             ),
             LuxuryLead(
                 lead_id="LEAD-002",
@@ -450,8 +445,8 @@ class TestEndToEndScoring:
                 wealth_tier=WealthTier.ULTRA_UHNW,
                 overall_luxury_score=92.0,
                 qualification_status="ultra_premium",
-                commission_potential=250_000
-            )
+                commission_potential=250_000,
+            ),
         ]
 
         insights = luxury_scoring_engine.generate_lead_insights_summary(sample_leads)
@@ -469,11 +464,7 @@ class TestDataValidation:
     @pytest.mark.asyncio
     async def test_empty_lead_data(self, luxury_scoring_engine):
         """Test scoring with minimal lead data"""
-        minimal_data = {
-            "lead_id": "MINIMAL-001",
-            "contact_info": {},
-            "source": "unknown"
-        }
+        minimal_data = {"lead_id": "MINIMAL-001", "contact_info": {}, "source": "unknown"}
 
         luxury_lead = await luxury_scoring_engine.score_luxury_lead(minimal_data)
 
@@ -489,10 +480,7 @@ class TestDataValidation:
             "lead_id": "INVALID-001",
             "contact_info": {},
             "source": "test",
-            "communication_history": [
-                {"content": "", "date": "invalid-date"},
-                {"content": None}
-            ]
+            "communication_history": [{"content": "", "date": "invalid-date"}, {"content": None}],
         }
 
         luxury_lead = await luxury_scoring_engine.score_luxury_lead(invalid_data)
@@ -517,8 +505,8 @@ class TestIntegrationWithExistingSystems:
     async def test_integration_with_cache_service(self, luxury_scoring_engine):
         """Test integration with cache service"""
         # Mock cache hit
-        with patch.object(luxury_scoring_engine.cache, 'get', return_value=None):
-            with patch.object(luxury_scoring_engine.cache, 'set', return_value=True):
+        with patch.object(luxury_scoring_engine.cache, "get", return_value=None):
+            with patch.object(luxury_scoring_engine.cache, "set", return_value=True):
                 lead_data = create_sample_luxury_lead_data()
                 result = await luxury_scoring_engine.score_luxury_lead(lead_data)
                 assert result is not None

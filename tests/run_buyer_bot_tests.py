@@ -7,30 +7,26 @@ Usage:
     python tests/run_buyer_bot_tests.py [--coverage] [--verbose] [--integration]
 """
 
-import sys
-import os
 import argparse
+import os
 import subprocess
+import sys
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
+
 def run_command(command: List[str], description: str) -> Dict[str, Any]:
     """Run a command and return results."""
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"🔍 {description}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     try:
-        result = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            cwd=project_root
-        )
+        result = subprocess.run(command, capture_output=True, text=True, cwd=project_root)
 
         print(f"Command: {' '.join(command)}")
         print(f"Exit code: {result.returncode}")
@@ -41,20 +37,12 @@ def run_command(command: List[str], description: str) -> Dict[str, Any]:
         if result.stderr:
             print(f"\nSTDERR:\n{result.stderr}")
 
-        return {
-            "success": result.returncode == 0,
-            "stdout": result.stdout,
-            "stderr": result.stderr,
-            "command": command
-        }
+        return {"success": result.returncode == 0, "stdout": result.stdout, "stderr": result.stderr, "command": command}
 
     except Exception as e:
         print(f"❌ Error running command: {e}")
-        return {
-            "success": False,
-            "error": str(e),
-            "command": command
-        }
+        return {"success": False, "error": str(e), "command": command}
+
 
 def validate_buyer_bot_files():
     """Validate that all buyer bot files exist."""
@@ -68,7 +56,7 @@ def validate_buyer_bot_files():
         "ghl_real_estate_ai/api/routes/sms_compliance.py",
         "tests/agents/test_buyer_bot.py",
         "tests/services/test_sms_compliance_service.py",
-        "tests/integration/test_buyer_bot_integration.py"
+        "tests/integration/test_buyer_bot_integration.py",
     ]
 
     missing_files = []
@@ -87,6 +75,7 @@ def validate_buyer_bot_files():
 
     print(f"\n✅ All {len(required_files)} buyer bot files are present")
     return True
+
 
 def validate_imports():
     """Validate that all imports work correctly."""
@@ -117,34 +106,44 @@ def validate_imports():
     print(f"\n✅ All imports successful")
     return True
 
+
 def run_unit_tests(verbose: bool = False) -> Dict[str, Any]:
     """Run unit tests for buyer bot components."""
     command = [
-        sys.executable, "-m", "pytest",
+        sys.executable,
+        "-m",
+        "pytest",
         "tests/agents/test_buyer_bot.py",
         "tests/services/test_sms_compliance_service.py",
         "-v" if verbose else "-q",
-        "--tb=short"
+        "--tb=short",
     ]
 
     return run_command(command, "Running Unit Tests")
 
+
 def run_integration_tests(verbose: bool = False) -> Dict[str, Any]:
     """Run integration tests for buyer bot workflows."""
     command = [
-        sys.executable, "-m", "pytest",
+        sys.executable,
+        "-m",
+        "pytest",
         "tests/integration/test_buyer_bot_integration.py",
         "-v" if verbose else "-q",
         "--tb=short",
-        "-m", "not slow"  # Skip slow integration tests by default
+        "-m",
+        "not slow",  # Skip slow integration tests by default
     ]
 
     return run_command(command, "Running Integration Tests")
 
+
 def run_coverage_tests() -> Dict[str, Any]:
     """Run tests with coverage analysis."""
     command = [
-        sys.executable, "-m", "pytest",
+        sys.executable,
+        "-m",
+        "pytest",
         "tests/agents/test_buyer_bot.py",
         "tests/services/test_sms_compliance_service.py",
         "tests/integration/test_buyer_bot_integration.py",
@@ -154,10 +153,11 @@ def run_coverage_tests() -> Dict[str, Any]:
         "--cov=ghl_real_estate_ai.models.buyer_bot_state",
         "--cov-report=term-missing",
         "--cov-report=html:htmlcov/buyer_bot",
-        "--cov-fail-under=80"
+        "--cov-fail-under=80",
     ]
 
     return run_command(command, "Running Coverage Analysis")
+
 
 def validate_orchestrator_integration():
     """Validate that orchestrator integration works."""
@@ -172,7 +172,7 @@ def validate_orchestrator_integration():
         print("✅ Orchestrator imports buyer bot successfully")
 
         # Check if buyer conversation method exists
-        if hasattr(orchestrator, '_orchestrate_buyer_conversation'):
+        if hasattr(orchestrator, "_orchestrate_buyer_conversation"):
             print("✅ Buyer conversation orchestration method exists")
         else:
             print("❌ Buyer conversation orchestration method missing")
@@ -183,6 +183,7 @@ def validate_orchestrator_integration():
     except Exception as e:
         print(f"❌ Orchestrator integration failed: {e}")
         return False
+
 
 def validate_event_publisher_integration():
     """Validate event publisher has buyer-specific methods."""
@@ -197,7 +198,7 @@ def validate_event_publisher_integration():
             "BUYER_INTENT_ANALYSIS",
             "BUYER_QUALIFICATION_PROGRESS",
             "BUYER_QUALIFICATION_COMPLETE",
-            "SMS_COMPLIANCE"
+            "SMS_COMPLIANCE",
         ]
 
         missing_events = []
@@ -218,7 +219,7 @@ def validate_event_publisher_integration():
             "publish_buyer_intent_analysis",
             "publish_buyer_qualification_progress",
             "publish_buyer_qualification_complete",
-            "publish_sms_compliance_event"
+            "publish_sms_compliance_event",
         ]
 
         missing_methods = []
@@ -240,11 +241,12 @@ def validate_event_publisher_integration():
         print(f"❌ Event publisher validation failed: {e}")
         return False
 
+
 def generate_test_report(results: Dict[str, Any]):
     """Generate comprehensive test report."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("📊 BUYER BOT TEST REPORT")
-    print("="*80)
+    print("=" * 80)
 
     total_tests = 0
     passed_tests = 0
@@ -264,13 +266,13 @@ def generate_test_report(results: Dict[str, Any]):
 
         total_tests += 1
 
-    print(f"\n{'='*80}")
+    print(f"\n{'=' * 80}")
     print(f"📈 SUMMARY")
-    print(f"{'='*80}")
+    print(f"{'=' * 80}")
     print(f"Total Tests: {total_tests}")
     print(f"Passed: {passed_tests} ✅")
     print(f"Failed: {failed_tests} ❌")
-    print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
+    print(f"Success Rate: {(passed_tests / total_tests) * 100:.1f}%")
 
     if failed_tests == 0:
         print("\n🎉 ALL TESTS PASSED! Buyer bot implementation is ready for deployment.")
@@ -278,6 +280,7 @@ def generate_test_report(results: Dict[str, Any]):
     else:
         print(f"\n⚠️  {failed_tests} test(s) failed. Please review and fix issues before deployment.")
         return False
+
 
 def main():
     parser = argparse.ArgumentParser(description="Run Jorge's Buyer Bot test suite")
@@ -289,7 +292,7 @@ def main():
     args = parser.parse_args()
 
     print("🚀 Jorge's Buyer Bot Test Suite")
-    print("="*80)
+    print("=" * 80)
 
     results = {}
 
@@ -320,6 +323,7 @@ def main():
 
     # Exit with appropriate code
     sys.exit(0 if success else 1)
+
 
 if __name__ == "__main__":
     main()

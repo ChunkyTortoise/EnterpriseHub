@@ -6,22 +6,22 @@ Supports dependency injection and configuration-based repository selection.
 """
 
 import os
-from typing import Dict, Any, Optional, List, Type, Callable
 from datetime import timedelta
 from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Type
 
 try:
+    from .caching_repository import CachingRepository, MemoryCacheBackend, RedisCacheBackend
     from .interfaces import IPropertyRepository, RepositoryConfig, RepositoryRegistry
     from .json_repository import JsonPropertyRepository
     from .mls_repository import MLSAPIRepository
     from .rag_repository import RAGPropertyRepository
-    from .caching_repository import CachingRepository, MemoryCacheBackend, RedisCacheBackend
 except ImportError:
+    from caching_repository import CachingRepository, MemoryCacheBackend, RedisCacheBackend
     from interfaces import IPropertyRepository, RepositoryConfig, RepositoryRegistry
     from json_repository import JsonPropertyRepository
     from mls_repository import MLSAPIRepository
     from rag_repository import RAGPropertyRepository
-    from caching_repository import CachingRepository, MemoryCacheBackend, RedisCacheBackend
 
 
 class RepositoryFactory:
@@ -53,8 +53,13 @@ class RepositoryFactory:
         """Set default configuration for repository type"""
         self._default_configs[repository_type] = config
 
-    async def create(self, repository_type: str, config: Optional[RepositoryConfig] = None,
-                    enable_caching: bool = True, cache_config: Optional[Dict[str, Any]] = None) -> IPropertyRepository:
+    async def create(
+        self,
+        repository_type: str,
+        config: Optional[RepositoryConfig] = None,
+        enable_caching: bool = True,
+        cache_config: Optional[Dict[str, Any]] = None,
+    ) -> IPropertyRepository:
         """
         Create repository instance.
 
@@ -86,8 +91,9 @@ class RepositoryFactory:
 
         return repository
 
-    async def create_composite(self, repositories: List[Dict[str, Any]],
-                              strategy: str = "first_success") -> IPropertyRepository:
+    async def create_composite(
+        self, repositories: List[Dict[str, Any]], strategy: str = "first_success"
+    ) -> IPropertyRepository:
         """
         Create composite repository from multiple sources.
 
@@ -137,8 +143,12 @@ class RepositoryFactory:
 _factory = RepositoryFactory()
 
 
-def create_repository(repository_type: str, config: Optional[RepositoryConfig] = None,
-                     enable_caching: bool = True, cache_config: Optional[Dict[str, Any]] = None) -> IPropertyRepository:
+def create_repository(
+    repository_type: str,
+    config: Optional[RepositoryConfig] = None,
+    enable_caching: bool = True,
+    cache_config: Optional[Dict[str, Any]] = None,
+) -> IPropertyRepository:
     """
     Convenience function to create repository using global factory.
 
@@ -152,6 +162,7 @@ def create_repository(repository_type: str, config: Optional[RepositoryConfig] =
         Configured repository instance
     """
     import asyncio
+
     return asyncio.run(_factory.create(repository_type, config, enable_caching, cache_config))
 
 
@@ -179,7 +190,7 @@ def create_from_config(config_dict: Dict[str, Any]) -> IPropertyRepository:
         "backend": caching_config.get("backend", "memory"),
         "max_size": caching_config.get("max_size", 1000),
         "redis_url": caching_config.get("redis_url"),
-        "key_prefix": caching_config.get("key_prefix", "prop_cache:")
+        "key_prefix": caching_config.get("key_prefix", "prop_cache:"),
     }
 
     return create_repository(repo_type, repo_config, enable_caching, cache_backend_config)
@@ -199,6 +210,7 @@ def create_from_environment() -> IPropertyRepository:
 
     # Parse repository config from environment
     import json
+
     config_str = os.getenv("PROPERTY_REPO_CONFIG", "{}")
     try:
         repo_config = json.loads(config_str)
@@ -210,7 +222,7 @@ def create_from_environment() -> IPropertyRepository:
     cache_config = {
         "backend": os.getenv("PROPERTY_CACHE_BACKEND", "memory"),
         "redis_url": os.getenv("PROPERTY_CACHE_REDIS_URL", "redis://localhost:6379"),
-        "max_size": int(os.getenv("PROPERTY_CACHE_MAX_SIZE", "1000"))
+        "max_size": int(os.getenv("PROPERTY_CACHE_MAX_SIZE", "1000")),
     }
 
     return create_repository(repo_type, repo_config, enable_caching, cache_config)
@@ -226,8 +238,9 @@ class RepositoryBuilder:
         self._cache_config = {}
         self._enable_caching = True
 
-    def json_source(self, data_paths: List[str], cache_ttl: int = 300,
-                   auto_refresh: bool = True) -> 'RepositoryBuilder':
+    def json_source(
+        self, data_paths: List[str], cache_ttl: int = 300, auto_refresh: bool = True
+    ) -> "RepositoryBuilder":
         """Configure JSON data source"""
         self._config = {
             "type": "json",
@@ -235,13 +248,14 @@ class RepositoryBuilder:
                 "data_paths": data_paths,
                 "cache_ttl": cache_ttl,
                 "auto_refresh": auto_refresh,
-                "normalize_data": True
-            }
+                "normalize_data": True,
+            },
         }
         return self
 
-    def mls_source(self, api_base_url: str, api_key: str, provider: str = "generic",
-                  rate_limit: int = 10) -> 'RepositoryBuilder':
+    def mls_source(
+        self, api_base_url: str, api_key: str, provider: str = "generic", rate_limit: int = 10
+    ) -> "RepositoryBuilder":
         """Configure MLS API source"""
         self._config = {
             "type": "mls",
@@ -251,54 +265,49 @@ class RepositoryBuilder:
                 "provider": provider,
                 "rate_limit": rate_limit,
                 "timeout": 30,
-                "retry_attempts": 3
-            }
+                "retry_attempts": 3,
+            },
         }
         return self
 
-    def rag_source(self, data_paths: List[str], embedding_model: str = "all-MiniLM-L6-v2",
-                  openai_api_key: Optional[str] = None) -> 'RepositoryBuilder':
+    def rag_source(
+        self, data_paths: List[str], embedding_model: str = "all-MiniLM-L6-v2", openai_api_key: Optional[str] = None
+    ) -> "RepositoryBuilder":
         """Configure RAG/semantic search source"""
         config = {
             "data_paths": data_paths,
             "embedding_model": embedding_model,
             "similarity_threshold": 0.6,
             "max_semantic_results": 100,
-            "fallback_to_traditional": True
+            "fallback_to_traditional": True,
         }
 
         if openai_api_key:
             config["openai_api_key"] = openai_api_key
 
-        self._config = {
-            "type": "rag",
-            "config": config
-        }
+        self._config = {"type": "rag", "config": config}
         return self
 
-    def with_memory_cache(self, max_size: int = 1000, ttl_minutes: int = 15) -> 'RepositoryBuilder':
+    def with_memory_cache(self, max_size: int = 1000, ttl_minutes: int = 15) -> "RepositoryBuilder":
         """Add in-memory caching"""
         self._enable_caching = True
-        self._cache_config = {
-            "backend": "memory",
-            "max_size": max_size,
-            "ttl": ttl_minutes * 60
-        }
+        self._cache_config = {"backend": "memory", "max_size": max_size, "ttl": ttl_minutes * 60}
         return self
 
-    def with_redis_cache(self, redis_url: str = "redis://localhost:6379",
-                        key_prefix: str = "prop_cache:", ttl_minutes: int = 15) -> 'RepositoryBuilder':
+    def with_redis_cache(
+        self, redis_url: str = "redis://localhost:6379", key_prefix: str = "prop_cache:", ttl_minutes: int = 15
+    ) -> "RepositoryBuilder":
         """Add Redis caching"""
         self._enable_caching = True
         self._cache_config = {
             "backend": "redis",
             "redis_url": redis_url,
             "key_prefix": key_prefix,
-            "ttl": ttl_minutes * 60
+            "ttl": ttl_minutes * 60,
         }
         return self
 
-    def without_cache(self) -> 'RepositoryBuilder':
+    def without_cache(self) -> "RepositoryBuilder":
         """Disable caching"""
         self._enable_caching = False
         self._cache_config = {}
@@ -316,7 +325,7 @@ class RepositoryBuilder:
             repository_type=repo_type,
             config=repo_config,
             enable_caching=self._enable_caching,
-            cache_config=self._cache_config
+            cache_config=self._cache_config,
         )
 
 
@@ -325,9 +334,11 @@ def json_repository(data_paths: List[str]) -> RepositoryBuilder:
     """Quick JSON repository builder"""
     return RepositoryBuilder().json_source(data_paths)
 
+
 def mls_repository(api_base_url: str, api_key: str, provider: str = "generic") -> RepositoryBuilder:
     """Quick MLS repository builder"""
     return RepositoryBuilder().mls_source(api_base_url, api_key, provider)
+
 
 def rag_repository(data_paths: List[str], embedding_model: str = "all-MiniLM-L6-v2") -> RepositoryBuilder:
     """Quick RAG repository builder"""
@@ -347,30 +358,25 @@ class ConfiguredFactories:
         if not json_files:
             raise ValueError(f"No JSON files found in {data_dir}")
 
-        return await (json_repository([str(f) for f in json_files])
-                     .with_memory_cache(max_size=500, ttl_minutes=10)
-                     .build())
+        return await (
+            json_repository([str(f) for f in json_files]).with_memory_cache(max_size=500, ttl_minutes=10).build()
+        )
 
     @staticmethod
-    async def production_mls_repository(api_url: str, api_key: str,
-                                      provider: str = "generic") -> IPropertyRepository:
+    async def production_mls_repository(api_url: str, api_key: str, provider: str = "generic") -> IPropertyRepository:
         """Create production MLS repository with Redis caching"""
-        return await (mls_repository(api_url, api_key, provider)
-                     .with_redis_cache(ttl_minutes=30)
-                     .build())
+        return await mls_repository(api_url, api_key, provider).with_redis_cache(ttl_minutes=30).build()
 
     @staticmethod
     async def hybrid_repository(json_paths: List[str], mls_config: Dict[str, Any]) -> IPropertyRepository:
         """Create hybrid repository with JSON fallback and MLS primary"""
         # For now, return MLS repository
         # In full implementation, would create composite repository
-        return await (mls_repository(
-                         mls_config["api_url"],
-                         mls_config["api_key"],
-                         mls_config.get("provider", "generic")
-                     )
-                     .with_memory_cache()
-                     .build())
+        return await (
+            mls_repository(mls_config["api_url"], mls_config["api_key"], mls_config.get("provider", "generic"))
+            .with_memory_cache()
+            .build()
+        )
 
 
 # Export convenience functions
@@ -383,5 +389,5 @@ __all__ = [
     "json_repository",
     "mls_repository",
     "rag_repository",
-    "ConfiguredFactories"
+    "ConfiguredFactories",
 ]

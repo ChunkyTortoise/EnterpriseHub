@@ -21,19 +21,20 @@ import pytest
 
 try:
     from PIL import Image
+
     HAS_PIL = True
 except ImportError:
     HAS_PIL = False
 
 from src.core.exceptions import RetrievalError
-from src.core.types import SearchResult, Metadata
+from src.core.types import Metadata, SearchResult
+from src.multimodal.structured_retriever import StructuredQuery
 from src.multimodal.unified_retriever import (
     QueryModality,
     UnifiedRetriever,
     UnifiedRetrieverConfig,
     UnifiedSearchResult,
 )
-from src.multimodal.structured_retriever import StructuredQuery
 
 
 class TestQueryModality:
@@ -131,11 +132,13 @@ class TestUnifiedRetriever:
     def sample_csv(self, tmp_path):
         """Create a sample CSV file."""
         csv_path = tmp_path / "sample.csv"
-        df = pd.DataFrame({
-            "id": [1, 2, 3],
-            "name": ["Alice", "Bob", "Charlie"],
-            "value": [100, 200, 300],
-        })
+        df = pd.DataFrame(
+            {
+                "id": [1, 2, 3],
+                "name": ["Alice", "Bob", "Charlie"],
+                "value": [100, 200, 300],
+            }
+        )
         df.to_csv(csv_path, index=False)
         return str(csv_path)
 
@@ -446,11 +449,13 @@ class TestUnifiedRetrieverIntegration:
             # Index various content types
             # CSV data
             csv_path = tmp_path / "data.csv"
-            pd.DataFrame({
-                "id": range(10),
-                "category": ["A", "B"] * 5,
-                "value": range(100, 200, 10),
-            }).to_csv(csv_path, index=False)
+            pd.DataFrame(
+                {
+                    "id": range(10),
+                    "category": ["A", "B"] * 5,
+                    "value": range(100, 200, 10),
+                }
+            ).to_csv(csv_path, index=False)
 
             await retriever.index_content("csv", str(csv_path), "Sample data")
 

@@ -13,20 +13,21 @@ Features:
 
 import asyncio
 import json
-import time
-import psutil
-import aiohttp
 import smtplib
+import time
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass, asdict
-from email.mime.text import MimeText
 from email.mime.multipart import MimeMultipart
+from email.mime.text import MimeText
+from typing import Any, Dict, List, Optional
 
-from ghl_real_estate_ai.services.ghl_service import GHLService
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+import aiohttp
+import psutil
+
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.ghl_service import GHLService
 
 logger = get_logger(__name__)
 
@@ -34,9 +35,11 @@ logger = get_logger(__name__)
 # MONITORING DATA MODELS
 # =============================================================================
 
+
 @dataclass
 class SystemHealthMetrics:
     """System health and performance metrics."""
+
     timestamp: datetime
 
     # System resources
@@ -55,9 +58,11 @@ class SystemHealthMetrics:
     overall_status: str  # healthy, warning, critical
     uptime_seconds: int
 
+
 @dataclass
 class BusinessMetrics:
     """Jorge-specific business performance metrics."""
+
     timestamp: datetime
 
     # Lead pipeline
@@ -83,9 +88,11 @@ class BusinessMetrics:
     api_requests_today: int
     websocket_connections: int
 
+
 @dataclass
 class AlertRule:
     """Monitoring alert rule configuration."""
+
     name: str
     metric_name: str
     threshold: float
@@ -96,9 +103,11 @@ class AlertRule:
     enabled: bool
     description: str
 
+
 @dataclass
 class AlertEvent:
     """Monitoring alert event."""
+
     alert_name: str
     severity: str
     triggered_at: datetime
@@ -107,6 +116,7 @@ class AlertEvent:
     description: str
     resolved_at: Optional[datetime] = None
     acknowledgment: Optional[str] = None
+
 
 class ProductionMonitoringSystem:
     """
@@ -155,7 +165,7 @@ class ProductionMonitoringSystem:
                 self._business_metrics_monitor(),
                 self._alert_processor(),
                 self._daily_report_scheduler(),
-                self._health_dashboard_server()
+                self._health_dashboard_server(),
             )
 
         except Exception as e:
@@ -206,7 +216,7 @@ class ProductionMonitoringSystem:
         # System resource metrics
         cpu_percent = psutil.cpu_percent(interval=1)
         memory = psutil.virtual_memory()
-        disk = psutil.disk_usage('/')
+        disk = psutil.disk_usage("/")
         network_connections = len(psutil.net_connections())
 
         # Application metrics
@@ -231,7 +241,7 @@ class ProductionMonitoringSystem:
             database_connections=db_connections,
             redis_memory_usage_mb=redis_memory,
             overall_status=overall_status,
-            uptime_seconds=int(time.time() - psutil.boot_time())
+            uptime_seconds=int(time.time() - psutil.boot_time()),
         )
 
     async def _collect_business_metrics(self) -> BusinessMetrics:
@@ -255,21 +265,21 @@ class ProductionMonitoringSystem:
 
         return BusinessMetrics(
             timestamp=datetime.now(),
-            total_leads_today=leads_data.get('total_leads', 0),
-            hot_leads_count=leads_data.get('hot_leads', 0),
-            qualified_leads_count=leads_data.get('qualified_leads', 0),
+            total_leads_today=leads_data.get("total_leads", 0),
+            hot_leads_count=leads_data.get("hot_leads", 0),
+            qualified_leads_count=leads_data.get("qualified_leads", 0),
             pipeline_value_usd=pipeline_value,
-            jorge_bot_conversations=bot_metrics.get('jorge_conversations', 0),
-            lead_bot_sequences=bot_metrics.get('lead_sequences', 0),
-            bot_response_time_avg_ms=bot_metrics.get('avg_response_time', 0),
-            bot_success_rate_percent=bot_metrics.get('success_rate', 0),
-            projected_monthly_commission=revenue_metrics.get('projected_commission', 0),
-            avg_deal_size=revenue_metrics.get('avg_deal_size', 0),
-            conversion_rate_percent=revenue_metrics.get('conversion_rate', 0),
-            deals_closed_this_month=revenue_metrics.get('deals_closed', 0),
-            daily_active_sessions=usage_metrics.get('active_sessions', 0),
-            api_requests_today=usage_metrics.get('api_requests', 0),
-            websocket_connections=usage_metrics.get('websocket_connections', 0)
+            jorge_bot_conversations=bot_metrics.get("jorge_conversations", 0),
+            lead_bot_sequences=bot_metrics.get("lead_sequences", 0),
+            bot_response_time_avg_ms=bot_metrics.get("avg_response_time", 0),
+            bot_success_rate_percent=bot_metrics.get("success_rate", 0),
+            projected_monthly_commission=revenue_metrics.get("projected_commission", 0),
+            avg_deal_size=revenue_metrics.get("avg_deal_size", 0),
+            conversion_rate_percent=revenue_metrics.get("conversion_rate", 0),
+            deals_closed_this_month=revenue_metrics.get("deals_closed", 0),
+            daily_active_sessions=usage_metrics.get("active_sessions", 0),
+            api_requests_today=usage_metrics.get("api_requests", 0),
+            websocket_connections=usage_metrics.get("websocket_connections", 0),
         )
 
     # =========================================================================
@@ -297,11 +307,11 @@ class ProductionMonitoringSystem:
     async def _check_system_health_alerts(self, metrics: SystemHealthMetrics):
         """Check system health metrics against alert rules."""
         metric_values = {
-            'cpu_usage_percent': metrics.cpu_usage_percent,
-            'memory_usage_percent': metrics.memory_usage_percent,
-            'disk_usage_percent': metrics.disk_usage_percent,
-            'api_response_time_ms': metrics.api_response_time_ms,
-            'database_connections': metrics.database_connections
+            "cpu_usage_percent": metrics.cpu_usage_percent,
+            "memory_usage_percent": metrics.memory_usage_percent,
+            "disk_usage_percent": metrics.disk_usage_percent,
+            "api_response_time_ms": metrics.api_response_time_ms,
+            "database_connections": metrics.database_connections,
         }
 
         for metric_name, value in metric_values.items():
@@ -310,11 +320,11 @@ class ProductionMonitoringSystem:
     async def _check_business_metrics_alerts(self, metrics: BusinessMetrics):
         """Check business metrics against alert rules."""
         metric_values = {
-            'pipeline_value_usd': metrics.pipeline_value_usd,
-            'bot_response_time_avg_ms': metrics.bot_response_time_avg_ms,
-            'bot_success_rate_percent': metrics.bot_success_rate_percent,
-            'conversion_rate_percent': metrics.conversion_rate_percent,
-            'daily_active_sessions': metrics.daily_active_sessions
+            "pipeline_value_usd": metrics.pipeline_value_usd,
+            "bot_response_time_avg_ms": metrics.bot_response_time_avg_ms,
+            "bot_success_rate_percent": metrics.bot_success_rate_percent,
+            "conversion_rate_percent": metrics.conversion_rate_percent,
+            "daily_active_sessions": metrics.daily_active_sessions,
         }
 
         for metric_name, value in metric_values.items():
@@ -352,7 +362,7 @@ class ProductionMonitoringSystem:
             triggered_at=datetime.now(),
             metric_value=value,
             threshold=rule.threshold,
-            description=f"{rule.description}. Current value: {value}, Threshold: {rule.threshold}"
+            description=f"{rule.description}. Current value: {value}, Threshold: {rule.threshold}",
         )
 
         # Store alert
@@ -392,7 +402,7 @@ class ProductionMonitoringSystem:
 
         Alert: {rule.name}
         Severity: {rule.severity.upper()}
-        Triggered: {alert.triggered_at.strftime('%Y-%m-%d %H:%M:%S')}
+        Triggered: {alert.triggered_at.strftime("%Y-%m-%d %H:%M:%S")}
 
         Details:
         {alert.description}
@@ -407,11 +417,7 @@ class ProductionMonitoringSystem:
         This is an automated alert from Jorge's AI Platform monitoring system.
         """
 
-        await self._send_email(
-            to_email="jorge@jorge-ai-platform.com",
-            subject=subject,
-            body=body
-        )
+        await self._send_email(to_email="jorge@jorge-ai-platform.com", subject=subject, body=body)
 
     async def _send_sms_alert(self, rule: AlertRule, alert: AlertEvent):
         """Send SMS alert notification (integration with SMS service)."""
@@ -428,31 +434,15 @@ class ProductionMonitoringSystem:
                 {
                     "color": "danger" if rule.severity == "critical" else "warning",
                     "fields": [
-                        {
-                            "title": "Metric",
-                            "value": rule.metric_name,
-                            "short": True
-                        },
-                        {
-                            "title": "Value",
-                            "value": str(alert.metric_value),
-                            "short": True
-                        },
-                        {
-                            "title": "Threshold",
-                            "value": str(alert.threshold),
-                            "short": True
-                        },
-                        {
-                            "title": "Severity",
-                            "value": rule.severity.upper(),
-                            "short": True
-                        }
+                        {"title": "Metric", "value": rule.metric_name, "short": True},
+                        {"title": "Value", "value": str(alert.metric_value), "short": True},
+                        {"title": "Threshold", "value": str(alert.threshold), "short": True},
+                        {"title": "Severity", "value": rule.severity.upper(), "short": True},
                     ],
                     "footer": "Jorge AI Platform Monitoring",
-                    "ts": int(alert.triggered_at.timestamp())
+                    "ts": int(alert.triggered_at.timestamp()),
                 }
-            ]
+            ],
         }
 
         # Send to Slack webhook (implement based on webhook URL)
@@ -498,7 +488,7 @@ class ProductionMonitoringSystem:
             to_email="jorge@jorge-ai-platform.com",
             subject=f"Jorge Platform Daily Report - {datetime.now().strftime('%B %d, %Y')}",
             body=report_html,
-            html=True
+            html=True,
         )
 
         logger.info("✅ Daily report sent to Jorge")
@@ -519,7 +509,7 @@ class ProductionMonitoringSystem:
             "projected_commission": 144000,
             "bot_conversations": 34,
             "appointments_scheduled": 5,
-            "alerts_triggered": len([a for a in self.alert_history if a.triggered_at.date() == yesterday.date()])
+            "alerts_triggered": len([a for a in self.alert_history if a.triggered_at.date() == yesterday.date()]),
         }
 
     async def _generate_daily_report_html(self, data: Dict[str, Any]) -> str:
@@ -540,48 +530,48 @@ class ProductionMonitoringSystem:
         <body>
             <div class="header">
                 <h1>Jorge's AI Platform - Daily Report</h1>
-                <p>{data['report_date']}</p>
+                <p>{data["report_date"]}</p>
             </div>
 
             <h2>🏆 Platform Performance</h2>
             <div class="metric">
-                <div class="value success">{data['system_uptime']}</div>
+                <div class="value success">{data["system_uptime"]}</div>
                 <div class="label">System Uptime</div>
             </div>
             <div class="metric">
-                <div class="value">{data['avg_response_time']}ms</div>
+                <div class="value">{data["avg_response_time"]}ms</div>
                 <div class="label">Avg Response Time</div>
             </div>
             <div class="metric">
-                <div class="value">{data['total_api_requests']:,}</div>
+                <div class="value">{data["total_api_requests"]:,}</div>
                 <div class="label">API Requests</div>
             </div>
 
             <h2>💰 Business Metrics</h2>
             <div class="metric">
-                <div class="value">${data['pipeline_value']:,}</div>
+                <div class="value">${data["pipeline_value"]:,}</div>
                 <div class="label">Pipeline Value</div>
             </div>
             <div class="metric">
-                <div class="value">${data['projected_commission']:,}</div>
+                <div class="value">${data["projected_commission"]:,}</div>
                 <div class="label">Projected Commission</div>
             </div>
             <div class="metric">
-                <div class="value">{data['new_leads']}</div>
+                <div class="value">{data["new_leads"]}</div>
                 <div class="label">New Leads</div>
             </div>
             <div class="metric">
-                <div class="value">{data['hot_leads']}</div>
+                <div class="value">{data["hot_leads"]}</div>
                 <div class="label">Hot Leads</div>
             </div>
 
             <h2>🤖 Bot Performance</h2>
             <div class="metric">
-                <div class="value">{data['bot_conversations']}</div>
+                <div class="value">{data["bot_conversations"]}</div>
                 <div class="label">Conversations</div>
             </div>
             <div class="metric">
-                <div class="value">{data['appointments_scheduled']}</div>
+                <div class="value">{data["appointments_scheduled"]}</div>
                 <div class="label">Appointments Scheduled</div>
             </div>
 
@@ -642,7 +632,7 @@ class ProductionMonitoringSystem:
                 severity="warning",
                 notification_channels=["email"],
                 enabled=True,
-                description="CPU usage is above 80%"
+                description="CPU usage is above 80%",
             ),
             AlertRule(
                 name="High Memory Usage",
@@ -653,7 +643,7 @@ class ProductionMonitoringSystem:
                 severity="critical",
                 notification_channels=["email", "sms"],
                 enabled=True,
-                description="Memory usage is above 90%"
+                description="Memory usage is above 90%",
             ),
             AlertRule(
                 name="Slow API Response",
@@ -664,7 +654,7 @@ class ProductionMonitoringSystem:
                 severity="warning",
                 notification_channels=["email"],
                 enabled=True,
-                description="API response time is above 2 seconds"
+                description="API response time is above 2 seconds",
             ),
             AlertRule(
                 name="Low Bot Success Rate",
@@ -675,7 +665,7 @@ class ProductionMonitoringSystem:
                 severity="warning",
                 notification_channels=["email"],
                 enabled=True,
-                description="Bot success rate has dropped below 70%"
+                description="Bot success rate has dropped below 70%",
             ),
             AlertRule(
                 name="Pipeline Value Drop",
@@ -686,8 +676,8 @@ class ProductionMonitoringSystem:
                 severity="warning",
                 notification_channels=["email"],
                 enabled=True,
-                description="Pipeline value has dropped below $1M"
-            )
+                description="Pipeline value has dropped below $1M",
+            ),
         ]
 
     async def _send_email(self, to_email: str, subject: str, body: str, html: bool = False):
@@ -703,27 +693,13 @@ class ProductionMonitoringSystem:
         return 2400000.0
 
     async def _get_bot_performance_metrics(self) -> Dict[str, float]:
-        return {
-            "jorge_conversations": 34,
-            "lead_sequences": 28,
-            "avg_response_time": 142,
-            "success_rate": 78.5
-        }
+        return {"jorge_conversations": 34, "lead_sequences": 28, "avg_response_time": 142, "success_rate": 78.5}
 
     async def _get_revenue_metrics(self) -> Dict[str, float]:
-        return {
-            "projected_commission": 144000,
-            "avg_deal_size": 425000,
-            "conversion_rate": 34.2,
-            "deals_closed": 7
-        }
+        return {"projected_commission": 144000, "avg_deal_size": 425000, "conversion_rate": 34.2, "deals_closed": 7}
 
     async def _get_platform_usage_metrics(self) -> Dict[str, int]:
-        return {
-            "active_sessions": 23,
-            "api_requests": 4247,
-            "websocket_connections": 12
-        }
+        return {"active_sessions": 23, "api_requests": 4247, "websocket_connections": 12}
 
     # Placeholder methods for alert management
     async def _process_pending_alerts(self):
@@ -755,6 +731,7 @@ class ProductionMonitoringSystem:
 
 _monitoring_system_instance = None
 
+
 def get_production_monitoring_system() -> ProductionMonitoringSystem:
     """Get singleton monitoring system instance."""
     global _monitoring_system_instance
@@ -768,6 +745,7 @@ def get_production_monitoring_system() -> ProductionMonitoringSystem:
 # =============================================================================
 
 if __name__ == "__main__":
+
     async def main():
         print("🔍 Starting Jorge Platform Production Monitoring...")
 

@@ -167,8 +167,7 @@ class Settings(BaseSettings):
         key = self.openai_api_key or os.getenv("OPENAI_API_KEY")
         if not key:
             raise ValueError(
-                "OpenAI API key not configured. "
-                "Set RAG_OPENAI_API_KEY or OPENAI_API_KEY environment variable."
+                "OpenAI API key not configured. Set RAG_OPENAI_API_KEY or OPENAI_API_KEY environment variable."
             )
         return key
 

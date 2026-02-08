@@ -12,49 +12,58 @@ This module provides:
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, field
-from enum import Enum
-import numpy as np
+from datetime import datetime, timedelta
 from decimal import Decimal
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
-from ...services.claude_assistant import ClaudeAssistant
-from ...services.cache_service import CacheService
+import numpy as np
+
 from ...ghl_utils.jorge_config import JorgeConfig
+from ...services.cache_service import CacheService
+from ...services.claude_assistant import ClaudeAssistant
 
 logger = logging.getLogger(__name__)
 
+
 class ClientPersonalityType(Enum):
     """Client personality classifications for Jorge's methodology"""
-    ANALYTICAL_DECIDER = "analytical_decider"        # Data-driven, methodical
-    EMOTIONAL_BUYER = "emotional_buyer"              # Heart-based decisions
+
+    ANALYTICAL_DECIDER = "analytical_decider"  # Data-driven, methodical
+    EMOTIONAL_BUYER = "emotional_buyer"  # Heart-based decisions
     AGGRESSIVE_NEGOTIATOR = "aggressive_negotiator"  # Confrontational style
-    COLLABORATIVE_PARTNER = "collaborative_partner" # Relationship-focused
-    PRICE_FOCUSED = "price_focused"                 # Cost-conscious primary
-    STATUS_SEEKER = "status_seeker"                 # Prestige-motivated
-    PRACTICAL_INVESTOR = "practical_investor"       # ROI-focused decisions
+    COLLABORATIVE_PARTNER = "collaborative_partner"  # Relationship-focused
+    PRICE_FOCUSED = "price_focused"  # Cost-conscious primary
+    STATUS_SEEKER = "status_seeker"  # Prestige-motivated
+    PRACTICAL_INVESTOR = "practical_investor"  # ROI-focused decisions
+
 
 class PurchaseReadinessStage(Enum):
     """Stages of purchase readiness"""
-    EXPLORATION = "exploration"          # Just looking, not serious
-    CONSIDERATION = "consideration"      # Actively considering options
-    EVALUATION = "evaluation"           # Comparing specific properties
-    NEGOTIATION = "negotiation"         # Ready to make offers
-    COMMITMENT = "commitment"           # Serious about closing
-    POST_DECISION = "post_decision"     # Already committed
+
+    EXPLORATION = "exploration"  # Just looking, not serious
+    CONSIDERATION = "consideration"  # Actively considering options
+    EVALUATION = "evaluation"  # Comparing specific properties
+    NEGOTIATION = "negotiation"  # Ready to make offers
+    COMMITMENT = "commitment"  # Serious about closing
+    POST_DECISION = "post_decision"  # Already committed
+
 
 class EngagementTiming(Enum):
     """Optimal engagement timing classifications"""
-    IMMEDIATE = "immediate"             # Contact within hours
-    URGENT = "urgent"                   # Contact within 24 hours
-    PROMPT = "prompt"                   # Contact within 3 days
-    SCHEDULED = "scheduled"             # Contact on specific date
-    PATIENT = "patient"                 # Wait for client to re-engage
+
+    IMMEDIATE = "immediate"  # Contact within hours
+    URGENT = "urgent"  # Contact within 24 hours
+    PROMPT = "prompt"  # Contact within 3 days
+    SCHEDULED = "scheduled"  # Contact on specific date
+    PATIENT = "patient"  # Wait for client to re-engage
+
 
 @dataclass
 class ClientPsychProfile:
     """Comprehensive client psychological profile"""
+
     client_id: str
     personality_type: ClientPersonalityType
     decision_making_style: str
@@ -66,9 +75,11 @@ class ClientPsychProfile:
     logical_triggers: List[str]
     stress_indicators: List[str]
 
+
 @dataclass
 class BehavioralPatterns:
     """Client behavioral pattern analysis"""
+
     client_id: str
     response_time_avg: float  # Average response time in hours
     engagement_frequency: str  # 'high', 'moderate', 'low'
@@ -79,9 +90,11 @@ class BehavioralPatterns:
     meeting_preferences: Dict[str, Any]
     communication_channels: List[str]
 
+
 @dataclass
 class FinancialProfile:
     """Client financial readiness assessment"""
+
     client_id: str
     financial_readiness_score: float  # 0-100
     pre_approval_status: str
@@ -92,9 +105,11 @@ class FinancialProfile:
     debt_to_income_estimate: float
     credit_confidence: str
 
+
 @dataclass
 class PurchasePrediction:
     """Purchase timing and probability prediction"""
+
     client_id: str
     purchase_probability: float  # 0-100
     predicted_timeframe: PurchaseReadinessStage
@@ -105,9 +120,11 @@ class PurchasePrediction:
     conversion_triggers: List[str]
     optimal_follow_up_schedule: List[Dict[str, Any]]
 
+
 @dataclass
 class ClientValueAssessment:
     """Client lifetime value and referral assessment"""
+
     client_id: str
     lifetime_value_prediction: Decimal
     referral_potential_score: int  # 0-10
@@ -117,6 +134,7 @@ class ClientValueAssessment:
     professional_connections: str
     geographic_influence: str
     testimonial_potential: str
+
 
 class ClientBehaviorAnalyzer:
     """
@@ -131,39 +149,39 @@ class ClientBehaviorAnalyzer:
 
         # Client analysis configurations
         self.analysis_config = {
-            'prediction_accuracy_target': 0.90,
-            'behavioral_data_lookback': 90,  # days
-            'confidence_threshold': 0.70,
-            'update_frequency': 1800,  # 30 minutes
-            'psychology_factors': [
-                'communication_patterns',
-                'decision_timing',
-                'objection_handling',
-                'engagement_level',
-                'information_seeking'
-            ]
+            "prediction_accuracy_target": 0.90,
+            "behavioral_data_lookback": 90,  # days
+            "confidence_threshold": 0.70,
+            "update_frequency": 1800,  # 30 minutes
+            "psychology_factors": [
+                "communication_patterns",
+                "decision_timing",
+                "objection_handling",
+                "engagement_level",
+                "information_seeking",
+            ],
         }
 
         # Jorge's client methodology
         self.jorge_client_methodology = {
-            'confrontational_fit_factors': [
-                'pressure_tolerance',
-                'direct_communication_preference',
-                'results_orientation',
-                'time_consciousness',
-                'value_recognition'
+            "confrontational_fit_factors": [
+                "pressure_tolerance",
+                "direct_communication_preference",
+                "results_orientation",
+                "time_consciousness",
+                "value_recognition",
             ],
-            'qualification_thresholds': {
-                'financial_readiness': 75,
-                'psychological_commitment': 70,
-                'urgency_level': 60,
-                'jorge_methodology_fit': 65
+            "qualification_thresholds": {
+                "financial_readiness": 75,
+                "psychological_commitment": 70,
+                "urgency_level": 60,
+                "jorge_methodology_fit": 65,
             },
-            'engagement_optimization': {
-                'high_probability_clients': 'immediate_personal_attention',
-                'moderate_probability_clients': 'specialized_bot_nurture',
-                'low_probability_clients': 'automated_drip_campaign'
-            }
+            "engagement_optimization": {
+                "high_probability_clients": "immediate_personal_attention",
+                "moderate_probability_clients": "specialized_bot_nurture",
+                "low_probability_clients": "automated_drip_campaign",
+            },
         }
 
         # Client behavior cache and tracking
@@ -171,10 +189,9 @@ class ClientBehaviorAnalyzer:
         self.prediction_accuracy = {}
         self.behavioral_model_performance = {}
 
-    async def analyze_client_psychology(self,
-                                      client_id: str,
-                                      interaction_history: List[Dict[str, Any]],
-                                      context: Optional[Dict[str, Any]] = None) -> ClientPsychProfile:
+    async def analyze_client_psychology(
+        self, client_id: str, interaction_history: List[Dict[str, Any]], context: Optional[Dict[str, Any]] = None
+    ) -> ClientPsychProfile:
         """
         Analyze client psychology and personality for optimal approach
         """
@@ -223,15 +240,17 @@ class ClientBehaviorAnalyzer:
             # Create psychological profile
             profile = ClientPsychProfile(
                 client_id=client_id,
-                personality_type=ClientPersonalityType(psychology_response.get('personality_type', 'analytical_decider')),
-                decision_making_style=psychology_response.get('decision_making_style', 'analytical'),
-                risk_tolerance=psychology_response.get('risk_tolerance', 'moderate'),
-                communication_preference=psychology_response.get('communication_preference', 'direct'),
-                pressure_sensitivity=psychology_response.get('pressure_sensitivity', 50.0),
-                authority_level=psychology_response.get('authority_level', 'joint_decision'),
-                emotional_triggers=psychology_response.get('emotional_triggers', []),
-                logical_triggers=psychology_response.get('logical_triggers', []),
-                stress_indicators=psychology_response.get('stress_indicators', [])
+                personality_type=ClientPersonalityType(
+                    psychology_response.get("personality_type", "analytical_decider")
+                ),
+                decision_making_style=psychology_response.get("decision_making_style", "analytical"),
+                risk_tolerance=psychology_response.get("risk_tolerance", "moderate"),
+                communication_preference=psychology_response.get("communication_preference", "direct"),
+                pressure_sensitivity=psychology_response.get("pressure_sensitivity", 50.0),
+                authority_level=psychology_response.get("authority_level", "joint_decision"),
+                emotional_triggers=psychology_response.get("emotional_triggers", []),
+                logical_triggers=psychology_response.get("logical_triggers", []),
+                stress_indicators=psychology_response.get("stress_indicators", []),
             )
 
             # Cache profile
@@ -244,10 +263,9 @@ class ClientBehaviorAnalyzer:
             logger.error(f"Client psychology analysis failed: {str(e)}")
             raise
 
-    async def predict_purchase_behavior(self,
-                                      client_id: str,
-                                      current_engagement_level: str,
-                                      market_context: Optional[Dict[str, Any]] = None) -> PurchasePrediction:
+    async def predict_purchase_behavior(
+        self, client_id: str, current_engagement_level: str, market_context: Optional[Dict[str, Any]] = None
+    ) -> PurchasePrediction:
         """
         Predict client purchase timing and probability
         """
@@ -255,13 +273,17 @@ class ClientBehaviorAnalyzer:
             logger.info(f"Predicting purchase behavior for: {client_id}")
 
             # Check cache
-            cache_key = f"purchase_prediction_{client_id}_{current_engagement_level}_{datetime.now().strftime('%Y%m%d_%H')}"
+            cache_key = (
+                f"purchase_prediction_{client_id}_{current_engagement_level}_{datetime.now().strftime('%Y%m%d_%H')}"
+            )
             cached_prediction = await self.cache.get(cache_key)
             if cached_prediction:
                 return PurchasePrediction(**cached_prediction)
 
             # Gather behavioral prediction data
-            behavioral_data = await self._gather_behavioral_prediction_data(client_id, current_engagement_level, market_context)
+            behavioral_data = await self._gather_behavioral_prediction_data(
+                client_id, current_engagement_level, market_context
+            )
 
             # Generate purchase behavior prediction
             prediction_prompt = f"""
@@ -296,14 +318,18 @@ class ClientBehaviorAnalyzer:
             # Create purchase prediction
             prediction = PurchasePrediction(
                 client_id=client_id,
-                purchase_probability=prediction_response.get('purchase_probability', 50.0),
-                predicted_timeframe=PurchaseReadinessStage(prediction_response.get('predicted_timeframe', 'consideration')),
-                predicted_purchase_date=datetime.now() + timedelta(days=prediction_response.get('predicted_days', 30)) if prediction_response.get('predicted_days') else None,
-                confidence_level=prediction_response.get('confidence_level', 0.75),
-                accelerating_factors=prediction_response.get('accelerating_factors', []),
-                delaying_factors=prediction_response.get('delaying_factors', []),
-                conversion_triggers=prediction_response.get('conversion_triggers', []),
-                optimal_follow_up_schedule=prediction_response.get('optimal_follow_up_schedule', [])
+                purchase_probability=prediction_response.get("purchase_probability", 50.0),
+                predicted_timeframe=PurchaseReadinessStage(
+                    prediction_response.get("predicted_timeframe", "consideration")
+                ),
+                predicted_purchase_date=datetime.now() + timedelta(days=prediction_response.get("predicted_days", 30))
+                if prediction_response.get("predicted_days")
+                else None,
+                confidence_level=prediction_response.get("confidence_level", 0.75),
+                accelerating_factors=prediction_response.get("accelerating_factors", []),
+                delaying_factors=prediction_response.get("delaying_factors", []),
+                conversion_triggers=prediction_response.get("conversion_triggers", []),
+                optimal_follow_up_schedule=prediction_response.get("optimal_follow_up_schedule", []),
             )
 
             # Cache prediction
@@ -316,9 +342,7 @@ class ClientBehaviorAnalyzer:
             logger.error(f"Purchase behavior prediction failed: {str(e)}")
             raise
 
-    async def assess_behavioral_patterns(self,
-                                       client_id: str,
-                                       interaction_window: int = 30) -> BehavioralPatterns:
+    async def assess_behavioral_patterns(self, client_id: str, interaction_window: int = 30) -> BehavioralPatterns:
         """
         Assess client behavioral patterns from interaction history
         """
@@ -366,14 +390,14 @@ class ClientBehaviorAnalyzer:
             # Create behavioral patterns assessment
             patterns = BehavioralPatterns(
                 client_id=client_id,
-                response_time_avg=patterns_response.get('response_time_avg', 24.0),
-                engagement_frequency=patterns_response.get('engagement_frequency', 'moderate'),
-                question_patterns=patterns_response.get('question_patterns', []),
-                objection_patterns=patterns_response.get('objection_patterns', []),
-                decision_velocity=patterns_response.get('decision_velocity', 'moderate'),
-                information_consumption=patterns_response.get('information_consumption', 'moderate'),
-                meeting_preferences=patterns_response.get('meeting_preferences', {}),
-                communication_channels=patterns_response.get('communication_channels', ['phone', 'email'])
+                response_time_avg=patterns_response.get("response_time_avg", 24.0),
+                engagement_frequency=patterns_response.get("engagement_frequency", "moderate"),
+                question_patterns=patterns_response.get("question_patterns", []),
+                objection_patterns=patterns_response.get("objection_patterns", []),
+                decision_velocity=patterns_response.get("decision_velocity", "moderate"),
+                information_consumption=patterns_response.get("information_consumption", "moderate"),
+                meeting_preferences=patterns_response.get("meeting_preferences", {}),
+                communication_channels=patterns_response.get("communication_channels", ["phone", "email"]),
             )
 
             # Cache patterns
@@ -386,9 +410,9 @@ class ClientBehaviorAnalyzer:
             logger.error(f"Behavioral patterns assessment failed: {str(e)}")
             raise
 
-    async def evaluate_financial_readiness(self,
-                                         client_id: str,
-                                         financial_data: Optional[Dict[str, Any]] = None) -> FinancialProfile:
+    async def evaluate_financial_readiness(
+        self, client_id: str, financial_data: Optional[Dict[str, Any]] = None
+    ) -> FinancialProfile:
         """
         Evaluate client financial readiness for purchase
         """
@@ -436,18 +460,18 @@ class ClientBehaviorAnalyzer:
             # Create financial profile
             profile = FinancialProfile(
                 client_id=client_id,
-                financial_readiness_score=financial_response.get('financial_readiness_score', 50.0),
-                pre_approval_status=financial_response.get('pre_approval_status', 'unknown'),
+                financial_readiness_score=financial_response.get("financial_readiness_score", 50.0),
+                pre_approval_status=financial_response.get("pre_approval_status", "unknown"),
                 budget_range={
-                    'min': Decimal(str(financial_response.get('budget_range', {}).get('min', 200000))),
-                    'max': Decimal(str(financial_response.get('budget_range', {}).get('max', 500000))),
-                    'target': Decimal(str(financial_response.get('budget_range', {}).get('target', 350000)))
+                    "min": Decimal(str(financial_response.get("budget_range", {}).get("min", 200000))),
+                    "max": Decimal(str(financial_response.get("budget_range", {}).get("max", 500000))),
+                    "target": Decimal(str(financial_response.get("budget_range", {}).get("target", 350000))),
                 },
-                budget_flexibility=financial_response.get('budget_flexibility', 20.0),
-                financing_confidence=financial_response.get('financing_confidence', 'moderate'),
-                down_payment_readiness=financial_response.get('down_payment_readiness', 'adequate'),
-                debt_to_income_estimate=financial_response.get('debt_to_income_estimate', 0.28),
-                credit_confidence=financial_response.get('credit_confidence', 'good')
+                budget_flexibility=financial_response.get("budget_flexibility", 20.0),
+                financing_confidence=financial_response.get("financing_confidence", "moderate"),
+                down_payment_readiness=financial_response.get("down_payment_readiness", "adequate"),
+                debt_to_income_estimate=financial_response.get("debt_to_income_estimate", 0.28),
+                credit_confidence=financial_response.get("credit_confidence", "good"),
             )
 
             # Cache profile
@@ -460,10 +484,12 @@ class ClientBehaviorAnalyzer:
             logger.error(f"Financial readiness evaluation failed: {str(e)}")
             raise
 
-    async def predict_client_value(self,
-                                 client_id: str,
-                                 behavioral_profile: Optional[BehavioralPatterns] = None,
-                                 financial_profile: Optional[FinancialProfile] = None) -> ClientValueAssessment:
+    async def predict_client_value(
+        self,
+        client_id: str,
+        behavioral_profile: Optional[BehavioralPatterns] = None,
+        financial_profile: Optional[FinancialProfile] = None,
+    ) -> ClientValueAssessment:
         """
         Predict client lifetime value and referral potential
         """
@@ -512,14 +538,14 @@ class ClientBehaviorAnalyzer:
             # Create client value assessment
             assessment = ClientValueAssessment(
                 client_id=client_id,
-                lifetime_value_prediction=Decimal(str(value_response.get('lifetime_value_prediction', 50000))),
-                referral_potential_score=value_response.get('referral_potential_score', 5),
-                repeat_business_probability=value_response.get('repeat_business_probability', 30.0),
-                network_influence_score=value_response.get('network_influence_score', 5),
-                social_media_reach=value_response.get('social_media_reach', 'moderate'),
-                professional_connections=value_response.get('professional_connections', 'moderate'),
-                geographic_influence=value_response.get('geographic_influence', 'local'),
-                testimonial_potential=value_response.get('testimonial_potential', 'good')
+                lifetime_value_prediction=Decimal(str(value_response.get("lifetime_value_prediction", 50000))),
+                referral_potential_score=value_response.get("referral_potential_score", 5),
+                repeat_business_probability=value_response.get("repeat_business_probability", 30.0),
+                network_influence_score=value_response.get("network_influence_score", 5),
+                social_media_reach=value_response.get("social_media_reach", "moderate"),
+                professional_connections=value_response.get("professional_connections", "moderate"),
+                geographic_influence=value_response.get("geographic_influence", "local"),
+                testimonial_potential=value_response.get("testimonial_potential", "good"),
             )
 
             # Cache assessment
@@ -532,10 +558,9 @@ class ClientBehaviorAnalyzer:
             logger.error(f"Client value prediction failed: {str(e)}")
             raise
 
-    async def determine_optimal_engagement_strategy(self,
-                                                  client_id: str,
-                                                  psychology_profile: ClientPsychProfile,
-                                                  purchase_prediction: PurchasePrediction) -> Dict[str, Any]:
+    async def determine_optimal_engagement_strategy(
+        self, client_id: str, psychology_profile: ClientPsychProfile, purchase_prediction: PurchasePrediction
+    ) -> Dict[str, Any]:
         """
         Determine optimal engagement strategy based on client analysis
         """
@@ -550,16 +575,20 @@ class ClientBehaviorAnalyzer:
 
             # Create optimal engagement strategy
             strategy = {
-                'client_id': client_id,
-                'jorge_methodology_fit_score': jorge_fit_score,
-                'recommended_approach': await self._recommend_approach_strategy(psychology_profile, jorge_fit_score),
-                'engagement_timing': engagement_timing,
-                'communication_strategy': await self._determine_communication_strategy(psychology_profile),
-                'pressure_application_timing': await self._determine_pressure_timing(psychology_profile, purchase_prediction),
-                'follow_up_schedule': purchase_prediction.optimal_follow_up_schedule,
-                'success_probability': await self._calculate_success_probability(psychology_profile, purchase_prediction, jorge_fit_score),
-                'risk_mitigation': await self._identify_engagement_risks(psychology_profile),
-                'value_maximization': await self._identify_value_opportunities(psychology_profile, purchase_prediction)
+                "client_id": client_id,
+                "jorge_methodology_fit_score": jorge_fit_score,
+                "recommended_approach": await self._recommend_approach_strategy(psychology_profile, jorge_fit_score),
+                "engagement_timing": engagement_timing,
+                "communication_strategy": await self._determine_communication_strategy(psychology_profile),
+                "pressure_application_timing": await self._determine_pressure_timing(
+                    psychology_profile, purchase_prediction
+                ),
+                "follow_up_schedule": purchase_prediction.optimal_follow_up_schedule,
+                "success_probability": await self._calculate_success_probability(
+                    psychology_profile, purchase_prediction, jorge_fit_score
+                ),
+                "risk_mitigation": await self._identify_engagement_risks(psychology_profile),
+                "value_maximization": await self._identify_value_opportunities(psychology_profile, purchase_prediction),
             }
 
             logger.info(f"Optimal engagement strategy determined - Jorge fit: {jorge_fit_score}")
@@ -570,75 +599,88 @@ class ClientBehaviorAnalyzer:
             raise
 
     # Helper methods for data gathering and analysis
-    async def _analyze_interaction_psychology(self, client_id: str, interaction_history: List[Dict[str, Any]], context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _analyze_interaction_psychology(
+        self, client_id: str, interaction_history: List[Dict[str, Any]], context: Optional[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze interaction patterns for psychological insights"""
         # Implement psychology analysis logic
         return {
-            'communication_patterns': {},
-            'response_timing': {},
-            'question_themes': [],
-            'objection_patterns': [],
-            'engagement_consistency': {},
-            'stress_indicators': []
+            "communication_patterns": {},
+            "response_timing": {},
+            "question_themes": [],
+            "objection_patterns": [],
+            "engagement_consistency": {},
+            "stress_indicators": [],
         }
 
-    async def _gather_behavioral_prediction_data(self, client_id: str, engagement_level: str, market_context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _gather_behavioral_prediction_data(
+        self, client_id: str, engagement_level: str, market_context: Optional[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Gather data for behavioral prediction"""
         # Implement behavioral prediction data gathering
         return {
-            'client_id': client_id,
-            'current_engagement': engagement_level,
-            'interaction_history': {},
-            'financial_indicators': {},
-            'market_context': market_context or {},
-            'timing_patterns': {},
-            'decision_indicators': {}
+            "client_id": client_id,
+            "current_engagement": engagement_level,
+            "interaction_history": {},
+            "financial_indicators": {},
+            "market_context": market_context or {},
+            "timing_patterns": {},
+            "decision_indicators": {},
         }
 
     async def _gather_behavioral_pattern_data(self, client_id: str, interaction_window: int) -> Dict[str, Any]:
         """Gather behavioral pattern data"""
         # Implement behavioral pattern data gathering
         return {
-            'client_id': client_id,
-            'interaction_window': interaction_window,
-            'response_times': [],
-            'engagement_frequency': {},
-            'communication_preferences': {},
-            'decision_patterns': {}
+            "client_id": client_id,
+            "interaction_window": interaction_window,
+            "response_times": [],
+            "engagement_frequency": {},
+            "communication_preferences": {},
+            "decision_patterns": {},
         }
 
-    async def _analyze_financial_indicators(self, client_id: str, financial_data: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _analyze_financial_indicators(
+        self, client_id: str, financial_data: Optional[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze financial readiness indicators"""
         # Implement financial analysis logic
         return {
-            'client_id': client_id,
-            'financial_data': financial_data or {},
-            'pre_approval_indicators': {},
-            'budget_signals': {},
-            'financing_readiness': {},
-            'financial_behavior_patterns': {}
+            "client_id": client_id,
+            "financial_data": financial_data or {},
+            "pre_approval_indicators": {},
+            "budget_signals": {},
+            "financing_readiness": {},
+            "financial_behavior_patterns": {},
         }
 
-    async def _gather_client_value_data(self, client_id: str, behavioral_profile: Optional[BehavioralPatterns], financial_profile: Optional[FinancialProfile]) -> Dict[str, Any]:
+    async def _gather_client_value_data(
+        self,
+        client_id: str,
+        behavioral_profile: Optional[BehavioralPatterns],
+        financial_profile: Optional[FinancialProfile],
+    ) -> Dict[str, Any]:
         """Gather client value prediction data"""
         # Implement value data gathering
         return {
-            'client_id': client_id,
-            'behavioral_profile': behavioral_profile.__dict__ if behavioral_profile else {},
-            'financial_profile': financial_profile.__dict__ if financial_profile else {},
-            'network_data': {},
-            'referral_history': {},
-            'social_influence': {}
+            "client_id": client_id,
+            "behavioral_profile": behavioral_profile.__dict__ if behavioral_profile else {},
+            "financial_profile": financial_profile.__dict__ if financial_profile else {},
+            "network_data": {},
+            "referral_history": {},
+            "social_influence": {},
         }
 
-    async def _calculate_jorge_methodology_fit(self, psychology_profile: ClientPsychProfile, purchase_prediction: PurchasePrediction) -> float:
+    async def _calculate_jorge_methodology_fit(
+        self, psychology_profile: ClientPsychProfile, purchase_prediction: PurchasePrediction
+    ) -> float:
         """Calculate how well client fits Jorge's methodology"""
         # Implement Jorge methodology fit calculation
         fit_factors = {
-            'pressure_tolerance': 100 - psychology_profile.pressure_sensitivity,
-            'direct_communication': 80 if psychology_profile.communication_preference == 'direct' else 40,
-            'decision_velocity': 80 if purchase_prediction.predicted_timeframe in ['negotiation', 'commitment'] else 50,
-            'results_orientation': 70  # Default assumption
+            "pressure_tolerance": 100 - psychology_profile.pressure_sensitivity,
+            "direct_communication": 80 if psychology_profile.communication_preference == "direct" else 40,
+            "decision_velocity": 80 if purchase_prediction.predicted_timeframe in ["negotiation", "commitment"] else 50,
+            "results_orientation": 70,  # Default assumption
         }
         return sum(fit_factors.values()) / len(fit_factors)
 
@@ -665,28 +707,36 @@ class ClientBehaviorAnalyzer:
     async def _determine_communication_strategy(self, psychology_profile: ClientPsychProfile) -> Dict[str, Any]:
         """Determine optimal communication strategy"""
         return {
-            'primary_style': psychology_profile.communication_preference,
-            'pressure_level': 'high' if psychology_profile.pressure_sensitivity < 30 else 'moderate',
-            'information_depth': 'detailed' if psychology_profile.personality_type == ClientPersonalityType.ANALYTICAL_DECIDER else 'summary',
-            'frequency': 'high' if psychology_profile.personality_type == ClientPersonalityType.EMOTIONAL_BUYER else 'moderate'
+            "primary_style": psychology_profile.communication_preference,
+            "pressure_level": "high" if psychology_profile.pressure_sensitivity < 30 else "moderate",
+            "information_depth": "detailed"
+            if psychology_profile.personality_type == ClientPersonalityType.ANALYTICAL_DECIDER
+            else "summary",
+            "frequency": "high"
+            if psychology_profile.personality_type == ClientPersonalityType.EMOTIONAL_BUYER
+            else "moderate",
         }
 
-    async def _determine_pressure_timing(self, psychology_profile: ClientPsychProfile, purchase_prediction: PurchasePrediction) -> List[str]:
+    async def _determine_pressure_timing(
+        self, psychology_profile: ClientPsychProfile, purchase_prediction: PurchasePrediction
+    ) -> List[str]:
         """Determine optimal timing for pressure application"""
         pressure_timing = []
 
         if psychology_profile.pressure_sensitivity < 40:
-            pressure_timing.extend(['initial_contact', 'objection_handling'])
+            pressure_timing.extend(["initial_contact", "objection_handling"])
 
         if purchase_prediction.purchase_probability >= 70:
-            pressure_timing.append('closing_acceleration')
+            pressure_timing.append("closing_acceleration")
 
         if psychology_profile.personality_type == ClientPersonalityType.AGGRESSIVE_NEGOTIATOR:
-            pressure_timing.append('negotiation_leverage')
+            pressure_timing.append("negotiation_leverage")
 
         return pressure_timing
 
-    async def _calculate_success_probability(self, psychology_profile: ClientPsychProfile, purchase_prediction: PurchasePrediction, jorge_fit_score: float) -> float:
+    async def _calculate_success_probability(
+        self, psychology_profile: ClientPsychProfile, purchase_prediction: PurchasePrediction, jorge_fit_score: float
+    ) -> float:
         """Calculate overall success probability with Jorge's methodology"""
         base_probability = purchase_prediction.purchase_probability
         jorge_multiplier = jorge_fit_score / 100
@@ -705,12 +755,14 @@ class ClientBehaviorAnalyzer:
         if psychology_profile.personality_type == ClientPersonalityType.COLLABORATIVE_PARTNER:
             risks.append("Collaborative preference - may resist confrontational approach")
 
-        if psychology_profile.authority_level != 'sole_decision':
+        if psychology_profile.authority_level != "sole_decision":
             risks.append("Joint decision making - need to engage multiple stakeholders")
 
         return risks
 
-    async def _identify_value_opportunities(self, psychology_profile: ClientPsychProfile, purchase_prediction: PurchasePrediction) -> List[str]:
+    async def _identify_value_opportunities(
+        self, psychology_profile: ClientPsychProfile, purchase_prediction: PurchasePrediction
+    ) -> List[str]:
         """Identify value maximization opportunities"""
         opportunities = []
 
@@ -720,7 +772,7 @@ class ClientBehaviorAnalyzer:
         if purchase_prediction.purchase_probability >= 80:
             opportunities.append("High closing probability - opportunity for premium commission")
 
-        if psychology_profile.decision_making_style == 'fast':
+        if psychology_profile.decision_making_style == "fast":
             opportunities.append("Fast decision maker - compress sales cycle for efficiency")
 
         return opportunities

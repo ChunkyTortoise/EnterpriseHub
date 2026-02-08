@@ -8,21 +8,22 @@ with centralized governance, security, and cost management.
 
 import asyncio
 import json
+import logging
 import time
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Any, Optional, Callable, Set
+from typing import Any, Callable, Dict, List, Optional, Set
 from uuid import uuid4
-import logging
 
-from ghl_real_estate_ai.services.progressive_skills_manager import ProgressiveSkillsManager
-from ghl_real_estate_ai.services.mcp_client import get_mcp_client
-from ghl_real_estate_ai.services.token_tracker import TokenTracker
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.mcp_client import get_mcp_client
+from ghl_real_estate_ai.services.progressive_skills_manager import ProgressiveSkillsManager
+from ghl_real_estate_ai.services.token_tracker import TokenTracker
 from ghl_real_estate_ai.utils.async_utils import safe_create_task
 
 logger = get_logger(__name__)
+
 
 class AgentStatus(Enum):
     IDLE = "idle"
@@ -31,12 +32,14 @@ class AgentStatus(Enum):
     ERROR = "error"
     MAINTENANCE = "maintenance"
 
+
 class TaskPriority(Enum):
     LOW = 1
     NORMAL = 2
     HIGH = 3
     CRITICAL = 4
     EMERGENCY = 5
+
 
 class AgentCapability(Enum):
     LEAD_QUALIFICATION = "lead_qualification"
@@ -48,9 +51,11 @@ class AgentCapability(Enum):
     DOCUMENT_PROCESSING = "document_processing"
     VOICE_INTERACTION = "voice_interaction"
 
+
 @dataclass
 class AgentMetrics:
     """Real-time agent performance metrics"""
+
     total_tasks: int = 0
     completed_tasks: int = 0
     failed_tasks: int = 0
@@ -66,9 +71,11 @@ class AgentMetrics:
             return 100.0
         return (self.completed_tasks / self.total_tasks) * 100
 
+
 @dataclass
 class MeshAgent:
     """Agent registration in the mesh"""
+
     agent_id: str
     name: str
     capabilities: List[AgentCapability]
@@ -86,9 +93,9 @@ class MeshAgent:
     @property
     def is_available(self) -> bool:
         return (
-            self.status == AgentStatus.IDLE and
-            self.current_tasks < self.max_concurrent_tasks and
-            self.last_heartbeat > datetime.now() - timedelta(minutes=2)
+            self.status == AgentStatus.IDLE
+            and self.current_tasks < self.max_concurrent_tasks
+            and self.last_heartbeat > datetime.now() - timedelta(minutes=2)
         )
 
     @property
@@ -96,9 +103,11 @@ class MeshAgent:
         """Current load as percentage of capacity"""
         return (self.current_tasks / self.max_concurrent_tasks) * 100
 
+
 @dataclass
 class AgentTask:
     """Task definition for mesh execution"""
+
     task_id: str
     task_type: str
     priority: TaskPriority
@@ -125,6 +134,7 @@ class AgentTask:
         if self.started_at and self.completed_at:
             return (self.completed_at - self.started_at).total_seconds()
         return None
+
 
 class AgentMeshCoordinator:
     """
@@ -389,10 +399,7 @@ class AgentMeshCoordinator:
     async def _execute_jorge_bot_task(self, task: AgentTask, agent: MeshAgent) -> Dict[str, Any]:
         """Execute task on Jorge bot agents"""
         # Use progressive skills for token efficiency
-        skill_result = await self.skills_manager.execute_skill(
-            task.task_type,
-            task.payload
-        )
+        skill_result = await self.skills_manager.execute_skill(task.task_type, task.payload)
 
         # Track token usage
         await self.token_tracker.record_usage(
@@ -401,7 +408,7 @@ class AgentMeshCoordinator:
             task.task_type,
             task.requester_id,
             "progressive_skills",
-            "mesh_coordinated"
+            "mesh_coordinated",
         )
 
         return skill_result
@@ -411,11 +418,7 @@ class AgentMeshCoordinator:
         # Parse MCP server and tool from agent endpoint
         server_name, tool_name = agent.endpoint.split(":", 1)
 
-        result = await self.mcp_client.call_tool(
-            server_name,
-            tool_name,
-            task.payload
-        )
+        result = await self.mcp_client.call_tool(server_name, tool_name, task.payload)
 
         return result
 
@@ -426,7 +429,9 @@ class AgentMeshCoordinator:
 
     async def get_mesh_status(self) -> Dict[str, Any]:
         """Get comprehensive mesh status"""
-        active_agents = sum(1 for a in self.agents.values() if a.status in [AgentStatus.IDLE, AgentStatus.ACTIVE, AgentStatus.BUSY])
+        active_agents = sum(
+            1 for a in self.agents.values() if a.status in [AgentStatus.IDLE, AgentStatus.ACTIVE, AgentStatus.BUSY]
+        )
 
         return {
             "timestamp": datetime.now().isoformat(),
@@ -439,10 +444,16 @@ class AgentMeshCoordinator:
             },
             "tasks": {
                 "active": len(self.active_tasks),
-                "completed_today": len([t for t in self.completed_tasks.values()
-                                      if t.completed_at and t.completed_at.date() == datetime.now().date()]),
-                "failed_today": len([t for t in self.task_history
-                                   if t.error and t.created_at.date() == datetime.now().date()]),
+                "completed_today": len(
+                    [
+                        t
+                        for t in self.completed_tasks.values()
+                        if t.completed_at and t.completed_at.date() == datetime.now().date()
+                    ]
+                ),
+                "failed_today": len(
+                    [t for t in self.task_history if t.error and t.created_at.date() == datetime.now().date()]
+                ),
             },
             "performance": await self._calculate_mesh_performance(),
             "costs": await self._calculate_cost_summary(),
@@ -458,8 +469,7 @@ class AgentMeshCoordinator:
         return {
             "agent": asdict(agent),
             "recent_tasks": [
-                asdict(task) for task in list(self.completed_tasks.values())[-10:]
-                if task.assigned_agent == agent_id
+                asdict(task) for task in list(self.completed_tasks.values())[-10:] if task.assigned_agent == agent_id
             ],
             "performance_trend": await self._get_agent_performance_trend(agent_id),
         }
@@ -549,7 +559,7 @@ class AgentMeshCoordinator:
                 # Clean up history older than 24 hours
                 cutoff = datetime.now() - timedelta(hours=24)
                 self.task_history = [t for t in self.task_history if t.created_at > cutoff]
-                
+
                 await asyncio.sleep(3600)  # Run every hour
             except Exception as e:
                 logger.error(f"Cleanup monitor error: {e}")
@@ -587,14 +597,14 @@ class AgentMeshCoordinator:
                 "name": agent.name,
                 "status": agent.status.value if is_healthy else "error",
                 "last_heartbeat": agent.last_heartbeat.isoformat(),
-                "healthy": is_healthy
+                "healthy": is_healthy,
             }
-            
+
         return {
             "status": "healthy" if all(a["healthy"] for a in agent_health.values()) else "degraded",
             "timestamp": datetime.now().isoformat(),
             "agents": agent_health,
-            "coordinator": "active"
+            "coordinator": "active",
         }
 
     # Additional helper methods
@@ -649,9 +659,8 @@ class AgentMeshCoordinator:
             agent.metrics.average_response_time = execution_time
         else:
             agent.metrics.average_response_time = (
-                (agent.metrics.average_response_time * (agent.metrics.total_tasks - 1) + execution_time) /
-                agent.metrics.total_tasks
-            )
+                agent.metrics.average_response_time * (agent.metrics.total_tasks - 1) + execution_time
+            ) / agent.metrics.total_tasks
 
     async def _handle_task_failure(self, task: AgentTask, error: str):
         """Handle task execution failure"""
@@ -705,8 +714,10 @@ class AgentMeshCoordinator:
             for agent in self.agents.values()
         )
 
+
 # Global instance
 _mesh_coordinator = None
+
 
 def get_mesh_coordinator() -> AgentMeshCoordinator:
     """Get singleton mesh coordinator instance"""

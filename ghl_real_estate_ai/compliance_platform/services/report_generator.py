@@ -18,8 +18,8 @@ from ..models.compliance_models import (
     ComplianceScore,
     ComplianceStatus,
     PolicyViolation,
-    RiskAssessment,
     RegulationType,
+    RiskAssessment,
 )
 
 if TYPE_CHECKING:
@@ -67,10 +67,7 @@ class ComplianceReportGenerator:
         self.enable_ai_narratives = enable_ai_narratives and ai_analyzer is not None
 
         if enable_ai_narratives and ai_analyzer is None:
-            logger.warning(
-                "enable_ai_narratives=True but no ai_analyzer provided. "
-                "AI narratives will be disabled."
-            )
+            logger.warning("enable_ai_narratives=True but no ai_analyzer provided. AI narratives will be disabled.")
 
     async def generate_executive_summary(
         self,
@@ -101,9 +98,7 @@ class ComplianceReportGenerator:
             if assessment:
                 assessments.append(assessment)
 
-            model_violations = self.compliance_service.policy_enforcer.get_active_violations(
-                model_id=model.model_id
-            )
+            model_violations = self.compliance_service.policy_enforcer.get_active_violations(model_id=model.model_id)
             violations.extend(model_violations)
 
         # Calculate overall score
@@ -132,13 +127,19 @@ class ComplianceReportGenerator:
         # Generate key findings
         key_findings = []
         if dashboard_data["summary"]["critical_violations"] > 0:
-            key_findings.append(f"{dashboard_data['summary']['critical_violations']} critical violations require immediate attention")
+            key_findings.append(
+                f"{dashboard_data['summary']['critical_violations']} critical violations require immediate attention"
+            )
         if dashboard_data["risk_distribution"].get("high", 0) > 0:
             key_findings.append(f"{dashboard_data['risk_distribution']['high']} high-risk AI systems identified")
         if overall_score.overall_score < 80:
-            key_findings.append(f"Overall compliance score of {overall_score.overall_score:.1f}% below target threshold")
+            key_findings.append(
+                f"Overall compliance score of {overall_score.overall_score:.1f}% below target threshold"
+            )
         if dashboard_data["summary"]["potential_exposure"] > 0:
-            key_findings.append(f"Potential regulatory exposure of €{dashboard_data['summary']['potential_exposure']:,.0f}")
+            key_findings.append(
+                f"Potential regulatory exposure of €{dashboard_data['summary']['potential_exposure']:,.0f}"
+            )
 
         # Generate priority actions
         priority_actions = []
@@ -164,8 +165,8 @@ class ComplianceReportGenerator:
                 "low": sum(1 for v in violations if v.severity.value == "low"),
             },
             "models_assessed": len(models),
-            "period_start": period_start.strftime('%Y-%m-%d'),
-            "period_end": period_end.strftime('%Y-%m-%d'),
+            "period_start": period_start.strftime("%Y-%m-%d"),
+            "period_end": period_end.strftime("%Y-%m-%d"),
             "key_findings": key_findings,
             "priority_actions": priority_actions,
             "risk_distribution": dashboard_data["risk_distribution"],
@@ -281,7 +282,7 @@ class ComplianceReportGenerator:
         executive_summary = f"""
 ## {reg_name} Compliance Report
 
-**Reporting Period**: {period_start.strftime('%Y-%m-%d')} to {period_end.strftime('%Y-%m-%d')}
+**Reporting Period**: {period_start.strftime("%Y-%m-%d")} to {period_end.strftime("%Y-%m-%d")}
 
 ### Scope
 - **AI Systems Covered**: {len(relevant_models)}
@@ -289,15 +290,15 @@ class ComplianceReportGenerator:
 - **Active Violations**: {len(violations)}
 
 ### Audit Summary
-- Total Audit Events: {audit_report['summary']['total_events']}
-- Risk Assessments Performed: {audit_report['summary']['risk_assessments']}
-- AI Decisions Logged: {audit_report['summary']['ai_decisions']}
-- Human Overrides: {audit_report['summary']['human_overrides']}
+- Total Audit Events: {audit_report["summary"]["total_events"]}
+- Risk Assessments Performed: {audit_report["summary"]["risk_assessments"]}
+- AI Decisions Logged: {audit_report["summary"]["ai_decisions"]}
+- Human Overrides: {audit_report["summary"]["human_overrides"]}
 
 ### Compliance Metrics
-- Violation Resolution Rate: {audit_report['compliance_metrics']['violation_resolution_rate']}
-- Human Oversight Active: {'Yes' if audit_report['compliance_metrics']['human_oversight_active'] else 'No'}
-- Audit Trail Complete: {'Yes' if audit_report['compliance_metrics']['audit_trail_complete'] else 'No'}
+- Violation Resolution Rate: {audit_report["compliance_metrics"]["violation_resolution_rate"]}
+- Human Oversight Active: {"Yes" if audit_report["compliance_metrics"]["human_oversight_active"] else "No"}
+- Audit Trail Complete: {"Yes" if audit_report["compliance_metrics"]["audit_trail_complete"] else "No"}
 
 ### Systems Inventory
 {self._format_model_list(relevant_models)}
@@ -328,7 +329,9 @@ class ComplianceReportGenerator:
                 f"{len(violations)} active compliance gaps identified",
             ],
             priority_actions=[
-                f"Address {critical_count} critical violations" if critical_count > 0 else "Maintain compliance posture",
+                f"Address {critical_count} critical violations"
+                if critical_count > 0
+                else "Maintain compliance posture",
                 "Complete quarterly compliance documentation update",
                 "Conduct staff training on regulation requirements",
             ],
@@ -371,15 +374,17 @@ class ComplianceReportGenerator:
                 if assessment and not any(r in assessment.applicable_regulations for r in regulations):
                     continue
 
-            model_documentation.append({
-                "model_id": model.model_id,
-                "model_name": model.name,
-                "version": model.version,
-                "registration": model.model_dump(),
-                "risk_assessment": assessment.model_dump() if assessment else None,
-                "compliance_score": score.model_dump() if score else None,
-                "audit_history": [h.model_dump() for h in history],
-            })
+            model_documentation.append(
+                {
+                    "model_id": model.model_id,
+                    "model_name": model.name,
+                    "version": model.version,
+                    "registration": model.model_dump(),
+                    "risk_assessment": assessment.model_dump() if assessment else None,
+                    "compliance_score": score.model_dump() if score else None,
+                    "audit_history": [h.model_dump() for h in history],
+                }
+            )
 
         # Get violations and remediations
         violations = self.compliance_service.policy_enforcer.get_active_violations()
@@ -451,20 +456,20 @@ class ComplianceReportGenerator:
         return f"""
 ## Compliance Status Overview
 
-The organization's AI compliance posture for the period {period_start.strftime('%Y-%m-%d')} to {period_end.strftime('%Y-%m-%d')} shows:
+The organization's AI compliance posture for the period {period_start.strftime("%Y-%m-%d")} to {period_end.strftime("%Y-%m-%d")} shows:
 
 - **Overall Compliance Score**: {overall_score.overall_score:.1f}% ({overall_score.grade})
 - **AI Models Tracked**: {len(models)}
 - **Active Violations**: {len(violations)}
-- **Potential Regulatory Exposure**: €{dashboard_data['summary']['potential_exposure']:,.0f}
+- **Potential Regulatory Exposure**: €{dashboard_data["summary"]["potential_exposure"]:,.0f}
 
 ### Risk Distribution
-- High Risk: {dashboard_data['risk_distribution'].get('high', 0)} systems
-- Limited Risk: {dashboard_data['risk_distribution'].get('limited', 0)} systems
-- Minimal Risk: {dashboard_data['risk_distribution'].get('minimal', 0)} systems
+- High Risk: {dashboard_data["risk_distribution"].get("high", 0)} systems
+- Limited Risk: {dashboard_data["risk_distribution"].get("limited", 0)} systems
+- Minimal Risk: {dashboard_data["risk_distribution"].get("minimal", 0)} systems
 
 ### Compliance by Regulation
-{self._format_regulation_summary(dashboard_data['regulation_coverage'])}
+{self._format_regulation_summary(dashboard_data["regulation_coverage"])}
 
 ### Immediate Actions Required
 {self._format_actions(priority_actions)}
@@ -541,23 +546,23 @@ The organization's AI compliance posture for the period {period_start.strftime('
 for executive leadership to improve the organization's AI compliance position:
 
 COMPLIANCE OVERVIEW:
-- Overall Score: {score_data.get('overall_score', 'N/A')}/100 (Grade: {score_data.get('grade', 'N/A')})
-- Trend: {score_data.get('trend', 'stable')} ({score_data.get('trend_percentage', 0):+.1f}%)
-- Models Assessed: {report_data.get('models_assessed', 0)}
+- Overall Score: {score_data.get("overall_score", "N/A")}/100 (Grade: {score_data.get("grade", "N/A")})
+- Trend: {score_data.get("trend", "stable")} ({score_data.get("trend_percentage", 0):+.1f}%)
+- Models Assessed: {report_data.get("models_assessed", 0)}
 
 VIOLATIONS:
-- Critical: {violations.get('critical', 0)}
-- High: {violations.get('high', 0)}
-- Medium: {violations.get('medium', 0)}
-- Low: {violations.get('low', 0)}
+- Critical: {violations.get("critical", 0)}
+- High: {violations.get("high", 0)}
+- Medium: {violations.get("medium", 0)}
+- Low: {violations.get("low", 0)}
 
 RISK DISTRIBUTION:
-- High Risk Systems: {risk_dist.get('high', 0)}
-- Limited Risk: {risk_dist.get('limited', 0)}
-- Minimal Risk: {risk_dist.get('minimal', 0)}
+- High Risk Systems: {risk_dist.get("high", 0)}
+- Limited Risk: {risk_dist.get("limited", 0)}
+- Minimal Risk: {risk_dist.get("minimal", 0)}
 
 KEY FINDINGS:
-{chr(10).join(f"- {f}" for f in report_data.get('key_findings', [])) or "- None specified"}
+{chr(10).join(f"- {f}" for f in report_data.get("key_findings", [])) or "- None specified"}
 
 Provide strategic, actionable recommendations that:
 1. Address the most critical compliance gaps
@@ -574,8 +579,8 @@ Format as a numbered list (1. 2. 3. etc.)"""
         recommendations = []
 
         # Match numbered items (1. or 1) format)
-        pattern = r'^\d+[\.\)]\s*(.+)$'
-        for line in response.split('\n'):
+        pattern = r"^\d+[\.\)]\s*(.+)$"
+        for line in response.split("\n"):
             match = re.match(pattern, line.strip())
             if match:
                 rec = match.group(1).strip()
@@ -584,9 +589,9 @@ Format as a numbered list (1. 2. 3. etc.)"""
 
         # If no numbered items found, try bullet points
         if not recommendations:
-            for line in response.split('\n'):
+            for line in response.split("\n"):
                 line = line.strip()
-                if line.startswith(('- ', '* ', '+ ')):
+                if line.startswith(("- ", "* ", "+ ")):
                     rec = line[2:].strip()
                     if len(rec) > 20:
                         recommendations.append(rec)
@@ -678,7 +683,7 @@ Format as a numbered list (1. 2. 3. etc.)"""
 
     def _format_actions(self, actions: List[str]) -> str:
         """Format action items"""
-        return "\n".join(f"{i+1}. {action}" for i, action in enumerate(actions))
+        return "\n".join(f"{i + 1}. {action}" for i, action in enumerate(actions))
 
     def _format_model_list(self, models: List[Any]) -> str:
         """Format model list for report"""
@@ -694,10 +699,13 @@ Format as a numbered list (1. 2. 3. etc.)"""
         import hashlib
         import json
 
-        content = json.dumps({
-            "model_count": len(models),
-            "violation_count": len(violations),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        }, sort_keys=True)
+        content = json.dumps(
+            {
+                "model_count": len(models),
+                "violation_count": len(violations),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            },
+            sort_keys=True,
+        )
 
         return hashlib.sha256(content.encode()).hexdigest()[:16]

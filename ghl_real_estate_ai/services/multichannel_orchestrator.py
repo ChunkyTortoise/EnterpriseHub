@@ -12,14 +12,14 @@ Enhanced Features:
 - Advanced analytics and insights
 """
 
-import json
 import asyncio
+import json
 import logging
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
-from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
@@ -203,9 +203,7 @@ class MultiChannelOrchestrator:
         """Add a new sequence"""
         self.sequences[sequence.sequence_id] = sequence
 
-    def start_sequence(
-        self, lead_id: str, sequence_id: str
-    ) -> Optional[SequenceExecution]:
+    def start_sequence(self, lead_id: str, sequence_id: str) -> Optional[SequenceExecution]:
         """Start a sequence for a lead"""
 
         sequence = self.sequences.get(sequence_id)
@@ -224,9 +222,7 @@ class MultiChannelOrchestrator:
         self.executions[execution.execution_id] = execution
         return execution
 
-    def select_optimal_channel(
-        self, lead_id: str, message_type: str, time_of_day: int
-    ) -> str:
+    def select_optimal_channel(self, lead_id: str, message_type: str, time_of_day: int) -> str:
         """AI-powered channel selection"""
 
         # Get lead's channel preferences from history
@@ -327,9 +323,7 @@ class MultiChannelOrchestrator:
 
         # Select optimal channel if not specified
         if not step.channel:
-            step.channel = self.select_optimal_channel(
-                execution.lead_id, "general", datetime.utcnow().hour
-            )
+            step.channel = self.select_optimal_channel(execution.lead_id, "general", datetime.utcnow().hour)
 
         # Format message
         message = self._format_message(step.message_template, lead_context)
@@ -390,9 +384,7 @@ class MultiChannelOrchestrator:
             "delivered": True,
         }
 
-    def track_engagement(
-        self, lead_id: str, channel: str, action: str, metadata: Dict = None
-    ):
+    def track_engagement(self, lead_id: str, channel: str, action: str, metadata: Dict = None):
         """Track lead engagement with messages"""
 
         if lead_id not in self.engagement_history:
@@ -420,23 +412,17 @@ class MultiChannelOrchestrator:
 
         if action == "responded":
             prefs[f"prefers_{channel}"] = True
-            prefs[f"{channel}_response_rate"] = (
-                prefs.get(f"{channel}_response_rate", 0) + 1
-            )
+            prefs[f"{channel}_response_rate"] = prefs.get(f"{channel}_response_rate", 0) + 1
 
     def get_sequence_performance(self, sequence_id: str) -> Dict:
         """Get performance metrics for a sequence"""
 
-        executions = [
-            e for e in self.executions.values() if e.sequence_id == sequence_id
-        ]
+        executions = [e for e in self.executions.values() if e.sequence_id == sequence_id]
 
         if not executions:
             return {"sequence_id": sequence_id, "total_executions": 0}
 
-        completed = len(
-            [e for e in executions if e.status == SequenceStatus.COMPLETED.value]
-        )
+        completed = len([e for e in executions if e.status == SequenceStatus.COMPLETED.value])
         active = len([e for e in executions if e.status == SequenceStatus.ACTIVE.value])
 
         # Calculate average completion rate
@@ -470,11 +456,7 @@ class MultiChannelOrchestrator:
             channel_stats[channel] = {
                 "total_sent": len(channel_events),
                 "responses": responses,
-                "response_rate": (
-                    f"{(responses / len(channel_events) * 100):.1f}%"
-                    if channel_events
-                    else "0%"
-                ),
+                "response_rate": (f"{(responses / len(channel_events) * 100):.1f}%" if channel_events else "0%"),
             }
 
         return channel_stats
@@ -500,11 +482,9 @@ def demo_multichannel_orchestrator():
 
     # Execute steps
     for i in range(3):
-        result = orchestrator.execute_sequence_step(
-            execution.execution_id, lead_context
-        )
+        result = orchestrator.execute_sequence_step(execution.execution_id, lead_context)
         if result["success"]:
-            print(f"📤 Step {i+1}: Sent via {result.get('channel', 'N/A')}")
+            print(f"📤 Step {i + 1}: Sent via {result.get('channel', 'N/A')}")
             print(f"   Message: {result.get('message', 'N/A')[:80]}...")
             if result.get("next_step_delay"):
                 print(f"   Next step in: {result['next_step_delay']} hours")

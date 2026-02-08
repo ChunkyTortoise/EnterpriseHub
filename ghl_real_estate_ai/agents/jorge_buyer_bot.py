@@ -15,57 +15,71 @@ import asyncio
 import inspect
 import random
 import uuid
-from typing import Dict, Any, List, Literal, Optional
 from datetime import datetime, timezone
-from langgraph.graph import StateGraph, END
+from typing import Any, Dict, List, Literal, Optional
 
-from ghl_real_estate_ai.models.buyer_bot_state import BuyerBotState
+from langgraph.graph import END, StateGraph
+
 from ghl_real_estate_ai.agents.buyer_intent_decoder import BuyerIntentDecoder
+from ghl_real_estate_ai.models.buyer_bot_state import BuyerBotState
+
 
 # Custom exceptions for proper error handling and escalation
 class BuyerQualificationError(Exception):
     """Base exception for buyer qualification failures"""
+
     def __init__(self, message: str, recoverable: bool = False, escalate: bool = False):
         super().__init__(message)
         self.recoverable = recoverable
         self.escalate = escalate
 
+
 class BuyerIntentAnalysisError(BuyerQualificationError):
     """Raised when buyer intent analysis fails"""
+
     pass
+
 
 class FinancialAssessmentError(BuyerQualificationError):
     """Raised when financial readiness assessment fails"""
+
     pass
+
 
 class ClaudeAPIError(BuyerQualificationError):
     """Raised when Claude AI service fails"""
+
     pass
+
 
 class NetworkError(BuyerQualificationError):
     """Raised when network connectivity issues occur"""
+
     pass
+
 
 class ComplianceValidationError(BuyerQualificationError):
     """Raised when compliance validation fails (Fair Housing, DRE)"""
+
     pass
+
 
 # Error IDs for monitoring and alerting
 ERROR_ID_BUYER_QUALIFICATION_FAILED = "BUYER_QUALIFICATION_FAILED"
 ERROR_ID_FINANCIAL_ASSESSMENT_FAILED = "FINANCIAL_ASSESSMENT_FAILED"
 ERROR_ID_COMPLIANCE_VIOLATION = "COMPLIANCE_VIOLATION"
 ERROR_ID_SYSTEM_FAILURE = "SYSTEM_FAILURE"
+from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.jorge_config import BuyerBudgetConfig
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
-from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
 from ghl_real_estate_ai.services.ghl_client import GHLClient
-from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
-from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
-from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
 from ghl_real_estate_ai.services.jorge.ab_testing_service import ABTestingService
-from ghl_real_estate_ai.ghl_utils.config import settings
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.ghl_utils.jorge_config import BuyerBudgetConfig
+from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
+from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
+from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
+from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
 
 try:
     from bots.shared.ml_analytics_engine import get_ml_analytics_engine
@@ -76,8 +90,9 @@ logger = get_logger(__name__)
 
 # Phase 3.3 Bot Intelligence Middleware Integration
 try:
-    from ghl_real_estate_ai.services.bot_intelligence_middleware import get_bot_intelligence_middleware
     from ghl_real_estate_ai.models.intelligence_context import BotIntelligenceContext
+    from ghl_real_estate_ai.services.bot_intelligence_middleware import get_bot_intelligence_middleware
+
     BOT_INTELLIGENCE_AVAILABLE = True
 except ImportError as e:
     logger.warning(f"Bot Intelligence Middleware unavailable: {e}")
@@ -88,14 +103,22 @@ except ImportError as e:
 # RETRY MECHANISM WITH EXPONENTIAL BACKOFF
 # ================================
 
+
 class RetryConfig:
     """Configuration for retry behavior."""
-    def __init__(self, max_retries: int = 3, initial_backoff_ms: int = 500,
-                 exponential_base: float = 2.0, jitter_factor: float = 0.1):
+
+    def __init__(
+        self,
+        max_retries: int = 3,
+        initial_backoff_ms: int = 500,
+        exponential_base: float = 2.0,
+        jitter_factor: float = 0.1,
+    ):
         self.max_retries = max_retries
         self.initial_backoff_ms = initial_backoff_ms
         self.exponential_base = exponential_base
         self.jitter_factor = jitter_factor
+
 
 DEFAULT_RETRY_CONFIG = RetryConfig()
 
@@ -103,8 +126,7 @@ RETRYABLE_EXCEPTIONS = (ClaudeAPIError, NetworkError)
 NON_RETRYABLE_EXCEPTIONS = (BuyerIntentAnalysisError, ComplianceValidationError)
 
 
-async def async_retry_with_backoff(coro_factory, retry_config: RetryConfig = None,
-                                    context_label: str = "operation"):
+async def async_retry_with_backoff(coro_factory, retry_config: RetryConfig = None, context_label: str = "operation"):
     """
     Retry an async operation with exponential backoff and jitter.
 
@@ -131,7 +153,7 @@ async def async_retry_with_backoff(coro_factory, retry_config: RetryConfig = Non
         except RETRYABLE_EXCEPTIONS as e:
             last_exception = e
             if attempt < config.max_retries:
-                backoff_ms = config.initial_backoff_ms * (config.exponential_base ** attempt)
+                backoff_ms = config.initial_backoff_ms * (config.exponential_base**attempt)
                 jitter = backoff_ms * config.jitter_factor * (2 * random.random() - 1)
                 sleep_seconds = (backoff_ms + jitter) / 1000.0
                 logger.warning(
@@ -140,9 +162,7 @@ async def async_retry_with_backoff(coro_factory, retry_config: RetryConfig = Non
                 )
                 await asyncio.sleep(sleep_seconds)
             else:
-                logger.error(
-                    f"All {config.max_retries} retries exhausted for {context_label}: {e}"
-                )
+                logger.error(f"All {config.max_retries} retries exhausted for {context_label}: {e}")
                 raise
 
     raise last_exception  # Should not reach here, but safety net
@@ -177,9 +197,14 @@ class JorgeBuyerBot:
     MAX_CONVERSATION_HISTORY = 50
     SMS_MAX_LENGTH = 160
 
-    def __init__(self, tenant_id: str = "jorge_buyer", enable_bot_intelligence: bool = True,
-                 enable_handoff: bool = True, budget_ranges: Optional[Dict] = None,
-                 budget_config: Optional[BuyerBudgetConfig] = None):
+    def __init__(
+        self,
+        tenant_id: str = "jorge_buyer",
+        enable_bot_intelligence: bool = True,
+        enable_handoff: bool = True,
+        budget_ranges: Optional[Dict] = None,
+        budget_config: Optional[BuyerBudgetConfig] = None,
+    ):
         self.intent_decoder = BuyerIntentDecoder()
         self.claude = ClaudeAssistant()
         self.event_publisher = get_event_publisher()
@@ -187,10 +212,10 @@ class JorgeBuyerBot:
         self.ml_analytics = get_ml_analytics_engine(tenant_id) if get_ml_analytics_engine else None
         self.ghl_client = GHLClient()
         self.enable_handoff = enable_handoff
-        
+
         # Use provided budget config or create from environment defaults
         self.budget_config = budget_config or BuyerBudgetConfig.from_environment()
-        
+
         # Use budget ranges from config if available, otherwise use provided or default
         if budget_ranges:
             self.budget_ranges = budget_ranges
@@ -264,11 +289,7 @@ class JorgeBuyerBot:
         workflow.add_conditional_edges(
             "match_properties",
             self._route_buyer_action,
-            {
-                "respond": "generate_buyer_response",
-                "schedule": "schedule_next_action",
-                "end": END
-            }
+            {"respond": "generate_buyer_response", "schedule": "schedule_next_action", "end": END},
         )
 
         workflow.add_edge("generate_buyer_response", "schedule_next_action")
@@ -281,7 +302,7 @@ class JorgeBuyerBot:
         try:
             next_action = state.get("next_action", "respond")
             qualification_score = state.get("financial_readiness_score", 0)
-            
+
             # Use budget_config for routing thresholds
             return self.budget_config.get_routing_action(qualification_score, next_action)
         except Exception as e:
@@ -324,7 +345,7 @@ class JorgeBuyerBot:
                 "urgency_score": 25,
                 "buying_motivation_score": 25,
                 "preference_clarity": 0.5,
-                "current_qualification_step": "error"
+                "current_qualification_step": "error",
             }
 
     async def gather_buyer_intelligence(self, state: BuyerBotState) -> Dict:
@@ -335,6 +356,7 @@ class JorgeBuyerBot:
 
             if self.intelligence_middleware:
                 import time
+
                 start_time = time.time()
 
                 intelligence_context = await self.intelligence_middleware.gather_intelligence(
@@ -343,23 +365,17 @@ class JorgeBuyerBot:
                     intelligence_types=[
                         "conversation_intelligence",
                         "preference_intelligence",
-                        "property_intelligence"
-                    ]
+                        "property_intelligence",
+                    ],
                 )
 
                 performance_ms = (time.time() - start_time) * 1000
                 self.workflow_stats["intelligence_enhancements"] += 1
 
-            return {
-                "intelligence_context": intelligence_context,
-                "intelligence_performance_ms": performance_ms
-            }
+            return {"intelligence_context": intelligence_context, "intelligence_performance_ms": performance_ms}
         except Exception as e:
             logger.warning(f"Buyer intelligence gathering failed: {e}")
-            return {
-                "intelligence_context": None,
-                "intelligence_performance_ms": 0.0
-            }
+            return {"intelligence_context": None, "intelligence_performance_ms": 0.0}
 
     async def assess_financial_readiness(self, state: BuyerBotState) -> Dict:
         """Assess buyer's financial preparedness using budget_config thresholds."""
@@ -400,7 +416,7 @@ class JorgeBuyerBot:
                 "budget_range": budget_range,
                 "financing_status": financing_status,
                 "financial_readiness_score": min(100, score),
-                "current_qualification_step": "property"
+                "current_qualification_step": "property",
             }
         except Exception as e:
             logger.error(f"Error assessing financial readiness for {state['buyer_id']}: {str(e)}")
@@ -408,7 +424,7 @@ class JorgeBuyerBot:
                 "budget_range": None,
                 "financing_status": "assessment_error",
                 "financial_readiness_score": 25,
-                "current_qualification_step": "error"
+                "current_qualification_step": "error",
             }
 
     async def qualify_property_needs(self, state: BuyerBotState) -> Dict:
@@ -419,7 +435,7 @@ class JorgeBuyerBot:
                 return {"property_preferences": None, "urgency_level": "browsing"}
 
             # Extract property preferences from conversation
-            preferences = await self._extract_property_preferences(state['conversation_history'])
+            preferences = await self._extract_property_preferences(state["conversation_history"])
 
             # Determine urgency level using budget_config
             urgency_score = float(state.get("urgency_score", 0))
@@ -433,10 +449,7 @@ class JorgeBuyerBot:
 
         except Exception as e:
             logger.error(f"Error qualifying property needs for {state['buyer_id']}: {str(e)}")
-            return {
-                "property_preferences": None,
-                "urgency_level": "browsing"
-            }
+            return {"property_preferences": None, "urgency_level": "browsing"}
 
     async def match_properties(self, state: BuyerBotState) -> Dict:
         """
@@ -445,46 +458,36 @@ class JorgeBuyerBot:
         """
         try:
             if not state.get("budget_range"):
-                return {
-                    "matched_properties": [],
-                    "properties_viewed_count": 0,
-                    "next_action": "qualify_more"
-                }
+                return {"matched_properties": [], "properties_viewed_count": 0, "next_action": "qualify_more"}
 
             # Use existing property matching service
             # Handle both sync and async property matcher (for tests/mocks)
             if inspect.iscoroutinefunction(self.property_matcher.find_matches):
                 matches = await self.property_matcher.find_matches(
-                    preferences=state.get("property_preferences") or {},
-                    limit=5
+                    preferences=state.get("property_preferences") or {}, limit=5
                 )
             else:
                 matches = self.property_matcher.find_matches(
-                    preferences=state.get("property_preferences") or {},
-                    limit=5
+                    preferences=state.get("property_preferences") or {}, limit=5
                 )
 
             # Emit property match event
             await self.event_publisher.publish_property_match_update(
                 contact_id=state["buyer_id"],
                 properties_matched=len(matches),
-                match_criteria=state["property_preferences"]
+                match_criteria=state["property_preferences"],
             )
 
             return {
                 "matched_properties": matches[:5],  # Top 5 matches
-                "property_matches": matches[:5],    # Add for consistency with script expectation
+                "property_matches": matches[:5],  # Add for consistency with script expectation
                 "properties_viewed_count": len(matches),
-                "next_action": "respond" if matches else "educate_market"
+                "next_action": "respond" if matches else "educate_market",
             }
 
         except Exception as e:
             logger.error(f"Error matching properties for {state['buyer_id']}: {str(e)}")
-            return {
-                "matched_properties": [],
-                "properties_viewed_count": 0,
-                "next_action": "qualify_more"
-            }
+            return {"matched_properties": [], "properties_viewed_count": 0, "next_action": "qualify_more"}
 
     async def generate_buyer_response(self, state: BuyerBotState) -> Dict:
         """
@@ -513,11 +516,11 @@ class JorgeBuyerBot:
             As Jorge's Buyer Bot, generate a helpful and supportive response for this buyer:
 
             Buyer Temperature: {buyer_temp}
-            Financial Readiness: {state.get('financial_readiness_score', 25)}/100
+            Financial Readiness: {state.get("financial_readiness_score", 25)}/100
             Properties Matched: {len(matches)}
-            Current Step: {state.get('current_qualification_step', 'unknown')}
+            Current Step: {state.get("current_qualification_step", "unknown")}
 
-            Conversation Context: {state['conversation_history'][-2:] if state['conversation_history'] else []}
+            Conversation Context: {state["conversation_history"][-2:] if state["conversation_history"] else []}
 
             Response should be:
             - Warm, helpful and genuinely caring
@@ -541,9 +544,11 @@ class JorgeBuyerBot:
             response = await self.claude.generate_response(response_prompt)
 
             return {
-                "response_content": response.get("content", "I'd love to help you find the perfect property for your needs."),
+                "response_content": response.get(
+                    "content", "I'd love to help you find the perfect property for your needs."
+                ),
                 "response_tone": "friendly_consultative",
-                "next_action": "send_response"
+                "next_action": "send_response",
             }
 
         except Exception as e:
@@ -551,7 +556,7 @@ class JorgeBuyerBot:
             return {
                 "response_content": "I'd love to help you find the perfect property for your needs.",
                 "response_tone": "friendly_supportive",
-                "next_action": "send_response"
+                "next_action": "send_response",
             }
 
     async def schedule_next_action(self, state: BuyerBotState) -> Dict:
@@ -568,25 +573,18 @@ class JorgeBuyerBot:
             next_action, follow_up_hours = self.budget_config.get_next_action(qualification_score)
 
             # Schedule the action
-            await self._schedule_follow_up(
-                state["buyer_id"],
-                next_action,
-                follow_up_hours
-            )
+            await self._schedule_follow_up(state["buyer_id"], next_action, follow_up_hours)
 
             return {
                 "next_action": next_action,
                 "follow_up_scheduled": True,
                 "follow_up_hours": follow_up_hours,
-                "last_action_timestamp": datetime.now(timezone.utc)
+                "last_action_timestamp": datetime.now(timezone.utc),
             }
 
         except Exception as e:
             logger.error(f"Error scheduling next action for {state['buyer_id']}: {str(e)}")
-            return {
-                "next_action": "manual_review",
-                "follow_up_scheduled": False
-            }
+            return {"next_action": "manual_review", "follow_up_scheduled": False}
 
     # ================================
     # ERROR HANDLING & ESCALATION METHODS
@@ -661,6 +659,7 @@ class JorgeBuyerBot:
             )
 
             import httpx
+
             endpoint = f"{self.ghl_client.base_url}/contacts/{buyer_id}/notes"
             async with httpx.AsyncClient() as client:
                 response = await client.post(
@@ -685,9 +684,7 @@ class JorgeBuyerBot:
         # 3. Trigger notify-agent workflow if configured
         if settings.notify_agent_workflow_id:
             try:
-                await self.ghl_client.trigger_workflow(
-                    buyer_id, settings.notify_agent_workflow_id
-                )
+                await self.ghl_client.trigger_workflow(buyer_id, settings.notify_agent_workflow_id)
                 escalation_result["workflow_triggered"] = True
                 logger.info(
                     "Notify-agent workflow triggered",
@@ -741,9 +738,7 @@ class JorgeBuyerBot:
 
         # 6. Determine final status
         ghl_actions_succeeded = (
-            escalation_result["tag_added"]
-            or escalation_result["note_added"]
-            or escalation_result["workflow_triggered"]
+            escalation_result["tag_added"] or escalation_result["note_added"] or escalation_result["workflow_triggered"]
         )
         if ghl_actions_succeeded:
             escalation_result["status"] = "escalated"
@@ -775,30 +770,32 @@ class JorgeBuyerBot:
         buyer_id = state.get("buyer_id", "unknown")
         conversation_history = state.get("conversation_history", [])
         conversation_text = " ".join(
-            msg.get("content", "").lower()
-            for msg in conversation_history
-            if msg.get("role") == "user"
+            msg.get("content", "").lower() for msg in conversation_history if msg.get("role") == "user"
         )
 
         # Tier 1: Conversation heuristics
         try:
             heuristic_result = self._assess_financial_from_conversation(conversation_text)
             if heuristic_result:
-                logger.info(f"Financial fallback Tier 1 (heuristic) used for buyer {buyer_id}",
-                           extra={"fallback_tier": 1, "buyer_id": buyer_id})
+                logger.info(
+                    f"Financial fallback Tier 1 (heuristic) used for buyer {buyer_id}",
+                    extra={"fallback_tier": 1, "buyer_id": buyer_id},
+                )
                 return {
                     "financing_status": heuristic_result["financing_status"],
                     "budget_range": heuristic_result.get("budget_range"),
                     "financial_readiness_score": heuristic_result["confidence"],
                     "fallback_tier": 1,
-                    "fallback_source": "conversation_heuristic"
+                    "fallback_source": "conversation_heuristic",
                 }
         except Exception as e:
             logger.warning(f"Tier 1 fallback failed for {buyer_id}: {e}")
 
         # Tier 2: Conservative default
-        logger.info(f"Financial fallback Tier 2 (conservative default) used for buyer {buyer_id}",
-                    extra={"fallback_tier": 2, "buyer_id": buyer_id})
+        logger.info(
+            f"Financial fallback Tier 2 (conservative default) used for buyer {buyer_id}",
+            extra={"fallback_tier": 2, "buyer_id": buyer_id},
+        )
         return {
             "financing_status": "assessment_pending",
             "budget_range": None,
@@ -806,7 +803,7 @@ class JorgeBuyerBot:
             "requires_manual_review": True,
             "fallback_tier": 2,
             "fallback_source": "conservative_default",
-            "confidence": 0.3
+            "confidence": 0.3,
         }
 
     def _assess_financial_from_conversation(self, conversation_text: str) -> Optional[Dict]:
@@ -839,8 +836,7 @@ class JorgeBuyerBot:
             "confidence": confidence * 100,
         }
 
-    async def escalate_compliance_violation(self, buyer_id: str, violation_type: str,
-                                            evidence: Dict) -> Dict:
+    async def escalate_compliance_violation(self, buyer_id: str, violation_type: str, evidence: Dict) -> Dict:
         """
         Handle compliance violation detection and escalation.
 
@@ -866,8 +862,8 @@ class JorgeBuyerBot:
                 "violation_type": violation_type,
                 "severity": severity,
                 "timestamp": timestamp,
-                "evidence_keys": list(evidence.keys())
-            }
+                "evidence_keys": list(evidence.keys()),
+            },
         )
 
         result = {
@@ -880,7 +876,7 @@ class JorgeBuyerBot:
             "notification_sent": False,
             "crm_flagged": False,
             "bot_paused": False,
-            "status": "pending"
+            "status": "pending",
         }
 
         # 1. Log to audit trail
@@ -893,7 +889,7 @@ class JorgeBuyerBot:
                 compliance_ticket_id=compliance_ticket_id,
                 violation_type=violation_type,
                 severity=severity,
-                evidence_summary=str(evidence.get("summary", ""))[:500]
+                evidence_summary=str(evidence.get("summary", ""))[:500],
             )
             result["audit_logged"] = True
         except Exception as e:
@@ -910,7 +906,7 @@ class JorgeBuyerBot:
                     compliance_ticket_id=compliance_ticket_id,
                     violation_type=violation_type,
                     severity=severity,
-                    priority="urgent"
+                    priority="urgent",
                 )
                 result["notification_sent"] = True
             except Exception as e:
@@ -924,7 +920,7 @@ class JorgeBuyerBot:
                 status="compliance_flagged",
                 current_step="bot_paused",
                 compliance_ticket_id=compliance_ticket_id,
-                violation_type=violation_type
+                violation_type=violation_type,
             )
             result["crm_flagged"] = True
             result["bot_paused"] = True
@@ -944,19 +940,18 @@ class JorgeBuyerBot:
         try:
             # Look for dollar amounts in conversation
             import re
-            conversation_text = " ".join([
-                msg.get("content", "")
-                for msg in conversation_history
-                if msg.get("role") == "user"
-            ])
+
+            conversation_text = " ".join(
+                [msg.get("content", "") for msg in conversation_history if msg.get("role") == "user"]
+            )
 
             # Find dollar amounts with optional k
-            dollar_pattern = r'\$([0-9,]+)([kK]?)'
+            dollar_pattern = r"\$([0-9,]+)([kK]?)"
             matches = re.findall(dollar_pattern, conversation_text)
-            
+
             amounts = []
             for val, k_suffix in matches:
-                amount = int(val.replace(',', ''))
+                amount = int(val.replace(",", ""))
                 if k_suffix:
                     amount *= 1000
                 elif 100 <= amount < self.budget_config.BUDGET_AMOUNT_K_THRESHOLD:
@@ -980,22 +975,21 @@ class JorgeBuyerBot:
     async def _extract_property_preferences(self, conversation_history: List[Dict]) -> Optional[Dict[str, Any]]:
         """Extract property preferences from conversation history."""
         try:
-            conversation_text = " ".join([
-                msg.get("content", "").lower()
-                for msg in conversation_history
-                if msg.get("role") == "user"
-            ])
+            conversation_text = " ".join(
+                [msg.get("content", "").lower() for msg in conversation_history if msg.get("role") == "user"]
+            )
 
             preferences = {}
 
             # Extract bedrooms
             import re
-            bed_match = re.search(r'(\d+)\s*(bed|bedroom)', conversation_text)
+
+            bed_match = re.search(r"(\d+)\s*(bed|bedroom)", conversation_text)
             if bed_match:
                 preferences["bedrooms"] = int(bed_match.group(1))
 
             # Extract bathrooms
-            bath_match = re.search(r'(\d+)\s*(bath|bathroom)', conversation_text)
+            bath_match = re.search(r"(\d+)\s*(bath|bathroom)", conversation_text)
             if bath_match:
                 preferences["bathrooms"] = int(bath_match.group(1))
 
@@ -1022,9 +1016,7 @@ class JorgeBuyerBot:
         try:
             # Emit scheduling event
             await self.event_publisher.publish_buyer_follow_up_scheduled(
-                contact_id=buyer_id,
-                action_type=action,
-                scheduled_hours=hours
+                contact_id=buyer_id, action_type=action, scheduled_hours=hours
             )
 
             logger.info(f"Scheduled {action} for buyer {buyer_id} in {hours} hours")
@@ -1040,7 +1032,7 @@ class JorgeBuyerBot:
         conversation_history: Optional[List[Dict[str, Any]]] = None,
         buyer_phone: Optional[str] = None,
         buyer_email: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Main entry point for processing buyer conversations.
@@ -1070,29 +1062,31 @@ class JorgeBuyerBot:
             raise ValueError("conversation_id must be a non-empty string")
         if not user_message or not str(user_message).strip():
             return {
-                "buyer_id": conversation_id, "lead_id": conversation_id,
+                "buyer_id": conversation_id,
+                "lead_id": conversation_id,
                 "response_content": "I didn't catch that. Could you say more?",
-                "current_step": "awaiting_input", "engagement_status": "active",
-                "financial_readiness": 0.0, "handoff_signals": {},
+                "current_step": "awaiting_input",
+                "engagement_status": "active",
+                "financial_readiness": 0.0,
+                "handoff_signals": {},
             }
         user_message = str(user_message).strip()[:MAX_MESSAGE_LENGTH]
 
         try:
             import time as _time
+
             _workflow_start = _time.time()
 
             if conversation_history is None:
                 conversation_history = []
 
-            conversation_history.append({
-                "role": "user",
-                "content": user_message,
-                "timestamp": datetime.now(timezone.utc).isoformat()
-            })
+            conversation_history.append(
+                {"role": "user", "content": user_message, "timestamp": datetime.now(timezone.utc).isoformat()}
+            )
 
             # Prune to prevent unbounded memory growth
             if len(conversation_history) > self.MAX_CONVERSATION_HISTORY:
-                conversation_history = conversation_history[-self.MAX_CONVERSATION_HISTORY:]
+                conversation_history = conversation_history[-self.MAX_CONVERSATION_HISTORY :]
 
             # Get A/B test variant for response tone (before workflow)
             try:
@@ -1143,8 +1137,7 @@ class JorgeBuyerBot:
             self.workflow_stats["total_interactions"] += 1
 
             is_qualified = (
-                result.get("financial_readiness_score", 0) >= 50 and
-                result.get("buying_motivation_score", 0) >= 50
+                result.get("financial_readiness_score", 0) >= 50 and result.get("buying_motivation_score", 0) >= 50
             )
             result["is_qualified"] = is_qualified
             result["lead_id"] = conversation_id
@@ -1155,6 +1148,7 @@ class JorgeBuyerBot:
             handoff_signals = {}
             if self.enable_handoff:
                 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+
                 handoff_signals = JorgeHandoffService.extract_intent_signals(user_message)
 
             result["handoff_signals"] = handoff_signals
@@ -1163,15 +1157,11 @@ class JorgeBuyerBot:
             response_text = result.get("response_content", "")
             if response_text and len(response_text) > self.SMS_MAX_LENGTH:
                 result["response_content_full"] = response_text
-                result["response_content"] = response_text[:self.SMS_MAX_LENGTH]
+                result["response_content"] = response_text[: self.SMS_MAX_LENGTH]
 
             # Record performance metrics
-            await self.performance_tracker.track_operation(
-                "buyer_bot", "process", _workflow_duration_ms, success=True
-            )
-            self.metrics_collector.record_bot_interaction(
-                "buyer", duration_ms=_workflow_duration_ms, success=True
-            )
+            await self.performance_tracker.track_operation("buyer_bot", "process", _workflow_duration_ms, success=True)
+            self.metrics_collector.record_bot_interaction("buyer", duration_ms=_workflow_duration_ms, success=True)
 
             # Feed metrics to alerting (non-blocking)
             try:
@@ -1200,15 +1190,14 @@ class JorgeBuyerBot:
                 bot_type="jorge-buyer",
                 contact_id=conversation_id,
                 status="completed",
-                current_step=result.get("current_qualification_step", "unknown")
+                current_step=result.get("current_qualification_step", "unknown"),
             )
 
             await self.event_publisher.publish_buyer_qualification_complete(
                 contact_id=conversation_id,
                 qualification_status="qualified" if is_qualified else "needs_nurturing",
-                final_score=(result.get("financial_readiness_score", 0) +
-                           result.get("buying_motivation_score", 0)) / 2,
-                properties_matched=len(result.get("matched_properties", []))
+                final_score=(result.get("financial_readiness_score", 0) + result.get("buying_motivation_score", 0)) / 2,
+                properties_matched=len(result.get("matched_properties", [])),
             )
 
             return result
@@ -1217,13 +1206,10 @@ class JorgeBuyerBot:
             # Record failure metrics
             try:
                 import time as _time
+
                 _fail_duration = (_time.time() - _workflow_start) * 1000
-                await self.performance_tracker.track_operation(
-                    "buyer_bot", "process", _fail_duration, success=False
-                )
-                self.metrics_collector.record_bot_interaction(
-                    "buyer", duration_ms=_fail_duration, success=False
-                )
+                await self.performance_tracker.track_operation("buyer_bot", "process", _fail_duration, success=False)
+                self.metrics_collector.record_bot_interaction("buyer", duration_ms=_fail_duration, success=False)
             except Exception:
                 pass
 
@@ -1236,7 +1222,7 @@ class JorgeBuyerBot:
                 "current_step": "error",
                 "engagement_status": "error",
                 "financial_readiness": 0.0,
-                "handoff_signals": {}
+                "handoff_signals": {},
             }
 
     # ================================
@@ -1244,10 +1230,7 @@ class JorgeBuyerBot:
     # ================================
 
     async def _enhance_buyer_prompt_with_intelligence(
-        self,
-        base_prompt: str,
-        intelligence_context: "BotIntelligenceContext",
-        state: BuyerBotState
+        self, base_prompt: str, intelligence_context: "BotIntelligenceContext", state: BuyerBotState
     ) -> str:
         """
         Enhance Claude prompt with buyer intelligence context for consultative responses.
@@ -1272,13 +1255,13 @@ class JorgeBuyerBot:
             if conversation_intel.objections_detected:
                 enhanced_prompt += f"\n\nBUYER CONCERNS DETECTED:"
                 for objection in conversation_intel.objections_detected[:2]:  # Top 2 concerns
-                    concern_type = objection.get('type', 'unknown')
-                    confidence = objection.get('confidence', 0.0)
-                    context = objection.get('context', '')
+                    concern_type = objection.get("type", "unknown")
+                    confidence = objection.get("confidence", 0.0)
+                    context = objection.get("context", "")
                     enhanced_prompt += f"\n- {concern_type.upper()} concern detected ({confidence:.0%}): {context}"
 
                     # Add consultative suggestions for buyer concerns
-                    suggestions = objection.get('suggested_responses', [])
+                    suggestions = objection.get("suggested_responses", [])
                     if suggestions:
                         enhanced_prompt += f"\n  Consultative approach: {suggestions[0]}"
 
@@ -1289,7 +1272,7 @@ class JorgeBuyerBot:
                 enhanced_prompt += f"\n- Preference profile completeness: {preference_intel.profile_completeness:.0%}"
 
                 # Add learned preferences for better consultation
-                if hasattr(preference_intel, 'learned_preferences') and preference_intel.learned_preferences:
+                if hasattr(preference_intel, "learned_preferences") and preference_intel.learned_preferences:
                     preferences = preference_intel.learned_preferences
                     enhanced_prompt += f"\n- Key preferences: {', '.join(preferences.keys())}"
 
@@ -1309,7 +1292,7 @@ class JorgeBuyerBot:
         self,
         conversation_strategy: Dict[str, Any],
         intelligence_context: "BotIntelligenceContext",
-        state: BuyerBotState
+        state: BuyerBotState,
     ) -> Dict[str, Any]:
         """
         Apply conversation intelligence to refine buyer consultation strategy.
@@ -1323,39 +1306,39 @@ class JorgeBuyerBot:
             # Analyze buyer concerns for consultative opportunities
             if conversation_intel.objections_detected:
                 primary_concern = conversation_intel.objections_detected[0]
-                concern_type = primary_concern.get('type', 'unknown')
-                severity = primary_concern.get('severity', 0.5)
+                concern_type = primary_concern.get("type", "unknown")
+                severity = primary_concern.get("severity", 0.5)
 
                 logger.info(f"Jorge Buyer Bot addressing {concern_type} concern with care (severity: {severity})")
 
                 # Buyer-specific caring responses to common concerns
-                if concern_type in ['price', 'pricing', 'budget'] and severity > 0.6:
+                if concern_type in ["price", "pricing", "budget"] and severity > 0.6:
                     # Budget concern - provide gentle education with understanding
-                    conversation_strategy['approach'] = 'budget_understanding_education'
-                    conversation_strategy['talking_points'] = primary_concern.get('suggested_responses', [])
-                elif concern_type in ['timing', 'timeline'] and severity > 0.5:
+                    conversation_strategy["approach"] = "budget_understanding_education"
+                    conversation_strategy["talking_points"] = primary_concern.get("suggested_responses", [])
+                elif concern_type in ["timing", "timeline"] and severity > 0.5:
                     # Timeline concern - understand their needs patiently
-                    conversation_strategy['approach'] = 'timeline_patient_guidance'
-                elif concern_type in ['location', 'area']:
+                    conversation_strategy["approach"] = "timeline_patient_guidance"
+                elif concern_type in ["location", "area"]:
                     # Location concern - explore options together
-                    conversation_strategy['approach'] = 'area_collaborative_exploration'
+                    conversation_strategy["approach"] = "area_collaborative_exploration"
 
             # Adjust approach based on sentiment
             sentiment = conversation_intel.overall_sentiment
             if sentiment < -0.2:
                 # Negative sentiment - provide extra care and reassurance
-                conversation_strategy['tone_modifier'] = 'extra_caring_support'
+                conversation_strategy["tone_modifier"] = "extra_caring_support"
             elif sentiment > 0.4:
                 # Positive sentiment - opportunity for enthusiastic partnership
-                conversation_strategy['tone_modifier'] = 'enthusiastic_partnership'
+                conversation_strategy["tone_modifier"] = "enthusiastic_partnership"
 
             # Use response recommendations for buyer education
             if conversation_intel.response_recommendations:
                 best_response = conversation_intel.response_recommendations[0]
-                conversation_strategy['recommended_response'] = best_response.get('response_text')
-                conversation_strategy['recommended_education'] = best_response.get('education_points', [])
+                conversation_strategy["recommended_response"] = best_response.get("response_text")
+                conversation_strategy["recommended_education"] = best_response.get("education_points", [])
 
-            conversation_strategy['intelligence_enhanced'] = True
+            conversation_strategy["intelligence_enhanced"] = True
             return conversation_strategy
 
         except Exception as e:
@@ -1367,7 +1350,7 @@ class JorgeBuyerBot:
     # ================================
 
     @classmethod
-    def create_enhanced_buyer_bot(cls, tenant_id: str = "jorge_buyer") -> 'JorgeBuyerBot':
+    def create_enhanced_buyer_bot(cls, tenant_id: str = "jorge_buyer") -> "JorgeBuyerBot":
         """Factory method: Create buyer bot with Phase 3.3 intelligence enhancements enabled"""
         return cls(tenant_id=tenant_id, enable_bot_intelligence=True)
 
@@ -1377,9 +1360,7 @@ class JorgeBuyerBot:
         # Base metrics
         metrics = {
             "workflow_statistics": self.workflow_stats,
-            "features_enabled": {
-                "bot_intelligence": self.enable_bot_intelligence
-            }
+            "features_enabled": {"bot_intelligence": self.enable_bot_intelligence},
         }
 
         # Phase 3.3 Bot intelligence metrics
@@ -1392,7 +1373,7 @@ class JorgeBuyerBot:
                 "cache_hits": cache_hits,
                 "cache_hit_rate": (cache_hits / max(intelligence_enhancements, 1)) * 100,
                 "enhancement_rate": intelligence_enhancements / max(self.workflow_stats["total_interactions"], 1),
-                "middleware_available": self.intelligence_middleware is not None
+                "middleware_available": self.intelligence_middleware is not None,
             }
 
             # Get middleware performance metrics if available
@@ -1401,7 +1382,7 @@ class JorgeBuyerBot:
                 metrics["bot_intelligence"]["middleware_performance"] = {
                     "avg_latency_ms": middleware_metrics.get("avg_latency_ms", 0),
                     "performance_status": middleware_metrics.get("performance_status", "unknown"),
-                    "service_failures": middleware_metrics.get("service_failures", {})
+                    "service_failures": middleware_metrics.get("service_failures", {}),
                 }
 
         return metrics

@@ -9,25 +9,19 @@ Tests all endpoints for:
 - Integration & Dashboard endpoints
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 from fastapi.testclient import TestClient
 
 from ghl_real_estate_ai.api.main import app
-from ghl_real_estate_ai.services.voice_ai_handler import (
-    VoiceCallContext,
-    VoiceResponse,
-    CallType,
-    CallPriority,
-    ConversationStage,
-)
 from ghl_real_estate_ai.services.automated_marketing_engine import (
     CampaignBrief,
+    CampaignStatus,
     CampaignTrigger,
     ContentFormat,
-    CampaignStatus,
 )
 from ghl_real_estate_ai.services.client_retention_engine import (
     ClientProfile,
@@ -37,31 +31,32 @@ from ghl_real_estate_ai.services.market_prediction_engine import (
     PredictionResult,
     TimeHorizon,
 )
+from ghl_real_estate_ai.services.voice_ai_handler import (
+    CallPriority,
+    CallType,
+    ConversationStage,
+    VoiceCallContext,
+    VoiceResponse,
+)
 
 client = TestClient(app)
 
 
 # ================== VOICE AI TESTS ==================
 
+
 class TestVoiceAIEndpoints:
     """Test voice AI API endpoints."""
 
     def test_start_voice_call_success(self):
         """Test successful voice call start."""
-        with patch('ghl_real_estate_ai.api.routes.jorge_advanced.get_voice_ai_handler') as mock_handler:
+        with patch("ghl_real_estate_ai.api.routes.jorge_advanced.get_voice_ai_handler") as mock_handler:
             mock_handler.return_value.handle_incoming_call = AsyncMock(
-                return_value=VoiceCallContext(
-                    call_id="test-call-123",
-                    phone_number="+19095551234"
-                )
+                return_value=VoiceCallContext(call_id="test-call-123", phone_number="+19095551234")
             )
 
             response = client.post(
-                "/api/jorge-advanced/voice/start-call",
-                json={
-                    "phone_number": "+19095551234",
-                    "caller_name": "John Doe"
-                }
+                "/api/jorge-advanced/voice/start-call", json={"phone_number": "+19095551234", "caller_name": "John Doe"}
             )
 
             assert response.status_code == 200
@@ -72,23 +67,19 @@ class TestVoiceAIEndpoints:
     def test_start_voice_call_invalid_phone(self):
         """Test voice call start with invalid phone number."""
         response = client.post(
-            "/api/jorge-advanced/voice/start-call",
-            json={
-                "phone_number": "",
-                "caller_name": "John Doe"
-            }
+            "/api/jorge-advanced/voice/start-call", json={"phone_number": "", "caller_name": "John Doe"}
         )
 
         assert response.status_code == 422  # Validation error
 
     def test_process_voice_input_success(self):
         """Test successful voice input processing."""
-        with patch('ghl_real_estate_ai.api.routes.jorge_advanced.get_voice_ai_handler') as mock_handler:
+        with patch("ghl_real_estate_ai.api.routes.jorge_advanced.get_voice_ai_handler") as mock_handler:
             mock_handler.return_value.process_voice_input = AsyncMock(
                 return_value=VoiceResponse(
                     text="Hello! I'm Jorge Martinez, your Inland Empire specialist.",
                     emotion="professional",
-                    confidence=0.95
+                    confidence=0.95,
                 )
             )
 
@@ -97,8 +88,8 @@ class TestVoiceAIEndpoints:
                 json={
                     "call_id": "test-call-123",
                     "speech_text": "Hi, I'm looking for a real estate agent",
-                    "audio_confidence": 0.9
-                }
+                    "audio_confidence": 0.9,
+                },
             )
 
             assert response.status_code == 200
@@ -108,7 +99,7 @@ class TestVoiceAIEndpoints:
 
     def test_end_voice_call_success(self):
         """Test successful voice call completion."""
-        with patch('ghl_real_estate_ai.api.routes.jorge_advanced.get_voice_ai_handler') as mock_handler:
+        with patch("ghl_real_estate_ai.api.routes.jorge_advanced.get_voice_ai_handler") as mock_handler:
             mock_handler.return_value.handle_call_completion = AsyncMock(
                 return_value={
                     "call_id": "test-call-123",
@@ -117,7 +108,7 @@ class TestVoiceAIEndpoints:
                     "transfer_to_jorge": True,
                     "lead_quality": "high",
                     "extracted_info": {"employer": "Amazon"},
-                    "summary": "High-quality lead with relocation needs"
+                    "summary": "High-quality lead with relocation needs",
                 }
             )
 
@@ -131,13 +122,13 @@ class TestVoiceAIEndpoints:
 
     def test_get_voice_analytics_success(self):
         """Test voice analytics retrieval."""
-        with patch('ghl_real_estate_ai.api.routes.jorge_advanced.get_voice_ai_handler') as mock_handler:
+        with patch("ghl_real_estate_ai.api.routes.jorge_advanced.get_voice_ai_handler") as mock_handler:
             mock_handler.return_value.get_call_analytics = AsyncMock(
                 return_value={
                     "total_calls": 45,
                     "avg_qualification_score": 68,
                     "transfer_rate": 0.35,
-                    "top_industries": ["healthcare", "logistics"]
+                    "top_industries": ["healthcare", "logistics"],
                 }
             )
 
@@ -151,19 +142,20 @@ class TestVoiceAIEndpoints:
 
 # ================== MARKETING AUTOMATION TESTS ==================
 
+
 class TestMarketingAutomationEndpoints:
     """Test marketing automation API endpoints."""
 
     def test_create_automated_campaign_success(self):
         """Test successful campaign creation."""
-        with patch('ghl_real_estate_ai.api.routes.jorge_advanced.AutomatedMarketingEngine') as mock_engine:
+        with patch("ghl_real_estate_ai.api.routes.jorge_advanced.AutomatedMarketingEngine") as mock_engine:
             mock_engine.return_value.create_campaign_from_trigger = AsyncMock(
                 return_value=CampaignBrief(
                     campaign_id="campaign-123",
                     name="New Listing Campaign - Etiwanda Heights",
                     trigger=CampaignTrigger.NEW_LISTING,
                     target_audience={"location": "Rancho Cucamonga"},
-                    objectives=["Generate qualified leads", "Increase property visibility"]
+                    objectives=["Generate qualified leads", "Increase property visibility"],
                 )
             )
 
@@ -174,8 +166,8 @@ class TestMarketingAutomationEndpoints:
                     "target_audience": {"location": "Rancho Cucamonga"},
                     "campaign_objectives": ["Generate qualified leads"],
                     "content_formats": ["email", "social_media"],
-                    "budget_range": [1000, 5000]
-                }
+                    "budget_range": [1000, 5000],
+                },
             )
 
             assert response.status_code == 200
@@ -185,17 +177,17 @@ class TestMarketingAutomationEndpoints:
 
     def test_get_campaign_content_success(self):
         """Test campaign content retrieval."""
-        with patch('ghl_real_estate_ai.api.routes.jorge_advanced.AutomatedMarketingEngine') as mock_engine:
+        with patch("ghl_real_estate_ai.api.routes.jorge_advanced.AutomatedMarketingEngine") as mock_engine:
             mock_engine.return_value.get_campaign_content = AsyncMock(
                 return_value={
                     "email": {
                         "subject": "New Listing Alert in Etiwanda",
-                        "content": "Jorge Martinez here with an exclusive listing..."
+                        "content": "Jorge Martinez here with an exclusive listing...",
                     },
                     "social_media": {
                         "caption": "Just listed! Beautiful home in Etiwanda Heights...",
-                        "hashtags": ["#RanchoCucamonga", "#EtiwandaHomes"]
-                    }
+                        "hashtags": ["#RanchoCucamonga", "#EtiwandaHomes"],
+                    },
                 }
             )
 
@@ -208,7 +200,7 @@ class TestMarketingAutomationEndpoints:
 
     def test_get_campaign_performance_success(self):
         """Test campaign performance metrics."""
-        with patch('ghl_real_estate_ai.api.routes.jorge_advanced.AutomatedMarketingEngine') as mock_engine:
+        with patch("ghl_real_estate_ai.api.routes.jorge_advanced.AutomatedMarketingEngine") as mock_engine:
             mock_engine.return_value.get_campaign_performance = AsyncMock(
                 return_value={
                     "impressions": 2500,
@@ -218,7 +210,7 @@ class TestMarketingAutomationEndpoints:
                     "conversion_rate": 0.064,
                     "roi": 3.2,
                     "cost_per_lead": 187.50,
-                    "lead_quality_score": 0.78
+                    "lead_quality_score": 0.78,
                 }
             )
 
@@ -231,10 +223,8 @@ class TestMarketingAutomationEndpoints:
 
     def test_start_ab_test_success(self):
         """Test A/B test initiation."""
-        with patch('ghl_real_estate_ai.api.routes.jorge_advanced.AutomatedMarketingEngine') as mock_engine:
-            mock_engine.return_value.start_ab_test = AsyncMock(
-                return_value="ab-test-456"
-            )
+        with patch("ghl_real_estate_ai.api.routes.jorge_advanced.AutomatedMarketingEngine") as mock_engine:
+            mock_engine.return_value.start_ab_test = AsyncMock(return_value="ab-test-456")
 
             response = client.post(
                 "/api/jorge-advanced/marketing/ab-test/campaign-123",
@@ -242,11 +232,11 @@ class TestMarketingAutomationEndpoints:
                     "test_name": "Subject Line Test",
                     "variants": {
                         "A": {"subject": "New Listing Alert"},
-                        "B": {"subject": "Exclusive Property Available"}
+                        "B": {"subject": "Exclusive Property Available"},
                     },
                     "metric": "open_rate",
-                    "duration_days": 7
-                }
+                    "duration_days": 7,
+                },
             )
 
             assert response.status_code == 200
@@ -257,12 +247,13 @@ class TestMarketingAutomationEndpoints:
 
 # ================== CLIENT RETENTION TESTS ==================
 
+
 class TestClientRetentionEndpoints:
     """Test client retention API endpoints."""
 
     def test_update_client_lifecycle_success(self):
         """Test client lifecycle update."""
-        with patch('ghl_real_estate_ai.api.routes.jorge_advanced.ClientRetentionEngine') as mock_engine:
+        with patch("ghl_real_estate_ai.api.routes.jorge_advanced.ClientRetentionEngine") as mock_engine:
             mock_engine.return_value.detect_life_event = AsyncMock()
 
             response = client.post(
@@ -270,12 +261,8 @@ class TestClientRetentionEndpoints:
                 json={
                     "client_id": "client-123",
                     "life_event": "job_change",
-                    "event_context": {
-                        "new_employer": "Amazon",
-                        "location_change": "possible",
-                        "timeline": "3_months"
-                    }
-                }
+                    "event_context": {"new_employer": "Amazon", "location_change": "possible", "timeline": "3_months"},
+                },
             )
 
             assert response.status_code == 200
@@ -285,10 +272,8 @@ class TestClientRetentionEndpoints:
 
     def test_track_referral_success(self):
         """Test referral tracking."""
-        with patch('ghl_real_estate_ai.api.routes.jorge_advanced.ClientRetentionEngine') as mock_engine:
-            mock_engine.return_value.process_referral = AsyncMock(
-                return_value="referral-789"
-            )
+        with patch("ghl_real_estate_ai.api.routes.jorge_advanced.ClientRetentionEngine") as mock_engine:
+            mock_engine.return_value.process_referral = AsyncMock(return_value="referral-789")
 
             response = client.post(
                 "/api/jorge-advanced/retention/track-referral",
@@ -297,14 +282,11 @@ class TestClientRetentionEndpoints:
                     "referred_contact_info": {
                         "name": "Jane Smith",
                         "phone": "+19095554321",
-                        "email": "jane@example.com"
+                        "email": "jane@example.com",
                     },
                     "referral_source": "word_of_mouth",
-                    "context": {
-                        "relationship": "coworker",
-                        "reason": "relocation"
-                    }
-                }
+                    "context": {"relationship": "coworker", "reason": "relocation"},
+                },
             )
 
             assert response.status_code == 200
@@ -314,21 +296,18 @@ class TestClientRetentionEndpoints:
 
     def test_get_client_engagement_success(self):
         """Test client engagement retrieval."""
-        with patch('ghl_real_estate_ai.api.routes.jorge_advanced.ClientRetentionEngine') as mock_engine:
+        with patch("ghl_real_estate_ai.api.routes.jorge_advanced.ClientRetentionEngine") as mock_engine:
             mock_engine.return_value.get_client_profile = AsyncMock(
                 return_value=ClientProfile(
                     client_id="client-123",
                     total_interactions=25,
                     last_interaction=datetime.now() - timedelta(days=5),
                     referrals_made=3,
-                    lifetime_value=450000.0
+                    lifetime_value=450000.0,
                 )
             )
             mock_engine.return_value.calculate_engagement_score = AsyncMock(
-                return_value={
-                    "score": 0.85,
-                    "retention_probability": 0.92
-                }
+                return_value={"score": 0.85, "retention_probability": 0.92}
             )
 
             response = client.get("/api/jorge-advanced/retention/client/client-123/engagement")
@@ -341,14 +320,14 @@ class TestClientRetentionEndpoints:
 
     def test_get_retention_analytics_success(self):
         """Test retention analytics retrieval."""
-        with patch('ghl_real_estate_ai.api.routes.jorge_advanced.ClientRetentionEngine') as mock_engine:
+        with patch("ghl_real_estate_ai.api.routes.jorge_advanced.ClientRetentionEngine") as mock_engine:
             mock_engine.return_value.get_retention_analytics = AsyncMock(
                 return_value={
                     "total_clients": 150,
                     "active_clients": 120,
                     "retention_rate": 0.8,
                     "avg_referrals_per_client": 2.1,
-                    "lifetime_value_avg": 320000
+                    "lifetime_value_avg": 320000,
                 }
             )
 
@@ -362,12 +341,13 @@ class TestClientRetentionEndpoints:
 
 # ================== MARKET PREDICTION TESTS ==================
 
+
 class TestMarketPredictionEndpoints:
     """Test market prediction API endpoints."""
 
     def test_analyze_market_success(self):
         """Test market analysis."""
-        with patch('ghl_real_estate_ai.api.routes.jorge_advanced.MarketPredictionEngine') as mock_engine:
+        with patch("ghl_real_estate_ai.api.routes.jorge_advanced.MarketPredictionEngine") as mock_engine:
             mock_engine.return_value.predict_price_appreciation = AsyncMock(
                 return_value=PredictionResult(
                     neighborhood="Etiwanda",
@@ -377,8 +357,8 @@ class TestMarketPredictionEndpoints:
                     supporting_factors=[
                         "New Amazon distribution center",
                         "School district improvements",
-                        "Infrastructure upgrades"
-                    ]
+                        "Infrastructure upgrades",
+                    ],
                 )
             )
 
@@ -388,8 +368,8 @@ class TestMarketPredictionEndpoints:
                     "neighborhood": "Etiwanda",
                     "time_horizon": "1_year",
                     "property_type": "single_family",
-                    "price_range": [600000, 800000]
-                }
+                    "price_range": [600000, 800000],
+                },
             )
 
             assert response.status_code == 200
@@ -399,7 +379,7 @@ class TestMarketPredictionEndpoints:
 
     def test_find_investment_opportunities_success(self):
         """Test investment opportunity analysis."""
-        with patch('ghl_real_estate_ai.api.routes.jorge_advanced.MarketPredictionEngine') as mock_engine:
+        with patch("ghl_real_estate_ai.api.routes.jorge_advanced.MarketPredictionEngine") as mock_engine:
             mock_engine.return_value.identify_investment_opportunities = AsyncMock(
                 return_value=[
                     {
@@ -407,7 +387,7 @@ class TestMarketPredictionEndpoints:
                         "predicted_roi": 0.12,
                         "risk_score": 0.3,
                         "appreciation_forecast": 0.06,
-                        "cash_flow_potential": 850
+                        "cash_flow_potential": 850,
                     }
                 ]
             )
@@ -418,8 +398,8 @@ class TestMarketPredictionEndpoints:
                     "client_budget": 750000,
                     "risk_tolerance": "medium",
                     "investment_goals": ["cash_flow", "appreciation"],
-                    "time_horizon": "2_years"
-                }
+                    "time_horizon": "2_years",
+                },
             )
 
             assert response.status_code == 200
@@ -429,13 +409,13 @@ class TestMarketPredictionEndpoints:
 
     def test_get_market_trends_success(self):
         """Test market trends retrieval."""
-        with patch('ghl_real_estate_ai.api.routes.jorge_advanced.MarketPredictionEngine') as mock_engine:
+        with patch("ghl_real_estate_ai.api.routes.jorge_advanced.MarketPredictionEngine") as mock_engine:
             mock_engine.return_value.get_market_trends = AsyncMock(
                 return_value={
                     "historical_prices": [650000, 680000, 705000],
                     "predicted_prices": [720000, 735000, 750000],
                     "trend_direction": "upward",
-                    "market_velocity": 0.15
+                    "market_velocity": 0.15,
                 }
             )
 
@@ -449,38 +429,24 @@ class TestMarketPredictionEndpoints:
 
 # ================== INTEGRATION & DASHBOARD TESTS ==================
 
+
 class TestIntegrationEndpoints:
     """Test integration and dashboard API endpoints."""
 
     def test_get_dashboard_metrics_success(self):
         """Test unified dashboard metrics."""
-        with patch('ghl_real_estate_ai.api.routes.jorge_advanced.JorgeAdvancedIntegration') as mock_integration:
+        with patch("ghl_real_estate_ai.api.routes.jorge_advanced.JorgeAdvancedIntegration") as mock_integration:
             mock_integration.return_value.get_unified_dashboard = AsyncMock(
                 return_value={
-                    "voice_ai": {
-                        "active_calls": 3,
-                        "daily_calls": 12,
-                        "avg_qualification_score": 72
-                    },
-                    "marketing": {
-                        "active_campaigns": 5,
-                        "total_leads_generated": 28,
-                        "avg_campaign_roi": 2.8
-                    },
-                    "client_retention": {
-                        "active_clients": 145,
-                        "retention_rate": 0.88,
-                        "referrals_this_month": 8
-                    },
+                    "voice_ai": {"active_calls": 3, "daily_calls": 12, "avg_qualification_score": 72},
+                    "marketing": {"active_campaigns": 5, "total_leads_generated": 28, "avg_campaign_roi": 2.8},
+                    "client_retention": {"active_clients": 145, "retention_rate": 0.88, "referrals_this_month": 8},
                     "market_predictions": {
                         "neighborhoods_analyzed": 15,
                         "investment_opportunities": 6,
-                        "avg_predicted_appreciation": 0.07
+                        "avg_predicted_appreciation": 0.07,
                     },
-                    "integration_health": {
-                        "status": "healthy",
-                        "modules_online": 4
-                    }
+                    "integration_health": {"status": "healthy", "modules_online": 4},
                 }
             )
 
@@ -493,24 +459,14 @@ class TestIntegrationEndpoints:
 
     def test_get_module_health_success(self):
         """Test module health status."""
-        with patch('ghl_real_estate_ai.api.routes.jorge_advanced.JorgeAdvancedIntegration') as mock_integration:
+        with patch("ghl_real_estate_ai.api.routes.jorge_advanced.JorgeAdvancedIntegration") as mock_integration:
             mock_integration.return_value.check_module_health = AsyncMock(
                 return_value={
                     "overall_status": "healthy",
                     "modules": [
-                        {
-                            "name": "voice_ai",
-                            "status": "healthy",
-                            "metrics": {"active_calls": 3},
-                            "issues": []
-                        },
-                        {
-                            "name": "marketing",
-                            "status": "healthy",
-                            "metrics": {"active_campaigns": 5},
-                            "issues": []
-                        }
-                    ]
+                        {"name": "voice_ai", "status": "healthy", "metrics": {"active_calls": 3}, "issues": []},
+                        {"name": "marketing", "status": "healthy", "metrics": {"active_campaigns": 5}, "issues": []},
+                    ],
                 }
             )
 
@@ -523,7 +479,7 @@ class TestIntegrationEndpoints:
 
     def test_trigger_integration_event_success(self):
         """Test manual integration event triggering."""
-        with patch('ghl_real_estate_ai.api.routes.jorge_advanced.JorgeAdvancedIntegration') as mock_integration:
+        with patch("ghl_real_estate_ai.api.routes.jorge_advanced.JorgeAdvancedIntegration") as mock_integration:
             mock_integration.return_value.handle_integration_event = AsyncMock()
 
             response = client.post(
@@ -532,8 +488,8 @@ class TestIntegrationEndpoints:
                 json={
                     "call_id": "test-call-123",
                     "qualification_score": 85,
-                    "lead_info": {"employer": "Amazon", "timeline": "30_days"}
-                }
+                    "lead_info": {"employer": "Amazon", "timeline": "30_days"},
+                },
             )
 
             assert response.status_code == 200
@@ -543,6 +499,7 @@ class TestIntegrationEndpoints:
 
 
 # ================== SYSTEM TESTS ==================
+
 
 class TestSystemEndpoints:
     """Test system-level endpoints."""
@@ -572,20 +529,17 @@ class TestSystemEndpoints:
 
 # ================== ERROR HANDLING TESTS ==================
 
+
 class TestErrorHandling:
     """Test error handling across all endpoints."""
 
     def test_voice_handler_error(self):
         """Test voice handler service error."""
-        with patch('ghl_real_estate_ai.api.routes.jorge_advanced.get_voice_ai_handler') as mock_handler:
+        with patch("ghl_real_estate_ai.api.routes.jorge_advanced.get_voice_ai_handler") as mock_handler:
             mock_handler.side_effect = Exception("Voice service unavailable")
 
             response = client.post(
-                "/api/jorge-advanced/voice/start-call",
-                json={
-                    "phone_number": "+19095551234",
-                    "caller_name": "John Doe"
-                }
+                "/api/jorge-advanced/voice/start-call", json={"phone_number": "+19095551234", "caller_name": "John Doe"}
             )
 
             assert response.status_code == 500
@@ -593,7 +547,7 @@ class TestErrorHandling:
 
     def test_campaign_not_found(self):
         """Test campaign not found error."""
-        with patch('ghl_real_estate_ai.api.routes.jorge_advanced.AutomatedMarketingEngine') as mock_engine:
+        with patch("ghl_real_estate_ai.api.routes.jorge_advanced.AutomatedMarketingEngine") as mock_engine:
             mock_engine.return_value.get_campaign_content = AsyncMock(return_value=None)
 
             response = client.get("/api/jorge-advanced/marketing/campaigns/invalid-id/content")
@@ -603,7 +557,7 @@ class TestErrorHandling:
 
     def test_client_not_found(self):
         """Test client not found error."""
-        with patch('ghl_real_estate_ai.api.routes.jorge_advanced.ClientRetentionEngine') as mock_engine:
+        with patch("ghl_real_estate_ai.api.routes.jorge_advanced.ClientRetentionEngine") as mock_engine:
             mock_engine.return_value.get_client_profile = AsyncMock(return_value=None)
 
             response = client.get("/api/jorge-advanced/retention/client/invalid-id/engagement")
@@ -613,6 +567,7 @@ class TestErrorHandling:
 
 
 # ================== INTEGRATION TESTS ==================
+
 
 @pytest.mark.integration
 class TestJorgeAdvancedIntegration:
@@ -624,8 +579,8 @@ class TestJorgeAdvancedIntegration:
         # This would test the actual integration between modules
         # For now, just verify the endpoints can be called in sequence
 
-        with patch('ghl_real_estate_ai.api.routes.jorge_advanced.get_voice_ai_handler') as mock_voice:
-            with patch('ghl_real_estate_ai.api.routes.jorge_advanced.AutomatedMarketingEngine') as mock_marketing:
+        with patch("ghl_real_estate_ai.api.routes.jorge_advanced.get_voice_ai_handler") as mock_voice:
+            with patch("ghl_real_estate_ai.api.routes.jorge_advanced.AutomatedMarketingEngine") as mock_marketing:
                 # Setup mocks
                 mock_voice.return_value.handle_incoming_call = AsyncMock(
                     return_value=VoiceCallContext(call_id="test-123", phone_number="+19095551234")
@@ -635,7 +590,7 @@ class TestJorgeAdvancedIntegration:
                         "call_id": "test-123",
                         "qualification_score": 85,
                         "transfer_to_jorge": True,
-                        "extracted_info": {"employer": "Amazon"}
+                        "extracted_info": {"employer": "Amazon"},
                     }
                 )
                 mock_marketing.return_value.create_campaign_from_trigger = AsyncMock(
@@ -643,10 +598,7 @@ class TestJorgeAdvancedIntegration:
                 )
 
                 # Start call
-                response1 = client.post(
-                    "/api/jorge-advanced/voice/start-call",
-                    json={"phone_number": "+19095551234"}
-                )
+                response1 = client.post("/api/jorge-advanced/voice/start-call", json={"phone_number": "+19095551234"})
                 assert response1.status_code == 200
 
                 # End call
@@ -660,21 +612,21 @@ class TestJorgeAdvancedIntegration:
                         "trigger_type": "high_qualified_call",
                         "target_audience": {"employer": "Amazon"},
                         "campaign_objectives": ["Follow up on qualified lead"],
-                        "content_formats": ["email"]
-                    }
+                        "content_formats": ["email"],
+                    },
                 )
                 assert response3.status_code == 200
 
     def test_dashboard_metrics_integration(self):
         """Test dashboard metrics pulling from all modules."""
-        with patch('ghl_real_estate_ai.api.routes.jorge_advanced.JorgeAdvancedIntegration') as mock_integration:
+        with patch("ghl_real_estate_ai.api.routes.jorge_advanced.JorgeAdvancedIntegration") as mock_integration:
             mock_integration.return_value.get_unified_dashboard = AsyncMock(
                 return_value={
                     "voice_ai": {"status": "active"},
                     "marketing": {"status": "active"},
                     "client_retention": {"status": "active"},
                     "market_predictions": {"status": "active"},
-                    "integration_health": {"status": "healthy"}
+                    "integration_health": {"status": "healthy"},
                 }
             )
 
@@ -682,10 +634,15 @@ class TestJorgeAdvancedIntegration:
 
             assert response.status_code == 200
             data = response.json()
-            assert all(module["status"] == "active" for module in [
-                data["voice_ai"], data["marketing"],
-                data["client_retention"], data["market_predictions"]
-            ])
+            assert all(
+                module["status"] == "active"
+                for module in [
+                    data["voice_ai"],
+                    data["marketing"],
+                    data["client_retention"],
+                    data["market_predictions"],
+                ]
+            )
 
 
 if __name__ == "__main__":

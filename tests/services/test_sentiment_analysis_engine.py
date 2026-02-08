@@ -3,10 +3,10 @@
 import pytest
 
 from ghl_real_estate_ai.services.sentiment_analysis_engine import (
-    SentimentAnalysisEngine,
-    Emotion,
-    SentimentTrend,
     Channel,
+    Emotion,
+    SentimentAnalysisEngine,
+    SentimentTrend,
 )
 
 
@@ -18,6 +18,7 @@ def engine():
 # -------------------------------------------------------------------------
 # Polarity detection
 # -------------------------------------------------------------------------
+
 
 class TestPolarity:
     @pytest.mark.asyncio
@@ -57,6 +58,7 @@ class TestPolarity:
 # Emotion classification
 # -------------------------------------------------------------------------
 
+
 class TestEmotionClassification:
     @pytest.mark.asyncio
     async def test_excited_emotion(self, engine):
@@ -88,6 +90,7 @@ class TestEmotionClassification:
 # Intent detection
 # -------------------------------------------------------------------------
 
+
 class TestIntentDetection:
     @pytest.mark.asyncio
     async def test_schedule_showing_intent(self, engine):
@@ -114,6 +117,7 @@ class TestIntentDetection:
 # Key phrase extraction
 # -------------------------------------------------------------------------
 
+
 class TestKeyPhrases:
     @pytest.mark.asyncio
     async def test_price_extraction(self, engine):
@@ -134,6 +138,7 @@ class TestKeyPhrases:
 # -------------------------------------------------------------------------
 # Conversation sentiment
 # -------------------------------------------------------------------------
+
 
 class TestConversationSentiment:
     @pytest.mark.asyncio
@@ -198,6 +203,7 @@ class TestConversationSentiment:
 # Channel handling
 # -------------------------------------------------------------------------
 
+
 class TestChannels:
     @pytest.mark.asyncio
     async def test_voice_channel(self, engine):
@@ -213,6 +219,7 @@ class TestChannels:
 # -------------------------------------------------------------------------
 # History management
 # -------------------------------------------------------------------------
+
 
 class TestHistoryManagement:
     @pytest.mark.asyncio

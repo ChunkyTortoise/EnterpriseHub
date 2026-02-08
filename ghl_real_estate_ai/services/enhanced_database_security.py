@@ -13,15 +13,15 @@ Critical Security Enhancements:
 
 import asyncio
 import json
+import time
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union, Set
-import time
+from typing import Any, Dict, List, Optional, Set, Union
 
 import asyncpg
-from asyncpg import Pool, Connection
+from asyncpg import Connection, Pool
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -31,6 +31,7 @@ logger = get_logger(__name__)
 
 class DatabaseOperationError(Exception):
     """Specific database operation error for proper error handling"""
+
     def __init__(self, message: str, error_id: str = None):
         super().__init__(message)
         self.error_id = error_id
@@ -38,6 +39,7 @@ class DatabaseOperationError(Exception):
 
 class CircuitBreakerState(Enum):
     """Circuit breaker states for database operations"""
+
     CLOSED = "closed"
     OPEN = "open"
     HALF_OPEN = "half_open"
@@ -46,12 +48,7 @@ class CircuitBreakerState(Enum):
 class DatabaseCircuitBreaker:
     """Circuit breaker for database operations to prevent cascading failures"""
 
-    def __init__(
-        self,
-        failure_threshold: int = 5,
-        recovery_timeout: float = 60.0,
-        success_threshold: int = 3
-    ):
+    def __init__(self, failure_threshold: int = 5, recovery_timeout: float = 60.0, success_threshold: int = 3):
         self.failure_threshold = failure_threshold
         self.recovery_timeout = recovery_timeout
         self.success_threshold = success_threshold
@@ -74,12 +71,12 @@ class DatabaseCircuitBreaker:
                         "error_id": "CIRCUIT_BREAKER_OPEN_001",
                         "operation": operation.__name__,
                         "state": self.state.value,
-                        "failure_count": self.failure_count
-                    }
+                        "failure_count": self.failure_count,
+                    },
                 )
                 raise DatabaseOperationError(
                     "Database circuit breaker is OPEN - service temporarily unavailable",
-                    error_id="CIRCUIT_BREAKER_OPEN_001"
+                    error_id="CIRCUIT_BREAKER_OPEN_001",
                 )
 
         try:
@@ -105,7 +102,7 @@ class DatabaseCircuitBreaker:
                 self.failure_count = 0
                 logger.info(
                     "CIRCUIT_BREAKER_CLOSED: Database circuit breaker reset to CLOSED",
-                    extra={"error_id": "CIRCUIT_BREAKER_CLOSED_001", "state": self.state.value}
+                    extra={"error_id": "CIRCUIT_BREAKER_CLOSED_001", "state": self.state.value},
                 )
         elif self.state == CircuitBreakerState.CLOSED:
             # Reset failure count on successful operation
@@ -125,14 +122,14 @@ class DatabaseCircuitBreaker:
                         "error_id": "CIRCUIT_BREAKER_OPENED_001",
                         "failure_count": self.failure_count,
                         "threshold": self.failure_threshold,
-                        "error": str(error)
-                    }
+                        "error": str(error),
+                    },
                 )
         elif self.state == CircuitBreakerState.HALF_OPEN:
             self.state = CircuitBreakerState.OPEN
             logger.warning(
                 "CIRCUIT_BREAKER_REOPEN: Database circuit breaker reopened after failed recovery",
-                extra={"error_id": "CIRCUIT_BREAKER_REOPEN_001", "error": str(error)}
+                extra={"error_id": "CIRCUIT_BREAKER_REOPEN_001", "error": str(error)},
             )
 
 
@@ -141,34 +138,62 @@ class EnhancedDatabaseService:
 
     # SECURITY: Comprehensive field whitelist for all tables
     LEAD_ALLOWED_FIELDS = {
-        'first_name', 'last_name', 'email', 'phone', 'company',
-        'status', 'source', 'score', 'temperature', 'last_interaction_at',
-        'assigned_agent_id', 'notes', 'budget_min', 'budget_max',
-        'property_type', 'location', 'timeline', 'enrichment_data',
-        'preferences', 'tags', 'priority', 'lead_type'
+        "first_name",
+        "last_name",
+        "email",
+        "phone",
+        "company",
+        "status",
+        "source",
+        "score",
+        "temperature",
+        "last_interaction_at",
+        "assigned_agent_id",
+        "notes",
+        "budget_min",
+        "budget_max",
+        "property_type",
+        "location",
+        "timeline",
+        "enrichment_data",
+        "preferences",
+        "tags",
+        "priority",
+        "lead_type",
     }
 
     AGENT_ALLOWED_FIELDS = {
-        'first_name', 'last_name', 'email', 'phone', 'is_active',
-        'is_available', 'current_load', 'capacity', 'conversion_rate',
-        'avg_response_time_minutes', 'expertise_areas', 'territory'
+        "first_name",
+        "last_name",
+        "email",
+        "phone",
+        "is_active",
+        "is_available",
+        "current_load",
+        "capacity",
+        "conversion_rate",
+        "avg_response_time_minutes",
+        "expertise_areas",
+        "territory",
     }
 
     COMMUNICATION_ALLOWED_FIELDS = {
-        'lead_id', 'channel', 'direction', 'content', 'status',
-        'sent_at', 'response_received_at', 'sentiment_score', 'metadata'
+        "lead_id",
+        "channel",
+        "direction",
+        "content",
+        "status",
+        "sent_at",
+        "response_received_at",
+        "sentiment_score",
+        "metadata",
     }
 
     def __init__(self):
         self.circuit_breaker = DatabaseCircuitBreaker()
         self.connection_manager = None  # Will be injected
 
-    async def secure_update_lead(
-        self,
-        lead_id: str,
-        updates: Dict[str, Any],
-        updated_by: str = None
-    ) -> bool:
+    async def secure_update_lead(self, lead_id: str, updates: Dict[str, Any], updated_by: str = None) -> bool:
         """
         Secure lead update with SQL injection prevention and comprehensive error handling
 
@@ -184,6 +209,7 @@ class EnhancedDatabaseService:
             ValueError: Invalid field names or data
             DatabaseOperationError: Database operation failed
         """
+
         async def _perform_update():
             # SECURITY: Validate lead_id format
             try:
@@ -192,11 +218,7 @@ class EnhancedDatabaseService:
                 error_msg = f"Invalid lead ID format: {lead_id}"
                 logger.error(
                     f"SECURITY_VIOLATION: {error_msg}",
-                    extra={
-                        "error_id": "INVALID_LEAD_ID_001",
-                        "lead_id": lead_id,
-                        "source": "secure_update_lead"
-                    }
+                    extra={"error_id": "INVALID_LEAD_ID_001", "lead_id": lead_id, "source": "secure_update_lead"},
                 )
                 raise ValueError(error_msg)
 
@@ -210,15 +232,15 @@ class EnhancedDatabaseService:
                         "error_id": "SQL_INJECTION_ATTEMPT_001",
                         "lead_id": lead_id,
                         "invalid_fields": list(invalid_fields),
-                        "attempted_fields": list(updates.keys())
-                    }
+                        "attempted_fields": list(updates.keys()),
+                    },
                 )
                 raise ValueError(error_msg)
 
             if not updates:
                 logger.warning(
                     f"EMPTY_UPDATE: No data provided for lead {lead_id}",
-                    extra={"error_id": "EMPTY_UPDATE_001", "lead_id": lead_id}
+                    extra={"error_id": "EMPTY_UPDATE_001", "lead_id": lead_id},
                 )
                 return True
 
@@ -254,7 +276,7 @@ class EnhancedDatabaseService:
 
                     query = f"""
                         UPDATE leads
-                        SET {', '.join(set_clauses)}
+                        SET {", ".join(set_clauses)}
                         WHERE id = ${param_count} AND deleted_at IS NULL
                     """
 
@@ -270,8 +292,8 @@ class EnhancedDatabaseService:
                                 "error_id": "LEAD_UPDATED_001",
                                 "lead_id": lead_id,
                                 "fields_updated": list(sanitized_updates.keys()),
-                                "updated_by": updated_by
-                            }
+                                "updated_by": updated_by,
+                            },
                         )
                         return True
                     else:
@@ -280,8 +302,8 @@ class EnhancedDatabaseService:
                             extra={
                                 "error_id": "DB_UPDATE_NO_ROWS_001",
                                 "lead_id": lead_id,
-                                "attempted_fields": list(updates.keys())
-                            }
+                                "attempted_fields": list(updates.keys()),
+                            },
                         )
                         return False
 
@@ -292,8 +314,8 @@ class EnhancedDatabaseService:
                         "error_id": "DB_FAILURE_002",
                         "lead_id": lead_id,
                         "postgres_error": str(e),
-                        "error_code": e.sqlstate if hasattr(e, 'sqlstate') else None
-                    }
+                        "error_code": e.sqlstate if hasattr(e, "sqlstate") else None,
+                    },
                 )
                 raise DatabaseOperationError(f"Failed to update lead: {e}", error_id="DB_FAILURE_002")
 
@@ -304,8 +326,8 @@ class EnhancedDatabaseService:
                         "error_id": "UNEXPECTED_ERROR_002",
                         "lead_id": lead_id,
                         "error_type": type(e).__name__,
-                        "error": str(e)
-                    }
+                        "error": str(e),
+                    },
                 )
                 raise
 
@@ -318,13 +340,13 @@ class EnhancedDatabaseService:
 
         for field, value in data.items():
             if field in self.LEAD_ALLOWED_FIELDS:
-                if field in ['first_name', 'last_name', 'company', 'notes']:
+                if field in ["first_name", "last_name", "company", "notes"]:
                     # Sanitize text fields
                     if isinstance(value, str):
                         # Remove potential XSS/SQL injection characters
                         sanitized_value = value.strip()[:255]  # Limit length
                         # Remove dangerous characters but keep apostrophes for names
-                        dangerous_chars = ['<', '>', '"', '&', ';', '--', '/*', '*/', 'script']
+                        dangerous_chars = ["<", ">", '"', "&", ";", "--", "/*", "*/", "script"]
                         for char in dangerous_chars:
                             if char in sanitized_value.lower():
                                 logger.warning(
@@ -333,31 +355,31 @@ class EnhancedDatabaseService:
                                         "error_id": "SUSPICIOUS_INPUT_001",
                                         "field": field,
                                         "original_length": len(value),
-                                        "sanitized_length": len(sanitized_value)
-                                    }
+                                        "sanitized_length": len(sanitized_value),
+                                    },
                                 )
-                                sanitized_value = sanitized_value.replace(char, '')
+                                sanitized_value = sanitized_value.replace(char, "")
                         sanitized[field] = sanitized_value
                     else:
                         sanitized[field] = value
-                elif field == 'email':
+                elif field == "email":
                     # Basic email validation
-                    if isinstance(value, str) and '@' in value and '.' in value:
+                    if isinstance(value, str) and "@" in value and "." in value:
                         sanitized[field] = value.lower().strip()
                     else:
                         logger.warning(
                             f"INVALID_EMAIL: Invalid email format",
-                            extra={"error_id": "INVALID_EMAIL_001", "field": field}
+                            extra={"error_id": "INVALID_EMAIL_001", "field": field},
                         )
                         continue
-                elif field in ['score', 'budget_min', 'budget_max']:
+                elif field in ["score", "budget_min", "budget_max"]:
                     # Validate numeric fields
                     if isinstance(value, (int, float)) and value >= 0:
                         sanitized[field] = value
                     else:
                         logger.warning(
                             f"INVALID_NUMERIC: Invalid numeric value",
-                            extra={"error_id": "INVALID_NUMERIC_001", "field": field, "value": value}
+                            extra={"error_id": "INVALID_NUMERIC_001", "field": field, "value": value},
                         )
                         continue
                 else:
@@ -365,11 +387,7 @@ class EnhancedDatabaseService:
 
         return sanitized
 
-    async def secure_get_lead_follow_up_history(
-        self,
-        lead_id: str,
-        limit: int = 50
-    ) -> List[Dict[str, Any]]:
+    async def secure_get_lead_follow_up_history(self, lead_id: str, limit: int = 50) -> List[Dict[str, Any]]:
         """
         Secure retrieval of lead follow-up history with comprehensive error handling
 
@@ -384,6 +402,7 @@ class EnhancedDatabaseService:
             ValueError: Invalid parameters
             DatabaseOperationError: Database operation failed
         """
+
         async def _get_history():
             # Validate lead_id format
             try:
@@ -391,8 +410,7 @@ class EnhancedDatabaseService:
             except ValueError:
                 error_msg = f"Invalid lead ID format: {lead_id}"
                 logger.error(
-                    f"INVALID_LEAD_ID: {error_msg}",
-                    extra={"error_id": "INVALID_LEAD_ID_002", "lead_id": lead_id}
+                    f"INVALID_LEAD_ID: {error_msg}", extra={"error_id": "INVALID_LEAD_ID_002", "lead_id": lead_id}
                 )
                 raise ValueError(error_msg)
 
@@ -401,7 +419,7 @@ class EnhancedDatabaseService:
                 limit = min(max(1, limit), 1000)
                 logger.warning(
                     f"LIMIT_ADJUSTED: Adjusted limit to safe range",
-                    extra={"error_id": "LIMIT_ADJUSTED_001", "original_limit": limit, "adjusted_limit": limit}
+                    extra={"error_id": "LIMIT_ADJUSTED_001", "original_limit": limit, "adjusted_limit": limit},
                 )
 
             try:
@@ -430,8 +448,8 @@ class EnhancedDatabaseService:
                                 "error_id": "DB_EMPTY_RESULT_001",
                                 "lead_id": lead_id,
                                 "table": "communication_logs",
-                                "query_type": "follow_up_history"
-                            }
+                                "query_type": "follow_up_history",
+                            },
                         )
                     else:
                         logger.debug(
@@ -439,8 +457,8 @@ class EnhancedDatabaseService:
                             extra={
                                 "error_id": "FOLLOW_UP_HISTORY_RETRIEVED_001",
                                 "lead_id": lead_id,
-                                "record_count": len(result)
-                            }
+                                "record_count": len(result),
+                            },
                         )
 
                     return result
@@ -452,8 +470,8 @@ class EnhancedDatabaseService:
                         "error_id": "DB_FAILURE_001",
                         "lead_id": lead_id,
                         "postgres_error": str(e),
-                        "error_code": e.sqlstate if hasattr(e, 'sqlstate') else None
-                    }
+                        "error_code": e.sqlstate if hasattr(e, "sqlstate") else None,
+                    },
                 )
                 # Don't return empty list - re-raise to force proper error handling
                 raise DatabaseOperationError(f"Failed to get lead follow-up history: {e}", error_id="DB_FAILURE_001")
@@ -465,19 +483,15 @@ class EnhancedDatabaseService:
                         "error_id": "UNEXPECTED_DB_ERROR_001",
                         "lead_id": lead_id,
                         "error_type": type(e).__name__,
-                        "error": str(e)
-                    }
+                        "error": str(e),
+                    },
                 )
                 raise
 
         # Execute with circuit breaker protection
         return await self.circuit_breaker.call(_get_history)
 
-    async def secure_bulk_update_leads(
-        self,
-        updates: List[Dict[str, Any]],
-        updated_by: str = None
-    ) -> Dict[str, int]:
+    async def secure_bulk_update_leads(self, updates: List[Dict[str, Any]], updated_by: str = None) -> Dict[str, int]:
         """
         Secure bulk lead updates for performance optimization
 
@@ -492,6 +506,7 @@ class EnhancedDatabaseService:
             ValueError: Invalid input data
             DatabaseOperationError: Database operation failed
         """
+
         async def _bulk_update():
             if not updates:
                 return {"success": 0, "failed": 0, "total": 0}
@@ -502,18 +517,18 @@ class EnhancedDatabaseService:
             # Process in smaller batches to avoid memory issues
             batch_size = 50
             for i in range(0, len(updates), batch_size):
-                batch = updates[i:i + batch_size]
+                batch = updates[i : i + batch_size]
 
                 for update_data in batch:
-                    if 'lead_id' not in update_data:
+                    if "lead_id" not in update_data:
                         logger.error(
                             "BULK_UPDATE_ERROR: Missing lead_id in update data",
-                            extra={"error_id": "BULK_UPDATE_ERROR_001", "update_data": update_data}
+                            extra={"error_id": "BULK_UPDATE_ERROR_001", "update_data": update_data},
                         )
                         failed_count += 1
                         continue
 
-                    lead_id = update_data.pop('lead_id')
+                    lead_id = update_data.pop("lead_id")
 
                     try:
                         success = await self.secure_update_lead(lead_id, update_data, updated_by)
@@ -524,11 +539,7 @@ class EnhancedDatabaseService:
                     except Exception as e:
                         logger.error(
                             f"BULK_UPDATE_ITEM_FAILED: Failed to update lead {lead_id}",
-                            extra={
-                                "error_id": "BULK_UPDATE_ITEM_FAILED_001",
-                                "lead_id": lead_id,
-                                "error": str(e)
-                            }
+                            extra={"error_id": "BULK_UPDATE_ITEM_FAILED_001", "lead_id": lead_id, "error": str(e)},
                         )
                         failed_count += 1
 
@@ -543,24 +554,15 @@ class EnhancedDatabaseService:
                     "total": len(updates),
                     "success": success_count,
                     "failed": failed_count,
-                    "success_rate": success_count / len(updates) if updates else 0
-                }
+                    "success_rate": success_count / len(updates) if updates else 0,
+                },
             )
 
-            return {
-                "success": success_count,
-                "failed": failed_count,
-                "total": len(updates)
-            }
+            return {"success": success_count, "failed": failed_count, "total": len(updates)}
 
         # Execute with circuit breaker protection
         return await self.circuit_breaker.call(_bulk_update)
 
 
 # Export enhanced service
-__all__ = [
-    'EnhancedDatabaseService',
-    'DatabaseOperationError',
-    'DatabaseCircuitBreaker',
-    'CircuitBreakerState'
-]
+__all__ = ["EnhancedDatabaseService", "DatabaseOperationError", "DatabaseCircuitBreaker", "CircuitBreakerState"]

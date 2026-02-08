@@ -22,7 +22,8 @@ Agent Coordination: Architecture Sentinel + UI Specialist + Context Memory
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Any, Union
+from typing import Any, Dict, List, Union
+
 
 class JorgeDemoPremiumActivator:
     """Activate premium UI components for Jorge's demo."""
@@ -45,7 +46,7 @@ class JorgeDemoPremiumActivator:
             "property_cards.py",
             "elite_refinements.py",
             "enhanced_services.py",
-            "property_matcher_ai.py"
+            "property_matcher_ai.py",
         ]
 
         all_exist = True
@@ -66,14 +67,14 @@ class JorgeDemoPremiumActivator:
             self.log_activation("app.py not found", False)
             return {}
 
-        with open(self.app_path, 'r') as f:
+        with open(self.app_path, "r") as f:
             app_content = f.read()
 
         integrations = {
             "elite_refinements": False,
             "enhanced_services": False,
             "property_matcher": False,
-            "actionable_heatmap": False
+            "actionable_heatmap": False,
         }
 
         # Check for elite refinements integration
@@ -82,7 +83,7 @@ class JorgeDemoPremiumActivator:
             r"from.*elite_refinements.*import.*render_feature_gap",
             r"from.*elite_refinements.*import.*render_elite_segmentation_tab",
             r"render_dynamic_timeline",
-            r"render_feature_gap"
+            r"render_feature_gap",
         ]
 
         if any(re.search(pattern, app_content) for pattern in elite_patterns):
@@ -90,30 +91,21 @@ class JorgeDemoPremiumActivator:
             self.log_activation("Elite Refinements - ACTIVE")
 
         # Check for enhanced services integration
-        enhanced_patterns = [
-            r"from.*enhanced_services.*import.*render_ai_lead_insights",
-            r"render_ai_lead_insights"
-        ]
+        enhanced_patterns = [r"from.*enhanced_services.*import.*render_ai_lead_insights", r"render_ai_lead_insights"]
 
         if any(re.search(pattern, app_content) for pattern in enhanced_patterns):
             integrations["enhanced_services"] = True
             self.log_activation("Enhanced Services - ACTIVE")
 
         # Check for property matcher integration
-        matcher_patterns = [
-            r"from.*property_matcher_ai.*import.*render_property_matcher",
-            r"render_property_matcher"
-        ]
+        matcher_patterns = [r"from.*property_matcher_ai.*import.*render_property_matcher", r"render_property_matcher"]
 
         if any(re.search(pattern, app_content) for pattern in matcher_patterns):
             integrations["property_matcher"] = True
             self.log_activation("Property Matcher AI - ACTIVE")
 
         # Check for actionable heatmap
-        heatmap_patterns = [
-            r"from.*elite_refinements.*import.*render_actionable_heatmap",
-            r"render_actionable_heatmap"
-        ]
+        heatmap_patterns = [r"from.*elite_refinements.*import.*render_actionable_heatmap", r"render_actionable_heatmap"]
 
         if any(re.search(pattern, app_content) for pattern in heatmap_patterns):
             integrations["actionable_heatmap"] = True
@@ -130,7 +122,7 @@ class JorgeDemoPremiumActivator:
         if not property_cards_path.exists():
             return False
 
-        with open(property_cards_path, 'r') as f:
+        with open(property_cards_path, "r") as f:
             content = f.read()
 
         # Check if premium function exists
@@ -145,7 +137,7 @@ class JorgeDemoPremiumActivator:
         """Activate actionable heatmap in Executive Dashboard if not present."""
 
         # Check if actionable heatmap is already integrated
-        with open(self.app_path, 'r') as f:
+        with open(self.app_path, "r") as f:
             content = f.read()
 
         if "render_actionable_heatmap" in content:
@@ -153,7 +145,7 @@ class JorgeDemoPremiumActivator:
             return True
 
         # Find the executive dashboard section and add heatmap
-        executive_section_pattern = r'(with tab5:.*?)(\n\n\n|\nif __name__|$)'
+        executive_section_pattern = r"(with tab5:.*?)(\n\n\n|\nif __name__|$)"
         match = re.search(executive_section_pattern, content, re.DOTALL)
 
         if not match:
@@ -161,7 +153,7 @@ class JorgeDemoPremiumActivator:
             return False
 
         # Add heatmap integration to executive dashboard
-        heatmap_integration = '''
+        heatmap_integration = """
                 # PREMIUM FEATURE: Actionable Intelligence Heatmap
                 st.markdown("---")
                 st.markdown("### 🎯 Actionable Intelligence Heatmap")
@@ -185,7 +177,7 @@ class JorgeDemoPremiumActivator:
 
                 except ImportError:
                     st.info("🚀 Actionable Intelligence available in premium version")
-'''
+"""
 
         # Insert heatmap integration before the end of the executive section
         executive_content = match.group(1)
@@ -196,7 +188,7 @@ class JorgeDemoPremiumActivator:
 
         # Write enhanced version
         enhanced_app_path = Path("app_enhanced_demo.py")
-        with open(enhanced_app_path, 'w') as f:
+        with open(enhanced_app_path, "w") as f:
             f.write(new_content)
 
         self.log_activation(f"Enhanced app created: {enhanced_app_path}")
@@ -267,11 +259,12 @@ if __name__ == "__main__":
 '''
 
         launcher_path = Path("launch_jorge_demo.py")
-        with open(launcher_path, 'w') as f:
+        with open(launcher_path, "w") as f:
             f.write(launcher_script)
 
         # Make executable
         import stat
+
         launcher_path.chmod(launcher_path.stat().Union[st_mode, stat].S_IEXEC)
 
         self.log_activation(f"Demo launcher created: {launcher_path}")
@@ -365,7 +358,7 @@ if __name__ == "__main__":
 """
 
         checklist_path = Path("JORGE_DEMO_CHECKLIST.md")
-        with open(checklist_path, 'w') as f:
+        with open(checklist_path, "w") as f:
             f.write(checklist)
 
         self.log_activation(f"Demo checklist created: {checklist_path}")
@@ -440,6 +433,7 @@ if __name__ == "__main__":
 
         return active_count >= 3
 
+
 def main():
     """Main activation execution."""
 
@@ -447,6 +441,7 @@ def main():
     if not Path("app.py").exists():
         if Path("streamlit_demo/app.py").exists():
             import os
+
             os.chdir("streamlit_demo")
             print("✅ Changed to streamlit_demo directory")
         else:
@@ -458,6 +453,7 @@ def main():
     success = activator.run_activation()
 
     return success
+
 
 if __name__ == "__main__":
     success = main()

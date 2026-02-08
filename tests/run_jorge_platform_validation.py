@@ -10,18 +10,19 @@ Created: 2026-01-17
 """
 
 import asyncio
-import sys
 import json
 import subprocess
+import sys
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any
-from dataclasses import dataclass, asdict
+from typing import Any, Dict, List
 
 
 @dataclass
 class TestResult:
     """Test execution result"""
+
     suite_name: str
     total_tests: int
     passed: int
@@ -35,6 +36,7 @@ class TestResult:
 @dataclass
 class ValidationReport:
     """Complete validation report"""
+
     timestamp: datetime
     platform_version: str
     test_results: List[TestResult]
@@ -86,8 +88,8 @@ class JorgePlatformValidator:
             [
                 "tests/services/test_dynamic_pricing_optimizer.py",
                 "tests/services/test_roi_calculator_service.py",
-                "tests/services/test_realtime_behavioral_network.py"
-            ]
+                "tests/services/test_realtime_behavioral_network.py",
+            ],
         )
 
         # Test Suite 2: API Integration Tests
@@ -95,10 +97,7 @@ class JorgePlatformValidator:
         print("-" * 80)
         self._run_test_suite(
             "API Integration Tests",
-            [
-                "tests/api/test_pricing_optimization_routes.py",
-                "tests/integration/test_pricing_system_integration.py"
-            ]
+            ["tests/api/test_pricing_optimization_routes.py", "tests/integration/test_pricing_system_integration.py"],
         )
 
         # Test Suite 3: End-to-End Workflow Tests
@@ -109,19 +108,14 @@ class JorgePlatformValidator:
             [
                 "tests/integration/test_jorge_revenue_platform_e2e.py",
                 "test_jorge_integration.py",
-                "test_pricing_end_to_end.py"
-            ]
+                "test_pricing_end_to_end.py",
+            ],
         )
 
         # Test Suite 4: Security & Performance
         print("\n📋 TEST SUITE 4: Security & Performance")
         print("-" * 80)
-        self._run_test_suite(
-            "Security & Performance Tests",
-            [
-                "tests/security/test_jorge_webhook_security.py"
-            ]
-        )
+        self._run_test_suite("Security & Performance Tests", ["tests/security/test_jorge_webhook_security.py"])
 
         # Generate comprehensive report
         return self._generate_report()
@@ -158,7 +152,7 @@ class JorgePlatformValidator:
                 skipped=0,
                 duration_seconds=0.0,
                 coverage_percentage=0.0,
-                failures=[]
+                failures=[],
             )
             self.results.append(result)
             return result
@@ -166,7 +160,9 @@ class JorgePlatformValidator:
         # Execute pytest with coverage
         start_time = datetime.now()
         cmd = [
-            sys.executable, "-m", "pytest",
+            sys.executable,
+            "-m",
+            "pytest",
             *existing_files,
             "-v",
             "--tb=short",
@@ -175,16 +171,12 @@ class JorgePlatformValidator:
             "--cov=ghl_real_estate_ai",
             "--cov-report=term-missing",
             "--cov-report=json",
-            "-m", "not slow"  # Skip slow tests for quick validation
+            "-m",
+            "not slow",  # Skip slow tests for quick validation
         ]
 
         try:
-            result_output = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                cwd=str(self.project_root)
-            )
+            result_output = subprocess.run(cmd, capture_output=True, text=True, cwd=str(self.project_root))
 
             duration = (datetime.now() - start_time).total_seconds()
 
@@ -214,17 +206,12 @@ class JorgePlatformValidator:
                 skipped=0,
                 duration_seconds=0.0,
                 coverage_percentage=0.0,
-                failures=[{"error": str(e)}]
+                failures=[{"error": str(e)}],
             )
             self.results.append(error_result)
             return error_result
 
-    def _parse_pytest_output(
-        self,
-        suite_name: str,
-        output: str,
-        duration: float
-    ) -> TestResult:
+    def _parse_pytest_output(self, suite_name: str, output: str, duration: float) -> TestResult:
         """
         Parse pytest output to extract test results.
 
@@ -245,21 +232,22 @@ class JorgePlatformValidator:
         failures = []
 
         # Parse summary line
-        for line in output.split('\n'):
-            if 'passed' in line.lower() or 'failed' in line.lower():
+        for line in output.split("\n"):
+            if "passed" in line.lower() or "failed" in line.lower():
                 # Extract numbers
                 import re
-                if match := re.search(r'(\d+)\s+passed', line):
+
+                if match := re.search(r"(\d+)\s+passed", line):
                     passed = int(match.group(1))
-                if match := re.search(r'(\d+)\s+failed', line):
+                if match := re.search(r"(\d+)\s+failed", line):
                     failed = int(match.group(1))
-                if match := re.search(r'(\d+)\s+skipped', line):
+                if match := re.search(r"(\d+)\s+skipped", line):
                     skipped = int(match.group(1))
 
         # Parse failures
-        if 'FAILED' in output:
-            for line in output.split('\n'):
-                if 'FAILED' in line:
+        if "FAILED" in output:
+            for line in output.split("\n"):
+                if "FAILED" in line:
                     failures.append({"test": line.strip()})
 
         # Try to read coverage from json
@@ -283,7 +271,7 @@ class JorgePlatformValidator:
             skipped=skipped,
             duration_seconds=duration,
             coverage_percentage=coverage_pct,
-            failures=failures
+            failures=failures,
         )
 
     def _generate_report(self) -> ValidationReport:
@@ -315,16 +303,14 @@ class JorgePlatformValidator:
             "roi_calculator": 0.0,
             "golden_lead_detector": 0.0,
             "api_routes": 0.0,
-            "overall": sum(r.coverage_percentage for r in self.results) / max(len(self.results), 1)
+            "overall": sum(r.coverage_percentage for r in self.results) / max(len(self.results), 1),
         }
 
         # Identify critical issues
         critical_issues = []
         for result in self.results:
             if result.failed > 0:
-                critical_issues.append(
-                    f"{result.suite_name}: {result.failed} test(s) failed"
-                )
+                critical_issues.append(f"{result.suite_name}: {result.failed} test(s) failed")
 
         # Generate recommendations
         recommendations = []
@@ -351,7 +337,7 @@ class JorgePlatformValidator:
             total_duration=total_duration,
             coverage_summary=coverage_summary,
             critical_issues=critical_issues,
-            recommendations=recommendations
+            recommendations=recommendations,
         )
 
         # Print report
@@ -369,7 +355,9 @@ class JorgePlatformValidator:
         print("=" * 80)
         print(f"Timestamp: {report.timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
         print(f"Platform Version: {report.platform_version}")
-        print(f"Overall Status: {'✅ ' + report.overall_status if report.overall_status == 'PASSED' else '❌ ' + report.overall_status}")
+        print(
+            f"Overall Status: {'✅ ' + report.overall_status if report.overall_status == 'PASSED' else '❌ ' + report.overall_status}"
+        )
         print()
 
         print("Test Summary:")
@@ -428,10 +416,10 @@ class JorgePlatformValidator:
             "coverage_summary": report.coverage_summary,
             "test_results": [asdict(r) for r in report.test_results],
             "critical_issues": report.critical_issues,
-            "recommendations": report.recommendations
+            "recommendations": report.recommendations,
         }
 
-        with open(report_file, 'w') as f:
+        with open(report_file, "w") as f:
             json.dump(report_dict, f, indent=2)
 
         print(f"📄 Report saved to: {report_file}")
@@ -458,6 +446,7 @@ def main():
     except Exception as e:
         print(f"\n❌ Validation error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 

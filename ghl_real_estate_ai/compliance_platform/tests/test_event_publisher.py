@@ -12,16 +12,17 @@ Tests cover:
 
 import asyncio
 import json
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 
 from ghl_real_estate_ai.compliance_platform.realtime.event_publisher import (
-    ComplianceEventType,
     ComplianceEvent,
+    ComplianceEventBus,
     ComplianceEventPublisher,
     ComplianceEventSubscriber,
-    ComplianceEventBus,
+    ComplianceEventType,
 )
 
 
@@ -146,12 +147,12 @@ class TestComplianceEventPublisher:
             model_id="model-123",
         )
 
-        with patch.object(publisher, '_ensure_connected', return_value=False):
+        with patch.object(publisher, "_ensure_connected", return_value=False):
             result = await publisher.publish(event)
 
         # Should return 0 subscribers (fallback mode)
         assert result == 0
-        assert publisher._metrics['events_failed'] == 1
+        assert publisher._metrics["events_failed"] == 1
 
     @pytest.mark.asyncio
     async def test_publish_with_mocked_redis(self, publisher):
@@ -168,17 +169,17 @@ class TestComplianceEventPublisher:
             model_id="model-456",
         )
 
-        with patch.object(publisher, '_ensure_connected', return_value=True):
+        with patch.object(publisher, "_ensure_connected", return_value=True):
             result = await publisher.publish(event)
 
         assert result == 2
-        assert publisher._metrics['events_published'] == 1
+        assert publisher._metrics["events_published"] == 1
         mock_redis.publish.assert_called()
 
     @pytest.mark.asyncio
     async def test_publish_violation_convenience_method(self, publisher):
         """Test publish_violation convenience method"""
-        with patch.object(publisher, 'publish', new_callable=AsyncMock) as mock_publish:
+        with patch.object(publisher, "publish", new_callable=AsyncMock) as mock_publish:
             mock_publish.return_value = 1
 
             event = await publisher.publish_violation(
@@ -199,7 +200,7 @@ class TestComplianceEventPublisher:
     @pytest.mark.asyncio
     async def test_publish_score_change_convenience_method(self, publisher):
         """Test publish_score_change convenience method"""
-        with patch.object(publisher, 'publish', new_callable=AsyncMock) as mock_publish:
+        with patch.object(publisher, "publish", new_callable=AsyncMock) as mock_publish:
             mock_publish.return_value = 1
 
             event = await publisher.publish_score_change(
@@ -218,7 +219,7 @@ class TestComplianceEventPublisher:
     @pytest.mark.asyncio
     async def test_publish_threshold_breach_convenience_method(self, publisher):
         """Test publish_threshold_breach convenience method"""
-        with patch.object(publisher, 'publish', new_callable=AsyncMock) as mock_publish:
+        with patch.object(publisher, "publish", new_callable=AsyncMock) as mock_publish:
             mock_publish.return_value = 1
 
             event = await publisher.publish_threshold_breach(
@@ -279,7 +280,7 @@ class TestComplianceEventSubscriber:
         subscriber._redis = mock_redis
         subscriber._pubsub = mock_pubsub
 
-        with patch.object(subscriber, 'connect', return_value=True):
+        with patch.object(subscriber, "connect", return_value=True):
             result = await subscriber.subscribe(
                 [ComplianceEventType.VIOLATION_DETECTED],
                 handler,
@@ -300,7 +301,7 @@ class TestComplianceEventSubscriber:
         subscriber._redis = mock_redis
         subscriber._pubsub = mock_pubsub
 
-        with patch.object(subscriber, 'connect', return_value=True):
+        with patch.object(subscriber, "connect", return_value=True):
             result = await subscriber.subscribe_all(handler)
 
         assert result is True
@@ -319,30 +320,30 @@ class TestComplianceEventSubscriber:
         )
 
         message = {
-            'type': 'message',
-            'channel': 'test_compliance:violations',
-            'data': event.to_json(),
+            "type": "message",
+            "channel": "test_compliance:violations",
+            "data": event.to_json(),
         }
 
         await subscriber._process_message(message)
 
         handler.assert_called_once()
-        assert subscriber._metrics['events_received'] == 1
-        assert subscriber._metrics['events_processed'] == 1
+        assert subscriber._metrics["events_received"] == 1
+        assert subscriber._metrics["events_processed"] == 1
 
     @pytest.mark.asyncio
     async def test_process_message_handles_invalid_json(self, subscriber):
         """Test that invalid JSON is handled gracefully"""
         message = {
-            'type': 'message',
-            'channel': 'test_compliance:violations',
-            'data': 'invalid json {{{',
+            "type": "message",
+            "channel": "test_compliance:violations",
+            "data": "invalid json {{{",
         }
 
         await subscriber._process_message(message)
 
-        assert subscriber._metrics['events_received'] == 1
-        assert subscriber._metrics['events_failed'] == 1
+        assert subscriber._metrics["events_received"] == 1
+        assert subscriber._metrics["events_failed"] == 1
 
     @pytest.mark.asyncio
     async def test_unsubscribe_removes_handler(self, subscriber):
@@ -355,9 +356,7 @@ class TestComplianceEventSubscriber:
             handler=handler,
         )
 
-        assert handler not in subscriber._handlers.get(
-            ComplianceEventType.VIOLATION_DETECTED.value, []
-        )
+        assert handler not in subscriber._handlers.get(ComplianceEventType.VIOLATION_DETECTED.value, [])
 
     @pytest.mark.asyncio
     async def test_get_metrics(self, subscriber):
@@ -392,9 +391,7 @@ class TestComplianceEventBus:
     @pytest.mark.asyncio
     async def test_event_bus_publish(self, event_bus):
         """Test publishing through event bus"""
-        with patch.object(
-            event_bus._publisher, 'publish', new_callable=AsyncMock
-        ) as mock_publish:
+        with patch.object(event_bus._publisher, "publish", new_callable=AsyncMock) as mock_publish:
             mock_publish.return_value = 1
 
             event = ComplianceEvent(
@@ -415,9 +412,7 @@ class TestComplianceEventBus:
         """Test subscribing through event bus"""
         handler = AsyncMock()
 
-        with patch.object(
-            event_bus._subscriber, 'subscribe', new_callable=AsyncMock
-        ) as mock_subscribe:
+        with patch.object(event_bus._subscriber, "subscribe", new_callable=AsyncMock) as mock_subscribe:
             mock_subscribe.return_value = True
 
             result = await event_bus.subscribe(
@@ -431,8 +426,8 @@ class TestComplianceEventBus:
     @pytest.mark.asyncio
     async def test_event_bus_context_manager(self, event_bus):
         """Test event bus as async context manager"""
-        with patch.object(event_bus, 'start', new_callable=AsyncMock) as mock_start:
-            with patch.object(event_bus, 'stop', new_callable=AsyncMock) as mock_stop:
+        with patch.object(event_bus, "start", new_callable=AsyncMock) as mock_start:
+            with patch.object(event_bus, "stop", new_callable=AsyncMock) as mock_stop:
                 mock_start.return_value = True
 
                 async with event_bus as bus:

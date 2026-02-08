@@ -18,20 +18,19 @@ import asyncio
 import time
 import traceback
 import uuid
-from typing import Dict, Any, Optional, Union
-from fastapi import Request, HTTPException, status
-from fastapi.responses import JSONResponse
+from typing import Any, Dict, Optional, Union
+
+from fastapi import HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+
 try:
-    from ghl_real_estate_ai.services.error_monitoring_service import (
-        get_error_monitoring_service,
-        ErrorCategory
-    )
+    from ghl_real_estate_ai.services.error_monitoring_service import ErrorCategory, get_error_monitoring_service
 except ImportError:
     # Fallback if monitoring service is not available
     def get_error_monitoring_service():
@@ -49,6 +48,7 @@ except ImportError:
         WEBSOCKET = "websocket"
         PERFORMANCE = "performance"
 
+
 logger = get_logger(__name__)
 
 
@@ -63,7 +63,7 @@ class JorgeErrorResponse:
         details: Optional[Dict[str, Any]] = None,
         correlation_id: Optional[str] = None,
         retryable: bool = False,
-        guidance: Optional[str] = None
+        guidance: Optional[str] = None,
     ):
         self.error_type = error_type
         self.message = message
@@ -82,13 +82,9 @@ class JorgeErrorResponse:
         """Convert to dictionary response."""
         response = {
             "success": False,
-            "error": {
-                "type": self.error_type,
-                "message": self.message,
-                "retryable": self.retryable
-            },
+            "error": {"type": self.error_type, "message": self.message, "retryable": self.retryable},
             "correlation_id": self.correlation_id,
-            "timestamp": self.timestamp
+            "timestamp": self.timestamp,
         }
 
         if self.guidance:
@@ -98,7 +94,7 @@ class JorgeErrorResponse:
             response["retry"] = {
                 "recommended": True,
                 "suggested_delay_seconds": self._get_retry_delay(),
-                "max_retries": 3
+                "max_retries": 3,
             }
 
         if include_debug and self.details:
@@ -108,13 +104,7 @@ class JorgeErrorResponse:
 
     def _get_retry_delay(self) -> int:
         """Get retry delay based on error type."""
-        delay_map = {
-            "timeout": 2,
-            "external_service": 5,
-            "database": 3,
-            "rate_limit": 60,
-            "temporary": 5
-        }
+        delay_map = {"timeout": 2, "external_service": 5, "database": 3, "rate_limit": 60, "temporary": 5}
         return delay_map.get(self.error_type, 5)
 
 
@@ -137,88 +127,82 @@ class GlobalExceptionHandler:
                 "status_code": 400,
                 "message": "Commission rate validation failed",
                 "guidance": "Commission must be between 5% and 8% for Jorge's listings",
-                "retryable": False
+                "retryable": False,
             },
             "property_qualification": {
                 "status_code": 400,
                 "message": "Property does not meet Jorge's criteria",
                 "guidance": "Properties must be residential, $100K-$2M range, in supported markets",
-                "retryable": False
+                "retryable": False,
             },
             "lead_scoring_error": {
                 "status_code": 400,
                 "message": "Lead scoring validation failed",
                 "guidance": "Check lead data completeness and contact information",
-                "retryable": True
+                "retryable": True,
             },
-
             # External Service Errors
             "ghl_api_error": {
                 "status_code": 502,
                 "message": "GoHighLevel service temporarily unavailable",
                 "guidance": "CRM operations will retry automatically",
-                "retryable": True
+                "retryable": True,
             },
             "claude_api_error": {
                 "status_code": 502,
                 "message": "AI assistant service temporarily unavailable",
                 "guidance": "AI features will be restored shortly",
-                "retryable": True
+                "retryable": True,
             },
             "retell_api_error": {
                 "status_code": 502,
                 "message": "Voice calling service unavailable",
                 "guidance": "Voice features temporarily disabled",
-                "retryable": True
+                "retryable": True,
             },
-
             # Database and Performance
             "database_timeout": {
                 "status_code": 503,
                 "message": "Database operation timed out",
                 "guidance": "Please try your request again",
-                "retryable": True
+                "retryable": True,
             },
             "cache_miss": {
                 "status_code": 202,
                 "message": "Data is being processed",
                 "guidance": "Results will be available shortly",
-                "retryable": True
+                "retryable": True,
             },
-
             # Authentication and Authorization
             "auth_token_expired": {
                 "status_code": 401,
                 "message": "Authentication token has expired",
                 "guidance": "Please sign in again to continue",
-                "retryable": False
+                "retryable": False,
             },
             "insufficient_permissions": {
                 "status_code": 403,
                 "message": "Insufficient permissions for this action",
                 "guidance": "Contact your administrator for access",
-                "retryable": False
+                "retryable": False,
             },
-
             # WebSocket Specific
             "websocket_connection_failed": {
                 "status_code": 503,
                 "message": "Real-time connection failed",
                 "guidance": "Refreshing page may restore real-time features",
-                "retryable": True
+                "retryable": True,
             },
             "websocket_message_invalid": {
                 "status_code": 400,
                 "message": "Invalid real-time message format",
                 "guidance": "Check message structure and try again",
-                "retryable": False
-            }
+                "retryable": False,
+            },
         }
 
     async def handle_validation_error(
-        self,
-        request: Request,
-        exc: Union[RequestValidationError, ValidationError]
+        self, request: Request, exc: Union[RequestValidationError, ValidationError]
     ) -> JorgeErrorResponse:
         """Handle Pydantic validation errors with user-friendly messages."""
 
@@ -239,30 +223,20 @@ class GlobalExceptionHandler:
             error_type="validation_error",
             message=jorge_context.get("message", "Invalid request data"),
             status_code=422,
-            details={
-                "field_errors": field_errors,
-                "validation_type": jorge_context.get("type", "general")
-            },
+            details={"field_errors": field_errors, "validation_type": jorge_context.get("type", "general")},
             correlation_id=correlation_id,
             retryable=False,
-            guidance=jorge_context.get("guidance")
+            guidance=jorge_context.get("guidance"),
         )
 
         # Record error in monitoring system
         await self._record_error_event(
-            request=request,
-            error_response=error_response,
-            category=ErrorCategory.VALIDATION,
-            exception=exc
+            request=request, error_response=error_response, category=ErrorCategory.VALIDATION, exception=exc
         )
 
         return error_response
 
-    def _get_jorge_validation_context(
-        self,
-        error_msg: str,
-        field_errors: list
-    ) -> Dict[str, str]:
+    def _get_jorge_validation_context(self, error_msg: str, field_errors: list) -> Dict[str, str]:
         """Get Jorge-specific validation context and guidance."""
 
         error_msg_lower = error_msg.lower()
@@ -272,7 +246,7 @@ class GlobalExceptionHandler:
             return {
                 "type": "commission",
                 "message": "Commission rate is invalid",
-                "guidance": "Jorge's commission rate must be between 5% and 8%. Standard rate is 6%."
+                "guidance": "Jorge's commission rate must be between 5% and 8%. Standard rate is 6%.",
             }
 
         # Phone number validation
@@ -280,7 +254,7 @@ class GlobalExceptionHandler:
             return {
                 "type": "contact",
                 "message": "Phone number format is invalid",
-                "guidance": "Please provide a valid 10-digit US phone number (e.g., 555-123-4567)"
+                "guidance": "Please provide a valid 10-digit US phone number (e.g., 555-123-4567)",
             }
 
         # Email validation
@@ -288,7 +262,7 @@ class GlobalExceptionHandler:
             return {
                 "type": "contact",
                 "message": "Email address format is invalid",
-                "guidance": "Please provide a valid email address (e.g., contact@example.com)"
+                "guidance": "Please provide a valid email address (e.g., contact@example.com)",
             }
 
         # Price/value validation
@@ -296,7 +270,7 @@ class GlobalExceptionHandler:
             return {
                 "type": "property",
                 "message": "Property value is outside acceptable range",
-                "guidance": "Jorge handles properties between $100,000 and $2,000,000"
+                "guidance": "Jorge handles properties between $100,000 and $2,000,000",
             }
 
         # Date validation
@@ -304,19 +278,17 @@ class GlobalExceptionHandler:
             return {
                 "type": "datetime",
                 "message": "Date/time format is invalid",
-                "guidance": "Please provide dates in ISO format (YYYY-MM-DD) or Unix timestamp"
+                "guidance": "Please provide dates in ISO format (YYYY-MM-DD) or Unix timestamp",
             }
 
         return {
             "type": "general",
             "message": "Request data validation failed",
-            "guidance": "Please check the highlighted fields and correct any errors"
+            "guidance": "Please check the highlighted fields and correct any errors",
         }
 
     async def handle_http_exception(
-        self,
-        request: Request,
-        exc: Union[HTTPException, StarletteHTTPException]
+        self, request: Request, exc: Union[HTTPException, StarletteHTTPException]
     ) -> JorgeErrorResponse:
         """Handle HTTP exceptions with Jorge context."""
 
@@ -332,7 +304,7 @@ class GlobalExceptionHandler:
             details={"original_detail": str(exc.detail)},
             correlation_id=correlation_id,
             retryable=error_context["retryable"],
-            guidance=error_context.get("guidance")
+            guidance=error_context.get("guidance"),
         )
 
         # Record error in monitoring system
@@ -340,16 +312,12 @@ class GlobalExceptionHandler:
             request=request,
             error_response=error_response,
             category=self._map_http_status_to_category(exc.status_code),
-            exception=exc
+            exception=exc,
         )
 
         return error_response
 
-    async def handle_system_exception(
-        self,
-        request: Request,
-        exc: Exception
-    ) -> JorgeErrorResponse:
+    async def handle_system_exception(self, request: Request, exc: Exception) -> JorgeErrorResponse:
         """Handle unexpected system exceptions."""
 
         correlation_id = self._get_correlation_id(request)
@@ -368,8 +336,8 @@ class GlobalExceptionHandler:
                 "error_type": exc_type,
                 "error_message": exc_str,
                 "stack_trace": traceback.format_exc(),
-                "jorge_platform": True
-            }
+                "jorge_platform": True,
+            },
         )
 
         error_response = JorgeErrorResponse(
@@ -378,19 +346,16 @@ class GlobalExceptionHandler:
             status_code=error_context["status_code"],
             details={
                 "exception_type": exc_type,
-                "stack_trace": traceback.format_exc() if settings.environment == "development" else None
+                "stack_trace": traceback.format_exc() if settings.environment == "development" else None,
             },
             correlation_id=correlation_id,
             retryable=error_context["retryable"],
-            guidance=error_context.get("guidance")
+            guidance=error_context.get("guidance"),
         )
 
         # Record error in monitoring system
         await self._record_error_event(
-            request=request,
-            error_response=error_response,
-            category=self._map_exception_to_category(exc),
-            exception=exc
+            request=request, error_response=error_response, category=self._map_exception_to_category(exc), exception=exc
         )
 
         return error_response
@@ -413,7 +378,7 @@ class GlobalExceptionHandler:
                     "type": "bad_request",
                     "message": "Invalid request format",
                     "retryable": False,
-                    "guidance": "Please check your request data and try again"
+                    "guidance": "Please check your request data and try again",
                 }
 
         # 401 Unauthorized
@@ -425,7 +390,7 @@ class GlobalExceptionHandler:
                     "type": "authentication_required",
                     "message": "Authentication required",
                     "retryable": False,
-                    "guidance": "Please sign in to access this feature"
+                    "guidance": "Please sign in to access this feature",
                 }
 
         # 403 Forbidden
@@ -438,7 +403,7 @@ class GlobalExceptionHandler:
                 "type": "resource_not_found",
                 "message": "Requested resource was not found",
                 "retryable": False,
-                "guidance": "Please check the resource ID and try again"
+                "guidance": "Please check the resource ID and try again",
             }
 
         # 429 Rate Limited
@@ -447,7 +412,7 @@ class GlobalExceptionHandler:
                 "type": "rate_limit",
                 "message": "Too many requests",
                 "retryable": True,
-                "guidance": "Please wait a moment before trying again"
+                "guidance": "Please wait a moment before trying again",
             }
 
         # 5xx Server Errors
@@ -456,15 +421,11 @@ class GlobalExceptionHandler:
                 "type": "server_error",
                 "message": "Server encountered an error",
                 "retryable": True,
-                "guidance": "Please try again in a few moments"
+                "guidance": "Please try again in a few moments",
             }
 
         else:
-            return {
-                "type": "unknown_http_error",
-                "message": detail,
-                "retryable": False
-            }
+            return {"type": "unknown_http_error", "message": detail, "retryable": False}
 
     def _classify_system_error(self, exc_type: str, exc_str: str) -> Dict[str, Any]:
         """Classify system errors by type and message."""
@@ -472,14 +433,18 @@ class GlobalExceptionHandler:
         exc_str_lower = exc_str.lower()
 
         # Database errors
-        if ("database" in exc_str_lower or "postgres" in exc_str_lower or
-            "connection" in exc_str_lower and "database" in exc_str_lower):
+        if (
+            "database" in exc_str_lower
+            or "postgres" in exc_str_lower
+            or "connection" in exc_str_lower
+            and "database" in exc_str_lower
+        ):
             return {
                 "type": "database_error",
                 "message": "Database service temporarily unavailable",
                 "status_code": 503,
                 "retryable": True,
-                "guidance": "Please try your request again"
+                "guidance": "Please try your request again",
             }
 
         # Timeout errors
@@ -489,7 +454,7 @@ class GlobalExceptionHandler:
                 "message": "Request timed out",
                 "status_code": 408,
                 "retryable": True,
-                "guidance": "The operation took too long. Please try again."
+                "guidance": "The operation took too long. Please try again.",
             }
 
         # External API errors
@@ -509,7 +474,7 @@ class GlobalExceptionHandler:
                 "message": "System resources temporarily unavailable",
                 "status_code": 503,
                 "retryable": True,
-                "guidance": "Please try again in a few moments"
+                "guidance": "Please try again in a few moments",
             }
 
         # WebSocket errors
@@ -526,7 +491,7 @@ class GlobalExceptionHandler:
                 "message": "Network connection failed",
                 "status_code": 502,
                 "retryable": True,
-                "guidance": "Please check your connection and try again"
+                "guidance": "Please check your connection and try again",
             }
 
         # Default system error
@@ -536,16 +501,16 @@ class GlobalExceptionHandler:
                 "message": "An unexpected error occurred",
                 "status_code": 500,
                 "retryable": True,
-                "guidance": "Our team has been notified. Please try again."
+                "guidance": "Our team has been notified. Please try again.",
             }
 
     def _get_correlation_id(self, request: Request) -> str:
         """Extract or generate correlation ID for the request."""
         return (
-            getattr(request.state, 'correlation_id', None) or
-            request.headers.get("X-Correlation-ID") or
-            request.headers.get("X-Request-ID") or
-            f"jorge_{int(time.time() * 1000)}_{str(uuid.uuid4())[:8]}"
+            getattr(request.state, "correlation_id", None)
+            or request.headers.get("X-Correlation-ID")
+            or request.headers.get("X-Request-ID")
+            or f"jorge_{int(time.time() * 1000)}_{str(uuid.uuid4())[:8]}"
         )
 
     async def _record_error_event(
@@ -553,15 +518,15 @@ class GlobalExceptionHandler:
         request: Request,
         error_response: JorgeErrorResponse,
         category: ErrorCategory,
-        exception: Optional[Exception] = None
+        exception: Optional[Exception] = None,
     ):
         """Record error event in monitoring system."""
 
         try:
             if self.monitoring_service:
                 # Extract user information if available
-                user_id = getattr(request.state, 'user_id', None)
-                session_id = getattr(request.state, 'session_id', None)
+                user_id = getattr(request.state, "user_id", None)
+                session_id = getattr(request.state, "session_id", None)
 
                 # Record the error event
                 await self.monitoring_service.record_error(
@@ -576,14 +541,13 @@ class GlobalExceptionHandler:
                     session_id=session_id,
                     user_agent=request.headers.get("user-agent"),
                     ip_address=request.client.host if request.client else None,
-                    stack_trace=traceback.format_exc() if exception else None
+                    stack_trace=traceback.format_exc() if exception else None,
                 )
 
         except Exception as monitoring_error:
             # Don't let monitoring errors affect the main error handling
             logger.warning(
-                f"Failed to record error event: {monitoring_error}",
-                extra={"error_id": error_response.correlation_id}
+                f"Failed to record error event: {monitoring_error}", extra={"error_id": error_response.correlation_id}
             )
 
     def _map_http_status_to_category(self, status_code: int) -> ErrorCategory:
@@ -642,26 +606,17 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     return JSONResponse(
         status_code=error_response.status_code,
         content=error_response.to_dict(include_debug=settings.environment == "development"),
-        headers={
-            "X-Correlation-ID": error_response.correlation_id,
-            "X-Error-Type": error_response.error_type
-        }
+        headers={"X-Correlation-ID": error_response.correlation_id, "X-Error-Type": error_response.error_type},
     )
 
 
-async def http_exception_handler(
-    request: Request,
-    exc: Union[HTTPException, StarletteHTTPException]
-) -> JSONResponse:
+async def http_exception_handler(request: Request, exc: Union[HTTPException, StarletteHTTPException]) -> JSONResponse:
     """FastAPI HTTP exception handler."""
     error_response = await _global_exception_handler.handle_http_exception(request, exc)
     return JSONResponse(
         status_code=error_response.status_code,
         content=error_response.to_dict(include_debug=settings.environment == "development"),
-        headers={
-            "X-Correlation-ID": error_response.correlation_id,
-            "X-Error-Type": error_response.error_type
-        }
+        headers={"X-Correlation-ID": error_response.correlation_id, "X-Error-Type": error_response.error_type},
     )
 
 
@@ -671,10 +626,7 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
     return JSONResponse(
         status_code=error_response.status_code,
         content=error_response.to_dict(include_debug=settings.environment == "development"),
-        headers={
-            "X-Correlation-ID": error_response.correlation_id,
-            "X-Error-Type": error_response.error_type
-        }
+        headers={"X-Correlation-ID": error_response.correlation_id, "X-Error-Type": error_response.error_type},
     )
 
 

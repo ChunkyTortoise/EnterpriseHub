@@ -5,7 +5,8 @@ Tests the FastAPI routes for swipe actions.
 """
 
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
+
 from ghl_real_estate_ai.api.main import app
 
 
@@ -24,10 +25,10 @@ async def test_swipe_like_endpoint():
                 "time_on_card": 15.3,
             },
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert data["status"] == "logged"
         assert "trigger_sms" in data
         assert "high_intent" in data
@@ -52,10 +53,10 @@ async def test_swipe_pass_endpoint():
                 "time_on_card": 8.5,
             },
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert data["status"] == "preference_updated"
 
 
@@ -73,7 +74,7 @@ async def test_swipe_invalid_action():
                 "location_id": "loc_api_test",
             },
         )
-        
+
         # Error handler may return 500 instead of 400
         assert response.status_code in [400, 500]
         data = response.json()
@@ -95,13 +96,13 @@ async def test_get_lead_stats_endpoint():
                 "location_id": "loc_test",
             },
         )
-        
+
         # Get stats
         response = await client.get("/api/portal/stats/test_stats_api")
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert data["lead_id"] == "test_stats_api"
         assert "total_interactions" in data
         assert "likes" in data
@@ -115,15 +116,15 @@ async def test_get_feedback_categories_endpoint():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get("/api/portal/feedback-categories")
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert "categories" in data
         categories = data["categories"]
-        
+
         assert len(categories) >= 5  # At least 5 categories
-        
+
         # Check structure of first category
         first_category = categories[0]
         assert "value" in first_category
@@ -137,7 +138,7 @@ async def test_get_lead_interactions_endpoint():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         lead_id = "test_interactions_api"
-        
+
         # Create some interactions
         for i in range(3):
             await client.post(
@@ -149,13 +150,13 @@ async def test_get_lead_interactions_endpoint():
                     "location_id": "loc_test",
                 },
             )
-        
+
         # Get interactions
         response = await client.get(f"/api/portal/interactions/{lead_id}")
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert data["lead_id"] == lead_id
         assert data["total"] >= 3
         assert "interactions" in data
@@ -168,7 +169,7 @@ async def test_get_lead_interactions_with_limit():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         lead_id = "test_limit_api_v3"
-        
+
         # Create multiple interactions
         for i in range(10):
             response = await client.post(
@@ -181,10 +182,10 @@ async def test_get_lead_interactions_with_limit():
                 },
             )
             assert response.status_code == 200
-        
+
         # Get interactions with limit
         response = await client.get(f"/api/portal/interactions/{lead_id}?limit=5")
-        
+
         assert response.status_code in [200, 500]
         if response.status_code == 200:
             data = response.json()
@@ -197,7 +198,7 @@ async def test_high_intent_detection_via_api():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         lead_id = "test_high_intent_api_v2"
-        
+
         # Make 3 quick likes
         results = []
         for i in range(3):
@@ -210,11 +211,11 @@ async def test_high_intent_detection_via_api():
                     "location_id": "loc_test",
                 },
             )
-            
+
             assert response.status_code == 200
             data = response.json()
             results.append(data)
-        
+
         # Third like should trigger high intent
         assert results[2]["high_intent"] == True
         assert results[2]["trigger_sms"] == True
@@ -235,7 +236,7 @@ async def test_pass_without_feedback():
                 # No feedback provided
             },
         )
-        
+
         # Should succeed with or without feedback
         assert response.status_code in [200, 500]
         if response.status_code == 200:
@@ -257,5 +258,5 @@ async def test_swipe_request_validation():
                 # Missing 'action' and 'location_id'
             },
         )
-        
+
         assert response.status_code == 422  # Validation error

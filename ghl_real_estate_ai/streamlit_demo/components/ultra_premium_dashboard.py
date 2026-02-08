@@ -13,45 +13,59 @@ Features:
 - Premium Service Delivery Tracking
 """
 
-import streamlit as st
-from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
+import asyncio
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import streamlit as st
 from plotly.subplots import make_subplots
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any
-from datetime import datetime, timedelta
-import asyncio
 
+from ghl_real_estate_ai.core.llm_client import LLMClient
+from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
-from ghl_real_estate_ai.services.analytics_service import AnalyticsService
-from ghl_real_estate_ai.core.llm_client import LLMClient
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 
 
 @dataclass
 class LuxuryMarketConfig:
     """Configuration for luxury market analysis"""
+
     min_property_value: int = 750_000  # Minimum luxury threshold
     ultra_luxury_threshold: int = 2_000_000  # Ultra-luxury tier
     mega_luxury_threshold: int = 5_000_000  # Mega-luxury tier
     target_commission_rate: float = 0.038  # 3.8% target commission
-    market_zip_codes: List[str] = field(default_factory=lambda: [
-        "78746", "78738", "78733", "78704", "78759",  # Austin luxury areas
-        "78613", "78732", "78669", "78734"  # West Lake Hills, Bee Cave
-    ])
-    wealth_tiers: Dict[str, int] = field(default_factory=lambda: {
-        "Affluent": 1_000_000,      # $1M+ net worth
-        "UHNW": 5_000_000,          # $5M+ net worth
-        "Ultra-UHNW": 25_000_000,   # $25M+ net worth
-        "Billionaire": 1_000_000_000 # $1B+ net worth
-    })
+    market_zip_codes: List[str] = field(
+        default_factory=lambda: [
+            "78746",
+            "78738",
+            "78733",
+            "78704",
+            "78759",  # Austin luxury areas
+            "78613",
+            "78732",
+            "78669",
+            "78734",  # West Lake Hills, Bee Cave
+        ]
+    )
+    wealth_tiers: Dict[str, int] = field(
+        default_factory=lambda: {
+            "Affluent": 1_000_000,  # $1M+ net worth
+            "UHNW": 5_000_000,  # $5M+ net worth
+            "Ultra-UHNW": 25_000_000,  # $25M+ net worth
+            "Billionaire": 1_000_000_000,  # $1B+ net worth
+        }
+    )
 
 
 @dataclass
 class LuxuryMetrics:
     """Luxury market performance metrics"""
+
     total_luxury_volume: float = 0.0
     avg_luxury_price: float = 0.0
     luxury_commission_rate: float = 0.0
@@ -81,10 +95,10 @@ class UltraPremiumDashboard:
         self.config = LuxuryMarketConfig()
 
         # Initialize session state
-        if 'luxury_config' not in st.session_state:
+        if "luxury_config" not in st.session_state:
             st.session_state.luxury_config = self.config
 
-        if 'selected_wealth_tier' not in st.session_state:
+        if "selected_wealth_tier" not in st.session_state:
             st.session_state.selected_wealth_tier = "UHNW"
 
     @st.cache_data(ttl=300)
@@ -96,7 +110,7 @@ class UltraPremiumDashboard:
             "luxury_inventory": self._generate_luxury_inventory(),
             "market_trends": self._generate_luxury_trends(),
             "competitor_analysis": self._generate_competitor_data(),
-            "client_portfolio": self._generate_client_portfolio()
+            "client_portfolio": self._generate_client_portfolio(),
         }
 
     def _generate_luxury_inventory(self) -> pd.DataFrame:
@@ -119,23 +133,25 @@ class UltraPremiumDashboard:
                 tier = "Luxury"
                 neighborhood = random.choice(["Mueller", "East Austin", "South Lamar"])
 
-            properties.append({
-                "property_id": f"LUX-{i+1:03d}",
-                "address": f"{random.randint(100, 9999)} {random.choice(['Oak', 'Maple', 'Cedar', 'Pine'])} Dr",
-                "neighborhood": neighborhood,
-                "price": property_value,
-                "sqft": sqft,
-                "price_per_sqft": property_value / sqft,
-                "bedrooms": random.randint(3, 7),
-                "bathrooms": random.randint(2, 8),
-                "lot_size": random.uniform(0.2, 5.0),
-                "year_built": random.randint(1990, 2024),
-                "days_on_market": random.randint(1, 365),
-                "tier": tier,
-                "status": random.choice(["Active", "Pending", "Sold", "Coming Soon"]),
-                "agent_notes": "Luxury features include...",
-                "client_match_score": random.randint(65, 98)
-            })
+            properties.append(
+                {
+                    "property_id": f"LUX-{i + 1:03d}",
+                    "address": f"{random.randint(100, 9999)} {random.choice(['Oak', 'Maple', 'Cedar', 'Pine'])} Dr",
+                    "neighborhood": neighborhood,
+                    "price": property_value,
+                    "sqft": sqft,
+                    "price_per_sqft": property_value / sqft,
+                    "bedrooms": random.randint(3, 7),
+                    "bathrooms": random.randint(2, 8),
+                    "lot_size": random.uniform(0.2, 5.0),
+                    "year_built": random.randint(1990, 2024),
+                    "days_on_market": random.randint(1, 365),
+                    "tier": tier,
+                    "status": random.choice(["Active", "Pending", "Sold", "Coming Soon"]),
+                    "agent_notes": "Luxury features include...",
+                    "client_match_score": random.randint(65, 98),
+                }
+            )
 
         return pd.DataFrame(properties)
 
@@ -154,14 +170,16 @@ class UltraPremiumDashboard:
             seasonal_factor = 1.0 + 0.15 * (i % 52) / 52
             base_price = 1_500_000 * seasonal_factor
 
-            trends.append({
-                "week": date,
-                "avg_luxury_price": base_price + random.randint(-100_000, 200_000),
-                "luxury_transactions": random.randint(15, 45),
-                "inventory_count": random.randint(180, 320),
-                "avg_days_market": random.randint(25, 85),
-                "price_per_sqft": random.randint(400, 800)
-            })
+            trends.append(
+                {
+                    "week": date,
+                    "avg_luxury_price": base_price + random.randint(-100_000, 200_000),
+                    "luxury_transactions": random.randint(15, 45),
+                    "inventory_count": random.randint(180, 320),
+                    "avg_days_market": random.randint(25, 85),
+                    "price_per_sqft": random.randint(400, 800),
+                }
+            )
 
         return pd.DataFrame(trends)
 
@@ -172,7 +190,7 @@ class UltraPremiumDashboard:
             {"name": "Austin Premier Properties", "market_share": 0.15, "avg_commission": 0.029, "luxury_focus": True},
             {"name": "Luxury Home Specialists", "market_share": 0.12, "avg_commission": 0.035, "luxury_focus": True},
             {"name": "Traditional Realty Co", "market_share": 0.25, "avg_commission": 0.026, "luxury_focus": False},
-            {"name": "Jorge's AI-Enhanced Luxury", "market_share": 0.08, "avg_commission": 0.038, "luxury_focus": True}
+            {"name": "Jorge's AI-Enhanced Luxury", "market_share": 0.08, "avg_commission": 0.038, "luxury_focus": True},
         ]
 
         return {"competitors": competitors}
@@ -188,23 +206,24 @@ class UltraPremiumDashboard:
             tier = random.choice(wealth_tiers)
             net_worth = self.config.wealth_tiers[tier] * random.uniform(1.0, 5.0)
 
-            clients.append({
-                "client_id": f"UHNW-{i+1:03d}",
-                "client_name": f"Client {i+1}",
-                "wealth_tier": tier,
-                "net_worth": net_worth,
-                "properties_owned": random.randint(2, 12),
-                "total_portfolio_value": net_worth * random.uniform(0.3, 0.8),
-                "annual_transactions": random.randint(0, 4),
-                "lifetime_commissions": random.randint(50_000, 500_000),
-                "satisfaction_score": random.uniform(8.5, 10.0),
-                "referrals_given": random.randint(0, 8),
-                "preferred_neighborhoods": random.sample(
-                    ["West Lake Hills", "Tarrytown", "Zilker", "Hyde Park"],
-                    random.randint(1, 3)
-                ),
-                "last_transaction": datetime.now() - timedelta(days=random.randint(30, 730))
-            })
+            clients.append(
+                {
+                    "client_id": f"UHNW-{i + 1:03d}",
+                    "client_name": f"Client {i + 1}",
+                    "wealth_tier": tier,
+                    "net_worth": net_worth,
+                    "properties_owned": random.randint(2, 12),
+                    "total_portfolio_value": net_worth * random.uniform(0.3, 0.8),
+                    "annual_transactions": random.randint(0, 4),
+                    "lifetime_commissions": random.randint(50_000, 500_000),
+                    "satisfaction_score": random.uniform(8.5, 10.0),
+                    "referrals_given": random.randint(0, 8),
+                    "preferred_neighborhoods": random.sample(
+                        ["West Lake Hills", "Tarrytown", "Zilker", "Hyde Park"], random.randint(1, 3)
+                    ),
+                    "last_transaction": datetime.now() - timedelta(days=random.randint(30, 730)),
+                }
+            )
 
         return pd.DataFrame(clients)
 
@@ -228,30 +247,22 @@ class UltraPremiumDashboard:
             st.metric(
                 "Total Luxury Volume",
                 f"${total_luxury_volume:,.0f}",
-                f"+${total_luxury_volume * 0.15:,.0f}"  # 15% growth YoY
+                f"+${total_luxury_volume * 0.15:,.0f}",  # 15% growth YoY
             )
 
         with col2:
             st.metric(
                 "Avg Luxury Price",
                 f"${avg_luxury_price:,.0f}",
-                f"+{((avg_luxury_price - 1_200_000) / 1_200_000) * 100:.1f}%"
+                f"+{((avg_luxury_price - 1_200_000) / 1_200_000) * 100:.1f}%",
             )
 
         with col3:
-            st.metric(
-                "Luxury Transactions",
-                f"{luxury_count}",
-                "+23%"
-            )
+            st.metric("Luxury Transactions", f"{luxury_count}", "+23%")
 
         with col4:
             commission_earned = total_luxury_volume * 0.038
-            st.metric(
-                "Commission @ 3.8%",
-                f"${commission_earned:,.0f}",
-                f"+{commission_earned * 0.35:,.0f}"
-            )
+            st.metric("Commission @ 3.8%", f"${commission_earned:,.0f}", f"+{commission_earned * 0.35:,.0f}")
 
     def render_luxury_market_intelligence(self, market_data: Dict[str, Any]):
         """Render luxury market intelligence section"""
@@ -266,66 +277,55 @@ class UltraPremiumDashboard:
         with col1:
             # Price distribution by tier
             fig_price_dist = px.histogram(
-                luxury_inventory,
-                x="price",
-                color="tier",
-                title="Luxury Property Price Distribution",
-                nbins=20
+                luxury_inventory, x="price", color="tier", title="Luxury Property Price Distribution", nbins=20
             )
-            fig_price_dist.update_layout(
-                xaxis_title="Property Value ($)",
-                yaxis_title="Count",
-                showlegend=True
-            )
+            fig_price_dist.update_layout(xaxis_title="Property Value ($)", yaxis_title="Count", showlegend=True)
             st.plotly_chart(fig_price_dist, use_container_width=True)
 
         with col2:
             # Tier breakdown
             tier_counts = luxury_inventory["tier"].value_counts()
-            fig_tier = px.pie(
-                values=tier_counts.values,
-                names=tier_counts.index,
-                title="Market Tier Distribution"
-            )
+            fig_tier = px.pie(values=tier_counts.values, names=tier_counts.index, title="Market Tier Distribution")
             st.plotly_chart(fig_tier, use_container_width=True)
 
         # Luxury market trends
         st.markdown("### 📈 Luxury Market Trends (12 Months)")
 
         fig_trends = make_subplots(
-            rows=2, cols=2,
-            subplot_titles=("Average Luxury Price", "Transaction Volume",
-                           "Inventory Levels", "Days on Market"),
-            specs=[[{"secondary_y": False}, {"secondary_y": False}],
-                   [{"secondary_y": False}, {"secondary_y": False}]]
+            rows=2,
+            cols=2,
+            subplot_titles=("Average Luxury Price", "Transaction Volume", "Inventory Levels", "Days on Market"),
+            specs=[[{"secondary_y": False}, {"secondary_y": False}], [{"secondary_y": False}, {"secondary_y": False}]],
         )
 
         # Price trend
         fig_trends.add_trace(
-            go.Scatter(x=trends["week"], y=trends["avg_luxury_price"],
-                      name="Avg Price", line=dict(color="gold")),
-            row=1, col=1
+            go.Scatter(x=trends["week"], y=trends["avg_luxury_price"], name="Avg Price", line=dict(color="gold")),
+            row=1,
+            col=1,
         )
 
         # Volume trend
         fig_trends.add_trace(
-            go.Scatter(x=trends["week"], y=trends["luxury_transactions"],
-                      name="Transactions", line=dict(color="green")),
-            row=1, col=2
+            go.Scatter(
+                x=trends["week"], y=trends["luxury_transactions"], name="Transactions", line=dict(color="green")
+            ),
+            row=1,
+            col=2,
         )
 
         # Inventory trend
         fig_trends.add_trace(
-            go.Scatter(x=trends["week"], y=trends["inventory_count"],
-                      name="Inventory", line=dict(color="blue")),
-            row=2, col=1
+            go.Scatter(x=trends["week"], y=trends["inventory_count"], name="Inventory", line=dict(color="blue")),
+            row=2,
+            col=1,
         )
 
         # Days on market
         fig_trends.add_trace(
-            go.Scatter(x=trends["week"], y=trends["avg_days_market"],
-                      name="Days on Market", line=dict(color="red")),
-            row=2, col=2
+            go.Scatter(x=trends["week"], y=trends["avg_days_market"], name="Days on Market", line=dict(color="red")),
+            row=2,
+            col=2,
         )
 
         fig_trends.update_layout(height=600, showlegend=False)
@@ -377,7 +377,7 @@ class UltraPremiumDashboard:
             "Filter by Wealth Tier",
             options=list(self.config.wealth_tiers.keys()),
             default=["UHNW", "Ultra-UHNW"],
-            key="wealth_tier_filter"
+            key="wealth_tier_filter",
         )
 
         filtered_clients = clients[clients["wealth_tier"].isin(selected_tiers)]
@@ -412,7 +412,7 @@ class UltraPremiumDashboard:
                 size="lifetime_commissions",
                 color="wealth_tier",
                 hover_data=["client_name", "satisfaction_score"],
-                title="Client Wealth vs Portfolio Value"
+                title="Client Wealth vs Portfolio Value",
             )
             fig_wealth.update_layout(xaxis_title="Net Worth ($)", yaxis_title="Portfolio Value ($)")
             st.plotly_chart(fig_wealth, use_container_width=True)
@@ -425,7 +425,7 @@ class UltraPremiumDashboard:
                 y=avg_satisfaction_by_tier.values,
                 title="Satisfaction by Wealth Tier",
                 color=avg_satisfaction_by_tier.values,
-                color_continuous_scale="Greens"
+                color_continuous_scale="Greens",
             )
             fig_satisfaction.update_layout(yaxis_title="Satisfaction Score")
             st.plotly_chart(fig_satisfaction, use_container_width=True)
@@ -433,8 +433,7 @@ class UltraPremiumDashboard:
         # Top clients table
         st.markdown("### 🏅 Top UHNW Clients")
         top_clients = filtered_clients.nlargest(10, "lifetime_commissions")[
-            ["client_name", "wealth_tier", "net_worth", "lifetime_commissions",
-             "satisfaction_score", "referrals_given"]
+            ["client_name", "wealth_tier", "net_worth", "lifetime_commissions", "satisfaction_score", "referrals_given"]
         ]
 
         # Format currency columns
@@ -459,7 +458,7 @@ class UltraPremiumDashboard:
                 values="market_share",
                 names="name",
                 title="Luxury Market Share",
-                color_discrete_sequence=px.colors.qualitative.Set3
+                color_discrete_sequence=px.colors.qualitative.Set3,
             )
             st.plotly_chart(fig_market_share, use_container_width=True)
 
@@ -471,7 +470,7 @@ class UltraPremiumDashboard:
                 y="avg_commission",
                 color="luxury_focus",
                 title="Average Commission Rates",
-                color_discrete_map={True: "gold", False: "lightblue"}
+                color_discrete_map={True: "gold", False: "lightblue"},
             )
             fig_commission.update_layout(xaxis_tickangle=-45)
             fig_commission.update_yaxis(tickformat=".1%")
@@ -489,7 +488,7 @@ class UltraPremiumDashboard:
             "**UHNW Focus**: Specialized in $1M+ properties and ultra-high-net-worth clients",
             "**Performance Analytics**: Real-time market intelligence and predictive analytics",
             "**Luxury Service Integration**: White-glove service automation and concierge features",
-            "**Investment-Grade Analysis**: Professional-level property investment evaluation"
+            "**Investment-Grade Analysis**: Professional-level property investment evaluation",
         ]
 
         for advantage in advantages:
@@ -511,13 +510,15 @@ class UltraPremiumDashboard:
             premium_fee = prop_value * premium_commission
             additional_value = premium_fee - base_fee
 
-            roi_data.append({
-                "Property Value": f"${prop_value:,.0f}",
-                "Standard Commission (2.9%)": f"${base_fee:,.0f}",
-                "Premium Commission (3.8%)": f"${premium_fee:,.0f}",
-                "Additional Value": f"${additional_value:,.0f}",
-                "Premium %": f"+{((premium_commission - base_commission) / base_commission * 100):.1f}%"
-            })
+            roi_data.append(
+                {
+                    "Property Value": f"${prop_value:,.0f}",
+                    "Standard Commission (2.9%)": f"${base_fee:,.0f}",
+                    "Premium Commission (3.8%)": f"${premium_fee:,.0f}",
+                    "Additional Value": f"${additional_value:,.0f}",
+                    "Premium %": f"+{((premium_commission - base_commission) / base_commission * 100):.1f}%",
+                }
+            )
 
         roi_df = pd.DataFrame(roi_data)
         st.dataframe(roi_df, use_container_width=True)
@@ -531,7 +532,7 @@ class UltraPremiumDashboard:
             "**Technology Differentiation**: Advanced property matching and investment analysis",
             "**Concierge-Level Service**: White-glove transaction management and luxury amenities",
             "**Investment Advisory**: Professional-grade ROI analysis and portfolio optimization",
-            "**Privacy & Discretion**: Enhanced confidentiality protocols for high-profile clients"
+            "**Privacy & Discretion**: Enhanced confidentiality protocols for high-profile clients",
         ]
 
         for prop in value_props:
@@ -565,10 +566,7 @@ class UltraPremiumDashboard:
     def render(self):
         """Main render method for the dashboard"""
         st.set_page_config(
-            page_title="Ultra-Premium Dashboard",
-            page_icon="🏆",
-            layout="wide",
-            initial_sidebar_state="expanded"
+            page_title="Ultra-Premium Dashboard", page_icon="🏆", layout="wide", initial_sidebar_state="expanded"
         )
 
         # Header

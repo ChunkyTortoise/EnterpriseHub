@@ -22,21 +22,23 @@ Created: 2026-01-18
 """
 
 import asyncio
-import logging
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple, Any, Union
-from enum import Enum
 import json
+import logging
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
 
 # Neural ML imports
 try:
     import torch
     import torch.nn as nn
-    from transformers import AutoTokenizer, AutoModel
+    from transformers import AutoModel, AutoTokenizer
+
     NEURAL_AVAILABLE = True
 except ImportError:
     NEURAL_AVAILABLE = False
@@ -44,21 +46,25 @@ except ImportError:
     nn = None
 
 # Import existing ML infrastructure
-from ghl_real_estate_ai.ml.ml_pipeline_orchestrator import (
-    MLPipelineOrchestrator, ModelType, ModelConfig, TrainingJob,
-    ModelMetrics, ModelStatus, TrainingStatus
-)
-
-# Import neural components
-from ghl_real_estate_ai.ml.neural_property_matcher import NeuralMatchingNetwork, NeuralMatchingConfig
-from ghl_real_estate_ai.ml.neural_feature_engineer import NeuralFeatureEngineer
-from ghl_real_estate_ai.services.neural_inference_engine import NeuralInferenceEngine
-from ghl_real_estate_ai.ml.privacy_preserving_pipeline import PrivacyPreservingMLPipeline
-from ghl_real_estate_ai.services.vr_ar_analytics_engine import VRARAnalyticsEngine
-
 # Import existing services
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.ml.ml_pipeline_orchestrator import (
+    MLPipelineOrchestrator,
+    ModelConfig,
+    ModelMetrics,
+    ModelStatus,
+    ModelType,
+    TrainingJob,
+    TrainingStatus,
+)
+from ghl_real_estate_ai.ml.neural_feature_engineer import NeuralFeatureEngineer
+
+# Import neural components
+from ghl_real_estate_ai.ml.neural_property_matcher import NeuralMatchingConfig, NeuralMatchingNetwork
+from ghl_real_estate_ai.ml.privacy_preserving_pipeline import PrivacyPreservingMLPipeline
 from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.neural_inference_engine import NeuralInferenceEngine
+from ghl_real_estate_ai.services.vr_ar_analytics_engine import VRARAnalyticsEngine
 
 logger = get_logger(__name__)
 cache = get_cache_service()
@@ -201,7 +207,7 @@ class NeuralMLIntegrator:
             min_accuracy=0.85,
             min_auc=0.90,
             retrain_frequency_days=14,
-            description="Advanced neural network for property-client matching"
+            description="Advanced neural network for property-client matching",
         )
 
         # Multi-Modal Encoder Config
@@ -221,7 +227,7 @@ class NeuralMLIntegrator:
             learning_rate=5e-5,
             batch_size=16,
             max_epochs=30,
-            description="Multi-modal property and client representation encoder"
+            description="Multi-modal property and client representation encoder",
         )
 
         # Privacy-Preserving ML Config
@@ -237,7 +243,7 @@ class NeuralMLIntegrator:
             learning_rate=1e-3,
             batch_size=64,
             max_epochs=100,
-            description="Privacy-preserving neural property matching"
+            description="Privacy-preserving neural property matching",
         )
 
         # VR/AR Analytics Config
@@ -252,7 +258,7 @@ class NeuralMLIntegrator:
             embedding_dim=256,
             num_attention_heads=4,
             num_transformer_layers=4,
-            description="VR/AR spatial interaction analytics and optimization"
+            description="VR/AR spatial interaction analytics and optimization",
         )
 
         return configs
@@ -262,7 +268,7 @@ class NeuralMLIntegrator:
         neural_model_type: NeuralModelType,
         training_data: Dict[str, Any],
         custom_config: Optional[NeuralModelConfig] = None,
-        location_id: str = ""
+        location_id: str = "",
     ) -> TrainingJob:
         """Train neural models with advanced configurations."""
 
@@ -277,26 +283,18 @@ class NeuralMLIntegrator:
         # Create neural training job
         job_id = f"{neural_model_type.value}_{int(datetime.now().timestamp())}"
         training_job = TrainingJob(
-            job_id=job_id,
-            job_name=f"Train Neural {config.model_name}",
-            model_config=config,
-            location_id=location_id
+            job_id=job_id, job_name=f"Train Neural {config.model_name}", model_config=config, location_id=location_id
         )
 
         # Start neural training pipeline
         self.base_orchestrator.active_training_jobs[job_id] = training_job
-        asyncio.create_task(self._execute_neural_training_pipeline(
-            training_job, training_data, neural_model_type
-        ))
+        asyncio.create_task(self._execute_neural_training_pipeline(training_job, training_data, neural_model_type))
 
         logger.info(f"Started neural training job {job_id} for {neural_model_type}")
         return training_job
 
     async def _execute_neural_training_pipeline(
-        self,
-        training_job: TrainingJob,
-        training_data: Dict[str, Any],
-        neural_model_type: NeuralModelType
+        self, training_job: TrainingJob, training_data: Dict[str, Any], neural_model_type: NeuralModelType
     ) -> None:
         """Execute complete neural training pipeline."""
 
@@ -322,14 +320,10 @@ class NeuralMLIntegrator:
 
             # Step 3: Neural Training with Privacy (if enabled)
             training_job.training_logs.append("Training neural model...")
-            if config.privacy_enabled if hasattr(config, 'privacy_enabled') else config.differential_privacy_enabled:
-                trained_model, training_metrics = await self._train_with_privacy(
-                    model, processed_data, config
-                )
+            if config.privacy_enabled if hasattr(config, "privacy_enabled") else config.differential_privacy_enabled:
+                trained_model, training_metrics = await self._train_with_privacy(model, processed_data, config)
             else:
-                trained_model, training_metrics = await self._train_neural_model(
-                    model, processed_data, config
-                )
+                trained_model, training_metrics = await self._train_neural_model(model, processed_data, config)
             training_job.progress_percentage = 70.0
 
             # Step 4: Neural Model Optimization
@@ -347,9 +341,7 @@ class NeuralMLIntegrator:
             # Step 6: Register Neural Model
             if self._meets_neural_performance_thresholds(neural_metrics, config):
                 training_job.training_logs.append("Registering neural model...")
-                model_id = await self._register_neural_model(
-                    neural_metrics, optimized_model, neural_model_type
-                )
+                model_id = await self._register_neural_model(neural_metrics, optimized_model, neural_model_type)
                 training_job.training_logs.append(f"Neural model registered with ID: {model_id}")
 
                 # Deploy to neural inference engine
@@ -379,39 +371,29 @@ class NeuralMLIntegrator:
 
             logger.error(f"Neural training job {training_job.job_id} failed: {e}")
 
-    async def _neural_feature_engineering(
-        self,
-        raw_data: Dict[str, Any],
-        config: NeuralModelConfig
-    ) -> Dict[str, Any]:
+    async def _neural_feature_engineering(self, raw_data: Dict[str, Any], config: NeuralModelConfig) -> Dict[str, Any]:
         """Advanced neural feature engineering."""
 
         if not self.neural_feature_engineer:
             return raw_data
 
         # Extract comprehensive features
-        property_data = raw_data.get('property_data', {})
-        client_data = raw_data.get('client_data', {})
+        property_data = raw_data.get("property_data", {})
+        client_data = raw_data.get("client_data", {})
 
         # Neural feature extraction
-        property_features = await self.neural_feature_engineer.extract_comprehensive_features(
-            property_data, "property"
-        )
-        client_features = await self.neural_feature_engineer.extract_comprehensive_features(
-            client_data, "client"
-        )
+        property_features = await self.neural_feature_engineer.extract_comprehensive_features(property_data, "property")
+        client_features = await self.neural_feature_engineer.extract_comprehensive_features(client_data, "client")
 
         return {
-            'property_features': property_features,
-            'client_features': client_features,
-            'raw_property_data': property_data,
-            'raw_client_data': client_data
+            "property_features": property_features,
+            "client_features": client_features,
+            "raw_property_data": property_data,
+            "raw_client_data": client_data,
         }
 
     async def _initialize_neural_model(
-        self,
-        neural_model_type: NeuralModelType,
-        config: NeuralModelConfig
+        self, neural_model_type: NeuralModelType, config: NeuralModelConfig
     ) -> torch.nn.Module:
         """Initialize neural model architecture."""
 
@@ -421,7 +403,7 @@ class NeuralMLIntegrator:
                 num_attention_heads=config.num_attention_heads,
                 num_transformer_layers=config.num_transformer_layers,
                 dropout_rate=config.dropout_rate,
-                enable_cross_attention=config.enable_cross_attention
+                enable_cross_attention=config.enable_cross_attention,
             )
             return NeuralMatchingNetwork(neural_config)
 
@@ -455,7 +437,7 @@ class NeuralMLIntegrator:
                     self.cross_attention = nn.MultiheadAttention(
                         embed_dim=config.embedding_dim,
                         num_heads=config.num_attention_heads,
-                        dropout=config.dropout_rate
+                        dropout=config.dropout_rate,
                     )
 
                 # Fusion layer
@@ -473,7 +455,7 @@ class NeuralMLIntegrator:
                 image_emb = self.image_projection(image_features)
 
                 # Cross-attention if enabled
-                if hasattr(self, 'cross_attention'):
+                if hasattr(self, "cross_attention"):
                     text_emb, _ = self.cross_attention(text_emb, image_emb, image_emb)
 
                 # Fusion
@@ -499,7 +481,7 @@ class NeuralMLIntegrator:
                     nn.Dropout(config.dropout_rate),
                     nn.Linear(config.embedding_dim // 2, config.embedding_dim // 4),
                     nn.ReLU(),
-                    nn.Linear(config.embedding_dim // 4, 1)
+                    nn.Linear(config.embedding_dim // 4, 1),
                 )
 
             def forward(self, x):
@@ -508,10 +490,7 @@ class NeuralMLIntegrator:
         return PrivacyPreservingNet(config)
 
     async def _train_neural_model(
-        self,
-        model: torch.nn.Module,
-        data: Dict[str, Any],
-        config: NeuralModelConfig
+        self, model: torch.nn.Module, data: Dict[str, Any], config: NeuralModelConfig
     ) -> Tuple[torch.nn.Module, Dict[str, float]]:
         """Train neural model with PyTorch."""
 
@@ -524,11 +503,7 @@ class NeuralMLIntegrator:
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5)
 
         # Training loop (simplified)
-        training_metrics = {
-            "training_loss": 0.0,
-            "validation_loss": 0.0,
-            "convergence_epochs": config.max_epochs
-        }
+        training_metrics = {"training_loss": 0.0, "validation_loss": 0.0, "convergence_epochs": config.max_epochs}
 
         model.train()
         for epoch in range(config.max_epochs):
@@ -549,10 +524,7 @@ class NeuralMLIntegrator:
         return model, training_metrics
 
     async def _train_with_privacy(
-        self,
-        model: torch.nn.Module,
-        data: Dict[str, Any],
-        config: NeuralModelConfig
+        self, model: torch.nn.Module, data: Dict[str, Any], config: NeuralModelConfig
     ) -> Tuple[torch.nn.Module, Dict[str, float]]:
         """Train with differential privacy and federated learning."""
 
@@ -560,30 +532,22 @@ class NeuralMLIntegrator:
             raise ValueError("Privacy pipeline not available")
 
         # Use privacy-preserving pipeline
-        training_result = await self.privacy_pipeline.train_federated_round(
-            data, epochs_per_round=5
-        )
+        training_result = await self.privacy_pipeline.train_federated_round(data, epochs_per_round=5)
 
         training_metrics = {
             "training_loss": training_result.get("avg_loss", 0.0),
             "privacy_budget_consumed": training_result.get("privacy_budget_used", 0.0),
-            "federated_rounds": training_result.get("federated_rounds", 1)
+            "federated_rounds": training_result.get("federated_rounds", 1),
         }
 
         return model, training_metrics
 
-    async def _optimize_neural_model(
-        self,
-        model: torch.nn.Module,
-        config: NeuralModelConfig
-    ) -> torch.nn.Module:
+    async def _optimize_neural_model(self, model: torch.nn.Module, config: NeuralModelConfig) -> torch.nn.Module:
         """Optimize neural model for inference."""
 
         # Model quantization
         if config.quantization_enabled:
-            model = torch.quantization.quantize_dynamic(
-                model, {torch.nn.Linear}, dtype=torch.qint8
-            )
+            model = torch.quantization.quantize_dynamic(model, {torch.nn.Linear}, dtype=torch.qint8)
 
         # ONNX optimization (placeholder)
         if config.onnx_optimization:
@@ -597,7 +561,7 @@ class NeuralMLIntegrator:
         model: torch.nn.Module,
         data: Dict[str, Any],
         config: NeuralModelConfig,
-        training_metrics: Dict[str, float]
+        training_metrics: Dict[str, float],
     ) -> NeuralModelMetrics:
         """Evaluate neural model performance."""
 
@@ -618,52 +582,40 @@ class NeuralMLIntegrator:
             model_name=config.model_name,
             model_version=config.model_version,
             model_type=config.model_type,
-
             # Basic metrics (would be computed from actual evaluation)
             accuracy=0.85,
             precision=0.83,
             recall=0.87,
             f1_score=0.85,
             auc_score=0.90,
-
             # Neural-specific metrics
             training_loss=training_metrics.get("training_loss", 0.0),
             validation_loss=training_metrics.get("validation_loss", 0.0),
             convergence_epochs=training_metrics.get("convergence_epochs", config.max_epochs),
-
             # Performance metrics
             inference_latency_ms=inference_latency,
             throughput_requests_per_second=1000 / max(inference_latency, 1),
-
             # Privacy metrics
             privacy_budget_consumed=training_metrics.get("privacy_budget_consumed", 0.0),
             federated_rounds_completed=training_metrics.get("federated_rounds", 0),
-
             # Business impact (would be measured in production)
             property_matching_accuracy_improvement=15.0,
-            revenue_per_match_increase=2500.0
+            revenue_per_match_increase=2500.0,
         )
 
         return neural_metrics
 
-    def _meets_neural_performance_thresholds(
-        self,
-        metrics: NeuralModelMetrics,
-        config: NeuralModelConfig
-    ) -> bool:
+    def _meets_neural_performance_thresholds(self, metrics: NeuralModelMetrics, config: NeuralModelConfig) -> bool:
         """Check if neural model meets performance thresholds."""
 
         return (
-            metrics.accuracy >= config.min_accuracy and
-            metrics.auc_score >= config.min_auc and
-            metrics.inference_latency_ms <= config.max_inference_latency_ms
+            metrics.accuracy >= config.min_accuracy
+            and metrics.auc_score >= config.min_auc
+            and metrics.inference_latency_ms <= config.max_inference_latency_ms
         )
 
     async def _register_neural_model(
-        self,
-        metrics: NeuralModelMetrics,
-        model: torch.nn.Module,
-        neural_model_type: NeuralModelType
+        self, metrics: NeuralModelMetrics, model: torch.nn.Module, neural_model_type: NeuralModelType
     ) -> str:
         """Register neural model in extended registry."""
 
@@ -713,27 +665,25 @@ async def test_neural_integration() -> None:
 
     # Create sample neural training data
     neural_data = {
-        'property_data': {
-            'description': 'Beautiful modern home with pool and garden',
-            'price': 750000,
-            'sqft': 2500,
-            'bedrooms': 4,
-            'bathrooms': 3,
-            'amenities': ['pool', 'garage', 'garden']
+        "property_data": {
+            "description": "Beautiful modern home with pool and garden",
+            "price": 750000,
+            "sqft": 2500,
+            "bedrooms": 4,
+            "bathrooms": 3,
+            "amenities": ["pool", "garage", "garden"],
         },
-        'client_data': {
-            'preferences': 'Looking for family home with pool',
-            'budget_max': 800000,
-            'must_haves': ['pool', 'good_schools'],
-            'family_size': 4
-        }
+        "client_data": {
+            "preferences": "Looking for family home with pool",
+            "budget_max": 800000,
+            "must_haves": ["pool", "good_schools"],
+            "family_size": 4,
+        },
     }
 
     # Start neural training
     training_job = await neural_integrator.train_neural_model(
-        NeuralModelType.NEURAL_PROPERTY_MATCHER,
-        neural_data,
-        location_id="test_location"
+        NeuralModelType.NEURAL_PROPERTY_MATCHER, neural_data, location_id="test_location"
     )
 
     print(f"Neural Training Job Started: {training_job.job_id}")

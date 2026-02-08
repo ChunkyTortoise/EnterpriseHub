@@ -4,22 +4,23 @@ Integration tests for full Jorge bot flow with cross-bot handoffs.
 Tests end-to-end scenarios where leads transition between bots.
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
+from ghl_real_estate_ai.api.schemas.ghl import (
+    ActionType,
+    GHLAction,
+    GHLContact,
+    GHLMessage,
+    GHLWebhookEvent,
+    MessageDirection,
+    MessageType,
+)
 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
     HandoffDecision,
     JorgeHandoffService,
-)
-from ghl_real_estate_ai.api.schemas.ghl import (
-    GHLAction,
-    ActionType,
-    GHLWebhookEvent,
-    GHLMessage,
-    GHLContact,
-    MessageType,
-    MessageDirection,
 )
 
 
@@ -63,7 +64,7 @@ class TestFullJorgeFlow:
     async def test_lead_qualifies_as_buyer_full_flow(self, handoff_service, mock_analytics_service):
         """
         Test complete flow: Lead bot detects buyer intent -> handoff -> buyer bot.
-        
+
         Scenario:
         1. Lead with "Needs Qualifying" tag sends buyer-intent message
         2. Lead bot processes and detects strong buyer intent
@@ -74,14 +75,14 @@ class TestFullJorgeFlow:
         7. Next message would route to buyer bot
         """
         contact_id = "lead_buyer_123"
-        
+
         # Simulate lead bot detecting buyer intent
         lead_intent_signals = {
             "buyer_intent_score": 0.85,
             "seller_intent_score": 0.1,
             "detected_intent_phrases": ["I want to buy a house", "budget around 700k", "pre-approved"],
         }
-        
+
         # Evaluate handoff
         decision = await handoff_service.evaluate_handoff(
             current_bot="lead",
@@ -93,19 +94,19 @@ class TestFullJorgeFlow:
             ],
             intent_signals=lead_intent_signals,
         )
-        
+
         # Verify handoff decision
         assert decision is not None
         assert decision.source_bot == "lead"
         assert decision.target_bot == "buyer"
         assert decision.confidence >= 0.7
-        
+
         # Execute handoff
         actions = await handoff_service.execute_handoff(
             decision=decision,
             contact_id=contact_id,
         )
-        
+
         # Convert to GHLActions for webhook compatibility
         ghl_actions = []
         for action in actions:
@@ -113,15 +114,15 @@ class TestFullJorgeFlow:
                 ghl_actions.append(GHLAction(type=ActionType.ADD_TAG, tag=action["tag"]))
             elif action["type"] == "remove_tag":
                 ghl_actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=action["tag"]))
-        
+
         # Verify tag swap
         remove_tags = [a.tag for a in ghl_actions if a.type == ActionType.REMOVE_TAG]
         add_tags = [a.tag for a in ghl_actions if a.type == ActionType.ADD_TAG]
-        
+
         assert "Needs Qualifying" in remove_tags  # Lead tag removed
         assert "Buyer-Lead" in add_tags  # Buyer tag added
         assert "Handoff-Lead-to-Buyer" in add_tags  # Tracking tag added
-        
+
         # Verify analytics
         mock_analytics_service.track_event.assert_called_once()
         call_kwargs = mock_analytics_service.track_event.call_args.kwargs
@@ -133,7 +134,7 @@ class TestFullJorgeFlow:
     async def test_seller_also_buying_full_flow(self, handoff_service, mock_analytics_service):
         """
         Test complete flow: Seller bot detects buyer intent -> handoff -> buyer bot.
-        
+
         Scenario:
         1. Seller with "Needs Qualifying" tag mentions they also want to buy
         2. Seller bot processes and detects buyer intent (common scenario)
@@ -142,14 +143,14 @@ class TestFullJorgeFlow:
         5. Next message would route to buyer bot
         """
         contact_id = "seller_buyer_456"
-        
+
         # Simulate seller bot detecting buyer intent (seller also buying)
         seller_intent_signals = {
             "buyer_intent_score": 0.65,  # Above 0.6 threshold for seller->buyer
             "seller_intent_score": 0.3,
             "detected_intent_phrases": ["also looking to buy", "need to find a new place"],
         }
-        
+
         # Evaluate handoff from seller to buyer
         decision = await handoff_service.evaluate_handoff(
             current_bot="seller",
@@ -161,20 +162,20 @@ class TestFullJorgeFlow:
             ],
             intent_signals=seller_intent_signals,
         )
-        
+
         # Verify handoff decision (seller->buyer has 0.6 threshold)
         assert decision is not None
         assert decision.source_bot == "seller"
         assert decision.target_bot == "buyer"
         assert decision.confidence >= 0.6
         assert decision.confidence < 0.7  # Would not trigger lead->buyer
-        
+
         # Execute handoff
         actions = await handoff_service.execute_handoff(
             decision=decision,
             contact_id=contact_id,
         )
-        
+
         # Convert to GHLActions
         ghl_actions = []
         for action in actions:
@@ -182,16 +183,16 @@ class TestFullJorgeFlow:
                 ghl_actions.append(GHLAction(type=ActionType.ADD_TAG, tag=action["tag"]))
             elif action["type"] == "remove_tag":
                 ghl_actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=action["tag"]))
-        
+
         # Verify actions
         remove_tags = [a.tag for a in ghl_actions if a.type == ActionType.REMOVE_TAG]
         add_tags = [a.tag for a in ghl_actions if a.type == ActionType.ADD_TAG]
-        
+
         # Seller and lead use same tag "Needs Qualifying"
         assert "Needs Qualifying" in remove_tags
         assert "Buyer-Lead" in add_tags
         assert "Handoff-Seller-to-Buyer" in add_tags
-        
+
         # Verify analytics
         mock_analytics_service.track_event.assert_called_once()
         call_kwargs = mock_analytics_service.track_event.call_args.kwargs
@@ -226,7 +227,10 @@ class TestFullJorgeFlow:
             conversation_history=[
                 {"role": "user", "content": "I'm looking for a 3BR in Victoria Gardens"},
                 {"role": "assistant", "content": "Great area! What's your budget?"},
-                {"role": "user", "content": "Before that, I need to sell my current house first. Can you help with that?"},
+                {
+                    "role": "user",
+                    "content": "Before that, I need to sell my current house first. Can you help with that?",
+                },
             ],
             intent_signals=buyer_intent_signals,
         )

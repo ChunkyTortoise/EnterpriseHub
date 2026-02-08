@@ -21,31 +21,32 @@ Last Updated: 2026-01-18
 import asyncio
 import hashlib
 import json
-import time
 import logging
+import threading
+import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, TypeVar
 from functools import wraps
-import threading
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, TypeVar
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class RequestPriority(Enum):
     """Priority levels for AI requests"""
-    CRITICAL = 0    # Must execute immediately (user-facing)
-    HIGH = 1        # Execute within 100ms
-    NORMAL = 2      # Can wait for batching (up to 500ms)
-    LOW = 3         # Background processing (up to 5s)
-    BATCH = 4       # Bulk operations (up to 30s)
+
+    CRITICAL = 0  # Must execute immediately (user-facing)
+    HIGH = 1  # Execute within 100ms
+    NORMAL = 2  # Can wait for batching (up to 500ms)
+    LOW = 3  # Background processing (up to 5s)
+    BATCH = 4  # Bulk operations (up to 30s)
 
     @classmethod
-    def get_max_wait_ms(cls, priority: 'RequestPriority') -> int:
+    def get_max_wait_ms(cls, priority: "RequestPriority") -> int:
         """Get maximum wait time for batch accumulation"""
         wait_times = {
             cls.CRITICAL: 0,
@@ -60,6 +61,7 @@ class RequestPriority(Enum):
 @dataclass
 class AIRequest:
     """Represents a single AI request"""
+
     request_id: str
     prompt: str
     model: str = "claude-3-5-sonnet-20241022"
@@ -95,6 +97,7 @@ class AIRequest:
 @dataclass
 class AIResponse:
     """Represents an AI response"""
+
     request_id: str
     content: str
     model: str
@@ -108,6 +111,7 @@ class AIResponse:
 @dataclass
 class BatchMetrics:
     """Metrics for batch processing"""
+
     total_requests: int = 0
     batched_requests: int = 0
     cache_hits: int = 0
@@ -233,20 +237,20 @@ class AIRequestBatcher:
     - Comprehensive metrics tracking
     """
 
-    def __init__(self,
-                 anthropic_client=None,
-                 max_batch_size: int = 5,
-                 cache_ttl_seconds: int = 3600,
-                 background_interval_ms: int = 1000):
+    def __init__(
+        self,
+        anthropic_client=None,
+        max_batch_size: int = 5,
+        cache_ttl_seconds: int = 3600,
+        background_interval_ms: int = 1000,
+    ):
 
         self.anthropic_client = anthropic_client
         self.max_batch_size = max_batch_size
         self.background_interval_ms = background_interval_ms
 
         # Request queues by priority
-        self._queues: Dict[RequestPriority, List[AIRequest]] = {
-            priority: [] for priority in RequestPriority
-        }
+        self._queues: Dict[RequestPriority, List[AIRequest]] = {priority: [] for priority in RequestPriority}
         self._queue_lock = threading.RLock()
 
         # In-flight request tracking (for deduplication)
@@ -265,15 +269,17 @@ class AIRequestBatcher:
 
         logger.info(f"AIRequestBatcher initialized with batch_size={max_batch_size}, cache_ttl={cache_ttl_seconds}s")
 
-    async def submit(self,
-                     prompt: str,
-                     model: str = "claude-3-5-sonnet-20241022",
-                     priority: RequestPriority = RequestPriority.NORMAL,
-                     context: Optional[Dict[str, Any]] = None,
-                     max_tokens: int = 1024,
-                     temperature: float = 0.7,
-                     system_prompt: Optional[str] = None,
-                     skip_cache: bool = False) -> AIResponse:
+    async def submit(
+        self,
+        prompt: str,
+        model: str = "claude-3-5-sonnet-20241022",
+        priority: RequestPriority = RequestPriority.NORMAL,
+        context: Optional[Dict[str, Any]] = None,
+        max_tokens: int = 1024,
+        temperature: float = 0.7,
+        system_prompt: Optional[str] = None,
+        skip_cache: bool = False,
+    ) -> AIResponse:
         """
         Submit an AI request for processing
 
@@ -428,8 +434,8 @@ class AIRequestBatcher:
     async def _process_batch(self, priority: RequestPriority) -> AIResponse:
         """Process a batch of requests"""
         with self._queue_lock:
-            batch = self._queues[priority][:self.max_batch_size]
-            self._queues[priority] = self._queues[priority][self.max_batch_size:]
+            batch = self._queues[priority][: self.max_batch_size]
+            self._queues[priority] = self._queues[priority][self.max_batch_size :]
 
         if not batch:
             # Queue was emptied by another processor
@@ -517,8 +523,8 @@ class AIRequestBatcher:
                     with self._queue_lock:
                         queue = self._queues[priority]
                         if queue:
-                            batch = queue[:self.max_batch_size]
-                            self._queues[priority] = queue[self.max_batch_size:]
+                            batch = queue[: self.max_batch_size]
+                            self._queues[priority] = queue[self.max_batch_size :]
 
                             if batch:
                                 await self._process_background_batch(batch)
@@ -554,9 +560,7 @@ class AIRequestBatcher:
         """Get comprehensive metrics"""
         metrics = self.metrics.to_dict()
         metrics["cache_stats"] = self._cache.stats()
-        metrics["queue_sizes"] = {
-            priority.name: len(queue) for priority, queue in self._queues.items()
-        }
+        metrics["queue_sizes"] = {priority.name: len(queue) for priority, queue in self._queues.items()}
         metrics["inflight_count"] = len(self._inflight)
         metrics["timestamp"] = datetime.now().isoformat()
         return metrics
@@ -583,11 +587,14 @@ def get_ai_request_batcher(anthropic_client=None) -> AIRequestBatcher:
 # DECORATOR FOR EASY FUNCTION INTEGRATION
 # ============================================================================
 
-def batched_ai_call(priority: RequestPriority = RequestPriority.NORMAL,
-                    max_tokens: int = 1024,
-                    temperature: float = 0.7,
-                    system_prompt: Optional[str] = None,
-                    skip_cache: bool = False):
+
+def batched_ai_call(
+    priority: RequestPriority = RequestPriority.NORMAL,
+    max_tokens: int = 1024,
+    temperature: float = 0.7,
+    system_prompt: Optional[str] = None,
+    skip_cache: bool = False,
+):
     """
     Decorator for batched AI calls
 
@@ -596,6 +603,7 @@ def batched_ai_call(priority: RequestPriority = RequestPriority.NORMAL,
         async def analyze_lead(lead_data: dict) -> str:
             return f"Analyze this lead: {json.dumps(lead_data)}"
     """
+
     def decorator(func: Callable):
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -616,6 +624,7 @@ def batched_ai_call(priority: RequestPriority = RequestPriority.NORMAL,
             return response.content
 
         return wrapper
+
     return decorator
 
 
@@ -624,6 +633,7 @@ def batched_ai_call(priority: RequestPriority = RequestPriority.NORMAL,
 # ============================================================================
 
 if __name__ == "__main__":
+
     async def test_ai_batcher():
         """Test the AI request batcher"""
         batcher = get_ai_request_batcher()
@@ -653,10 +663,12 @@ if __name__ == "__main__":
         print("\n3. Testing batch processing...")
         tasks = []
         for i in range(5):
-            tasks.append(batcher.submit(
-                prompt=f"Question {i}: What is {i} + {i}?",
-                priority=RequestPriority.NORMAL,
-            ))
+            tasks.append(
+                batcher.submit(
+                    prompt=f"Question {i}: What is {i} + {i}?",
+                    priority=RequestPriority.NORMAL,
+                )
+            )
         responses = await asyncio.gather(*tasks)
         print(f"   Processed {len(responses)} requests")
 

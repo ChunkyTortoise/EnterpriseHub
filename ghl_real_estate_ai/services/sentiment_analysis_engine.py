@@ -33,8 +33,10 @@ logger = logging.getLogger(__name__)
 # Data structures
 # ---------------------------------------------------------------------------
 
+
 class Emotion(Enum):
     """Primary emotion categories for real-estate conversations."""
+
     EXCITED = "excited"
     INTERESTED = "interested"
     NEUTRAL = "neutral"
@@ -62,6 +64,7 @@ class Channel(Enum):
 @dataclass
 class SentimentResult:
     """Analysis result for a single message."""
+
     contact_id: str
     polarity: float  # -1.0 (very negative) to 1.0 (very positive)
     magnitude: float  # 0.0 to 1.0 (strength of sentiment)
@@ -76,6 +79,7 @@ class SentimentResult:
 @dataclass
 class ConversationSentiment:
     """Aggregated sentiment for a full conversation."""
+
     contact_id: str
     message_count: int
     avg_polarity: float
@@ -138,37 +142,52 @@ NEGATIVE_PATTERNS: List[Tuple[str, float]] = [
 
 EMOTION_PATTERNS: Dict[Emotion, List[Tuple[str, float]]] = {
     Emotion.EXCITED: [
-        (r"\bexcited\b", 0.9), (r"\bcan'?t wait\b", 0.85),
-        (r"!{2,}", 0.6), (r"\bomg\b", 0.7), (r"\bwow\b", 0.65),
+        (r"\bexcited\b", 0.9),
+        (r"\bcan'?t wait\b", 0.85),
+        (r"!{2,}", 0.6),
+        (r"\bomg\b", 0.7),
+        (r"\bwow\b", 0.65),
     ],
     Emotion.INTERESTED: [
-        (r"\btell me more\b", 0.8), (r"\binterested\b", 0.75),
-        (r"\bwhat about\b", 0.5), (r"\bhow much\b", 0.6),
+        (r"\btell me more\b", 0.8),
+        (r"\binterested\b", 0.75),
+        (r"\bwhat about\b", 0.5),
+        (r"\bhow much\b", 0.6),
         (r"\bwhen can\b", 0.65),
     ],
     Emotion.HESITANT: [
-        (r"\bmaybe\b", 0.5), (r"\bnot sure\b", 0.65),
-        (r"\bneed to think\b", 0.7), (r"\bi don'?t know\b", 0.6),
+        (r"\bmaybe\b", 0.5),
+        (r"\bnot sure\b", 0.65),
+        (r"\bneed to think\b", 0.7),
+        (r"\bi don'?t know\b", 0.6),
         (r"\blet me.*think\b", 0.6),
     ],
     Emotion.FRUSTRATED: [
-        (r"\bfrustrat", 0.8), (r"\bannoyed\b", 0.7),
-        (r"\bstop\b", 0.6), (r"\benough\b", 0.55),
+        (r"\bfrustrat", 0.8),
+        (r"\bannoyed\b", 0.7),
+        (r"\bstop\b", 0.6),
+        (r"\benough\b", 0.55),
         (r"\btired of\b", 0.7),
     ],
     Emotion.ANXIOUS: [
-        (r"\bworried\b", 0.7), (r"\bnervous\b", 0.65),
-        (r"\bscared\b", 0.75), (r"\bconcerned\b", 0.55),
+        (r"\bworried\b", 0.7),
+        (r"\bnervous\b", 0.65),
+        (r"\bscared\b", 0.75),
+        (r"\bconcerned\b", 0.55),
         (r"\bafraid\b", 0.7),
     ],
     Emotion.CONFIDENT: [
-        (r"\bready\b", 0.6), (r"\blet'?s do\b", 0.8),
-        (r"\bdecided\b", 0.75), (r"\bgoing for it\b", 0.8),
+        (r"\bready\b", 0.6),
+        (r"\blet'?s do\b", 0.8),
+        (r"\bdecided\b", 0.75),
+        (r"\bgoing for it\b", 0.8),
         (r"\bdefinitely\b", 0.65),
     ],
     Emotion.DISAPPOINTED: [
-        (r"\bdisappoint", 0.8), (r"\bexpected more\b", 0.7),
-        (r"\bnot what i\b", 0.6), (r"\bunhappy\b", 0.7),
+        (r"\bdisappoint", 0.8),
+        (r"\bexpected more\b", 0.7),
+        (r"\bnot what i\b", 0.6),
+        (r"\bunhappy\b", 0.7),
     ],
 }
 
@@ -187,6 +206,7 @@ INTENT_PATTERNS: Dict[str, str] = {
 # ---------------------------------------------------------------------------
 # Engine
 # ---------------------------------------------------------------------------
+
 
 class SentimentAnalysisEngine:
     """
@@ -237,9 +257,7 @@ class SentimentAnalysisEngine:
         self._conversation_history.setdefault(contact_id, []).append(result)
         return result
 
-    async def get_conversation_sentiment(
-        self, contact_id: str
-    ) -> ConversationSentiment:
+    async def get_conversation_sentiment(self, contact_id: str) -> ConversationSentiment:
         """Compute aggregated sentiment for a contact's conversation."""
         history = self._conversation_history.get(contact_id, [])
         if not history:
@@ -326,9 +344,7 @@ class SentimentAnalysisEngine:
     # Emotion classification
     # ------------------------------------------------------------------
 
-    def _classify_emotion(
-        self, text: str, polarity: float
-    ) -> Tuple[Emotion, float]:
+    def _classify_emotion(self, text: str, polarity: float) -> Tuple[Emotion, float]:
         """Classify the primary emotion with confidence."""
         scores: Dict[Emotion, float] = {}
 
@@ -379,7 +395,8 @@ class SentimentAnalysisEngine:
 
         location_match = re.findall(
             r"\b(?:rancho cucamonga|victoria|haven|etiwanda|terra vista|central park)\b",
-            text, re.IGNORECASE,
+            text,
+            re.IGNORECASE,
         )
         phrases.extend(location_match)
 
@@ -408,7 +425,7 @@ class SentimentAnalysisEngine:
         if len(polarities) < 2:
             return SentimentTrend.STABLE
 
-        recent = polarities[-self.TREND_WINDOW:]
+        recent = polarities[-self.TREND_WINDOW :]
         if len(recent) < 2:
             return SentimentTrend.STABLE
 
@@ -440,14 +457,12 @@ class SentimentAnalysisEngine:
         intent_factor = sum(1 for r in history if r.intent_signals) / max(len(history), 1)
         return min(avg_magnitude * 0.4 + msg_factor * 0.3 + intent_factor * 0.3, 1.0)
 
-    def _compute_escalation_risk(
-        self, polarities: List[float], history: List[SentimentResult]
-    ) -> float:
+    def _compute_escalation_risk(self, polarities: List[float], history: List[SentimentResult]) -> float:
         """Risk of conversation escalation requiring human intervention."""
         if not polarities:
             return 0.0
 
-        recent = polarities[-self.TREND_WINDOW:]
+        recent = polarities[-self.TREND_WINDOW :]
         avg_recent = sum(recent) / len(recent)
 
         # Strongly negative recent sentiment
@@ -455,8 +470,7 @@ class SentimentAnalysisEngine:
 
         # Frustration presence
         frustration = sum(
-            1 for r in history[-self.TREND_WINDOW:]
-            if r.emotion in (Emotion.FRUSTRATED, Emotion.DISAPPOINTED)
+            1 for r in history[-self.TREND_WINDOW :] if r.emotion in (Emotion.FRUSTRATED, Emotion.DISAPPOINTED)
         ) / max(len(recent), 1)
 
         # Declining trend

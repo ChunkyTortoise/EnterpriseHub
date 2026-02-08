@@ -12,15 +12,16 @@ import asyncio
 import logging
 import time
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
 from enum import Enum
-import psutil
-import redis.asyncio as aioredis
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from typing import Any, Dict, List, Optional
+
 import asyncpg
 import httpx
+import psutil
+import redis.asyncio as aioredis
 from anthropic import AsyncAnthropic
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
 from ..core.config import get_settings
 from ..core.database import get_database_pool
@@ -29,15 +30,19 @@ from ..core.redis_client import get_redis_client
 settings = get_settings()
 logger = logging.getLogger(__name__)
 
+
 class HealthStatus(str, Enum):
     """Health status levels for component monitoring."""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
     UNKNOWN = "unknown"
 
+
 class ComponentHealth(BaseModel):
     """Health status for a single component."""
+
     name: str
     status: HealthStatus
     message: str
@@ -45,14 +50,17 @@ class ComponentHealth(BaseModel):
     response_time_ms: Optional[float] = None
     metadata: Dict[str, Any] = {}
 
+
 class HealthReport(BaseModel):
     """Complete platform health report."""
+
     overall_status: HealthStatus
     timestamp: datetime
     uptime_seconds: float
     components: List[ComponentHealth]
     performance_metrics: Dict[str, Any]
     sla_metrics: Dict[str, Any]
+
 
 class HealthCheckService:
     """
@@ -92,7 +100,7 @@ class HealthCheckService:
             self._check_jorge_bots_health(),
             self._check_ml_pipeline_health(),
             self._check_system_resources_health(),
-            self._check_api_performance_health()
+            self._check_api_performance_health(),
         ]
 
         try:
@@ -100,23 +108,27 @@ class HealthCheckService:
 
             for result in results:
                 if isinstance(result, Exception):
-                    components.append(ComponentHealth(
-                        name="unknown_component",
-                        status=HealthStatus.UNHEALTHY,
-                        message=f"Health check failed: {str(result)}",
-                        last_check=datetime.utcnow()
-                    ))
+                    components.append(
+                        ComponentHealth(
+                            name="unknown_component",
+                            status=HealthStatus.UNHEALTHY,
+                            message=f"Health check failed: {str(result)}",
+                            last_check=datetime.utcnow(),
+                        )
+                    )
                 else:
                     components.append(result)
 
         except Exception as e:
             logger.error(f"Health check failed: {e}")
-            components.append(ComponentHealth(
-                name="health_system",
-                status=HealthStatus.UNHEALTHY,
-                message=f"Health check system error: {str(e)}",
-                last_check=datetime.utcnow()
-            ))
+            components.append(
+                ComponentHealth(
+                    name="health_system",
+                    status=HealthStatus.UNHEALTHY,
+                    message=f"Health check system error: {str(e)}",
+                    last_check=datetime.utcnow(),
+                )
+            )
 
         # Calculate overall status
         overall_status = self._calculate_overall_status(components)
@@ -133,7 +145,7 @@ class HealthCheckService:
             uptime_seconds=time.time() - self.start_time,
             components=components,
             performance_metrics=performance_metrics,
-            sla_metrics=sla_metrics
+            sla_metrics=sla_metrics,
         )
 
     async def _check_database_health(self) -> ComponentHealth:
@@ -189,8 +201,8 @@ class HealthCheckService:
                         "pool_used": pool_used,
                         "active_connections": stats["active_connections"],
                         "max_connections": stats["max_connections"],
-                        "pool_utilization_pct": round((pool_used / pool_size) * 100, 2)
-                    }
+                        "pool_utilization_pct": round((pool_used / pool_size) * 100, 2),
+                    },
                 )
 
         except Exception as e:
@@ -199,7 +211,7 @@ class HealthCheckService:
                 status=HealthStatus.UNHEALTHY,
                 message=f"Database connection failed: {str(e)}",
                 last_check=datetime.utcnow(),
-                response_time_ms=(time.time() - start_time) * 1000
+                response_time_ms=(time.time() - start_time) * 1000,
             )
 
     async def _check_redis_health(self) -> ComponentHealth:
@@ -256,8 +268,8 @@ class HealthCheckService:
                     "memory_max_mb": round(memory_max / 1024 / 1024, 2) if memory_max > 0 else None,
                     "memory_usage_pct": round(memory_usage_pct, 2),
                     "connected_clients": connected_clients,
-                    "redis_version": info.get("redis_version")
-                }
+                    "redis_version": info.get("redis_version"),
+                },
             )
 
         except Exception as e:
@@ -266,7 +278,7 @@ class HealthCheckService:
                 status=HealthStatus.UNHEALTHY,
                 message=f"Redis connection failed: {str(e)}",
                 last_check=datetime.utcnow(),
-                response_time_ms=(time.time() - start_time) * 1000
+                response_time_ms=(time.time() - start_time) * 1000,
             )
 
     async def _check_claude_ai_health(self) -> ComponentHealth:
@@ -280,7 +292,7 @@ class HealthCheckService:
             response = await client.messages.create(
                 model="claude-3-haiku-20240307",  # Use fastest model for health check
                 max_tokens=10,
-                messages=[{"role": "user", "content": "Health check test - respond with 'OK'"}]
+                messages=[{"role": "user", "content": "Health check test - respond with 'OK'"}],
             )
 
             response_time = (time.time() - start_time) * 1000
@@ -303,10 +315,7 @@ class HealthCheckService:
                 message=message,
                 last_check=datetime.utcnow(),
                 response_time_ms=response_time,
-                metadata={
-                    "model_used": "claude-3-haiku-20240307",
-                    "api_version": "2023-06-01"
-                }
+                metadata={"model_used": "claude-3-haiku-20240307", "api_version": "2023-06-01"},
             )
 
         except Exception as e:
@@ -315,7 +324,7 @@ class HealthCheckService:
                 status=HealthStatus.UNHEALTHY,
                 message=f"Claude AI service failed: {str(e)}",
                 last_check=datetime.utcnow(),
-                response_time_ms=(time.time() - start_time) * 1000
+                response_time_ms=(time.time() - start_time) * 1000,
             )
 
     async def _check_ghl_api_health(self) -> ComponentHealth:
@@ -329,21 +338,16 @@ class HealthCheckService:
                     name="ghl_api",
                     status=HealthStatus.UNKNOWN,
                     message="GHL API not configured",
-                    last_check=datetime.utcnow()
+                    last_check=datetime.utcnow(),
                 )
 
             # Test GHL API connectivity (use a minimal endpoint)
             async with httpx.AsyncClient() as client:
-                headers = {
-                    "Authorization": f"Bearer {settings.GHL_ACCESS_TOKEN}",
-                    "Content-Type": "application/json"
-                }
+                headers = {"Authorization": f"Bearer {settings.GHL_ACCESS_TOKEN}", "Content-Type": "application/json"}
 
                 # Test with locations endpoint (minimal data)
                 response = await client.get(
-                    "https://services.leadconnectorhq.com/locations/",
-                    headers=headers,
-                    timeout=10
+                    "https://services.leadconnectorhq.com/locations/", headers=headers, timeout=10
                 )
 
                 response_time = (time.time() - start_time) * 1000
@@ -375,8 +379,8 @@ class HealthCheckService:
                     metadata={
                         "status_code": response.status_code,
                         "rate_limit_remaining": rate_limit_remaining,
-                        "rate_limit_limit": rate_limit_limit
-                    }
+                        "rate_limit_limit": rate_limit_limit,
+                    },
                 )
 
         except Exception as e:
@@ -385,7 +389,7 @@ class HealthCheckService:
                 status=HealthStatus.UNHEALTHY,
                 message=f"GHL API connection failed: {str(e)}",
                 last_check=datetime.utcnow(),
-                response_time_ms=(time.time() - start_time) * 1000
+                response_time_ms=(time.time() - start_time) * 1000,
             )
 
     async def _check_jorge_bots_health(self) -> ComponentHealth:
@@ -394,9 +398,9 @@ class HealthCheckService:
 
         try:
             # Import Jorge bot modules
+            from ..agents.intent_decoder import IntentDecoder
             from ..agents.jorge_seller_bot import JorgeSellerBot
             from ..agents.lead_bot import LeadBot
-            from ..agents.intent_decoder import IntentDecoder
 
             # Initialize bots for health check
             jorge_bot = JorgeSellerBot()
@@ -453,8 +457,8 @@ class HealthCheckService:
                 metadata={
                     "total_bots": total_bots,
                     "healthy_bots": healthy_bots,
-                    "bot_statuses": {name: health for name, health in health_checks}
-                }
+                    "bot_statuses": {name: health for name, health in health_checks},
+                },
             )
 
         except Exception as e:
@@ -463,7 +467,7 @@ class HealthCheckService:
                 status=HealthStatus.UNHEALTHY,
                 message=f"Jorge bots health check failed: {str(e)}",
                 last_check=datetime.utcnow(),
-                response_time_ms=(time.time() - start_time) * 1000
+                response_time_ms=(time.time() - start_time) * 1000,
             )
 
     async def _check_ml_pipeline_health(self) -> ComponentHealth:
@@ -485,7 +489,7 @@ class HealthCheckService:
                 "urgency_keywords": 3,
                 "financial_keywords": 2,
                 "time_of_day": 14,
-                "day_of_week": 2
+                "day_of_week": 2,
             }
 
             # Test prediction
@@ -518,8 +522,8 @@ class HealthCheckService:
                         "model_accuracy": accuracy,
                         "prediction_confidence": confidence,
                         "features_processed": len(test_features),
-                        "target_response_time_ms": 50  # Jorge's 42.3ms target + buffer
-                    }
+                        "target_response_time_ms": 50,  # Jorge's 42.3ms target + buffer
+                    },
                 )
             else:
                 return ComponentHealth(
@@ -527,7 +531,7 @@ class HealthCheckService:
                     status=HealthStatus.UNHEALTHY,
                     message="ML prediction failed or invalid result",
                     last_check=datetime.utcnow(),
-                    response_time_ms=response_time
+                    response_time_ms=response_time,
                 )
 
         except Exception as e:
@@ -536,7 +540,7 @@ class HealthCheckService:
                 status=HealthStatus.UNHEALTHY,
                 message=f"ML pipeline failed: {str(e)}",
                 last_check=datetime.utcnow(),
-                response_time_ms=(time.time() - start_time) * 1000
+                response_time_ms=(time.time() - start_time) * 1000,
             )
 
     async def _check_system_resources_health(self) -> ComponentHealth:
@@ -547,7 +551,7 @@ class HealthCheckService:
             # Get system metrics
             cpu_percent = psutil.cpu_percent(interval=1)
             memory = psutil.virtual_memory()
-            disk = psutil.disk_usage('/')
+            disk = psutil.disk_usage("/")
 
             # Get process-specific metrics
             process = psutil.Process()
@@ -598,8 +602,8 @@ class HealthCheckService:
                     "disk_percent": round(disk.percent, 2),
                     "disk_free_gb": round(disk.free / 1024**3, 2),
                     "process_memory_mb": round(process_memory.rss / 1024**2, 2),
-                    "process_cpu_percent": round(process_cpu, 2)
-                }
+                    "process_cpu_percent": round(process_cpu, 2),
+                },
             )
 
         except Exception as e:
@@ -608,7 +612,7 @@ class HealthCheckService:
                 status=HealthStatus.UNHEALTHY,
                 message=f"System metrics failed: {str(e)}",
                 last_check=datetime.utcnow(),
-                response_time_ms=(time.time() - start_time) * 1000
+                response_time_ms=(time.time() - start_time) * 1000,
             )
 
     async def _check_api_performance_health(self) -> ComponentHealth:
@@ -667,8 +671,8 @@ class HealthCheckService:
                     "successful_tests": successful_tests,
                     "total_tests": total_tests,
                     "avg_response_time_ms": round(avg_response_time, 2),
-                    "test_results": api_tests
-                }
+                    "test_results": api_tests,
+                },
             )
 
         except Exception as e:
@@ -677,7 +681,7 @@ class HealthCheckService:
                 status=HealthStatus.UNHEALTHY,
                 message=f"API performance check failed: {str(e)}",
                 last_check=datetime.utcnow(),
-                response_time_ms=(time.time() - start_time) * 1000
+                response_time_ms=(time.time() - start_time) * 1000,
             )
 
     def _calculate_overall_status(self, components: List[ComponentHealth]) -> HealthStatus:
@@ -690,8 +694,9 @@ class HealthCheckService:
 
         # Critical components that affect overall status more heavily
         critical_components = {"database", "jorge_bots", "claude_ai"}
-        critical_unhealthy = sum(1 for c in components
-                               if c.name in critical_components and c.status == HealthStatus.UNHEALTHY)
+        critical_unhealthy = sum(
+            1 for c in components if c.name in critical_components and c.status == HealthStatus.UNHEALTHY
+        )
 
         if critical_unhealthy > 0 or unhealthy_count > 2:
             return HealthStatus.UNHEALTHY
@@ -725,11 +730,13 @@ class HealthCheckService:
             "availability_percentage": (healthy_components / total_components) * 100 if total_components > 0 else 0,
             "sla_compliance_status": "compliant",  # "compliant", "at_risk", "breach"
             "time_to_recovery_target_minutes": 5,
-            "mean_time_between_failures_hours": 720  # 30 days
+            "mean_time_between_failures_hours": 720,  # 30 days
         }
+
 
 # Global health check service instance
 health_service = HealthCheckService()
+
 
 # FastAPI endpoints for health checks
 async def startup_health() -> Dict[str, Any]:
@@ -738,16 +745,18 @@ async def startup_health() -> Dict[str, Any]:
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
         "service": "jorge_real_estate_ai",
-        "version": "1.0.0"
+        "version": "1.0.0",
     }
+
 
 async def liveness_health() -> Dict[str, Any]:
     """Kubernetes liveness probe endpoint - basic service availability."""
     return {
         "status": "alive",
         "timestamp": datetime.utcnow().isoformat(),
-        "uptime_seconds": time.time() - health_service.start_time
+        "uptime_seconds": time.time() - health_service.start_time,
     }
+
 
 async def readiness_health() -> Dict[str, Any]:
     """Kubernetes readiness probe endpoint - service ready to handle traffic."""
@@ -763,13 +772,11 @@ async def readiness_health() -> Dict[str, Any]:
         return {
             "status": "ready",
             "timestamp": datetime.utcnow().isoformat(),
-            "checks": {
-                "database": "healthy",
-                "cache": "healthy"
-            }
+            "checks": {"database": "healthy", "cache": "healthy"},
         }
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Service not ready: {str(e)}")
+
 
 async def detailed_health() -> HealthReport:
     """Detailed health report for monitoring and diagnostics."""

@@ -22,21 +22,21 @@ from functools import wraps
 from typing import Any, Callable, Dict, List, Optional, Set, TypeVar
 
 from fastapi import Depends, HTTPException, Request, Response, status
+from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi.responses import JSONResponse
 
 from .models import (
+    ROLE_PERMISSIONS,
+    TIER_FEATURES,
+    TIER_LIMITS,
     AuditLogEntry,
     Organization,
     OrganizationUser,
     Permission,
-    ROLE_PERMISSIONS,
     SubscriptionTier,
     TenantContext,
-    TIER_LIMITS,
-    TIER_FEATURES,
     UserRole,
 )
 
@@ -120,18 +120,21 @@ class TenantMiddleware(BaseHTTPMiddleware):
         self.audit_enabled = audit_enabled
 
         # Paths that don't require tenant context
-        self.exclude_paths = set(exclude_paths or [
-            "/health",
-            "/ready",
-            "/metrics",
-            "/docs",
-            "/redoc",
-            "/openapi.json",
-            "/api/v1/auth/login",
-            "/api/v1/auth/register",
-            "/api/v1/auth/refresh",
-            "/api/v1/auth/forgot-password",
-        ])
+        self.exclude_paths = set(
+            exclude_paths
+            or [
+                "/health",
+                "/ready",
+                "/metrics",
+                "/docs",
+                "/redoc",
+                "/openapi.json",
+                "/api/v1/auth/login",
+                "/api/v1/auth/register",
+                "/api/v1/auth/refresh",
+                "/api/v1/auth/forgot-password",
+            ]
+        )
 
         # In-memory caches (in production, use Redis)
         self._organizations: Dict[str, Organization] = {}
@@ -521,6 +524,7 @@ class TenantIsolation:
             async def create_model(...):
                 ...
         """
+
         def decorator(func: F) -> F:
             @wraps(func)
             async def wrapper(*args, **kwargs):
@@ -531,7 +535,9 @@ class TenantIsolation:
                         detail=f"Permission denied: {permission.value}",
                     )
                 return await func(*args, **kwargs)
+
             return wrapper  # type: ignore
+
         return decorator
 
     def require_any_permission(self, permissions: List[Permission]) -> Callable[[F], F]:
@@ -543,6 +549,7 @@ class TenantIsolation:
             async def get_or_update_model(...):
                 ...
         """
+
         def decorator(func: F) -> F:
             @wraps(func)
             async def wrapper(*args, **kwargs):
@@ -553,7 +560,9 @@ class TenantIsolation:
                         detail=f"Permission denied: requires one of {[p.value for p in permissions]}",
                     )
                 return await func(*args, **kwargs)
+
             return wrapper  # type: ignore
+
         return decorator
 
     def require_all_permissions(self, permissions: List[Permission]) -> Callable[[F], F]:
@@ -565,6 +574,7 @@ class TenantIsolation:
             async def replace_model(...):
                 ...
         """
+
         def decorator(func: F) -> F:
             @wraps(func)
             async def wrapper(*args, **kwargs):
@@ -576,7 +586,9 @@ class TenantIsolation:
                         detail=f"Permission denied: missing {[p.value for p in missing]}",
                     )
                 return await func(*args, **kwargs)
+
             return wrapper  # type: ignore
+
         return decorator
 
     def require_tier(self, min_tier: SubscriptionTier) -> Callable[[F], F]:
@@ -589,6 +601,7 @@ class TenantIsolation:
             async def ai_analysis(...):
                 ...
         """
+
         def decorator(func: F) -> F:
             @wraps(func)
             async def wrapper(*args, **kwargs):
@@ -600,10 +613,12 @@ class TenantIsolation:
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
                         detail=f"This feature requires {min_tier.display_name} tier or higher. "
-                               f"Current tier: {ctx.subscription_tier.display_name}",
+                        f"Current tier: {ctx.subscription_tier.display_name}",
                     )
                 return await func(*args, **kwargs)
+
             return wrapper  # type: ignore
+
         return decorator
 
     def require_feature(self, feature: str) -> Callable[[F], F]:
@@ -615,6 +630,7 @@ class TenantIsolation:
             async def get_ai_explanation(...):
                 ...
         """
+
         def decorator(func: F) -> F:
             @wraps(func)
             async def wrapper(*args, **kwargs):
@@ -628,7 +644,9 @@ class TenantIsolation:
                         detail=f"Feature '{feature}' is not available on your subscription tier",
                     )
                 return await func(*args, **kwargs)
+
             return wrapper  # type: ignore
+
         return decorator
 
     def check_limit(self, limit_type: str, current_value: int) -> bool:
@@ -669,8 +687,8 @@ class TenantIsolation:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Limit exceeded: {limit_type}. "
-                       f"Current: {current_value}, Max: {max_value}. "
-                       f"Upgrade your subscription for higher limits.",
+                f"Current: {current_value}, Max: {max_value}. "
+                f"Upgrade your subscription for higher limits.",
             )
 
 
@@ -694,10 +712,7 @@ class TenantDataFilter:
         Returns:
             Filtered list containing only items for the organization
         """
-        return [
-            item for item in items
-            if getattr(item, "organization_id", None) == org_id
-        ]
+        return [item for item in items if getattr(item, "organization_id", None) == org_id]
 
     @staticmethod
     def filter_models(models: List[Any], org_id: str) -> List[Any]:
@@ -764,6 +779,7 @@ class TenantDataFilter:
 
 
 # Utility functions for JWT token management
+
 
 def create_tenant_token(
     org: Organization,
@@ -844,6 +860,7 @@ def decode_tenant_token(
 
 # FastAPI dependency functions
 
+
 async def get_current_org(
     ctx: TenantContext = Depends(get_current_tenant),
 ) -> str:
@@ -897,6 +914,7 @@ def require_permission(permission: Permission):
         ):
             ...
     """
+
     async def check_permission(
         ctx: TenantContext = Depends(get_current_tenant),
     ) -> TenantContext:
@@ -921,6 +939,7 @@ def require_role(role: UserRole):
         ):
             ...
     """
+
     async def check_role(
         ctx: TenantContext = Depends(get_current_tenant),
     ) -> TenantContext:
@@ -949,6 +968,7 @@ def require_tier(tier: SubscriptionTier):
         ):
             ...
     """
+
     async def check_tier(
         ctx: TenantContext = Depends(get_current_tenant),
     ) -> TenantContext:

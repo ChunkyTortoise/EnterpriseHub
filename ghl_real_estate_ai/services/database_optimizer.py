@@ -10,13 +10,14 @@ Provides automated database optimization and maintenance:
 """
 
 import asyncio
-import aiosqlite
-import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass
-from pathlib import Path
 import json
+import time
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import aiosqlite
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service_optimized import get_optimized_cache_service
@@ -24,18 +25,22 @@ from ghl_real_estate_ai.services.performance_optimizer import get_performance_op
 
 logger = get_logger(__name__)
 
+
 @dataclass
 class QueryPerformance:
     """Query performance metrics."""
+
     query: str
     execution_time_ms: float
     rows_affected: int
     timestamp: datetime
     optimization_suggestion: Optional[str] = None
 
+
 @dataclass
 class IndexAnalysis:
     """Database index analysis."""
+
     table: str
     index_name: str
     columns: List[str]
@@ -44,9 +49,11 @@ class IndexAnalysis:
     effectiveness_score: float
     recommendation: str
 
+
 @dataclass
 class DatabaseHealth:
     """Overall database health metrics."""
+
     database_size_mb: float
     total_queries_today: int
     avg_query_time_ms: float
@@ -56,16 +63,13 @@ class DatabaseHealth:
     last_optimization: datetime
     recommendations: List[str]
 
+
 class DatabaseOptimizer:
     """Comprehensive database optimization service."""
 
     def __init__(self, database_paths: List[str] = None):
         """Initialize database optimizer."""
-        self.database_paths = database_paths or [
-            "data/auth.db",
-            "data/monitoring.db",
-            "data/dashboard.db"
-        ]
+        self.database_paths = database_paths or ["data/auth.db", "data/monitoring.db", "data/dashboard.db"]
 
         self.performance_log_path = "data/query_performance.db"
         self.optimization_history_path = "data/optimization_history.json"
@@ -165,13 +169,13 @@ class DatabaseOptimizer:
 
                 health = DatabaseHealth(
                     database_size_mb=size_mb,
-                    total_queries_today=performance_metrics.get('total_queries', 0),
-                    avg_query_time_ms=performance_metrics.get('avg_time_ms', 0.0),
-                    slow_queries_count=performance_metrics.get('slow_queries', 0),
-                    cache_hit_ratio=cache_stats.get('hit_ratio', 0.0),
+                    total_queries_today=performance_metrics.get("total_queries", 0),
+                    avg_query_time_ms=performance_metrics.get("avg_time_ms", 0.0),
+                    slow_queries_count=performance_metrics.get("slow_queries", 0),
+                    cache_hit_ratio=cache_stats.get("hit_ratio", 0.0),
                     fragmentation_ratio=fragmentation_ratio,
                     last_optimization=await self._get_last_optimization_time(db_path),
-                    recommendations=recommendations
+                    recommendations=recommendations,
                 )
 
                 return health
@@ -186,17 +190,17 @@ class DatabaseOptimizer:
                 cache_hit_ratio=0.0,
                 fragmentation_ratio=1.0,
                 last_optimization=datetime.now() - timedelta(days=365),
-                recommendations=["Health check failed - manual investigation required"]
+                recommendations=["Health check failed - manual investigation required"],
             )
 
     async def optimize_database(self, db_path: str) -> Dict[str, Any]:
         """Perform database optimization operations."""
         optimization_results = {
-            'database': db_path,
-            'start_time': datetime.now(),
-            'operations': [],
-            'improvements': {},
-            'errors': []
+            "database": db_path,
+            "start_time": datetime.now(),
+            "operations": [],
+            "improvements": {},
+            "errors": [],
         }
 
         try:
@@ -223,15 +227,15 @@ class DatabaseOptimizer:
             final_health = await self.analyze_database_health(db_path)
 
             # Calculate improvements
-            optimization_results['improvements'] = {
-                'size_reduction_mb': baseline_health.database_size_mb - final_health.database_size_mb,
-                'query_time_improvement_ms': baseline_health.avg_query_time_ms - final_health.avg_query_time_ms,
-                'cache_hit_ratio_improvement': final_health.cache_hit_ratio - baseline_health.cache_hit_ratio
+            optimization_results["improvements"] = {
+                "size_reduction_mb": baseline_health.database_size_mb - final_health.database_size_mb,
+                "query_time_improvement_ms": baseline_health.avg_query_time_ms - final_health.avg_query_time_ms,
+                "cache_hit_ratio_improvement": final_health.cache_hit_ratio - baseline_health.cache_hit_ratio,
             }
 
-            optimization_results['end_time'] = datetime.now()
-            optimization_results['duration_seconds'] = (
-                optimization_results['end_time'] - optimization_results['start_time']
+            optimization_results["end_time"] = datetime.now()
+            optimization_results["duration_seconds"] = (
+                optimization_results["end_time"] - optimization_results["start_time"]
             ).total_seconds()
 
             # Log optimization history
@@ -242,7 +246,7 @@ class DatabaseOptimizer:
 
         except Exception as e:
             logger.error(f"Database optimization failed for {db_path}: {e}")
-            optimization_results['errors'].append(str(e))
+            optimization_results["errors"].append(str(e))
             return optimization_results
 
     async def monitor_query_performance(self, db_path: str, query: str, params: Tuple = None) -> QueryPerformance:
@@ -264,11 +268,11 @@ class DatabaseOptimizer:
 
             # Create performance record
             performance = QueryPerformance(
-                query=query[:200] + '...' if len(query) > 200 else query,  # Truncate long queries
+                query=query[:200] + "..." if len(query) > 200 else query,  # Truncate long queries
                 execution_time_ms=execution_time_ms,
                 rows_affected=rows_affected,
                 timestamp=datetime.now(),
-                optimization_suggestion=self._suggest_query_optimization(query, execution_time_ms)
+                optimization_suggestion=self._suggest_query_optimization(query, execution_time_ms),
             )
 
             # Log performance if it's a slow query
@@ -282,11 +286,11 @@ class DatabaseOptimizer:
             logger.error(f"Query monitoring failed: {e}")
 
             return QueryPerformance(
-                query=query[:200] + '...' if len(query) > 200 else query,
+                query=query[:200] + "..." if len(query) > 200 else query,
                 execution_time_ms=execution_time_ms,
                 rows_affected=0,
                 timestamp=datetime.now(),
-                optimization_suggestion=f"Query failed: {str(e)}"
+                optimization_suggestion=f"Query failed: {str(e)}",
             )
 
     async def _analyze_query_performance(self, db_path: str) -> Dict[str, Any]:
@@ -294,28 +298,27 @@ class DatabaseOptimizer:
         try:
             async with aiosqlite.connect(self.performance_log_path) as db:
                 # Get today's query statistics
-                async with db.execute("""
+                async with db.execute(
+                    """
                     SELECT
                         COUNT(*) as total_queries,
                         AVG(execution_time_ms) as avg_time_ms,
                         COUNT(CASE WHEN execution_time_ms > ? THEN 1 END) as slow_queries
                     FROM query_performance
                     WHERE database_name = ? AND timestamp > datetime('now', '-1 day')
-                """, (self.slow_query_threshold_ms, db_path)) as cursor:
+                """,
+                    (self.slow_query_threshold_ms, db_path),
+                ) as cursor:
                     row = await cursor.fetchone()
 
                     if row:
-                        return {
-                            'total_queries': row[0] or 0,
-                            'avg_time_ms': row[1] or 0.0,
-                            'slow_queries': row[2] or 0
-                        }
+                        return {"total_queries": row[0] or 0, "avg_time_ms": row[1] or 0.0, "slow_queries": row[2] or 0}
                     else:
-                        return {'total_queries': 0, 'avg_time_ms': 0.0, 'slow_queries': 0}
+                        return {"total_queries": 0, "avg_time_ms": 0.0, "slow_queries": 0}
 
         except Exception as e:
             logger.error(f"Query performance analysis failed: {e}")
-            return {'total_queries': 0, 'avg_time_ms': 999.0, 'slow_queries': 999}
+            return {"total_queries": 0, "avg_time_ms": 999.0, "slow_queries": 999}
 
     async def _analyze_indexes(self, db: aiosqlite.Connection) -> List[IndexAnalysis]:
         """Analyze database indexes for effectiveness."""
@@ -345,15 +348,17 @@ class DatabaseOptimizer:
                 else:
                     recommendation = "Moderate effectiveness - review"
 
-                indexes.append(IndexAnalysis(
-                    table=table_name,
-                    index_name=index_name,
-                    columns=[],  # Would parse from SQL in real implementation
-                    usage_count=usage_count,
-                    last_used=datetime.now() - timedelta(days=1),  # Simplified
-                    effectiveness_score=effectiveness_score,
-                    recommendation=recommendation
-                ))
+                indexes.append(
+                    IndexAnalysis(
+                        table=table_name,
+                        index_name=index_name,
+                        columns=[],  # Would parse from SQL in real implementation
+                        usage_count=usage_count,
+                        last_used=datetime.now() - timedelta(days=1),  # Simplified
+                        effectiveness_score=effectiveness_score,
+                        recommendation=recommendation,
+                    )
+                )
 
         except Exception as e:
             logger.error(f"Index analysis failed: {e}")
@@ -388,14 +393,11 @@ class DatabaseOptimizer:
             # In a real implementation, this would track actual cache hits/misses
             cache_hit_ratio = 0.85  # Default assumption
 
-            return {
-                'cache_size': cache_size,
-                'hit_ratio': cache_hit_ratio
-            }
+            return {"cache_size": cache_size, "hit_ratio": cache_hit_ratio}
 
         except Exception as e:
             logger.error(f"Cache statistics failed: {e}")
-            return {'cache_size': 0, 'hit_ratio': 0.0}
+            return {"cache_size": 0, "hit_ratio": 0.0}
 
     async def _generate_recommendations(
         self,
@@ -403,7 +405,7 @@ class DatabaseOptimizer:
         size_mb: float,
         performance_metrics: Dict,
         index_analysis: List[IndexAnalysis],
-        fragmentation_ratio: float
+        fragmentation_ratio: float,
     ) -> List[str]:
         """Generate optimization recommendations."""
         recommendations = []
@@ -413,11 +415,11 @@ class DatabaseOptimizer:
             recommendations.append("Consider archiving old data - database size is large")
 
         # Performance recommendations
-        avg_query_time = performance_metrics.get('avg_time_ms', 0)
+        avg_query_time = performance_metrics.get("avg_time_ms", 0)
         if avg_query_time > 500:
             recommendations.append("High average query time - review query optimization")
 
-        slow_queries = performance_metrics.get('slow_queries', 0)
+        slow_queries = performance_metrics.get("slow_queries", 0)
         if slow_queries > 10:
             recommendations.append(f"{slow_queries} slow queries detected - investigate and optimize")
 
@@ -440,29 +442,29 @@ class DatabaseOptimizer:
         """Update database statistics."""
         try:
             await db.execute("ANALYZE")
-            results['operations'].append("Updated database statistics")
+            results["operations"].append("Updated database statistics")
             logger.debug("Database statistics updated")
         except Exception as e:
-            results['errors'].append(f"Statistics update failed: {e}")
+            results["errors"].append(f"Statistics update failed: {e}")
 
     async def _optimize_indexes(self, db: aiosqlite.Connection, results: Dict):
         """Optimize database indexes."""
         try:
             # Reindex all indexes
             await db.execute("REINDEX")
-            results['operations'].append("Reindexed all database indexes")
+            results["operations"].append("Reindexed all database indexes")
             logger.debug("Database indexes optimized")
         except Exception as e:
-            results['errors'].append(f"Index optimization failed: {e}")
+            results["errors"].append(f"Index optimization failed: {e}")
 
     async def _vacuum_database(self, db: aiosqlite.Connection, results: Dict):
         """Clean up unused space in database."""
         try:
             await db.execute("VACUUM")
-            results['operations'].append("Vacuumed database to reclaim space")
+            results["operations"].append("Vacuumed database to reclaim space")
             logger.debug("Database vacuumed")
         except Exception as e:
-            results['errors'].append(f"Database vacuum failed: {e}")
+            results["errors"].append(f"Database vacuum failed: {e}")
 
     async def _optimize_sqlite_settings(self, db: aiosqlite.Connection, results: Dict):
         """Optimize SQLite configuration settings."""
@@ -480,11 +482,11 @@ class DatabaseOptimizer:
             if self.temp_store_memory:
                 await db.execute("PRAGMA temp_store = MEMORY")
 
-            results['operations'].append("Optimized SQLite configuration settings")
+            results["operations"].append("Optimized SQLite configuration settings")
             logger.debug("SQLite settings optimized")
 
         except Exception as e:
-            results['errors'].append(f"SQLite optimization failed: {e}")
+            results["errors"].append(f"SQLite optimization failed: {e}")
 
     async def _analyze_tables(self, db: aiosqlite.Connection, results: Dict):
         """Analyze and optimize table structure."""
@@ -499,19 +501,22 @@ class DatabaseOptimizer:
                 table_name = table[0]
                 await db.execute(f"ANALYZE {table_name}")
 
-            results['operations'].append(f"Analyzed {len(tables)} tables")
+            results["operations"].append(f"Analyzed {len(tables)} tables")
             logger.debug(f"Analyzed {len(tables)} database tables")
 
         except Exception as e:
-            results['errors'].append(f"Table analysis failed: {e}")
+            results["errors"].append(f"Table analysis failed: {e}")
 
     async def _get_index_usage_count(self, index_name: str) -> int:
         """Get index usage count from tracking."""
         try:
             async with aiosqlite.connect(self.performance_log_path) as db:
-                async with db.execute("""
+                async with db.execute(
+                    """
                     SELECT usage_count FROM index_usage WHERE index_name = ?
-                """, (index_name,)) as cursor:
+                """,
+                    (index_name,),
+                ) as cursor:
                     row = await cursor.fetchone()
                     return row[0] if row else 0
         except Exception:
@@ -521,9 +526,12 @@ class DatabaseOptimizer:
         """Get timestamp of last optimization."""
         try:
             async with aiosqlite.connect(self.performance_log_path) as db:
-                async with db.execute("""
+                async with db.execute(
+                    """
                     SELECT MAX(timestamp) FROM optimization_history WHERE database_name = ?
-                """, (db_path,)) as cursor:
+                """,
+                    (db_path,),
+                ) as cursor:
                     row = await cursor.fetchone()
                     if row and row[0]:
                         return datetime.fromisoformat(row[0])
@@ -537,14 +545,14 @@ class DatabaseOptimizer:
         try:
             async with aiosqlite.connect(self.performance_log_path) as db:
                 query_hash = str(hash(performance.query))
-                await db.execute("""
+                await db.execute(
+                    """
                     INSERT INTO query_performance
                     (database_name, query_hash, query_text, execution_time_ms, rows_affected)
                     VALUES (?, ?, ?, ?, ?)
-                """, (
-                    db_path, query_hash, performance.query,
-                    performance.execution_time_ms, performance.rows_affected
-                ))
+                """,
+                    (db_path, query_hash, performance.query, performance.execution_time_ms, performance.rows_affected),
+                )
                 await db.commit()
 
         except Exception as e:
@@ -554,16 +562,19 @@ class DatabaseOptimizer:
         """Log optimization operation to history."""
         try:
             async with aiosqlite.connect(self.performance_log_path) as db:
-                await db.execute("""
+                await db.execute(
+                    """
                     INSERT INTO optimization_history
                     (database_name, optimization_type, description, improvement_ratio)
                     VALUES (?, ?, ?, ?)
-                """, (
-                    db_path,
-                    "full_optimization",
-                    f"Operations: {', '.join(results['operations'])}",
-                    results.get('improvements', {}).get('query_time_improvement_ms', 0)
-                ))
+                """,
+                    (
+                        db_path,
+                        "full_optimization",
+                        f"Operations: {', '.join(results['operations'])}",
+                        results.get("improvements", {}).get("query_time_improvement_ms", 0),
+                    ),
+                )
                 await db.commit()
 
         except Exception as e:
@@ -574,11 +585,11 @@ class DatabaseOptimizer:
         query_lower = query.lower()
 
         if execution_time_ms > 2000:
-            if 'where' not in query_lower:
+            if "where" not in query_lower:
                 return "Consider adding WHERE clause to filter results"
-            elif 'order by' in query_lower and 'limit' not in query_lower:
+            elif "order by" in query_lower and "limit" not in query_lower:
                 return "Consider adding LIMIT clause with ORDER BY"
-            elif 'join' in query_lower:
+            elif "join" in query_lower:
                 return "Review JOIN conditions and ensure proper indexing"
             else:
                 return "Consider adding appropriate indexes for this query"
@@ -586,6 +597,7 @@ class DatabaseOptimizer:
             return "Monitor this query - approaching slow query threshold"
 
         return None
+
 
 class ProductionQueryOptimizer:
     """
@@ -603,27 +615,26 @@ class ProductionQueryOptimizer:
 
         # Query pattern optimizations
         self.optimization_patterns = {
-            'lead_scoring': {
-                'cache_ttl': 300,  # 5 minutes for lead scores
-                'batch_size': 50,  # Process 50 leads at once
-                'parallel_execution': True
+            "lead_scoring": {
+                "cache_ttl": 300,  # 5 minutes for lead scores
+                "batch_size": 50,  # Process 50 leads at once
+                "parallel_execution": True,
             },
-            'property_search': {
-                'cache_ttl': 600,  # 10 minutes for property data
-                'batch_size': 20,
-                'parallel_execution': True
+            "property_search": {
+                "cache_ttl": 600,  # 10 minutes for property data
+                "batch_size": 20,
+                "parallel_execution": True,
             },
-            'analytics_queries': {
-                'cache_ttl': 900,  # 15 minutes for analytics
-                'batch_size': 10,
-                'parallel_execution': False  # Analytics can be sequential
-            }
+            "analytics_queries": {
+                "cache_ttl": 900,  # 15 minutes for analytics
+                "batch_size": 10,
+                "parallel_execution": False,  # Analytics can be sequential
+            },
         }
 
         logger.info("🚀 ProductionQueryOptimizer initialized with <20ms target")
 
-    async def execute_optimized_query(self, query_func: callable, query_pattern: str,
-                                    query_id: str, **kwargs) -> Any:
+    async def execute_optimized_query(self, query_func: callable, query_pattern: str, query_id: str, **kwargs) -> Any:
         """
         Execute query with production optimizations.
 
@@ -632,11 +643,9 @@ class ProductionQueryOptimizer:
         - Performance tracking
         - Automatic batching for supported patterns
         """
-        pattern_config = self.optimization_patterns.get(query_pattern, {
-            'cache_ttl': 300,
-            'batch_size': 20,
-            'parallel_execution': False
-        })
+        pattern_config = self.optimization_patterns.get(
+            query_pattern, {"cache_ttl": 300, "batch_size": 20, "parallel_execution": False}
+        )
 
         cache_key = f"query:{query_pattern}:{query_id}"
         start_time = time.time()
@@ -654,11 +663,9 @@ class ProductionQueryOptimizer:
             # Execute fresh query
             self.performance_optimizer.track_cache_operation(hit=False)
 
-            if pattern_config.get('parallel_execution') and hasattr(query_func, '__iter__'):
+            if pattern_config.get("parallel_execution") and hasattr(query_func, "__iter__"):
                 # Use parallel execution for supported patterns
-                result = await self.performance_optimizer.parallel_ml_scoring(
-                    kwargs.get('items', []), query_func
-                )
+                result = await self.performance_optimizer.parallel_ml_scoring(kwargs.get("items", []), query_func)
             else:
                 # Standard execution
                 result = await query_func(**kwargs)
@@ -666,12 +673,14 @@ class ProductionQueryOptimizer:
             execution_time = (time.time() - start_time) * 1000
 
             # Cache successful results
-            await self.cache.set(cache_key, result, pattern_config['cache_ttl'])
+            await self.cache.set(cache_key, result, pattern_config["cache_ttl"])
 
             # Track performance
             if execution_time > self.slow_query_threshold_ms:
-                logger.warning(f"🐌 Slow query: {query_pattern} took {execution_time:.2f}ms "
-                             f"(threshold: {self.slow_query_threshold_ms}ms)")
+                logger.warning(
+                    f"🐌 Slow query: {query_pattern} took {execution_time:.2f}ms "
+                    f"(threshold: {self.slow_query_threshold_ms}ms)"
+                )
 
             logger.debug(f"✓ Query executed: {query_pattern} in {execution_time:.2f}ms")
             return result
@@ -698,9 +707,7 @@ class ProductionQueryOptimizer:
         Uses property search optimization pattern with 10-minute cache TTL.
         """
         search_id = self._generate_search_id(search_params)
-        return await self.execute_optimized_query(
-            search_func, 'property_search', search_id, **search_params
-        )
+        return await self.execute_optimized_query(search_func, "property_search", search_id, **search_params)
 
     async def optimize_analytics_query(self, analytics_func: callable, query_params: Dict[str, Any]) -> Any:
         """
@@ -709,19 +716,19 @@ class ProductionQueryOptimizer:
         Analytics data changes less frequently, so uses 15-minute cache.
         """
         query_id = self._generate_analytics_id(query_params)
-        return await self.execute_optimized_query(
-            analytics_func, 'analytics_queries', query_id, **query_params
-        )
+        return await self.execute_optimized_query(analytics_func, "analytics_queries", query_id, **query_params)
 
     def _generate_search_id(self, search_params: Dict[str, Any]) -> str:
         """Generate unique ID for property search parameters."""
         import hashlib
+
         params_str = json.dumps(search_params, sort_keys=True)
         return hashlib.md5(params_str.encode()).hexdigest()[:16]
 
     def _generate_analytics_id(self, query_params: Dict[str, Any]) -> str:
         """Generate unique ID for analytics query parameters."""
         import hashlib
+
         params_str = json.dumps(query_params, sort_keys=True)
         return hashlib.md5(params_str.encode()).hexdigest()[:16]
 
@@ -731,32 +738,32 @@ class ProductionQueryOptimizer:
         performance_report = await self.performance_optimizer.get_comprehensive_performance_report()
 
         return {
-            'database_optimization_summary': {
-                'target_query_time_ms': self.slow_query_threshold_ms,
-                'optimization_patterns': {
+            "database_optimization_summary": {
+                "target_query_time_ms": self.slow_query_threshold_ms,
+                "optimization_patterns": {
                     pattern: {
-                        'cache_ttl_seconds': config['cache_ttl'],
-                        'batch_size': config['batch_size'],
-                        'parallel_execution': config['parallel_execution']
+                        "cache_ttl_seconds": config["cache_ttl"],
+                        "batch_size": config["batch_size"],
+                        "parallel_execution": config["parallel_execution"],
                     }
                     for pattern, config in self.optimization_patterns.items()
                 },
-                'cache_integration': cache_performance,
-                'performance_tracking': performance_report
+                "cache_integration": cache_performance,
+                "performance_tracking": performance_report,
             },
-            'critical_improvements': [
-                'Query result caching with pattern-specific TTL (5-15 minute cache)',
-                'Parallel ML scoring replacing sequential processing (90%+ improvement)',
-                'Intelligent cache invalidation on data updates',
-                'Performance monitoring with <20ms target tracking'
+            "critical_improvements": [
+                "Query result caching with pattern-specific TTL (5-15 minute cache)",
+                "Parallel ML scoring replacing sequential processing (90%+ improvement)",
+                "Intelligent cache invalidation on data updates",
+                "Performance monitoring with <20ms target tracking",
             ],
-            'next_optimizations': [
-                'Database connection pooling monitoring (already well-implemented)',
-                'Query plan analysis and index optimization',
-                'Read replica utilization for heavy read workloads',
-                'Connection pool size tuning based on load patterns'
+            "next_optimizations": [
+                "Database connection pooling monitoring (already well-implemented)",
+                "Query plan analysis and index optimization",
+                "Read replica utilization for heavy read workloads",
+                "Connection pool size tuning based on load patterns",
             ],
-            'timestamp': datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
 
@@ -775,8 +782,7 @@ class MLScoringOptimizer:
 
         logger.info("🎯 MLScoringOptimizer initialized for <30ms inference target")
 
-    async def optimize_batch_scoring(self, ml_engine, items: List[Any],
-                                   batch_size: int = 20) -> List[Any]:
+    async def optimize_batch_scoring(self, ml_engine, items: List[Any], batch_size: int = 20) -> List[Any]:
         """
         CRITICAL OPTIMIZATION: Parallel ML batch scoring.
 
@@ -801,9 +807,7 @@ class MLScoringOptimizer:
 
         # Execute scoring in parallel with optimal batch size
         results = await self.performance_optimizer.parallel_ml_scoring(
-            items,
-            lambda item: self._cached_ml_predict(ml_engine, item),
-            batch_size=batch_size
+            items, lambda item: self._cached_ml_predict(ml_engine, item), batch_size=batch_size
         )
 
         logger.info(f"✅ ML batch scoring completed: {len(items)} items in optimized parallel execution")
@@ -833,10 +837,7 @@ class MLScoringOptimizer:
                 await self.cache.set(f"ml_features:{item_id}", features, self.feature_cache_ttl)
                 return item_id, features
 
-            await asyncio.gather(*[
-                compute_and_cache_features(item_id, item)
-                for item_id, item in feature_tasks
-            ])
+            await asyncio.gather(*[compute_and_cache_features(item_id, item) for item_id, item in feature_tasks])
 
             logger.debug(f"Precomputed features for {len(feature_tasks)} items")
 
@@ -861,13 +862,14 @@ class MLScoringOptimizer:
 
     def _get_item_id(self, item: Any) -> str:
         """Generate consistent ID for item for caching."""
-        if hasattr(item, 'id'):
+        if hasattr(item, "id"):
             return str(item.id)
-        elif isinstance(item, dict) and 'id' in item:
-            return str(item['id'])
+        elif isinstance(item, dict) and "id" in item:
+            return str(item["id"])
         else:
             # Generate hash-based ID for items without explicit ID
             import hashlib
+
             item_str = json.dumps(item, sort_keys=True, default=str)
             return hashlib.md5(item_str.encode()).hexdigest()[:16]
 
@@ -879,17 +881,14 @@ class MLScoringOptimizer:
         For now, returns a simplified feature representation.
         """
         # This would be replaced with actual feature extraction logic
-        return {
-            'item_id': self._get_item_id(item),
-            'features_extracted_at': time.time(),
-            'feature_version': '1.0'
-        }
+        return {"item_id": self._get_item_id(item), "features_extracted_at": time.time(), "feature_version": "1.0"}
 
 
 # Global optimizer instances
 _database_optimizer = None
 _production_query_optimizer = None
 _ml_scoring_optimizer = None
+
 
 def get_database_optimizer() -> DatabaseOptimizer:
     """Get singleton database optimizer instance."""
@@ -898,12 +897,14 @@ def get_database_optimizer() -> DatabaseOptimizer:
         _database_optimizer = DatabaseOptimizer()
     return _database_optimizer
 
+
 def get_production_query_optimizer() -> ProductionQueryOptimizer:
     """Get singleton production query optimizer instance."""
     global _production_query_optimizer
     if _production_query_optimizer is None:
         _production_query_optimizer = ProductionQueryOptimizer()
     return _production_query_optimizer
+
 
 def get_ml_scoring_optimizer() -> MLScoringOptimizer:
     """Get singleton ML scoring optimizer instance."""

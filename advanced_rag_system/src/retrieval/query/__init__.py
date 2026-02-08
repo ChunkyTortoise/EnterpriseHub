@@ -6,21 +6,19 @@ This module provides comprehensive query enhancement features including:
 - Query classification for intelligent routing and strategy selection
 """
 
-from .expansion import QueryExpander, ExpansionConfig
-from .hyde import HyDEGenerator, HyDEConfig, MockLLMProvider, LLMProvider
-from .classifier import QueryClassifier, ClassifierConfig, QueryType, ClassificationResult
+from .classifier import ClassificationResult, ClassifierConfig, QueryClassifier, QueryType
+from .expansion import ExpansionConfig, QueryExpander
+from .hyde import HyDEConfig, HyDEGenerator, LLMProvider, MockLLMProvider
 
 __all__ = [
     # Query Expansion
     "QueryExpander",
     "ExpansionConfig",
-
     # HyDE (Hypothetical Document Embedding)
     "HyDEGenerator",
     "HyDEConfig",
     "MockLLMProvider",
     "LLMProvider",
-
     # Query Classification
     "QueryClassifier",
     "ClassifierConfig",

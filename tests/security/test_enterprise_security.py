@@ -5,24 +5,20 @@ Comprehensive security testing for the Enterprise Partnership Platform
 including authentication, authorization, data protection, and compliance.
 """
 
-import pytest
-import jwt
-import secrets
 import hashlib
-from datetime import datetime, timezone, timedelta
+import secrets
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import jwt
+import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
-from ghl_real_estate_ai.api.enterprise.auth import (
-    EnterpriseAuthService,
-    TenantRole,
-    SSOProvider,
-    EnterpriseAuthError
-)
-from ghl_real_estate_ai.services.corporate_partnership_service import CorporatePartnershipService
+from ghl_real_estate_ai.api.enterprise.auth import EnterpriseAuthError, EnterpriseAuthService, SSOProvider, TenantRole
 from ghl_real_estate_ai.services.corporate_billing_service import CorporateBillingService
+from ghl_real_estate_ai.services.corporate_partnership_service import CorporatePartnershipService
 
 
 class TestAuthenticationSecurity:
@@ -51,7 +47,7 @@ class TestAuthenticationSecurity:
         payload = {
             "sub": "user_123",
             "session_id": "session_123",
-            "exp": datetime.now(timezone.utc) + timedelta(hours=8)
+            "exp": datetime.now(timezone.utc) + timedelta(hours=8),
         }
         valid_token = jwt.encode(payload, auth_service.jwt_secret, algorithm=auth_service.jwt_algorithm)
 
@@ -68,17 +64,17 @@ class TestAuthenticationSecurity:
         """Test protection against token replay attacks."""
         mock_cache = AsyncMock()
 
-        with patch.object(auth_service, 'cache_service', mock_cache):
+        with patch.object(auth_service, "cache_service", mock_cache):
             # First token validation - session exists
             mock_cache.get.side_effect = [
                 {"session_id": "session_123", "user": {"user_id": "user_123"}, "tenant_id": "tenant_123"},
-                {"tenant_id": "tenant_123", "status": "active"}
+                {"tenant_id": "tenant_123", "status": "active"},
             ]
 
             payload = {
                 "sub": "user_123",
                 "session_id": "session_123",
-                "exp": datetime.now(timezone.utc) + timedelta(hours=8)
+                "exp": datetime.now(timezone.utc) + timedelta(hours=8),
             }
             token = jwt.encode(payload, auth_service.jwt_secret, algorithm=auth_service.jwt_algorithm)
 
@@ -96,8 +92,8 @@ class TestAuthenticationSecurity:
     def test_password_security_not_applicable(self, auth_service):
         """Test that no passwords are stored or handled."""
         # Enterprise platform should only use SSO - no password handling
-        assert not hasattr(auth_service, 'hash_password')
-        assert not hasattr(auth_service, 'verify_password')
+        assert not hasattr(auth_service, "hash_password")
+        assert not hasattr(auth_service, "verify_password")
 
     def test_secure_random_generation(self, auth_service):
         """Test that secure random values are used for secrets."""
@@ -105,11 +101,11 @@ class TestAuthenticationSecurity:
         secrets_generated = []
         for _ in range(10):
             tenant_secrets = asyncio.run(auth_service._generate_tenant_secrets("tenant_123"))
-            secrets_generated.append(tenant_secrets['client_secret'])
+            secrets_generated.append(tenant_secrets["client_secret"])
 
             # Each secret should be sufficiently long
-            assert len(tenant_secrets['client_secret']) >= 32
-            assert len(tenant_secrets['api_key']) >= 32
+            assert len(tenant_secrets["client_secret"]) >= 32
+            assert len(tenant_secrets["api_key"]) >= 32
 
         # Ensure all generated secrets are unique
         assert len(set(secrets_generated)) == 10
@@ -144,7 +140,12 @@ class TestAuthorizationSecurity:
 
     def test_permission_overlap_security(self, auth_service):
         """Test that permission overlap doesn't create security holes."""
-        all_roles = [TenantRole.EMPLOYEE, TenantRole.RELOCATION_MANAGER, TenantRole.HR_COORDINATOR, TenantRole.TENANT_ADMIN]
+        all_roles = [
+            TenantRole.EMPLOYEE,
+            TenantRole.RELOCATION_MANAGER,
+            TenantRole.HR_COORDINATOR,
+            TenantRole.TENANT_ADMIN,
+        ]
 
         for role in all_roles:
             permissions = auth_service._calculate_user_permissions([role])
@@ -180,22 +181,19 @@ class TestAuthorizationSecurity:
             "session_id": "session_123",
             "user": {"user_id": "user_123", "tenant_id": "tenant_a"},
             "tenant_id": "tenant_a",
-            "permissions": ["view_analytics"]
+            "permissions": ["view_analytics"],
         }
 
-        tenant_config = {
-            "tenant_id": "tenant_a",
-            "status": "active"
-        }
+        tenant_config = {"tenant_id": "tenant_a", "status": "active"}
 
-        with patch.object(auth_service, 'cache_service', mock_cache):
+        with patch.object(auth_service, "cache_service", mock_cache):
             mock_cache.get.side_effect = [user_session, tenant_config]
 
             payload = {
                 "sub": "user_123",
                 "session_id": "session_123",
                 "tenant_id": "tenant_a",
-                "exp": datetime.now(timezone.utc) + timedelta(hours=8)
+                "exp": datetime.now(timezone.utc) + timedelta(hours=8),
             }
             token = jwt.encode(payload, auth_service.jwt_secret, algorithm=auth_service.jwt_algorithm)
 
@@ -229,13 +227,13 @@ class TestDataProtectionSecurity:
         # Mock cache operations to verify TTL settings
         mock_cache = AsyncMock()
 
-        with patch.object(auth_service, 'cache_service', mock_cache):
+        with patch.object(auth_service, "cache_service", mock_cache):
             # Test tenant creation with proper TTL
             tenant_data = {
                 "company_name": "TestCorp",
                 "domain": "testcorp.com",
                 "sso_provider": SSOProvider.AZURE_AD,
-                "admin_email": "admin@testcorp.com"
+                "admin_email": "admin@testcorp.com",
             }
 
             auth_service._is_domain_already_registered = AsyncMock(return_value=False)
@@ -248,7 +246,7 @@ class TestDataProtectionSecurity:
             cache_calls = mock_cache.set.call_args_list
             for call in cache_calls:
                 args, kwargs = call
-                ttl = kwargs.get('ttl')
+                ttl = kwargs.get("ttl")
 
                 # Ensure TTL is set and reasonable (not too long)
                 assert ttl is not None
@@ -259,7 +257,7 @@ class TestDataProtectionSecurity:
         auth_service = EnterpriseAuthService()
 
         tenant_secrets = asyncio.run(auth_service._generate_tenant_secrets("tenant_123"))
-        api_key = tenant_secrets['api_key']
+        api_key = tenant_secrets["api_key"]
 
         # API key should have identifiable prefix
         assert api_key.startswith("ent_")
@@ -283,7 +281,7 @@ class TestInputValidationSecurity:
         malicious_data = {
             "company_name": "'; DROP TABLE partnerships; --",
             "contact_email": "test@company.com",
-            "expected_volume": 100
+            "expected_volume": 100,
         }
 
         # Service should handle malicious input safely
@@ -302,26 +300,20 @@ class TestInputValidationSecurity:
         malicious_user_data = {
             "name": "<script>alert('xss')</script>",
             "department": "Engineering<img src=x onerror=alert(1)>",
-            "job_title": "Developer' OR '1'='1"
+            "job_title": "Developer' OR '1'='1",
         }
 
         # User data should be properly escaped/sanitized
         # The service should store the data safely without executing scripts
 
-        tenant_config = {
-            "tenant_id": "tenant_123",
-            "allowed_domains": ["company.com"],
-            "require_mfa": True
-        }
+        tenant_config = {"tenant_id": "tenant_123", "allowed_domains": ["company.com"], "require_mfa": True}
 
-        with patch.object(auth_service, 'cache_service', AsyncMock()):
+        with patch.object(auth_service, "cache_service", AsyncMock()):
             auth_service._validate_user_domain = MagicMock(return_value=True)
             auth_service._calculate_user_permissions = MagicMock(return_value=["view_own_relocation"])
 
             # This should not raise an exception and should handle malicious input safely
-            result = await auth_service.provision_enterprise_user(
-                "tenant_123", "user@company.com", malicious_user_data
-            )
+            result = await auth_service.provision_enterprise_user("tenant_123", "user@company.com", malicious_user_data)
 
             # Verify that the malicious content is stored as plain text, not executed
             assert result["name"] == "<script>alert('xss')</script>"
@@ -343,7 +335,7 @@ class TestInputValidationSecurity:
             "not-an-email",
             "user@@company.com",
             "user@",
-            "@company.com"
+            "@company.com",
         ]
 
         for email in malicious_emails:
@@ -362,7 +354,7 @@ class TestInputValidationSecurity:
 
         active_partnership = {"partnership_id": "test", "status": "active"}
 
-        with patch.object(partnership_service, 'get_partnership', AsyncMock(return_value=active_partnership)):
+        with patch.object(partnership_service, "get_partnership", AsyncMock(return_value=active_partnership)):
             with pytest.raises(Exception):  # Should raise an error for excessive volume
                 await partnership_service.process_bulk_relocation_request("test", excessive_relocations)
 
@@ -403,7 +395,7 @@ class TestComplianceSecurity:
 
         # Session timeout should be reasonable
         assert auth_service.enterprise_token_expiry <= 86400  # Max 24 hours
-        assert auth_service.enterprise_token_expiry >= 3600   # Min 1 hour
+        assert auth_service.enterprise_token_expiry >= 3600  # Min 1 hour
 
 
 class TestErrorHandlingSecurity:
@@ -434,7 +426,7 @@ class TestErrorHandlingSecurity:
         import time
 
         # Mock consistent behavior
-        with patch.object(auth_service, 'cache_service', AsyncMock()):
+        with patch.object(auth_service, "cache_service", AsyncMock()):
             start_time = time.time()
             result1 = await auth_service.get_tenant_by_domain("existing.com")
             time1 = time.time() - start_time
@@ -504,10 +496,7 @@ class TestCryptographicSecurity:
         auth_service = EnterpriseAuthService()
 
         # Create token with correct secret
-        payload = {
-            "sub": "user_123",
-            "exp": datetime.now(timezone.utc) + timedelta(hours=8)
-        }
+        payload = {"sub": "user_123", "exp": datetime.now(timezone.utc) + timedelta(hours=8)}
         valid_token = jwt.encode(payload, auth_service.jwt_secret, algorithm="HS256")
 
         # Attempt to create token with wrong secret
@@ -567,6 +556,7 @@ if __name__ == "__main__":
 
 
 import asyncio
+
 
 # Helper to run async tests
 def asyncio_run(coro):

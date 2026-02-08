@@ -5,15 +5,16 @@ End-to-end tests for the complete lead source attribution workflow from webhook
 processing through analytics and reporting.
 """
 
-import pytest
 import asyncio
 import json
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 from fastapi.testclient import TestClient
 
 from ghl_real_estate_ai.api.main import app
-from ghl_real_estate_ai.api.schemas.ghl import GHLWebhookEvent, GHLMessage, GHLContact, MessageType, MessageDirection
+from ghl_real_estate_ai.api.schemas.ghl import GHLContact, GHLMessage, GHLWebhookEvent, MessageDirection, MessageType
 from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, SourceAttribution, SourceQuality
 
 
@@ -37,7 +38,7 @@ class TestLeadAttributionIntegration:
                 "type": "SMS",
                 "body": "Hi, I'm interested in the property listing I saw on Zillow. Can you tell me more?",
                 "direction": "inbound",
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             },
             "contact": {
                 "contactId": "test_contact_zillow_123",
@@ -53,19 +54,20 @@ class TestLeadAttributionIntegration:
                     "lead_source": "Zillow",
                     "original_url": "https://www.zillow.com/homedetails/123-main-st/",
                     "referrer": "https://zillow.com/search",
-                    "landing_page": "https://youragentsite.com/listings/123-main-st"
-                }
-            }
+                    "landing_page": "https://youragentsite.com/listings/123-main-st",
+                },
+            },
         }
 
         # Mock necessary services
-        with patch('ghl_real_estate_ai.api.routes.webhook.conversation_manager') as mock_conv_mgr, \
-             patch('ghl_real_estate_ai.api.routes.webhook.ghl_client_default') as mock_ghl_client, \
-             patch('ghl_real_estate_ai.api.routes.webhook.tenant_service') as mock_tenant, \
-             patch('ghl_real_estate_ai.api.routes.webhook.analytics_service') as mock_analytics, \
-             patch('ghl_real_estate_ai.api.routes.webhook.lead_source_tracker') as mock_tracker, \
-             patch('ghl_real_estate_ai.api.routes.webhook.attribution_analytics') as mock_attribution:
-
+        with (
+            patch("ghl_real_estate_ai.api.routes.webhook.conversation_manager") as mock_conv_mgr,
+            patch("ghl_real_estate_ai.api.routes.webhook.ghl_client_default") as mock_ghl_client,
+            patch("ghl_real_estate_ai.api.routes.webhook.tenant_service") as mock_tenant,
+            patch("ghl_real_estate_ai.api.routes.webhook.analytics_service") as mock_analytics,
+            patch("ghl_real_estate_ai.api.routes.webhook.lead_source_tracker") as mock_tracker,
+            patch("ghl_real_estate_ai.api.routes.webhook.attribution_analytics") as mock_attribution,
+        ):
             # Mock conversation manager response
             mock_ai_response = MagicMock()
             mock_ai_response.message = "Thanks for your interest! I'd be happy to help. What's your budget range?"
@@ -73,7 +75,7 @@ class TestLeadAttributionIntegration:
             mock_ai_response.extracted_data = {
                 "property_interest": "123 Main St listing",
                 "timeline": "soon",
-                "source": "zillow"
+                "source": "zillow",
             }
 
             mock_conv_mgr.get_context = AsyncMock(return_value={})
@@ -103,7 +105,7 @@ class TestLeadAttributionIntegration:
                 source_quality=SourceQuality.PREMIUM,
                 confidence_score=0.95,
                 first_touch=datetime.utcnow(),
-                last_touch=datetime.utcnow()
+                last_touch=datetime.utcnow(),
             )
 
             mock_tracker.analyze_lead_source = AsyncMock(return_value=expected_attribution)
@@ -118,9 +120,7 @@ class TestLeadAttributionIntegration:
 
             # 2. Send webhook request
             response = self.client.post(
-                "/api/ghl/webhook",
-                json=webhook_payload,
-                headers={"Content-Type": "application/json"}
+                "/api/ghl/webhook", json=webhook_payload, headers={"Content-Type": "application/json"}
             )
 
             # 3. Verify webhook processing
@@ -150,7 +150,7 @@ class TestLeadAttributionIntegration:
             mock_attribution.track_daily_metrics.assert_called_once()
 
         # 8. Test attribution reporting endpoints
-        with patch('ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker') as mock_tracker:
+        with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
             from ghl_real_estate_ai.services.lead_source_tracker import SourcePerformance
 
             # Mock performance data that would result from the tracked events
@@ -168,7 +168,7 @@ class TestLeadAttributionIntegration:
                 cost_per_lead=25.0,  # Estimated Zillow cost
                 roi=0.0,  # No revenue yet
                 avg_lead_score=3.0,  # From our test
-                avg_budget=0.0
+                avg_budget=0.0,
             )
 
             mock_tracker.get_all_source_performance = AsyncMock(return_value=[mock_performance])
@@ -191,18 +191,18 @@ class TestLeadAttributionIntegration:
             {
                 "body": "I saw your Facebook ad about homes in Austin. I'm looking to buy.",
                 "lead_score": 2,
-                "extracted_data": {"budget": None, "timeline": None}
+                "extracted_data": {"budget": None, "timeline": None},
             },
             {
                 "body": "My budget is around $400,000 and I'm looking to buy within 3 months.",
                 "lead_score": 5,
-                "extracted_data": {"budget": 400000, "timeline": "3 months", "property_type": "house"}
+                "extracted_data": {"budget": 400000, "timeline": "3 months", "property_type": "house"},
             },
             {
                 "body": "I'm pre-approved and ready to make an offer on the right property.",
                 "lead_score": 7,  # Should trigger qualification
-                "extracted_data": {"budget": 400000, "timeline": "immediate", "financing": "pre-approved"}
-            }
+                "extracted_data": {"budget": 400000, "timeline": "immediate", "financing": "pre-approved"},
+            },
         ]
 
         contact_id = "test_facebook_lead_789"
@@ -212,11 +212,7 @@ class TestLeadAttributionIntegration:
                 "type": "InboundMessage",
                 "contactId": contact_id,
                 "locationId": "test_location_456",
-                "message": {
-                    "type": "SMS",
-                    "body": message_data["body"],
-                    "direction": "inbound"
-                },
+                "message": {"type": "SMS", "body": message_data["body"], "direction": "inbound"},
                 "contact": {
                     "contactId": contact_id,
                     "firstName": "Mike",
@@ -233,21 +229,22 @@ class TestLeadAttributionIntegration:
                         "fbclid": "IwAR123abc456def",
                         "lead_source": "Facebook Ads",
                         "ad_set": "austin-buyers-lookalike",
-                        "ad_creative": "spring-homes-carousel"
-                    }
-                }
+                        "ad_creative": "spring-homes-carousel",
+                    },
+                },
             }
 
-            with patch('ghl_real_estate_ai.api.routes.webhook.conversation_manager') as mock_conv_mgr, \
-                 patch('ghl_real_estate_ai.api.routes.webhook.ghl_client_default') as mock_ghl_client, \
-                 patch('ghl_real_estate_ai.api.routes.webhook.tenant_service') as mock_tenant, \
-                 patch('ghl_real_estate_ai.api.routes.webhook.analytics_service') as mock_analytics, \
-                 patch('ghl_real_estate_ai.api.routes.webhook.lead_source_tracker') as mock_tracker, \
-                 patch('ghl_real_estate_ai.api.routes.webhook.attribution_analytics') as mock_attribution:
-
+            with (
+                patch("ghl_real_estate_ai.api.routes.webhook.conversation_manager") as mock_conv_mgr,
+                patch("ghl_real_estate_ai.api.routes.webhook.ghl_client_default") as mock_ghl_client,
+                patch("ghl_real_estate_ai.api.routes.webhook.tenant_service") as mock_tenant,
+                patch("ghl_real_estate_ai.api.routes.webhook.analytics_service") as mock_analytics,
+                patch("ghl_real_estate_ai.api.routes.webhook.lead_source_tracker") as mock_tracker,
+                patch("ghl_real_estate_ai.api.routes.webhook.attribution_analytics") as mock_attribution,
+            ):
                 # Mock AI response based on message iteration
                 mock_ai_response = MagicMock()
-                mock_ai_response.message = f"Response {i+1}"
+                mock_ai_response.message = f"Response {i + 1}"
                 mock_ai_response.lead_score = message_data["lead_score"]
                 mock_ai_response.extracted_data = message_data["extracted_data"]
 
@@ -272,7 +269,7 @@ class TestLeadAttributionIntegration:
                     source_quality=SourceQuality.STANDARD,
                     confidence_score=0.92,
                     first_touch=datetime.utcnow() - timedelta(hours=2),
-                    last_touch=datetime.utcnow()
+                    last_touch=datetime.utcnow(),
                 )
 
                 mock_tracker.analyze_lead_source = AsyncMock(return_value=expected_attribution)
@@ -283,9 +280,7 @@ class TestLeadAttributionIntegration:
 
                 # Send message
                 response = self.client.post(
-                    "/api/ghl/webhook",
-                    json=webhook_payload,
-                    headers={"Content-Type": "application/json"}
+                    "/api/ghl/webhook", json=webhook_payload, headers={"Content-Type": "application/json"}
                 )
 
                 assert response.status_code == 200
@@ -311,11 +306,7 @@ class TestLeadAttributionIntegration:
             "type": "InboundMessage",
             "contactId": "test_unknown_lead_999",
             "locationId": "test_location_456",
-            "message": {
-                "type": "SMS",
-                "body": "I'm interested in buying a home",
-                "direction": "inbound"
-            },
+            "message": {"type": "SMS", "body": "I'm interested in buying a home", "direction": "inbound"},
             "contact": {
                 "contactId": "test_unknown_lead_999",
                 "firstName": "Jane",
@@ -323,17 +314,18 @@ class TestLeadAttributionIntegration:
                 "phone": "+15557654321",
                 "email": "jane.smith@email.com",
                 "tags": ["Needs Qualifying"],
-                "customFields": {}  # No attribution data
-            }
+                "customFields": {},  # No attribution data
+            },
         }
 
-        with patch('ghl_real_estate_ai.api.routes.webhook.conversation_manager') as mock_conv_mgr, \
-             patch('ghl_real_estate_ai.api.routes.webhook.ghl_client_default') as mock_ghl_client, \
-             patch('ghl_real_estate_ai.api.routes.webhook.tenant_service') as mock_tenant, \
-             patch('ghl_real_estate_ai.api.routes.webhook.analytics_service') as mock_analytics, \
-             patch('ghl_real_estate_ai.api.routes.webhook.lead_source_tracker') as mock_tracker, \
-             patch('ghl_real_estate_ai.api.routes.webhook.attribution_analytics') as mock_attribution:
-
+        with (
+            patch("ghl_real_estate_ai.api.routes.webhook.conversation_manager") as mock_conv_mgr,
+            patch("ghl_real_estate_ai.api.routes.webhook.ghl_client_default") as mock_ghl_client,
+            patch("ghl_real_estate_ai.api.routes.webhook.tenant_service") as mock_tenant,
+            patch("ghl_real_estate_ai.api.routes.webhook.analytics_service") as mock_analytics,
+            patch("ghl_real_estate_ai.api.routes.webhook.lead_source_tracker") as mock_tracker,
+            patch("ghl_real_estate_ai.api.routes.webhook.attribution_analytics") as mock_attribution,
+        ):
             # Mock responses
             mock_ai_response = MagicMock()
             mock_ai_response.message = "I'd be happy to help you find a home!"
@@ -354,7 +346,7 @@ class TestLeadAttributionIntegration:
                 quality_score=3.0,
                 source_quality=SourceQuality.EXPERIMENTAL,
                 first_touch=datetime.utcnow(),
-                last_touch=datetime.utcnow()
+                last_touch=datetime.utcnow(),
             )
 
             mock_tracker.analyze_lead_source = AsyncMock(return_value=unknown_attribution)
@@ -364,9 +356,7 @@ class TestLeadAttributionIntegration:
             mock_analytics.track_event = AsyncMock()
 
             response = self.client.post(
-                "/api/ghl/webhook",
-                json=webhook_payload,
-                headers={"Content-Type": "application/json"}
+                "/api/ghl/webhook", json=webhook_payload, headers={"Content-Type": "application/json"}
             )
 
             assert response.status_code == 200
@@ -381,8 +371,7 @@ class TestLeadAttributionIntegration:
         """Test end-to-end attribution reporting after processing multiple leads."""
 
         # Simulate performance data from multiple processed leads
-        with patch('ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics') as mock_analytics:
-
+        with patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics:
             from ghl_real_estate_ai.services.attribution_analytics import AttributionReport
             from ghl_real_estate_ai.services.lead_source_tracker import SourcePerformance
 
@@ -411,7 +400,7 @@ class TestLeadAttributionIntegration:
                         cost_per_lead=30.0,
                         roi=9.0,
                         avg_lead_score=6.2,
-                        avg_budget=420000.0
+                        avg_budget=420000.0,
                     ),
                     SourcePerformance(
                         source=LeadSource.FACEBOOK_ADS,
@@ -427,7 +416,7 @@ class TestLeadAttributionIntegration:
                         cost_per_lead=25.0,
                         roi=11.5,
                         avg_lead_score=4.8,
-                        avg_budget=380000.0
+                        avg_budget=380000.0,
                     ),
                     SourcePerformance(
                         source=LeadSource.UNKNOWN,
@@ -442,8 +431,8 @@ class TestLeadAttributionIntegration:
                         cost_per_lead=0.0,
                         roi=0.0,
                         avg_lead_score=3.5,
-                        avg_budget=0.0
-                    )
+                        avg_budget=0.0,
+                    ),
                 ],
                 active_alerts=[],
                 optimization_recommendations=[
@@ -451,9 +440,9 @@ class TestLeadAttributionIntegration:
                         "type": "improve_tracking",
                         "priority": "medium",
                         "title": "Improve Source Tracking",
-                        "description": "2 leads have unknown source attribution"
+                        "description": "2 leads have unknown source attribution",
                     }
-                ]
+                ],
             )
 
             mock_analytics.generate_attribution_report = AsyncMock(return_value=mock_report)
@@ -488,16 +477,16 @@ class TestLeadAttributionIntegration:
         test_cases = [
             {
                 "source": LeadSource.ZILLOW,
-                "expected_tags": ["Source-Zillow", "Source-Quality-Premium", "Premium-Source"]
+                "expected_tags": ["Source-Zillow", "Source-Quality-Premium", "Premium-Source"],
             },
             {
                 "source": LeadSource.FACEBOOK_ADS,
-                "expected_tags": ["Source-Facebook-Ads", "Source-Quality-Standard", "Paid-Source"]
+                "expected_tags": ["Source-Facebook-Ads", "Source-Quality-Standard", "Paid-Source"],
             },
             {
                 "source": LeadSource.AGENT_REFERRAL,
-                "expected_tags": ["Source-Agent-Referral", "Source-Quality-Premium", "Premium-Source", "VIP-Lead"]
-            }
+                "expected_tags": ["Source-Agent-Referral", "Source-Quality-Premium", "Premium-Source", "VIP-Lead"],
+            },
         ]
 
         for test_case in test_cases:
@@ -505,29 +494,24 @@ class TestLeadAttributionIntegration:
                 "type": "InboundMessage",
                 "contactId": f"test_contact_{test_case['source'].value}",
                 "locationId": "test_location",
-                "message": {
-                    "type": "SMS",
-                    "body": "Test message",
-                    "direction": "inbound"
-                },
+                "message": {"type": "SMS", "body": "Test message", "direction": "inbound"},
                 "contact": {
                     "contactId": f"test_contact_{test_case['source'].value}",
                     "firstName": "Test",
                     "lastName": "Contact",
                     "tags": ["Needs Qualifying"],
-                    "customFields": {
-                        "lead_source": test_case['source'].value
-                    }
-                }
+                    "customFields": {"lead_source": test_case["source"].value},
+                },
             }
 
-            with patch('ghl_real_estate_ai.api.routes.webhook.conversation_manager') as mock_conv_mgr, \
-                 patch('ghl_real_estate_ai.api.routes.webhook.ghl_client_default') as mock_ghl_client, \
-                 patch('ghl_real_estate_ai.api.routes.webhook.tenant_service') as mock_tenant, \
-                 patch('ghl_real_estate_ai.api.routes.webhook.analytics_service'), \
-                 patch('ghl_real_estate_ai.api.routes.webhook.lead_source_tracker') as mock_tracker, \
-                 patch('ghl_real_estate_ai.api.routes.webhook.attribution_analytics'):
-
+            with (
+                patch("ghl_real_estate_ai.api.routes.webhook.conversation_manager") as mock_conv_mgr,
+                patch("ghl_real_estate_ai.api.routes.webhook.ghl_client_default") as mock_ghl_client,
+                patch("ghl_real_estate_ai.api.routes.webhook.tenant_service") as mock_tenant,
+                patch("ghl_real_estate_ai.api.routes.webhook.analytics_service"),
+                patch("ghl_real_estate_ai.api.routes.webhook.lead_source_tracker") as mock_tracker,
+                patch("ghl_real_estate_ai.api.routes.webhook.attribution_analytics"),
+            ):
                 # Mock basic responses
                 mock_ai_response = MagicMock()
                 mock_ai_response.message = "Test response"
@@ -543,12 +527,14 @@ class TestLeadAttributionIntegration:
 
                 # Mock source attribution
                 attribution = SourceAttribution(
-                    source=test_case['source'],
+                    source=test_case["source"],
                     confidence_score=0.95,
-                    quality_score=8.0 if "Premium" in str(test_case['source']) else 6.0,
-                    source_quality=SourceQuality.PREMIUM if "REFERRAL" in test_case['source'].value or test_case['source'] == LeadSource.ZILLOW else SourceQuality.STANDARD,
-                    utm_campaign="test-campaign" if "ADS" in test_case['source'].value else None,
-                    medium="cpc" if "ADS" in test_case['source'].value else None
+                    quality_score=8.0 if "Premium" in str(test_case["source"]) else 6.0,
+                    source_quality=SourceQuality.PREMIUM
+                    if "REFERRAL" in test_case["source"].value or test_case["source"] == LeadSource.ZILLOW
+                    else SourceQuality.STANDARD,
+                    utm_campaign="test-campaign" if "ADS" in test_case["source"].value else None,
+                    medium="cpc" if "ADS" in test_case["source"].value else None,
                 )
 
                 mock_tracker.analyze_lead_source = AsyncMock(return_value=attribution)
@@ -556,9 +542,7 @@ class TestLeadAttributionIntegration:
                 mock_tracker.track_source_performance = AsyncMock()
 
                 response = self.client.post(
-                    "/api/ghl/webhook",
-                    json=webhook_payload,
-                    headers={"Content-Type": "application/json"}
+                    "/api/ghl/webhook", json=webhook_payload, headers={"Content-Type": "application/json"}
                 )
 
                 assert response.status_code == 200
@@ -570,8 +554,7 @@ class TestLeadAttributionIntegration:
     async def test_performance_optimization_workflow(self):
         """Test the complete performance optimization recommendation workflow."""
 
-        with patch('ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker') as mock_tracker:
-
+        with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
             # Mock performance data showing optimization opportunities
             mock_recommendations = {
                 "status": "success",
@@ -584,7 +567,7 @@ class TestLeadAttributionIntegration:
                         "title": "Scale Top Performing Sources",
                         "description": "Increase investment in agent_referral, zillow",
                         "sources": ["agent_referral", "zillow"],
-                        "expected_impact": "Increase overall ROI by focusing on proven sources"
+                        "expected_impact": "Increase overall ROI by focusing on proven sources",
                     },
                     {
                         "type": "optimize_or_pause",
@@ -592,21 +575,21 @@ class TestLeadAttributionIntegration:
                         "title": "Optimize or Pause Underperforming Sources",
                         "description": "Review and optimize facebook_ads",
                         "sources": ["facebook_ads"],
-                        "expected_impact": "Reduce wasted ad spend and improve overall ROI"
+                        "expected_impact": "Reduce wasted ad spend and improve overall ROI",
                     },
                     {
                         "type": "improve_tracking",
                         "priority": "medium",
                         "title": "Improve Source Tracking",
                         "description": "5 leads have unknown source attribution",
-                        "expected_impact": "Better attribution enables more informed optimization decisions"
-                    }
+                        "expected_impact": "Better attribution enables more informed optimization decisions",
+                    },
                 ],
                 "top_performers": [
                     {"source": "agent_referral", "roi": 450.0, "total_leads": 12, "conversion_rate": 25.0},
                     {"source": "zillow", "roi": 320.0, "total_leads": 25, "conversion_rate": 16.0},
-                    {"source": "facebook_ads", "roi": 85.0, "total_leads": 40, "conversion_rate": 5.0}
-                ]
+                    {"source": "facebook_ads", "roi": 85.0, "total_leads": 40, "conversion_rate": 5.0},
+                ],
             }
 
             mock_tracker.get_source_recommendations = AsyncMock(return_value=mock_recommendations)

@@ -2,14 +2,16 @@
 Contact Timing Component - Urgency Badges with Success Rates
 Enhanced visualization for optimal contact times
 """
+
+from typing import Dict, List, Literal
+
 import streamlit as st
-from typing import List, Dict, Literal
 
 
 def render_contact_timing_badges(times: List[Dict]):
     """
     Render contact timing with urgency badges and success rate indicators.
-    
+
     Args:
         times: List of dictionaries containing:
             - day: str (e.g., "Tomorrow", "Friday")
@@ -17,21 +19,21 @@ def render_contact_timing_badges(times: List[Dict]):
             - urgency: Literal["high", "medium", "low"]
             - probability: int (success rate percentage)
     """
-    
+
     st.markdown("### 📞 OPTIMAL SYNC WINDOWS")
     st.markdown("<div style='margin-bottom: 1.5rem;'></div>", unsafe_allow_html=True)
-    
+
     for t in times:
-        urgency = t.get('urgency', 'medium')
-        
+        urgency = t.get("urgency", "medium")
+
         # Color scheme based on urgency - Obsidian Edition
-        if urgency == 'high':
+        if urgency == "high":
             bg_color = "rgba(16, 185, 129, 0.1)"
             text_color = "#10b981"
             border_color = "rgba(16, 185, 129, 0.3)"
             badge_bg = "#10b981"
             urgency_icon = "🔥"
-        elif urgency == 'medium':
+        elif urgency == "medium":
             bg_color = "rgba(245, 158, 11, 0.1)"
             text_color = "#f59e0b"
             border_color = "rgba(245, 158, 11, 0.3)"
@@ -43,11 +45,12 @@ def render_contact_timing_badges(times: List[Dict]):
             border_color = "rgba(99, 102, 241, 0.3)"
             badge_bg = "#6366F1"
             urgency_icon = "📅"
-        
-        probability = t.get('probability', t.get('confidence', 'N/A'))
+
+        probability = t.get("probability", t.get("confidence", "N/A"))
         # ... logic ...
-        
-        st.markdown(f"""
+
+        st.markdown(
+            f"""
             <div style='
                 display: flex; 
                 justify-content: space-between; 
@@ -69,7 +72,7 @@ def render_contact_timing_badges(times: List[Dict]):
                         font-family: "Space Grotesk", sans-serif;
                         margin-bottom: 0.25rem;
                     '>
-                        {urgency_icon} {t['day']} ({t['time']})
+                        {urgency_icon} {t["day"]} ({t["time"]})
                     </div>
                     <div style='
                         font-size: 0.75rem; 
@@ -131,22 +134,24 @@ def render_contact_timing_badges(times: List[Dict]):
                     </div>
                 </div>
             </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
 
 def render_contact_timing_simple(times: List[Dict]):
     """
     Render a simplified version for compact layouts - Obsidian Edition
     """
-    
+
     for t in times:
-        confidence = t.get('confidence', t.get('urgency', 'medium'))
-        
+        confidence = t.get("confidence", t.get("urgency", "medium"))
+
         if isinstance(confidence, str):
-            if confidence.lower() == 'high':
+            if confidence.lower() == "high":
                 color = "#10b981"
                 icon = "🔥"
-            elif confidence.lower() == 'medium':
+            elif confidence.lower() == "medium":
                 color = "#f59e0b"
                 icon = "⭐"
             else:
@@ -154,9 +159,10 @@ def render_contact_timing_simple(times: List[Dict]):
                 icon = "📅"
         else:
             color = "#6366F1"
-            icon = t.get('icon', "📞")
-        
-        st.markdown(f"""
+            icon = t.get("icon", "📞")
+
+        st.markdown(
+            f"""
         <div style='
             background: rgba(22, 27, 34, 0.7); 
             padding: 1rem; 
@@ -170,8 +176,8 @@ def render_contact_timing_simple(times: List[Dict]):
         '>
             <div style='display: flex; justify-content: space-between; align-items: center;'>
                 <div>
-                    <div style='font-weight: 700; color: #FFFFFF; font-family: "Space Grotesk", sans-serif;'>{icon} {t['day']}</div>
-                    <div style='font-size: 0.85rem; color: #8B949E; font-family: "Inter", sans-serif;'>{t['time']}</div>
+                    <div style='font-weight: 700; color: #FFFFFF; font-family: "Space Grotesk", sans-serif;'>{icon} {t["day"]}</div>
+                    <div style='font-size: 0.85rem; color: #8B949E; font-family: "Inter", sans-serif;'>{t["time"]}</div>
                 </div>
                 <div style='
                     background: {color}20; 
@@ -188,4 +194,6 @@ def render_contact_timing_simple(times: List[Dict]):
                 </div>
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )

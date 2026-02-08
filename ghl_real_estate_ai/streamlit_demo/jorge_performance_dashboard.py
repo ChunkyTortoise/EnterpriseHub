@@ -27,38 +27,40 @@ Date: 2026-01-25
 Version: 1.0.0
 """
 
-import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import time
-from datetime import datetime, timedelta
 import asyncio
 import json
-from typing import Dict, List, Any
+import time
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
+
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import streamlit as st
+from plotly.subplots import make_subplots
 
 # Jorge performance monitoring imports (mock for demo)
 try:
-    from ghl_real_estate_ai.services.jorge_performance_monitor import (
-        JorgePerformanceMonitor, JorgeMetricType, AlertLevel
-    )
     from ghl_real_estate_ai.services.jorge_optimization_engine import JorgeOptimizationEngine
+    from ghl_real_estate_ai.services.jorge_performance_monitor import (
+        AlertLevel,
+        JorgeMetricType,
+        JorgePerformanceMonitor,
+    )
+
     JORGE_SERVICES_AVAILABLE = True
 except ImportError:
     JORGE_SERVICES_AVAILABLE = False
 
 # Page configuration
 st.set_page_config(
-    page_title="Jorge Performance Dashboard",
-    page_icon="🎯",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    page_title="Jorge Performance Dashboard", page_icon="🎯", layout="wide", initial_sidebar_state="expanded"
 )
 
 # Custom CSS for performance dashboard
-st.markdown("""
+st.markdown(
+    """
 <style>
     .metric-card {
         background-color: #f0f2f6;
@@ -94,7 +96,10 @@ st.markdown("""
         color: #ff9800;
     }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
+
 
 class JorgePerformanceDashboard:
     """Jorge Bot Performance Dashboard"""
@@ -127,16 +132,12 @@ class JorgePerformanceDashboard:
 
             # Time range selection
             time_range = st.selectbox(
-                "Time Range",
-                ["Last Hour", "Last 4 Hours", "Last 24 Hours", "Last 7 Days"],
-                index=2
+                "Time Range", ["Last Hour", "Last 4 Hours", "Last 24 Hours", "Last 7 Days"], index=2
             )
 
             # Bot type filter
             bot_types = st.multiselect(
-                "Bot Types",
-                ["Seller Bot", "Lead Bot", "Buyer Bot"],
-                default=["Seller Bot", "Lead Bot", "Buyer Bot"]
+                "Bot Types", ["Seller Bot", "Lead Bot", "Buyer Bot"], default=["Seller Bot", "Lead Bot", "Buyer Bot"]
             )
 
             # Auto-refresh
@@ -189,13 +190,15 @@ class JorgePerformanceDashboard:
         st.markdown("---")
 
         # Detailed sections
-        tab1, tab2, tab3, tab4, tab5 = st.tabs([
-            "🚨 Alerts & Issues",
-            "📊 Detailed Metrics",
-            "⚡ Optimization",
-            "💼 Business Impact",
-            "🔧 Jorge Methodology"
-        ])
+        tab1, tab2, tab3, tab4, tab5 = st.tabs(
+            [
+                "🚨 Alerts & Issues",
+                "📊 Detailed Metrics",
+                "⚡ Optimization",
+                "💼 Business Impact",
+                "🔧 Jorge Methodology",
+            ]
+        )
 
         with tab1:
             self._display_alerts_section()
@@ -225,11 +228,14 @@ class JorgePerformanceDashboard:
         score = self._get_performance_score()
         score_color = "#4caf50" if score >= 85 else "#ff9800" if score >= 70 else "#f44336"
 
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="performance-score" style="color: {score_color};">
             {score:.1f}/100
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
         # Score components
         components = self._get_score_components()
@@ -247,7 +253,8 @@ class JorgePerformanceDashboard:
         utilization = (active_count / max_capacity) * 100
         utilization_color = "#4caf50" if utilization < 70 else "#ff9800" if utilization < 85 else "#f44336"
 
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="metric-card">
             <h2 style="margin: 0; color: {utilization_color};">{active_count}</h2>
             <p style="margin: 0;">of {max_capacity} capacity</p>
@@ -255,7 +262,9 @@ class JorgePerformanceDashboard:
                 {utilization:.1f}% utilization
             </p>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
         # Conversation breakdown by bot type
         conversation_breakdown = self._get_conversation_breakdown()
@@ -269,32 +278,41 @@ class JorgePerformanceDashboard:
         alerts = self._get_current_alerts()
 
         # Alert counts by severity
-        critical_count = len([a for a in alerts if a.get('level') == 'critical'])
-        warning_count = len([a for a in alerts if a.get('level') == 'warning'])
+        critical_count = len([a for a in alerts if a.get("level") == "critical"])
+        warning_count = len([a for a in alerts if a.get("level") == "warning"])
 
         # Critical alerts
         if critical_count > 0:
-            st.markdown(f"""
+            st.markdown(
+                f"""
             <div class="metric-card critical-alert">
                 <h3 style="margin: 0; color: #f44336;">{critical_count}</h3>
                 <p style="margin: 0;">Critical Alerts</p>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
         else:
-            st.markdown(f"""
+            st.markdown(
+                f"""
             <div class="metric-card success-metric">
                 <h3 style="margin: 0; color: #4caf50;">0</h3>
                 <p style="margin: 0;">Critical Alerts</p>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
         # Warning alerts
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="metric-card warning-alert">
             <h3 style="margin: 0; color: #ff9800;">{warning_count}</h3>
             <p style="margin: 0;">Warning Alerts</p>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     def _display_system_health(self):
         """Display system health metrics"""
@@ -303,27 +321,30 @@ class JorgePerformanceDashboard:
         health_metrics = self._get_system_health()
 
         # Memory usage
-        memory_percent = health_metrics.get('memory_percent', 65)
+        memory_percent = health_metrics.get("memory_percent", 65)
         memory_color = "#4caf50" if memory_percent < 70 else "#ff9800" if memory_percent < 85 else "#f44336"
 
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="metric-card" style="border-left-color: {memory_color};">
             <h4 style="margin: 0;">Memory Usage</h4>
             <p style="margin: 0; color: {memory_color}; font-weight: bold;">
                 {memory_percent:.1f}%
             </p>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
         # CPU usage
-        cpu_percent = health_metrics.get('cpu_percent', 45)
+        cpu_percent = health_metrics.get("cpu_percent", 45)
         cpu_color = "#4caf50" if cpu_percent < 70 else "#ff9800" if cpu_percent < 85 else "#f44336"
 
-        st.metric("CPU Usage", f"{cpu_percent:.1f}%", f"{cpu_percent-40:.1f}%")
+        st.metric("CPU Usage", f"{cpu_percent:.1f}%", f"{cpu_percent - 40:.1f}%")
 
         # Cache hit rate
-        cache_hit_rate = health_metrics.get('cache_hit_rate', 0.87)
-        st.metric("Cache Hit Rate", f"{cache_hit_rate:.1%}", f"{(cache_hit_rate-0.80)*100:.1f}%")
+        cache_hit_rate = health_metrics.get("cache_hit_rate", 0.87)
+        st.metric("Cache Hit Rate", f"{cache_hit_rate:.1%}", f"{(cache_hit_rate - 0.80) * 100:.1f}%")
 
     def _display_response_time_chart(self, time_range: str):
         """Display response time performance chart"""
@@ -335,24 +356,28 @@ class JorgePerformanceDashboard:
         # Create chart
         fig = go.Figure()
 
-        fig.add_trace(go.Scatter(
-            x=times,
-            y=response_times,
-            mode='lines+markers',
-            name='Response Time',
-            line=dict(color='#1f77b4', width=2),
-            marker=dict(size=4)
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=times,
+                y=response_times,
+                mode="lines+markers",
+                name="Response Time",
+                line=dict(color="#1f77b4", width=2),
+                marker=dict(size=4),
+            )
+        )
 
         # Add target line
         target_line = [500] * len(times)  # 500ms target
-        fig.add_trace(go.Scatter(
-            x=times,
-            y=target_line,
-            mode='lines',
-            name='Target (500ms)',
-            line=dict(color='#ff7f0e', width=2, dash='dash')
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=times,
+                y=target_line,
+                mode="lines",
+                name="Target (500ms)",
+                line=dict(color="#ff7f0e", width=2, dash="dash"),
+            )
+        )
 
         fig.update_layout(
             title="Average Response Time",
@@ -360,7 +385,7 @@ class JorgePerformanceDashboard:
             yaxis_title="Response Time (ms)",
             height=400,
             showlegend=True,
-            hovermode='x unified'
+            hovermode="x unified",
         )
 
         st.plotly_chart(fig, use_container_width=True)
@@ -368,10 +393,10 @@ class JorgePerformanceDashboard:
         # Summary statistics
         avg_response = np.mean(response_times)
         p95_response = np.percentile(response_times, 95)
-        target_met = (avg_response < 500)
+        target_met = avg_response < 500
 
         col1, col2, col3 = st.columns(3)
-        col1.metric("Average", f"{avg_response:.1f}ms", f"{avg_response-400:.1f}ms")
+        col1.metric("Average", f"{avg_response:.1f}ms", f"{avg_response - 400:.1f}ms")
         col2.metric("95th Percentile", f"{p95_response:.1f}ms")
         col3.metric("Target Met", "✅" if target_met else "❌", "500ms target")
 
@@ -381,43 +406,44 @@ class JorgePerformanceDashboard:
 
         # Mock accuracy data
         accuracy_data = {
-            'Stall Detection': {'current': 89.5, 'target': 91.3},
-            'Re-engagement': {'current': 76.8, 'target': 78.5},
-            'Property Matching': {'current': 92.1, 'target': 89.7},
-            'Close Rate Improvement': {'current': 65.3, 'target': 67.8}
+            "Stall Detection": {"current": 89.5, "target": 91.3},
+            "Re-engagement": {"current": 76.8, "target": 78.5},
+            "Property Matching": {"current": 92.1, "target": 89.7},
+            "Close Rate Improvement": {"current": 65.3, "target": 67.8},
         }
 
         metrics = list(accuracy_data.keys())
-        current_values = [accuracy_data[m]['current'] for m in metrics]
-        target_values = [accuracy_data[m]['target'] for m in metrics]
+        current_values = [accuracy_data[m]["current"] for m in metrics]
+        target_values = [accuracy_data[m]["target"] for m in metrics]
 
         fig = go.Figure()
 
         # Current performance bars
-        fig.add_trace(go.Bar(
-            x=metrics,
-            y=current_values,
-            name='Current',
-            marker_color='#1f77b4',
-            text=[f"{v:.1f}%" for v in current_values],
-            textposition='auto'
-        ))
+        fig.add_trace(
+            go.Bar(
+                x=metrics,
+                y=current_values,
+                name="Current",
+                marker_color="#1f77b4",
+                text=[f"{v:.1f}%" for v in current_values],
+                textposition="auto",
+            )
+        )
 
         # Target lines
-        fig.add_trace(go.Scatter(
-            x=metrics,
-            y=target_values,
-            mode='markers+lines',
-            name='Target',
-            marker=dict(color='#ff7f0e', size=8, symbol='diamond'),
-            line=dict(color='#ff7f0e', width=2, dash='dash')
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=metrics,
+                y=target_values,
+                mode="markers+lines",
+                name="Target",
+                marker=dict(color="#ff7f0e", size=8, symbol="diamond"),
+                line=dict(color="#ff7f0e", width=2, dash="dash"),
+            )
+        )
 
         fig.update_layout(
-            title="Jorge Bot Accuracy Metrics vs Targets",
-            yaxis_title="Accuracy (%)",
-            height=400,
-            showlegend=True
+            title="Jorge Bot Accuracy Metrics vs Targets", yaxis_title="Accuracy (%)", height=400, showlegend=True
         )
 
         st.plotly_chart(fig, use_container_width=True)
@@ -430,32 +456,36 @@ class JorgePerformanceDashboard:
 
         fig = go.Figure()
 
-        fig.add_trace(go.Scatter(
-            x=times,
-            y=memory_usage,
-            mode='lines+markers',
-            name='Memory per Conversation',
-            fill='tonexty',
-            line=dict(color='#2ca02c', width=2),
-            marker=dict(size=4)
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=times,
+                y=memory_usage,
+                mode="lines+markers",
+                name="Memory per Conversation",
+                fill="tonexty",
+                line=dict(color="#2ca02c", width=2),
+                marker=dict(size=4),
+            )
+        )
 
         # Target line
         target_line = [50] * len(times)  # 50MB target
-        fig.add_trace(go.Scatter(
-            x=times,
-            y=target_line,
-            mode='lines',
-            name='Target (50MB)',
-            line=dict(color='#d62728', width=2, dash='dash')
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=times,
+                y=target_line,
+                mode="lines",
+                name="Target (50MB)",
+                line=dict(color="#d62728", width=2, dash="dash"),
+            )
+        )
 
         fig.update_layout(
             title="Memory Usage per Conversation",
             xaxis_title="Time",
             yaxis_title="Memory (MB)",
             height=400,
-            showlegend=True
+            showlegend=True,
         )
 
         st.plotly_chart(fig, use_container_width=True)
@@ -466,29 +496,29 @@ class JorgePerformanceDashboard:
 
         # Mock business metrics
         metrics_data = {
-            'Qualified Leads/Hour': 8.2,
-            'Deals Closed/Day': 2.1,
-            'Revenue Attribution': 94.5,
-            'Customer Satisfaction': 87.3
+            "Qualified Leads/Hour": 8.2,
+            "Deals Closed/Day": 2.1,
+            "Revenue Attribution": 94.5,
+            "Customer Satisfaction": 87.3,
         }
 
         # Create gauge charts
         fig = make_subplots(
-            rows=2, cols=2,
-            specs=[[{"type": "indicator"}, {"type": "indicator"}],
-                   [{"type": "indicator"}, {"type": "indicator"}]],
-            subplot_titles=list(metrics_data.keys())
+            rows=2,
+            cols=2,
+            specs=[[{"type": "indicator"}, {"type": "indicator"}], [{"type": "indicator"}, {"type": "indicator"}]],
+            subplot_titles=list(metrics_data.keys()),
         )
 
         positions = [(1, 1), (1, 2), (2, 1), (2, 2)]
-        colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
+        colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"]
 
         for i, (metric, value) in enumerate(metrics_data.items()):
             row, col = positions[i]
 
-            if 'Hour' in metric:
+            if "Hour" in metric:
                 max_val, suffix = 15, ""
-            elif 'Day' in metric:
+            elif "Day" in metric:
                 max_val, suffix = 5, ""
             else:
                 max_val, suffix = 100, "%"
@@ -497,24 +527,21 @@ class JorgePerformanceDashboard:
                 go.Indicator(
                     mode="gauge+number",
                     value=value,
-                    domain={'x': [0, 1], 'y': [0, 1]},
-                    title={'text': metric},
-                    number={'suffix': suffix},
+                    domain={"x": [0, 1], "y": [0, 1]},
+                    title={"text": metric},
+                    number={"suffix": suffix},
                     gauge={
-                        'axis': {'range': [None, max_val]},
-                        'bar': {'color': colors[i]},
-                        'steps': [
-                            {'range': [0, max_val * 0.5], 'color': "lightgray"},
-                            {'range': [max_val * 0.5, max_val * 0.8], 'color': "gray"}
+                        "axis": {"range": [None, max_val]},
+                        "bar": {"color": colors[i]},
+                        "steps": [
+                            {"range": [0, max_val * 0.5], "color": "lightgray"},
+                            {"range": [max_val * 0.5, max_val * 0.8], "color": "gray"},
                         ],
-                        'threshold': {
-                            'line': {'color': "red", 'width': 4},
-                            'thickness': 0.75,
-                            'value': max_val * 0.9
-                        }
-                    }
+                        "threshold": {"line": {"color": "red", "width": 4}, "thickness": 0.75, "value": max_val * 0.9},
+                    },
                 ),
-                row=row, col=col
+                row=row,
+                col=col,
             )
 
         fig.update_layout(height=600)
@@ -531,8 +558,8 @@ class JorgePerformanceDashboard:
             return
 
         # Group alerts by severity
-        critical_alerts = [a for a in alerts if a['level'] == 'critical']
-        warning_alerts = [a for a in alerts if a['level'] == 'warning']
+        critical_alerts = [a for a in alerts if a["level"] == "critical"]
+        warning_alerts = [a for a in alerts if a["level"] == "warning"]
 
         # Critical alerts
         if critical_alerts:
@@ -545,8 +572,8 @@ class JorgePerformanceDashboard:
                         st.markdown(f"**Impact:** {alert['impact']}")
                         st.markdown(f"**Recommendation:** {alert['recommendation']}")
                     with col2:
-                        st.metric("Current Value", alert['current_value'])
-                        st.metric("Threshold", alert['threshold'])
+                        st.metric("Current Value", alert["current_value"])
+                        st.metric("Threshold", alert["threshold"])
                         if st.button(f"Acknowledge", key=f"ack_{alert['id']}"):
                             st.success("Alert acknowledged!")
 
@@ -563,9 +590,7 @@ class JorgePerformanceDashboard:
         st.markdown("## 📊 Detailed Performance Metrics")
 
         # Create tabs for different metric categories
-        metric_tab1, metric_tab2, metric_tab3 = st.tabs([
-            "Response Time", "Accuracy", "System Performance"
-        ])
+        metric_tab1, metric_tab2, metric_tab3 = st.tabs(["Response Time", "Accuracy", "System Performance"])
 
         with metric_tab1:
             self._display_response_time_details()
@@ -600,24 +625,18 @@ class JorgePerformanceDashboard:
         recommendations = self._get_optimization_recommendations()
 
         for i, rec in enumerate(recommendations):
-            priority_color = {
-                'critical': '#f44336',
-                'high': '#ff9800',
-                'medium': '#2196f3',
-                'low': '#4caf50'
-            }.get(rec['priority'], '#666')
+            priority_color = {"critical": "#f44336", "high": "#ff9800", "medium": "#2196f3", "low": "#4caf50"}.get(
+                rec["priority"], "#666"
+            )
 
-            with st.expander(
-                f"{rec['priority'].upper()} - {rec['title']}",
-                expanded=(rec['priority'] == 'critical')
-            ):
+            with st.expander(f"{rec['priority'].upper()} - {rec['title']}", expanded=(rec["priority"] == "critical")):
                 col1, col2 = st.columns([2, 1])
 
                 with col1:
                     st.markdown(f"**Description:** {rec['description']}")
                     st.markdown(f"**Expected Improvement:** {rec['expected_improvement']}")
                     st.markdown(f"**Implementation Steps:**")
-                    for step in rec['implementation_steps']:
+                    for step in rec["implementation_steps"]:
                         st.markdown(f"- {step}")
 
                 with col2:
@@ -639,31 +658,32 @@ class JorgePerformanceDashboard:
             st.markdown("### 💰 Revenue Attribution")
 
             revenue_data = {
-                'Direct Revenue': 125000,
-                'Pipeline Value': 245000,
-                'Qualified Leads': 85,
-                'Closed Deals': 12
+                "Direct Revenue": 125000,
+                "Pipeline Value": 245000,
+                "Qualified Leads": 85,
+                "Closed Deals": 12,
             }
 
             for metric, value in revenue_data.items():
-                if 'Revenue' in metric or 'Value' in metric:
-                    st.metric(metric, f"${value:,}", f"+{(value*0.15):,.0f}")
+                if "Revenue" in metric or "Value" in metric:
+                    st.metric(metric, f"${value:,}", f"+{(value * 0.15):,.0f}")
                 else:
-                    st.metric(metric, value, f"+{int(value*0.12)}")
+                    st.metric(metric, value, f"+{int(value * 0.12)}")
 
         with col2:
             st.markdown("### 📈 Performance Trends")
 
             # Mock trend data
-            trend_data = pd.DataFrame({
-                'Week': ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-                'Qualified Leads': [18, 22, 28, 32],
-                'Close Rate': [12.5, 15.2, 18.7, 21.3],
-                'Revenue': [45000, 52000, 68000, 75000]
-            })
+            trend_data = pd.DataFrame(
+                {
+                    "Week": ["Week 1", "Week 2", "Week 3", "Week 4"],
+                    "Qualified Leads": [18, 22, 28, 32],
+                    "Close Rate": [12.5, 15.2, 18.7, 21.3],
+                    "Revenue": [45000, 52000, 68000, 75000],
+                }
+            )
 
-            fig = px.line(trend_data, x='Week', y=['Qualified Leads', 'Close Rate'],
-                         title="Weekly Performance Trends")
+            fig = px.line(trend_data, x="Week", y=["Qualified Leads", "Close Rate"], title="Weekly Performance Trends")
             st.plotly_chart(fig, use_container_width=True)
 
         st.markdown("---")
@@ -672,9 +692,9 @@ class JorgePerformanceDashboard:
         st.markdown("### 📊 Jorge Methodology ROI Analysis")
 
         roi_metrics = {
-            'Traditional Approach': {'close_rate': 45.2, 'avg_cycle': 28, 'leads_per_agent': 120},
-            'Jorge Enhanced': {'close_rate': 67.8, 'avg_cycle': 19, 'leads_per_agent': 185},
-            'Improvement': {'close_rate': 50.0, 'avg_cycle': -32.1, 'leads_per_agent': 54.2}
+            "Traditional Approach": {"close_rate": 45.2, "avg_cycle": 28, "leads_per_agent": 120},
+            "Jorge Enhanced": {"close_rate": 67.8, "avg_cycle": 19, "leads_per_agent": 185},
+            "Improvement": {"close_rate": 50.0, "avg_cycle": -32.1, "leads_per_agent": 54.2},
         }
 
         col1, col2, col3 = st.columns(3)
@@ -683,13 +703,13 @@ class JorgePerformanceDashboard:
             with [col1, col2, col3][i]:
                 st.markdown(f"#### {approach}")
                 for metric, value in metrics.items():
-                    if approach == 'Improvement':
+                    if approach == "Improvement":
                         sign = "+" if value > 0 else ""
-                        unit = "%" if 'rate' in metric else " days" if 'cycle' in metric else " leads"
+                        unit = "%" if "rate" in metric else " days" if "cycle" in metric else " leads"
                         color = "green" if value > 0 else "red"
                         st.markdown(f"**{metric.replace('_', ' ').title()}:** :{color}[{sign}{value:.1f}{unit}]")
                     else:
-                        unit = "%" if 'rate' in metric else " days" if 'cycle' in metric else " leads"
+                        unit = "%" if "rate" in metric else " days" if "cycle" in metric else " leads"
                         st.markdown(f"**{metric.replace('_', ' ').title()}:** {value:.1f}{unit}")
 
     def _display_jorge_methodology(self):
@@ -703,15 +723,16 @@ class JorgePerformanceDashboard:
             st.markdown("### 🎯 Confrontational Approach Effectiveness")
 
             effectiveness_data = {
-                'Stall Breaking Success': 89.3,
-                'Timeline Pressure Effectiveness': 76.8,
-                'Budget Reality Check Impact': 82.1,
-                'Decision Acceleration Success': 71.4
+                "Stall Breaking Success": 89.3,
+                "Timeline Pressure Effectiveness": 76.8,
+                "Budget Reality Check Impact": 82.1,
+                "Decision Acceleration Success": 71.4,
             }
 
             for technique, effectiveness in effectiveness_data.items():
                 progress_color = "#4caf50" if effectiveness > 80 else "#ff9800" if effectiveness > 70 else "#f44336"
-                st.markdown(f"""
+                st.markdown(
+                    f"""
                 **{technique}**
                 <div style="background-color: #f0f0f0; border-radius: 5px; padding: 5px;">
                     <div style="background-color: {progress_color}; height: 20px; width: {effectiveness}%;
@@ -719,21 +740,35 @@ class JorgePerformanceDashboard:
                         {effectiveness:.1f}%
                     </div>
                 </div>
-                """, unsafe_allow_html=True)
+                """,
+                    unsafe_allow_html=True,
+                )
 
         with col2:
             st.markdown("### 📊 Methodology Usage Patterns")
 
             # Mock usage data
-            usage_data = pd.DataFrame({
-                'Intervention Type': ['Timeline Pressure', 'Budget Reality', 'Decision Acceleration', 'Competitive Urgency'],
-                'Usage Frequency': [45, 38, 29, 22],
-                'Success Rate': [76.8, 82.1, 71.4, 68.9]
-            })
+            usage_data = pd.DataFrame(
+                {
+                    "Intervention Type": [
+                        "Timeline Pressure",
+                        "Budget Reality",
+                        "Decision Acceleration",
+                        "Competitive Urgency",
+                    ],
+                    "Usage Frequency": [45, 38, 29, 22],
+                    "Success Rate": [76.8, 82.1, 71.4, 68.9],
+                }
+            )
 
-            fig = px.scatter(usage_data, x='Usage Frequency', y='Success Rate',
-                           size='Usage Frequency', text='Intervention Type',
-                           title="Intervention Effectiveness vs Usage")
+            fig = px.scatter(
+                usage_data,
+                x="Usage Frequency",
+                y="Success Rate",
+                size="Usage Frequency",
+                text="Intervention Type",
+                title="Intervention Effectiveness vs Usage",
+            )
             fig.update_traces(textposition="top center")
             st.plotly_chart(fig, use_container_width=True)
 
@@ -760,24 +795,24 @@ class JorgePerformanceDashboard:
             {
                 "date": "2026-01-20",
                 "update": "Enhanced stall detection patterns for Rancho Cucamonga market",
-                "impact": "+5.2% stall detection accuracy"
+                "impact": "+5.2% stall detection accuracy",
             },
             {
                 "date": "2026-01-18",
                 "update": "Refined confrontational intensity levels",
-                "impact": "+3.8% intervention success rate"
+                "impact": "+3.8% intervention success rate",
             },
             {
                 "date": "2026-01-15",
                 "update": "Added compliance safeguards for aggressive tactics",
-                "impact": "100% compliance maintenance"
-            }
+                "impact": "100% compliance maintenance",
+            },
         ]
 
         for update in updates:
             st.markdown(f"""
-            **{update['date']}** - {update['update']}
-            - *Impact: {update['impact']}*
+            **{update["date"]}** - {update["update"]}
+            - *Impact: {update["impact"]}*
             """)
 
     # Helper methods for mock data generation
@@ -787,12 +822,7 @@ class JorgePerformanceDashboard:
 
     def _get_score_components(self) -> Dict[str, float]:
         """Get performance score components"""
-        return {
-            "Response Time": 78.5,
-            "Accuracy": 87.2,
-            "System Health": 91.4,
-            "Business Impact": 84.1
-        }
+        return {"Response Time": 78.5, "Accuracy": 87.2, "System Health": 91.4, "Business Impact": 84.1}
 
     def _get_active_conversations_count(self) -> int:
         """Get active conversations count"""
@@ -800,11 +830,7 @@ class JorgePerformanceDashboard:
 
     def _get_conversation_breakdown(self) -> Dict[str, int]:
         """Get conversation breakdown by bot type"""
-        return {
-            "Seller Bot": 28,
-            "Lead Bot": 25,
-            "Buyer Bot": 14
-        }
+        return {"Seller Bot": 28, "Lead Bot": 25, "Buyer Bot": 14}
 
     def _get_current_alerts(self) -> List[Dict[str, Any]]:
         """Get current alerts"""
@@ -817,7 +843,7 @@ class JorgePerformanceDashboard:
                 "current_value": "485ms",
                 "threshold": "500ms",
                 "impact": "User experience degradation",
-                "recommendation": "Enable response caching for common patterns"
+                "recommendation": "Enable response caching for common patterns",
             },
             {
                 "id": "alert_002",
@@ -827,17 +853,13 @@ class JorgePerformanceDashboard:
                 "current_value": "87.2%",
                 "threshold": "91.3%",
                 "impact": "Missed intervention opportunities",
-                "recommendation": "Review and retrain stall detection patterns"
-            }
+                "recommendation": "Review and retrain stall detection patterns",
+            },
         ]
 
     def _get_system_health(self) -> Dict[str, float]:
         """Get system health metrics"""
-        return {
-            "memory_percent": 67.8,
-            "cpu_percent": 45.2,
-            "cache_hit_rate": 0.87
-        }
+        return {"memory_percent": 67.8, "cpu_percent": 45.2, "cache_hit_rate": 0.87}
 
     def _generate_response_time_data(self, time_range: str) -> Tuple[List[datetime], List[float]]:
         """Generate mock response time data"""
@@ -887,10 +909,10 @@ class JorgePerformanceDashboard:
                 "implementation_steps": [
                     "Enable response caching for common patterns",
                     "Implement async processing for non-critical operations",
-                    "Optimize database queries"
+                    "Optimize database queries",
                 ],
                 "effort": "Medium",
-                "timeline": "1-2 weeks"
+                "timeline": "1-2 weeks",
             },
             {
                 "priority": "high",
@@ -900,11 +922,11 @@ class JorgePerformanceDashboard:
                 "implementation_steps": [
                     "Analyze failed stall detection cases",
                     "Enhance pattern recognition algorithms",
-                    "Add more conversation context"
+                    "Add more conversation context",
                 ],
                 "effort": "Low",
-                "timeline": "3-5 days"
-            }
+                "timeline": "3-5 days",
+            },
         ]
 
     def _display_response_time_details(self):
@@ -912,18 +934,13 @@ class JorgePerformanceDashboard:
         st.markdown("#### Response Time Breakdown")
 
         # Mock detailed response time data
-        breakdown_data = {
-            "AI Processing": 280,
-            "Database Queries": 95,
-            "Business Logic": 85,
-            "Network Latency": 40
-        }
+        breakdown_data = {"AI Processing": 280, "Database Queries": 95, "Business Logic": 85, "Network Latency": 40}
 
         # Create pie chart
         fig = px.pie(
             values=list(breakdown_data.values()),
             names=list(breakdown_data.keys()),
-            title="Response Time Component Breakdown"
+            title="Response Time Component Breakdown",
         )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -932,16 +949,22 @@ class JorgePerformanceDashboard:
         st.markdown("#### Accuracy Trend Analysis")
 
         # Mock accuracy trends
-        dates = pd.date_range(start='2026-01-18', end='2026-01-25', freq='D')
-        accuracy_trends = pd.DataFrame({
-            'Date': dates,
-            'Stall Detection': np.random.normal(90, 2, len(dates)),
-            'Re-engagement': np.random.normal(78, 3, len(dates)),
-            'Property Matching': np.random.normal(89, 2, len(dates))
-        })
+        dates = pd.date_range(start="2026-01-18", end="2026-01-25", freq="D")
+        accuracy_trends = pd.DataFrame(
+            {
+                "Date": dates,
+                "Stall Detection": np.random.normal(90, 2, len(dates)),
+                "Re-engagement": np.random.normal(78, 3, len(dates)),
+                "Property Matching": np.random.normal(89, 2, len(dates)),
+            }
+        )
 
-        fig = px.line(accuracy_trends, x='Date', y=['Stall Detection', 'Re-engagement', 'Property Matching'],
-                     title="Accuracy Trends (Last 7 Days)")
+        fig = px.line(
+            accuracy_trends,
+            x="Date",
+            y=["Stall Detection", "Re-engagement", "Property Matching"],
+            title="Accuracy Trends (Last 7 Days)",
+        )
         st.plotly_chart(fig, use_container_width=True)
 
     def _display_system_performance_details(self):
@@ -952,24 +975,17 @@ class JorgePerformanceDashboard:
 
         with col1:
             # Memory usage over time
-            times = pd.date_range(start=datetime.now() - timedelta(hours=24), end=datetime.now(), freq='H')
-            memory_data = pd.DataFrame({
-                'Time': times,
-                'Memory_MB': np.random.normal(42, 5, len(times))
-            })
+            times = pd.date_range(start=datetime.now() - timedelta(hours=24), end=datetime.now(), freq="H")
+            memory_data = pd.DataFrame({"Time": times, "Memory_MB": np.random.normal(42, 5, len(times))})
 
-            fig = px.line(memory_data, x='Time', y='Memory_MB',
-                         title="Memory Usage (24 Hours)")
+            fig = px.line(memory_data, x="Time", y="Memory_MB", title="Memory Usage (24 Hours)")
             st.plotly_chart(fig, use_container_width=True)
 
         with col2:
             # CPU usage distribution
-            cpu_data = pd.DataFrame({
-                'CPU_Usage': np.random.beta(2, 5, 100) * 100
-            })
+            cpu_data = pd.DataFrame({"CPU_Usage": np.random.beta(2, 5, 100) * 100})
 
-            fig = px.histogram(cpu_data, x='CPU_Usage', nbins=20,
-                             title="CPU Usage Distribution")
+            fig = px.histogram(cpu_data, x="CPU_Usage", nbins=20, title="CPU Usage Distribution")
             st.plotly_chart(fig, use_container_width=True)
 
 

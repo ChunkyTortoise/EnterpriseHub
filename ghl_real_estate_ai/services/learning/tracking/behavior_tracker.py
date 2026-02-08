@@ -6,17 +6,16 @@ Integrates with Repository Pattern for persistence.
 """
 
 import asyncio
-from typing import Dict, List, Optional, Any
-from datetime import datetime, timedelta
-from collections import defaultdict
 import json
-import threading
 import logging
+import threading
+from collections import defaultdict
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.utils.async_utils import safe_create_task
-from ..interfaces import (
-    IBehaviorTracker, BehavioralEvent, EventType
-)
+
+from ..interfaces import BehavioralEvent, EventType, IBehaviorTracker
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +52,7 @@ class InMemoryBehaviorTracker(IBehaviorTracker):
             "flush_errors": 0,
             "cache_hits": 0,
             "cache_misses": 0,
-            "total_queries": 0
+            "total_queries": 0,
         }
 
         # Background flush task
@@ -153,7 +152,7 @@ class InMemoryBehaviorTracker(IBehaviorTracker):
         event_types: Optional[List[EventType]] = None,
         start_time: Optional[datetime] = None,
         end_time: Optional[datetime] = None,
-        limit: int = 1000
+        limit: int = 1000,
     ) -> List[BehavioralEvent]:
         """Retrieve events matching criteria with optimized filtering"""
 
@@ -184,9 +183,7 @@ class InMemoryBehaviorTracker(IBehaviorTracker):
                 self.stats["cache_misses"] += 1
 
             # Apply filters
-            filtered_events = self._apply_filters(
-                events, entity_id, entity_type, event_types, start_time, end_time
-            )
+            filtered_events = self._apply_filters(events, entity_id, entity_type, event_types, start_time, end_time)
 
             # Apply limit
             return filtered_events[:limit]
@@ -198,7 +195,7 @@ class InMemoryBehaviorTracker(IBehaviorTracker):
         entity_type: Optional[str],
         event_types: Optional[List[EventType]],
         start_time: Optional[datetime],
-        end_time: Optional[datetime]
+        end_time: Optional[datetime],
     ) -> List[BehavioralEvent]:
         """Apply filters to event list"""
 
@@ -233,7 +230,7 @@ class InMemoryBehaviorTracker(IBehaviorTracker):
         self,
         entity_id: Optional[str] = None,
         entity_type: Optional[str] = None,
-        event_types: Optional[List[EventType]] = None
+        event_types: Optional[List[EventType]] = None,
     ) -> int:
         """Count events matching criteria"""
 
@@ -254,12 +251,7 @@ class InMemoryBehaviorTracker(IBehaviorTracker):
 
             return count
 
-    async def record_outcome(
-        self,
-        event_id: str,
-        outcome: str,
-        outcome_value: Optional[float] = None
-    ) -> bool:
+    async def record_outcome(self, event_id: str, outcome: str, outcome_value: Optional[float] = None) -> bool:
         """Record outcome for event (for supervised learning)"""
 
         with self._lock:
@@ -274,11 +266,7 @@ class InMemoryBehaviorTracker(IBehaviorTracker):
         logger.warning(f"Event {event_id} not found in memory for outcome recording")
         return False
 
-    async def get_events_by_session(
-        self,
-        session_id: str,
-        limit: int = 1000
-    ) -> List[BehavioralEvent]:
+    async def get_events_by_session(self, session_id: str, limit: int = 1000) -> List[BehavioralEvent]:
         """Get all events for a session"""
 
         with self._lock:
@@ -287,10 +275,7 @@ class InMemoryBehaviorTracker(IBehaviorTracker):
             return events[:limit]
 
     async def get_recent_events(
-        self,
-        minutes: int = 60,
-        event_types: Optional[List[EventType]] = None,
-        limit: int = 1000
+        self, minutes: int = 60, event_types: Optional[List[EventType]] = None, limit: int = 1000
     ) -> List[BehavioralEvent]:
         """Get recent events within time window"""
 
@@ -368,7 +353,7 @@ class InMemoryBehaviorTracker(IBehaviorTracker):
                 "unique_entities": len(self._events_by_entity),
                 "event_types_tracked": len(self._events_by_type),
                 "memory_usage_estimate_mb": self._estimate_memory_usage(),
-                "cache_hit_rate": self._calculate_cache_hit_rate()
+                "cache_hit_rate": self._calculate_cache_hit_rate(),
             }
 
     def _estimate_memory_usage(self) -> float:
@@ -394,13 +379,9 @@ class InMemoryBehaviorTracker(IBehaviorTracker):
             self._events_by_type.clear()
 
             # Reset stats
-            self.stats.update({
-                "events_tracked": 0,
-                "events_flushed": 0,
-                "cache_hits": 0,
-                "cache_misses": 0,
-                "total_queries": 0
-            })
+            self.stats.update(
+                {"events_tracked": 0, "events_flushed": 0, "cache_hits": 0, "cache_misses": 0, "total_queries": 0}
+            )
 
     async def shutdown(self):
         """Shutdown tracker and cleanup resources"""

@@ -16,13 +16,13 @@ Modules:
 
 Example:
     >>> from src.caching import SemanticCache, QueryCache, RedisClient
-    >>> 
+    >>>
     >>> # Initialize Redis client
     >>> redis = RedisClient("redis://localhost:6379")
-    >>> 
+    >>>
     >>> # Create semantic cache
     >>> cache = SemanticCache(redis_client=redis, similarity_threshold=0.85)
-    >>> 
+    >>>
     >>> # Cache query results
     >>> result = await cache.get_or_set(
     ...     query="What is the market trend?",
@@ -30,27 +30,27 @@ Example:
     ... )
 """
 
-from src.caching.redis_client import RedisClient, RedisClusterClient
-from src.caching.semantic_cache import (
-    SemanticCache,
-    EmbeddingService,
-    OpenAIEmbeddingService,
-    SentenceTransformerEmbeddingService,
-    MockEmbeddingService,
-    CacheEntry,
-    EvictionPolicy,
-)
-from src.caching.query_cache import (
-    QueryCache,
-    QueryResult,
-    DeduplicationStrategy,
-    CacheWarmingStrategy,
-)
 from src.caching.analytics import (
     CacheAnalytics,
     CacheMetrics,
     HitMissRatio,
     PerformanceReport,
+)
+from src.caching.query_cache import (
+    CacheWarmingStrategy,
+    DeduplicationStrategy,
+    QueryCache,
+    QueryResult,
+)
+from src.caching.redis_client import RedisClient, RedisClusterClient
+from src.caching.semantic_cache import (
+    CacheEntry,
+    EmbeddingService,
+    EvictionPolicy,
+    MockEmbeddingService,
+    OpenAIEmbeddingService,
+    SemanticCache,
+    SentenceTransformerEmbeddingService,
 )
 
 __version__ = "1.0.0"

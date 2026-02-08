@@ -17,18 +17,19 @@ Status: Production-Ready Real-Time Analytics Intelligence
 """
 
 import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
 import json
-import numpy as np
-from collections import defaultdict, deque
 import logging
+from collections import defaultdict, deque
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
+import numpy as np
+
 from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.database_service import get_database
 
 logger = get_logger(__name__)
@@ -196,7 +197,7 @@ class AdvancedAnalyticsEngine:
             "total_calculations": 0,
             "average_calculation_time": 0.0,
             "cache_hit_rate": 0.0,
-            "data_points_processed": 0
+            "data_points_processed": 0,
         }
 
     async def start_real_time_monitoring(self):
@@ -224,11 +225,7 @@ class AdvancedAnalyticsEngine:
         logger.info("⏹️ Analytics monitoring stopped")
 
     async def track_metric(
-        self,
-        metric_type: MetricType,
-        value: float,
-        dimensions: Dict[str, str] = None,
-        metadata: Dict[str, Any] = None
+        self, metric_type: MetricType, value: float, dimensions: Dict[str, str] = None, metadata: Dict[str, Any] = None
     ):
         """
         Track a metric value in real-time.
@@ -245,7 +242,7 @@ class AdvancedAnalyticsEngine:
                 value=value,
                 timestamp=datetime.now(),
                 dimensions=dimensions or {},
-                metadata=metadata or {}
+                metadata=metadata or {},
             )
 
             # Add to real-time buffer
@@ -269,9 +266,7 @@ class AdvancedAnalyticsEngine:
             logger.error(f"❌ Error tracking metric {metric_type.value}: {e}")
 
     async def calculate_roi_comprehensive(
-        self,
-        time_window: TimeWindow = TimeWindow.DAILY,
-        dimensions: Dict[str, str] = None
+        self, time_window: TimeWindow = TimeWindow.DAILY, dimensions: Dict[str, str] = None
     ) -> ROICalculation:
         """
         Calculate comprehensive ROI with attribution modeling.
@@ -291,9 +286,7 @@ class AdvancedAnalyticsEngine:
             cached_roi = await self.cache.get(cache_key)
 
             if cached_roi:
-                self.calculation_metrics["cache_hit_rate"] = (
-                    self.calculation_metrics["cache_hit_rate"] * 0.9 + 0.1
-                )
+                self.calculation_metrics["cache_hit_rate"] = self.calculation_metrics["cache_hit_rate"] * 0.9 + 0.1
                 return cached_roi
 
             # Get time range for calculation
@@ -322,9 +315,7 @@ class AdvancedAnalyticsEngine:
             margin = (net_profit / total_revenue * 100) if total_revenue > 0 else 0.0
 
             # Attribution breakdown
-            attribution_breakdown = await self._calculate_attribution_breakdown(
-                revenue_data, investment_data
-            )
+            attribution_breakdown = await self._calculate_attribution_breakdown(revenue_data, investment_data)
 
             # Confidence calculation
             confidence_score = self._calculate_roi_confidence(
@@ -342,7 +333,7 @@ class AdvancedAnalyticsEngine:
                 cost_per_acquisition=cost_per_acquisition,
                 margin=margin,
                 confidence_score=confidence_score,
-                attribution_breakdown=attribution_breakdown
+                attribution_breakdown=attribution_breakdown,
             )
 
             # Cache result
@@ -353,8 +344,7 @@ class AdvancedAnalyticsEngine:
             calculation_time = (datetime.now() - start_time).total_seconds()
             self.calculation_metrics["total_calculations"] += 1
             self.calculation_metrics["average_calculation_time"] = (
-                self.calculation_metrics["average_calculation_time"] * 0.9 +
-                calculation_time * 0.1
+                self.calculation_metrics["average_calculation_time"] * 0.9 + calculation_time * 0.1
             )
 
             logger.info(
@@ -377,13 +367,11 @@ class AdvancedAnalyticsEngine:
                 cost_per_acquisition=0.0,
                 margin=0.0,
                 confidence_score=0.0,
-                attribution_breakdown={}
+                attribution_breakdown={},
             )
 
     async def detect_performance_anomalies(
-        self,
-        metric_type: MetricType,
-        time_window: TimeWindow = TimeWindow.HOURLY
+        self, metric_type: MetricType, time_window: TimeWindow = TimeWindow.HOURLY
     ) -> List[PerformanceAlert]:
         """
         Detect performance anomalies using statistical analysis.
@@ -427,7 +415,7 @@ class AdvancedAnalyticsEngine:
                     expected_value=mean_value,
                     variance_percentage=variance,
                     description=f"{metric_type.value} anomaly detected: {z_score:.1f}σ deviation",
-                    recommended_actions=self._get_anomaly_recommendations(metric_type, variance)
+                    recommended_actions=self._get_anomaly_recommendations(metric_type, variance),
                 )
 
                 alerts.append(alert)
@@ -439,10 +427,7 @@ class AdvancedAnalyticsEngine:
             logger.error(f"❌ Error detecting anomalies for {metric_type.value}: {e}")
             return []
 
-    async def generate_performance_insights(
-        self,
-        time_window: TimeWindow = TimeWindow.DAILY
-    ) -> List[AnalyticsInsight]:
+    async def generate_performance_insights(self, time_window: TimeWindow = TimeWindow.DAILY) -> List[AnalyticsInsight]:
         """
         Generate AI-powered performance insights and recommendations.
 
@@ -497,7 +482,7 @@ class AdvancedAnalyticsEngine:
                 MetricType.RESPONSE_RATE,
                 MetricType.CONVERSION_RATE,
                 MetricType.COST_PER_LEAD,
-                MetricType.ENGAGEMENT_SCORE
+                MetricType.ENGAGEMENT_SCORE,
             ]:
                 current_value = await self._get_current_metric_value(metric_type)
                 metrics[metric_type.value] = {
@@ -505,7 +490,7 @@ class AdvancedAnalyticsEngine:
                     "baseline": self.baseline_metrics.get(metric_type, 0.0),
                     "variance_percentage": self._calculate_variance_percentage(
                         current_value, self.baseline_metrics.get(metric_type, 0.0)
-                    )
+                    ),
                 }
 
             # Get recent alerts
@@ -525,7 +510,7 @@ class AdvancedAnalyticsEngine:
                         "type": alert.alert_type.value,
                         "severity": alert.severity,
                         "description": alert.description,
-                        "triggered_at": alert.triggered_at.isoformat()
+                        "triggered_at": alert.triggered_at.isoformat(),
                     }
                     for alert in recent_alerts
                 ],
@@ -535,12 +520,12 @@ class AdvancedAnalyticsEngine:
                         "category": insight.category,
                         "title": insight.title,
                         "description": insight.description,
-                        "impact_score": insight.impact_score
+                        "impact_score": insight.impact_score,
                     }
                     for insight in insights[:5]
                 ],
                 "system_performance": self.calculation_metrics,
-                "last_updated": datetime.now().isoformat()
+                "last_updated": datetime.now().isoformat(),
             }
 
         except Exception as e:
@@ -606,8 +591,8 @@ class AdvancedAnalyticsEngine:
                 recommended_actions=[
                     "Investigate cause immediately",
                     "Review recent campaign changes",
-                    "Check system performance"
-                ]
+                    "Check system performance",
+                ],
             )
 
             self.alert_queue.append(alert)
@@ -616,10 +601,7 @@ class AdvancedAnalyticsEngine:
             logger.error(f"Error checking anomalies: {e}")
 
     async def _get_revenue_data(
-        self,
-        start_time: datetime,
-        end_time: datetime,
-        dimensions: Dict[str, str] = None
+        self, start_time: datetime, end_time: datetime, dimensions: Dict[str, str] = None
     ) -> Dict[str, float]:
         """Get revenue data for ROI calculation."""
         try:
@@ -630,10 +612,7 @@ class AdvancedAnalyticsEngine:
             return {"total": 125000.0}  # Fallback data
 
     async def _get_investment_data(
-        self,
-        start_time: datetime,
-        end_time: datetime,
-        dimensions: Dict[str, str] = None
+        self, start_time: datetime, end_time: datetime, dimensions: Dict[str, str] = None
     ) -> Dict[str, float]:
         """Get investment/cost data for ROI calculation."""
         try:
@@ -658,11 +637,7 @@ class AdvancedAnalyticsEngine:
         else:  # QUARTERLY
             return end_time - timedelta(days=90)
 
-    def _build_roi_cache_key(
-        self,
-        time_window: TimeWindow,
-        dimensions: Dict[str, str] = None
-    ) -> str:
+    def _build_roi_cache_key(self, time_window: TimeWindow, dimensions: Dict[str, str] = None) -> str:
         """Build cache key for ROI calculation."""
         dim_key = "_".join(f"{k}:{v}" for k, v in (dimensions or {}).items())
         return f"roi:{time_window.value}:{dim_key}"
@@ -670,12 +645,12 @@ class AdvancedAnalyticsEngine:
     def _get_cache_ttl(self, time_window: TimeWindow) -> int:
         """Get cache TTL based on time window."""
         ttl_map = {
-            TimeWindow.REAL_TIME: 60,     # 1 minute
-            TimeWindow.HOURLY: 300,       # 5 minutes
-            TimeWindow.DAILY: 1800,       # 30 minutes
-            TimeWindow.WEEKLY: 7200,      # 2 hours
-            TimeWindow.MONTHLY: 14400,    # 4 hours
-            TimeWindow.QUARTERLY: 43200   # 12 hours
+            TimeWindow.REAL_TIME: 60,  # 1 minute
+            TimeWindow.HOURLY: 300,  # 5 minutes
+            TimeWindow.DAILY: 1800,  # 30 minutes
+            TimeWindow.WEEKLY: 7200,  # 2 hours
+            TimeWindow.MONTHLY: 14400,  # 4 hours
+            TimeWindow.QUARTERLY: 43200,  # 12 hours
         }
         return ttl_map.get(time_window, 300)
 
@@ -684,28 +659,18 @@ class AdvancedAnalyticsEngine:
         try:
             # Simplified LTV calculation
             avg_commission = 18750.0  # $18,750 average commission
-            repeat_rate = 0.25        # 25% repeat/referral rate
+            repeat_rate = 0.25  # 25% repeat/referral rate
             ltv = avg_commission * (1 + repeat_rate)
             return ltv
         except Exception:
             return 23437.5  # Default LTV
 
-    def _calculate_payback_period(
-        self,
-        investment: float,
-        revenue: float,
-        time_window: TimeWindow
-    ) -> float:
+    def _calculate_payback_period(self, investment: float, revenue: float, time_window: TimeWindow) -> float:
         """Calculate payback period in days."""
         if revenue <= 0:
             return 999.0  # Very long payback
 
-        days_map = {
-            TimeWindow.DAILY: 1,
-            TimeWindow.WEEKLY: 7,
-            TimeWindow.MONTHLY: 30,
-            TimeWindow.QUARTERLY: 90
-        }
+        days_map = {TimeWindow.DAILY: 1, TimeWindow.WEEKLY: 7, TimeWindow.MONTHLY: 30, TimeWindow.QUARTERLY: 90}
 
         window_days = days_map.get(time_window, 30)
         daily_profit = (revenue - investment) / window_days if window_days > 0 else 0
@@ -716,9 +681,7 @@ class AdvancedAnalyticsEngine:
         return investment / daily_profit
 
     async def _calculate_attribution_breakdown(
-        self,
-        revenue_data: Dict[str, float],
-        investment_data: Dict[str, float]
+        self, revenue_data: Dict[str, float], investment_data: Dict[str, float]
     ) -> Dict[str, float]:
         """Calculate attribution breakdown by channel/campaign."""
         try:
@@ -737,11 +700,7 @@ class AdvancedAnalyticsEngine:
             return {"email": 35.0, "sms": 25.0, "calls": 40.0}
 
     def _calculate_roi_confidence(
-        self,
-        lead_count: int,
-        conversion_count: int,
-        revenue: float,
-        investment: float
+        self, lead_count: int, conversion_count: int, revenue: float, investment: float
     ) -> float:
         """Calculate confidence score for ROI calculation."""
         confidence_factors = []
@@ -773,9 +732,7 @@ class AdvancedAnalyticsEngine:
         return sum(confidence_factors) / len(confidence_factors)
 
     async def _generate_claude_insights(
-        self,
-        performance_data: Dict[str, Any],
-        time_window: TimeWindow
+        self, performance_data: Dict[str, Any], time_window: TimeWindow
     ) -> List[AnalyticsInsight]:
         """Generate insights using Claude analysis."""
         try:
@@ -803,29 +760,27 @@ class AdvancedAnalyticsEngine:
             Focus on actionable insights that can improve ROI and performance.
             """
 
-            response = await self.llm_client.generate(
-                prompt=prompt,
-                max_tokens=800,
-                temperature=0.3
-            )
+            response = await self.llm_client.generate(prompt=prompt, max_tokens=800, temperature=0.3)
 
             # Parse Claude's response into structured insights
             insights = []
             if response.content:
                 # This is simplified - in production would use structured parsing
-                insight_lines = response.content.split('\n')
+                insight_lines = response.content.split("\n")
                 for i, line in enumerate(insight_lines):
-                    if line.strip() and not line.startswith('-'):
-                        insights.append(AnalyticsInsight(
-                            insight_id=f"claude_{i}_{int(datetime.now().timestamp())}",
-                            category="optimization",
-                            title=f"Claude Insight {i + 1}",
-                            description=line.strip(),
-                            impact_score=0.8,
-                            confidence_level=0.85,
-                            recommended_actions=["Implement suggested optimization"],
-                            supporting_data=performance_data
-                        ))
+                    if line.strip() and not line.startswith("-"):
+                        insights.append(
+                            AnalyticsInsight(
+                                insight_id=f"claude_{i}_{int(datetime.now().timestamp())}",
+                                category="optimization",
+                                title=f"Claude Insight {i + 1}",
+                                description=line.strip(),
+                                impact_score=0.8,
+                                confidence_level=0.85,
+                                recommended_actions=["Implement suggested optimization"],
+                                supporting_data=performance_data,
+                            )
+                        )
 
             return insights[:5]  # Return top 5 insights
 
@@ -833,12 +788,7 @@ class AdvancedAnalyticsEngine:
             logger.error(f"Error generating Claude insights: {e}")
             return []
 
-    def _classify_anomaly_type(
-        self,
-        metric_type: MetricType,
-        current_value: float,
-        expected_value: float
-    ) -> AlertType:
+    def _classify_anomaly_type(self, metric_type: MetricType, current_value: float, expected_value: float) -> AlertType:
         """Classify the type of anomaly detected."""
         if current_value < expected_value:
             if metric_type in [MetricType.TOTAL_ROI, MetricType.CONVERSION_RATE]:
@@ -858,7 +808,7 @@ class AdvancedAnalyticsEngine:
                 f"Investigate drop in {metric_type.value}",
                 "Review recent campaign changes",
                 "Check system performance",
-                "Analyze competitor activity"
+                "Analyze competitor activity",
             ]
         elif variance > 20:  # Significant increase
             if metric_type == MetricType.COST_PER_LEAD:
@@ -866,14 +816,14 @@ class AdvancedAnalyticsEngine:
                     "Review bid strategies",
                     "Optimize targeting parameters",
                     "Check for click fraud",
-                    "Evaluate campaign quality"
+                    "Evaluate campaign quality",
                 ]
             else:
                 return [
                     "Analyze success factors",
                     "Scale successful campaigns",
                     "Document best practices",
-                    "Apply learnings to other campaigns"
+                    "Apply learnings to other campaigns",
                 ]
         else:
             return ["Monitor closely", "Continue current approach"]
@@ -908,7 +858,7 @@ class AdvancedAnalyticsEngine:
                 "roi_data": roi_calculation,
                 "metrics": metrics,
                 "time_window": time_window.value,
-                "calculation_time": datetime.now().isoformat()
+                "calculation_time": datetime.now().isoformat(),
             }
 
         except Exception as e:
@@ -945,9 +895,9 @@ class AdvancedAnalyticsEngine:
             "active_alerts": len(self.alert_queue),
             "cache_performance": {
                 "hit_rate": self.calculation_metrics.get("cache_hit_rate", 0.0),
-                "total_calculations": self.calculation_metrics.get("total_calculations", 0)
+                "total_calculations": self.calculation_metrics.get("total_calculations", 0),
             },
-            "last_calculation": self.last_calculation_time.isoformat()
+            "last_calculation": self.last_calculation_time.isoformat(),
         }
 
 

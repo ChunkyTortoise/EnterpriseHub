@@ -1,21 +1,25 @@
 """
 Integration tests for Analytics Engine with new services.
 """
-import pytest
+
 import json
-from pathlib import Path
 from datetime import datetime, timedelta
+from pathlib import Path
+
+import pytest
+
 from ghl_real_estate_ai.services.analytics_engine import AnalyticsEngine
+
 
 @pytest.fixture
 def temp_storage(tmp_path):
     storage_dir = tmp_path / "metrics"
     storage_dir.mkdir()
-    
+
     # Create mock analytics file for the services
     data_dir = tmp_path / "data"
     data_dir.mkdir()
-    
+
     mock_analytics = {
         "conversations": [
             {
@@ -23,25 +27,27 @@ def temp_storage(tmp_path):
                 "timestamp": datetime.now().isoformat(),
                 "lead_score": 85,
                 "appointment_set": True,
-                "response_time_minutes": 1.2
-            } for _ in range(10)
+                "response_time_minutes": 1.2,
+            }
+            for _ in range(10)
         ]
     }
-    
+
     with open(data_dir / "mock_analytics.json", "w") as f:
         json.dump(mock_analytics, f)
-        
+
     return storage_dir, data_dir
+
 
 @pytest.mark.asyncio
 async def test_comprehensive_report_integration(temp_storage):
     storage_dir, data_dir = temp_storage
-    
+
     # Initialize engine with mock data dir for its sub-services
     engine = AnalyticsEngine(storage_dir=str(storage_dir))
     engine.executive_dashboard.data_dir = data_dir
     engine.revenue_attribution.data_dir = data_dir
-    
+
     # Record one real-time event with strong signals and high engagement
     context = {
         "created_at": datetime.utcnow().isoformat(),
@@ -53,17 +59,17 @@ async def test_comprehensive_report_integration(temp_storage):
             {"role": "user", "content": "ASAP, relocatig for work.", "response_time_seconds": 45},
             {"role": "assistant", "content": "I can help with that. Any specific neighborhood?"},
             {"role": "user", "content": "Hyde Park area preferred.", "response_time_seconds": 60},
-            {"role": "assistant", "content": "Good choice. How many bedrooms?"}
+            {"role": "assistant", "content": "Good choice. How many bedrooms?"},
         ],
         "extracted_preferences": {
             "pathway": "wholesale",
             "budget": 500000,
             "financing": "pre-approved",
             "timeline": "ASAP",
-            "location": "Hyde Park"
-        }
+            "location": "Hyde Park",
+        },
     }
-    
+
     await engine.record_event(
         contact_id="test_integration",
         location_id="test_loc",
@@ -72,19 +78,19 @@ async def test_comprehensive_report_integration(temp_storage):
         message="I need 3 bedrooms and a yard.",
         response="I have several matches for you. When can you view them?",
         response_time_ms=150,
-        context=context
+        context=context,
     )
-    
+
     # Get comprehensive report
     report = await engine.get_comprehensive_report("test_loc")
-    
+
     assert "executive_summary" in report
     assert "revenue_attribution" in report
-    
+
     # Check integrated data
     assert report["executive_summary"]["metrics"]["conversations"]["total"] == 10
     assert report["revenue_attribution"]["summary"]["total_deals"] == 1
-    
+
     # Check real-time conversion probability in tracked metrics
     # (The record_event call should have stored the prob)
     metrics = await engine.metrics_collector.get_metrics("test_loc")

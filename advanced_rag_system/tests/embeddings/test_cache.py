@@ -1,16 +1,16 @@
 """Tests for embedding cache."""
 
-import pytest
 from uuid import uuid4
 
+import pytest
+from src.core.exceptions import CacheError
+from src.core.types import DocumentChunk
 from src.embeddings.cache import (
     CacheEntry,
     CacheStats,
     EmbeddingCache,
     MemoryCacheBackend,
 )
-from src.core.exceptions import CacheError
-from src.core.types import DocumentChunk
 
 
 class TestMemoryCacheBackend:

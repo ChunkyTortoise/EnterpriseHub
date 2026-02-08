@@ -12,35 +12,27 @@ Test coverage:
 - API documentation compliance
 """
 
-import pytest
 import asyncio
 import json
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, AsyncMock
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
+
+# Create a test app with the router
+from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
-from fastapi import status
-from typing import Dict, List, Any
 
 # Import the main FastAPI app and router
 from ghl_real_estate_ai.api.routes.neighborhood_intelligence import router
+from ghl_real_estate_ai.ml.price_prediction_engine import PredictionTimeframe, PricePredictionResult
+from ghl_real_estate_ai.services.inventory_alert_system import AlertInstance, AlertSeverity, AlertStatus, AlertType
 from ghl_real_estate_ai.services.neighborhood_intelligence_service import (
-    NeighborhoodMetrics,
+    InvestmentGrade,
     MarketTrend,
-    InvestmentGrade
+    NeighborhoodMetrics,
 )
-from ghl_real_estate_ai.ml.price_prediction_engine import (
-    PricePredictionResult,
-    PredictionTimeframe
-)
-from ghl_real_estate_ai.services.inventory_alert_system import (
-    AlertInstance,
-    AlertType,
-    AlertSeverity,
-    AlertStatus
-)
-
-# Create a test app with the router
-from fastapi import FastAPI
 
 test_app = FastAPI()
 test_app.include_router(router)
@@ -100,7 +92,7 @@ class TestNeighborhoodIntelligenceRoutes:
             amenity_scores={"restaurants": 94.0, "shopping": 89.0},
             data_freshness=datetime.now(),
             confidence_score=0.94,
-            last_updated=datetime.now()
+            last_updated=datetime.now(),
         )
 
     @pytest.fixture
@@ -108,22 +100,18 @@ class TestNeighborhoodIntelligenceRoutes:
         """Sample intelligence data for testing."""
         return {
             "neighborhood_id": "test_neighborhood",
-            "metrics": {
-                "median_home_value": 750000.0,
-                "price_appreciation_12m": 12.3,
-                "investment_grade": "A"
-            },
+            "metrics": {"median_home_value": 750000.0, "price_appreciation_12m": 12.3, "investment_grade": "A"},
             "analysis": {
                 "market_summary": "Strong market with good fundamentals",
                 "investment_thesis": "High-quality investment opportunity",
-                "opportunity_score": 87.5
+                "opportunity_score": 87.5,
             },
             "predictions": {
                 "1m": {"predicted_price": 760000.0, "confidence": 0.95},
-                "3m": {"predicted_price": 780000.0, "confidence": 0.93}
+                "3m": {"predicted_price": 780000.0, "confidence": 0.93},
             },
             "alerts": [],
-            "generated_at": datetime.now().isoformat()
+            "generated_at": datetime.now().isoformat(),
         }
 
     @pytest.fixture
@@ -147,12 +135,14 @@ class TestNeighborhoodIntelligenceRoutes:
             delivery_status={},
             triggered_at=datetime.now(),
             expires_at=datetime.now() + timedelta(hours=24),
-            recommended_actions=["Monitor market", "Prepare buyers"]
+            recommended_actions=["Monitor market", "Prepare buyers"],
         )
 
     def test_get_neighborhood_intelligence_success(self, sample_intelligence_data):
         """Test successful neighborhood intelligence retrieval."""
-        with patch('ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service') as mock_service:
+        with patch(
+            "ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service"
+        ) as mock_service:
             # Mock service response
             mock_service_instance = AsyncMock()
             mock_service_instance.get_neighborhood_intelligence.return_value = sample_intelligence_data
@@ -169,7 +159,9 @@ class TestNeighborhoodIntelligenceRoutes:
 
     def test_get_neighborhood_intelligence_not_found(self):
         """Test neighborhood intelligence for non-existent neighborhood."""
-        with patch('ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service') as mock_service:
+        with patch(
+            "ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service"
+        ) as mock_service:
             # Mock service returning None (not found)
             mock_service_instance = AsyncMock()
             mock_service_instance.get_neighborhood_intelligence.return_value = None
@@ -195,7 +187,9 @@ class TestNeighborhoodIntelligenceRoutes:
 
     def test_get_neighborhood_metrics_success(self, sample_neighborhood_metrics):
         """Test successful neighborhood metrics retrieval."""
-        with patch('ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service') as mock_service:
+        with patch(
+            "ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service"
+        ) as mock_service:
             mock_service_instance = AsyncMock()
             mock_service_instance.get_market_metrics.return_value = sample_neighborhood_metrics
             mock_service.return_value = mock_service_instance
@@ -211,7 +205,9 @@ class TestNeighborhoodIntelligenceRoutes:
 
     def test_get_neighborhood_metrics_with_timeframe(self, sample_neighborhood_metrics):
         """Test neighborhood metrics with specific timeframe."""
-        with patch('ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service') as mock_service:
+        with patch(
+            "ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service"
+        ) as mock_service:
             mock_service_instance = AsyncMock()
             mock_service_instance.get_market_metrics.return_value = sample_neighborhood_metrics
             mock_service.return_value = mock_service_instance
@@ -222,15 +218,17 @@ class TestNeighborhoodIntelligenceRoutes:
 
             # Verify timeframe was passed to service
             mock_service_instance.get_market_metrics.assert_called_with(
-                neighborhood_id="test_neighborhood",
-                timeframe="1m"
+                neighborhood_id="test_neighborhood", timeframe="1m"
             )
 
     def test_get_price_predictions_success(self, sample_neighborhood_metrics):
         """Test successful price predictions."""
-        with patch('ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service') as mock_intelligence, \
-             patch('ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_price_prediction_engine') as mock_engine:
-
+        with (
+            patch(
+                "ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service"
+            ) as mock_intelligence,
+            patch("ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_price_prediction_engine") as mock_engine,
+        ):
             # Mock intelligence service
             mock_intelligence_instance = AsyncMock()
             mock_intelligence_instance.get_market_metrics.return_value = sample_neighborhood_metrics
@@ -252,20 +250,14 @@ class TestNeighborhoodIntelligenceRoutes:
                 neighborhood_context={},
                 prediction_date=datetime.now(),
                 data_freshness=datetime.now(),
-                model_version="2.1.0"
+                model_version="2.1.0",
             )
             mock_engine_instance.predict_price.return_value = mock_prediction_result
             mock_engine.return_value = mock_engine_instance
 
-            request_data = {
-                "property_type": "single_family",
-                "timeframes": ["1m", "3m"]
-            }
+            request_data = {"property_type": "single_family", "timeframes": ["1m", "3m"]}
 
-            response = client.post(
-                "/api/v1/neighborhoods/test_neighborhood/predictions",
-                json=request_data
-            )
+            response = client.post("/api/v1/neighborhoods/test_neighborhood/predictions", json=request_data)
 
             assert response.status_code == status.HTTP_200_OK
 
@@ -275,14 +267,9 @@ class TestNeighborhoodIntelligenceRoutes:
 
     def test_get_price_predictions_invalid_timeframe(self, sample_neighborhood_metrics):
         """Test price predictions with invalid timeframe."""
-        request_data = {
-            "timeframes": ["invalid_timeframe"]
-        }
+        request_data = {"timeframes": ["invalid_timeframe"]}
 
-        response = client.post(
-            "/api/v1/neighborhoods/test_neighborhood/predictions",
-            json=request_data
-        )
+        response = client.post("/api/v1/neighborhoods/test_neighborhood/predictions", json=request_data)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -292,17 +279,16 @@ class TestNeighborhoodIntelligenceRoutes:
 
     def test_search_neighborhoods_success(self):
         """Test successful neighborhood search."""
-        with patch('ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service') as mock_service:
+        with patch(
+            "ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service"
+        ) as mock_service:
             mock_service_instance = AsyncMock()
             mock_service.return_value = mock_service_instance
 
             request_data = {
-                "criteria": {
-                    "max_price": 800000,
-                    "min_walk_score": 70
-                },
+                "criteria": {"max_price": 800000, "min_walk_score": 70},
                 "max_results": 10,
-                "include_metrics": True
+                "include_metrics": True,
             }
 
             response = client.post("/api/v1/neighborhoods/search", json=request_data)
@@ -315,10 +301,7 @@ class TestNeighborhoodIntelligenceRoutes:
 
     def test_search_neighborhoods_empty_criteria(self):
         """Test neighborhood search with empty criteria."""
-        request_data = {
-            "criteria": {},
-            "max_results": 10
-        }
+        request_data = {"criteria": {}, "max_results": 10}
 
         response = client.post("/api/v1/neighborhoods/search", json=request_data)
 
@@ -330,7 +313,9 @@ class TestNeighborhoodIntelligenceRoutes:
 
     def test_get_market_alerts_success(self, sample_alert):
         """Test successful market alerts retrieval."""
-        with patch('ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_inventory_alert_system') as mock_alert_system:
+        with patch(
+            "ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_inventory_alert_system"
+        ) as mock_alert_system:
             mock_system_instance = AsyncMock()
             mock_system_instance.get_active_alerts.return_value = [sample_alert]
             mock_alert_system.return_value = mock_system_instance
@@ -346,14 +331,14 @@ class TestNeighborhoodIntelligenceRoutes:
 
     def test_get_market_alerts_with_filters(self, sample_alert):
         """Test market alerts with filters."""
-        with patch('ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_inventory_alert_system') as mock_alert_system:
+        with patch(
+            "ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_inventory_alert_system"
+        ) as mock_alert_system:
             mock_system_instance = AsyncMock()
             mock_system_instance.get_active_alerts.return_value = [sample_alert]
             mock_alert_system.return_value = mock_system_instance
 
-            response = client.get(
-                "/api/v1/market/alerts?neighborhood_ids=test_neighborhood&min_severity=high&limit=20"
-            )
+            response = client.get("/api/v1/market/alerts?neighborhood_ids=test_neighborhood&min_severity=high&limit=20")
 
             assert response.status_code == status.HTTP_200_OK
 
@@ -363,7 +348,9 @@ class TestNeighborhoodIntelligenceRoutes:
 
     def test_create_alert_rule_success(self):
         """Test successful alert rule creation."""
-        with patch('ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_inventory_alert_system') as mock_alert_system:
+        with patch(
+            "ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_inventory_alert_system"
+        ) as mock_alert_system:
             mock_system_instance = AsyncMock()
             mock_system_instance.create_alert_rule.return_value = True
             mock_alert_system.return_value = mock_system_instance
@@ -378,7 +365,7 @@ class TestNeighborhoodIntelligenceRoutes:
                 "comparison_period": "24h",
                 "severity": "high",
                 "delivery_channels": ["email"],
-                "throttle_minutes": 60
+                "throttle_minutes": 60,
             }
 
             response = client.post("/api/v1/market/alerts/rules", json=request_data)
@@ -398,7 +385,7 @@ class TestNeighborhoodIntelligenceRoutes:
             "enabled": True,
             "conditions": {},
             "threshold_values": {},
-            "severity": "high"
+            "severity": "high",
         }
 
         response = client.post("/api/v1/market/alerts/rules", json=request_data)
@@ -410,14 +397,16 @@ class TestNeighborhoodIntelligenceRoutes:
 
     def test_get_investment_opportunities_success(self):
         """Test successful investment opportunities analysis."""
-        with patch('ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service') as mock_service:
+        with patch(
+            "ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service"
+        ) as mock_service:
             mock_service_instance = AsyncMock()
             mock_opportunities = [
                 {
                     "neighborhood_id": "opportunity_area",
                     "score": 94.2,
                     "roi_projection": {"1_year": 18.5},
-                    "investment_thesis": "Strong growth potential"
+                    "investment_thesis": "Strong growth potential",
                 }
             ]
             mock_service_instance.analyze_investment_opportunities.return_value = mock_opportunities
@@ -426,7 +415,7 @@ class TestNeighborhoodIntelligenceRoutes:
             request_data = {
                 "criteria": {"max_budget": 800000, "min_roi": 15.0},
                 "max_results": 20,
-                "risk_tolerance": "medium"
+                "risk_tolerance": "medium",
             }
 
             response = client.post("/api/v1/investment/opportunities", json=request_data)
@@ -439,7 +428,9 @@ class TestNeighborhoodIntelligenceRoutes:
 
     def test_generate_investment_heatmap_success(self):
         """Test successful investment heatmap generation."""
-        with patch('ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_geospatial_analysis_service') as mock_geo_service:
+        with patch(
+            "ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_geospatial_analysis_service"
+        ) as mock_geo_service:
             from ghl_real_estate_ai.services.geospatial_analysis_service import InvestmentHeatmap
 
             mock_geo_instance = AsyncMock()
@@ -454,7 +445,7 @@ class TestNeighborhoodIntelligenceRoutes:
                 scoring_factors=["price_appreciation"],
                 confidence_level=0.85,
                 data_freshness=datetime.now(),
-                generated_at=datetime.now()
+                generated_at=datetime.now(),
             )
             mock_geo_instance.generate_investment_heatmap.return_value = mock_heatmap
             mock_geo_service.return_value = mock_geo_instance
@@ -462,7 +453,7 @@ class TestNeighborhoodIntelligenceRoutes:
             request_data = {
                 "bounds": [30.0, -98.0, 30.5, -97.5],
                 "grid_resolution_km": 0.5,
-                "scoring_factors": ["price_appreciation", "market_velocity"]
+                "scoring_factors": ["price_appreciation", "market_velocity"],
             }
 
             response = client.post("/api/v1/investment/heatmap", json=request_data)
@@ -477,7 +468,7 @@ class TestNeighborhoodIntelligenceRoutes:
         """Test heatmap generation with invalid bounds."""
         request_data = {
             "bounds": [200.0, -98.0, 30.5],  # Invalid bounds
-            "grid_resolution_km": 0.5
+            "grid_resolution_km": 0.5,
         }
 
         response = client.post("/api/v1/investment/heatmap", json=request_data)
@@ -486,7 +477,9 @@ class TestNeighborhoodIntelligenceRoutes:
 
     def test_analyze_accessibility_success(self):
         """Test successful accessibility analysis."""
-        with patch('ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_geospatial_analysis_service') as mock_geo_service:
+        with patch(
+            "ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_geospatial_analysis_service"
+        ) as mock_geo_service:
             from ghl_real_estate_ai.services.geospatial_analysis_service import AccessibilityScore, GeographicPoint
 
             mock_geo_instance = AsyncMock()
@@ -502,7 +495,7 @@ class TestNeighborhoodIntelligenceRoutes:
                 walkability_factors={},
                 commute_scores={"downtown": 92.0},
                 traffic_patterns={},
-                calculated_at=datetime.now()
+                calculated_at=datetime.now(),
             )
             mock_geo_instance.calculate_accessibility_scores.return_value = [mock_score]
             mock_geo_service.return_value = mock_geo_instance
@@ -510,7 +503,7 @@ class TestNeighborhoodIntelligenceRoutes:
             request_data = {
                 "locations": [{"latitude": 30.2672, "longitude": -97.7431}],
                 "analysis_radius_km": 2.0,
-                "include_demographics": True
+                "include_demographics": True,
             }
 
             response = client.post("/api/v1/geospatial/accessibility", json=request_data)
@@ -525,7 +518,7 @@ class TestNeighborhoodIntelligenceRoutes:
         """Test accessibility analysis with invalid coordinates."""
         request_data = {
             "locations": [{"latitude": 200.0, "longitude": -97.7431}],  # Invalid latitude
-            "analysis_radius_km": 2.0
+            "analysis_radius_km": 2.0,
         }
 
         response = client.post("/api/v1/geospatial/accessibility", json=request_data)
@@ -534,8 +527,10 @@ class TestNeighborhoodIntelligenceRoutes:
 
     def test_cluster_properties_success(self):
         """Test successful property clustering."""
-        with patch('ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_geospatial_analysis_service') as mock_geo_service:
-            from ghl_real_estate_ai.services.geospatial_analysis_service import PropertyCluster, GeographicPoint
+        with patch(
+            "ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_geospatial_analysis_service"
+        ) as mock_geo_service:
+            from ghl_real_estate_ai.services.geospatial_analysis_service import GeographicPoint, PropertyCluster
 
             mock_geo_instance = AsyncMock()
             mock_cluster = PropertyCluster(
@@ -546,7 +541,7 @@ class TestNeighborhoodIntelligenceRoutes:
                 property_count=15,
                 cluster_characteristics={"avg_price": 750000},
                 similarity_score=0.85,
-                market_homogeneity=0.78
+                market_homogeneity=0.78,
             )
             mock_geo_instance.cluster_properties.return_value = [mock_cluster]
             mock_geo_service.return_value = mock_geo_instance
@@ -554,10 +549,10 @@ class TestNeighborhoodIntelligenceRoutes:
             request_data = {
                 "properties": [
                     {"latitude": 30.2672, "longitude": -97.7431, "price": 750000},
-                    {"latitude": 30.2680, "longitude": -97.7440, "price": 780000}
+                    {"latitude": 30.2680, "longitude": -97.7440, "price": 780000},
                 ],
                 "cluster_criteria": "investment_potential",
-                "max_clusters": 5
+                "max_clusters": 5,
             }
 
             response = client.post("/api/v1/geospatial/cluster", json=request_data)
@@ -570,11 +565,16 @@ class TestNeighborhoodIntelligenceRoutes:
 
     def test_health_check_success(self):
         """Test health check endpoint."""
-        with patch('ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service') as mock_intelligence, \
-             patch('ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_price_prediction_engine') as mock_engine, \
-             patch('ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_geospatial_analysis_service') as mock_geo, \
-             patch('ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_inventory_alert_system') as mock_alert:
-
+        with (
+            patch(
+                "ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service"
+            ) as mock_intelligence,
+            patch("ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_price_prediction_engine") as mock_engine,
+            patch(
+                "ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_geospatial_analysis_service"
+            ) as mock_geo,
+            patch("ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_inventory_alert_system") as mock_alert,
+        ):
             # Mock all services as initialized
             mock_intelligence_instance = AsyncMock()
             mock_intelligence_instance.is_initialized = True
@@ -603,7 +603,9 @@ class TestNeighborhoodIntelligenceRoutes:
 
     def test_health_check_service_unavailable(self):
         """Test health check when services are unavailable."""
-        with patch('ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service') as mock_service:
+        with patch(
+            "ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service"
+        ) as mock_service:
             mock_service.side_effect = Exception("Service unavailable")
 
             response = client.get("/api/v1/health")
@@ -620,10 +622,13 @@ class TestNeighborhoodIntelligenceRoutes:
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
         # Test invalid data types
-        response = client.post("/api/v1/neighborhoods/search", json={
-            "criteria": "not_a_dict",  # Should be dict
-            "max_results": "not_a_number"  # Should be number
-        })
+        response = client.post(
+            "/api/v1/neighborhoods/search",
+            json={
+                "criteria": "not_a_dict",  # Should be dict
+                "max_results": "not_a_number",  # Should be number
+            },
+        )
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_error_response_format(self):
@@ -633,7 +638,9 @@ class TestNeighborhoodIntelligenceRoutes:
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
         # Test internal server error handling
-        with patch('ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service') as mock_service:
+        with patch(
+            "ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service"
+        ) as mock_service:
             mock_service.side_effect = Exception("Internal error")
 
             response = client.get("/api/v1/neighborhoods/test/intelligence")
@@ -647,12 +654,15 @@ class TestNeighborhoodIntelligenceRoutes:
 
     def test_response_time_performance(self, sample_intelligence_data):
         """Test API response time performance."""
-        with patch('ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service') as mock_service:
+        with patch(
+            "ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service"
+        ) as mock_service:
             mock_service_instance = AsyncMock()
             mock_service_instance.get_neighborhood_intelligence.return_value = sample_intelligence_data
             mock_service.return_value = mock_service_instance
 
             import time
+
             start_time = time.time()
 
             response = client.get("/api/v1/neighborhoods/test_neighborhood/intelligence")
@@ -672,7 +682,9 @@ class TestNeighborhoodIntelligenceRoutes:
         import threading
         import time
 
-        with patch('ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service') as mock_service:
+        with patch(
+            "ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_neighborhood_intelligence_service"
+        ) as mock_service:
             mock_service_instance = AsyncMock()
             mock_service_instance.get_neighborhood_intelligence.return_value = sample_intelligence_data
             mock_service.return_value = mock_service_instance
@@ -708,14 +720,18 @@ class TestNeighborhoodIntelligenceRoutes:
         # Create large property list for clustering
         large_properties = []
         for i in range(1000):  # 1000 properties
-            large_properties.append({
-                "latitude": 30.0 + (i * 0.001),
-                "longitude": -97.0 - (i * 0.001),
-                "price": 500000 + (i * 1000),
-                "property_id": f"prop_{i}"
-            })
+            large_properties.append(
+                {
+                    "latitude": 30.0 + (i * 0.001),
+                    "longitude": -97.0 - (i * 0.001),
+                    "price": 500000 + (i * 1000),
+                    "property_id": f"prop_{i}",
+                }
+            )
 
-        with patch('ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_geospatial_analysis_service') as mock_geo_service:
+        with patch(
+            "ghl_real_estate_ai.api.routes.neighborhood_intelligence.get_geospatial_analysis_service"
+        ) as mock_geo_service:
             mock_geo_instance = AsyncMock()
             mock_geo_instance.cluster_properties.return_value = []
             mock_geo_service.return_value = mock_geo_instance
@@ -723,7 +739,7 @@ class TestNeighborhoodIntelligenceRoutes:
             request_data = {
                 "properties": large_properties[:100],  # Limit to reasonable size
                 "cluster_criteria": "price",
-                "max_clusters": 5
+                "max_clusters": 5,
             }
 
             response = client.post("/api/v1/geospatial/cluster", json=request_data)

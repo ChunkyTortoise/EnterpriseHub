@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 # Data structures
 # ---------------------------------------------------------------------------
 
+
 class ChannelType(Enum):
     SMS = "sms"
     EMAIL = "email"
@@ -61,6 +62,7 @@ class MessagePriority(Enum):
 @dataclass
 class ChannelPreference:
     """Learned channel preference for a contact."""
+
     channel: ChannelType
     engagement_rate: float = 0.5
     response_rate: float = 0.5
@@ -72,6 +74,7 @@ class ChannelPreference:
 @dataclass
 class DeliveryResult:
     """Result of a message delivery attempt."""
+
     contact_id: str
     message_id: str
     channel_used: ChannelType
@@ -86,6 +89,7 @@ class DeliveryResult:
 @dataclass
 class ChannelAnalytics:
     """Cross-channel performance analytics."""
+
     total_messages: int = 0
     messages_by_channel: Dict[str, int] = field(default_factory=dict)
     delivery_rate: float = 0.0
@@ -119,6 +123,7 @@ SMS_MAX_LENGTH = 320
 # ---------------------------------------------------------------------------
 # Router
 # ---------------------------------------------------------------------------
+
 
 class UnifiedChannelRouter:
     """
@@ -176,15 +181,11 @@ class UnifiedChannelRouter:
         formatted = self._format_for_channel(message, optimal)
 
         # 5. Deliver
-        result = await self._deliver(
-            contact_id, formatted, optimal, sentiment, compliance_status
-        )
+        result = await self._deliver(contact_id, formatted, optimal, sentiment, compliance_status)
 
         # 6. Fallback if failed
         if result.delivery_status == DeliveryStatus.FAILED:
-            fb = await self._try_fallback(
-                contact_id, formatted, optimal, sentiment, compliance_status
-            )
+            fb = await self._try_fallback(contact_id, formatted, optimal, sentiment, compliance_status)
             if fb:
                 result = fb
 
@@ -192,9 +193,7 @@ class UnifiedChannelRouter:
         self._delivery_log.append(result)
         return result
 
-    async def get_channel_preference(
-        self, contact_id: str
-    ) -> Optional[ChannelType]:
+    async def get_channel_preference(self, contact_id: str) -> Optional[ChannelType]:
         """Return the learned best channel for a contact."""
         prefs = self._preferences.get(contact_id, {})
         if not prefs:
@@ -220,9 +219,9 @@ class UnifiedChannelRouter:
         effectiveness: Dict[str, float] = {}
         for ch, count in by_channel.items():
             ok = sum(
-                1 for r in self._delivery_log
-                if r.channel_used.value == ch
-                and r.delivery_status in (DeliveryStatus.SENT, DeliveryStatus.DELIVERED)
+                1
+                for r in self._delivery_log
+                if r.channel_used.value == ch and r.delivery_status in (DeliveryStatus.SENT, DeliveryStatus.DELIVERED)
             )
             effectiveness[ch] = round(ok / count, 4) if count else 0.0
 
@@ -241,9 +240,7 @@ class UnifiedChannelRouter:
             preferred_channels=preferred,
         )
 
-    def register_channel_handler(
-        self, channel: str, handler: Callable
-    ) -> None:
+    def register_channel_handler(self, channel: str, handler: Callable) -> None:
         """Register a delivery handler for a channel."""
         self._channel_handlers[self._resolve_channel(channel)] = handler
 
@@ -291,7 +288,7 @@ class UnifiedChannelRouter:
     def _format_for_channel(message: str, channel: ChannelType) -> str:
         if channel == ChannelType.SMS:
             if len(message) > SMS_MAX_LENGTH:
-                return message[:SMS_MAX_LENGTH - 3] + "..."
+                return message[: SMS_MAX_LENGTH - 3] + "..."
             return message
         if channel == ChannelType.VOICE:
             return message.replace("**", "").replace("*", "").replace("#", "")
@@ -306,19 +303,19 @@ class UnifiedChannelRouter:
             from ghl_real_estate_ai.services.compliance_middleware import (
                 get_compliance_middleware,
             )
+
             mw = get_compliance_middleware()
             result = await mw.enforce(message)
             return result.status.value
         except Exception:
             return "PASSED"
 
-    async def _analyze_sentiment(
-        self, contact_id: str, message: str, channel: str
-    ) -> float:
+    async def _analyze_sentiment(self, contact_id: str, message: str, channel: str) -> float:
         try:
             from ghl_real_estate_ai.services.sentiment_analysis_engine import (
                 get_sentiment_engine,
             )
+
             engine = get_sentiment_engine()
             result = await engine.analyze_message(contact_id, message, channel)
             return result.polarity
@@ -370,9 +367,7 @@ class UnifiedChannelRouter:
     ) -> Optional[DeliveryResult]:
         for fb in FALLBACK_ORDER.get(failed_channel, []):
             formatted = self._format_for_channel(message, fb)
-            result = await self._deliver(
-                contact_id, formatted, fb, sentiment, compliance
-            )
+            result = await self._deliver(contact_id, formatted, fb, sentiment, compliance)
             if result.delivery_status == DeliveryStatus.SENT:
                 result.delivery_status = DeliveryStatus.FALLBACK
                 result.fallback_channel = fb
@@ -383,9 +378,7 @@ class UnifiedChannelRouter:
     # Preference learning
     # ------------------------------------------------------------------
 
-    def _update_preferences(
-        self, contact_id: str, result: DeliveryResult
-    ) -> None:
+    def _update_preferences(self, contact_id: str, result: DeliveryResult) -> None:
         if contact_id not in self._preferences:
             self._preferences[contact_id] = {}
 
@@ -399,9 +392,11 @@ class UnifiedChannelRouter:
         pref.total_messages += 1
         pref.last_used = time.time()
 
-        success = 1.0 if result.delivery_status in (
-            DeliveryStatus.SENT, DeliveryStatus.DELIVERED, DeliveryStatus.FALLBACK
-        ) else 0.0
+        success = (
+            1.0
+            if result.delivery_status in (DeliveryStatus.SENT, DeliveryStatus.DELIVERED, DeliveryStatus.FALLBACK)
+            else 0.0
+        )
         alpha = 0.2
         pref.engagement_rate = pref.engagement_rate * (1 - alpha) + success * alpha
 

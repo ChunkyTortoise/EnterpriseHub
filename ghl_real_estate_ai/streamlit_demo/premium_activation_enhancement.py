@@ -1,6 +1,6 @@
-
 # Premium UI Activation Enhancement
 # This code ensures premium components are always available for Jorge demo
+
 
 def ensure_premium_components_activated():
     """
@@ -17,17 +17,20 @@ def ensure_premium_components_activated():
 
     # Test import premium components
     try:
-        from components.property_cards import render_premium_property_grid
         from components.elite_refinements import (
-            render_dynamic_timeline, render_feature_gap,
-            render_elite_segmentation_tab, render_actionable_heatmap
+            render_actionable_heatmap,
+            render_dynamic_timeline,
+            render_elite_segmentation_tab,
+            render_feature_gap,
         )
         from components.enhanced_services import render_ai_lead_insights
+        from components.property_cards import render_premium_property_grid
 
         return True, "✅ All premium components successfully activated"
 
     except ImportError as e:
         return False, f"⚠️ Component activation issue: {e}"
+
 
 def enhance_property_matcher_premium_display():
     """
@@ -43,6 +46,7 @@ def enhance_property_matcher_premium_display():
         # Always try premium first, fallback to standard
         try:
             from components.property_cards import render_premium_property_grid
+
             render_premium_property_grid(matches[:3])
 
             # Add premium enhancement indicators
@@ -57,7 +61,9 @@ def enhance_property_matcher_premium_display():
                 with st.expander(f"🏠 {prop['address']} - {prop.get('match_score', 95)}% AI Match"):
                     col1, col2 = st.columns([3, 1])
                     with col1:
-                        st.write(f"**${prop.get('price', 750000):,}** | {prop.get('beds', 3)} bed, {prop.get('baths', 2)} bath")
+                        st.write(
+                            f"**${prop.get('price', 750000):,}** | {prop.get('beds', 3)} bed, {prop.get('baths', 2)} bath"
+                        )
                         st.write(f"📍 {prop.get('neighborhood', 'Premium Location')}")
                     with col2:
                         st.metric("AI Score", f"{prop.get('match_score', 95)}%")

@@ -25,16 +25,17 @@ Author: Lead Scoring 2.0 Implementation
 Date: 2026-01-18
 """
 
-import numpy as np
-import pandas as pd
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple, Union
-from dataclasses import dataclass
-from enum import Enum
+import hashlib
 import json
 import pickle
-import hashlib
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import numpy as np
+import pandas as pd
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.ai_predictive_lead_scoring import LeadScore
@@ -44,6 +45,7 @@ logger = get_logger(__name__)
 
 class MarketSegment(Enum):
     """Market segment types"""
+
     TECH_HUB = "tech_hub"
     ENERGY_SECTOR = "energy_sector"
     MILITARY_MARKET = "military_market"
@@ -56,6 +58,7 @@ class MarketSegment(Enum):
 @dataclass
 class MarketMetrics:
     """Market-specific performance metrics"""
+
     segment: MarketSegment
     accuracy: float
     precision: float
@@ -72,6 +75,7 @@ class MarketMetrics:
 @dataclass
 class SegmentProfile:
     """Segment characteristics and behavior patterns"""
+
     segment: MarketSegment
     typical_budget_range: Tuple[int, int]
     common_keywords: List[str]
@@ -92,20 +96,12 @@ class BaseMarketModel(ABC):
         self.feature_importance = {}
 
     @abstractmethod
-    def predict(
-        self,
-        lead_data: Dict[str, Any],
-        behavioral_signals: Dict[str, float]
-    ) -> LeadScore:
+    def predict(self, lead_data: Dict[str, Any], behavioral_signals: Dict[str, float]) -> LeadScore:
         """Predict lead score for this market segment"""
         pass
 
     @abstractmethod
-    def get_segment_features(
-        self,
-        lead_data: Dict[str, Any],
-        behavioral_signals: Dict[str, float]
-    ) -> Dict[str, float]:
+    def get_segment_features(self, lead_data: Dict[str, Any], behavioral_signals: Dict[str, float]) -> Dict[str, float]:
         """Extract segment-specific features"""
         pass
 
@@ -116,84 +112,71 @@ class TechHubModel(BaseMarketModel):
     def __init__(self):
         super().__init__(MarketSegment.TECH_HUB)
         self.tech_companies = [
-            "apple", "google", "microsoft", "amazon", "meta", "tesla",
-            "nvidia", "salesforce", "adobe", "uber", "airbnb"
+            "apple",
+            "google",
+            "microsoft",
+            "amazon",
+            "meta",
+            "tesla",
+            "nvidia",
+            "salesforce",
+            "adobe",
+            "uber",
+            "airbnb",
         ]
         self.tech_keywords = [
-            "engineer", "developer", "programmer", "architect", "manager",
-            "startup", "ipo", "stock options", "remote work", "commute"
+            "engineer",
+            "developer",
+            "programmer",
+            "architect",
+            "manager",
+            "startup",
+            "ipo",
+            "stock options",
+            "remote work",
+            "commute",
         ]
 
-    def get_segment_features(
-        self,
-        lead_data: Dict[str, Any],
-        behavioral_signals: Dict[str, float]
-    ) -> Dict[str, float]:
+    def get_segment_features(self, lead_data: Dict[str, Any], behavioral_signals: Dict[str, float]) -> Dict[str, float]:
         """Extract tech-specific features"""
         features = {}
 
         all_text = str(lead_data).lower()
-        conversation_text = " ".join([
-            str(msg) for msg in lead_data.get("messages", [])
-        ]).lower()
+        conversation_text = " ".join([str(msg) for msg in lead_data.get("messages", [])]).lower()
 
         # Tech company association
-        tech_company_mentions = sum(1 for company in self.tech_companies
-                                  if company in all_text)
+        tech_company_mentions = sum(1 for company in self.tech_companies if company in all_text)
         features["tech_company_association"] = min(tech_company_mentions / 3.0, 1.0)
 
         # Tech role indicators
-        tech_role_mentions = sum(1 for keyword in self.tech_keywords
-                               if keyword in all_text)
+        tech_role_mentions = sum(1 for keyword in self.tech_keywords if keyword in all_text)
         features["tech_role_indicators"] = min(tech_role_mentions / 5.0, 1.0)
 
         # Equity/stock options mentions (high income potential)
-        equity_indicators = [
-            "stock options", "rsu", "vesting", "equity", "ipo", "shares"
-        ]
-        features["equity_compensation"] = float(any(
-            indicator in conversation_text for indicator in equity_indicators
-        ))
+        equity_indicators = ["stock options", "rsu", "vesting", "equity", "ipo", "shares"]
+        features["equity_compensation"] = float(any(indicator in conversation_text for indicator in equity_indicators))
 
         # Work-from-home setup mentions
-        wfh_indicators = [
-            "home office", "work from home", "remote work", "office space"
-        ]
-        features["wfh_requirements"] = float(any(
-            indicator in conversation_text for indicator in wfh_indicators
-        ))
+        wfh_indicators = ["home office", "work from home", "remote work", "office space"]
+        features["wfh_requirements"] = float(any(indicator in conversation_text for indicator in wfh_indicators))
 
         # Tech hub location preferences
-        tech_locations = [
-            "austin", "seattle", "san francisco", "palo alto", "cupertino"
-        ]
-        features["tech_location_preference"] = float(any(
-            location in all_text for location in tech_locations
-        ))
+        tech_locations = ["austin", "seattle", "san francisco", "palo alto", "cupertino"]
+        features["tech_location_preference"] = float(any(location in all_text for location in tech_locations))
 
         # High-speed internet requirements
-        internet_indicators = [
-            "fiber", "gigabit", "high speed internet", "bandwidth"
-        ]
-        features["high_speed_internet_needs"] = float(any(
-            indicator in conversation_text for indicator in internet_indicators
-        ))
+        internet_indicators = ["fiber", "gigabit", "high speed internet", "bandwidth"]
+        features["high_speed_internet_needs"] = float(
+            any(indicator in conversation_text for indicator in internet_indicators)
+        )
 
         # Commute optimization focus
-        commute_indicators = [
-            "commute", "drive time", "traffic", "transportation", "bart", "metro"
-        ]
-        features["commute_focus"] = float(any(
-            indicator in conversation_text for indicator in commute_indicators
-        ))
+        commute_indicators = ["commute", "drive time", "traffic", "transportation", "bart", "metro"]
+        features["commute_focus"] = float(any(indicator in conversation_text for indicator in commute_indicators))
 
         return features
 
-    def predict(
-        self,
-        lead_data: Dict[str, Any],
-        behavioral_signals: Dict[str, float]
-    ) -> LeadScore:
+    def predict(self, lead_data: Dict[str, Any], behavioral_signals: Dict[str, float]) -> LeadScore:
         """Tech hub specific prediction logic"""
         # Get segment features
         segment_features = self.get_segment_features(lead_data, behavioral_signals)
@@ -242,21 +225,30 @@ class TechHubModel(BaseMarketModel):
             confidence=confidence,
             tier=tier,
             factors=[
-                {"name": "Tech Industry Association", "impact": segment_features.get("tech_company_association", 0) * 15,
-                 "value": f"{int(segment_features.get('tech_company_association', 0) * 100)}% tech signals"},
-                {"name": "Equity Compensation", "impact": segment_features.get("equity_compensation", 0) * 20,
-                 "value": "Stock options mentioned" if segment_features.get("equity_compensation", 0) > 0 else "Not mentioned"},
-                {"name": "Digital Engagement", "impact": behavioral_signals.get("digital_engagement", 0) * 12,
-                 "value": f"{int(behavioral_signals.get('digital_engagement', 0) * 100)}% engagement"}
+                {
+                    "name": "Tech Industry Association",
+                    "impact": segment_features.get("tech_company_association", 0) * 15,
+                    "value": f"{int(segment_features.get('tech_company_association', 0) * 100)}% tech signals",
+                },
+                {
+                    "name": "Equity Compensation",
+                    "impact": segment_features.get("equity_compensation", 0) * 20,
+                    "value": "Stock options mentioned"
+                    if segment_features.get("equity_compensation", 0) > 0
+                    else "Not mentioned",
+                },
+                {
+                    "name": "Digital Engagement",
+                    "impact": behavioral_signals.get("digital_engagement", 0) * 12,
+                    "value": f"{int(behavioral_signals.get('digital_engagement', 0) * 100)}% engagement",
+                },
             ],
             recommendations=recommendations,
-            scored_at=datetime.now()
+            scored_at=datetime.now(),
         )
 
     def _generate_tech_recommendations(
-        self,
-        segment_features: Dict[str, float],
-        behavioral_signals: Dict[str, float]
+        self, segment_features: Dict[str, float], behavioral_signals: Dict[str, float]
     ) -> List[str]:
         """Generate tech-specific recommendations"""
         recommendations = []
@@ -285,57 +277,57 @@ class EnergySectorModel(BaseMarketModel):
     def __init__(self):
         super().__init__(MarketSegment.ENERGY_SECTOR)
         self.energy_companies = [
-            "exxon", "chevron", "bp", "shell", "conocophillips", "marathon",
-            "valero", "phillips 66", "halliburton", "schlumberger"
+            "exxon",
+            "chevron",
+            "bp",
+            "shell",
+            "conocophillips",
+            "marathon",
+            "valero",
+            "phillips 66",
+            "halliburton",
+            "schlumberger",
         ]
         self.energy_keywords = [
-            "oil", "gas", "petroleum", "refinery", "drilling", "pipeline",
-            "upstream", "downstream", "geologist", "engineer"
+            "oil",
+            "gas",
+            "petroleum",
+            "refinery",
+            "drilling",
+            "pipeline",
+            "upstream",
+            "downstream",
+            "geologist",
+            "engineer",
         ]
 
-    def get_segment_features(
-        self,
-        lead_data: Dict[str, Any],
-        behavioral_signals: Dict[str, float]
-    ) -> Dict[str, float]:
+    def get_segment_features(self, lead_data: Dict[str, Any], behavioral_signals: Dict[str, float]) -> Dict[str, float]:
         """Extract energy sector specific features"""
         features = {}
 
         all_text = str(lead_data).lower()
 
         # Energy company association
-        energy_company_mentions = sum(1 for company in self.energy_companies
-                                    if company in all_text)
+        energy_company_mentions = sum(1 for company in self.energy_companies if company in all_text)
         features["energy_company_association"] = min(energy_company_mentions / 2.0, 1.0)
 
         # Industry keywords
-        energy_keyword_mentions = sum(1 for keyword in self.energy_keywords
-                                    if keyword in all_text)
+        energy_keyword_mentions = sum(1 for keyword in self.energy_keywords if keyword in all_text)
         features["energy_industry_indicators"] = min(energy_keyword_mentions / 4.0, 1.0)
 
         # Cyclical employment awareness (energy sector volatility)
-        stability_indicators = [
-            "stable job", "permanent position", "contract work", "layoffs"
-        ]
-        features["employment_stability_awareness"] = float(any(
-            indicator in all_text for indicator in stability_indicators
-        ))
+        stability_indicators = ["stable job", "permanent position", "contract work", "layoffs"]
+        features["employment_stability_awareness"] = float(
+            any(indicator in all_text for indicator in stability_indicators)
+        )
 
         # Location proximity to energy hubs
-        energy_locations = [
-            "houston", "dallas", "midland", "corpus christi", "beaumont"
-        ]
-        features["energy_hub_proximity"] = float(any(
-            location in all_text for location in energy_locations
-        ))
+        energy_locations = ["houston", "dallas", "midland", "corpus christi", "beaumont"]
+        features["energy_hub_proximity"] = float(any(location in all_text for location in energy_locations))
 
         return features
 
-    def predict(
-        self,
-        lead_data: Dict[str, Any],
-        behavioral_signals: Dict[str, float]
-    ) -> LeadScore:
+    def predict(self, lead_data: Dict[str, Any], behavioral_signals: Dict[str, float]) -> LeadScore:
         """Energy sector specific prediction"""
         segment_features = self.get_segment_features(lead_data, behavioral_signals)
 
@@ -368,19 +360,25 @@ class EnergySectorModel(BaseMarketModel):
             confidence=confidence,
             tier=tier,
             factors=[
-                {"name": "Energy Industry Connection", "impact": segment_features.get("energy_company_association", 0) * 18,
-                 "value": f"{int(segment_features.get('energy_company_association', 0) * 100)}% industry signals"},
-                {"name": "Cash Buyer Potential", "impact": behavioral_signals.get("cash_buyer_indicators", 0) * 20,
-                 "value": "Cash purchase mentioned" if behavioral_signals.get("cash_buyer_indicators", 0) > 0 else "Financing likely"}
+                {
+                    "name": "Energy Industry Connection",
+                    "impact": segment_features.get("energy_company_association", 0) * 18,
+                    "value": f"{int(segment_features.get('energy_company_association', 0) * 100)}% industry signals",
+                },
+                {
+                    "name": "Cash Buyer Potential",
+                    "impact": behavioral_signals.get("cash_buyer_indicators", 0) * 20,
+                    "value": "Cash purchase mentioned"
+                    if behavioral_signals.get("cash_buyer_indicators", 0) > 0
+                    else "Financing likely",
+                },
             ],
             recommendations=self._generate_energy_recommendations(segment_features, behavioral_signals),
-            scored_at=datetime.now()
+            scored_at=datetime.now(),
         )
 
     def _generate_energy_recommendations(
-        self,
-        segment_features: Dict[str, float],
-        behavioral_signals: Dict[str, float]
+        self, segment_features: Dict[str, float], behavioral_signals: Dict[str, float]
     ) -> List[str]:
         """Generate energy sector recommendations"""
         recommendations = []
@@ -401,50 +399,45 @@ class MilitaryMarketModel(BaseMarketModel):
     def __init__(self):
         super().__init__(MarketSegment.MILITARY_MARKET)
         self.military_keywords = [
-            "military", "army", "navy", "air force", "marines", "coast guard",
-            "veteran", "active duty", "deployment", "pcs", "base", "fort"
+            "military",
+            "army",
+            "navy",
+            "air force",
+            "marines",
+            "coast guard",
+            "veteran",
+            "active duty",
+            "deployment",
+            "pcs",
+            "base",
+            "fort",
         ]
 
-    def get_segment_features(
-        self,
-        lead_data: Dict[str, Any],
-        behavioral_signals: Dict[str, float]
-    ) -> Dict[str, float]:
+    def get_segment_features(self, lead_data: Dict[str, Any], behavioral_signals: Dict[str, float]) -> Dict[str, float]:
         """Extract military-specific features"""
         features = {}
 
         all_text = str(lead_data).lower()
 
         # Military affiliation
-        military_mentions = sum(1 for keyword in self.military_keywords
-                              if keyword in all_text)
+        military_mentions = sum(1 for keyword in self.military_keywords if keyword in all_text)
         features["military_affiliation"] = min(military_mentions / 3.0, 1.0)
 
         # VA loan indicators
         va_indicators = ["va loan", "va mortgage", "va benefit", "veterans affairs"]
-        features["va_loan_eligible"] = float(any(
-            indicator in all_text for indicator in va_indicators
-        ))
+        features["va_loan_eligible"] = float(any(indicator in all_text for indicator in va_indicators))
 
         # PCS (Permanent Change of Station) indicators
         pcs_indicators = ["pcs", "transfer", "new orders", "reassignment", "deployment"]
-        features["pcs_timeline"] = float(any(
-            indicator in all_text for indicator in pcs_indicators
-        ))
+        features["pcs_timeline"] = float(any(indicator in all_text for indicator in pcs_indicators))
 
         # Base proximity requirements
         base_indicators = ["base", "fort", "naval station", "air force base"]
-        features["base_proximity_needs"] = float(any(
-            indicator in all_text for indicator in base_indicators
-        ))
+        features["base_proximity_needs"] = float(any(indicator in all_text for indicator in base_indicators))
 
         return features
 
-    def predict(
-        self,
-        lead_data: Dict[str, Any],
-        behavioral_signals: Dict[str, float]
-    ) -> LeadScore:
+    def predict(self, lead_data: Dict[str, Any], behavioral_signals: Dict[str, float]) -> LeadScore:
         """Military market specific prediction"""
         segment_features = self.get_segment_features(lead_data, behavioral_signals)
 
@@ -474,19 +467,25 @@ class MilitaryMarketModel(BaseMarketModel):
             confidence=confidence,
             tier=tier,
             factors=[
-                {"name": "Military Affiliation", "impact": segment_features.get("military_affiliation", 0) * 20,
-                 "value": f"{int(segment_features.get('military_affiliation', 0) * 100)}% military signals"},
-                {"name": "VA Loan Eligibility", "impact": segment_features.get("va_loan_eligible", 0) * 18,
-                 "value": "VA loan mentioned" if segment_features.get("va_loan_eligible", 0) > 0 else "Not mentioned"}
+                {
+                    "name": "Military Affiliation",
+                    "impact": segment_features.get("military_affiliation", 0) * 20,
+                    "value": f"{int(segment_features.get('military_affiliation', 0) * 100)}% military signals",
+                },
+                {
+                    "name": "VA Loan Eligibility",
+                    "impact": segment_features.get("va_loan_eligible", 0) * 18,
+                    "value": "VA loan mentioned"
+                    if segment_features.get("va_loan_eligible", 0) > 0
+                    else "Not mentioned",
+                },
             ],
             recommendations=self._generate_military_recommendations(segment_features, behavioral_signals),
-            scored_at=datetime.now()
+            scored_at=datetime.now(),
         )
 
     def _generate_military_recommendations(
-        self,
-        segment_features: Dict[str, float],
-        behavioral_signals: Dict[str, float]
+        self, segment_features: Dict[str, float], behavioral_signals: Dict[str, float]
     ) -> List[str]:
         """Generate military-specific recommendations"""
         recommendations = []
@@ -524,10 +523,7 @@ class MarketSpecificModelRouter:
         logger.info(f"MarketSpecificModelRouter initialized with {len(self.models)} specialized models")
 
     def predict(
-        self,
-        lead_data: Dict[str, Any],
-        behavioral_signals: Dict[str, float],
-        market_segment: MarketSegment
+        self, lead_data: Dict[str, Any], behavioral_signals: Dict[str, float], market_segment: MarketSegment
     ) -> Optional[LeadScore]:
         """Route prediction to appropriate market-specific model"""
         try:
@@ -575,7 +571,7 @@ class MarketSpecificModelRouter:
                 preferred_communication=["email", "text", "video"],
                 key_motivators=["commute", "home office", "investment potential"],
                 common_objections=["market volatility", "overpriced market"],
-                conversion_probability_boost=1.15
+                conversion_probability_boost=1.15,
             ),
             MarketSegment.ENERGY_SECTOR: SegmentProfile(
                 segment=MarketSegment.ENERGY_SECTOR,
@@ -585,7 +581,7 @@ class MarketSpecificModelRouter:
                 preferred_communication=["phone", "in-person"],
                 key_motivators=["stability", "investment", "location"],
                 common_objections=["job security", "market cycles"],
-                conversion_probability_boost=1.05
+                conversion_probability_boost=1.05,
             ),
             MarketSegment.MILITARY_MARKET: SegmentProfile(
                 segment=MarketSegment.MILITARY_MARKET,
@@ -595,8 +591,8 @@ class MarketSpecificModelRouter:
                 preferred_communication=["phone", "email"],
                 key_motivators=["va benefits", "family", "base proximity"],
                 common_objections=["deployment", "transfer timeline"],
-                conversion_probability_boost=1.20
-            )
+                conversion_probability_boost=1.20,
+            ),
         }
 
     def _initialize_metrics(self):
@@ -613,7 +609,7 @@ class MarketSpecificModelRouter:
                 last_updated=datetime.now(),
                 conversion_rate=0.0,
                 avg_deal_size=0.0,
-                avg_days_to_close=0
+                avg_days_to_close=0,
             )
 
 
@@ -636,23 +632,19 @@ if __name__ == "__main__":
         "location": "Austin, TX",
         "messages": [
             {"text": "I'm a software engineer at Apple looking for a home with a good home office setup"},
-            {"text": "My stock options vest next month, so I can put down 20%"}
-        ]
+            {"text": "My stock options vest next month, so I can put down 20%"},
+        ],
     }
 
     behavioral_signals = {
         "digital_engagement": 0.9,
         "response_velocity": 0.8,
         "technical_language_usage": 0.7,
-        "equity_compensation": 1.0
+        "equity_compensation": 1.0,
     }
 
     # Predict using tech hub model
-    result = router.predict(
-        tech_lead_data,
-        behavioral_signals,
-        MarketSegment.TECH_HUB
-    )
+    result = router.predict(tech_lead_data, behavioral_signals, MarketSegment.TECH_HUB)
 
     if result:
         print(f"Tech Hub Lead Score: {result.score:.1f}")

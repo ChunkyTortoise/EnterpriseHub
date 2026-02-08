@@ -6,10 +6,11 @@ negotiation strategy generation, and win probability prediction.
 """
 
 from datetime import datetime
-from enum import Enum
-from typing import List, Dict, Optional, Any
-from pydantic import BaseModel, Field, ConfigDict
 from decimal import Decimal
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # Enums for type safety
@@ -52,8 +53,9 @@ class ListingBehaviorPattern(str, Enum):
 # Core Data Models
 class ListingHistory(BaseModel):
     """Historical data points for a property listing"""
+
     model_config = ConfigDict(use_enum_values=True)
-    
+
     original_list_price: Decimal
     current_price: Decimal
     price_drops: List[Dict[str, Any]]  # [{date, old_price, new_price, percentage}]
@@ -66,22 +68,23 @@ class ListingHistory(BaseModel):
 
 class SellerPsychologyProfile(BaseModel):
     """Comprehensive psychological profile of the seller"""
+
     model_config = ConfigDict(use_enum_values=True)
-    
+
     motivation_type: SellerMotivationType
     urgency_level: UrgencyLevel
     urgency_score: float = Field(..., ge=0, le=100)
-    
+
     # Behavioral indicators
     behavioral_pattern: ListingBehaviorPattern
     emotional_attachment_score: float = Field(..., ge=0, le=100)
     financial_pressure_score: float = Field(..., ge=0, le=100)
     flexibility_score: float = Field(..., ge=0, le=100)
-    
+
     # Communication patterns
     response_time_hours: Optional[float] = None
     communication_style: Optional[str] = None  # professional, emotional, urgent
-    
+
     # Key insights
     primary_concerns: List[str] = []
     negotiation_hot_buttons: List[str] = []
@@ -90,21 +93,22 @@ class SellerPsychologyProfile(BaseModel):
 
 class MarketLeverage(BaseModel):
     """Buyer's negotiating position and market leverage"""
+
     model_config = ConfigDict(use_enum_values=True)
-    
+
     overall_leverage_score: float = Field(..., ge=0, le=100)
     market_condition: MarketCondition
-    
+
     # Market dynamics
     inventory_levels: Dict[str, float]  # {price_range: months_inventory}
     competitive_pressure: float = Field(..., ge=0, le=100)
     seasonal_advantage: float = Field(..., ge=-50, le=50)
-    
+
     # Property-specific factors
     property_uniqueness_score: float = Field(..., ge=0, le=100)
     comparable_sales_strength: float = Field(..., ge=0, le=100)
     price_positioning: str  # overpriced, fairly_priced, underpriced
-    
+
     # Buyer advantages
     financing_strength: float = Field(..., ge=0, le=100)
     cash_offer_boost: float = Field(..., ge=0, le=25)
@@ -113,29 +117,30 @@ class MarketLeverage(BaseModel):
 
 class NegotiationStrategy(BaseModel):
     """Strategic recommendations for negotiation approach"""
+
     model_config = ConfigDict(use_enum_values=True)
-    
+
     primary_tactic: NegotiationTactic
     confidence_score: float = Field(..., ge=0, le=100)
-    
+
     # Offer recommendations
     recommended_offer_price: Decimal
     offer_range: Dict[str, Decimal]  # {min, target, max}
-    
+
     # Strategic elements
     key_terms_to_emphasize: List[str] = []
     concessions_to_request: List[str] = []
     relationship_building_approach: str
-    
+
     # Tactical guidance
     opening_strategy: str
     response_to_counter: str
     negotiation_timeline: str
-    
+
     # Talking points
     primary_talking_points: List[str] = []
     objection_responses: Dict[str, str] = {}
-    
+
     # Vanguard 3: Agentic Negotiation (Phase 11)
     optimal_bid_sequence: List[float] = []
     strategy_blend: Optional[str] = None
@@ -143,14 +148,15 @@ class NegotiationStrategy(BaseModel):
 
 class WinProbabilityAnalysis(BaseModel):
     """ML-powered prediction of offer acceptance probability"""
+
     win_probability: float = Field(..., ge=0, le=100)
     confidence_interval: Dict[str, float]  # {lower, upper}
-    
+
     # Contributing factors
     factor_weights: Dict[str, float] = {}
     risk_factors: List[str] = []
     success_drivers: List[str] = []
-    
+
     # Scenario analysis
     scenarios: Dict[str, float] = {}  # {offer_type: win_probability}
     optimal_offer_analysis: Dict[str, Any] = {}
@@ -158,22 +164,23 @@ class WinProbabilityAnalysis(BaseModel):
 
 class NegotiationIntelligence(BaseModel):
     """Complete negotiation intelligence package"""
+
     property_id: str
     lead_id: str
     tenant_id: str = Field(..., description="Tenant ID owning or managing this negotiation")
     analysis_timestamp: datetime
-    
+
     # Core analyses
     seller_psychology: SellerPsychologyProfile
     market_leverage: MarketLeverage
     negotiation_strategy: NegotiationStrategy
     win_probability: WinProbabilityAnalysis
-    
+
     # Executive summary
     executive_summary: str
     key_insights: List[str] = []
     action_items: List[str] = []
-    
+
     # Metadata
     analysis_version: str = "1.0"
     processing_time_ms: Optional[int] = None
@@ -182,10 +189,11 @@ class NegotiationIntelligence(BaseModel):
 # API Request/Response Models
 class NegotiationAnalysisRequest(BaseModel):
     """Request for negotiation intelligence analysis"""
+
     property_id: str
     lead_id: str
     tenant_id: str = Field(..., description="Tenant ID for the negotiation context")
-    
+
     # Optional context
     buyer_preferences: Optional[Dict[str, Any]] = None
     existing_offers: Optional[List[Dict[str, Any]]] = None
@@ -195,6 +203,7 @@ class NegotiationAnalysisRequest(BaseModel):
 
 class RealTimeCoachingRequest(BaseModel):
     """Request for real-time negotiation coaching"""
+
     negotiation_id: str
     conversation_context: str
     current_situation: str
@@ -204,6 +213,7 @@ class RealTimeCoachingRequest(BaseModel):
 
 class RealTimeCoachingResponse(BaseModel):
     """Real-time coaching recommendations"""
+
     immediate_guidance: str
     tactical_adjustments: List[str] = []
     next_steps: List[str] = []
@@ -213,6 +223,7 @@ class RealTimeCoachingResponse(BaseModel):
 
 class StrategyUpdateRequest(BaseModel):
     """Request to update strategy based on new information"""
+
     negotiation_id: str
     new_information: Dict[str, Any]
     strategy_adjustments: Optional[Dict[str, Any]] = None
@@ -221,19 +232,20 @@ class StrategyUpdateRequest(BaseModel):
 # Historical Analysis Models
 class NegotiationOutcome(BaseModel):
     """Historical negotiation outcome for learning"""
+
     negotiation_id: str
     property_id: str
-    
+
     # Outcome details
     final_sale_price: Decimal
     negotiation_duration_days: int
     offer_acceptance_ratio: float
-    
+
     # Strategy effectiveness
     strategy_used: NegotiationTactic
     tactics_effectiveness: Dict[str, float] = {}
     actual_vs_predicted: Dict[str, float] = {}
-    
+
     # Learning insights
     what_worked: List[str] = []
     what_failed: List[str] = []
@@ -242,6 +254,7 @@ class NegotiationOutcome(BaseModel):
 
 class MarketIntelligenceUpdate(BaseModel):
     """Real-time market intelligence update"""
+
     timestamp: datetime
     market_condition_change: Optional[MarketCondition] = None
     inventory_update: Optional[Dict[str, float]] = None
@@ -252,6 +265,7 @@ class MarketIntelligenceUpdate(BaseModel):
 # Integration Models
 class GHLNegotiationEvent(BaseModel):
     """GHL webhook event for negotiation milestones"""
+
     event_type: str  # offer_submitted, offer_countered, offer_accepted
     negotiation_id: str
     contact_id: str
@@ -262,6 +276,7 @@ class GHLNegotiationEvent(BaseModel):
 
 class NegotiationMetrics(BaseModel):
     """Performance metrics for the negotiation system"""
+
     total_negotiations: int
     average_win_rate: float
     average_price_improvement: float

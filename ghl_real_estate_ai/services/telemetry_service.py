@@ -2,10 +2,12 @@
 Telemetry Service for Behavioral Intelligence.
 Tracks lead interactions with the portal to identify intent.
 """
+
+import json
 from datetime import datetime
 from pathlib import Path
-import json
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
 
 class TelemetryService:
     def __init__(self, data_dir: str = "data/telemetry"):
@@ -15,16 +17,12 @@ class TelemetryService:
     def record_interaction(self, lead_id: str, action: str, metadata: Dict[str, Any]):
         """Record a lead's interaction (view, save, chat)."""
         file_path = self.data_dir / f"{lead_id}.json"
-        
-        interaction = {
-            "timestamp": datetime.utcnow().isoformat(),
-            "action": action,
-            "metadata": metadata
-        }
-        
+
+        interaction = {"timestamp": datetime.utcnow().isoformat(), "action": action, "metadata": metadata}
+
         history = self.get_lead_history(lead_id)
         history.append(interaction)
-        
+
         with open(file_path, "w") as f:
             json.dump(history, f, indent=2)
 
@@ -41,7 +39,7 @@ class TelemetryService:
         history = self.get_lead_history(lead_id)
         if not history:
             return 0
-            
+
         score = 0
         for interaction in history:
             if interaction["action"] == "save":

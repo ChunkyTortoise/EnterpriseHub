@@ -6,29 +6,31 @@ Extends the base LeadIntentDecoder with Track 1 enhancements.
 
 import asyncio
 import json
-from typing import Dict, Any, List, Optional, Tuple
-from datetime import datetime, timedelta
-from dataclasses import dataclass, asdict
-from enum import Enum
 import re
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.lead_scoring import (
-    LeadIntentProfile,
-    FinancialReadinessScore,
-    PsychologicalCommitmentScore,
-    MotivationSignals,
-    TimelineCommitment,
     ConditionRealism,
-    PriceResponsiveness
+    FinancialReadinessScore,
+    LeadIntentProfile,
+    MotivationSignals,
+    PriceResponsiveness,
+    PsychologicalCommitmentScore,
+    TimelineCommitment,
 )
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+
 class IntentSignal(Enum):
     """Types of intent signals detected in real-time."""
+
     MOTIVATION_INCREASE = "motivation_increase"
     MOTIVATION_DECREASE = "motivation_decrease"
     TIMELINE_URGENCY = "timeline_urgency"
@@ -37,9 +39,11 @@ class IntentSignal(Enum):
     ENGAGEMENT_SPIKE = "engagement_spike"
     DISENGAGEMENT_WARNING = "disengagement_warning"
 
+
 @dataclass
 class IntentUpdate:
     """Real-time intent score update."""
+
     frs_delta: float
     pcs_delta: float
     confidence: float
@@ -48,9 +52,11 @@ class IntentUpdate:
     timestamp: datetime
     message_trigger: str
 
+
 @dataclass
 class ConversationContext:
     """Maintains conversation state across interactions."""
+
     conversation_id: str
     last_scores: Optional[LeadIntentProfile]
     message_count: int
@@ -59,6 +65,7 @@ class ConversationContext:
     score_history: List[Dict]
     detected_patterns: Dict[str, Any]
     semantic_markers: List[str]
+
 
 class SemanticIntentEngine:
     """Advanced semantic analysis for deeper intent understanding."""
@@ -69,30 +76,30 @@ class SemanticIntentEngine:
             "urgency_markers": {
                 "immediate": ["asap", "immediately", "urgent", "right away", "today"],
                 "forced_timeline": ["have to", "need to", "must", "deadline", "by [date]"],
-                "life_events": ["divorce", "death", "job loss", "moving", "relocation", "baby"]
+                "life_events": ["divorce", "death", "job loss", "moving", "relocation", "baby"],
             },
             "commitment_signals": {
                 "strong": ["definitely", "absolutely", "committed", "ready", "let's do it"],
                 "medium": ["probably", "likely", "thinking about", "considering"],
-                "weak": ["maybe", "possibly", "not sure", "if", "depends"]
+                "weak": ["maybe", "possibly", "not sure", "if", "depends"],
             },
             "financial_indicators": {
                 "cash_ready": ["cash", "liquid", "available funds", "ready to buy"],
                 "financing_dependent": ["loan", "mortgage", "financing", "bank approval"],
-                "budget_conscious": ["budget", "afford", "payment", "monthly", "price range"]
+                "budget_conscious": ["budget", "afford", "payment", "monthly", "price range"],
             },
             "emotional_states": {
                 "excited": ["excited", "love", "perfect", "dream home", "amazing"],
                 "frustrated": ["frustrated", "tired", "difficult", "problem", "stressed"],
-                "skeptical": ["not sure", "doubt", "concerned", "worried", "hesitant"]
-            }
+                "skeptical": ["not sure", "doubt", "concerned", "worried", "hesitant"],
+            },
         }
 
         # Contextual relationship patterns
         self.context_patterns = {
             "price_negotiation": ["negotiate", "lower", "reduce", "best price", "deal"],
             "comparison_shopping": ["compare", "other options", "looking at", "versus"],
-            "decision_factors": ["important", "priority", "must have", "deal breaker"]
+            "decision_factors": ["important", "priority", "must have", "deal breaker"],
         }
 
     async def analyze(self, message: str, context: ConversationContext) -> Dict[str, Any]:
@@ -141,8 +148,8 @@ class SemanticIntentEngine:
                 "urgency_detected": any("urgency" in signal for signal in detected_signals),
                 "commitment_shift": any("commitment" in signal for signal in detected_signals),
                 "financial_readiness": any("financial" in signal for signal in detected_signals),
-                "emotional_state": [s for s in detected_signals if "emotion" in s]
-            }
+                "emotional_state": [s for s in detected_signals if "emotion" in s],
+            },
         }
 
     def _analyze_context_shifts(self, message: str, context: ConversationContext) -> Dict[str, Any]:
@@ -159,9 +166,13 @@ class SemanticIntentEngine:
         urgency_shift = current_urgency - previous_urgency
 
         return {
-            "shift_type": "urgency_increase" if urgency_shift > 0.2 else "urgency_decrease" if urgency_shift < -0.2 else "stable",
+            "shift_type": "urgency_increase"
+            if urgency_shift > 0.2
+            else "urgency_decrease"
+            if urgency_shift < -0.2
+            else "stable",
             "magnitude": abs(urgency_shift),
-            "urgency_delta": urgency_shift
+            "urgency_delta": urgency_shift,
         }
 
     def _calculate_urgency_level(self, message: str) -> float:
@@ -169,6 +180,7 @@ class SemanticIntentEngine:
         urgency_keywords = ["urgent", "asap", "immediately", "quickly", "soon"]
         urgency_score = sum(1 for keyword in urgency_keywords if keyword in message)
         return min(1.0, urgency_score * 0.25)
+
 
 class ConversationMemory:
     """Advanced conversation memory with pattern recognition."""
@@ -187,7 +199,7 @@ class ConversationMemory:
                 last_interaction=datetime.now(),
                 score_history=[],
                 detected_patterns={},
-                semantic_markers=[]
+                semantic_markers=[],
             )
         return self._memory[conversation_id]
 
@@ -205,13 +217,13 @@ class ConversationMemory:
         context.message_count += 1
 
         # Maintain score history (keep last 20 interactions)
-        if 'score_snapshot' in update_data:
-            context.score_history.append({
-                'timestamp': datetime.now().isoformat(),
-                'scores': update_data['score_snapshot']
-            })
+        if "score_snapshot" in update_data:
+            context.score_history.append(
+                {"timestamp": datetime.now().isoformat(), "scores": update_data["score_snapshot"]}
+            )
             if len(context.score_history) > 20:
                 context.score_history = context.score_history[-20:]
+
 
 class RealTimeIntentDecoder(LeadIntentDecoder):
     """
@@ -237,10 +249,7 @@ class RealTimeIntentDecoder(LeadIntentDecoder):
 
         # Calculate incremental score updates
         updated_scores = await self._update_incremental_scores(
-            current_scores=context.last_scores,
-            new_message=message,
-            semantic_signals=semantic_signals,
-            context=context
+            current_scores=context.last_scores, new_message=message, semantic_signals=semantic_signals, context=context
         )
 
         # Determine recommended action
@@ -251,13 +260,13 @@ class RealTimeIntentDecoder(LeadIntentDecoder):
 
         # Create intent update
         intent_update = IntentUpdate(
-            frs_delta=updated_scores.get('frs_delta', 0.0),
-            pcs_delta=updated_scores.get('pcs_delta', 0.0),
-            confidence=semantic_signals.get('confidence', 0.5),
+            frs_delta=updated_scores.get("frs_delta", 0.0),
+            pcs_delta=updated_scores.get("pcs_delta", 0.0),
+            confidence=semantic_signals.get("confidence", 0.5),
             recommended_action=recommended_action,
             signals_detected=detected_signals,
             timestamp=datetime.now(),
-            message_trigger=message[:100]  # Truncate for storage
+            message_trigger=message[:100],  # Truncate for storage
         )
 
         # Update context memory
@@ -268,16 +277,18 @@ class RealTimeIntentDecoder(LeadIntentDecoder):
             contact_id=lead_id,
             conversation_id=conversation_id,
             intent_update=asdict(intent_update),
-            semantic_analysis=semantic_signals
+            semantic_analysis=semantic_signals,
         )
 
         return intent_update
 
-    async def _update_incremental_scores(self,
-                                       current_scores: Optional[LeadIntentProfile],
-                                       new_message: str,
-                                       semantic_signals: Dict[str, Any],
-                                       context: ConversationContext) -> Dict[str, Any]:
+    async def _update_incremental_scores(
+        self,
+        current_scores: Optional[LeadIntentProfile],
+        new_message: str,
+        semantic_signals: Dict[str, Any],
+        context: ConversationContext,
+    ) -> Dict[str, Any]:
         """Update scores incrementally based on new message."""
 
         # Initialize baseline scores
@@ -291,7 +302,7 @@ class RealTimeIntentDecoder(LeadIntentDecoder):
                 "pcs_total": full_analysis.pcs.total_score,
                 "frs_delta": 0.0,  # No delta for first message
                 "pcs_delta": 0.0,
-                "full_profile": full_analysis
+                "full_profile": full_analysis,
             }
 
         # Calculate incremental changes
@@ -299,23 +310,23 @@ class RealTimeIntentDecoder(LeadIntentDecoder):
         pcs_delta = 0.0
 
         # FRS adjustments based on semantic signals
-        for signal in semantic_signals.get('semantic_signals', []):
-            if signal.startswith('urgency_'):
+        for signal in semantic_signals.get("semantic_signals", []):
+            if signal.startswith("urgency_"):
                 frs_delta += 5.0  # Boost timeline score
-            elif signal.startswith('financial_cash'):
+            elif signal.startswith("financial_cash"):
                 frs_delta += 8.0  # Strong financial readiness
-            elif signal.startswith('commitment_strong'):
+            elif signal.startswith("commitment_strong"):
                 pcs_delta += 10.0
                 frs_delta += 3.0
-            elif signal.startswith('commitment_weak'):
+            elif signal.startswith("commitment_weak"):
                 pcs_delta -= 5.0
                 frs_delta -= 2.0
 
         # Context-based adjustments
-        context_insights = semantic_signals.get('context_insights', {})
-        if context_insights.get('shift_type') == 'urgency_increase':
-            frs_delta += context_insights.get('magnitude', 0) * 10
-            pcs_delta += context_insights.get('magnitude', 0) * 8
+        context_insights = semantic_signals.get("context_insights", {})
+        if context_insights.get("shift_type") == "urgency_increase":
+            frs_delta += context_insights.get("magnitude", 0) * 10
+            pcs_delta += context_insights.get("magnitude", 0) * 8
 
         # Message length and engagement signals for PCS
         message_length = len(new_message.split())
@@ -333,24 +344,24 @@ class RealTimeIntentDecoder(LeadIntentDecoder):
             "pcs_total": new_pcs,
             "frs_delta": frs_delta,
             "pcs_delta": pcs_delta,
-            "confidence": semantic_signals.get('confidence', 0.5)
+            "confidence": semantic_signals.get("confidence", 0.5),
         }
 
     def _determine_streaming_action(self, scores: Dict[str, Any], semantic_signals: Dict[str, Any]) -> str:
         """Determine recommended action based on streaming analysis."""
-        frs = scores.get('frs_total', 0)
-        pcs = scores.get('pcs_total', 0)
+        frs = scores.get("frs_total", 0)
+        pcs = scores.get("pcs_total", 0)
 
         # High urgency signals - immediate action
-        if any('urgency_immediate' in signal for signal in semantic_signals.get('semantic_signals', [])):
+        if any("urgency_immediate" in signal for signal in semantic_signals.get("semantic_signals", [])):
             return "IMMEDIATE_CALL"
 
         # Strong positive momentum
-        if scores.get('frs_delta', 0) > 10 and scores.get('pcs_delta', 0) > 10:
+        if scores.get("frs_delta", 0) > 10 and scores.get("pcs_delta", 0) > 10:
             return "ACCELERATE_SEQUENCE"
 
         # Declining engagement
-        if scores.get('frs_delta', 0) < -5 and scores.get('pcs_delta', 0) < -5:
+        if scores.get("frs_delta", 0) < -5 and scores.get("pcs_delta", 0) < -5:
             return "RE_ENGAGEMENT_REQUIRED"
 
         # Standard qualification thresholds
@@ -361,48 +372,55 @@ class RealTimeIntentDecoder(LeadIntentDecoder):
         else:
             return "CONTINUE_NURTURE"
 
-    def _detect_intent_signals(self, scores: Dict[str, Any], semantic_signals: Dict[str, Any], context: ConversationContext) -> List[IntentSignal]:
+    def _detect_intent_signals(
+        self, scores: Dict[str, Any], semantic_signals: Dict[str, Any], context: ConversationContext
+    ) -> List[IntentSignal]:
         """Detect specific intent signals from analysis."""
         signals = []
 
         # Motivation changes
-        if scores.get('frs_delta', 0) > 8:
+        if scores.get("frs_delta", 0) > 8:
             signals.append(IntentSignal.MOTIVATION_INCREASE)
-        elif scores.get('frs_delta', 0) < -5:
+        elif scores.get("frs_delta", 0) < -5:
             signals.append(IntentSignal.MOTIVATION_DECREASE)
 
         # Timeline urgency
-        if any('urgency_' in signal for signal in semantic_signals.get('semantic_signals', [])):
+        if any("urgency_" in signal for signal in semantic_signals.get("semantic_signals", [])):
             signals.append(IntentSignal.TIMELINE_URGENCY)
 
         # Price sensitivity
-        if any('financial_' in signal for signal in semantic_signals.get('semantic_signals', [])):
+        if any("financial_" in signal for signal in semantic_signals.get("semantic_signals", [])):
             signals.append(IntentSignal.PRICE_SENSITIVITY)
 
         # Engagement patterns
-        if scores.get('pcs_delta', 0) > 15:
+        if scores.get("pcs_delta", 0) > 15:
             signals.append(IntentSignal.ENGAGEMENT_SPIKE)
-        elif scores.get('pcs_delta', 0) < -10:
+        elif scores.get("pcs_delta", 0) < -10:
             signals.append(IntentSignal.DISENGAGEMENT_WARNING)
 
         return signals
 
-    async def _update_memory_with_analysis(self, conversation_id: str, scores: Dict[str, Any], semantic_signals: Dict[str, Any]):
+    async def _update_memory_with_analysis(
+        self, conversation_id: str, scores: Dict[str, Any], semantic_signals: Dict[str, Any]
+    ):
         """Update conversation memory with latest analysis."""
-        await self.context_memory.update_context(conversation_id, {
-            'score_snapshot': {
-                'frs_total': scores.get('frs_total'),
-                'pcs_total': scores.get('pcs_total'),
-                'frs_delta': scores.get('frs_delta'),
-                'pcs_delta': scores.get('pcs_delta')
+        await self.context_memory.update_context(
+            conversation_id,
+            {
+                "score_snapshot": {
+                    "frs_total": scores.get("frs_total"),
+                    "pcs_total": scores.get("pcs_total"),
+                    "frs_delta": scores.get("frs_delta"),
+                    "pcs_delta": scores.get("pcs_delta"),
+                },
+                "detected_patterns": {
+                    "semantic_signals": semantic_signals.get("semantic_signals", []),
+                    "confidence": semantic_signals.get("confidence", 0.5),
+                    "urgency_level": semantic_signals.get("context_insights", {}).get("urgency_delta", 0),
+                },
+                "semantic_markers": semantic_signals.get("semantic_signals", []),
             },
-            'detected_patterns': {
-                'semantic_signals': semantic_signals.get('semantic_signals', []),
-                'confidence': semantic_signals.get('confidence', 0.5),
-                'urgency_level': semantic_signals.get('context_insights', {}).get('urgency_delta', 0)
-            },
-            'semantic_markers': semantic_signals.get('semantic_signals', [])
-        })
+        )
 
     async def forecast_intent_trajectory(self, conversation_id: str, lead_id: str) -> Dict[str, Any]:
         """Forecast likely intent trajectory based on conversation patterns."""
@@ -413,8 +431,8 @@ class RealTimeIntentDecoder(LeadIntentDecoder):
 
         # Analyze score trends
         recent_scores = context.score_history[-3:]
-        frs_trend = [score['scores']['frs_total'] for score in recent_scores]
-        pcs_trend = [score['scores']['pcs_total'] for score in recent_scores]
+        frs_trend = [score["scores"]["frs_total"] for score in recent_scores]
+        pcs_trend = [score["scores"]["pcs_total"] for score in recent_scores]
 
         # Simple linear extrapolation
         frs_change_rate = (frs_trend[-1] - frs_trend[0]) / len(frs_trend)
@@ -437,15 +455,9 @@ class RealTimeIntentDecoder(LeadIntentDecoder):
         return {
             "forecast": trajectory,
             "confidence": confidence,
-            "predicted_scores": {
-                "frs": predicted_frs,
-                "pcs": predicted_pcs
-            },
-            "change_rates": {
-                "frs_rate": frs_change_rate,
-                "pcs_rate": pcs_change_rate
-            },
-            "recommendation": self._trajectory_recommendation(trajectory, predicted_frs, predicted_pcs)
+            "predicted_scores": {"frs": predicted_frs, "pcs": predicted_pcs},
+            "change_rates": {"frs_rate": frs_change_rate, "pcs_rate": pcs_change_rate},
+            "recommendation": self._trajectory_recommendation(trajectory, predicted_frs, predicted_pcs),
         }
 
     def _trajectory_recommendation(self, trajectory: str, frs: float, pcs: float) -> str:
@@ -459,23 +471,22 @@ class RealTimeIntentDecoder(LeadIntentDecoder):
         else:
             return "Continue nurture sequence - monitor for changes"
 
+
 # --- Utility Functions ---
+
 
 def get_realtime_intent_decoder() -> RealTimeIntentDecoder:
     """Factory function to get singleton real-time intent decoder."""
-    if not hasattr(get_realtime_intent_decoder, '_instance'):
+    if not hasattr(get_realtime_intent_decoder, "_instance"):
         get_realtime_intent_decoder._instance = RealTimeIntentDecoder()
     return get_realtime_intent_decoder._instance
 
+
 # --- Event Publisher Extensions ---
+
 
 async def publish_realtime_intent_update(event_publisher, contact_id: str, conversation_id: str, **kwargs):
     """Publish real-time intent update event."""
     await event_publisher.publish_event(
-        event_type="realtime_intent_update",
-        contact_id=contact_id,
-        data={
-            "conversation_id": conversation_id,
-            **kwargs
-        }
+        event_type="realtime_intent_update", contact_id=contact_id, data={"conversation_id": conversation_id, **kwargs}
     )

@@ -7,19 +7,21 @@ Provides call completion waiting (not fire-and-forget) and result processing.
 
 import asyncio
 import json
-from typing import Optional, Dict, Any
-from datetime import datetime, timedelta
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any, Dict, Optional
 
-from ghl_real_estate_ai.integrations.retell import RetellClient
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.integrations.retell import RetellClient
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)
 
+
 class CallStatus(Enum):
     """Call status enumeration"""
+
     QUEUED = "queued"
     RINGING = "ringing"
     IN_PROGRESS = "in_progress"
@@ -29,9 +31,11 @@ class CallStatus(Enum):
     BUSY = "busy"
     CANCELLED = "cancelled"
 
+
 @dataclass
 class CallResult:
     """Result of a completed call"""
+
     call_id: str
     status: CallStatus
     duration_seconds: int
@@ -46,6 +50,7 @@ class CallResult:
     def __post_init__(self):
         if self.created_at is None:
             self.created_at = datetime.now()
+
 
 class RetellCallManager:
     """
@@ -62,11 +67,7 @@ class RetellCallManager:
         self.poll_interval_seconds = 10  # How often to check call status
 
     async def create_and_wait_for_call(
-        self,
-        lead_id: str,
-        phone: str,
-        context: Dict[str, Any],
-        max_wait_minutes: Optional[int] = None
+        self, lead_id: str, phone: str, context: Dict[str, Any], max_wait_minutes: Optional[int] = None
     ) -> CallResult:
         """
         Create a Retell call and wait for completion
@@ -94,8 +95,8 @@ class RetellCallManager:
                     "sequence_day": context.get("sequence_day", "unknown"),
                     "call_purpose": context.get("call_purpose", "follow_up"),
                     "lead_name": context.get("lead_name", f"Lead {lead_id}"),
-                    "created_by": "lead_bot_scheduler"
-                }
+                    "created_by": "lead_bot_scheduler",
+                },
             }
 
             # Create the call
@@ -105,11 +106,7 @@ class RetellCallManager:
                 error_msg = "Failed to create call - no call ID returned"
                 logger.error(f"{error_msg} for lead {lead_id}")
                 return CallResult(
-                    call_id="",
-                    status=CallStatus.FAILED,
-                    duration_seconds=0,
-                    answered=False,
-                    error_message=error_msg
+                    call_id="", status=CallStatus.FAILED, duration_seconds=0, answered=False, error_message=error_msg
                 )
 
             call_id = call_response["call_id"]
@@ -130,11 +127,7 @@ class RetellCallManager:
             error_msg = f"Exception creating call for lead {lead_id}: {str(e)}"
             logger.error(error_msg)
             return CallResult(
-                call_id="",
-                status=CallStatus.FAILED,
-                duration_seconds=0,
-                answered=False,
-                error_message=error_msg
+                call_id="", status=CallStatus.FAILED, duration_seconds=0, answered=False, error_message=error_msg
             )
 
     async def _wait_for_call_completion(self, call_id: str, max_wait_minutes: int) -> CallResult:
@@ -185,7 +178,7 @@ class RetellCallManager:
             duration_seconds=0,
             answered=False,
             error_message=f"Monitoring timeout after {max_wait_minutes} minutes",
-            completed_at=datetime.now()
+            completed_at=datetime.now(),
         )
 
     async def _build_call_result(self, call_id: str, status: str, details: Dict[str, Any]) -> CallResult:
@@ -197,7 +190,7 @@ class RetellCallManager:
                 "failed": CallStatus.FAILED,
                 "no_answer": CallStatus.NO_ANSWER,
                 "busy": CallStatus.BUSY,
-                "cancelled": CallStatus.CANCELLED
+                "cancelled": CallStatus.CANCELLED,
             }
 
             call_status = status_mapping.get(status, CallStatus.FAILED)
@@ -223,7 +216,7 @@ class RetellCallManager:
                 transcript=transcript,
                 summary=summary,
                 engagement_score=engagement_score,
-                completed_at=datetime.now()
+                completed_at=datetime.now(),
             )
 
         except Exception as e:
@@ -234,7 +227,7 @@ class RetellCallManager:
                 duration_seconds=0,
                 answered=False,
                 error_message=str(e),
-                completed_at=datetime.now()
+                completed_at=datetime.now(),
             )
 
     def _calculate_engagement_score(self, duration: int, transcript: str) -> float:
@@ -302,7 +295,7 @@ class RetellCallManager:
                 "lead_id": lead_id,
                 "context": context,
                 "created_at": datetime.now().isoformat(),
-                "status": "initiated"
+                "status": "initiated",
             }
 
             # Cache for 24 hours
@@ -324,7 +317,7 @@ class RetellCallManager:
                 "summary": result.summary,
                 "engagement_score": result.engagement_score,
                 "error_message": result.error_message,
-                "completed_at": result.completed_at.isoformat() if result.completed_at else None
+                "completed_at": result.completed_at.isoformat() if result.completed_at else None,
             }
 
             # Cache for 7 days
@@ -351,7 +344,9 @@ class RetellCallManager:
                 summary=cached_data.get("summary"),
                 engagement_score=cached_data.get("engagement_score"),
                 error_message=cached_data.get("error_message"),
-                completed_at=datetime.fromisoformat(cached_data["completed_at"]) if cached_data.get("completed_at") else None
+                completed_at=datetime.fromisoformat(cached_data["completed_at"])
+                if cached_data.get("completed_at")
+                else None,
             )
 
         except Exception as e:
@@ -373,7 +368,7 @@ class RetellCallManager:
                     status=CallStatus.CANCELLED,
                     duration_seconds=0,
                     answered=False,
-                    completed_at=datetime.now()
+                    completed_at=datetime.now(),
                 )
                 await self._cache_call_result(call_id, result)
 
@@ -389,6 +384,7 @@ class RetellCallManager:
 
 # Singleton instance
 _retell_call_manager = None
+
 
 def get_retell_call_manager() -> RetellCallManager:
     """Get singleton RetellCallManager instance"""

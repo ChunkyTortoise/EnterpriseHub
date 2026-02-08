@@ -11,13 +11,12 @@ import pandas as pd
 import pytest
 
 from utils.validators import (
-    Conflict,
     ConfidenceScorer,
+    Conflict,
     ContradictionDetector,
     SchemaValidator,
     ValidationResult,
 )
-
 
 # ============================================================================
 # Fixtures
@@ -256,9 +255,7 @@ class TestConfidenceScorer:
         # Old data (45 days) should have lower freshness score
         assert score < 0.9
 
-    def test_score_data_quality_non_datetime_index(
-        self, confidence_scorer: ConfidenceScorer
-    ) -> None:
+    def test_score_data_quality_non_datetime_index(self, confidence_scorer: ConfidenceScorer) -> None:
         """Test quality score with non-datetime index."""
         df = pd.DataFrame({"Close": [100.0] * 100})  # Default integer index
 
@@ -267,9 +264,7 @@ class TestConfidenceScorer:
         # Should still score reasonably well (defaults to 0.8 for freshness)
         assert score > 0.0
 
-    def test_score_completeness_all_fields_present(
-        self, confidence_scorer: ConfidenceScorer
-    ) -> None:
+    def test_score_completeness_all_fields_present(self, confidence_scorer: ConfidenceScorer) -> None:
         """Test completeness score when all fields are present."""
         data = {"ticker": "AAPL", "period": "1y", "optional_field": 123}
         schema = {"required": ["ticker", "period"], "optional": ["optional_field"]}
@@ -322,26 +317,20 @@ class TestConfidenceScorer:
         # 3.5 days rounds to 3 days, so score = 1 - (3/7) = 0.571
         assert score == pytest.approx(0.571, abs=0.01)
 
-    def test_score_source_reliability_known_sources(
-        self, confidence_scorer: ConfidenceScorer
-    ) -> None:
+    def test_score_source_reliability_known_sources(self, confidence_scorer: ConfidenceScorer) -> None:
         """Test reliability scores for known data sources."""
         assert confidence_scorer.score_source_reliability("yfinance") == 0.9
         assert confidence_scorer.score_source_reliability("database") == 0.95
         assert confidence_scorer.score_source_reliability("manual") == 0.7
         assert confidence_scorer.score_source_reliability("user_input") == 0.6
 
-    def test_score_source_reliability_unknown_source(
-        self, confidence_scorer: ConfidenceScorer
-    ) -> None:
+    def test_score_source_reliability_unknown_source(self, confidence_scorer: ConfidenceScorer) -> None:
         """Test reliability score for unknown data source."""
         score = confidence_scorer.score_source_reliability("random_source")
 
         assert score == 0.5  # Default for unknown
 
-    def test_score_source_reliability_case_insensitive(
-        self, confidence_scorer: ConfidenceScorer
-    ) -> None:
+    def test_score_source_reliability_case_insensitive(self, confidence_scorer: ConfidenceScorer) -> None:
         """Test that source reliability is case-insensitive."""
         assert confidence_scorer.score_source_reliability("YFINANCE") == 0.9
         assert confidence_scorer.score_source_reliability("YFinance") == 0.9
@@ -386,57 +375,43 @@ class TestConfidenceScorer:
 class TestContradictionDetector:
     """Tests for ContradictionDetector class."""
 
-    def test_compare_numeric_values_no_contradiction(
-        self, contradiction_detector: ContradictionDetector
-    ) -> None:
+    def test_compare_numeric_values_no_contradiction(self, contradiction_detector: ContradictionDetector) -> None:
         """Test numeric comparison with values within tolerance."""
         contradicts = contradiction_detector.compare_numeric_values(100.0, 105.0, 0.1)
 
         assert contradicts is False  # 5% difference, within 10% tolerance
 
-    def test_compare_numeric_values_contradiction(
-        self, contradiction_detector: ContradictionDetector
-    ) -> None:
+    def test_compare_numeric_values_contradiction(self, contradiction_detector: ContradictionDetector) -> None:
         """Test numeric comparison with values exceeding tolerance."""
         contradicts = contradiction_detector.compare_numeric_values(100.0, 120.0, 0.1)
 
         assert contradicts is True  # 20% difference, exceeds 10% tolerance
 
-    def test_compare_numeric_values_with_zero(
-        self, contradiction_detector: ContradictionDetector
-    ) -> None:
+    def test_compare_numeric_values_with_zero(self, contradiction_detector: ContradictionDetector) -> None:
         """Test numeric comparison when one value is zero."""
         contradicts = contradiction_detector.compare_numeric_values(0.0, 0.05, 0.1)
 
         assert contradicts is False  # Absolute difference 0.05 < 0.1
 
-    def test_compare_sentiments_bullish_vs_bearish(
-        self, contradiction_detector: ContradictionDetector
-    ) -> None:
+    def test_compare_sentiments_bullish_vs_bearish(self, contradiction_detector: ContradictionDetector) -> None:
         """Test sentiment contradiction between bullish and bearish."""
         contradicts = contradiction_detector.compare_sentiments("BULLISH", "BEARISH")
 
         assert contradicts is True
 
-    def test_compare_sentiments_both_bullish(
-        self, contradiction_detector: ContradictionDetector
-    ) -> None:
+    def test_compare_sentiments_both_bullish(self, contradiction_detector: ContradictionDetector) -> None:
         """Test no contradiction when both sentiments are bullish."""
         contradicts = contradiction_detector.compare_sentiments("BULLISH", "BUY")
 
         assert contradicts is False
 
-    def test_compare_sentiments_both_bearish(
-        self, contradiction_detector: ContradictionDetector
-    ) -> None:
+    def test_compare_sentiments_both_bearish(self, contradiction_detector: ContradictionDetector) -> None:
         """Test no contradiction when both sentiments are bearish."""
         contradicts = contradiction_detector.compare_sentiments("BEARISH", "SELL")
 
         assert contradicts is False
 
-    def test_compare_sentiments_case_sensitive(
-        self, contradiction_detector: ContradictionDetector
-    ) -> None:
+    def test_compare_sentiments_case_sensitive(self, contradiction_detector: ContradictionDetector) -> None:
         """Test sentiment comparison handles various cases."""
         assert contradiction_detector.compare_sentiments("Bullish", "Bearish") is True
         assert contradiction_detector.compare_sentiments("Positive", "Negative") is True
@@ -491,9 +466,7 @@ class TestContradictionDetector:
         assert conflicts[0].conflict_type == "QUALITY_CONFIDENCE_MISMATCH"
         assert conflicts[0].severity == "WARNING"
 
-    def test_detect_logical_conflicts_no_conflicts(
-        self, contradiction_detector: ContradictionDetector
-    ) -> None:
+    def test_detect_logical_conflicts_no_conflicts(self, contradiction_detector: ContradictionDetector) -> None:
         """Test no conflicts detected when all signals align."""
         results = {
             "technical": {"macd_signal": "BULLISH", "rsi_value": 65.0},
@@ -506,9 +479,7 @@ class TestContradictionDetector:
 
         assert len(conflicts) == 0
 
-    def test_detect_logical_conflicts_empty_results(
-        self, contradiction_detector: ContradictionDetector
-    ) -> None:
+    def test_detect_logical_conflicts_empty_results(self, contradiction_detector: ContradictionDetector) -> None:
         """Test no conflicts with empty results dict."""
         conflicts = contradiction_detector.detect_logical_conflicts({})
 

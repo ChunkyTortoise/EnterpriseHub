@@ -29,7 +29,7 @@ Example:
         failure_threshold=5,
         reset_timeout=60.0,
     )
-    
+
     async with breaker:
         result = await generate_embeddings(text)
 
@@ -37,7 +37,7 @@ Example:
     limiter = RateLimiter(
         config=RateLimitConfig(rate=100, burst=150)
     )
-    
+
     allowed, headers = await limiter.check_limit(key="user_123")
     if not allowed:
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
@@ -47,14 +47,14 @@ Example:
 from src.middleware.circuit_breaker import (
     CircuitBreaker,
     CircuitBreakerConfig,
-    CircuitState,
     CircuitBreakerError,
+    CircuitState,
     circuit_breaker,
 )
 from src.middleware.rate_limiter import (
-    RateLimiter,
-    RateLimitConfig,
     RateLimitBackend,
+    RateLimitConfig,
+    RateLimiter,
     RateLimitError,
     rate_limiter,
 )

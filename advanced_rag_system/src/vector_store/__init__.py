@@ -4,7 +4,7 @@ Provides vector storage and retrieval capabilities with support
 for multiple backends and metadata filtering.
 """
 
-from src.vector_store.base import VectorStore, VectorStoreConfig, SearchOptions
+from src.vector_store.base import SearchOptions, VectorStore, VectorStoreConfig
 from src.vector_store.in_memory_store import InMemoryVectorStore
 
 __all__ = [
@@ -18,6 +18,7 @@ __all__ = [
 # with pydantic v2 on Python 3.14+
 try:
     from src.vector_store.chroma_store import ChromaVectorStore
+
     __all__.append("ChromaVectorStore")
 except (ImportError, Exception):
     pass
@@ -25,30 +26,33 @@ except (ImportError, Exception):
 # Production ChromaDB with enterprise features
 try:
     from src.vector_store.chroma_production import (
-        ProductionChromaStore,
-        ProductionVectorStoreConfig,
+        BackupConfig,
+        BackupManager,
+        BackupType,
         ConnectionPool,
         ConnectionPoolConfig,
-        RetryManager,
-        RetryConfig,
-        BackupManager,
-        BackupConfig,
-        BackupType,
-        MigrationManager,
         MigrationConfig,
+        MigrationManager,
+        ProductionChromaStore,
+        ProductionVectorStoreConfig,
+        RetryConfig,
+        RetryManager,
     )
-    __all__.extend([
-        "ProductionChromaStore",
-        "ProductionVectorStoreConfig",
-        "ConnectionPool",
-        "ConnectionPoolConfig",
-        "RetryManager",
-        "RetryConfig",
-        "BackupManager",
-        "BackupConfig",
-        "BackupType",
-        "MigrationManager",
-        "MigrationConfig",
-    ])
+
+    __all__.extend(
+        [
+            "ProductionChromaStore",
+            "ProductionVectorStoreConfig",
+            "ConnectionPool",
+            "ConnectionPoolConfig",
+            "RetryManager",
+            "RetryConfig",
+            "BackupManager",
+            "BackupConfig",
+            "BackupType",
+            "MigrationManager",
+            "MigrationConfig",
+        ]
+    )
 except (ImportError, Exception):
     pass

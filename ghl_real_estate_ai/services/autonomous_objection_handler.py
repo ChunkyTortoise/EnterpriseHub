@@ -16,17 +16,17 @@ Status: Production-Ready Autonomous Objection Resolution System
 """
 
 import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
-import re
 import logging
+import re
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.core.llm_client import get_llm_client
-from ghl_real_estate_ai.services.behavioral_trigger_engine import get_behavioral_trigger_engine
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.behavioral_trigger_engine import get_behavioral_trigger_engine
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.database_service import get_database
 from ghl_real_estate_ai.services.market_timing_opportunity_intelligence import MarketTimingOpportunityEngine
 
@@ -73,9 +73,9 @@ class ObjectionSentiment(Enum):
     """Sentiment analysis for objections."""
 
     POSITIVE = "positive"  # Interested but has concerns
-    NEUTRAL = "neutral"   # Factual questions/concerns
-    NEGATIVE = "negative" # Frustrated/upset
-    HOSTILE = "hostile"   # Angry/aggressive
+    NEUTRAL = "neutral"  # Factual questions/concerns
+    NEGATIVE = "negative"  # Frustrated/upset
+    HOSTILE = "hostile"  # Angry/aggressive
 
 
 class ResponseStrategy(Enum):
@@ -156,7 +156,7 @@ class AutonomousObjectionHandler:
         self.confidence_thresholds = {
             "auto_respond": 0.85,  # Auto-respond if confidence >= 85%
             "human_review": 0.70,  # Flag for human review if < 70%
-            "escalate": 0.50       # Escalate if < 50%
+            "escalate": 0.50,  # Escalate if < 50%
         }
 
         # Performance tracking
@@ -164,7 +164,7 @@ class AutonomousObjectionHandler:
             "total_objections_handled": 0,
             "auto_response_rate": 0.0,
             "resolution_success_rate": 0.0,
-            "average_response_time": 0.0
+            "average_response_time": 0.0,
         }
 
     async def analyze_objection(self, lead_id: str, message: str, context: Dict[str, Any] = None) -> ObjectionAnalysis:
@@ -195,14 +195,10 @@ class AutonomousObjectionHandler:
             pattern_matches = self._detect_objection_patterns(normalized_message)
 
             # Claude-powered deep analysis for nuanced objections
-            claude_analysis = await self._claude_objection_analysis(
-                lead_id, normalized_message, context or {}
-            )
+            claude_analysis = await self._claude_objection_analysis(lead_id, normalized_message, context or {})
 
             # Combine pattern matching and AI analysis
-            final_category, confidence = self._combine_analysis_results(
-                pattern_matches, claude_analysis
-            )
+            final_category, confidence = self._combine_analysis_results(pattern_matches, claude_analysis)
 
             # Sentiment analysis
             sentiment = await self._analyze_sentiment(normalized_message, context or {})
@@ -218,9 +214,9 @@ class AutonomousObjectionHandler:
                 category=final_category,
                 sentiment=sentiment,
                 confidence_score=confidence,
-                keywords_found=pattern_matches.get('keywords', []),
+                keywords_found=pattern_matches.get("keywords", []),
                 context_factors=context or {},
-                urgency_level=urgency
+                urgency_level=urgency,
             )
 
             # Cache for 1 hour
@@ -245,14 +241,14 @@ class AutonomousObjectionHandler:
                 confidence_score=0.3,
                 keywords_found=[],
                 context_factors={},
-                urgency_level="medium"
+                urgency_level="medium",
             )
 
     async def generate_response(
         self,
         analysis: ObjectionAnalysis,
         lead_profile: Dict[str, Any] = None,
-        conversation_history: List[Dict[str, Any]] = None
+        conversation_history: List[Dict[str, Any]] = None,
     ) -> ObjectionResponse:
         """
         Generate personalized response to objection using Claude.
@@ -269,10 +265,11 @@ class AutonomousObjectionHandler:
             logger.info(f"🤖 Generating response for objection {analysis.objection_id}")
 
             # Check if response requires human escalation
-            if (analysis.confidence_score < self.confidence_thresholds["escalate"] or
-                analysis.sentiment == ObjectionSentiment.HOSTILE or
-                analysis.urgency_level == "critical"):
-
+            if (
+                analysis.confidence_score < self.confidence_thresholds["escalate"]
+                or analysis.sentiment == ObjectionSentiment.HOSTILE
+                or analysis.urgency_level == "critical"
+            ):
                 return await self._create_escalation_response(analysis)
 
             # Determine response strategy
@@ -307,17 +304,14 @@ class AutonomousObjectionHandler:
                     "lead_profile_used": bool(lead_profile),
                     "conversation_history_used": bool(conversation_history),
                     "behavioral_context_used": bool(behavioral_context),
-                    "strategy_selected": strategy.value
-                }
+                    "strategy_selected": strategy.value,
+                },
             )
 
             # Update metrics
             await self._update_response_metrics(response)
 
-            logger.info(
-                f"✅ Response generated with {strategy.value} strategy "
-                f"(confidence: {response_confidence:.2f})"
-            )
+            logger.info(f"✅ Response generated with {strategy.value} strategy (confidence: {response_confidence:.2f})")
 
             return response
 
@@ -326,10 +320,7 @@ class AutonomousObjectionHandler:
             return await self._create_fallback_response(analysis)
 
     async def handle_objection_flow(
-        self,
-        lead_id: str,
-        message: str,
-        context: Dict[str, Any] = None
+        self, lead_id: str, message: str, context: Dict[str, Any] = None
     ) -> ObjectionResponse:
         """
         Complete objection handling flow: analyze + generate response.
@@ -347,8 +338,7 @@ class AutonomousObjectionHandler:
             analysis = await self.analyze_objection(lead_id, message, context)
 
             # Skip response generation if no clear objection detected
-            if (analysis.category == ObjectionCategory.UNCLEAR_OBJECTION and
-                analysis.confidence_score < 0.6):
+            if analysis.category == ObjectionCategory.UNCLEAR_OBJECTION and analysis.confidence_score < 0.6:
                 logger.info(f"⏭️ No clear objection detected in message from {lead_id}")
                 return None
 
@@ -377,67 +367,84 @@ class AutonomousObjectionHandler:
                 category=ObjectionCategory.PRICE_TOO_HIGH,
                 keywords=["expensive", "cost", "afford", "budget", "price", "money"],
                 phrases=[
-                    "too expensive", "can't afford", "out of my budget",
-                    "too much money", "overpriced", "too costly"
+                    "too expensive",
+                    "can't afford",
+                    "out of my budget",
+                    "too much money",
+                    "overpriced",
+                    "too costly",
                 ],
                 context_clues=["monthly payment", "down payment", "mortgage"],
-                weight=0.9
+                weight=0.9,
             ),
-
             ObjectionCategory.NOT_READY_YET: ObjectionPattern(
                 category=ObjectionCategory.NOT_READY_YET,
                 keywords=["not ready", "thinking", "considering", "maybe", "unsure"],
                 phrases=[
-                    "not ready yet", "still thinking", "need more time",
-                    "not sure", "maybe later", "let me think"
+                    "not ready yet",
+                    "still thinking",
+                    "need more time",
+                    "not sure",
+                    "maybe later",
+                    "let me think",
                 ],
                 context_clues=["timeline", "when", "future"],
-                weight=0.85
+                weight=0.85,
             ),
-
             ObjectionCategory.TRUST_ISSUES: ObjectionPattern(
                 category=ObjectionCategory.TRUST_ISSUES,
                 keywords=["trust", "scam", "legitimate", "reviews", "references"],
                 phrases=[
-                    "can i trust", "seems too good", "legitimate company",
-                    "other agents", "get references", "check reviews"
+                    "can i trust",
+                    "seems too good",
+                    "legitimate company",
+                    "other agents",
+                    "get references",
+                    "check reviews",
                 ],
                 context_clues=["experience", "credentials", "testimonials"],
-                weight=0.8
+                weight=0.8,
             ),
-
             ObjectionCategory.LOCATION_CONCERNS: ObjectionPattern(
                 category=ObjectionCategory.LOCATION_CONCERNS,
                 keywords=["location", "neighborhood", "area", "commute", "schools"],
                 phrases=[
-                    "wrong location", "bad area", "too far", "don't like neighborhood",
-                    "schools not good", "commute too long"
+                    "wrong location",
+                    "bad area",
+                    "too far",
+                    "don't like neighborhood",
+                    "schools not good",
+                    "commute too long",
                 ],
                 context_clues=["distance", "safety", "amenities"],
-                weight=0.85
+                weight=0.85,
             ),
-
             ObjectionCategory.NEED_TO_SELL_FIRST: ObjectionPattern(
                 category=ObjectionCategory.NEED_TO_SELL_FIRST,
                 keywords=["sell", "current home", "house", "contingent"],
                 phrases=[
-                    "need to sell first", "sell current home", "contingent offer",
-                    "can't buy until", "tied up in current"
+                    "need to sell first",
+                    "sell current home",
+                    "contingent offer",
+                    "can't buy until",
+                    "tied up in current",
                 ],
                 context_clues=["equity", "closing", "timing"],
-                weight=0.9
+                weight=0.9,
             ),
-
             ObjectionCategory.FINANCING_CONCERNS: ObjectionPattern(
                 category=ObjectionCategory.FINANCING_CONCERNS,
                 keywords=["loan", "credit", "mortgage", "approval", "qualify"],
                 phrases=[
-                    "credit issues", "pre-approval", "qualify for loan",
-                    "financing problems", "mortgage approval"
+                    "credit issues",
+                    "pre-approval",
+                    "qualify for loan",
+                    "financing problems",
+                    "mortgage approval",
                 ],
                 context_clues=["interest rate", "down payment", "lender"],
-                weight=0.85
-            )
+                weight=0.85,
+            ),
         }
 
     def _normalize_message(self, message: str) -> str:
@@ -446,10 +453,10 @@ class AutonomousObjectionHandler:
         normalized = message.lower()
 
         # Remove extra whitespace
-        normalized = re.sub(r'\s+', ' ', normalized).strip()
+        normalized = re.sub(r"\s+", " ", normalized).strip()
 
         # Remove special characters but keep basic punctuation
-        normalized = re.sub(r'[^\w\s.,!?-]', '', normalized)
+        normalized = re.sub(r"[^\w\s.,!?-]", "", normalized)
 
         return normalized
 
@@ -483,23 +490,12 @@ class AutonomousObjectionHandler:
             score *= pattern.weight
 
             if score > 0.5:  # Threshold for pattern detection
-                detected_objections[category] = {
-                    'score': min(score, 1.0),
-                    'keywords': found_keywords
-                }
+                detected_objections[category] = {"score": min(score, 1.0), "keywords": found_keywords}
                 all_keywords.extend(found_keywords)
 
-        return {
-            'objections': detected_objections,
-            'keywords': list(set(all_keywords))
-        }
+        return {"objections": detected_objections, "keywords": list(set(all_keywords))}
 
-    async def _claude_objection_analysis(
-        self,
-        lead_id: str,
-        message: str,
-        context: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _claude_objection_analysis(self, lead_id: str, message: str, context: Dict[str, Any]) -> Dict[str, Any]:
         """Use Claude for deep objection analysis."""
         try:
             prompt = f"""
@@ -540,11 +536,7 @@ class AutonomousObjectionHandler:
             }}
             """
 
-            response = await self.llm_client.generate(
-                prompt=prompt,
-                max_tokens=400,
-                temperature=0.3
-            )
+            response = await self.llm_client.generate(prompt=prompt, max_tokens=400, temperature=0.3)
 
             # Parse Claude's response (simplified - in production would use proper JSON parsing)
             if response.content:
@@ -570,52 +562,43 @@ class AutonomousObjectionHandler:
                 # Estimate confidence based on response content
                 confidence = 0.8 if "clear" in content else 0.6
 
-                return {
-                    'primary_objection': primary_objection,
-                    'confidence': confidence,
-                    'reasoning': response.content
-                }
+                return {"primary_objection": primary_objection, "confidence": confidence, "reasoning": response.content}
 
             return {
-                'primary_objection': ObjectionCategory.UNCLEAR_OBJECTION,
-                'confidence': 0.3,
-                'reasoning': 'Claude analysis failed'
+                "primary_objection": ObjectionCategory.UNCLEAR_OBJECTION,
+                "confidence": 0.3,
+                "reasoning": "Claude analysis failed",
             }
 
         except Exception as e:
             logger.error(f"Error in Claude objection analysis: {e}")
             return {
-                'primary_objection': ObjectionCategory.UNCLEAR_OBJECTION,
-                'confidence': 0.2,
-                'reasoning': f'Analysis error: {e}'
+                "primary_objection": ObjectionCategory.UNCLEAR_OBJECTION,
+                "confidence": 0.2,
+                "reasoning": f"Analysis error: {e}",
             }
 
     def _combine_analysis_results(
-        self,
-        pattern_matches: Dict[str, Any],
-        claude_analysis: Dict[str, Any]
+        self, pattern_matches: Dict[str, Any], claude_analysis: Dict[str, Any]
     ) -> Tuple[ObjectionCategory, float]:
         """Combine pattern matching and Claude analysis results."""
 
         # If Claude found a clear objection with high confidence, use it
-        if claude_analysis['confidence'] > 0.75:
-            return claude_analysis['primary_objection'], claude_analysis['confidence']
+        if claude_analysis["confidence"] > 0.75:
+            return claude_analysis["primary_objection"], claude_analysis["confidence"]
 
         # If pattern matching found objections, use the highest scoring one
-        if pattern_matches['objections']:
-            best_pattern = max(
-                pattern_matches['objections'].items(),
-                key=lambda x: x[1]['score']
-            )
+        if pattern_matches["objections"]:
+            best_pattern = max(pattern_matches["objections"].items(), key=lambda x: x[1]["score"])
             category, data = best_pattern
 
             # Combine with Claude confidence
-            combined_confidence = (data['score'] + claude_analysis['confidence']) / 2
+            combined_confidence = (data["score"] + claude_analysis["confidence"]) / 2
 
             return category, combined_confidence
 
         # Fallback to Claude's analysis even with low confidence
-        return claude_analysis['primary_objection'], claude_analysis['confidence']
+        return claude_analysis["primary_objection"], claude_analysis["confidence"]
 
     async def _analyze_sentiment(self, message: str, context: Dict[str, Any]) -> ObjectionSentiment:
         """Analyze sentiment of the message."""
@@ -640,10 +623,7 @@ class AutonomousObjectionHandler:
         return ObjectionSentiment.NEUTRAL
 
     def _calculate_urgency_level(
-        self,
-        category: ObjectionCategory,
-        sentiment: ObjectionSentiment,
-        context: Dict[str, Any]
+        self, category: ObjectionCategory, sentiment: ObjectionSentiment, context: Dict[str, Any]
     ) -> str:
         """Calculate urgency level for objection handling."""
 
@@ -655,7 +635,7 @@ class AutonomousObjectionHandler:
         high_urgency_categories = [
             ObjectionCategory.TRUST_ISSUES,
             ObjectionCategory.FINANCING_CONCERNS,
-            ObjectionCategory.NEED_TO_SELL_FIRST
+            ObjectionCategory.NEED_TO_SELL_FIRST,
         ]
 
         if category in high_urgency_categories and sentiment == ObjectionSentiment.NEGATIVE:
@@ -678,7 +658,7 @@ class AutonomousObjectionHandler:
             ObjectionCategory.LOCATION_CONCERNS: ResponseStrategy.EMPATHIZE_AND_EDUCATE,
             ObjectionCategory.TRUST_ISSUES: ResponseStrategy.PROVIDE_EVIDENCE,
             ObjectionCategory.FINANCING_CONCERNS: ResponseStrategy.OFFER_ALTERNATIVES,
-            ObjectionCategory.UNCLEAR_OBJECTION: ResponseStrategy.CLARIFY_AND_EXPLORE
+            ObjectionCategory.UNCLEAR_OBJECTION: ResponseStrategy.CLARIFY_AND_EXPLORE,
         }
 
         # Override strategy based on sentiment
@@ -693,37 +673,42 @@ class AutonomousObjectionHandler:
         strategy: ResponseStrategy,
         lead_profile: Dict[str, Any],
         conversation_history: List[Dict[str, Any]],
-        behavioral_context: Dict[str, Any]
+        behavioral_context: Dict[str, Any],
     ) -> str:
         """Generate personalized response using Claude with Market Intelligence."""
         try:
             # Fetch Market Intelligence if objection is market-related
             market_intel = ""
             market_related_categories = [
-                ObjectionCategory.MARKET_UNCERTAINTY, 
-                ObjectionCategory.INTEREST_RATE_CONCERNS, 
+                ObjectionCategory.MARKET_UNCERTAINTY,
+                ObjectionCategory.INTEREST_RATE_CONCERNS,
                 ObjectionCategory.ECONOMIC_UNCERTAINTY,
                 ObjectionCategory.PRICE_TOO_HIGH,
-                ObjectionCategory.WAITING_FOR_MARKET
+                ObjectionCategory.WAITING_FOR_MARKET,
             ]
-            
+
             # Price Anchor Defense logic (Price Defense 2.0)
             price_anchor_info = ""
-            price_mentions = re.findall(r'\$\d+(?:,\d+)*(?:\.\d+)?', analysis.original_message)
+            price_mentions = re.findall(r"\$\d+(?:,\d+)*(?:\.\d+)?", analysis.original_message)
             if price_mentions and analysis.category == ObjectionCategory.PRICE_TOO_HIGH:
                 try:
                     zip_code = lead_profile.get("zip_code") or lead_profile.get("address", {}).get("zip")
                     if zip_code:
                         # Fetch zip-specific variance from NationalMarketIntelligence
                         variance = await self.market_engine.get_zip_variance(zip_code)
-                        
+
                         # Price Defense 2.0: Competitor Listing Arbitrage
-                        from ghl_real_estate_ai.services.competitive_intelligence_system import get_competitive_intelligence_system
+                        from ghl_real_estate_ai.services.competitive_intelligence_system import (
+                            get_competitive_intelligence_system,
+                        )
+
                         comp_intel = get_competitive_intelligence_system()
-                        
+
                         # Simulate finding a stale competitor
-                        stale_listing = "Active home on 4th street is listed at your price but has been sitting for 82 days."
-                        
+                        stale_listing = (
+                            "Active home on 4th street is listed at your price but has been sitting for 82 days."
+                        )
+
                         price_anchor_info = (
                             f"\n[PRICE ANCHOR DEFENSE 2.0]\n"
                             f"- Detected Anchor: {price_mentions[0]}\n"
@@ -739,10 +724,10 @@ class AutonomousObjectionHandler:
                 try:
                     market_area = lead_profile.get("preferred_neighborhood", "austin").lower()
                     dashboard = await self.market_engine.get_opportunity_dashboard(market_area)
-                    market_overview = dashboard.get('market_overview', {})
-                    timing_insights = dashboard.get('timing_insights', {})
-                    recommendations = dashboard.get('recommendations', {})
-                    
+                    market_overview = dashboard.get("market_overview", {})
+                    timing_insights = dashboard.get("timing_insights", {})
+                    recommendations = dashboard.get("recommendations", {})
+
                     market_intel = (
                         f"\n[MARKET INTELLIGENCE FOR {market_area.upper()}]\n"
                         f"- Current Phase: {market_overview.get('current_phase', 'Stable')}\n"
@@ -753,13 +738,11 @@ class AutonomousObjectionHandler:
                     logger.warning(f"Failed to fetch market intel: {e}")
 
             # Build context for Claude
-            context_summary = self._build_context_summary(
-                lead_profile, conversation_history, behavioral_context
-            )
-            
+            context_summary = self._build_context_summary(lead_profile, conversation_history, behavioral_context)
+
             if market_intel:
                 context_summary += market_intel
-            
+
             if price_anchor_info:
                 context_summary += price_anchor_info
 
@@ -790,11 +773,7 @@ class AutonomousObjectionHandler:
             Generate a response that follows the {strategy.value} strategy:
             """
 
-            response = await self.llm_client.generate(
-                prompt=prompt,
-                max_tokens=300,
-                temperature=0.7
-            )
+            response = await self.llm_client.generate(prompt=prompt, max_tokens=300, temperature=0.7)
 
             return response.content.strip() if response.content else self._get_fallback_response(analysis.category)
 
@@ -810,12 +789,11 @@ class AutonomousObjectionHandler:
             ObjectionCategory.TRUST_ISSUES: "Trust is essential in real estate. I'm happy to provide references and explain my process.",
             ObjectionCategory.LOCATION_CONCERNS: "Location is crucial! Let me share insights about this area and explore other options.",
             ObjectionCategory.FINANCING_CONCERNS: "I work with excellent lenders who can help explore financing options. Would that be helpful?",
-            ObjectionCategory.NEED_TO_SELL_FIRST: "Many buyers need to sell first. I can help coordinate both transactions seamlessly."
+            ObjectionCategory.NEED_TO_SELL_FIRST: "Many buyers need to sell first. I can help coordinate both transactions seamlessly.",
         }
 
         return fallback_responses.get(
-            category,
-            "I understand your concern. Let me provide some insights that might help clarify things."
+            category, "I understand your concern. Let me provide some insights that might help clarify things."
         )
 
     async def _get_behavioral_context(self, lead_id: str) -> Dict[str, Any]:
@@ -830,7 +808,7 @@ class AutonomousObjectionHandler:
                 "intent_level": behavioral_score.intent_level.value,
                 "likelihood_score": behavioral_score.likelihood_score,
                 "optimal_contact_window": behavioral_score.optimal_contact_window,
-                "preferred_channel": behavioral_score.recommended_channel
+                "preferred_channel": behavioral_score.recommended_channel,
             }
 
         except Exception as e:
@@ -857,15 +835,15 @@ class AutonomousObjectionHandler:
         self,
         lead_profile: Dict[str, Any],
         conversation_history: List[Dict[str, Any]],
-        behavioral_context: Dict[str, Any]
+        behavioral_context: Dict[str, Any],
     ) -> str:
         """Build context summary for Claude."""
         parts = []
 
-        if lead_profile.get('name'):
+        if lead_profile.get("name"):
             parts.append(f"Name: {lead_profile['name']}")
 
-        if behavioral_context.get('intent_level'):
+        if behavioral_context.get("intent_level"):
             parts.append(f"Intent Level: {behavioral_context['intent_level']}")
 
         if conversation_history:
@@ -873,11 +851,7 @@ class AutonomousObjectionHandler:
 
         return " | ".join(parts) if parts else "Limited context available"
 
-    def _calculate_response_confidence(
-        self,
-        analysis: ObjectionAnalysis,
-        strategy: ResponseStrategy
-    ) -> float:
+    def _calculate_response_confidence(self, analysis: ObjectionAnalysis, strategy: ResponseStrategy) -> float:
         """Calculate confidence in generated response."""
         base_confidence = analysis.confidence_score
 
@@ -889,7 +863,7 @@ class AutonomousObjectionHandler:
             ResponseStrategy.OFFER_ALTERNATIVES: 0.85,
             ResponseStrategy.ACKNOWLEDGE_AND_SCHEDULE: 0.9,
             ResponseStrategy.CLARIFY_AND_EXPLORE: 0.75,
-            ResponseStrategy.ESCALATE_TO_HUMAN: 1.0
+            ResponseStrategy.ESCALATE_TO_HUMAN: 1.0,
         }
 
         strategy_confidence = strategy_confidence_map.get(strategy, 0.7)
@@ -899,11 +873,7 @@ class AutonomousObjectionHandler:
 
         return min(combined, 1.0)
 
-    def _generate_next_steps(
-        self,
-        analysis: ObjectionAnalysis,
-        strategy: ResponseStrategy
-    ) -> List[str]:
+    def _generate_next_steps(self, analysis: ObjectionAnalysis, strategy: ResponseStrategy) -> List[str]:
         """Generate suggested next steps after response."""
 
         base_steps = []
@@ -912,25 +882,25 @@ class AutonomousObjectionHandler:
             base_steps = [
                 "Escalate to human agent immediately",
                 "Review objection context with agent",
-                "Schedule follow-up call within 24 hours"
+                "Schedule follow-up call within 24 hours",
             ]
         elif strategy == ResponseStrategy.ACKNOWLEDGE_AND_SCHEDULE:
             base_steps = [
                 "Schedule follow-up in 1-2 weeks",
                 "Send market updates periodically",
-                "Check in monthly to gauge readiness"
+                "Check in monthly to gauge readiness",
             ]
         elif strategy == ResponseStrategy.PROVIDE_EVIDENCE:
             base_steps = [
                 "Send relevant market data",
                 "Provide client testimonials",
-                "Schedule consultation to address concerns"
+                "Schedule consultation to address concerns",
             ]
         else:
             base_steps = [
                 "Monitor response to message",
                 "Follow up in 48 hours if no reply",
-                "Adjust approach based on lead's reaction"
+                "Adjust approach based on lead's reaction",
             ]
 
         return base_steps
@@ -952,9 +922,9 @@ class AutonomousObjectionHandler:
             suggested_next_steps=[
                 "Immediate human agent escalation",
                 "Review objection details with agent",
-                "Priority follow-up within 1 hour"
+                "Priority follow-up within 1 hour",
             ],
-            personalization_factors={"escalation_triggered": True}
+            personalization_factors={"escalation_triggered": True},
         )
 
     async def _create_fallback_response(self, analysis: ObjectionAnalysis) -> ObjectionResponse:
@@ -973,9 +943,9 @@ class AutonomousObjectionHandler:
             suggested_next_steps=[
                 "Schedule clarification call",
                 "Review with human agent",
-                "Gather more context before responding"
+                "Gather more context before responding",
             ],
-            personalization_factors={"fallback_response": True}
+            personalization_factors={"fallback_response": True},
         )
 
     async def _update_response_metrics(self, response: ObjectionResponse):
@@ -984,18 +954,12 @@ class AutonomousObjectionHandler:
             self.response_metrics["total_objections_handled"] += 1
 
             if response.confidence_score >= self.confidence_thresholds["auto_respond"]:
-                self.response_metrics["auto_response_rate"] = (
-                    self.response_metrics["auto_response_rate"] * 0.9 + 0.1
-                )
+                self.response_metrics["auto_response_rate"] = self.response_metrics["auto_response_rate"] * 0.9 + 0.1
 
         except Exception as e:
             logger.error(f"Error updating response metrics: {e}")
 
-    async def _log_objection_interaction(
-        self,
-        analysis: ObjectionAnalysis,
-        response: ObjectionResponse
-    ):
+    async def _log_objection_interaction(self, analysis: ObjectionAnalysis, response: ObjectionResponse):
         """Log objection interaction for learning and improvement."""
         try:
             interaction_log = {
@@ -1007,7 +971,7 @@ class AutonomousObjectionHandler:
                 "strategy_used": response.response_strategy.value,
                 "response_confidence": response.confidence_score,
                 "escalated": response.escalation_needed,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
             # Store in cache for analytics
@@ -1026,7 +990,7 @@ class AutonomousObjectionHandler:
             "response_strategies": len(ResponseStrategy),
             "pattern_detection_enabled": len(self.objection_patterns),
             "claude_integration": "active",
-            "last_updated": datetime.now().isoformat()
+            "last_updated": datetime.now().isoformat(),
         }
 
 

@@ -5,18 +5,18 @@ in the $500K ARR platform.
 """
 
 import asyncio
-import time
 import json
+import time
 import uuid
 from datetime import datetime, timedelta
-from typing import Dict, Any, Optional, Callable, Awaitable, Tuple
+from typing import Any, Awaitable, Callable, Dict, Optional, Tuple
 from urllib.parse import urlparse
 
-from fastapi import Request, Response, HTTPException
-from fastapi.responses import RedirectResponse, JSONResponse
+import asyncpg
+from fastapi import HTTPException, Request, Response
+from fastapi.responses import JSONResponse, RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
-import asyncpg
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -48,11 +48,7 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
     """
 
     def __init__(
-        self,
-        app: ASGIApp,
-        db_pool: asyncpg.Pool,
-        cache_service: CacheService,
-        default_agency_id: Optional[str] = None
+        self, app: ASGIApp, db_pool: asyncpg.Pool, cache_service: CacheService, default_agency_id: Optional[str] = None
     ):
         """Initialize domain resolver middleware."""
         super().__init__(app)
@@ -97,7 +93,7 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
                     "agency_id": tenant_context.agency_id,
                     "client_id": tenant_context.client_id,
                     "is_white_label": tenant_context.is_white_label,
-                    "domain_resolution_time_ms": round((time.time() - start_time) * 1000, 2)
+                    "domain_resolution_time_ms": round((time.time() - start_time) * 1000, 2),
                 }
 
             # Process request
@@ -120,10 +116,7 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
             # Return graceful fallback
             return JSONResponse(
                 status_code=500,
-                content={
-                    "error": "Internal server error",
-                    "message": "Failed to resolve domain configuration"
-                }
+                content={"error": "Internal server error", "message": "Failed to resolve domain configuration"},
             )
 
     async def _resolve_domain(self, request: Request) -> TenantContext:
@@ -134,7 +127,7 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
             return await self._get_default_context()
 
         # Remove port if present
-        domain_name = host.split(':')[0]
+        domain_name = host.split(":")[0]
 
         # Check cache first
         cache_key = f"domain_resolution:{domain_name}"
@@ -153,9 +146,7 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
         # Cache the result
         if tenant_context.agency_id:
             await self.cache.set(
-                cache_key,
-                json.dumps(self._tenant_context_to_dict(tenant_context)),
-                ttl=self.cache_ttl
+                cache_key, json.dumps(self._tenant_context_to_dict(tenant_context)), ttl=self.cache_ttl
             )
 
         return tenant_context
@@ -173,7 +164,7 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
                     FROM domain_routing_cache
                     WHERE domain_name = $1 AND expires_at > NOW()
                     """,
-                    domain_name
+                    domain_name,
                 )
 
                 if cached_routing:
@@ -182,8 +173,8 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
                     context.client_id = cached_routing["client_id"]
                     context.deployment_id = cached_routing["deployment_id"]
                     context.routing_config = json.loads(cached_routing["routing_config"])
-                    context.brand_config = json.loads(cached_routing["brand_config"] or '{}')
-                    context.feature_flags = json.loads(cached_routing["feature_flags"] or '{}')
+                    context.brand_config = json.loads(cached_routing["brand_config"] or "{}")
+                    context.feature_flags = json.loads(cached_routing["feature_flags"] or "{}")
                     context.is_white_label = True
                     context.custom_domain = True
                     return context
@@ -201,7 +192,7 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
                     LEFT JOIN brand_configurations bc ON dep.brand_config_id = bc.config_id
                     WHERE dc.domain_name = $1 AND dc.status = 'active'
                     """,
-                    domain_name
+                    domain_name,
                 )
 
                 if domain_config:
@@ -214,10 +205,10 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
 
                     # Set routing configuration
                     context.routing_config = {
-                        "modules": json.loads(domain_config["enabled_modules"] or '[]'),
-                        "module_config": json.loads(domain_config["module_configurations"] or '{}'),
+                        "modules": json.loads(domain_config["enabled_modules"] or "[]"),
+                        "module_config": json.loads(domain_config["module_configurations"] or "{}"),
                         "rate_limit": domain_config["rate_limit_requests_per_minute"] or 1000,
-                        "max_users": domain_config["max_concurrent_users"] or 100
+                        "max_users": domain_config["max_concurrent_users"] or 100,
                     }
 
                     # Set brand configuration
@@ -228,11 +219,11 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
                             "secondary_color": domain_config["secondary_color"],
                             "accent_color": domain_config["accent_color"],
                             "font_family": domain_config["primary_font_family"],
-                            "custom_css": domain_config["custom_css"]
+                            "custom_css": domain_config["custom_css"],
                         }
 
                     # Set feature flags
-                    context.feature_flags = json.loads(domain_config["feature_flags"] or '{}')
+                    context.feature_flags = json.loads(domain_config["feature_flags"] or "{}")
 
                     # Update domain routing cache
                     await self._update_domain_routing_cache(domain_name, context)
@@ -253,7 +244,7 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
     async def _resolve_subdomain_routing(self, domain_name: str) -> TenantContext:
         """Resolve subdomain-based routing (e.g., agency.app.com or client.agency.app.com)."""
 
-        parts = domain_name.split('.')
+        parts = domain_name.split(".")
         if len(parts) < 3:  # Minimum: subdomain.app.com
             return await self._get_default_context()
 
@@ -269,7 +260,7 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
                         FROM agencies
                         WHERE agency_slug = $1 AND status = 'active'
                         """,
-                        agency_slug
+                        agency_slug,
                     )
 
                     if agency_info:
@@ -292,7 +283,8 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
                         WHERE ac.client_slug = $1 AND a.agency_slug = $2
                         AND ac.is_active = true AND a.status = 'active'
                         """,
-                        client_slug, agency_slug
+                        client_slug,
+                        agency_slug,
                     )
 
                     if client_info:
@@ -318,11 +310,7 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
 
         context.is_white_label = False
         context.primary_domain = True
-        context.feature_flags = {
-            "advanced_analytics": True,
-            "api_access": True,
-            "custom_integrations": True
-        }
+        context.feature_flags = {"advanced_analytics": True, "api_access": True, "custom_integrations": True}
 
         return context
 
@@ -352,7 +340,7 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
                     json.dumps(context.brand_config),
                     json.dumps(context.feature_flags),
                     datetime.utcnow(),
-                    datetime.utcnow() + timedelta(hours=1)
+                    datetime.utcnow() + timedelta(hours=1),
                 )
         except Exception as e:
             logger.warning(f"Failed to update domain routing cache: {e}")
@@ -366,11 +354,11 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
             return True
 
         # Skip static assets
-        if path.startswith('/static/') or path.startswith('/assets/'):
+        if path.startswith("/static/") or path.startswith("/assets/"):
             return True
 
         # Skip API docs
-        if path in ['/docs', '/redoc', '/openapi.json']:
+        if path in ["/docs", "/redoc", "/openapi.json"]:
             return True
 
         return False
@@ -415,11 +403,7 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
             response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
     async def _log_request_analytics(
-        self,
-        request: Request,
-        response: Response,
-        tenant_context: TenantContext,
-        start_time: float
+        self, request: Request, response: Response, tenant_context: TenantContext, start_time: float
     ) -> None:
         """Log request analytics for tenant."""
         try:
@@ -438,7 +422,7 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
                 "ip_address": self._get_client_ip(request),
                 "domain": request.headers.get("host", ""),
                 "is_white_label": tenant_context.is_white_label,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
             # Log to analytics system (async, non-blocking)
@@ -484,14 +468,16 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
                     "milliseconds",
                     datetime.utcnow().replace(minute=0, second=0, microsecond=0),  # Hourly bucket
                     "hour",
-                    json.dumps({
-                        "method": analytics_data["method"],
-                        "status_code": analytics_data["status_code"],
-                        "user_agent": analytics_data["user_agent"][:100],  # Truncate
-                        "ip_address": analytics_data["ip_address"]
-                    }),
+                    json.dumps(
+                        {
+                            "method": analytics_data["method"],
+                            "status_code": analytics_data["status_code"],
+                            "user_agent": analytics_data["user_agent"][:100],  # Truncate
+                            "ip_address": analytics_data["ip_address"],
+                        }
+                    ),
                     analytics_data["domain"],
-                    json.dumps(analytics_data)
+                    json.dumps(analytics_data),
                 )
         except Exception as e:
             logger.warning(f"Failed to store analytics data: {e}")
@@ -507,7 +493,7 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
             "routing_config": context.routing_config,
             "is_white_label": context.is_white_label,
             "primary_domain": context.primary_domain,
-            "custom_domain": context.custom_domain
+            "custom_domain": context.custom_domain,
         }
 
     def _dict_to_tenant_context(self, data: Dict[str, Any]) -> TenantContext:
@@ -527,39 +513,39 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
 
 # Utility functions for use in route handlers
 
+
 def get_tenant_context(request: Request) -> TenantContext:
     """Get tenant context from request state."""
     return getattr(request.state, "tenant", TenantContext())
+
 
 def require_agency_context(request: Request) -> str:
     """Require agency context and return agency_id."""
     tenant = get_tenant_context(request)
     if not tenant.agency_id:
-        raise HTTPException(
-            status_code=403,
-            detail="Agency context required for this operation"
-        )
+        raise HTTPException(status_code=403, detail="Agency context required for this operation")
     return tenant.agency_id
+
 
 def require_client_context(request: Request) -> Tuple[str, str]:
     """Require client context and return (agency_id, client_id)."""
     tenant = get_tenant_context(request)
     if not tenant.agency_id or not tenant.client_id:
-        raise HTTPException(
-            status_code=403,
-            detail="Client context required for this operation"
-        )
+        raise HTTPException(status_code=403, detail="Client context required for this operation")
     return tenant.agency_id, tenant.client_id
+
 
 def has_feature_flag(request: Request, flag_name: str) -> bool:
     """Check if feature flag is enabled for current tenant."""
     tenant = get_tenant_context(request)
     return tenant.feature_flags.get(flag_name, False)
 
+
 def get_brand_config(request: Request) -> Dict[str, Any]:
     """Get brand configuration for current tenant."""
     tenant = get_tenant_context(request)
     return tenant.brand_config
+
 
 def is_white_label_request(request: Request) -> bool:
     """Check if request is from a white-label deployment."""

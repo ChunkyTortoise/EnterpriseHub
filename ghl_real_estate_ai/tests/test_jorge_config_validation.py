@@ -5,8 +5,9 @@ validation, environment variable overrides, and fallback behavior.
 """
 
 import os
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 
 class TestJorgeConfigValidation:
@@ -24,7 +25,7 @@ class TestJorgeConfigValidation:
 
     def teardown_method(self):
         """Clean up after each test."""
-        if hasattr(self, 'original_env'):
+        if hasattr(self, "original_env"):
             os.environ.clear()
             os.environ.update(self.original_env)
 
@@ -33,12 +34,16 @@ class TestJorgeConfigValidation:
         from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeEnvironmentSettings
 
         # Set seller mode but no workflow IDs
-        with patch.dict(os.environ, {
-            "JORGE_SELLER_MODE": "true",
-            "JORGE_BUYER_MODE": "false",
-            "HOT_SELLER_WORKFLOW_ID": "",
-            "WARM_SELLER_WORKFLOW_ID": ""
-        }, clear=False):
+        with patch.dict(
+            os.environ,
+            {
+                "JORGE_SELLER_MODE": "true",
+                "JORGE_BUYER_MODE": "false",
+                "HOT_SELLER_WORKFLOW_ID": "",
+                "WARM_SELLER_WORKFLOW_ID": "",
+            },
+            clear=False,
+        ):
             settings = JorgeEnvironmentSettings()
             warnings = settings.validate_ghl_integration()
 
@@ -54,7 +59,7 @@ class TestJorgeConfigValidation:
         env_without_fields = {
             "CUSTOM_FIELD_LEAD_SCORE": "",
             "CUSTOM_FIELD_SELLER_TEMPERATURE": "",
-            "CUSTOM_FIELD_BUDGET": ""
+            "CUSTOM_FIELD_BUDGET": "",
         }
 
         with patch.dict(os.environ, env_without_fields, clear=False):
@@ -77,7 +82,7 @@ class TestJorgeConfigValidation:
             "WARM_BUYER_WORKFLOW_ID": "",
             "CUSTOM_FIELD_LEAD_SCORE": "",
             "CUSTOM_FIELD_SELLER_TEMPERATURE": "",
-            "CUSTOM_FIELD_BUDGET": ""
+            "CUSTOM_FIELD_BUDGET": "",
         }
 
         with patch.dict(os.environ, env_cleared, clear=False):
@@ -101,7 +106,7 @@ class TestJorgeConfigValidation:
             "WARM_BUYER_WORKFLOW_ID": "buyer-warm-012",
             "CUSTOM_FIELD_LEAD_SCORE": "field_lead_123",
             "CUSTOM_FIELD_SELLER_TEMPERATURE": "field_temp_456",
-            "CUSTOM_FIELD_BUDGET": "field_budget_789"
+            "CUSTOM_FIELD_BUDGET": "field_budget_789",
         }
 
         with patch.dict(os.environ, env_valid, clear=False):
@@ -145,30 +150,22 @@ class TestJorgeConfigValidation:
         from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeEnvironmentSettings
 
         # Test workflow ID override
-        with patch.dict(os.environ, {
-            "HOT_SELLER_WORKFLOW_ID": "override-workflow-id"
-        }, clear=False):
+        with patch.dict(os.environ, {"HOT_SELLER_WORKFLOW_ID": "override-workflow-id"}, clear=False):
             settings = JorgeEnvironmentSettings()
             # The setting should reflect the env var
             assert settings.hot_seller_workflow_id == "override-workflow-id"
 
         # Test threshold override
-        with patch.dict(os.environ, {
-            "HOT_SELLER_THRESHOLD": "0.85"
-        }, clear=False):
+        with patch.dict(os.environ, {"HOT_SELLER_THRESHOLD": "0.85"}, clear=False):
             settings = JorgeEnvironmentSettings()
             assert settings.hot_seller_threshold == 0.85
 
         # Test mode override
-        with patch.dict(os.environ, {
-            "JORGE_SELLER_MODE": "true"
-        }, clear=False):
+        with patch.dict(os.environ, {"JORGE_SELLER_MODE": "true"}, clear=False):
             settings = JorgeEnvironmentSettings()
             assert settings.jorge_seller_mode is True
 
-        with patch.dict(os.environ, {
-            "JORGE_SELLER_MODE": "false"
-        }, clear=False):
+        with patch.dict(os.environ, {"JORGE_SELLER_MODE": "false"}, clear=False):
             settings = JorgeEnvironmentSettings()
             assert settings.jorge_seller_mode is False
 
@@ -177,12 +174,16 @@ class TestJorgeConfigValidation:
         from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeEnvironmentSettings
 
         # Set buyer mode but no buyer workflow IDs
-        with patch.dict(os.environ, {
-            "JORGE_SELLER_MODE": "false",
-            "JORGE_BUYER_MODE": "true",
-            "HOT_BUYER_WORKFLOW_ID": "",
-            "WARM_BUYER_WORKFLOW_ID": ""
-        }, clear=False):
+        with patch.dict(
+            os.environ,
+            {
+                "JORGE_SELLER_MODE": "false",
+                "JORGE_BUYER_MODE": "true",
+                "HOT_BUYER_WORKFLOW_ID": "",
+                "WARM_BUYER_WORKFLOW_ID": "",
+            },
+            clear=False,
+        ):
             settings = JorgeEnvironmentSettings()
             warnings = settings.validate_ghl_integration()
 
@@ -207,14 +208,18 @@ class TestJorgeConfigEdgeCases:
         from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeEnvironmentSettings
 
         # Seller mode with workflows, buyer mode without
-        with patch.dict(os.environ, {
-            "JORGE_SELLER_MODE": "true",
-            "JORGE_BUYER_MODE": "true",
-            "HOT_SELLER_WORKFLOW_ID": "seller-hot-123",
-            "WARM_SELLER_WORKFLOW_ID": "seller-warm-456",
-            "HOT_BUYER_WORKFLOW_ID": "",
-            "WARM_BUYER_WORKFLOW_ID": ""
-        }, clear=False):
+        with patch.dict(
+            os.environ,
+            {
+                "JORGE_SELLER_MODE": "true",
+                "JORGE_BUYER_MODE": "true",
+                "HOT_SELLER_WORKFLOW_ID": "seller-hot-123",
+                "WARM_SELLER_WORKFLOW_ID": "seller-warm-456",
+                "HOT_BUYER_WORKFLOW_ID": "",
+                "WARM_BUYER_WORKFLOW_ID": "",
+            },
+            clear=False,
+        ):
             settings = JorgeEnvironmentSettings()
             warnings = settings.validate_ghl_integration()
 

@@ -16,22 +16,23 @@ Features:
 
 import asyncio
 import time
-from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)
 
 
 class CacheWarmingPriority(Enum):
     """Cache warming priority levels."""
-    CRITICAL = "critical"      # <5ms: Jorge prompts, active leads
-    HIGH = "high"             # <50ms: Recent conversations, hot properties
-    MEDIUM = "medium"         # <200ms: Historical data, preferences
-    LOW = "low"               # <1s: Analytics, reports
+
+    CRITICAL = "critical"  # <5ms: Jorge prompts, active leads
+    HIGH = "high"  # <50ms: Recent conversations, hot properties
+    MEDIUM = "medium"  # <200ms: Historical data, preferences
+    LOW = "low"  # <1s: Analytics, reports
 
 
 class CacheWarmingService:
@@ -47,12 +48,12 @@ class CacheWarmingService:
     def __init__(self):
         self.cache = get_cache_service()
         self.warming_stats = {
-            'total_warmed': 0,
-            'critical_warmed': 0,
-            'high_warmed': 0,
-            'medium_warmed': 0,
-            'warming_time_ms': 0,
-            'last_warming': None
+            "total_warmed": 0,
+            "critical_warmed": 0,
+            "high_warmed": 0,
+            "medium_warmed": 0,
+            "warming_time_ms": 0,
+            "last_warming": None,
         }
 
     # CRITICAL PRIORITY: Jorge Bot Performance (<5ms)
@@ -80,7 +81,6 @@ Current Austin Market Context:
 - Mid-market: $500k-1M (Central Austin, West Lake Hills)
 - Luxury: $1M+ (Downtown high-rise, Westlake)
 - Market: Competitive, inventory constraints, tech-driven growth""",
-
             "jorge:buyer:system_prompt": """You are Jorge's Buyer Specialist, focused on matching Austin properties to qualified buyers.
 
 Your expertise:
@@ -94,7 +94,6 @@ Austin Neighborhood Expertise:
 - Families: Pflugerville (schools), Leander (space/value)
 - Luxury: West Lake Hills (schools), Downtown (lifestyle)
 - Investment: East Austin (growth), Cedar Park (rental demand)""",
-
             "jorge:seller:system_prompt": """You are Jorge's Seller Specialist, providing expert Austin market pricing and strategy.
 
 Your focus:
@@ -107,7 +106,7 @@ Austin Seller Insights:
 - Average DOM: 25-45 days (varies by price range and location)
 - Pricing strategy critical in competitive market
 - Staging important for $500k+ properties
-- Tech buyer influx driving demand in specific areas"""
+- Tech buyer influx driving demand in specific areas""",
         }
 
         # Warm Jorge prompts
@@ -118,12 +117,9 @@ Austin Seller Insights:
         # Common Jorge responses for quick recall
         jorge_responses = {
             "jorge:greeting": "Hi! I'm Jorge with Real Estate AI Solutions. I help folks buy and sell homes here in Austin. Quick question - are you looking to buy or sell, and what area of Austin interests you?",
-
             "jorge:qualification_start": "Perfect! Let me ask a few quick questions to see how I can best help you. What's your timeline - are you looking to move within the next 3-6 months, or just starting to explore?",
-
             "jorge:austin_market_overview": "Austin's market is competitive but has great opportunities! We're seeing strong demand in Cedar Park and Round Rock for families, downtown for professionals, and West Lake Hills for luxury buyers. What type of lifestyle are you looking for?",
-
-            "jorge:next_steps": "Based on what you've told me, I think you'd be a great fit for our buyer program. I'd love to get you connected with one of our Austin market specialists who can show you exactly what's available in your price range. Does a quick 15-minute call work for you?"
+            "jorge:next_steps": "Based on what you've told me, I think you'd be a great fit for our buyer program. I'd love to get you connected with one of our Austin market specialists who can show you exactly what's available in your price range. Does a quick 15-minute call work for you?",
         }
 
         for response_key, response_content in jorge_responses.items():
@@ -131,7 +127,7 @@ Austin Seller Insights:
             warmed_count += 1
 
         elapsed_ms = (time.time() - start_time) * 1000
-        self.warming_stats['critical_warmed'] += warmed_count
+        self.warming_stats["critical_warmed"] += warmed_count
 
         logger.info(f"Warmed {warmed_count} Jorge prompts/responses in {elapsed_ms:.2f}ms")
         return warmed_count
@@ -151,7 +147,7 @@ Austin Seller Insights:
             "lead_score:9",
             "lead_score:10",
             "engagement:high",
-            "engagement:medium"
+            "engagement:medium",
         ]
 
         # Create representative active lead data
@@ -161,13 +157,13 @@ Austin Seller Insights:
                 "pattern": pattern,
                 "timestamp": datetime.utcnow().isoformat(),
                 "location_id": location_id,
-                "warmed": True
+                "warmed": True,
             }
             await self.cache.set(cache_key, pattern_data, ttl)
             warmed_count += 1
 
         elapsed_ms = (time.time() - start_time) * 1000
-        self.warming_stats['critical_warmed'] += warmed_count
+        self.warming_stats["critical_warmed"] += warmed_count
 
         logger.info(f"Warmed {warmed_count} active lead patterns in {elapsed_ms:.2f}ms")
         return warmed_count
@@ -185,7 +181,7 @@ Austin Seller Insights:
             "seller_valuation",
             "market_inquiry",
             "scheduling_request",
-            "follow_up_nurture"
+            "follow_up_nurture",
         ]
 
         for conv_type in conversation_types:
@@ -195,13 +191,13 @@ Austin Seller Insights:
                     "type": conv_type,
                     "last_updated": (datetime.utcnow() - timedelta(hours=i)).isoformat(),
                     "stage": "active",
-                    "location_id": location_id
+                    "location_id": location_id,
                 }
                 await self.cache.set(cache_key, conv_data, ttl)
                 warmed_count += 1
 
         elapsed_ms = (time.time() - start_time) * 1000
-        self.warming_stats['high_warmed'] += warmed_count
+        self.warming_stats["high_warmed"] += warmed_count
 
         logger.info(f"Warmed {warmed_count} recent conversations in {elapsed_ms:.2f}ms")
         return warmed_count
@@ -217,7 +213,7 @@ Austin Seller Insights:
             {"zip": "78613", "area": "Cedar Park", "avg_price": 385000},
             {"zip": "78664", "area": "Round Rock", "avg_price": 365000},
             {"zip": "78746", "area": "West Lake Hills", "avg_price": 1200000},
-            {"zip": "78701", "area": "Downtown Austin", "avg_price": 850000}
+            {"zip": "78701", "area": "Downtown Austin", "avg_price": 850000},
         ]
 
         for area in austin_areas:
@@ -235,14 +231,14 @@ Austin Seller Insights:
                     "bathrooms": 2.0 + (i * 0.5),
                     "sqft": 1800 + (i * 200),
                     "hot_property": True,
-                    "cached_at": datetime.utcnow().isoformat()
+                    "cached_at": datetime.utcnow().isoformat(),
                 }
 
                 await self.cache.set(cache_key, property_data, ttl)
                 warmed_count += 1
 
         elapsed_ms = (time.time() - start_time) * 1000
-        self.warming_stats['high_warmed'] += warmed_count
+        self.warming_stats["high_warmed"] += warmed_count
 
         logger.info(f"Warmed {warmed_count} hot properties in {elapsed_ms:.2f}ms")
         return warmed_count
@@ -257,10 +253,15 @@ Austin Seller Insights:
         # Common buyer preference patterns in Austin market
         preference_patterns = [
             {"type": "family_buyer", "bedrooms_min": 3, "price_max": 500000, "areas": ["Cedar Park", "Round Rock"]},
-            {"type": "tech_professional", "bedrooms_min": 2, "price_max": 700000, "areas": ["Downtown", "South Austin"]},
+            {
+                "type": "tech_professional",
+                "bedrooms_min": 2,
+                "price_max": 700000,
+                "areas": ["Downtown", "South Austin"],
+            },
             {"type": "luxury_buyer", "bedrooms_min": 4, "price_max": 1500000, "areas": ["West Lake Hills", "Westlake"]},
             {"type": "investor", "bedrooms_min": 2, "price_max": 400000, "areas": ["East Austin", "Pflugerville"]},
-            {"type": "first_time_buyer", "bedrooms_min": 2, "price_max": 350000, "areas": ["Pflugerville", "Leander"]}
+            {"type": "first_time_buyer", "bedrooms_min": 2, "price_max": 350000, "areas": ["Pflugerville", "Leander"]},
         ]
 
         for pattern in preference_patterns:
@@ -269,7 +270,7 @@ Austin Seller Insights:
             warmed_count += 1
 
         elapsed_ms = (time.time() - start_time) * 1000
-        self.warming_stats['medium_warmed'] += warmed_count
+        self.warming_stats["medium_warmed"] += warmed_count
 
         logger.info(f"Warmed {warmed_count} preference patterns in {elapsed_ms:.2f}ms")
         return warmed_count
@@ -287,7 +288,7 @@ Austin Seller Insights:
             f"tenant:{location_id}:analytics:property_views_trending",
             f"tenant:{location_id}:analytics:monthly_revenue",
             f"tenant:{location_id}:analytics:lead_source_breakdown",
-            f"tenant:{location_id}:analytics:conversation_success_rate"
+            f"tenant:{location_id}:analytics:conversation_success_rate",
         ]
 
         for key in analytics_keys:
@@ -297,13 +298,13 @@ Austin Seller Insights:
                 "location_id": location_id,
                 "calculated_at": datetime.utcnow().isoformat(),
                 "value": f"Sample data for {key.split(':')[-1]}",
-                "warmed": True
+                "warmed": True,
             }
             await self.cache.set(key, analytics_data, ttl)
             warmed_count += 1
 
         elapsed_ms = (time.time() - start_time) * 1000
-        self.warming_stats['medium_warmed'] += warmed_count
+        self.warming_stats["medium_warmed"] += warmed_count
 
         logger.info(f"Warmed {warmed_count} analytics dashboards in {elapsed_ms:.2f}ms")
         return warmed_count
@@ -321,7 +322,7 @@ Austin Seller Insights:
             ("jorge_prompts", self.warm_jorge_prompts()),
             ("active_leads", self.warm_active_leads(location_id)),
             ("recent_conversations", self.warm_recent_conversations(location_id)),
-            ("hot_properties", self.warm_hot_properties(location_id))
+            ("hot_properties", self.warm_hot_properties(location_id)),
         ]
 
         completed_tasks = await asyncio.gather(*[task[1] for task in tasks], return_exceptions=True)
@@ -337,9 +338,9 @@ Austin Seller Insights:
         total_warmed = sum(results.values())
         elapsed_ms = (time.time() - start_time) * 1000
 
-        self.warming_stats['total_warmed'] += total_warmed
-        self.warming_stats['warming_time_ms'] = elapsed_ms
-        self.warming_stats['last_warming'] = datetime.utcnow().isoformat()
+        self.warming_stats["total_warmed"] += total_warmed
+        self.warming_stats["warming_time_ms"] = elapsed_ms
+        self.warming_stats["last_warming"] = datetime.utcnow().isoformat()
 
         logger.info(f"Cache warming completed: {total_warmed} items in {elapsed_ms:.2f}ms")
         logger.info(f"Warming breakdown: {results}")
@@ -356,7 +357,7 @@ Austin Seller Insights:
         # Medium priority (background warming)
         medium_tasks = [
             ("user_preferences", self.warm_user_preferences(location_id)),
-            ("analytics_dashboards", self.warm_analytics_dashboards(location_id))
+            ("analytics_dashboards", self.warm_analytics_dashboards(location_id)),
         ]
 
         medium_results = {}
@@ -375,7 +376,7 @@ Austin Seller Insights:
             "medium": medium_results,
             "total_items": sum(critical_results.values()) + sum(medium_results.values()),
             "total_time_ms": total_elapsed_ms,
-            "performance_improvement": "60% faster response times expected"
+            "performance_improvement": "60% faster response times expected",
         }
 
     async def get_warming_stats(self) -> Dict[str, Any]:
@@ -383,7 +384,7 @@ Austin Seller Insights:
         return {
             **self.warming_stats,
             "cache_health": await self.cache.health_check(),
-            "cache_performance": await self.cache.get_cache_stats()
+            "cache_performance": await self.cache.get_cache_stats(),
         }
 
     async def schedule_periodic_warming(self, location_id: str, interval_minutes: int = 60):
@@ -402,6 +403,7 @@ Austin Seller Insights:
 
 # Global service instance
 _warming_service = None
+
 
 def get_cache_warming_service() -> CacheWarmingService:
     """Get singleton cache warming service."""

@@ -10,9 +10,9 @@ import time
 import pytest
 
 from ghl_real_estate_ai.services.jorge.performance_tracker import (
-    PerformanceTracker,
     VALID_BOT_NAMES,
     WINDOWS,
+    PerformanceTracker,
 )
 
 
@@ -111,9 +111,7 @@ class TestPerformanceTracker:
 
         await tracker.track_operation("seller_bot", "process", 200.0, success=True, cache_hit=True)
         await tracker.track_operation("seller_bot", "process", 400.0, success=True, cache_hit=False)
-        await tracker.track_operation(
-            "seller_bot", "process", 600.0, success=False, cache_hit=False
-        )
+        await tracker.track_operation("seller_bot", "process", 600.0, success=False, cache_hit=False)
 
         stats = await tracker.get_bot_stats("seller_bot")
 

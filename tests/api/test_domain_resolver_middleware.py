@@ -4,27 +4,27 @@ Validates multi-tenant routing and domain resolution functionality
 for the white-label platform.
 """
 
-import pytest
 import asyncio
 import json
 from datetime import datetime, timedelta
+from typing import Any, Dict
 from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, Any
 
-from fastapi import FastAPI, Request, HTTPException
+import asyncpg
+import pytest
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.testclient import TestClient
 from starlette.responses import Response
-import asyncpg
 
 from ghl_real_estate_ai.api.middleware.domain_resolver_middleware import (
     DomainResolverMiddleware,
     TenantContext,
+    get_brand_config,
     get_tenant_context,
+    has_feature_flag,
+    is_white_label_request,
     require_agency_context,
     require_client_context,
-    has_feature_flag,
-    get_brand_config,
-    is_white_label_request
 )
 from ghl_real_estate_ai.services.cache_service import CacheService
 
@@ -55,21 +55,9 @@ def sample_tenant_context():
     context.deployment_id = "deployment_001"
     context.is_white_label = True
     context.custom_domain = True
-    context.brand_config = {
-        "brand_name": "Test Agency",
-        "primary_color": "#6D28D9",
-        "secondary_color": "#4C1D95"
-    }
-    context.feature_flags = {
-        "advanced_analytics": True,
-        "api_access": True,
-        "custom_integrations": False
-    }
-    context.routing_config = {
-        "modules": ["leads", "analytics"],
-        "rate_limit": 1000,
-        "max_users": 100
-    }
+    context.brand_config = {"brand_name": "Test Agency", "primary_color": "#6D28D9", "secondary_color": "#4C1D95"}
+    context.feature_flags = {"advanced_analytics": True, "api_access": True, "custom_integrations": False}
+    context.routing_config = {"modules": ["leads", "analytics"], "rate_limit": 1000, "max_users": 100}
     return context
 
 
@@ -80,10 +68,7 @@ def app_with_middleware(mock_db_pool, mock_cache_service):
 
     # Add middleware
     middleware = DomainResolverMiddleware(
-        app=app,
-        db_pool=mock_db_pool,
-        cache_service=mock_cache_service,
-        default_agency_id="default_agency"
+        app=app, db_pool=mock_db_pool, cache_service=mock_cache_service, default_agency_id="default_agency"
     )
 
     app.add_middleware(DomainResolverMiddleware, db_pool=mock_db_pool, cache_service=mock_cache_service)
@@ -97,7 +82,7 @@ def app_with_middleware(mock_db_pool, mock_cache_service):
             "client_id": tenant.client_id,
             "is_white_label": tenant.is_white_label,
             "brand_config": tenant.brand_config,
-            "feature_flags": tenant.feature_flags
+            "feature_flags": tenant.feature_flags,
         }
 
     @app.get("/agency-required")
@@ -125,10 +110,7 @@ class TestDomainResolverMiddleware:
     async def test_middleware_initialization(self, mock_db_pool, mock_cache_service):
         """Test middleware initialization."""
         middleware = DomainResolverMiddleware(
-            app=MagicMock(),
-            db_pool=mock_db_pool,
-            cache_service=mock_cache_service,
-            default_agency_id="default_agency"
+            app=MagicMock(), db_pool=mock_db_pool, cache_service=mock_cache_service, default_agency_id="default_agency"
         )
 
         assert middleware.db_pool == mock_db_pool
@@ -142,17 +124,19 @@ class TestDomainResolverMiddleware:
         app, middleware = app_with_middleware(mock_db_pool=MagicMock(), mock_cache_service=mock_cache_service)
 
         # Mock cache hit
-        cached_data = json.dumps({
-            "agency_id": "agency_001",
-            "client_id": "client_001",
-            "deployment_id": "deployment_001",
-            "brand_config": {"brand_name": "Test Agency"},
-            "feature_flags": {"advanced_analytics": True},
-            "routing_config": {"modules": ["leads"]},
-            "is_white_label": True,
-            "primary_domain": False,
-            "custom_domain": True
-        })
+        cached_data = json.dumps(
+            {
+                "agency_id": "agency_001",
+                "client_id": "client_001",
+                "deployment_id": "deployment_001",
+                "brand_config": {"brand_name": "Test Agency"},
+                "feature_flags": {"advanced_analytics": True},
+                "routing_config": {"modules": ["leads"]},
+                "is_white_label": True,
+                "primary_domain": False,
+                "custom_domain": True,
+            }
+        )
         mock_cache_service.get.return_value = cached_data
 
         # Mock request
@@ -185,7 +169,7 @@ class TestDomainResolverMiddleware:
             "deployment_id": "deployment_001",
             "routing_config": '{"modules": ["leads", "analytics"]}',
             "brand_config": '{"brand_name": "Test Agency", "primary_color": "#6D28D9"}',
-            "feature_flags": '{"advanced_analytics": true}'
+            "feature_flags": '{"advanced_analytics": true}',
         }
         conn_mock.fetchrow.return_value = cached_routing
 
@@ -217,7 +201,7 @@ class TestDomainResolverMiddleware:
         conn_mock.fetchrow.side_effect = [
             None,  # No domain routing cache
             None,  # No domain configuration
-            {"agency_id": "agency_001", "status": "active"}  # Agency exists
+            {"agency_id": "agency_001", "status": "active"},  # Agency exists
         ]
 
         # Mock request with agency subdomain
@@ -246,7 +230,7 @@ class TestDomainResolverMiddleware:
         conn_mock.fetchrow.side_effect = [
             None,  # No domain routing cache
             None,  # No domain configuration
-            {"client_id": "client_001", "agency_id": "agency_001", "status": "active"}  # Client exists
+            {"client_id": "client_001", "agency_id": "agency_001", "status": "active"},  # Client exists
         ]
 
         # Mock request with client subdomain
@@ -497,10 +481,7 @@ class TestUtilityFunctions:
         """Test feature flag checking."""
         request = MagicMock()
         request.state.tenant = TenantContext()
-        request.state.tenant.feature_flags = {
-            "advanced_analytics": True,
-            "custom_integrations": False
-        }
+        request.state.tenant.feature_flags = {"advanced_analytics": True, "custom_integrations": False}
 
         assert has_feature_flag(request, "advanced_analytics") is True
         assert has_feature_flag(request, "custom_integrations") is False
@@ -510,10 +491,7 @@ class TestUtilityFunctions:
         """Test getting brand configuration."""
         request = MagicMock()
         request.state.tenant = TenantContext()
-        request.state.tenant.brand_config = {
-            "brand_name": "Test Agency",
-            "primary_color": "#6D28D9"
-        }
+        request.state.tenant.brand_config = {"brand_name": "Test Agency", "primary_color": "#6D28D9"}
 
         brand_config = get_brand_config(request)
         assert brand_config["brand_name"] == "Test Agency"

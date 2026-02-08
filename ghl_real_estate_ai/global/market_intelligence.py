@@ -10,16 +10,17 @@ This module provides:
 - International payment processing integration
 """
 
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, Tuple
-from datetime import datetime, timedelta
-from enum import Enum
-import logging
 import asyncio
 import json
-from decimal import Decimal, ROUND_HALF_UP
+import logging
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from decimal import ROUND_HALF_UP, Decimal
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
+
 
 class MarketRegion(Enum):
     NORTH_AMERICA = "north_america"
@@ -28,21 +29,25 @@ class MarketRegion(Enum):
     LATIN_AMERICA = "latin_america"
     MIDDLE_EAST_AFRICA = "middle_east_africa"
 
+
 class MarketMaturity(Enum):
-    EMERGING = "emerging"           # New markets with growth potential
-    DEVELOPING = "developing"       # Markets in growth phase
-    MATURE = "mature"              # Established markets
-    SATURATED = "saturated"        # Highly competitive markets
+    EMERGING = "emerging"  # New markets with growth potential
+    DEVELOPING = "developing"  # Markets in growth phase
+    MATURE = "mature"  # Established markets
+    SATURATED = "saturated"  # Highly competitive markets
+
 
 class CulturalProfile(Enum):
-    DIRECT = "direct"              # Direct communication style (US, Germany)
+    DIRECT = "direct"  # Direct communication style (US, Germany)
     RELATIONSHIP_FOCUSED = "relationship"  # Relationship-first (Japan, China)
-    FORMAL = "formal"              # Formal approach (UK, France)
-    COLLABORATIVE = "collaborative"   # Team-oriented (Scandinavia)
+    FORMAL = "formal"  # Formal approach (UK, France)
+    COLLABORATIVE = "collaborative"  # Team-oriented (Scandinavia)
+
 
 @dataclass
 class CurrencyConfig:
     """Currency configuration for international markets"""
+
     currency_code: str
     symbol: str
     decimal_places: int = 2
@@ -50,9 +55,11 @@ class CurrencyConfig:
     last_updated: datetime = field(default_factory=datetime.now)
     local_formatting: str = "{symbol}{amount}"
 
+
 @dataclass
 class RegulatoryFramework:
     """Regional regulatory compliance framework"""
+
     region: MarketRegion
     privacy_laws: List[str]
     real_estate_regulations: Dict[str, Any]
@@ -62,9 +69,11 @@ class RegulatoryFramework:
     marketing_restrictions: List[str]
     consumer_protection_laws: List[str]
 
+
 @dataclass
 class CulturalAdaptation:
     """Cultural adaptation configuration for bots"""
+
     cultural_profile: CulturalProfile
     communication_style: str
     greeting_preferences: List[str]
@@ -75,9 +84,11 @@ class CulturalAdaptation:
     gift_giving_customs: bool
     business_card_protocol: str
 
+
 @dataclass
 class MarketConfig:
     """Complete market configuration for international deployment"""
+
     market_id: str
     country_code: str
     region: MarketRegion
@@ -92,9 +103,11 @@ class MarketConfig:
     competitive_landscape: Dict[str, Any]
     expansion_priority: int = 1  # 1=highest, 5=lowest
 
+
 @dataclass
 class MarketAnalysis:
     """Market analysis results for expansion decisions"""
+
     market_config: MarketConfig
     market_size: float  # Total addressable market
     competition_intensity: float  # 0-1 scale
@@ -106,6 +119,7 @@ class MarketAnalysis:
     recommended_strategy: str
     investment_required: float
     timeline_to_profitability: int  # months
+
 
 class GlobalMarketIntelligence:
     """
@@ -128,32 +142,24 @@ class GlobalMarketIntelligence:
             country_code="US",
             region=MarketRegion.NORTH_AMERICA,
             market_maturity=MarketMaturity.MATURE,
-            currency_config=CurrencyConfig(
-                currency_code="USD",
-                symbol="$",
-                decimal_places=2,
-                exchange_rate=1.0
-            ),
+            currency_config=CurrencyConfig(currency_code="USD", symbol="$", decimal_places=2, exchange_rate=1.0),
             regulatory_framework=RegulatoryFramework(
                 region=MarketRegion.NORTH_AMERICA,
                 privacy_laws=["CCPA", "GLBA"],
                 real_estate_regulations={
                     "fair_housing_act": True,
                     "respa_compliance": True,
-                    "mls_access_required": True
+                    "mls_access_required": True,
                 },
                 data_residency_requirements=["us-east-1", "us-west-2"],
-                licensing_requirements={
-                    "real_estate_license": "state_specific",
-                    "continuing_education": "required"
-                },
+                licensing_requirements={"real_estate_license": "state_specific", "continuing_education": "required"},
                 commission_regulations={
                     "max_commission": None,
                     "disclosure_required": True,
-                    "jorge_6_percent_allowed": True
+                    "jorge_6_percent_allowed": True,
                 },
                 marketing_restrictions=["spam_compliance", "do_not_call"],
-                consumer_protection_laws=["truth_in_advertising"]
+                consumer_protection_laws=["truth_in_advertising"],
             ),
             cultural_adaptation=CulturalAdaptation(
                 cultural_profile=CulturalProfile.DIRECT,
@@ -164,7 +170,7 @@ class GlobalMarketIntelligence:
                 hierarchy_respect=False,
                 personal_space_importance="medium",
                 gift_giving_customs=False,
-                business_card_protocol="informal"
+                business_card_protocol="informal",
             ),
             local_languages=["en"],
             timezone="America/New_York",
@@ -173,14 +179,14 @@ class GlobalMarketIntelligence:
                 "avg_home_price": 400000,
                 "transaction_volume_annual": 6000000,
                 "agent_count": 2000000,
-                "mls_penetration": 0.95
+                "mls_penetration": 0.95,
             },
             competitive_landscape={
                 "major_players": ["Zillow", "Realtor.com", "Compass"],
                 "ai_adoption": 0.25,
-                "market_share_available": 0.15
+                "market_share_available": 0.15,
             },
-            expansion_priority=1
+            expansion_priority=1,
         )
         self.market_configs["us"] = us_market
 
@@ -194,7 +200,7 @@ class GlobalMarketIntelligence:
                 currency_code="CAD",
                 symbol="C$",
                 decimal_places=2,
-                exchange_rate=0.74  # CAD to USD
+                exchange_rate=0.74,  # CAD to USD
             ),
             regulatory_framework=RegulatoryFramework(
                 region=MarketRegion.NORTH_AMERICA,
@@ -202,20 +208,20 @@ class GlobalMarketIntelligence:
                 real_estate_regulations={
                     "provincial_licensing": True,
                     "mls_system": "CREA",
-                    "foreign_buyer_tax": "varies_by_province"
+                    "foreign_buyer_tax": "varies_by_province",
                 },
                 data_residency_requirements=["ca-central-1"],
                 licensing_requirements={
                     "real_estate_license": "provincial_specific",
-                    "continuing_education": "required"
+                    "continuing_education": "required",
                 },
                 commission_regulations={
                     "max_commission": None,
                     "disclosure_required": True,
-                    "jorge_6_percent_allowed": True
+                    "jorge_6_percent_allowed": True,
                 },
                 marketing_restrictions=["casl_compliance"],
-                consumer_protection_laws=["consumer_protection_act"]
+                consumer_protection_laws=["consumer_protection_act"],
             ),
             cultural_adaptation=CulturalAdaptation(
                 cultural_profile=CulturalProfile.COLLABORATIVE,
@@ -226,7 +232,7 @@ class GlobalMarketIntelligence:
                 hierarchy_respect=True,
                 personal_space_importance="medium",
                 gift_giving_customs=False,
-                business_card_protocol="polite"
+                business_card_protocol="polite",
             ),
             local_languages=["en", "fr"],
             timezone="America/Toronto",
@@ -235,14 +241,14 @@ class GlobalMarketIntelligence:
                 "avg_home_price": 650000,
                 "transaction_volume_annual": 500000,
                 "agent_count": 120000,
-                "mls_penetration": 0.98
+                "mls_penetration": 0.98,
             },
             competitive_landscape={
                 "major_players": ["Realtor.ca", "Royal LePage", "RE/MAX"],
                 "ai_adoption": 0.15,
-                "market_share_available": 0.25
+                "market_share_available": 0.25,
             },
-            expansion_priority=2
+            expansion_priority=2,
         )
         self.market_configs["ca"] = canada_market
 
@@ -256,7 +262,7 @@ class GlobalMarketIntelligence:
                 currency_code="GBP",
                 symbol="£",
                 decimal_places=2,
-                exchange_rate=1.27  # GBP to USD
+                exchange_rate=1.27,  # GBP to USD
             ),
             regulatory_framework=RegulatoryFramework(
                 region=MarketRegion.EUROPE,
@@ -264,20 +270,20 @@ class GlobalMarketIntelligence:
                 real_estate_regulations={
                     "estate_agent_licensing": True,
                     "property_portal_regulation": True,
-                    "leasehold_regulations": True
+                    "leasehold_regulations": True,
                 },
                 data_residency_requirements=["eu-west-2"],
                 licensing_requirements={
                     "estate_agent_license": "not_required_but_regulated",
-                    "professional_indemnity": "required"
+                    "professional_indemnity": "required",
                 },
                 commission_regulations={
                     "typical_commission": "1.0_to_3.5_percent",
                     "no_win_no_fee": "common",
-                    "jorge_6_percent_challenging": True
+                    "jorge_6_percent_challenging": True,
                 },
                 marketing_restrictions=["gdpr_consent", "property_misdescriptions_act"],
-                consumer_protection_laws=["estate_agents_act"]
+                consumer_protection_laws=["estate_agents_act"],
             ),
             cultural_adaptation=CulturalAdaptation(
                 cultural_profile=CulturalProfile.FORMAL,
@@ -288,7 +294,7 @@ class GlobalMarketIntelligence:
                 hierarchy_respect=True,
                 personal_space_importance="high",
                 gift_giving_customs=False,
-                business_card_protocol="formal"
+                business_card_protocol="formal",
             ),
             local_languages=["en"],
             timezone="Europe/London",
@@ -297,14 +303,14 @@ class GlobalMarketIntelligence:
                 "avg_home_price": 280000,  # £
                 "transaction_volume_annual": 1200000,
                 "agent_count": 40000,
-                "mls_penetration": 0.70  # Different system - property portals
+                "mls_penetration": 0.70,  # Different system - property portals
             },
             competitive_landscape={
                 "major_players": ["Rightmove", "Zoopla", "OnTheMarket"],
                 "ai_adoption": 0.20,
-                "market_share_available": 0.18
+                "market_share_available": 0.18,
             },
-            expansion_priority=3
+            expansion_priority=3,
         )
         self.market_configs["uk"] = uk_market
 
@@ -318,7 +324,7 @@ class GlobalMarketIntelligence:
                 currency_code="EUR",
                 symbol="€",
                 decimal_places=2,
-                exchange_rate=1.09  # EUR to USD
+                exchange_rate=1.09,  # EUR to USD
             ),
             regulatory_framework=RegulatoryFramework(
                 region=MarketRegion.EUROPE,
@@ -326,20 +332,17 @@ class GlobalMarketIntelligence:
                 real_estate_regulations={
                     "makler_license": "required",
                     "widerruf_right": True,  # Right of withdrawal
-                    "energieausweis": "required"  # Energy certificate
+                    "energieausweis": "required",  # Energy certificate
                 },
                 data_residency_requirements=["eu-central-1"],
-                licensing_requirements={
-                    "makler_license": "required",
-                    "liability_insurance": "required"
-                },
+                licensing_requirements={"makler_license": "required", "liability_insurance": "required"},
                 commission_regulations={
                     "commission_split_law": "50_50_buyer_seller",
                     "max_commission": "7.14_percent_including_vat",
-                    "jorge_6_percent_acceptable": True
+                    "jorge_6_percent_acceptable": True,
                 },
                 marketing_restrictions=["gdpr_strict_consent", "truthful_advertising"],
-                consumer_protection_laws=["bgb", "consumer_protection"]
+                consumer_protection_laws=["bgb", "consumer_protection"],
             ),
             cultural_adaptation=CulturalAdaptation(
                 cultural_profile=CulturalProfile.DIRECT,
@@ -350,7 +353,7 @@ class GlobalMarketIntelligence:
                 hierarchy_respect=True,
                 personal_space_importance="high",
                 gift_giving_customs=False,
-                business_card_protocol="formal"
+                business_card_protocol="formal",
             ),
             local_languages=["de"],
             timezone="Europe/Berlin",
@@ -359,20 +362,18 @@ class GlobalMarketIntelligence:
                 "avg_home_price": 350000,  # €
                 "transaction_volume_annual": 650000,
                 "agent_count": 35000,
-                "mls_penetration": 0.60  # More fragmented
+                "mls_penetration": 0.60,  # More fragmented
             },
             competitive_landscape={
                 "major_players": ["ImmobilienScout24", "Immonet", "eBay Kleinanzeigen"],
                 "ai_adoption": 0.12,
-                "market_share_available": 0.22
+                "market_share_available": 0.22,
             },
-            expansion_priority=4
+            expansion_priority=4,
         )
         self.market_configs["de"] = germany_market
 
-    async def analyze_international_market(self,
-                                         country_code: str,
-                                         deep_analysis: bool = True) -> MarketAnalysis:
+    async def analyze_international_market(self, country_code: str, deep_analysis: bool = True) -> MarketAnalysis:
         """
         Perform comprehensive analysis of international market for expansion
         """
@@ -406,7 +407,7 @@ class GlobalMarketIntelligence:
                 success_probability=success_probability,
                 recommended_strategy=strategy,
                 investment_required=investment_required,
-                timeline_to_profitability=profitability_timeline
+                timeline_to_profitability=profitability_timeline,
             )
 
             # Store analysis
@@ -460,7 +461,10 @@ class GlobalMarketIntelligence:
 
         # Commission barriers
         commission_regs = market_config.regulatory_framework.commission_regulations
-        if commission_regs.get("jorge_6_percent_challenging") or commission_regs.get("jorge_6_percent_allowed") is False:
+        if (
+            commission_regs.get("jorge_6_percent_challenging")
+            or commission_regs.get("jorge_6_percent_allowed") is False
+        ):
             barriers.append("6% commission rate may face resistance")
 
         # Technology barriers
@@ -610,10 +614,7 @@ class GlobalMarketIntelligence:
 
         return base_timeline
 
-    async def convert_currency(self,
-                             amount: float,
-                             from_currency: str,
-                             to_currency: str) -> float:
+    async def convert_currency(self, amount: float, from_currency: str, to_currency: str) -> float:
         """
         Convert currency amounts with real-time exchange rates
         """
@@ -631,7 +632,7 @@ class GlobalMarketIntelligence:
             usd_amount = amount / from_rate
             converted_amount = usd_amount * to_rate
 
-            return float(Decimal(str(converted_amount)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
+            return float(Decimal(str(converted_amount)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
 
         except Exception as e:
             logger.error(f"Currency conversion failed: {str(e)}")
@@ -640,20 +641,11 @@ class GlobalMarketIntelligence:
     async def _update_exchange_rates(self):
         """Update exchange rates from external API"""
         # Mock exchange rates - in production, this would fetch from real API
-        self.exchange_rates.update({
-            "USD": 1.0,
-            "CAD": 0.74,
-            "GBP": 1.27,
-            "EUR": 1.09,
-            "AUD": 0.66,
-            "JPY": 0.0067,
-            "CHF": 1.08,
-            "SEK": 0.095
-        })
+        self.exchange_rates.update(
+            {"USD": 1.0, "CAD": 0.74, "GBP": 1.27, "EUR": 1.09, "AUD": 0.66, "JPY": 0.0067, "CHF": 1.08, "SEK": 0.095}
+        )
 
-    async def adapt_bot_personality(self,
-                                  market_id: str,
-                                  original_message: str) -> str:
+    async def adapt_bot_personality(self, market_id: str, original_message: str) -> str:
         """
         Adapt bot personality and communication for local market
         """
@@ -743,7 +735,7 @@ class GlobalMarketIntelligence:
                     "market_size": analysis.market_size,
                     "key_opportunities": self._extract_opportunities(analysis),
                     "main_challenges": analysis.entry_barriers[:3],  # Top 3 barriers
-                    "recommended_strategy": analysis.recommended_strategy
+                    "recommended_strategy": analysis.recommended_strategy,
                 }
 
                 recommendations.append(recommendation)
@@ -793,7 +785,7 @@ class GlobalMarketIntelligence:
                         "success_probability": analysis.success_probability,
                         "roi_projection": analysis.roi_projection,
                         "investment_required": analysis.investment_required,
-                        "priority": analysis.market_config.expansion_priority
+                        "priority": analysis.market_config.expansion_priority,
                     }
                     total_market_size += analysis.market_size
                     avg_success_probability += analysis.success_probability
@@ -809,14 +801,14 @@ class GlobalMarketIntelligence:
                     "total_international_market_size": total_market_size,
                     "markets_analyzed": len(market_summaries),
                     "average_success_probability": avg_success_probability,
-                    "total_investment_required": sum(m["investment_required"] for m in market_summaries.values())
+                    "total_investment_required": sum(m["investment_required"] for m in market_summaries.values()),
                 },
                 "market_summaries": market_summaries,
                 "expansion_recommendations": expansion_recommendations[:5],  # Top 5
                 "currency_rates": self.exchange_rates,
                 "regional_insights": await self._generate_regional_insights(),
                 "global_trends": await self._identify_global_trends(),
-                "generated_at": datetime.now().isoformat()
+                "generated_at": datetime.now().isoformat(),
             }
 
             return dashboard
@@ -830,10 +822,7 @@ class GlobalMarketIntelligence:
         regional_insights = {}
 
         for region in MarketRegion:
-            region_markets = [
-                config for config in self.market_configs.values()
-                if config.region == region
-            ]
+            region_markets = [config for config in self.market_configs.values() if config.region == region]
 
             if region_markets:
                 insights = {
@@ -841,7 +830,7 @@ class GlobalMarketIntelligence:
                     "avg_market_maturity": self._calculate_avg_maturity(region_markets),
                     "cultural_complexity": self._assess_cultural_complexity(region_markets),
                     "regulatory_complexity": self._assess_regulatory_complexity(region_markets),
-                    "expansion_recommendation": self._get_regional_recommendation(region_markets)
+                    "expansion_recommendation": self._get_regional_recommendation(region_markets),
                 }
                 regional_insights[region.value] = insights
 
@@ -853,7 +842,7 @@ class GlobalMarketIntelligence:
             MarketMaturity.EMERGING: 1,
             MarketMaturity.DEVELOPING: 2,
             MarketMaturity.MATURE: 3,
-            MarketMaturity.SATURATED: 4
+            MarketMaturity.SATURATED: 4,
         }
 
         if not markets:
@@ -910,27 +899,28 @@ class GlobalMarketIntelligence:
                 "trend": "AI Adoption Acceleration",
                 "description": "Real estate AI adoption growing 35% annually worldwide",
                 "impact": "high",
-                "opportunity": "First-mover advantage in emerging markets"
+                "opportunity": "First-mover advantage in emerging markets",
             },
             {
                 "trend": "Remote Work Impact",
                 "description": "Sustained impact on residential real estate preferences",
                 "impact": "medium",
-                "opportunity": "Suburban and rural market expansion"
+                "opportunity": "Suburban and rural market expansion",
             },
             {
                 "trend": "Regulatory Harmonization",
                 "description": "Cross-border real estate regulations becoming more standardized",
                 "impact": "medium",
-                "opportunity": "Easier international expansion"
+                "opportunity": "Easier international expansion",
             },
             {
                 "trend": "PropTech Investment Growth",
                 "description": "Global PropTech investment reaching record highs",
                 "impact": "high",
-                "opportunity": "Partnership and acquisition opportunities"
-            }
+                "opportunity": "Partnership and acquisition opportunities",
+            },
         ]
+
 
 # Global market intelligence instance
 global_market_intelligence = GlobalMarketIntelligence()

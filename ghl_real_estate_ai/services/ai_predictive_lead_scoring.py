@@ -17,19 +17,21 @@ Author: Eta ML Implementer Agent
 Date: 2026-01-05
 """
 
+import asyncio
 import json
 import math
-import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Any, Dict, List, Optional, Tuple
 
 # Dynamic Scoring Integration
 try:
     from ghl_real_estate_ai.services.dynamic_scoring_weights import DynamicScoringOrchestrator
+
     HAS_DYNAMIC_SCORING = True
 except ImportError:
     HAS_DYNAMIC_SCORING = False
+
 
 @dataclass
 class LeadFeatures:
@@ -63,9 +65,9 @@ class LeadScore:
         """Convert factors to reasoning strings for backward compatibility"""
         reasoning_list = []
         for factor in self.factors:
-            impact = factor.get('impact', 0)
-            name = factor.get('name', 'Unknown factor')
-            value = factor.get('value', '')
+            impact = factor.get("impact", 0)
+            name = factor.get("name", "Unknown factor")
+            value = factor.get("value", "")
             if impact > 0:
                 reasoning_list.append(f"{name} contributes +{impact}% to score ({value})")
             elif impact < 0:
@@ -96,43 +98,57 @@ class PredictiveLeadScorer:
         # Dynamic Scoring Orchestrator
         self.dynamic_orchestrator = DynamicScoringOrchestrator() if HAS_DYNAMIC_SCORING else None
         from ghl_real_estate_ai.services.claude_intent_detector import get_intent_detector
+
         self.intent_detector = get_intent_detector()
 
-    async def score_lead_with_intent(self, lead_id: str, lead_data: Dict, conversation_history: List[Dict]) -> LeadScore:
+    async def score_lead_with_intent(
+        self, lead_id: str, lead_data: Dict, conversation_history: List[Dict]
+    ) -> LeadScore:
         """
         Enhanced scoring that combines ML factors with Claude's intent detection.
         """
         # Step 1: Get standard ML score
         base_score = self.score_lead(lead_id, lead_data)
-        
+
         # Step 2: Get deep intent analysis
         intent_analysis = await self.intent_detector.analyze_property_intent(conversation_history, lead_data)
-        
+
         # Step 3: Synthesis
         # We adjust the score based on psychological intent signals
         # e.g., if financial_readiness is 0.9, we might boost the score
-        
-        financial = intent_analysis.get('financial_readiness', 0.5)
-        urgency = intent_analysis.get('timeline_urgency', 0.5)
-        
+
+        financial = intent_analysis.get("financial_readiness", 0.5)
+        urgency = intent_analysis.get("timeline_urgency", 0.5)
+
         # Simple weighted adjustment
-        intent_bonus = (financial * 10) + (urgency * 10) - 10 # Range -10 to +10
+        intent_bonus = (financial * 10) + (urgency * 10) - 10  # Range -10 to +10
         new_score = min(100, max(0, base_score.score + intent_bonus))
-        
+
         # Add intent factors to reasoning
         intent_factors = [
-            {"name": "Psychological Intent", "impact": round(intent_bonus, 1), "value": intent_analysis.get('intent_summary', 'N/A'), "sentiment": "positive" if intent_bonus > 0 else "neutral"},
-            {"name": "Financial Readiness", "impact": round(financial * 5, 1), "value": f"{int(financial*100)}% Readiness", "sentiment": "positive"}
+            {
+                "name": "Psychological Intent",
+                "impact": round(intent_bonus, 1),
+                "value": intent_analysis.get("intent_summary", "N/A"),
+                "sentiment": "positive" if intent_bonus > 0 else "neutral",
+            },
+            {
+                "name": "Financial Readiness",
+                "impact": round(financial * 5, 1),
+                "value": f"{int(financial * 100)}% Readiness",
+                "sentiment": "positive",
+            },
         ]
-        
+
         return LeadScore(
             lead_id=lead_id,
             score=new_score,
-            confidence=max(base_score.confidence, 0.9), # Claude increases confidence
+            confidence=max(base_score.confidence, 0.9),  # Claude increases confidence
             tier=self._assign_tier(new_score, 0.9),
             factors=base_score.factors + intent_factors,
-            recommendations=[intent_analysis.get('next_step_recommendation', 'Continue nurture')] + base_score.recommendations,
-            scored_at=datetime.now()
+            recommendations=[intent_analysis.get("next_step_recommendation", "Continue nurture")]
+            + base_score.recommendations,
+            scored_at=datetime.now(),
         )
         """
         Score a lead using the Advanced Dynamic Scoring Weights system.
@@ -143,29 +159,31 @@ class PredictiveLeadScorer:
         # Map to orchestrator
         # The orchestrator handles segment detection and market metrics internally
         result = await self.dynamic_orchestrator.score_lead_with_dynamic_weights(
-            tenant_id=tenant_id,
-            lead_id=lead_id,
-            lead_data=lead_data
+            tenant_id=tenant_id, lead_id=lead_id, lead_data=lead_data
         )
 
         # Convert result format
         factors = []
-        for feature, impact in result.get('feature_contributions', {}).items():
-            factors.append({
-                "name": feature.replace("_", " ").title(),
-                "impact": round(impact * 100, 1),
-                "value": self._get_feature_description(feature, self.extract_features(lead_data)),
-                "sentiment": "positive" if impact > 0 else "neutral"
-            })
+        for feature, impact in result.get("feature_contributions", {}).items():
+            factors.append(
+                {
+                    "name": feature.replace("_", " ").title(),
+                    "impact": round(impact * 100, 1),
+                    "value": self._get_feature_description(feature, self.extract_features(lead_data)),
+                    "sentiment": "positive" if impact > 0 else "neutral",
+                }
+            )
 
         return LeadScore(
             lead_id=lead_id,
-            score=result['score'],
-            confidence=result.get('confidence', 0.8),
-            tier=result['tier'],
+            score=result["score"],
+            confidence=result.get("confidence", 0.8),
+            tier=result["tier"],
             factors=factors[:5],
-            recommendations=self._generate_recommendations(result['score'], result['tier'], self.extract_features(lead_data)),
-            scored_at=datetime.now()
+            recommendations=self._generate_recommendations(
+                result["score"], result["tier"], self.extract_features(lead_data)
+            ),
+            scored_at=datetime.now(),
         )
 
     def _initialize_weights(self) -> Dict[str, float]:
@@ -214,12 +232,10 @@ class PredictiveLeadScorer:
             property_matches=property_matches,
             communication_quality=communication_quality,
             source_quality=source_quality,
-            lead_data_raw=lead_data
+            lead_data_raw=lead_data,
         )
 
-    def score_lead(
-        self, lead_id: str, lead_data: Dict, include_explanation: bool = True
-    ) -> LeadScore:
+    def score_lead(self, lead_id: str, lead_data: Dict, include_explanation: bool = True) -> LeadScore:
         """
         Score a lead using ML model
 
@@ -252,9 +268,7 @@ class PredictiveLeadScorer:
             factors = self._explain_score(features, feature_contributions)
 
         # Generate recommendations
-        recommendations = self._generate_recommendations(
-            normalized_score, tier, features
-        )
+        recommendations = self._generate_recommendations(normalized_score, tier, features)
 
         return LeadScore(
             lead_id=lead_id,
@@ -272,24 +286,17 @@ class PredictiveLeadScorer:
         total_score = 0.0
 
         # Engagement score (0-1)
-        engagement_contrib = (
-            features.engagement_score * self.feature_weights["engagement_score"]
-        )
+        engagement_contrib = features.engagement_score * self.feature_weights["engagement_score"]
         contributions["engagement_score"] = engagement_contrib
         total_score += engagement_contrib
 
         # Response time (inverse - faster is better)
-        response_contrib = (
-            self._score_response_time(features.response_time)
-            * self.feature_weights["response_time"]
-        )
+        response_contrib = self._score_response_time(features.response_time) * self.feature_weights["response_time"]
         contributions["response_time"] = response_contrib
         total_score += response_contrib
 
         # Page views (normalized)
-        page_views_contrib = (
-            min(features.page_views / 20.0, 1.0) * self.feature_weights["page_views"]
-        )
+        page_views_contrib = min(features.page_views / 20.0, 1.0) * self.feature_weights["page_views"]
         contributions["page_views"] = page_views_contrib
         total_score += page_views_contrib
 
@@ -305,18 +312,12 @@ class PredictiveLeadScorer:
         total_score += timeline_contrib
 
         # Property matches
-        matches_contrib = (
-            min(features.property_matches / 10.0, 1.0)
-            * self.feature_weights["property_matches"]
-        )
+        matches_contrib = min(features.property_matches / 10.0, 1.0) * self.feature_weights["property_matches"]
         contributions["property_matches"] = matches_contrib
         total_score += matches_contrib
 
         # Communication quality
-        comm_contrib = (
-            features.communication_quality
-            * self.feature_weights["communication_quality"]
-        )
+        comm_contrib = features.communication_quality * self.feature_weights["communication_quality"]
         contributions["communication_quality"] = comm_contrib
         total_score += comm_contrib
 
@@ -330,11 +331,13 @@ class PredictiveLeadScorer:
         intent_bonus = self._calculate_intent_bonus(features)
         total_score += intent_bonus
         contributions["intent_bonus"] = intent_bonus
-        
+
         # --- SENTIMENT-DRIVEN URGENCY BOOST (Enhancement) ---
-        sentiment_urgency = self._detect_urgency_sentiment(features.lead_data_raw if hasattr(features, 'lead_data_raw') else {})
+        sentiment_urgency = self._detect_urgency_sentiment(
+            features.lead_data_raw if hasattr(features, "lead_data_raw") else {}
+        )
         if sentiment_urgency > 0:
-            total_score += (sentiment_urgency * 0.1) # Up to 10% bonus
+            total_score += sentiment_urgency * 0.1  # Up to 10% bonus
             contributions["sentiment_urgency"] = sentiment_urgency * 0.1
 
         return total_score, contributions
@@ -347,34 +350,45 @@ class PredictiveLeadScorer:
         messages = lead_data.get("messages", [])
         if not messages:
             return 0.0
-            
+
         intensity = 0.0
         # High intensity keywords that imply immediate action or frustration
-        urgent_keywords = ["must", "immediately", "urgent", "emergency", "homeless", "deadline", "fast", "asap", "now", "today"]
-        
+        urgent_keywords = [
+            "must",
+            "immediately",
+            "urgent",
+            "emergency",
+            "homeless",
+            "deadline",
+            "fast",
+            "asap",
+            "now",
+            "today",
+        ]
+
         for msg in messages:
             content = msg.get("text", "").lower()
             # Check for keywords
             if any(k in content for k in urgent_keywords):
                 intensity += 0.3
-            
+
             # Check for punctuation intensity
             if "!" in content:
                 intensity += 0.1
             if "!!!" in content:
                 intensity += 0.2
-            
+
             # Check for CAPS (shouting/intensity)
             if content.upper() == content and len(content) > 10:
                 intensity += 0.2
-                
+
         return min(intensity, 1.0)
 
     def _normalize_score(self, raw_score: float) -> float:
         """Normalize score to 0-100 range"""
         # Enhanced linear transformation that rewards high-scoring leads
         # Raw scores typically range from 0.0 to 1.25 (with bonus)
-        
+
         # Cap raw_score at 1.0 for the base normalization logic
         # Any bonus above 1.0 will naturally hit the 100 cap
         base_score = min(raw_score, 1.0)
@@ -399,9 +413,7 @@ class PredictiveLeadScorer:
 
         return min(normalized, 100)
 
-    def _calculate_confidence(
-        self, features: LeadFeatures, contributions: Dict
-    ) -> float:
+    def _calculate_confidence(self, features: LeadFeatures, contributions: Dict) -> float:
         """Calculate confidence in the prediction"""
         # Higher confidence when we have more data points
         data_completeness = (
@@ -448,9 +460,7 @@ class PredictiveLeadScorer:
         factors = []
 
         # Sort by contribution
-        sorted_contribs = sorted(
-            contributions.items(), key=lambda x: x[1], reverse=True
-        )
+        sorted_contribs = sorted(contributions.items(), key=lambda x: x[1], reverse=True)
 
         for feature_name, contribution in sorted_contribs[:5]:  # Top 5 factors
             impact = "positive" if contribution > 0.05 else "neutral"
@@ -469,25 +479,21 @@ class PredictiveLeadScorer:
 
         return factors
 
-    def _get_feature_description(
-        self, feature_name: str, features: LeadFeatures
-    ) -> str:
+    def _get_feature_description(self, feature_name: str, features: LeadFeatures) -> str:
         """Get human-readable feature description"""
         descriptions = {
-            "engagement_score": f"{features.engagement_score*100:.0f}% engagement rate",
+            "engagement_score": f"{features.engagement_score * 100:.0f}% engagement rate",
             "response_time": f"{features.response_time:.1f} hour avg response",
             "page_views": f"{features.page_views} property views",
-            "budget_match": f"{features.budget_match*100:.0f}% budget match",
+            "budget_match": f"{features.budget_match * 100:.0f}% budget match",
             "timeline_urgency": f"{features.timeline_urgency} timeline",
             "property_matches": f"{features.property_matches} matching properties",
-            "communication_quality": f"{features.communication_quality*100:.0f}% communication quality",
+            "communication_quality": f"{features.communication_quality * 100:.0f}% communication quality",
             "source_quality": f"{features.source_quality} source",
         }
         return descriptions.get(feature_name, "N/A")
 
-    def _generate_recommendations(
-        self, score: float, tier: str, features: LeadFeatures
-    ) -> List[str]:
+    def _generate_recommendations(self, score: float, tier: str, features: LeadFeatures) -> List[str]:
         """Generate action recommendations"""
         recommendations = []
 
@@ -495,9 +501,7 @@ class PredictiveLeadScorer:
             recommendations.append("🔥 Priority follow-up within 1 hour")
             recommendations.append("Schedule property viewing ASAP")
             if features.budget_match > 0.8:
-                recommendations.append(
-                    "Lead is well-qualified - present financing options"
-                )
+                recommendations.append("Lead is well-qualified - present financing options")
 
         elif tier == "warm":
             recommendations.append("Follow up within 24 hours")
@@ -514,14 +518,10 @@ class PredictiveLeadScorer:
 
         # Specific recommendations based on features
         if features.timeline_urgency == "immediate":
-            recommendations.append(
-                "Lead has urgent timeline - prioritize showing availability"
-            )
+            recommendations.append("Lead has urgent timeline - prioritize showing availability")
 
         if features.communication_quality < 0.5:
-            recommendations.append(
-                "Improve response quality - ask more qualifying questions"
-            )
+            recommendations.append("Improve response quality - ask more qualifying questions")
 
         return recommendations[:5]  # Return top 5
 
@@ -543,9 +543,7 @@ class PredictiveLeadScorer:
         # Also check messages for response_time_seconds (common in legacy data)
         messages = lead_data.get("messages", [])
         msg_responses = [
-            m.get("response_time_seconds") / 3600.0
-            for m in messages
-            if m.get("response_time_seconds") is not None
+            m.get("response_time_seconds") / 3600.0 for m in messages if m.get("response_time_seconds") is not None
         ]
 
         all_responses = responses + msg_responses
@@ -617,16 +615,28 @@ class PredictiveLeadScorer:
 
             # Immediate indicators
             immediate_keywords = [
-                "asap", "immediately", "urgent", "2 weeks", "close within",
-                "cash buyer", "need to move", "right now", "this month"
+                "asap",
+                "immediately",
+                "urgent",
+                "2 weeks",
+                "close within",
+                "cash buyer",
+                "need to move",
+                "right now",
+                "this month",
             ]
             if any(keyword in content for keyword in immediate_keywords):
                 return "immediate"
 
             # Soon indicators
             soon_keywords = [
-                "soon", "next month", "next few", "coming months",
-                "pre-approved", "ready to buy", "looking to purchase"
+                "soon",
+                "next month",
+                "next few",
+                "coming months",
+                "pre-approved",
+                "ready to buy",
+                "looking to purchase",
             ]
             if any(keyword in content for keyword in soon_keywords):
                 return "soon"
@@ -655,14 +665,35 @@ class PredictiveLeadScorer:
 
             # High-value indicators for real estate leads
             high_value_indicators = {
-                "cash": 0.4, "cash buyer": 0.5, "pre-approved": 0.4, "preapproved": 0.4,
-                "approved": 0.3, "financing": 0.2, "loan": 0.2, "mortgage": 0.2,
-                "budget": 0.3, "afford": 0.2, "price": 0.2, "cost": 0.2,
-                "close": 0.4, "closing": 0.4, "urgent": 0.4, "asap": 0.5,
-                "serious": 0.3, "committed": 0.4, "ready": 0.3,
-                "2 weeks": 0.5, "next month": 0.3, "immediately": 0.5,
-                "location": 0.2, "neighborhood": 0.2, "area": 0.2,
-                "bedrooms": 0.2, "bathroom": 0.2, "sqft": 0.2, "square": 0.2
+                "cash": 0.4,
+                "cash buyer": 0.5,
+                "pre-approved": 0.4,
+                "preapproved": 0.4,
+                "approved": 0.3,
+                "financing": 0.2,
+                "loan": 0.2,
+                "mortgage": 0.2,
+                "budget": 0.3,
+                "afford": 0.2,
+                "price": 0.2,
+                "cost": 0.2,
+                "close": 0.4,
+                "closing": 0.4,
+                "urgent": 0.4,
+                "asap": 0.5,
+                "serious": 0.3,
+                "committed": 0.4,
+                "ready": 0.3,
+                "2 weeks": 0.5,
+                "next month": 0.3,
+                "immediately": 0.5,
+                "location": 0.2,
+                "neighborhood": 0.2,
+                "area": 0.2,
+                "bedrooms": 0.2,
+                "bathroom": 0.2,
+                "sqft": 0.2,
+                "square": 0.2,
             }
 
             detail_score = 0.0
@@ -692,12 +723,13 @@ class PredictiveLeadScorer:
         Expected by Lead Intelligence Hub UI.
         """
         import random
+
         random.seed(lead_id)
-        
+
         prob = random.randint(45, 92)
         delta = random.randint(2, 8)
         estimated_days = 45 if prob > 70 else 90 if prob > 40 else 120
-        
+
         return {
             "probability": prob,
             "delta": delta,
@@ -706,13 +738,13 @@ class PredictiveLeadScorer:
                 "Engagement Frequency": random.randint(10, 25),
                 "Response Velocity": random.randint(5, 15),
                 "Budget Alignment": random.randint(15, 30),
-                "Intent Clarity": random.randint(5, 20)
+                "Intent Clarity": random.randint(5, 20),
             },
             "next_steps": [
                 "Schedule priority follow-up call",
                 "Send personalized property matching report",
-                "Invite to upcoming open house"
-            ]
+                "Invite to upcoming open house",
+            ],
         }
 
     def batch_score(self, leads: List[Dict]) -> List[LeadScore]:
@@ -757,13 +789,9 @@ class PredictiveLeadScorer:
             "trajectory": self._determine_trajectory(score_result.score, score_result.tier),
             "reasoning": score_result.reasoning,  # Uses the new property
             "recommendations": [
-                {
-                    "type": "call" if i == 0 else "email",
-                    "title": f"Action {i+1}",
-                    "action": rec
-                }
+                {"type": "call" if i == 0 else "email", "title": f"Action {i + 1}", "action": rec}
                 for i, rec in enumerate(score_result.recommendations[:3])
-            ]
+            ],
         }
 
     def _calculate_intent_bonus(self, features: LeadFeatures) -> float:
@@ -803,7 +831,7 @@ class PredictiveLeadScorer:
         Used by the Conversation Simulator UI.
         """
         message_lower = message.lower()
-        
+
         # Persona-based responses
         if "sarah chen" in lead_name.lower():
             if "commute" in message_lower or "work" in message_lower:
@@ -821,14 +849,14 @@ class PredictiveLeadScorer:
 
         elif "rodriguez" in lead_name.lower():
             return f"Mike, Jessica, I completely understand wanting a safe fenced yard for the kids. The Pflugerville neighborhood we discussed has a top-rated elementary school within walking distance and the street has very low traffic. I've also checked the monthly payment including taxes and insurance, and it fits within your $380k comfort zone. Would you like to drive by the area this weekend?"
-            
+
         elif "sarah johnson" in lead_name.lower():
             return f"Sarah, I've cross-referenced the latest Avery Ranch school boundary maps with the properties we looked at. The home on Highland Ave is confirmed to stay within the preferred district for the 2026-27 year. I've also pulled the property tax history so we can calculate the exact monthly escrow. Does 2:00 PM tomorrow work for a quick tour?"
 
         # Default smart response
         if "?" in message:
             return f"That's a great question about {lead_name.split(' ')[0]}'s search. Based on their behavioral signals, they are prioritizing value and location. I'll make sure to emphasize the long-term ROI in our next touchpoint. Anything else you'd like to test in this scenario?"
-        
+
         return f"I've updated the engagement strategy for {lead_name}. The AI will now focus on addressing their specific concerns about market volatility while maintaining a consultative tone. The next automated follow-up is scheduled for tomorrow at 10 AM."
 
 
@@ -849,9 +877,7 @@ if __name__ == "__main__":
         "timeline": "soon",
         "property_matches": 7,
         "messages": [
-            {
-                "content": "I'm interested in properties in downtown. What's available in my budget of $500k?"
-            },
+            {"content": "I'm interested in properties in downtown. What's available in my budget of $500k?"},
             {"content": "Can we schedule a viewing next week?"},
         ],
         "source": "organic",
@@ -863,7 +889,7 @@ if __name__ == "__main__":
     print(f"\n🎯 Lead Scoring Result")
     print(f"   Score: {result.score}/100")
     print(f"   Tier: {result.tier.upper()}")
-    print(f"   Confidence: {result.confidence*100:.1f}%")
+    print(f"   Confidence: {result.confidence * 100:.1f}%")
     print(f"\n   Top Factors:")
     for factor in result.factors[:3]:
         print(f"   • {factor['name']}: {factor['value']} (impact: {factor['impact']})")

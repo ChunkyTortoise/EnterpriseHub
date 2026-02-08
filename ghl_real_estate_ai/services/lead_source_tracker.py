@@ -15,17 +15,17 @@ Key Features:
 - Custom field updates for source tracking in GHL
 """
 
-import re
-import json
 import asyncio
+import json
+import re
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional, Any, Tuple
-from urllib.parse import urlparse, parse_qs
-from dataclasses import dataclass, asdict
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import parse_qs, urlparse
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import CacheService
 
 logger = get_logger(__name__)
@@ -85,9 +85,9 @@ class LeadSource(str, Enum):
 class SourceQuality(str, Enum):
     """Lead source quality classifications."""
 
-    PREMIUM = "premium"      # High conversion, high value
-    STANDARD = "standard"    # Average performance
-    BUDGET = "budget"        # Low cost, volume focused
+    PREMIUM = "premium"  # High conversion, high value
+    STANDARD = "standard"  # Average performance
+    BUDGET = "budget"  # Low cost, volume focused
     EXPERIMENTAL = "experimental"  # Testing phase
 
 
@@ -98,8 +98,8 @@ class SourceAttribution:
     # Primary Source Information
     source: LeadSource
     source_detail: Optional[str] = None  # e.g., specific campaign name
-    medium: Optional[str] = None         # e.g., cpc, organic, referral
-    campaign: Optional[str] = None       # Campaign identifier
+    medium: Optional[str] = None  # e.g., cpc, organic, referral
+    campaign: Optional[str] = None  # Campaign identifier
 
     # UTM Parameters
     utm_source: Optional[str] = None
@@ -187,58 +187,18 @@ class LeadSourceTracker:
     def _build_source_patterns(self) -> Dict[str, List[str]]:
         """Build regex patterns for source detection."""
         return {
-            LeadSource.FACEBOOK_ORGANIC: [
-                r"facebook\.com",
-                r"fb\.com",
-                r"m\.facebook\.com"
-            ],
-            LeadSource.FACEBOOK_ADS: [
-                r"facebook.*ads",
-                r"fb.*ads",
-                r"utm_source=facebook.*utm_medium=cpc"
-            ],
-            LeadSource.GOOGLE_ORGANIC: [
-                r"google\.com.*q=",
-                r"utm_source=google.*utm_medium=organic"
-            ],
-            LeadSource.GOOGLE_ADS: [
-                r"googleadservices\.com",
-                r"utm_source=google.*utm_medium=cpc",
-                r"gclid="
-            ],
-            LeadSource.INSTAGRAM_ORGANIC: [
-                r"instagram\.com",
-                r"ig\.com"
-            ],
-            LeadSource.INSTAGRAM_ADS: [
-                r"instagram.*ads",
-                r"ig.*ads"
-            ],
-            LeadSource.ZILLOW: [
-                r"zillow\.com",
-                r"utm_source=zillow"
-            ],
-            LeadSource.REALTOR_COM: [
-                r"realtor\.com",
-                r"utm_source=realtor"
-            ],
-            LeadSource.TRULIA: [
-                r"trulia\.com",
-                r"utm_source=trulia"
-            ],
-            LeadSource.REDFIN: [
-                r"redfin\.com",
-                r"utm_source=redfin"
-            ],
-            LeadSource.YOUTUBE: [
-                r"youtube\.com",
-                r"youtu\.be",
-                r"utm_source=youtube"
-            ],
-            LeadSource.LINKEDIN: [
-                r"linkedin\.com",
-                r"utm_source=linkedin"
-            ]
+            LeadSource.FACEBOOK_ORGANIC: [r"facebook\.com", r"fb\.com", r"m\.facebook\.com"],
+            LeadSource.FACEBOOK_ADS: [r"facebook.*ads", r"fb.*ads", r"utm_source=facebook.*utm_medium=cpc"],
+            LeadSource.GOOGLE_ORGANIC: [r"google\.com.*q=", r"utm_source=google.*utm_medium=organic"],
+            LeadSource.GOOGLE_ADS: [r"googleadservices\.com", r"utm_source=google.*utm_medium=cpc", r"gclid="],
+            LeadSource.INSTAGRAM_ORGANIC: [r"instagram\.com", r"ig\.com"],
+            LeadSource.INSTAGRAM_ADS: [r"instagram.*ads", r"ig.*ads"],
+            LeadSource.ZILLOW: [r"zillow\.com", r"utm_source=zillow"],
+            LeadSource.REALTOR_COM: [r"realtor\.com", r"utm_source=realtor"],
+            LeadSource.TRULIA: [r"trulia\.com", r"utm_source=trulia"],
+            LeadSource.REDFIN: [r"redfin\.com", r"utm_source=redfin"],
+            LeadSource.YOUTUBE: [r"youtube\.com", r"youtu\.be", r"utm_source=youtube"],
+            LeadSource.LINKEDIN: [r"linkedin\.com", r"utm_source=linkedin"],
         }
 
     def _build_quality_scores(self) -> Dict[LeadSource, float]:
@@ -248,42 +208,34 @@ class LeadSourceTracker:
             LeadSource.AGENT_REFERRAL: 9.5,
             LeadSource.CLIENT_REFERRAL: 9.0,
             LeadSource.DIRECT: 8.5,
-
             # Real Estate Platforms (Good targeting)
             LeadSource.ZILLOW: 7.8,
             LeadSource.REALTOR_COM: 7.5,
             LeadSource.TRULIA: 7.2,
             LeadSource.REDFIN: 7.0,
-
             # Paid Digital (Variable quality)
             LeadSource.GOOGLE_ADS: 6.8,
             LeadSource.FACEBOOK_ADS: 6.5,
             LeadSource.INSTAGRAM_ADS: 6.0,
-
             # Organic Digital (Lower intent)
             LeadSource.GOOGLE_ORGANIC: 5.8,
             LeadSource.FACEBOOK_ORGANIC: 5.0,
             LeadSource.INSTAGRAM_ORGANIC: 4.8,
             LeadSource.YOUTUBE: 4.5,
-
             # Traditional (Variable)
             LeadSource.PHONE_CALL: 7.0,
             LeadSource.WEBSITE: 6.0,
             LeadSource.EMAIL: 5.5,
-
             # Events (Good for relationship building)
             LeadSource.OPEN_HOUSE: 6.8,
             LeadSource.NETWORKING_EVENT: 6.5,
-
             # Default scores
             LeadSource.UNKNOWN: 3.0,
-            LeadSource.OTHER: 4.0
+            LeadSource.OTHER: 4.0,
         }
 
     async def analyze_lead_source(
-        self,
-        contact_data: Dict[str, Any],
-        webhook_data: Optional[Dict[str, Any]] = None
+        self, contact_data: Dict[str, Any], webhook_data: Optional[Dict[str, Any]] = None
     ) -> SourceAttribution:
         """
         Analyze and determine the source attribution for a lead.
@@ -299,9 +251,7 @@ class LeadSourceTracker:
             logger.info(f"Analyzing source attribution for contact")
 
             attribution = SourceAttribution(
-                source=LeadSource.UNKNOWN,
-                first_touch=datetime.now(timezone.utc),
-                last_touch=datetime.now(timezone.utc)
+                source=LeadSource.UNKNOWN, first_touch=datetime.now(timezone.utc), last_touch=datetime.now(timezone.utc)
             )
 
             # Extract available data
@@ -328,9 +278,7 @@ class LeadSourceTracker:
             attribution.confidence_score = confidence
 
             # Set source details
-            attribution.source_detail = self._extract_source_detail(
-                detected_source, utm_params, referrer
-            )
+            attribution.source_detail = self._extract_source_detail(detected_source, utm_params, referrer)
             attribution.medium = utm_params.get("utm_medium") or self._infer_medium(detected_source)
             attribution.campaign = utm_params.get("utm_campaign")
 
@@ -356,21 +304,15 @@ class LeadSourceTracker:
                 source=LeadSource.UNKNOWN,
                 confidence_score=0.0,
                 first_touch=datetime.now(timezone.utc),
-                last_touch=datetime.now(timezone.utc)
+                last_touch=datetime.now(timezone.utc),
             )
 
-    def _extract_referrer(
-        self,
-        contact_data: Dict[str, Any],
-        webhook_data: Optional[Dict[str, Any]]
-    ) -> Optional[str]:
+    def _extract_referrer(self, contact_data: Dict[str, Any], webhook_data: Optional[Dict[str, Any]]) -> Optional[str]:
         """Extract referrer information from available data."""
         # Check custom fields first
         custom_fields = contact_data.get("custom_fields", {})
         referrer = (
-            custom_fields.get("referrer") or
-            custom_fields.get("source_url") or
-            custom_fields.get("lead_source_url")
+            custom_fields.get("referrer") or custom_fields.get("source_url") or custom_fields.get("lead_source_url")
         )
 
         if referrer:
@@ -379,17 +321,13 @@ class LeadSourceTracker:
         # Check webhook data
         if webhook_data:
             referrer = (
-                webhook_data.get("referrer") or
-                webhook_data.get("source") or
-                webhook_data.get("original_referrer")
+                webhook_data.get("referrer") or webhook_data.get("source") or webhook_data.get("original_referrer")
             )
 
         return referrer
 
     def _extract_utm_params(
-        self,
-        contact_data: Dict[str, Any],
-        webhook_data: Optional[Dict[str, Any]]
+        self, contact_data: Dict[str, Any], webhook_data: Optional[Dict[str, Any]]
     ) -> Dict[str, str]:
         """Extract UTM parameters from contact data."""
         utm_params = {}
@@ -400,9 +338,9 @@ class LeadSourceTracker:
 
         for field in utm_fields:
             value = (
-                custom_fields.get(field) or
-                custom_fields.get(field.upper()) or
-                custom_fields.get(field.replace("utm_", ""))
+                custom_fields.get(field)
+                or custom_fields.get(field.upper())
+                or custom_fields.get(field.replace("utm_", ""))
             )
             if value:
                 utm_params[field] = value
@@ -431,17 +369,13 @@ class LeadSourceTracker:
         return utm_params
 
     def _extract_landing_page(
-        self,
-        contact_data: Dict[str, Any],
-        webhook_data: Optional[Dict[str, Any]]
+        self, contact_data: Dict[str, Any], webhook_data: Optional[Dict[str, Any]]
     ) -> Optional[str]:
         """Extract landing page URL."""
         custom_fields = contact_data.get("custom_fields", {})
 
         landing_page = (
-            custom_fields.get("landing_page") or
-            custom_fields.get("original_url") or
-            custom_fields.get("source_page")
+            custom_fields.get("landing_page") or custom_fields.get("original_url") or custom_fields.get("source_page")
         )
 
         if not landing_page and webhook_data:
@@ -454,7 +388,7 @@ class LeadSourceTracker:
         referrer: Optional[str],
         utm_params: Dict[str, str],
         landing_page: Optional[str],
-        custom_fields: Dict[str, Any]
+        custom_fields: Dict[str, Any],
     ) -> Tuple[LeadSource, float]:
         """
         Detect the primary lead source with confidence scoring.
@@ -466,9 +400,7 @@ class LeadSourceTracker:
 
         # Check for explicit source in custom fields
         explicit_source = (
-            custom_fields.get("lead_source") or
-            custom_fields.get("source") or
-            custom_fields.get("original_source")
+            custom_fields.get("lead_source") or custom_fields.get("source") or custom_fields.get("original_source")
         )
 
         if explicit_source:
@@ -491,7 +423,7 @@ class LeadSourceTracker:
             for source, score in detected_sources.items():
                 confidence_scores[source] = max(
                     confidence_scores.get(source, 0),
-                    score * 0.8  # Referrer gets lower base confidence
+                    score * 0.8,  # Referrer gets lower base confidence
                 )
 
         # Landing page analysis (low confidence)
@@ -500,7 +432,7 @@ class LeadSourceTracker:
             for source, score in detected_sources.items():
                 confidence_scores[source] = max(
                     confidence_scores.get(source, 0),
-                    score * 0.6  # Landing page gets lowest confidence
+                    score * 0.6,  # Landing page gets lowest confidence
                 )
 
         # Return highest confidence source
@@ -538,9 +470,15 @@ class LeadSourceTracker:
     def _map_utm_source(self, utm_source: str, utm_medium: str = "") -> LeadSource:
         """Map UTM source to LeadSource enum."""
         source_mapping = {
-            "facebook": LeadSource.FACEBOOK_ADS if "cpc" in utm_medium or "paid" in utm_medium else LeadSource.FACEBOOK_ORGANIC,
-            "google": LeadSource.GOOGLE_ADS if "cpc" in utm_medium or "paid" in utm_medium else LeadSource.GOOGLE_ORGANIC,
-            "instagram": LeadSource.INSTAGRAM_ADS if "cpc" in utm_medium or "paid" in utm_medium else LeadSource.INSTAGRAM_ORGANIC,
+            "facebook": LeadSource.FACEBOOK_ADS
+            if "cpc" in utm_medium or "paid" in utm_medium
+            else LeadSource.FACEBOOK_ORGANIC,
+            "google": LeadSource.GOOGLE_ADS
+            if "cpc" in utm_medium or "paid" in utm_medium
+            else LeadSource.GOOGLE_ORGANIC,
+            "instagram": LeadSource.INSTAGRAM_ADS
+            if "cpc" in utm_medium or "paid" in utm_medium
+            else LeadSource.INSTAGRAM_ORGANIC,
             "zillow": LeadSource.ZILLOW,
             "realtor": LeadSource.REALTOR_COM,
             "trulia": LeadSource.TRULIA,
@@ -591,10 +529,7 @@ class LeadSourceTracker:
         return detected
 
     def _extract_source_detail(
-        self,
-        source: LeadSource,
-        utm_params: Dict[str, str],
-        referrer: Optional[str]
+        self, source: LeadSource, utm_params: Dict[str, str], referrer: Optional[str]
     ) -> Optional[str]:
         """Extract detailed source information."""
         campaign = utm_params.get("utm_campaign")
@@ -682,10 +617,7 @@ class LeadSourceTracker:
             logger.warning(f"Could not load historical data for {attribution.source}: {e}")
 
     async def track_source_performance(
-        self,
-        source: LeadSource,
-        event_type: str,
-        metadata: Optional[Dict[str, Any]] = None
+        self, source: LeadSource, event_type: str, metadata: Optional[Dict[str, Any]] = None
     ) -> None:
         """
         Track performance events for a lead source.
@@ -701,7 +633,7 @@ class LeadSourceTracker:
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "source": source.value,
                 "event_type": event_type,
-                "metadata": metadata or {}
+                "metadata": metadata or {},
             }
 
             cache_key = f"source_events:{source.value}:{datetime.now(timezone.utc).strftime('%Y-%m-%d')}"
@@ -722,10 +654,7 @@ class LeadSourceTracker:
             logger.error(f"Error tracking source performance: {e}", exc_info=True)
 
     async def _update_performance_metrics(
-        self,
-        source: LeadSource,
-        event_type: str,
-        metadata: Optional[Dict[str, Any]]
+        self, source: LeadSource, event_type: str, metadata: Optional[Dict[str, Any]]
     ) -> None:
         """Update aggregated performance metrics for a source."""
         cache_key = f"source_performance:{source.value}"
@@ -743,7 +672,7 @@ class LeadSourceTracker:
             "close_times": [],
             "lead_scores": [],
             "budgets": [],
-            "last_updated": datetime.now(timezone.utc).isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat(),
         }
 
         # Update based on event type
@@ -794,22 +723,34 @@ class LeadSourceTracker:
 
         # Calculate averages
         if current_metrics["qualify_times"]:
-            current_metrics["avg_time_to_qualify"] = sum(current_metrics["qualify_times"]) / len(current_metrics["qualify_times"])
+            current_metrics["avg_time_to_qualify"] = sum(current_metrics["qualify_times"]) / len(
+                current_metrics["qualify_times"]
+            )
 
         if current_metrics["close_times"]:
-            current_metrics["avg_time_to_close"] = sum(current_metrics["close_times"]) / len(current_metrics["close_times"])
+            current_metrics["avg_time_to_close"] = sum(current_metrics["close_times"]) / len(
+                current_metrics["close_times"]
+            )
 
         if current_metrics["lead_scores"]:
-            current_metrics["avg_lead_score"] = sum(current_metrics["lead_scores"]) / len(current_metrics["lead_scores"])
+            current_metrics["avg_lead_score"] = sum(current_metrics["lead_scores"]) / len(
+                current_metrics["lead_scores"]
+            )
 
         if current_metrics["budgets"]:
             current_metrics["avg_budget"] = sum(current_metrics["budgets"]) / len(current_metrics["budgets"])
 
         # Calculate ROI
         if current_metrics["total_cost"] > 0:
-            current_metrics["roi"] = (current_metrics["total_revenue"] - current_metrics["total_cost"]) / current_metrics["total_cost"]
+            current_metrics["roi"] = (
+                current_metrics["total_revenue"] - current_metrics["total_cost"]
+            ) / current_metrics["total_cost"]
             current_metrics["cost_per_lead"] = current_metrics["total_cost"] / total_leads if total_leads > 0 else 0
-            current_metrics["cost_per_qualified_lead"] = current_metrics["total_cost"] / current_metrics["qualified_leads"] if current_metrics["qualified_leads"] > 0 else 0
+            current_metrics["cost_per_qualified_lead"] = (
+                current_metrics["total_cost"] / current_metrics["qualified_leads"]
+                if current_metrics["qualified_leads"] > 0
+                else 0
+            )
 
         current_metrics["last_updated"] = datetime.now(timezone.utc).isoformat()
 
@@ -817,10 +758,7 @@ class LeadSourceTracker:
         await self.cache.set(cache_key, current_metrics, ttl=604800)
 
     async def get_source_performance(
-        self,
-        source: LeadSource,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None
+        self, source: LeadSource, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None
     ) -> Optional[SourcePerformance]:
         """
         Get performance metrics for a lead source.
@@ -865,7 +803,7 @@ class LeadSourceTracker:
                 avg_time_to_qualify=metrics.get("avg_time_to_qualify"),
                 avg_time_to_close=metrics.get("avg_time_to_close"),
                 avg_lead_score=metrics.get("avg_lead_score", 0.0),
-                avg_budget=metrics.get("avg_budget", 0.0)
+                avg_budget=metrics.get("avg_budget", 0.0),
             )
 
             return performance
@@ -875,10 +813,7 @@ class LeadSourceTracker:
             return None
 
     async def get_all_source_performance(
-        self,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-        min_leads: int = 1
+        self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None, min_leads: int = 1
     ) -> List[SourcePerformance]:
         """
         Get performance metrics for all active lead sources.
@@ -916,7 +851,7 @@ class LeadSourceTracker:
                 return {
                     "status": "insufficient_data",
                     "message": "Not enough data to generate recommendations",
-                    "recommendations": []
+                    "recommendations": [],
                 }
 
             recommendations = []
@@ -924,52 +859,59 @@ class LeadSourceTracker:
             # Find top performing sources
             top_performers = [p for p in performances[:3] if p.roi > 0]
             if top_performers:
-                recommendations.append({
-                    "type": "scale_up",
-                    "priority": "high",
-                    "title": "Scale Top Performing Sources",
-                    "description": f"Increase investment in {', '.join([p.source.value for p in top_performers])}",
-                    "sources": [p.source.value for p in top_performers],
-                    "expected_impact": "Increase overall ROI by focusing on proven sources"
-                })
+                recommendations.append(
+                    {
+                        "type": "scale_up",
+                        "priority": "high",
+                        "title": "Scale Top Performing Sources",
+                        "description": f"Increase investment in {', '.join([p.source.value for p in top_performers])}",
+                        "sources": [p.source.value for p in top_performers],
+                        "expected_impact": "Increase overall ROI by focusing on proven sources",
+                    }
+                )
 
             # Find underperforming sources
             poor_performers = [p for p in performances if p.roi < -0.2 and p.total_leads > 5]
             if poor_performers:
-                recommendations.append({
-                    "type": "optimize_or_pause",
-                    "priority": "high",
-                    "title": "Optimize or Pause Underperforming Sources",
-                    "description": f"Review and optimize {', '.join([p.source.value for p in poor_performers])}",
-                    "sources": [p.source.value for p in poor_performers],
-                    "expected_impact": "Reduce wasted ad spend and improve overall ROI"
-                })
+                recommendations.append(
+                    {
+                        "type": "optimize_or_pause",
+                        "priority": "high",
+                        "title": "Optimize or Pause Underperforming Sources",
+                        "description": f"Review and optimize {', '.join([p.source.value for p in poor_performers])}",
+                        "sources": [p.source.value for p in poor_performers],
+                        "expected_impact": "Reduce wasted ad spend and improve overall ROI",
+                    }
+                )
 
             # Find high-quality, low-volume sources
             high_quality_low_volume = [
-                p for p in performances
-                if p.qualification_rate > 0.3 and p.total_leads < 10 and p.roi > 0
+                p for p in performances if p.qualification_rate > 0.3 and p.total_leads < 10 and p.roi > 0
             ]
             if high_quality_low_volume:
-                recommendations.append({
-                    "type": "scale_quality",
-                    "priority": "medium",
-                    "title": "Scale High-Quality Sources",
-                    "description": f"Increase volume from {', '.join([p.source.value for p in high_quality_low_volume])}",
-                    "sources": [p.source.value for p in high_quality_low_volume],
-                    "expected_impact": "Increase qualified lead volume with maintained quality"
-                })
+                recommendations.append(
+                    {
+                        "type": "scale_quality",
+                        "priority": "medium",
+                        "title": "Scale High-Quality Sources",
+                        "description": f"Increase volume from {', '.join([p.source.value for p in high_quality_low_volume])}",
+                        "sources": [p.source.value for p in high_quality_low_volume],
+                        "expected_impact": "Increase qualified lead volume with maintained quality",
+                    }
+                )
 
             # Identify attribution gaps
             unknown_performance = next((p for p in performances if p.source == LeadSource.UNKNOWN), None)
             if unknown_performance and unknown_performance.total_leads > 5:
-                recommendations.append({
-                    "type": "improve_tracking",
-                    "priority": "medium",
-                    "title": "Improve Source Tracking",
-                    "description": f"{unknown_performance.total_leads} leads have unknown source",
-                    "expected_impact": "Better attribution enables more informed optimization decisions"
-                })
+                recommendations.append(
+                    {
+                        "type": "improve_tracking",
+                        "priority": "medium",
+                        "title": "Improve Source Tracking",
+                        "description": f"{unknown_performance.total_leads} leads have unknown source",
+                        "expected_impact": "Better attribution enables more informed optimization decisions",
+                    }
+                )
 
             return {
                 "status": "success",
@@ -981,26 +923,17 @@ class LeadSourceTracker:
                         "source": p.source.value,
                         "roi": round(p.roi * 100, 1),
                         "total_leads": p.total_leads,
-                        "conversion_rate": round(p.conversion_rate * 100, 1)
+                        "conversion_rate": round(p.conversion_rate * 100, 1),
                     }
                     for p in performances[:5]
-                ]
+                ],
             }
 
         except Exception as e:
             logger.error(f"Error generating source recommendations: {e}", exc_info=True)
-            return {
-                "status": "error",
-                "message": "Failed to generate recommendations",
-                "recommendations": []
-            }
+            return {"status": "error", "message": "Failed to generate recommendations", "recommendations": []}
 
-    async def update_ghl_custom_fields(
-        self,
-        contact_id: str,
-        attribution: SourceAttribution,
-        ghl_client
-    ) -> bool:
+    async def update_ghl_custom_fields(self, contact_id: str, attribution: SourceAttribution, ghl_client) -> bool:
         """
         Update GHL custom fields with source attribution data.
 
@@ -1017,18 +950,18 @@ class LeadSourceTracker:
             custom_fields = {}
 
             # Core attribution fields
-            if hasattr(settings, 'custom_field_lead_source') and settings.custom_field_lead_source:
+            if hasattr(settings, "custom_field_lead_source") and settings.custom_field_lead_source:
                 custom_fields[settings.custom_field_lead_source] = attribution.source.value
 
             # Additional fields (check if configured)
             field_mappings = {
-                'custom_field_source_medium': attribution.medium,
-                'custom_field_source_campaign': attribution.campaign,
-                'custom_field_source_quality': attribution.source_quality.value,
-                'custom_field_source_confidence': f"{attribution.confidence_score:.2f}",
-                'custom_field_utm_source': attribution.utm_source,
-                'custom_field_utm_campaign': attribution.utm_campaign,
-                'custom_field_referrer': attribution.referrer,
+                "custom_field_source_medium": attribution.medium,
+                "custom_field_source_campaign": attribution.campaign,
+                "custom_field_source_quality": attribution.source_quality.value,
+                "custom_field_source_confidence": f"{attribution.confidence_score:.2f}",
+                "custom_field_utm_source": attribution.utm_source,
+                "custom_field_utm_campaign": attribution.utm_campaign,
+                "custom_field_referrer": attribution.referrer,
             }
 
             for setting_name, value in field_mappings.items():
@@ -1067,14 +1000,14 @@ class LeadSourceTracker:
     def from_dict(self, data: Dict[str, Any]) -> SourceAttribution:
         """Create SourceAttribution from dictionary."""
         # Convert datetime strings back to datetime objects
-        for key in ['first_touch', 'last_touch']:
+        for key in ["first_touch", "last_touch"]:
             if key in data and data[key]:
                 data[key] = datetime.fromisoformat(data[key])
 
         # Convert enums
-        if 'source' in data:
-            data['source'] = LeadSource(data['source'])
-        if 'source_quality' in data:
-            data['source_quality'] = SourceQuality(data['source_quality'])
+        if "source" in data:
+            data["source"] = LeadSource(data["source"])
+        if "source_quality" in data:
+            data["source_quality"] = SourceQuality(data["source_quality"])
 
         return SourceAttribution(**data)

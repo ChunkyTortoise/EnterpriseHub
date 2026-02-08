@@ -16,7 +16,7 @@ import asyncio
 import logging
 import time
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
 import asyncpg
 import redis.asyncio as redis
@@ -24,13 +24,13 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-
 # Configure logging
 logger = logging.getLogger(__name__)
 
 
 class HealthStatus(BaseModel):
     """Health check status model"""
+
     status: str  # healthy, degraded, unhealthy
     timestamp: str
     response_time_ms: float
@@ -39,6 +39,7 @@ class HealthStatus(BaseModel):
 
 class ComponentHealth(BaseModel):
     """Individual component health model"""
+
     name: str
     status: str
     response_time_ms: float
@@ -49,6 +50,7 @@ class ComponentHealth(BaseModel):
 
 class SystemHealth(BaseModel):
     """Overall system health model"""
+
     service: str
     version: str
     environment: str
@@ -76,19 +78,12 @@ class HealthChecker:
         try:
             # Initialize Redis connection
             self.redis_client = redis.Redis(
-                host='localhost',
-                port=6379,
-                decode_responses=True,
-                socket_timeout=3.0,
-                socket_connect_timeout=3.0
+                host="localhost", port=6379, decode_responses=True, socket_timeout=3.0, socket_connect_timeout=3.0
             )
 
             # Initialize database connection pool
             self.db_pool = await asyncpg.create_pool(
-                "postgresql://localhost:5432/ghl_real_estate",
-                min_size=1,
-                max_size=3,
-                command_timeout=5.0
+                "postgresql://localhost:5432/ghl_real_estate", min_size=1, max_size=3, command_timeout=5.0
             )
 
             logger.info("Health checker initialized successfully")
@@ -104,11 +99,7 @@ class HealthChecker:
         try:
             # Basic application health
             status = "healthy"
-            details = {
-                "service": "service6_lead_recovery_engine",
-                "version": "2.0.0",
-                "environment": "production"
-            }
+            details = {"service": "service6_lead_recovery_engine", "version": "2.0.0", "environment": "production"}
 
             # Quick Redis check
             if self.redis_client:
@@ -122,10 +113,7 @@ class HealthChecker:
             response_time = (time.time() - start_time) * 1000
 
             return HealthStatus(
-                status=status,
-                timestamp=datetime.utcnow().isoformat(),
-                response_time_ms=response_time,
-                details=details
+                status=status, timestamp=datetime.utcnow().isoformat(), response_time_ms=response_time, details=details
             )
 
         except Exception as e:
@@ -134,7 +122,7 @@ class HealthChecker:
                 status="unhealthy",
                 timestamp=datetime.utcnow().isoformat(),
                 response_time_ms=(time.time() - start_time) * 1000,
-                details={"error": str(e)}
+                details={"error": str(e)},
             )
 
     async def comprehensive_health_check(self) -> SystemHealth:
@@ -153,30 +141,26 @@ class HealthChecker:
             self._check_ml_services_health(),
             self._check_voice_ai_health(),
             self._check_analytics_health(),
-            return_exceptions=True
+            return_exceptions=True,
         )
 
         # Process component check results
-        component_names = [
-            "database",
-            "redis",
-            "ml_services",
-            "voice_ai",
-            "analytics"
-        ]
+        component_names = ["database", "redis", "ml_services", "voice_ai", "analytics"]
 
         for i, check_result in enumerate(component_checks):
             if isinstance(check_result, ComponentHealth):
                 components.append(check_result)
             else:
                 # Handle exceptions
-                components.append(ComponentHealth(
-                    name=component_names[i],
-                    status="unhealthy",
-                    response_time_ms=0.0,
-                    last_check=datetime.utcnow().isoformat(),
-                    error=str(check_result) if check_result else "unknown_error"
-                ))
+                components.append(
+                    ComponentHealth(
+                        name=component_names[i],
+                        status="unhealthy",
+                        response_time_ms=0.0,
+                        last_check=datetime.utcnow().isoformat(),
+                        error=str(check_result) if check_result else "unknown_error",
+                    )
+                )
 
         # Determine overall status
         overall_status = self._determine_overall_status(components)
@@ -201,7 +185,7 @@ class HealthChecker:
             timestamp=datetime.utcnow().isoformat(),
             components=components,
             metrics=metrics,
-            performance=performance
+            performance=performance,
         )
 
         # Cache the result
@@ -244,8 +228,8 @@ class HealthChecker:
                         "recent_leads": lead_count,
                         "pool_size": pool_size,
                         "max_pool_size": max_size,
-                        "pool_utilization": (pool_size / max_size) * 100
-                    }
+                        "pool_utilization": (pool_size / max_size) * 100,
+                    },
                 )
 
         except Exception as e:
@@ -257,7 +241,7 @@ class HealthChecker:
                 status="unhealthy",
                 response_time_ms=response_time,
                 last_check=datetime.utcnow().isoformat(),
-                error=str(e)
+                error=str(e),
             )
 
     async def _check_redis_health(self) -> ComponentHealth:
@@ -275,8 +259,8 @@ class HealthChecker:
             info = await self.redis_client.info()
 
             # Calculate cache hit ratio
-            hits = info.get('keyspace_hits', 0)
-            misses = info.get('keyspace_misses', 0)
+            hits = info.get("keyspace_hits", 0)
+            misses = info.get("keyspace_misses", 0)
             hit_ratio = (hits / (hits + misses)) * 100 if (hits + misses) > 0 else 0
 
             response_time = (time.time() - start_time) * 1000
@@ -287,11 +271,11 @@ class HealthChecker:
                 response_time_ms=response_time,
                 last_check=datetime.utcnow().isoformat(),
                 metrics={
-                    "memory_usage": info.get('used_memory_human', 'unknown'),
-                    "connected_clients": info.get('connected_clients', 0),
+                    "memory_usage": info.get("used_memory_human", "unknown"),
+                    "connected_clients": info.get("connected_clients", 0),
                     "cache_hit_ratio": hit_ratio,
-                    "total_commands_processed": info.get('total_commands_processed', 0)
-                }
+                    "total_commands_processed": info.get("total_commands_processed", 0),
+                },
             )
 
         except Exception as e:
@@ -303,7 +287,7 @@ class HealthChecker:
                 status="unhealthy",
                 response_time_ms=response_time,
                 last_check=datetime.utcnow().isoformat(),
-                error=str(e)
+                error=str(e),
             )
 
     async def _check_ml_services_health(self) -> ComponentHealth:
@@ -316,10 +300,10 @@ class HealthChecker:
 
             # Test lead scoring model
             test_lead_data = {
-                'email': 'health.check@example.com',
-                'phone': '+1234567890',
-                'source': 'health_check',
-                'engagement_score': 50.0
+                "email": "health.check@example.com",
+                "phone": "+1234567890",
+                "source": "health_check",
+                "engagement_score": 50.0,
             }
 
             # Simulate ML scoring request (replace with actual call)
@@ -339,8 +323,8 @@ class HealthChecker:
                     "model_version": "2.0.0",
                     "inference_time_ms": response_time,
                     "last_training": "2026-01-16T10:00:00Z",
-                    "model_accuracy": 94.5
-                }
+                    "model_accuracy": 94.5,
+                },
             )
 
         except Exception as e:
@@ -352,7 +336,7 @@ class HealthChecker:
                 status="unhealthy",
                 response_time_ms=response_time,
                 last_check=datetime.utcnow().isoformat(),
-                error=str(e)
+                error=str(e),
             )
 
     async def _check_voice_ai_health(self) -> ComponentHealth:
@@ -380,8 +364,8 @@ class HealthChecker:
                     "transcription_accuracy": 96.8,
                     "emotion_detection_accuracy": 89.2,
                     "processing_time_ms": response_time,
-                    "supported_languages": ["en", "es"]
-                }
+                    "supported_languages": ["en", "es"],
+                },
             )
 
         except Exception as e:
@@ -393,7 +377,7 @@ class HealthChecker:
                 status="unhealthy",
                 response_time_ms=response_time,
                 last_check=datetime.utcnow().isoformat(),
-                error=str(e)
+                error=str(e),
             )
 
     async def _check_analytics_health(self) -> ComponentHealth:
@@ -421,8 +405,8 @@ class HealthChecker:
                     "prediction_accuracy": 87.3,
                     "data_freshness_minutes": 5,
                     "processing_time_ms": response_time,
-                    "active_experiments": 3
-                }
+                    "active_experiments": 3,
+                },
             )
 
         except Exception as e:
@@ -434,7 +418,7 @@ class HealthChecker:
                 status="unhealthy",
                 response_time_ms=response_time,
                 last_check=datetime.utcnow().isoformat(),
-                error=str(e)
+                error=str(e),
             )
 
     def _determine_overall_status(self, components: List[ComponentHealth]) -> str:
@@ -464,10 +448,10 @@ class HealthChecker:
         return {
             "cpu_usage_percent": 68.5,  # Would come from system monitoring
             "memory_usage_percent": 72.1,  # Would come from system monitoring
-            "disk_usage_percent": 45.3,   # Would come from system monitoring
-            "network_io_mbps": 23.7,      # Would come from system monitoring
+            "disk_usage_percent": 45.3,  # Would come from system monitoring
+            "network_io_mbps": 23.7,  # Would come from system monitoring
             "open_file_descriptors": 1247,
-            "active_connections": 145
+            "active_connections": 145,
         }
 
     async def _collect_performance_metrics(self) -> Dict[str, Any]:
@@ -479,7 +463,7 @@ class HealthChecker:
             "p99_response_time_ms": 580.0,
             "error_rate_percent": 0.3,
             "throughput_leads_per_hour": 1150,
-            "cache_hit_rate_percent": 87.5
+            "cache_hit_rate_percent": 87.5,
         }
 
     def _calculate_uptime(self) -> str:
@@ -560,14 +544,12 @@ async def liveness_check():
         status="healthy",
         timestamp=datetime.utcnow().isoformat(),
         response_time_ms=1.0,
-        details={"message": "Service is alive"}
+        details={"message": "Service is alive"},
     )
 
 
 @router.get("/detailed", response_model=SystemHealth)
-async def detailed_health(
-    refresh: bool = Query(False, description="Force refresh of cached health data")
-):
+async def detailed_health(refresh: bool = Query(False, description="Force refresh of cached health data")):
     """
     Detailed health check with comprehensive component status.
 
@@ -599,49 +581,40 @@ async def metrics_endpoint():
     # Generate Prometheus-style metrics
     metrics_lines = [
         "# HELP service6_health_status Current health status (1=healthy, 0.5=degraded, 0=unhealthy)",
-        "# TYPE service6_health_status gauge"
+        "# TYPE service6_health_status gauge",
     ]
 
     # Overall health status
-    status_value = {
-        "healthy": 1.0,
-        "degraded": 0.5,
-        "unhealthy": 0.0
-    }.get(system_health.status, 0.0)
+    status_value = {"healthy": 1.0, "degraded": 0.5, "unhealthy": 0.0}.get(system_health.status, 0.0)
 
     metrics_lines.append(f'service6_health_status{{service="service6_lead_recovery_engine"}} {status_value}')
 
     # Component health
-    metrics_lines.extend([
-        "# HELP service6_component_health Component health status",
-        "# TYPE service6_component_health gauge"
-    ])
+    metrics_lines.extend(
+        ["# HELP service6_component_health Component health status", "# TYPE service6_component_health gauge"]
+    )
 
     for component in system_health.components:
-        component_status = {
-            "healthy": 1.0,
-            "degraded": 0.5,
-            "unhealthy": 0.0
-        }.get(component.status, 0.0)
+        component_status = {"healthy": 1.0, "degraded": 0.5, "unhealthy": 0.0}.get(component.status, 0.0)
 
-        metrics_lines.append(
-            f'service6_component_health{{component="{component.name}"}} {component_status}'
-        )
+        metrics_lines.append(f'service6_component_health{{component="{component.name}"}} {component_status}')
 
     # Performance metrics
-    metrics_lines.extend([
-        "# HELP service6_response_time_ms Average response time in milliseconds",
-        "# TYPE service6_response_time_ms gauge",
-        f'service6_response_time_ms {system_health.performance.get("average_response_time_ms", 0)}',
-        "",
-        "# HELP service6_requests_per_second Current request rate",
-        "# TYPE service6_requests_per_second gauge",
-        f'service6_requests_per_second {system_health.performance.get("requests_per_second", 0)}',
-        "",
-        "# HELP service6_error_rate_percent Current error rate percentage",
-        "# TYPE service6_error_rate_percent gauge",
-        f'service6_error_rate_percent {system_health.performance.get("error_rate_percent", 0)}'
-    ])
+    metrics_lines.extend(
+        [
+            "# HELP service6_response_time_ms Average response time in milliseconds",
+            "# TYPE service6_response_time_ms gauge",
+            f"service6_response_time_ms {system_health.performance.get('average_response_time_ms', 0)}",
+            "",
+            "# HELP service6_requests_per_second Current request rate",
+            "# TYPE service6_requests_per_second gauge",
+            f"service6_requests_per_second {system_health.performance.get('requests_per_second', 0)}",
+            "",
+            "# HELP service6_error_rate_percent Current error rate percentage",
+            "# TYPE service6_error_rate_percent gauge",
+            f"service6_error_rate_percent {system_health.performance.get('error_rate_percent', 0)}",
+        ]
+    )
 
     return "\n".join(metrics_lines)
 
@@ -669,9 +642,9 @@ async def status_summary():
         "component_summary": component_counts,
         "key_metrics": {
             "response_time": f"{system_health.performance.get('average_response_time_ms', 0):.1f}ms",
-            "requests_per_second": system_health.performance.get('requests_per_second', 0),
+            "requests_per_second": system_health.performance.get("requests_per_second", 0),
             "error_rate": f"{system_health.performance.get('error_rate_percent', 0):.2f}%",
-            "throughput": f"{system_health.performance.get('throughput_leads_per_hour', 0)}/hour"
+            "throughput": f"{system_health.performance.get('throughput_leads_per_hour', 0)}/hour",
         },
-        "last_updated": system_health.timestamp
+        "last_updated": system_health.timestamp,
     }

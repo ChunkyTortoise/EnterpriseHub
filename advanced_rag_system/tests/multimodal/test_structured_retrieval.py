@@ -19,7 +19,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pandas as pd
 import pytest
-
 from src.core.exceptions import RetrievalError
 from src.core.types import DocumentChunk, Metadata, SearchResult
 from src.multimodal.structured_retriever import (
@@ -107,12 +106,14 @@ class TestStructuredRetriever:
     def sample_csv(self, tmp_path):
         """Create a sample CSV file."""
         csv_path = tmp_path / "sample.csv"
-        df = pd.DataFrame({
-            "id": [1, 2, 3, 4, 5],
-            "name": ["Alice", "Bob", "Charlie", "Diana", "Eve"],
-            "age": [25, 30, 35, 28, 32],
-            "salary": [50000.0, 60000.0, 75000.0, 65000.0, 70000.0],
-        })
+        df = pd.DataFrame(
+            {
+                "id": [1, 2, 3, 4, 5],
+                "name": ["Alice", "Bob", "Charlie", "Diana", "Eve"],
+                "age": [25, 30, 35, 28, 32],
+                "salary": [50000.0, 60000.0, 75000.0, 65000.0, 70000.0],
+            }
+        )
         df.to_csv(csv_path, index=False)
         return str(csv_path)
 
@@ -150,15 +151,15 @@ class TestStructuredRetriever:
     @pytest.mark.asyncio
     async def test_generate_table_description(self, retriever):
         """Test table description generation."""
-        df = pd.DataFrame({
-            "id": [1, 2, 3],
-            "name": ["A", "B", "C"],
-            "value": [10.5, 20.5, 30.5],
-        })
-
-        desc = retriever._generate_table_description(
-            df, user_description="Test data", source="test.csv"
+        df = pd.DataFrame(
+            {
+                "id": [1, 2, 3],
+                "name": ["A", "B", "C"],
+                "value": [10.5, 20.5, 30.5],
+            }
         )
+
+        desc = retriever._generate_table_description(df, user_description="Test data", source="test.csv")
 
         assert "Test data" in desc
         assert "3 rows" in desc
@@ -171,19 +172,19 @@ class TestStructuredRetriever:
     @pytest.mark.asyncio
     async def test_generate_row_description(self, retriever):
         """Test row description generation."""
-        df = pd.DataFrame({
-            "id": [1],
-            "name": ["Test"],
-        })
+        df = pd.DataFrame(
+            {
+                "id": [1],
+                "name": ["Test"],
+            }
+        )
 
         schema = TableSchema(
             columns={"id": "int64", "name": "object"},
             source="test.csv",
         )
 
-        desc = retriever._generate_row_description(
-            df.iloc[0], schema, table_description="Test table"
-        )
+        desc = retriever._generate_row_description(df.iloc[0], schema, table_description="Test table")
 
         assert "Test table" in desc
         assert "id: 1" in desc
@@ -192,9 +193,7 @@ class TestStructuredRetriever:
     @pytest.mark.asyncio
     async def test_index_csv(self, retriever, sample_csv):
         """Test indexing CSV file."""
-        doc_ids = await retriever.index_csv(
-            sample_csv, description="Employee data"
-        )
+        doc_ids = await retriever.index_csv(sample_csv, description="Employee data")
 
         assert len(doc_ids) > 0
         assert retriever._document_count > 0
@@ -241,10 +240,12 @@ class TestStructuredRetriever:
     @pytest.mark.asyncio
     async def test_index_dataframe(self, retriever):
         """Test indexing DataFrame directly."""
-        df = pd.DataFrame({
-            "col1": [1, 2, 3],
-            "col2": ["a", "b", "c"],
-        })
+        df = pd.DataFrame(
+            {
+                "col1": [1, 2, 3],
+                "col2": ["a", "b", "c"],
+            }
+        )
 
         doc_ids = await retriever.index_dataframe(df, "test_source", "Test data")
 
@@ -408,17 +409,17 @@ class TestStructuredRetrieverIntegration:
         try:
             # Create and index CSV
             csv_path = tmp_path / "sales.csv"
-            df = pd.DataFrame({
-                "date": pd.date_range("2024-01-01", periods=100),
-                "product": ["A", "B", "C"] * 33 + ["A"],
-                "region": ["North", "South", "East", "West"] * 25,
-                "amount": range(1000, 11000, 100),
-            })
+            df = pd.DataFrame(
+                {
+                    "date": pd.date_range("2024-01-01", periods=100),
+                    "product": ["A", "B", "C"] * 33 + ["A"],
+                    "region": ["North", "South", "East", "West"] * 25,
+                    "amount": range(1000, 11000, 100),
+                }
+            )
             df.to_csv(csv_path, index=False)
 
-            doc_ids = await retriever.index_csv(
-                str(csv_path), description="Sales data 2024"
-            )
+            doc_ids = await retriever.index_csv(str(csv_path), description="Sales data 2024")
             assert len(doc_ids) > 0
 
             # Semantic search
@@ -457,10 +458,12 @@ class TestStructuredRetrieverIntegration:
             # Create multiple CSV files
             for i in range(3):
                 csv_path = tmp_path / f"data_{i}.csv"
-                df = pd.DataFrame({
-                    "id": range(i * 10, (i + 1) * 10),
-                    "value": range(100),
-                })
+                df = pd.DataFrame(
+                    {
+                        "id": range(i * 10, (i + 1) * 10),
+                        "value": range(100),
+                    }
+                )
                 df.to_csv(csv_path, index=False)
 
                 await retriever.index_csv(str(csv_path), description=f"Dataset {i}")
@@ -490,10 +493,12 @@ class TestStructuredRetrieverIntegration:
         try:
             # Create large CSV
             csv_path = tmp_path / "large.csv"
-            df = pd.DataFrame({
-                "id": range(100),
-                "data": ["x"] * 100,
-            })
+            df = pd.DataFrame(
+                {
+                    "id": range(100),
+                    "data": ["x"] * 100,
+                }
+            )
             df.to_csv(csv_path, index=False)
 
             doc_ids = await retriever.index_csv(str(csv_path))

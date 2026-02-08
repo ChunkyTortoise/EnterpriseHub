@@ -13,7 +13,6 @@ from ghl_real_estate_ai.services.jorge.ab_testing_repository import (
     ABTestingRepository,
 )
 
-
 # ── Fake DB Manager ────────────────────────────────────────────────────
 
 
@@ -203,9 +202,7 @@ class TestDeactivateExperiment:
     @pytest.mark.asyncio
     async def test_accepts_winner_and_significance(self, repo, db):
         db._execute_command_result = "UPDATE 1"
-        result = await repo.deactivate_experiment(
-            "test_exp", winner="variant_a", significance=0.03
-        )
+        result = await repo.deactivate_experiment("test_exp", winner="variant_a", significance=0.03)
         assert result is True
 
 

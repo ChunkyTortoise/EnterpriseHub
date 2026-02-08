@@ -6,20 +6,23 @@ Replaces custom integrations with standardized MCP server connections
 import asyncio
 import json
 import shlex
-import websockets
-from typing import Dict, List, Any, Optional, Union
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional, Union
+
+import websockets
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+
 class MCPTransport(Enum):
     WEBSOCKET = "websocket"
     HTTP = "http"
     STDIO = "stdio"
+
 
 @dataclass
 class MCPServer:
@@ -30,6 +33,7 @@ class MCPServer:
     capabilities: List[str]
     status: str = "disconnected"
 
+
 @dataclass
 class MCPTool:
     name: str
@@ -37,6 +41,7 @@ class MCPTool:
     description: str
     parameters: Dict[str, Any]
     required_params: List[str]
+
 
 class MCPClient:
     """
@@ -61,7 +66,7 @@ class MCPClient:
     def _load_server_configs(self):
         """Load MCP server configurations from JSON file"""
         try:
-            with open(self.config_path, 'r') as f:
+            with open(self.config_path, "r") as f:
                 config = json.load(f)
 
             for server_config in config.get("servers", []):
@@ -70,7 +75,7 @@ class MCPClient:
                     transport=MCPTransport(server_config["transport"]),
                     url=server_config["url"],
                     auth_config=server_config.get("auth", {}),
-                    capabilities=server_config.get("capabilities", [])
+                    capabilities=server_config.get("capabilities", []),
                 )
                 self.servers[server.name] = server
 
@@ -131,26 +136,22 @@ class MCPClient:
         if "token" in server.auth_config:
             headers["Authorization"] = f"Bearer {server.auth_config['token']}"
 
-        connection = await websockets.connect(
-            server.url,
-            extra_headers=headers,
-            ping_interval=30,
-            ping_timeout=10
-        )
+        connection = await websockets.connect(server.url, extra_headers=headers, ping_interval=30, ping_timeout=10)
 
         # Send MCP handshake
-        await connection.send(json.dumps({
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "initialize",
-            "params": {
-                "protocolVersion": "2024-11-05",
-                "capabilities": {
-                    "roots": {"listChanged": True},
-                    "sampling": {}
+        await connection.send(
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "initialize",
+                    "params": {
+                        "protocolVersion": "2024-11-05",
+                        "capabilities": {"roots": {"listChanged": True}, "sampling": {}},
+                    },
                 }
-            }
-        }))
+            )
+        )
 
         # Wait for handshake response
         response = await connection.recv()
@@ -174,10 +175,7 @@ class MCPClient:
         elif "api_key" in server.auth_config:
             headers["X-API-Key"] = server.auth_config["api_key"]
 
-        session = aiohttp.ClientSession(
-            headers=headers,
-            timeout=aiohttp.ClientTimeout(total=30)
-        )
+        session = aiohttp.ClientSession(headers=headers, timeout=aiohttp.ClientTimeout(total=30))
 
         # Test connection with capabilities request
         async with session.get(f"{server.url}/mcp/capabilities") as response:
@@ -194,19 +192,21 @@ class MCPClient:
             *shlex.split(server.url),
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
+            stderr=asyncio.subprocess.PIPE,
         )
 
         # Send initialization message
-        init_message = json.dumps({
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "initialize",
-            "params": {
-                "protocolVersion": "2024-11-05",
-                "capabilities": {"roots": {"listChanged": True}}
-            }
-        }) + "\n"
+        init_message = (
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "initialize",
+                    "params": {"protocolVersion": "2024-11-05", "capabilities": {"roots": {"listChanged": True}}},
+                }
+            )
+            + "\n"
+        )
 
         process.stdin.write(init_message.encode())
         await process.stdin.drain()
@@ -224,11 +224,7 @@ class MCPClient:
     async def _discover_tools(self, server_name: str):
         """Discover available tools from connected MCP server"""
         try:
-            tools_response = await self.call_tool(
-                server_name,
-                "tools/list",
-                {}
-            )
+            tools_response = await self.call_tool(server_name, "tools/list", {})
 
             if tools_response.get("tools"):
                 for tool_def in tools_response["tools"]:
@@ -237,7 +233,7 @@ class MCPClient:
                         server=server_name,
                         description=tool_def.get("description", ""),
                         parameters=tool_def.get("inputSchema", {}),
-                        required_params=tool_def.get("inputSchema", {}).get("required", [])
+                        required_params=tool_def.get("inputSchema", {}).get("required", []),
                     )
                     self.available_tools[f"{server_name}:{tool.name}"] = tool
 
@@ -284,10 +280,7 @@ class MCPClient:
             "jsonrpc": "2.0",
             "id": int(datetime.now().timestamp() * 1000),
             "method": "tools/call",
-            "params": {
-                "name": tool_name,
-                "arguments": arguments
-            }
+            "params": {"name": tool_name, "arguments": arguments},
         }
 
         await connection.send(json.dumps(request))
@@ -299,7 +292,9 @@ class MCPClient:
 
         return result.get("result", {})
 
-    async def _call_http_tool(self, connection: Dict[str, Any], tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
+    async def _call_http_tool(
+        self, connection: Dict[str, Any], tool_name: str, arguments: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Call tool via HTTP MCP connection"""
         session = connection["session"]
         url = f"{connection['url']}/mcp/tools/{tool_name}"
@@ -311,16 +306,15 @@ class MCPClient:
 
             return await response.json()
 
-    async def _call_stdio_tool(self, process: asyncio.subprocess.Process, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
+    async def _call_stdio_tool(
+        self, process: asyncio.subprocess.Process, tool_name: str, arguments: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Call tool via stdio MCP connection"""
         request = {
             "jsonrpc": "2.0",
             "id": int(datetime.now().timestamp() * 1000),
             "method": "tools/call",
-            "params": {
-                "name": tool_name,
-                "arguments": arguments
-            }
+            "params": {"name": tool_name, "arguments": arguments},
         }
 
         request_line = json.dumps(request) + "\n"
@@ -384,8 +378,10 @@ class MCPClient:
 
         return health_status
 
+
 # Global instance for easy import
 _mcp_client = None
+
 
 def get_mcp_client() -> MCPClient:
     """Get singleton MCP client instance"""

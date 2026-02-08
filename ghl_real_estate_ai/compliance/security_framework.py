@@ -12,51 +12,60 @@ This module provides:
 """
 
 import asyncio
-import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Set
-from dataclasses import dataclass, field
-from enum import Enum
+import base64
 import hashlib
+import logging
 import secrets
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Set
+
 import jwt
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-import base64
 
-from ...services.cache_service import CacheService
 from ...ghl_utils.jorge_config import JorgeConfig
+from ...services.cache_service import CacheService
 
 logger = logging.getLogger(__name__)
 
+
 class SecurityLevel(Enum):
     """Security clearance levels"""
-    ULTRA_SECRET = "ultra_secret"        # Client financial data, SSNs
-    SECRET = "secret"                    # Transaction details, personal info
-    CONFIDENTIAL = "confidential"       # Business metrics, internal data
-    INTERNAL = "internal"               # General business information
-    PUBLIC = "public"                   # Marketing materials, listings
+
+    ULTRA_SECRET = "ultra_secret"  # Client financial data, SSNs
+    SECRET = "secret"  # Transaction details, personal info
+    CONFIDENTIAL = "confidential"  # Business metrics, internal data
+    INTERNAL = "internal"  # General business information
+    PUBLIC = "public"  # Marketing materials, listings
+
 
 class ThreatLevel(Enum):
     """Security threat levels"""
-    CRITICAL = "critical"               # Immediate action required
-    HIGH = "high"                       # Urgent attention needed
-    MEDIUM = "medium"                   # Monitor and investigate
-    LOW = "low"                         # Log and track
-    INFO = "info"                       # Informational only
+
+    CRITICAL = "critical"  # Immediate action required
+    HIGH = "high"  # Urgent attention needed
+    MEDIUM = "medium"  # Monitor and investigate
+    LOW = "low"  # Log and track
+    INFO = "info"  # Informational only
+
 
 class AccessAction(Enum):
     """Access control actions"""
+
     READ = "read"
     WRITE = "write"
     DELETE = "delete"
     EXECUTE = "execute"
     ADMIN = "admin"
 
+
 @dataclass
 class SecurityContext:
     """Security context for operations"""
+
     user_id: str
     role: str
     clearance_level: SecurityLevel
@@ -67,9 +76,11 @@ class SecurityContext:
     device_trusted: bool = False
     timestamp: datetime = field(default_factory=datetime.now)
 
+
 @dataclass
 class SecurityEvent:
     """Security event for monitoring and response"""
+
     event_id: str
     event_type: str
     threat_level: ThreatLevel
@@ -81,9 +92,11 @@ class SecurityEvent:
     investigated: bool = False
     resolved: bool = False
 
+
 @dataclass
 class AccessRequest:
     """Access control request"""
+
     user_id: str
     resource: str
     action: AccessAction
@@ -93,9 +106,11 @@ class AccessRequest:
     approved_by: Optional[str] = None
     expires_at: Optional[datetime] = None
 
+
 @dataclass
 class EncryptionKey:
     """Encryption key management"""
+
     key_id: str
     key_type: str  # 'master', 'data', 'session', 'transport'
     algorithm: str
@@ -103,6 +118,7 @@ class EncryptionKey:
     created_at: datetime
     expires_at: Optional[datetime] = None
     revoked: bool = False
+
 
 class JorgeSecurityFramework:
     """
@@ -116,22 +132,22 @@ class JorgeSecurityFramework:
 
         # Security configuration
         self.security_config = {
-            'encryption_algorithm': 'AES-256-GCM',
-            'key_rotation_interval': 86400,  # 24 hours
-            'session_timeout': 3600,         # 1 hour
-            'mfa_required_threshold': SecurityLevel.SECRET,
-            'failed_login_threshold': 5,
-            'account_lockout_duration': 1800  # 30 minutes
+            "encryption_algorithm": "AES-256-GCM",
+            "key_rotation_interval": 86400,  # 24 hours
+            "session_timeout": 3600,  # 1 hour
+            "mfa_required_threshold": SecurityLevel.SECRET,
+            "failed_login_threshold": 5,
+            "account_lockout_duration": 1800,  # 30 minutes
         }
 
         # Zero-trust policies
         self.zero_trust_policies = {
-            'never_trust_always_verify': True,
-            'least_privilege_access': True,
-            'continuous_verification': True,
-            'network_segmentation': True,
-            'data_classification_required': True,
-            'device_verification_required': True
+            "never_trust_always_verify": True,
+            "least_privilege_access": True,
+            "continuous_verification": True,
+            "network_segmentation": True,
+            "data_classification_required": True,
+            "device_verification_required": True,
         }
 
         # Security monitoring
@@ -142,10 +158,10 @@ class JorgeSecurityFramework:
 
         # Threat intelligence
         self.threat_indicators = {
-            'malicious_ips': set(),
-            'suspicious_patterns': [],
-            'known_attack_vectors': [],
-            'compromised_credentials': set()
+            "malicious_ips": set(),
+            "suspicious_patterns": [],
+            "known_attack_vectors": [],
+            "compromised_credentials": set(),
         }
 
         # Initialize security infrastructure
@@ -169,11 +185,13 @@ class JorgeSecurityFramework:
             logger.error(f"Security framework initialization failed: {str(e)}")
             raise
 
-    async def authenticate_user(self,
-                              username: str,
-                              password: str,
-                              mfa_token: Optional[str] = None,
-                              device_info: Optional[Dict[str, Any]] = None) -> SecurityContext:
+    async def authenticate_user(
+        self,
+        username: str,
+        password: str,
+        mfa_token: Optional[str] = None,
+        device_info: Optional[Dict[str, Any]] = None,
+    ) -> SecurityContext:
         """
         Authenticate user with multi-factor authentication
         """
@@ -191,7 +209,7 @@ class JorgeSecurityFramework:
                 raise SecurityException("Invalid credentials")
 
             # Check MFA requirement
-            if user_data['clearance_level'] >= SecurityLevel.SECRET and not mfa_token:
+            if user_data["clearance_level"] >= SecurityLevel.SECRET and not mfa_token:
                 raise SecurityException("Multi-factor authentication required")
 
             # Validate MFA if provided
@@ -204,14 +222,14 @@ class JorgeSecurityFramework:
 
             # Create security context
             security_context = SecurityContext(
-                user_id=user_data['user_id'],
-                role=user_data['role'],
-                clearance_level=SecurityLevel(user_data['clearance_level']),
+                user_id=user_data["user_id"],
+                role=user_data["role"],
+                clearance_level=SecurityLevel(user_data["clearance_level"]),
                 session_id=self._generate_session_id(),
-                ip_address=device_info.get('ip_address', 'unknown'),
-                user_agent=device_info.get('user_agent', 'unknown'),
+                ip_address=device_info.get("ip_address", "unknown"),
+                user_agent=device_info.get("user_agent", "unknown"),
                 mfa_verified=bool(mfa_token),
-                device_trusted=device_trusted
+                device_trusted=device_trusted,
             )
 
             # Store active session
@@ -222,8 +240,8 @@ class JorgeSecurityFramework:
                 "authentication_success",
                 ThreatLevel.INFO,
                 security_context.ip_address,
-                user_data['user_id'],
-                f"User {username} authenticated successfully"
+                user_data["user_id"],
+                f"User {username} authenticated successfully",
             )
 
             logger.info(f"User {username} authenticated successfully")
@@ -233,10 +251,7 @@ class JorgeSecurityFramework:
             logger.error(f"Authentication failed for {username}: {str(e)}")
             raise
 
-    async def authorize_access(self,
-                             security_context: SecurityContext,
-                             resource: str,
-                             action: AccessAction) -> bool:
+    async def authorize_access(self, security_context: SecurityContext, resource: str, action: AccessAction) -> bool:
         """
         Authorize user access to resources based on zero-trust principles
         """
@@ -252,7 +267,7 @@ class JorgeSecurityFramework:
                     ThreatLevel.MEDIUM,
                     security_context.ip_address,
                     security_context.user_id,
-                    f"Access denied to {resource} for action {action.value}"
+                    f"Access denied to {resource} for action {action.value}",
                 )
                 return False
 
@@ -262,7 +277,7 @@ class JorgeSecurityFramework:
                 ThreatLevel.INFO,
                 security_context.ip_address,
                 security_context.user_id,
-                f"Access granted to {resource} for action {action.value}"
+                f"Access granted to {resource} for action {action.value}",
             )
 
             return True
@@ -271,10 +286,9 @@ class JorgeSecurityFramework:
             logger.error(f"Authorization check failed: {str(e)}")
             return False
 
-    async def encrypt_data(self,
-                          data: str,
-                          classification: SecurityLevel,
-                          context: Optional[SecurityContext] = None) -> str:
+    async def encrypt_data(
+        self, data: str, classification: SecurityLevel, context: Optional[SecurityContext] = None
+    ) -> str:
         """
         Encrypt data based on classification level
         """
@@ -286,10 +300,10 @@ class JorgeSecurityFramework:
             cipher = Fernet(key.key_data)
 
             # Encrypt data
-            encrypted_data = cipher.encrypt(data.encode('utf-8'))
+            encrypted_data = cipher.encrypt(data.encode("utf-8"))
 
             # Encode to base64 for storage
-            encrypted_b64 = base64.b64encode(encrypted_data).decode('utf-8')
+            encrypted_b64 = base64.b64encode(encrypted_data).decode("utf-8")
 
             # Log encryption event for sensitive data
             if classification in [SecurityLevel.ULTRA_SECRET, SecurityLevel.SECRET]:
@@ -298,7 +312,7 @@ class JorgeSecurityFramework:
                     ThreatLevel.INFO,
                     context.ip_address if context else "system",
                     context.user_id if context else "system",
-                    f"Data encrypted with {classification.value} level protection"
+                    f"Data encrypted with {classification.value} level protection",
                 )
 
             return encrypted_b64
@@ -307,10 +321,7 @@ class JorgeSecurityFramework:
             logger.error(f"Data encryption failed: {str(e)}")
             raise
 
-    async def decrypt_data(self,
-                          encrypted_data: str,
-                          classification: SecurityLevel,
-                          context: SecurityContext) -> str:
+    async def decrypt_data(self, encrypted_data: str, classification: SecurityLevel, context: SecurityContext) -> str:
         """
         Decrypt data with access control verification
         """
@@ -323,13 +334,13 @@ class JorgeSecurityFramework:
             key = await self._get_encryption_key(classification)
 
             # Decode from base64
-            encrypted_bytes = base64.b64decode(encrypted_data.encode('utf-8'))
+            encrypted_bytes = base64.b64decode(encrypted_data.encode("utf-8"))
 
             # Create Fernet cipher
             cipher = Fernet(key.key_data)
 
             # Decrypt data
-            decrypted_data = cipher.decrypt(encrypted_bytes).decode('utf-8')
+            decrypted_data = cipher.decrypt(encrypted_bytes).decode("utf-8")
 
             # Log decryption event for sensitive data
             if classification in [SecurityLevel.ULTRA_SECRET, SecurityLevel.SECRET]:
@@ -338,7 +349,7 @@ class JorgeSecurityFramework:
                     ThreatLevel.INFO,
                     context.ip_address,
                     context.user_id,
-                    f"Sensitive data accessed with {classification.value} clearance"
+                    f"Sensitive data accessed with {classification.value} clearance",
                 )
 
             return decrypted_data
@@ -360,10 +371,10 @@ class JorgeSecurityFramework:
                     event_id=self._generate_event_id(),
                     event_type="brute_force_attack",
                     threat_level=ThreatLevel.HIGH,
-                    source_ip=event_data.get('ip_address', 'unknown'),
-                    user_id=event_data.get('user_id'),
+                    source_ip=event_data.get("ip_address", "unknown"),
+                    user_id=event_data.get("user_id"),
                     description="Brute force attack detected",
-                    evidence=event_data
+                    evidence=event_data,
                 )
                 detected_threats.append(threat)
 
@@ -373,10 +384,10 @@ class JorgeSecurityFramework:
                     event_id=self._generate_event_id(),
                     event_type="unusual_access_pattern",
                     threat_level=ThreatLevel.MEDIUM,
-                    source_ip=event_data.get('ip_address', 'unknown'),
-                    user_id=event_data.get('user_id'),
+                    source_ip=event_data.get("ip_address", "unknown"),
+                    user_id=event_data.get("user_id"),
                     description="Unusual access pattern detected",
-                    evidence=event_data
+                    evidence=event_data,
                 )
                 detected_threats.append(threat)
 
@@ -386,10 +397,10 @@ class JorgeSecurityFramework:
                     event_id=self._generate_event_id(),
                     event_type="data_exfiltration_attempt",
                     threat_level=ThreatLevel.CRITICAL,
-                    source_ip=event_data.get('ip_address', 'unknown'),
-                    user_id=event_data.get('user_id'),
+                    source_ip=event_data.get("ip_address", "unknown"),
+                    user_id=event_data.get("user_id"),
                     description="Data exfiltration attempt detected",
-                    evidence=event_data
+                    evidence=event_data,
                 )
                 detected_threats.append(threat)
 
@@ -442,7 +453,7 @@ class JorgeSecurityFramework:
                 ThreatLevel.INFO,
                 "system",
                 "system",
-                f"Responded to {security_event.event_type}: {response_actions}"
+                f"Responded to {security_event.event_type}: {response_actions}",
             )
 
             return {
@@ -450,25 +461,20 @@ class JorgeSecurityFramework:
                 "threat_level": security_event.threat_level.value,
                 "response_actions": response_actions,
                 "status": "responded",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
         except Exception as e:
             logger.error(f"Security incident response failed: {str(e)}")
             raise
 
-    async def generate_security_report(self,
-                                     start_date: datetime,
-                                     end_date: datetime) -> Dict[str, Any]:
+    async def generate_security_report(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
         """
         Generate comprehensive security report
         """
         try:
             # Filter events by date range
-            filtered_events = [
-                event for event in self.security_events
-                if start_date <= event.detected_at <= end_date
-            ]
+            filtered_events = [event for event in self.security_events if start_date <= event.detected_at <= end_date]
 
             # Categorize events by type and threat level
             event_summary = {}
@@ -486,28 +492,25 @@ class JorgeSecurityFramework:
 
             # Calculate security metrics
             security_metrics = {
-                'total_events': len(filtered_events),
-                'critical_events': len([e for e in filtered_events if e.threat_level == ThreatLevel.CRITICAL]),
-                'high_events': len([e for e in filtered_events if e.threat_level == ThreatLevel.HIGH]),
-                'medium_events': len([e for e in filtered_events if e.threat_level == ThreatLevel.MEDIUM]),
-                'low_events': len([e for e in filtered_events if e.threat_level == ThreatLevel.LOW]),
-                'resolved_incidents': len([e for e in filtered_events if e.resolved]),
-                'avg_response_time': await self._calculate_avg_response_time(filtered_events)
+                "total_events": len(filtered_events),
+                "critical_events": len([e for e in filtered_events if e.threat_level == ThreatLevel.CRITICAL]),
+                "high_events": len([e for e in filtered_events if e.threat_level == ThreatLevel.HIGH]),
+                "medium_events": len([e for e in filtered_events if e.threat_level == ThreatLevel.MEDIUM]),
+                "low_events": len([e for e in filtered_events if e.threat_level == ThreatLevel.LOW]),
+                "resolved_incidents": len([e for e in filtered_events if e.resolved]),
+                "avg_response_time": await self._calculate_avg_response_time(filtered_events),
             }
 
             # Generate report
             report = {
-                'report_period': {
-                    'start_date': start_date.isoformat(),
-                    'end_date': end_date.isoformat()
-                },
-                'security_metrics': security_metrics,
-                'event_summary': event_summary,
-                'top_threats': await self._identify_top_threats(filtered_events),
-                'security_trends': await self._analyze_security_trends(filtered_events),
-                'recommendations': await self._generate_security_recommendations(filtered_events),
-                'compliance_status': await self._assess_compliance_status(),
-                'generated_at': datetime.now().isoformat()
+                "report_period": {"start_date": start_date.isoformat(), "end_date": end_date.isoformat()},
+                "security_metrics": security_metrics,
+                "event_summary": event_summary,
+                "top_threats": await self._identify_top_threats(filtered_events),
+                "security_trends": await self._analyze_security_trends(filtered_events),
+                "recommendations": await self._generate_security_recommendations(filtered_events),
+                "compliance_status": await self._assess_compliance_status(),
+                "generated_at": datetime.now().isoformat(),
             }
 
             return report
@@ -541,12 +544,11 @@ class JorgeSecurityFramework:
         session = self.active_sessions[security_context.session_id]
         session_age = datetime.now() - session.timestamp
 
-        return session_age.total_seconds() < self.security_config['session_timeout']
+        return session_age.total_seconds() < self.security_config["session_timeout"]
 
-    async def _check_resource_permission(self,
-                                       security_context: SecurityContext,
-                                       resource: str,
-                                       action: AccessAction) -> bool:
+    async def _check_resource_permission(
+        self, security_context: SecurityContext, resource: str, action: AccessAction
+    ) -> bool:
         """Check if user has permission to perform action on resource"""
         # Implementation for resource permission checking
         return True  # Placeholder
@@ -564,18 +566,15 @@ class JorgeSecurityFramework:
                 algorithm="AES-256-GCM",
                 key_data=key_data,
                 created_at=datetime.now(),
-                expires_at=datetime.now() + timedelta(days=365)
+                expires_at=datetime.now() + timedelta(days=365),
             )
             self.encryption_keys[key_type] = key
 
         return self.encryption_keys[key_type]
 
-    async def _log_security_event(self,
-                                event_type: str,
-                                threat_level: ThreatLevel,
-                                source_ip: str,
-                                user_id: Optional[str],
-                                description: str):
+    async def _log_security_event(
+        self, event_type: str, threat_level: ThreatLevel, source_ip: str, user_id: Optional[str], description: str
+    ):
         """Log security event for monitoring and analysis"""
         event = SecurityEvent(
             event_id=self._generate_event_id(),
@@ -584,7 +583,7 @@ class JorgeSecurityFramework:
             source_ip=source_ip,
             user_id=user_id,
             description=description,
-            evidence={}
+            evidence={},
         )
 
         self.security_events.append(event)
@@ -612,7 +611,7 @@ class JorgeSecurityFramework:
             key_type="master",
             algorithm="AES-256-GCM",
             key_data=Fernet.generate_key(),
-            created_at=datetime.now()
+            created_at=datetime.now(),
         )
         self.encryption_keys["master"] = master_key
 
@@ -622,23 +621,23 @@ class JorgeSecurityFramework:
             "admin": {
                 "permissions": ["read", "write", "delete", "admin"],
                 "resources": ["*"],
-                "clearance_level": SecurityLevel.ULTRA_SECRET
+                "clearance_level": SecurityLevel.ULTRA_SECRET,
             },
             "jorge_overseer": {
                 "permissions": ["read", "write", "admin"],
                 "resources": ["clients/*", "deals/*", "analytics/*", "predictions/*"],
-                "clearance_level": SecurityLevel.SECRET
+                "clearance_level": SecurityLevel.SECRET,
             },
             "senior_agent": {
                 "permissions": ["read", "write"],
                 "resources": ["clients/*", "deals/*"],
-                "clearance_level": SecurityLevel.CONFIDENTIAL
+                "clearance_level": SecurityLevel.CONFIDENTIAL,
             },
             "agent": {
                 "permissions": ["read"],
                 "resources": ["clients/assigned", "deals/assigned"],
-                "clearance_level": SecurityLevel.INTERNAL
-            }
+                "clearance_level": SecurityLevel.INTERNAL,
+            },
         }
 
     def _start_security_monitoring(self):
@@ -736,4 +735,5 @@ class JorgeSecurityFramework:
 
 class SecurityException(Exception):
     """Custom exception for security-related errors"""
+
     pass

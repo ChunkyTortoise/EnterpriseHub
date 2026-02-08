@@ -1,4 +1,4 @@
-"""Demo routes — hardcoded sample data for zero-config API exploration.
+"""Demo routes -- hardcoded sample data for zero-config API exploration.
 
 No authentication required. Provides realistic Rancho Cucamonga real estate
 data so evaluators can explore the Swagger UI at /docs immediately.
@@ -11,17 +11,42 @@ from random import Random
 
 from fastapi import APIRouter
 
+from ghl_real_estate_ai.api.schemas.api_docs import (
+    BotStatusResponse,
+    HealthResponse,
+    LeadListResponse,
+    PipelineResponse,
+)
+
 router = APIRouter(prefix="/demo", tags=["Demo"])
 
 # Seeded RNG for deterministic sample data
 _rng = Random(42)
 
 _FIRST_NAMES = ["Maria", "James", "Sofia", "Robert", "Ana", "David", "Carmen", "Michael", "Elena", "John"]
-_LAST_NAMES = ["Garcia", "Johnson", "Martinez", "Williams", "Rodriguez", "Brown", "Lopez", "Davis", "Hernandez", "Smith"]
+_LAST_NAMES = [
+    "Garcia",
+    "Johnson",
+    "Martinez",
+    "Williams",
+    "Rodriguez",
+    "Brown",
+    "Lopez",
+    "Davis",
+    "Hernandez",
+    "Smith",
+]
 _STREETS = [
-    "Haven Ave", "Foothill Blvd", "Baseline Rd", "Archibald Ave",
-    "Milliken Ave", "Rochester Ave", "Etiwanda Ave", "Day Creek Blvd",
-    "Banyan St", "Church St",
+    "Haven Ave",
+    "Foothill Blvd",
+    "Baseline Rd",
+    "Archibald Ave",
+    "Milliken Ave",
+    "Rochester Ave",
+    "Etiwanda Ave",
+    "Day Creek Blvd",
+    "Banyan St",
+    "Church St",
 ]
 _SOURCES = ["Zillow", "Realtor.com", "Facebook Ad", "Google Ad", "Referral", "Open House", "Walk-In", "GHL Form"]
 _TEMPERATURES = ["Hot-Lead", "Warm-Lead", "Cold-Lead"]
@@ -36,24 +61,26 @@ def _generate_leads() -> list[dict]:
         last = _LAST_NAMES[i]
         score = _rng.randint(15, 98)
         temp = "Hot-Lead" if score >= 80 else "Warm-Lead" if score >= 40 else "Cold-Lead"
-        leads.append({
-            "id": f"lead_{i + 1:03d}",
-            "first_name": first,
-            "last_name": last,
-            "email": f"{first.lower()}.{last.lower()}@example.com",
-            "phone": f"+1909{_rng.randint(1000000, 9999999)}",
-            "source": _SOURCES[i % len(_SOURCES)],
-            "score": score,
-            "temperature": temp,
-            "stage": _STAGES[min(i, len(_STAGES) - 1)],
-            "budget_min": _rng.randint(400, 700) * 1000,
-            "budget_max": _rng.randint(700, 1200) * 1000,
-            "bedrooms": _rng.choice([3, 4, 5]),
-            "address_interest": f"{_rng.randint(1000, 9999)} {_STREETS[i]}",
-            "city": "Rancho Cucamonga",
-            "created_at": (now - timedelta(days=_rng.randint(1, 30))).isoformat(),
-            "last_activity": (now - timedelta(hours=_rng.randint(1, 72))).isoformat(),
-        })
+        leads.append(
+            {
+                "id": f"lead_{i + 1:03d}",
+                "first_name": first,
+                "last_name": last,
+                "email": f"{first.lower()}.{last.lower()}@example.com",
+                "phone": f"+1909{_rng.randint(1000000, 9999999)}",
+                "source": _SOURCES[i % len(_SOURCES)],
+                "score": score,
+                "temperature": temp,
+                "stage": _STAGES[min(i, len(_STAGES) - 1)],
+                "budget_min": _rng.randint(400, 700) * 1000,
+                "budget_max": _rng.randint(700, 1200) * 1000,
+                "bedrooms": _rng.choice([3, 4, 5]),
+                "address_interest": f"{_rng.randint(1000, 9999)} {_STREETS[i]}",
+                "city": "Rancho Cucamonga",
+                "created_at": (now - timedelta(days=_rng.randint(1, 30))).isoformat(),
+                "last_activity": (now - timedelta(hours=_rng.randint(1, 72))).isoformat(),
+            }
+        )
     return leads
 
 
@@ -87,13 +114,37 @@ _LEADS = _generate_leads()
 _PIPELINE = _generate_pipeline()
 
 
-@router.get("/leads")
+@router.get("/leads", response_model=LeadListResponse)
 async def demo_leads():
     """10 sample leads with realistic Rancho Cucamonga data. No auth required."""
     return {"leads": _LEADS, "total": len(_LEADS)}
 
 
-@router.get("/pipeline")
+@router.get("/pipeline", response_model=PipelineResponse)
 async def demo_pipeline():
     """Sample pipeline snapshot showing lead flow across stages. No auth required."""
     return _PIPELINE
+
+
+@router.get("/health", response_model=HealthResponse)
+async def demo_health():
+    """System health summary. No auth required."""
+    return {
+        "status": "healthy",
+        "active_bots": 4,
+        "uptime_pct": 99.87,
+        "version": "5.0.1",
+    }
+
+
+@router.get("/bots", response_model=BotStatusResponse)
+async def demo_bots():
+    """Active bot instances and today's conversation counts. No auth required."""
+    return {
+        "bots": [
+            {"name": "Jorge Lead Bot", "type": "lead", "status": "active", "uptime_hours": 72.3, "conversations_today": 47},
+            {"name": "Jorge Buyer Bot", "type": "buyer", "status": "active", "uptime_hours": 72.3, "conversations_today": 31},
+            {"name": "Jorge Seller Bot", "type": "seller", "status": "active", "uptime_hours": 72.3, "conversations_today": 18},
+        ],
+        "total_conversations_today": 96,
+    }

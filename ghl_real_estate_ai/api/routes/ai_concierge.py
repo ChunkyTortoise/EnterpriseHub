@@ -30,49 +30,42 @@ import json
 import time
 import uuid
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query, Path, Body, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, WebSocket, WebSocketDisconnect, status
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel, ConfigDict, ValidationError
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.api.middleware.auth import get_current_user, verify_concierge_permission
 from ghl_real_estate_ai.api.middleware.rate_limiting import rate_limit
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 # Import AI Concierge models and services
 from ghl_real_estate_ai.models.ai_concierge_models import (
-    # Core Models
-    ProactiveInsight,
+    CoachingCategory,
     CoachingOpportunity,
-    StrategyRecommendation,
+    ConversationIntelligenceSummary,
     ConversationQualityScore,
     ConversationTrajectory,
-    ConversationIntelligenceSummary,
-
-    # Event and Tracking Models
-    ProactiveEvent,
     InsightAcceptance,
-
+    InsightPriority,
     # Enums
     InsightType,
-    InsightPriority,
-    CoachingCategory,
-    StrategyType
+    # Event and Tracking Models
+    ProactiveEvent,
+    # Core Models
+    ProactiveInsight,
+    StrategyRecommendation,
+    StrategyType,
 )
-
+from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.proactive_conversation_intelligence import get_proactive_conversation_intelligence
 from ghl_real_estate_ai.services.websocket_server import get_websocket_manager
-from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 
 logger = get_logger(__name__)
 
 # Router Configuration
-router = APIRouter(
-    prefix="/api/v1/concierge",
-    tags=["AI Concierge"],
-    dependencies=[Depends(get_current_user)]
-)
+router = APIRouter(prefix="/api/v1/concierge", tags=["AI Concierge"], dependencies=[Depends(get_current_user)])
 
 # Service Instances
 proactive_intelligence = get_proactive_conversation_intelligence()
@@ -88,7 +81,7 @@ _endpoint_metrics = {
     "accept_insight": {"requests": 0, "total_time_ms": 0.0, "errors": 0},
     "dismiss_insight": {"requests": 0, "total_time_ms": 0.0, "errors": 0},
     "start_monitoring": {"requests": 0, "total_time_ms": 0.0, "errors": 0},
-    "websocket_streams": {"connections": 0, "messages_sent": 0, "errors": 0}
+    "websocket_streams": {"connections": 0, "messages_sent": 0, "errors": 0},
 }
 
 
@@ -96,20 +89,25 @@ _endpoint_metrics = {
 # Request/Response Models
 # ============================================================================
 
+
 class InsightAcceptanceRequest(BaseModel):
     """Request model for accepting a proactive insight."""
 
     action_taken: str = Field(..., min_length=5, max_length=200, description="Action taken based on insight")
     implementation_notes: Optional[str] = Field(None, max_length=500, description="Optional implementation notes")
-    effectiveness_prediction: Optional[float] = Field(None, ge=0.0, le=1.0, description="Predicted effectiveness (0.0-1.0)")
+    effectiveness_prediction: Optional[float] = Field(
+        None, ge=0.0, le=1.0, description="Predicted effectiveness (0.0-1.0)"
+    )
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "action_taken": "Used suggested objection handling technique with feel-felt-found method",
                 "implementation_notes": "Lead responded positively to empathy bridge before value presentation",
-                "effectiveness_prediction": 0.85
+                "effectiveness_prediction": 0.85,
             }
-        })
+        }
+    )
 
 
 class InsightDismissalRequest(BaseModel):
@@ -118,16 +116,18 @@ class InsightDismissalRequest(BaseModel):
     dismissal_reason: str = Field(
         ...,
         pattern="^(not_relevant|already_handled|poor_timing|low_quality|other)$",
-        description="Reason for dismissing the insight"
+        description="Reason for dismissing the insight",
     )
     feedback_notes: Optional[str] = Field(None, max_length=300, description="Optional feedback for improvement")
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "dismissal_reason": "poor_timing",
-                "feedback_notes": "Insight came too late in conversation flow"
+                "feedback_notes": "Insight came too late in conversation flow",
             }
-        })
+        }
+    )
 
 
 class MonitoringControlRequest(BaseModel):
@@ -135,20 +135,21 @@ class MonitoringControlRequest(BaseModel):
 
     action: str = Field(..., pattern="^(start|stop|pause|resume)$", description="Monitoring action to take")
     monitoring_preferences: Optional[Dict[str, Any]] = Field(
-        None,
-        description="Optional preferences for monitoring behavior"
+        None, description="Optional preferences for monitoring behavior"
     )
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "action": "start",
                 "monitoring_preferences": {
                     "insight_types": ["coaching", "strategy_pivot"],
                     "min_confidence": 0.75,
-                    "priority_filter": ["high", "critical"]
-                }
+                    "priority_filter": ["high", "critical"],
+                },
             }
-        })
+        }
+    )
 
 
 class ConversationInsightsResponse(BaseModel):
@@ -162,7 +163,8 @@ class ConversationInsightsResponse(BaseModel):
     last_analysis_at: Optional[datetime]
     performance_summary: Dict[str, Any]
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "conversation_id": "conv_12345",
                 "total_insights": 8,
@@ -170,13 +172,10 @@ class ConversationInsightsResponse(BaseModel):
                 "historical_insights": [],  # Would contain ProactiveInsight objects
                 "monitoring_status": "active",
                 "last_analysis_at": "2024-01-01T12:00:00Z",
-                "performance_summary": {
-                    "insights_generated": 8,
-                    "insights_accepted": 6,
-                    "average_effectiveness": 0.78
-                }
+                "performance_summary": {"insights_generated": 8, "insights_accepted": 6, "average_effectiveness": 0.78},
             }
-        })
+        }
+    )
 
 
 class InsightActionResponse(BaseModel):
@@ -188,7 +187,8 @@ class InsightActionResponse(BaseModel):
     tracking_id: str
     next_recommendations: List[str]
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "insight_id": "insight_12345",
                 "action": "accepted",
@@ -197,15 +197,17 @@ class InsightActionResponse(BaseModel):
                 "next_recommendations": [
                     "Monitor conversation for objection response",
                     "Track lead engagement improvement",
-                    "Watch for follow-up opportunities"
-                ]
+                    "Watch for follow-up opportunities",
+                ],
             }
-        })
+        }
+    )
 
 
 # ============================================================================
 # Core Insight Management Endpoints
 # ============================================================================
+
 
 @router.get(
     "/insights/{conversation_id}",
@@ -216,15 +218,17 @@ class InsightActionResponse(BaseModel):
         200: {"description": "Insights retrieved successfully"},
         403: {"description": "Access denied for conversation"},
         404: {"description": "Conversation not found"},
-        500: {"description": "Internal server error"}
-    }
+        500: {"description": "Internal server error"},
+    },
 )
 @rate_limit(max_requests=100, window_minutes=1)
 async def get_conversation_insights(
     conversation_id: str = Path(..., description="Unique conversation identifier"),
     include_historical: bool = Query(True, description="Include historical insights"),
-    priority_filter: Optional[str] = Query(None, pattern="^(critical|high|medium|low)$", description="Filter by priority"),
-    current_user: Dict = Depends(get_current_user)
+    priority_filter: Optional[str] = Query(
+        None, pattern="^(critical|high|medium|low)$", description="Filter by priority"
+    ),
+    current_user: Dict = Depends(get_current_user),
 ) -> ConversationInsightsResponse:
     """
     Get all proactive insights for a conversation with comprehensive status information.
@@ -243,8 +247,7 @@ async def get_conversation_insights(
         # Validate conversation access
         if not await _validate_conversation_access(conversation_id, current_user):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Access denied for conversation {conversation_id}"
+                status_code=status.HTTP_403_FORBIDDEN, detail=f"Access denied for conversation {conversation_id}"
             )
 
         logger.info(
@@ -277,7 +280,7 @@ async def get_conversation_insights(
             historical_insights=historical_insights if include_historical else [],
             monitoring_status=monitoring_status["status"],
             last_analysis_at=monitoring_status.get("last_analysis_at"),
-            performance_summary=performance_summary
+            performance_summary=performance_summary,
         )
 
         # Update performance metrics
@@ -297,13 +300,9 @@ async def get_conversation_insights(
         _endpoint_metrics[endpoint_name]["errors"] += 1
         processing_time_ms = (time.time() - start_time) * 1000
 
-        logger.error(
-            f"Failed to get insights for {conversation_id}: {e} [request_id: {request_id}]",
-            exc_info=True
-        )
+        logger.error(f"Failed to get insights for {conversation_id}: {e} [request_id: {request_id}]", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve insights for conversation"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to retrieve insights for conversation"
         )
 
 
@@ -316,14 +315,14 @@ async def get_conversation_insights(
         200: {"description": "Insight accepted successfully"},
         404: {"description": "Insight not found"},
         400: {"description": "Invalid acceptance data"},
-        500: {"description": "Internal server error"}
-    }
+        500: {"description": "Internal server error"},
+    },
 )
 @rate_limit(max_requests=50, window_minutes=1)
 async def accept_proactive_insight(
     insight_id: str = Path(..., description="Unique insight identifier"),
     acceptance_data: InsightAcceptanceRequest = Body(..., description="Insight acceptance details"),
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
 ) -> InsightActionResponse:
     """
     Accept a proactive insight and track implementation for continuous learning.
@@ -339,26 +338,17 @@ async def accept_proactive_insight(
     _endpoint_metrics[endpoint_name]["requests"] += 1
 
     try:
-        logger.info(
-            f"Accepting insight {insight_id} by user {current_user.get('user_id')} "
-            f"[request_id: {request_id}]"
-        )
+        logger.info(f"Accepting insight {insight_id} by user {current_user.get('user_id')} [request_id: {request_id}]")
 
         # Validate insight exists and user has access
         insight = await _get_insight_by_id(insight_id)
         if not insight:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Insight {insight_id} not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Insight {insight_id} not found")
 
         # Validate user can accept this insight (same conversation access rules)
         conversation_id = insight.conversation_context.get("conversation_id")
         if conversation_id and not await _validate_conversation_access(conversation_id, current_user):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied for this insight"
-            )
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied for this insight")
 
         # Create insight acceptance record
         acceptance = InsightAcceptance(
@@ -366,7 +356,7 @@ async def accept_proactive_insight(
             action_taken=acceptance_data.action_taken,
             outcome_observed="Pending measurement",  # Will be updated later
             effectiveness_rating=acceptance_data.effectiveness_prediction or 0.8,  # Default prediction
-            accepted_at=datetime.utcnow()
+            accepted_at=datetime.utcnow(),
         )
 
         # Process acceptance through proactive intelligence service
@@ -384,7 +374,7 @@ async def accept_proactive_insight(
             action="accepted",
             processed_at=datetime.utcnow(),
             tracking_id=tracking_id,
-            next_recommendations=next_recommendations
+            next_recommendations=next_recommendations,
         )
 
         # Update performance metrics
@@ -407,13 +397,9 @@ async def accept_proactive_insight(
         _endpoint_metrics[endpoint_name]["errors"] += 1
         processing_time_ms = (time.time() - start_time) * 1000
 
-        logger.error(
-            f"Failed to accept insight {insight_id}: {e} [request_id: {request_id}]",
-            exc_info=True
-        )
+        logger.error(f"Failed to accept insight {insight_id}: {e} [request_id: {request_id}]", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to process insight acceptance"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to process insight acceptance"
         )
 
 
@@ -426,14 +412,14 @@ async def accept_proactive_insight(
         200: {"description": "Insight dismissed successfully"},
         404: {"description": "Insight not found"},
         400: {"description": "Invalid dismissal data"},
-        500: {"description": "Internal server error"}
-    }
+        500: {"description": "Internal server error"},
+    },
 )
 @rate_limit(max_requests=50, window_minutes=1)
 async def dismiss_proactive_insight(
     insight_id: str = Path(..., description="Unique insight identifier"),
     dismissal_data: InsightDismissalRequest = Body(..., description="Insight dismissal details"),
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
 ) -> InsightActionResponse:
     """
     Dismiss a proactive insight with feedback for quality improvement.
@@ -449,18 +435,12 @@ async def dismiss_proactive_insight(
     _endpoint_metrics[endpoint_name]["requests"] += 1
 
     try:
-        logger.info(
-            f"Dismissing insight {insight_id} by user {current_user.get('user_id')} "
-            f"[request_id: {request_id}]"
-        )
+        logger.info(f"Dismissing insight {insight_id} by user {current_user.get('user_id')} [request_id: {request_id}]")
 
         # Validate insight exists and user has access
         insight = await _get_insight_by_id(insight_id)
         if not insight:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Insight {insight_id} not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Insight {insight_id} not found")
 
         # Process dismissal through proactive intelligence service
         tracking_id = await _process_insight_dismissal(insight, dismissal_data, current_user)
@@ -479,7 +459,7 @@ async def dismiss_proactive_insight(
             action="dismissed",
             processed_at=datetime.utcnow(),
             tracking_id=tracking_id,
-            next_recommendations=next_recommendations
+            next_recommendations=next_recommendations,
         )
 
         # Update performance metrics
@@ -503,19 +483,16 @@ async def dismiss_proactive_insight(
         _endpoint_metrics[endpoint_name]["errors"] += 1
         processing_time_ms = (time.time() - start_time) * 1000
 
-        logger.error(
-            f"Failed to dismiss insight {insight_id}: {e} [request_id: {request_id}]",
-            exc_info=True
-        )
+        logger.error(f"Failed to dismiss insight {insight_id}: {e} [request_id: {request_id}]", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to process insight dismissal"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to process insight dismissal"
         )
 
 
 # ============================================================================
 # Monitoring Control Endpoints
 # ============================================================================
+
 
 @router.post(
     "/conversations/{conversation_id}/monitoring",
@@ -525,14 +502,14 @@ async def dismiss_proactive_insight(
         200: {"description": "Monitoring action completed successfully"},
         403: {"description": "Access denied for conversation"},
         400: {"description": "Invalid monitoring action"},
-        500: {"description": "Internal server error"}
-    }
+        500: {"description": "Internal server error"},
+    },
 )
 @rate_limit(max_requests=20, window_minutes=1)
 async def control_conversation_monitoring(
     conversation_id: str = Path(..., description="Unique conversation identifier"),
     control_request: MonitoringControlRequest = Body(..., description="Monitoring control details"),
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
 ):
     """
     Control proactive monitoring for a conversation with customizable preferences.
@@ -551,8 +528,7 @@ async def control_conversation_monitoring(
         # Validate conversation access
         if not await _validate_conversation_access(conversation_id, current_user):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Access denied for conversation {conversation_id}"
+                status_code=status.HTTP_403_FORBIDDEN, detail=f"Access denied for conversation {conversation_id}"
             )
 
         logger.info(
@@ -580,7 +556,7 @@ async def control_conversation_monitoring(
             "status": result["status"],
             "message": result["message"],
             "monitoring_active": result["monitoring_active"],
-            "processed_at": datetime.utcnow().isoformat()
+            "processed_at": datetime.utcnow().isoformat(),
         }
 
     except HTTPException:
@@ -591,12 +567,11 @@ async def control_conversation_monitoring(
         processing_time_ms = (time.time() - start_time) * 1000
 
         logger.error(
-            f"Failed to control monitoring for {conversation_id}: {e} [request_id: {request_id}]",
-            exc_info=True
+            f"Failed to control monitoring for {conversation_id}: {e} [request_id: {request_id}]", exc_info=True
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to {control_request.action} monitoring for conversation"
+            detail=f"Failed to {control_request.action} monitoring for conversation",
         )
 
 
@@ -604,11 +579,10 @@ async def control_conversation_monitoring(
 # Real-Time WebSocket Endpoint
 # ============================================================================
 
+
 @router.websocket("/stream/{conversation_id}")
 async def stream_proactive_insights(
-    websocket: WebSocket,
-    conversation_id: str,
-    token: str = Query(None, description="Authentication token")
+    websocket: WebSocket, conversation_id: str, token: str = Query(None, description="Authentication token")
 ):
     """
     Real-time WebSocket stream of proactive insights for a conversation.
@@ -644,8 +618,7 @@ async def stream_proactive_insights(
         _endpoint_metrics["websocket_streams"]["connections"] += 1
 
         logger.info(
-            f"AI Concierge WebSocket connected for conversation {conversation_id} "
-            f"[user: {user_context.get('user_id')}]"
+            f"AI Concierge WebSocket connected for conversation {conversation_id} [user: {user_context.get('user_id')}]"
         )
 
         # Send initial connection confirmation
@@ -654,7 +627,7 @@ async def stream_proactive_insights(
             "conversation_id": conversation_id,
             "message": "Connected to AI Concierge insight stream",
             "available_insights": [insight_type.value for insight_type in InsightType],
-            "connection_time": datetime.utcnow().isoformat()
+            "connection_time": datetime.utcnow().isoformat(),
         }
 
         await websocket.send_text(json.dumps(welcome_message))
@@ -680,7 +653,7 @@ async def stream_proactive_insights(
                     "event_type": "heartbeat",
                     "timestamp": datetime.utcnow().isoformat(),
                     "monitoring_active": conversation_id in proactive_intelligence.active_monitors,
-                    "connection_status": "active"
+                    "connection_status": "active",
                 }
                 await websocket.send_text(json.dumps(heartbeat))
                 _endpoint_metrics["websocket_streams"]["messages_sent"] += 1
@@ -711,14 +684,13 @@ async def stream_proactive_insights(
 # Performance and Analytics Endpoints
 # ============================================================================
 
+
 @router.get(
     "/performance",
     summary="Get AI Concierge Performance Metrics",
-    description="Retrieve comprehensive performance metrics for AI Concierge intelligence and user interaction."
+    description="Retrieve comprehensive performance metrics for AI Concierge intelligence and user interaction.",
 )
-async def get_concierge_performance(
-    current_user: Dict = Depends(get_current_user)
-):
+async def get_concierge_performance(current_user: Dict = Depends(get_current_user)):
     """Get comprehensive AI Concierge performance metrics."""
 
     try:
@@ -736,7 +708,7 @@ async def get_concierge_performance(
                     "avg_response_time_ms": round(avg_response_time, 2),
                     "total_requests": metrics["requests"],
                     "error_rate": round(error_rate, 3),
-                    "errors": metrics["errors"]
+                    "errors": metrics["errors"],
                 }
 
         return {
@@ -745,23 +717,23 @@ async def get_concierge_performance(
             "websocket_stats": {
                 "active_connections": _endpoint_metrics["websocket_streams"]["connections"],
                 "total_messages_sent": _endpoint_metrics["websocket_streams"]["messages_sent"],
-                "websocket_errors": _endpoint_metrics["websocket_streams"]["errors"]
+                "websocket_errors": _endpoint_metrics["websocket_streams"]["errors"],
             },
             "overall_health": "good" if service_metrics.get("performance_status") == "good" else "needs_attention",
-            "retrieved_at": datetime.utcnow().isoformat()
+            "retrieved_at": datetime.utcnow().isoformat(),
         }
 
     except Exception as e:
         logger.error(f"Failed to get AI Concierge performance metrics: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve performance metrics"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve performance metrics"
         )
 
 
 # ============================================================================
 # Helper Functions
 # ============================================================================
+
 
 async def _validate_conversation_access(conversation_id: str, user: Dict) -> bool:
     """Validate that user has access to the specified conversation."""
@@ -771,10 +743,7 @@ async def _validate_conversation_access(conversation_id: str, user: Dict) -> boo
     return True
 
 
-async def _get_active_insights(
-    conversation_id: str,
-    priority_filter: Optional[str] = None
-) -> List[ProactiveInsight]:
+async def _get_active_insights(conversation_id: str, priority_filter: Optional[str] = None) -> List[ProactiveInsight]:
     """Get active insights for a conversation with optional priority filtering."""
     try:
         # Get insights from proactive intelligence service
@@ -796,8 +765,7 @@ async def _get_active_insights(
 
 
 async def _get_historical_insights(
-    conversation_id: str,
-    priority_filter: Optional[str] = None
+    conversation_id: str, priority_filter: Optional[str] = None
 ) -> List[ProactiveInsight]:
     """Get historical insights for a conversation."""
     try:
@@ -810,10 +778,7 @@ async def _get_historical_insights(
         # Apply priority filter if specified
         if priority_filter:
             priority_enum = InsightPriority(priority_filter)
-            historical_insights = [
-                insight for insight in historical_insights
-                if insight.priority == priority_enum
-            ]
+            historical_insights = [insight for insight in historical_insights if insight.priority == priority_enum]
 
         # Sort by creation time (most recent first)
         historical_insights.sort(key=lambda i: i.created_at, reverse=True)
@@ -835,7 +800,7 @@ async def _get_monitoring_status(conversation_id: str) -> Dict[str, Any]:
             "status": "active" if is_active else "inactive",
             "last_analysis_at": monitoring_state.last_analysis_at if monitoring_state else None,
             "monitoring_duration": monitoring_state.get_monitoring_duration() if monitoring_state else None,
-            "total_insights_generated": monitoring_state.total_insights_generated if monitoring_state else 0
+            "total_insights_generated": monitoring_state.total_insights_generated if monitoring_state else 0,
         }
 
     except Exception as e:
@@ -854,14 +819,13 @@ async def _calculate_performance_summary(conversation_id: str) -> Dict[str, Any]
                 "insights_accepted": 0,
                 "insights_dismissed": 0,
                 "acceptance_rate": 0.0,
-                "average_effectiveness": 0.0
+                "average_effectiveness": 0.0,
             }
 
         accepted_count = sum(1 for insight in insights if insight.acted_upon)
         dismissed_count = sum(1 for insight in insights if insight.dismissed)
         effectiveness_scores = [
-            insight.effectiveness_score for insight in insights
-            if insight.effectiveness_score is not None
+            insight.effectiveness_score for insight in insights if insight.effectiveness_score is not None
         ]
 
         return {
@@ -869,7 +833,9 @@ async def _calculate_performance_summary(conversation_id: str) -> Dict[str, Any]
             "insights_accepted": accepted_count,
             "insights_dismissed": dismissed_count,
             "acceptance_rate": accepted_count / len(insights) if insights else 0.0,
-            "average_effectiveness": sum(effectiveness_scores) / len(effectiveness_scores) if effectiveness_scores else 0.0
+            "average_effectiveness": sum(effectiveness_scores) / len(effectiveness_scores)
+            if effectiveness_scores
+            else 0.0,
         }
 
     except Exception as e:
@@ -890,11 +856,7 @@ async def _get_insight_by_id(insight_id: str) -> Optional[ProactiveInsight]:
         return None
 
 
-async def _process_insight_acceptance(
-    insight: ProactiveInsight,
-    acceptance: InsightAcceptance,
-    user: Dict
-) -> str:
+async def _process_insight_acceptance(insight: ProactiveInsight, acceptance: InsightAcceptance, user: Dict) -> str:
     """Process insight acceptance and return tracking ID."""
     try:
         # Mark insight as acted upon
@@ -915,9 +877,7 @@ async def _process_insight_acceptance(
 
 
 async def _process_insight_dismissal(
-    insight: ProactiveInsight,
-    dismissal_data: InsightDismissalRequest,
-    user: Dict
+    insight: ProactiveInsight, dismissal_data: InsightDismissalRequest, user: Dict
 ) -> str:
     """Process insight dismissal and return tracking ID."""
     try:
@@ -939,14 +899,13 @@ async def _process_insight_dismissal(
 
 
 async def _generate_next_recommendations(
-    insight: ProactiveInsight,
-    acceptance_data: InsightAcceptanceRequest
+    insight: ProactiveInsight, acceptance_data: InsightAcceptanceRequest
 ) -> List[str]:
     """Generate next step recommendations based on accepted insight."""
     recommendations = [
         "Monitor conversation for implementation results",
         "Track lead engagement changes",
-        "Watch for follow-up opportunities"
+        "Watch for follow-up opportunities",
     ]
 
     # Add insight-type specific recommendations
@@ -961,39 +920,37 @@ async def _generate_next_recommendations(
 
 
 async def _generate_improvement_recommendations(
-    insight: ProactiveInsight,
-    dismissal_reason: str,
-    feedback_notes: Optional[str]
+    insight: ProactiveInsight, dismissal_reason: str, feedback_notes: Optional[str]
 ) -> List[str]:
     """Generate improvement recommendations based on dismissal feedback."""
     recommendations = []
 
     if dismissal_reason == "poor_timing":
-        recommendations.extend([
-            "Review conversation stage detection algorithms",
-            "Improve timing prediction models",
-            "Consider conversation flow patterns"
-        ])
+        recommendations.extend(
+            [
+                "Review conversation stage detection algorithms",
+                "Improve timing prediction models",
+                "Consider conversation flow patterns",
+            ]
+        )
     elif dismissal_reason == "not_relevant":
-        recommendations.extend([
-            "Refine relevance detection patterns",
-            "Improve context understanding",
-            "Review conversation classification"
-        ])
+        recommendations.extend(
+            [
+                "Refine relevance detection patterns",
+                "Improve context understanding",
+                "Review conversation classification",
+            ]
+        )
     elif dismissal_reason == "low_quality":
-        recommendations.extend([
-            "Enhance confidence scoring models",
-            "Improve insight generation algorithms",
-            "Review quality thresholds"
-        ])
+        recommendations.extend(
+            ["Enhance confidence scoring models", "Improve insight generation algorithms", "Review quality thresholds"]
+        )
 
     return recommendations
 
 
 async def _execute_monitoring_action(
-    conversation_id: str,
-    control_request: MonitoringControlRequest,
-    user: Dict
+    conversation_id: str, control_request: MonitoringControlRequest, user: Dict
 ) -> Dict[str, Any]:
     """Execute monitoring control action."""
     try:
@@ -1004,7 +961,7 @@ async def _execute_monitoring_action(
             return {
                 "status": "started",
                 "message": f"Proactive monitoring started for conversation {conversation_id}",
-                "monitoring_active": True
+                "monitoring_active": True,
             }
 
         elif action == "stop":
@@ -1012,22 +969,18 @@ async def _execute_monitoring_action(
             return {
                 "status": "stopped",
                 "message": f"Proactive monitoring stopped for conversation {conversation_id}",
-                "monitoring_active": False
+                "monitoring_active": False,
             }
 
         # TODO: Implement pause/resume functionality
         elif action == "pause":
-            return {
-                "status": "paused",
-                "message": "Monitoring paused (not yet implemented)",
-                "monitoring_active": True
-            }
+            return {"status": "paused", "message": "Monitoring paused (not yet implemented)", "monitoring_active": True}
 
         elif action == "resume":
             return {
                 "status": "resumed",
                 "message": "Monitoring resumed (not yet implemented)",
-                "monitoring_active": True
+                "monitoring_active": True,
             }
 
         else:
@@ -1049,7 +1002,7 @@ async def _authenticate_websocket_connection(token: Optional[str]) -> Optional[D
         return {
             "user_id": "user_123",
             "role": "concierge_user",
-            "permissions": ["concierge_read", "concierge_websocket"]
+            "permissions": ["concierge_read", "concierge_websocket"],
         }
 
     except Exception as e:
@@ -1058,11 +1011,7 @@ async def _authenticate_websocket_connection(token: Optional[str]) -> Optional[D
 
 
 async def _handle_concierge_websocket_message(
-    websocket: WebSocket,
-    connection_id: str,
-    message: str,
-    conversation_id: str,
-    user_context: Dict
+    websocket: WebSocket, connection_id: str, message: str, conversation_id: str, user_context: Dict
 ):
     """Handle incoming WebSocket messages from concierge client."""
     try:
@@ -1078,7 +1027,7 @@ async def _handle_concierge_websocket_message(
                 "type": "subscription_confirmed",
                 "insight_types": insight_types,
                 "min_confidence": min_confidence,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
             await websocket.send_text(json.dumps(response))
 
@@ -1090,15 +1039,12 @@ async def _handle_concierge_websocket_message(
                 "conversation_id": conversation_id,
                 "insights": [asdict(insight) for insight in active_insights],
                 "count": len(active_insights),
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
             await websocket.send_text(json.dumps(response))
 
         elif message_type == "ping":
-            response = {
-                "type": "pong",
-                "timestamp": datetime.utcnow().isoformat()
-            }
+            response = {"type": "pong", "timestamp": datetime.utcnow().isoformat()}
             await websocket.send_text(json.dumps(response))
 
     except json.JSONDecodeError:
@@ -1107,12 +1053,7 @@ async def _handle_concierge_websocket_message(
         logger.error(f"Error handling concierge WebSocket message: {e}")
 
 
-async def _publish_insight_action_event(
-    action: str,
-    insight_id: str,
-    conversation_id: Optional[str],
-    user: Dict
-):
+async def _publish_insight_action_event(action: str, insight_id: str, conversation_id: Optional[str], user: Dict):
     """Publish insight action event for analytics."""
     try:
         event_data = {
@@ -1120,14 +1061,11 @@ async def _publish_insight_action_event(
             "insight_id": insight_id,
             "conversation_id": conversation_id,
             "user_id": user.get("user_id"),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
         # Publish through existing event system
-        await event_publisher.publish_dashboard_refresh(
-            component="ai_concierge",
-            data=event_data
-        )
+        await event_publisher.publish_dashboard_refresh(component="ai_concierge", data=event_data)
 
     except Exception as e:
         logger.error(f"Failed to publish insight action event: {e}")

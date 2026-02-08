@@ -7,9 +7,9 @@ types of queries to optimal retrieval strategies and enhance search performance.
 from __future__ import annotations
 
 import re
-from typing import Dict, List, Optional, Set, Tuple, Any
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from src.core.exceptions import RetrievalError
 
@@ -115,53 +115,48 @@ class QueryClassifier:
         """
         patterns = {
             QueryType.FACTUAL: [
-                re.compile(r'\b(what|who|when|where|which)\s+is\b', re.IGNORECASE),
-                re.compile(r'\bdefin(e|ition)\b', re.IGNORECASE),
-                re.compile(r'\bmean(ing)?\s+of\b', re.IGNORECASE),
-                re.compile(r'\b(name|list)\s+of\b', re.IGNORECASE),
-                re.compile(r'\b(how many|how much)\b', re.IGNORECASE),
-                re.compile(r'^\w+\s+is\s+\w+$', re.IGNORECASE),  # Simple "X is Y" patterns
+                re.compile(r"\b(what|who|when|where|which)\s+is\b", re.IGNORECASE),
+                re.compile(r"\bdefin(e|ition)\b", re.IGNORECASE),
+                re.compile(r"\bmean(ing)?\s+of\b", re.IGNORECASE),
+                re.compile(r"\b(name|list)\s+of\b", re.IGNORECASE),
+                re.compile(r"\b(how many|how much)\b", re.IGNORECASE),
+                re.compile(r"^\w+\s+is\s+\w+$", re.IGNORECASE),  # Simple "X is Y" patterns
             ],
-
             QueryType.CONCEPTUAL: [
-                re.compile(r'\b(explain|understand|concept|principle|theory)\b', re.IGNORECASE),
-                re.compile(r'\b(how does|why does)\b', re.IGNORECASE),
-                re.compile(r'\bwhat are the.*(benefit|advantage|principle|concept)\b', re.IGNORECASE),
-                re.compile(r'\b(overview|introduction|basics)\b', re.IGNORECASE),
-                re.compile(r'\b(understand|comprehend|grasp)\b', re.IGNORECASE),
+                re.compile(r"\b(explain|understand|concept|principle|theory)\b", re.IGNORECASE),
+                re.compile(r"\b(how does|why does)\b", re.IGNORECASE),
+                re.compile(r"\bwhat are the.*(benefit|advantage|principle|concept)\b", re.IGNORECASE),
+                re.compile(r"\b(overview|introduction|basics)\b", re.IGNORECASE),
+                re.compile(r"\b(understand|comprehend|grasp)\b", re.IGNORECASE),
             ],
-
             QueryType.PROCEDURAL: [
-                re.compile(r'\b(how to|how can I|how do I)\b', re.IGNORECASE),
-                re.compile(r'\b(step|guide|tutorial|instruction)\b', re.IGNORECASE),
-                re.compile(r'\b(implement|create|build|make|setup|install)\b', re.IGNORECASE),
-                re.compile(r'\b(process|procedure|method|approach)\b', re.IGNORECASE),
-                re.compile(r'\bwalk me through\b', re.IGNORECASE),
+                re.compile(r"\b(how to|how can I|how do I)\b", re.IGNORECASE),
+                re.compile(r"\b(step|guide|tutorial|instruction)\b", re.IGNORECASE),
+                re.compile(r"\b(implement|create|build|make|setup|install)\b", re.IGNORECASE),
+                re.compile(r"\b(process|procedure|method|approach)\b", re.IGNORECASE),
+                re.compile(r"\bwalk me through\b", re.IGNORECASE),
             ],
-
             QueryType.COMPARATIVE: [
-                re.compile(r'\b(vs|versus|compare|comparison|difference|better)\b', re.IGNORECASE),
-                re.compile(r'\b(between|among)\b.*\band\b', re.IGNORECASE),
-                re.compile(r'\b(which is|what is the difference)\b', re.IGNORECASE),
-                re.compile(r'\b(pros and cons|advantages and disadvantages)\b', re.IGNORECASE),
-                re.compile(r'\b(or|either)\b.*\bor\b', re.IGNORECASE),
+                re.compile(r"\b(vs|versus|compare|comparison|difference|better)\b", re.IGNORECASE),
+                re.compile(r"\b(between|among)\b.*\band\b", re.IGNORECASE),
+                re.compile(r"\b(which is|what is the difference)\b", re.IGNORECASE),
+                re.compile(r"\b(pros and cons|advantages and disadvantages)\b", re.IGNORECASE),
+                re.compile(r"\b(or|either)\b.*\bor\b", re.IGNORECASE),
             ],
-
             QueryType.EXPLORATORY: [
-                re.compile(r'\b(explore|discover|find out|learn about)\b', re.IGNORECASE),
-                re.compile(r'\b(anything|something|everything)\s+about\b', re.IGNORECASE),
-                re.compile(r'\b(research|investigate|study)\b', re.IGNORECASE),
-                re.compile(r'\b(what can|what should|what might)\b', re.IGNORECASE),
-                re.compile(r'\b(general|broad|overall)\b.*\b(information|overview)\b', re.IGNORECASE),
+                re.compile(r"\b(explore|discover|find out|learn about)\b", re.IGNORECASE),
+                re.compile(r"\b(anything|something|everything)\s+about\b", re.IGNORECASE),
+                re.compile(r"\b(research|investigate|study)\b", re.IGNORECASE),
+                re.compile(r"\b(what can|what should|what might)\b", re.IGNORECASE),
+                re.compile(r"\b(general|broad|overall)\b.*\b(information|overview)\b", re.IGNORECASE),
             ],
-
             QueryType.TECHNICAL: [
-                re.compile(r'\b(api|algorithm|function|method|class|library)\b', re.IGNORECASE),
-                re.compile(r'\b(error|exception|bug|debug|troubleshoot)\b', re.IGNORECASE),
-                re.compile(r'\b(code|syntax|parameter|argument|variable)\b', re.IGNORECASE),
-                re.compile(r'\b(configuration|setup|deployment|optimization)\b', re.IGNORECASE),
-                re.compile(r'\b(framework|tool|package|module|dependency)\b', re.IGNORECASE),
-            ]
+                re.compile(r"\b(api|algorithm|function|method|class|library)\b", re.IGNORECASE),
+                re.compile(r"\b(error|exception|bug|debug|troubleshoot)\b", re.IGNORECASE),
+                re.compile(r"\b(code|syntax|parameter|argument|variable)\b", re.IGNORECASE),
+                re.compile(r"\b(configuration|setup|deployment|optimization)\b", re.IGNORECASE),
+                re.compile(r"\b(framework|tool|package|module|dependency)\b", re.IGNORECASE),
+            ],
         }
 
         # Add custom patterns if provided
@@ -188,40 +183,127 @@ class QueryClassifier:
         """
         return {
             QueryType.FACTUAL: {
-                'definition', 'meaning', 'is', 'called', 'named', 'refers', 'stands',
-                'capital', 'population', 'number', 'count', 'amount', 'size', 'weight',
-                'date', 'year', 'time', 'location', 'place', 'country', 'city'
+                "definition",
+                "meaning",
+                "is",
+                "called",
+                "named",
+                "refers",
+                "stands",
+                "capital",
+                "population",
+                "number",
+                "count",
+                "amount",
+                "size",
+                "weight",
+                "date",
+                "year",
+                "time",
+                "location",
+                "place",
+                "country",
+                "city",
             },
-
             QueryType.CONCEPTUAL: {
-                'concept', 'principle', 'theory', 'idea', 'notion', 'understanding',
-                'explanation', 'reasoning', 'logic', 'rationale', 'basis', 'foundation',
-                'philosophy', 'approach', 'methodology', 'framework', 'paradigm'
+                "concept",
+                "principle",
+                "theory",
+                "idea",
+                "notion",
+                "understanding",
+                "explanation",
+                "reasoning",
+                "logic",
+                "rationale",
+                "basis",
+                "foundation",
+                "philosophy",
+                "approach",
+                "methodology",
+                "framework",
+                "paradigm",
             },
-
             QueryType.PROCEDURAL: {
-                'how', 'steps', 'procedure', 'process', 'method', 'way', 'guide',
-                'tutorial', 'instruction', 'manual', 'recipe', 'workflow', 'protocol',
-                'create', 'build', 'make', 'implement', 'setup', 'install', 'configure'
+                "how",
+                "steps",
+                "procedure",
+                "process",
+                "method",
+                "way",
+                "guide",
+                "tutorial",
+                "instruction",
+                "manual",
+                "recipe",
+                "workflow",
+                "protocol",
+                "create",
+                "build",
+                "make",
+                "implement",
+                "setup",
+                "install",
+                "configure",
             },
-
             QueryType.COMPARATIVE: {
-                'compare', 'comparison', 'versus', 'difference', 'similar', 'different',
-                'better', 'worse', 'best', 'worst', 'pros', 'cons', 'advantages',
-                'disadvantages', 'benefits', 'drawbacks', 'trade-offs'
+                "compare",
+                "comparison",
+                "versus",
+                "difference",
+                "similar",
+                "different",
+                "better",
+                "worse",
+                "best",
+                "worst",
+                "pros",
+                "cons",
+                "advantages",
+                "disadvantages",
+                "benefits",
+                "drawbacks",
+                "trade-offs",
             },
-
             QueryType.EXPLORATORY: {
-                'explore', 'discover', 'investigate', 'research', 'study', 'examine',
-                'analyze', 'survey', 'overview', 'general', 'broad', 'comprehensive',
-                'anything', 'everything', 'all', 'various', 'multiple', 'diverse'
+                "explore",
+                "discover",
+                "investigate",
+                "research",
+                "study",
+                "examine",
+                "analyze",
+                "survey",
+                "overview",
+                "general",
+                "broad",
+                "comprehensive",
+                "anything",
+                "everything",
+                "all",
+                "various",
+                "multiple",
+                "diverse",
             },
-
             QueryType.TECHNICAL: {
-                'code', 'programming', 'software', 'development', 'api', 'function',
-                'method', 'algorithm', 'implementation', 'syntax', 'error', 'debug',
-                'optimization', 'performance', 'configuration', 'deployment', 'testing'
-            }
+                "code",
+                "programming",
+                "software",
+                "development",
+                "api",
+                "function",
+                "method",
+                "algorithm",
+                "implementation",
+                "syntax",
+                "error",
+                "debug",
+                "optimization",
+                "performance",
+                "configuration",
+                "deployment",
+                "testing",
+            },
         }
 
     def _extract_features(self, query: str) -> Dict[str, Any]:
@@ -237,26 +319,26 @@ class QueryClassifier:
         words = query_lower.split()
 
         features = {
-            'length': len(query),
-            'word_count': len(words),
-            'has_question_mark': '?' in query,
-            'starts_with_wh': words[0] in {'what', 'who', 'when', 'where', 'why', 'which', 'how'} if words else False,
-            'pattern_matches': {},
-            'keyword_matches': {},
+            "length": len(query),
+            "word_count": len(words),
+            "has_question_mark": "?" in query,
+            "starts_with_wh": words[0] in {"what", "who", "when", "where", "why", "which", "how"} if words else False,
+            "pattern_matches": {},
+            "keyword_matches": {},
         }
 
         # Pattern-based features
         if self.config.use_patterns:
             for query_type, patterns in self._patterns.items():
                 matches = sum(1 for pattern in patterns if pattern.search(query))
-                features['pattern_matches'][query_type.value] = matches
+                features["pattern_matches"][query_type.value] = matches
 
         # Keyword-based features
         if self.config.use_keywords:
             query_words = set(words)
             for query_type, keywords in self._keywords.items():
                 matches = len(query_words.intersection(keywords))
-                features['keyword_matches'][query_type.value] = matches
+                features["keyword_matches"][query_type.value] = matches
 
         return features
 
@@ -273,7 +355,7 @@ class QueryClassifier:
 
         # Pattern-based scoring
         if self.config.use_patterns:
-            pattern_matches = features['pattern_matches']
+            pattern_matches = features["pattern_matches"]
             max_pattern_matches = max(pattern_matches.values()) if pattern_matches.values() else 1
             if max_pattern_matches == 0:
                 max_pattern_matches = 1
@@ -284,7 +366,7 @@ class QueryClassifier:
 
         # Keyword-based scoring
         if self.config.use_keywords:
-            keyword_matches = features['keyword_matches']
+            keyword_matches = features["keyword_matches"]
             max_keyword_matches = max(keyword_matches.values()) if keyword_matches.values() else 1
             if max_keyword_matches == 0:
                 max_keyword_matches = 1
@@ -295,7 +377,7 @@ class QueryClassifier:
 
         # Length-based scoring
         if self.config.use_length:
-            word_count = features['word_count']
+            word_count = features["word_count"]
             # Heuristic: short queries tend to be factual, longer ones conceptual/exploratory
             if word_count <= 3:
                 scores[QueryType.FACTUAL] += 0.3 * self.config.length_weight
@@ -307,12 +389,12 @@ class QueryClassifier:
                 scores[QueryType.EXPLORATORY] += 0.3 * self.config.length_weight
 
         # Question mark bonus for factual queries
-        if features['has_question_mark']:
+        if features["has_question_mark"]:
             scores[QueryType.FACTUAL] += 0.1
             scores[QueryType.PROCEDURAL] += 0.05
 
         # WH-word patterns
-        if features['starts_with_wh']:
+        if features["starts_with_wh"]:
             scores[QueryType.FACTUAL] += 0.2
             scores[QueryType.CONCEPTUAL] += 0.1
 
@@ -329,76 +411,88 @@ class QueryClassifier:
             Dictionary of recommended strategies with weights
         """
         recommendations = {
-            'dense_retrieval_weight': 0.5,
-            'sparse_retrieval_weight': 0.5,
-            'query_expansion': 0.0,
-            'hyde_generation': 0.0,
-            'multi_query': 0.0,
-            'reranking': 0.5
+            "dense_retrieval_weight": 0.5,
+            "sparse_retrieval_weight": 0.5,
+            "query_expansion": 0.0,
+            "hyde_generation": 0.0,
+            "multi_query": 0.0,
+            "reranking": 0.5,
         }
 
         # Adjust based on query type
         if query_type == QueryType.FACTUAL:
-            recommendations.update({
-                'dense_retrieval_weight': 0.3,
-                'sparse_retrieval_weight': 0.7,  # Better for exact matches
-                'query_expansion': 0.2,
-                'hyde_generation': 0.1,
-                'multi_query': 0.2,
-            })
+            recommendations.update(
+                {
+                    "dense_retrieval_weight": 0.3,
+                    "sparse_retrieval_weight": 0.7,  # Better for exact matches
+                    "query_expansion": 0.2,
+                    "hyde_generation": 0.1,
+                    "multi_query": 0.2,
+                }
+            )
 
         elif query_type == QueryType.CONCEPTUAL:
-            recommendations.update({
-                'dense_retrieval_weight': 0.7,  # Better for semantic understanding
-                'sparse_retrieval_weight': 0.3,
-                'query_expansion': 0.6,
-                'hyde_generation': 0.8,  # Very beneficial for concepts
-                'multi_query': 0.4,
-            })
+            recommendations.update(
+                {
+                    "dense_retrieval_weight": 0.7,  # Better for semantic understanding
+                    "sparse_retrieval_weight": 0.3,
+                    "query_expansion": 0.6,
+                    "hyde_generation": 0.8,  # Very beneficial for concepts
+                    "multi_query": 0.4,
+                }
+            )
 
         elif query_type == QueryType.PROCEDURAL:
-            recommendations.update({
-                'dense_retrieval_weight': 0.6,
-                'sparse_retrieval_weight': 0.4,
-                'query_expansion': 0.7,  # Expand with procedural terms
-                'hyde_generation': 0.6,
-                'multi_query': 0.5,
-                'reranking': 0.7,  # Important for step ordering
-            })
+            recommendations.update(
+                {
+                    "dense_retrieval_weight": 0.6,
+                    "sparse_retrieval_weight": 0.4,
+                    "query_expansion": 0.7,  # Expand with procedural terms
+                    "hyde_generation": 0.6,
+                    "multi_query": 0.5,
+                    "reranking": 0.7,  # Important for step ordering
+                }
+            )
 
         elif query_type == QueryType.COMPARATIVE:
-            recommendations.update({
-                'dense_retrieval_weight': 0.6,
-                'sparse_retrieval_weight': 0.4,
-                'query_expansion': 0.8,  # Expand to find all comparison points
-                'hyde_generation': 0.5,
-                'multi_query': 0.8,  # Generate queries for each item
-                'reranking': 0.8,  # Critical for comparison relevance
-            })
+            recommendations.update(
+                {
+                    "dense_retrieval_weight": 0.6,
+                    "sparse_retrieval_weight": 0.4,
+                    "query_expansion": 0.8,  # Expand to find all comparison points
+                    "hyde_generation": 0.5,
+                    "multi_query": 0.8,  # Generate queries for each item
+                    "reranking": 0.8,  # Critical for comparison relevance
+                }
+            )
 
         elif query_type == QueryType.EXPLORATORY:
-            recommendations.update({
-                'dense_retrieval_weight': 0.7,
-                'sparse_retrieval_weight': 0.3,
-                'query_expansion': 0.9,  # Maximum expansion for exploration
-                'hyde_generation': 0.7,
-                'multi_query': 0.9,  # Multiple perspectives
-                'reranking': 0.6,
-            })
+            recommendations.update(
+                {
+                    "dense_retrieval_weight": 0.7,
+                    "sparse_retrieval_weight": 0.3,
+                    "query_expansion": 0.9,  # Maximum expansion for exploration
+                    "hyde_generation": 0.7,
+                    "multi_query": 0.9,  # Multiple perspectives
+                    "reranking": 0.6,
+                }
+            )
 
         elif query_type == QueryType.TECHNICAL:
-            recommendations.update({
-                'dense_retrieval_weight': 0.4,
-                'sparse_retrieval_weight': 0.6,  # Better for technical terms
-                'query_expansion': 0.5,
-                'hyde_generation': 0.4,
-                'multi_query': 0.3,
-                'reranking': 0.8,  # Important for technical accuracy
-            })
+            recommendations.update(
+                {
+                    "dense_retrieval_weight": 0.4,
+                    "sparse_retrieval_weight": 0.6,  # Better for technical terms
+                    "query_expansion": 0.5,
+                    "hyde_generation": 0.4,
+                    "multi_query": 0.3,
+                    "reranking": 0.8,  # Important for technical accuracy
+                }
+            )
 
         # Scale by confidence
         for key in recommendations:
-            if key != 'dense_retrieval_weight' and key != 'sparse_retrieval_weight':
+            if key != "dense_retrieval_weight" and key != "sparse_retrieval_weight":
                 recommendations[key] *= confidence
 
         return recommendations
@@ -430,7 +524,9 @@ class QueryClassifier:
             confidence = scores[best_type]
 
             # Normalize confidence to [0, 1]
-            max_possible_score = self.config.pattern_weight + self.config.keyword_weight + self.config.length_weight + 0.3  # Extra bonuses
+            max_possible_score = (
+                self.config.pattern_weight + self.config.keyword_weight + self.config.length_weight + 0.3
+            )  # Extra bonuses
             confidence = min(confidence / max_possible_score, 1.0)
 
             # Use fallback if confidence too low
@@ -442,10 +538,7 @@ class QueryClassifier:
             recommendations = self._get_recommendations(best_type, confidence)
 
             return ClassificationResult(
-                query_type=best_type,
-                confidence=confidence,
-                features=features,
-                recommendations=recommendations
+                query_type=best_type, confidence=confidence, features=features, recommendations=recommendations
             )
 
         except Exception as e:
@@ -458,18 +551,18 @@ class QueryClassifier:
             Dictionary with classifier statistics
         """
         return {
-            'config': {
-                'min_confidence': self.config.min_confidence,
-                'use_patterns': self.config.use_patterns,
-                'use_keywords': self.config.use_keywords,
-                'use_length': self.config.use_length,
-                'weights': {
-                    'pattern': self.config.pattern_weight,
-                    'keyword': self.config.keyword_weight,
-                    'length': self.config.length_weight
-                }
+            "config": {
+                "min_confidence": self.config.min_confidence,
+                "use_patterns": self.config.use_patterns,
+                "use_keywords": self.config.use_keywords,
+                "use_length": self.config.use_length,
+                "weights": {
+                    "pattern": self.config.pattern_weight,
+                    "keyword": self.config.keyword_weight,
+                    "length": self.config.length_weight,
+                },
             },
-            'patterns': {query_type.value: len(patterns) for query_type, patterns in self._patterns.items()},
-            'keywords': {query_type.value: len(keywords) for query_type, keywords in self._keywords.items()},
-            'query_types': [qt.value for qt in QueryType]
+            "patterns": {query_type.value: len(patterns) for query_type, patterns in self._patterns.items()},
+            "keywords": {query_type.value: len(keywords) for query_type, keywords in self._keywords.items()},
+            "query_types": [qt.value for qt in QueryType],
         }

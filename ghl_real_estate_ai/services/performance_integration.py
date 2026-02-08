@@ -20,38 +20,40 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, TypeVar
 from functools import wraps
+from typing import Any, Callable, Dict, List, Optional, TypeVar
+
+from .ai_request_batcher import (
+    AIRequestBatcher,
+    RequestPriority,
+    batched_ai_call,
+    get_ai_request_batcher,
+)
 
 # Import optimized services
 from .optimized_cache_service import (
-    EnhancedCacheService,
-    get_enhanced_cache_service,
     CachePriority,
+    EnhancedCacheService,
     cached,
-)
-from .ai_request_batcher import (
-    AIRequestBatcher,
-    get_ai_request_batcher,
-    RequestPriority,
-    batched_ai_call,
+    get_enhanced_cache_service,
 )
 from .performance_monitor import (
     PerformanceMonitor,
-    get_performance_monitor,
     PerformanceThresholds,
+    get_performance_monitor,
     monitor_api_latency,
     monitor_db_query,
 )
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 @dataclass
 class PerformanceStatus:
     """Current system performance status"""
+
     status: str  # healthy, warning, critical
     cache_hit_rate: float
     api_p95_ms: float
@@ -180,21 +182,15 @@ class PerformanceIntegration:
             self.monitor.record_cache_operation(hit=False)
         return value
 
-    async def cache_set(self,
-                        key: str,
-                        value: Any,
-                        ttl: int = 300,
-                        priority: str = "normal") -> bool:
+    async def cache_set(self, key: str, value: Any, ttl: int = 300, priority: str = "normal") -> bool:
         """Set value in cache with priority-based TTL"""
         if not self.cache:
             return False
         return await self.cache.set_with_priority(key, value, ttl, priority)
 
-    async def cache_get_or_compute(self,
-                                   key: str,
-                                   compute_func: Callable,
-                                   ttl: int = 300,
-                                   priority: str = "normal") -> Any:
+    async def cache_get_or_compute(
+        self, key: str, compute_func: Callable, ttl: int = 300, priority: str = "normal"
+    ) -> Any:
         """
         Get from cache or compute and cache the result
 
@@ -235,11 +231,13 @@ class PerformanceIntegration:
     # AI REQUEST METHODS
     # ========================================================================
 
-    async def ai_query(self,
-                       prompt: str,
-                       priority: RequestPriority = RequestPriority.NORMAL,
-                       max_tokens: int = 1024,
-                       skip_cache: bool = False) -> str:
+    async def ai_query(
+        self,
+        prompt: str,
+        priority: RequestPriority = RequestPriority.NORMAL,
+        max_tokens: int = 1024,
+        skip_cache: bool = False,
+    ) -> str:
         """
         Submit AI query with automatic batching and caching
 
@@ -267,10 +265,7 @@ class PerformanceIntegration:
 
         return response.content
 
-    async def cached_ai_query(self,
-                              prompt: str,
-                              context_id: str,
-                              ttl: int = 3600) -> str:
+    async def cached_ai_query(self, prompt: str, context_id: str, ttl: int = 3600) -> str:
         """
         AI query with additional L1/L2 caching by context
 
@@ -397,6 +392,7 @@ async def shutdown_performance_services():
 # DECORATORS FOR EASY SERVICE INTEGRATION
 # ============================================================================
 
+
 def optimized_endpoint(endpoint_name: str = ""):
     """
     Decorator for optimizing API endpoints with caching and monitoring
@@ -407,6 +403,7 @@ def optimized_endpoint(endpoint_name: str = ""):
             # Your endpoint logic
             pass
     """
+
     def decorator(func: Callable):
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -425,6 +422,7 @@ def optimized_endpoint(endpoint_name: str = ""):
                 integration.record_api_latency(latency_ms, endpoint_name, success)
 
         return wrapper
+
     return decorator
 
 
@@ -438,6 +436,7 @@ def cached_operation(cache_key_prefix: str, ttl: int = 300, priority: str = "nor
             # Expensive computation
             return score
     """
+
     def decorator(func: Callable):
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -461,6 +460,7 @@ def cached_operation(cache_key_prefix: str, ttl: int = 300, priority: str = "nor
             return result
 
         return wrapper
+
     return decorator
 
 
@@ -469,6 +469,7 @@ def cached_operation(cache_key_prefix: str, ttl: int = 300, priority: str = "nor
 # ============================================================================
 
 if __name__ == "__main__":
+
     async def demo_performance_integration():
         """Demonstrate performance integration usage"""
 
@@ -491,24 +492,15 @@ if __name__ == "__main__":
 
         # Test get_or_compute
         print("\n3. Testing cache get_or_compute...")
+
         async def expensive_operation():
             await asyncio.sleep(0.1)  # Simulate work
             return {"computed": "value"}
 
-        result = await integration.cache_get_or_compute(
-            "computed_key",
-            expensive_operation,
-            ttl=300,
-            priority="normal"
-        )
+        result = await integration.cache_get_or_compute("computed_key", expensive_operation, ttl=300, priority="normal")
         print(f"   First call (computed): {result}")
 
-        result = await integration.cache_get_or_compute(
-            "computed_key",
-            expensive_operation,
-            ttl=300,
-            priority="normal"
-        )
+        result = await integration.cache_get_or_compute("computed_key", expensive_operation, ttl=300, priority="normal")
         print(f"   Second call (cached): {result}")
 
         # Test monitoring
@@ -528,7 +520,7 @@ if __name__ == "__main__":
         print("\n6. Getting health report...")
         report = await integration.get_health_report()
         print(f"   Health Status: {report['status']}")
-        if report.get('issues'):
+        if report.get("issues"):
             print(f"   Issues: {report['issues']}")
 
         # Shutdown

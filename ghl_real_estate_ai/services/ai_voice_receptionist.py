@@ -17,9 +17,7 @@ from typing import Any, Dict, List, Optional
 class AIVoiceReceptionist:
     """Service for AI-powered phone reception"""
 
-    def handle_call(
-        self, caller_id: str = None, call_reason: str = None
-    ) -> Dict[str, Any]:
+    def handle_call(self, caller_id: str = None, call_reason: str = None) -> Dict[str, Any]:
         """
         Handle incoming phone call with AI
 
@@ -90,11 +88,7 @@ class AIVoiceReceptionist:
         reason_lower = reason.lower()
         if "property" in reason_lower or "listing" in reason_lower:
             return "property_inquiry"
-        elif (
-            "showing" in reason_lower
-            or "view" in reason_lower
-            or "tour" in reason_lower
-        ):
+        elif "showing" in reason_lower or "view" in reason_lower or "tour" in reason_lower:
             return "schedule_showing"
         else:
             return "general_question"
@@ -188,9 +182,9 @@ def demo_voice_receptionist():
     for call in calls:
         result = service.handle_call(call["caller_id"], call["call_reason"])
 
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
         print(f"CALL: {result['call_id']}")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
         print(f"Caller: {result['caller_id']}")
         print(f"Intent: {result['intent']}")
         print(f"Summary: {result['conversation_summary']}")
@@ -206,9 +200,9 @@ def demo_voice_receptionist():
 
     # Analytics
     analytics = service.get_call_analytics()
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     print("24-HOUR ANALYTICS")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     print(f"Total Calls: {analytics['total_calls']}")
     print(f"AI Handled: {analytics['calls_handled']}")
     print(f"Leads Qualified: {analytics['leads_qualified']}")

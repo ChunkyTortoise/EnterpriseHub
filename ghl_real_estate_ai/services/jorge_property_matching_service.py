@@ -16,21 +16,31 @@ Features:
 import asyncio
 import json
 import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import asdict
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.ml.neural_property_matcher import NeuralPropertyMatcher
+from ghl_real_estate_ai.models.jorge_property_models import (
+    ConfidenceLevel,
+    LeadPropertyPreferences,
+    MatchingAlgorithm,
+    MatchingPerformanceMetrics,
+    MatchReasoning,
+    Property,
+    PropertyFilters,
+    PropertyMatch,
+    PropertyMatchRequest,
+    PropertyMatchResponse,
+)
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.services.enhanced_smart_lead_scorer import (
-    EnhancedSmartLeadScorer, LeadScoreBreakdown, LeadPriority, BuyingStage
-)
-from ghl_real_estate_ai.ml.neural_property_matcher import NeuralPropertyMatcher
-from ghl_real_estate_ai.models.jorge_property_models import (
-    Property, PropertyMatch, PropertyMatchRequest, PropertyMatchResponse,
-    LeadPropertyPreferences, MatchReasoning, ConfidenceLevel, MatchingAlgorithm,
-    PropertyFilters, MatchingPerformanceMetrics
+    BuyingStage,
+    EnhancedSmartLeadScorer,
+    LeadPriority,
+    LeadScoreBreakdown,
 )
 
 logger = get_logger(__name__)
@@ -50,10 +60,12 @@ class JorgePropertyMatchingService:
     Jorge's market-specific business intelligence.
     """
 
-    def __init__(self,
-                 enhanced_scorer: Optional[EnhancedSmartLeadScorer] = None,
-                 neural_matcher: Optional[NeuralPropertyMatcher] = None,
-                 claude_assistant: Optional[ClaudeAssistant] = None):
+    def __init__(
+        self,
+        enhanced_scorer: Optional[EnhancedSmartLeadScorer] = None,
+        neural_matcher: Optional[NeuralPropertyMatcher] = None,
+        claude_assistant: Optional[ClaudeAssistant] = None,
+    ):
         """Initialize the property matching service."""
         self.enhanced_scorer = enhanced_scorer or EnhancedSmartLeadScorer()
         self.neural_matcher = neural_matcher  # Will be initialized lazily if available
@@ -61,11 +73,11 @@ class JorgePropertyMatchingService:
 
         # Performance tracking
         self.performance_metrics = {
-            'total_matches_generated': 0,
-            'avg_processing_time_ms': 0,
-            'neural_inference_time_ms': 0,
-            'rules_processing_time_ms': 0,
-            'cache_hit_rate': 0.0
+            "total_matches_generated": 0,
+            "avg_processing_time_ms": 0,
+            "neural_inference_time_ms": 0,
+            "rules_processing_time_ms": 0,
+            "cache_hit_rate": 0.0,
         }
 
         # Rancho Cucamonga market intelligence
@@ -76,48 +88,42 @@ class JorgePropertyMatchingService:
         return {
             # Neighborhood priorities (Jorge's expertise)
             "premium_neighborhoods": [
-                "Alta Loma", "North Rancho Cucamonga", "Victoria Arbors",
-                "Red Hill Country Club", "Etiwanda Heights"
+                "Alta Loma",
+                "North Rancho Cucamonga",
+                "Victoria Arbors",
+                "Red Hill Country Club",
+                "Etiwanda Heights",
             ],
-            "emerging_neighborhoods": [
-                "Central Rancho", "South Rancho", "Terra Vista"
-            ],
-            "family_neighborhoods": [
-                "Deer Creek", "Los Osos", "Victoria Gardens Area"
-            ],
-
+            "emerging_neighborhoods": ["Central Rancho", "South Rancho", "Terra Vista"],
+            "family_neighborhoods": ["Deer Creek", "Los Osos", "Victoria Gardens Area"],
             # School district insights
             "top_school_districts": {
                 "Chaffey Joint Union": {"rating": 8, "premium": 1.15},
                 "Cucamonga Elementary": {"rating": 9, "premium": 1.25},
-                "Central Elementary": {"rating": 7, "premium": 1.05}
+                "Central Elementary": {"rating": 7, "premium": 1.05},
             },
-
             # Property type preferences by price range
             "price_segment_preferences": {
                 "luxury": {"min": 900000, "types": ["single_family", "luxury_home"]},
                 "upper": {"min": 650000, "max": 899999, "types": ["single_family", "townhome"]},
                 "middle": {"min": 450000, "max": 649999, "types": ["single_family", "townhome", "condo"]},
-                "starter": {"max": 449999, "types": ["townhome", "condo"]}
+                "starter": {"max": 449999, "types": ["townhome", "condo"]},
             },
-
             # Market timing factors
             "seasonal_factors": {
                 "spring": 1.2,  # High demand
                 "summer": 1.1,  # Good demand
-                "fall": 0.9,    # Cooling
-                "winter": 0.8   # Slower market
+                "fall": 0.9,  # Cooling
+                "winter": 0.8,  # Slower market
             },
-
             # Jorge's negotiation insights
             "negotiation_factors": {
                 "days_on_market_advantage": {15: "strong", 30: "good", 60: "opportunity", 90: "motivated"},
-                "inventory_level_impact": {"low": 1.1, "normal": 1.0, "high": 0.9}
-            }
+                "inventory_level_impact": {"low": 1.1, "normal": 1.0, "high": 0.9},
+            },
         }
 
-    async def find_matches_for_lead(self,
-                                   request: PropertyMatchRequest) -> PropertyMatchResponse:
+    async def find_matches_for_lead(self, request: PropertyMatchRequest) -> PropertyMatchResponse:
         """
         Find optimal property matches for a lead using hybrid AI approach.
 
@@ -155,17 +161,14 @@ class JorgePropertyMatchingService:
 
             # Step 4: Generate hybrid matches (neural + rules)
             matches = await self._generate_hybrid_matches(
-                request.lead_id, request.lead_data, lead_context,
-                preferences, properties, request.algorithm
+                request.lead_id, request.lead_data, lead_context, preferences, properties, request.algorithm
             )
 
             # Step 5: Rank and limit results
             top_matches = await self._rank_and_limit_matches(matches, request.max_results)
 
             # Step 6: Generate AI explanations for top matches
-            enhanced_matches = await self._enhance_matches_with_explanations(
-                top_matches, lead_context, preferences
-            )
+            enhanced_matches = await self._enhance_matches_with_explanations(top_matches, lead_context, preferences)
 
             # Step 7: Create response
             response = await self._create_match_response(
@@ -178,7 +181,9 @@ class JorgePropertyMatchingService:
             # Update performance metrics
             self._update_performance_metrics(start_time, False)
 
-            logger.info(f"Generated {len(enhanced_matches)} matches for lead {request.lead_id} in {response.processing_time_ms}ms")
+            logger.info(
+                f"Generated {len(enhanced_matches)} matches for lead {request.lead_id} in {response.processing_time_ms}ms"
+            )
             return response
 
         except Exception as e:
@@ -194,21 +199,28 @@ class JorgePropertyMatchingService:
             logger.warning(f"Enhanced scorer failed for lead {lead_id}: {e}")
             # Return minimal context
             return LeadScoreBreakdown(
-                intent_score=50.0, financial_readiness=50.0, timeline_urgency=50.0,
-                engagement_quality=50.0, referral_potential=50.0, local_connection=50.0,
-                overall_score=50.0, priority_level=LeadPriority.MEDIUM,
+                intent_score=50.0,
+                financial_readiness=50.0,
+                timeline_urgency=50.0,
+                engagement_quality=50.0,
+                referral_potential=50.0,
+                local_connection=50.0,
+                overall_score=50.0,
+                priority_level=LeadPriority.MEDIUM,
                 buying_stage=BuyingStage.GETTING_SERIOUS,
                 recommended_actions=["Schedule consultation"],
                 jorge_talking_points=["Discuss property preferences"],
-                risk_factors=["Limited lead data available"]
+                risk_factors=["Limited lead data available"],
             )
 
-    async def _extract_property_preferences(self,
-                                          lead_id: str,
-                                          tenant_id: str,
-                                          lead_data: Dict[str, Any],
-                                          lead_context: LeadScoreBreakdown,
-                                          explicit_preferences: Optional[LeadPropertyPreferences] = None) -> LeadPropertyPreferences:
+    async def _extract_property_preferences(
+        self,
+        lead_id: str,
+        tenant_id: str,
+        lead_data: Dict[str, Any],
+        lead_context: LeadScoreBreakdown,
+        explicit_preferences: Optional[LeadPropertyPreferences] = None,
+    ) -> LeadPropertyPreferences:
         """Extract property preferences from lead data and context."""
         cache_key = f"jorge:tenant:{tenant_id}:preferences:{lead_id}"
 
@@ -229,9 +241,9 @@ class JorgePropertyMatchingService:
 
         return prefs
 
-    async def _ai_extract_preferences(self,
-                                    lead_data: Dict[str, Any],
-                                    lead_context: LeadScoreBreakdown) -> LeadPropertyPreferences:
+    async def _ai_extract_preferences(
+        self, lead_data: Dict[str, Any], lead_context: LeadScoreBreakdown
+    ) -> LeadPropertyPreferences:
         """Use AI to extract preferences from conversation history and lead data."""
         try:
             # Create prompt for preference extraction
@@ -247,9 +259,7 @@ class JorgePropertyMatchingService:
             logger.warning(f"AI preference extraction failed: {e}")
             return self._create_fallback_preferences(lead_context)
 
-    def _build_preference_extraction_prompt(self,
-                                           lead_data: Dict[str, Any],
-                                           lead_context: LeadScoreBreakdown) -> str:
+    def _build_preference_extraction_prompt(self, lead_data: Dict[str, Any], lead_context: LeadScoreBreakdown) -> str:
         """Build prompt for AI preference extraction."""
         return f"""
         Extract property preferences for this Rancho Cucamonga home buyer:
@@ -261,9 +271,9 @@ class JorgePropertyMatchingService:
         - Financial Readiness: {lead_context.financial_readiness}/100
         - Timeline Urgency: {lead_context.timeline_urgency}/100
 
-        Conversation History: {lead_data.get('conversation_history', 'No conversation data')}
-        Search Behavior: {lead_data.get('search_behavior', {})}
-        Budget Hints: {lead_data.get('budget_hints', 'Not specified')}
+        Conversation History: {lead_data.get("conversation_history", "No conversation data")}
+        Search Behavior: {lead_data.get("search_behavior", {})}
+        Budget Hints: {lead_data.get("budget_hints", "Not specified")}
 
         Extract preferences in this JSON format:
         {{
@@ -282,14 +292,13 @@ class JorgePropertyMatchingService:
         Victoria Arbors, Red Hill Country Club, Central Rancho, South Rancho.
         """
 
-    def _parse_ai_preferences(self,
-                             ai_response: str,
-                             lead_context: LeadScoreBreakdown) -> LeadPropertyPreferences:
+    def _parse_ai_preferences(self, ai_response: str, lead_context: LeadScoreBreakdown) -> LeadPropertyPreferences:
         """Parse AI response into LeadPropertyPreferences."""
         try:
             # Extract JSON from AI response
             import re
-            json_match = re.search(r'\{.*\}', ai_response, re.DOTALL)
+
+            json_match = re.search(r"\{.*\}", ai_response, re.DOTALL)
             if json_match:
                 prefs_data = json.loads(json_match.group())
                 return LeadPropertyPreferences(**prefs_data)
@@ -323,7 +332,7 @@ class JorgePropertyMatchingService:
             preferred_bedrooms=3,
             min_bathrooms=2.0,
             preferred_neighborhoods=["Alta Loma", "North Rancho Cucamonga"],
-            timeline_urgency=urgency
+            timeline_urgency=urgency,
         )
 
     async def _get_filtered_inventory(self, tenant_id: str, preferences: LeadPropertyPreferences) -> List[Property]:
@@ -340,18 +349,17 @@ class JorgePropertyMatchingService:
         properties = await self._get_mock_inventory(tenant_id, preferences)
 
         # Cache filtered inventory
-        await cache_service.set(
-            cache_key,
-            json.dumps([p.dict() for p in properties]),
-            ttl=CACHE_TTL_INVENTORY
-        )
+        await cache_service.set(cache_key, json.dumps([p.dict() for p in properties]), ttl=CACHE_TTL_INVENTORY)
 
         return properties
 
     async def _get_mock_inventory(self, tenant_id: str, preferences: LeadPropertyPreferences) -> List[Property]:
         """Get mock inventory for development/demo."""
         from ghl_real_estate_ai.models.jorge_property_models import (
-            PropertyAddress, PropertyFeatures, PropertyType, SchoolInfo
+            PropertyAddress,
+            PropertyFeatures,
+            PropertyType,
+            SchoolInfo,
         )
 
         # Mock properties in Rancho Cucamonga
@@ -359,86 +367,119 @@ class JorgePropertyMatchingService:
             Property(
                 id="prop_001",
                 tenant_id=tenant_id,
-                address=PropertyAddress(
-                    street="4512 Duval Street",
-                    zip_code="91737",
-                    neighborhood="Alta Loma"
-                ),
+                address=PropertyAddress(street="4512 Duval Street", zip_code="91737", neighborhood="Alta Loma"),
                 price=825000,
                 features=PropertyFeatures(
-                    bedrooms=4, bathrooms=3.0, sqft=2650, lot_size_sqft=8500,
-                    garage_spaces=2, year_built=2018, has_pool=True,
-                    updated_kitchen=True, granite_counters=True
+                    bedrooms=4,
+                    bathrooms=3.0,
+                    sqft=2650,
+                    lot_size_sqft=8500,
+                    garage_spaces=2,
+                    year_built=2018,
+                    has_pool=True,
+                    updated_kitchen=True,
+                    granite_counters=True,
                 ),
                 property_type=PropertyType.SINGLE_FAMILY,
                 days_on_market=12,
                 price_per_sqft=311.32,
                 schools=[
-                    SchoolInfo(name="Banyan Elementary", type="elementary",
-                              rating=9, distance_miles=0.5, district="Cucamonga Elementary"),
-                    SchoolInfo(name="Ayala High School", type="high",
-                              rating=8, distance_miles=1.2, district="Chaffey Joint Union")
+                    SchoolInfo(
+                        name="Banyan Elementary",
+                        type="elementary",
+                        rating=9,
+                        distance_miles=0.5,
+                        district="Cucamonga Elementary",
+                    ),
+                    SchoolInfo(
+                        name="Ayala High School",
+                        type="high",
+                        rating=8,
+                        distance_miles=1.2,
+                        district="Chaffey Joint Union",
+                    ),
                 ],
                 commute_to_la=45,
                 walkability_score=72,
                 listing_date=datetime.now() - timedelta(days=12),
                 images=["https://example.com/prop1_1.jpg"],
-                virtual_tour_url="https://example.com/tour1"
+                virtual_tour_url="https://example.com/tour1",
             ),
             Property(
                 id="prop_002",
                 tenant_id=tenant_id,
                 address=PropertyAddress(
-                    street="8765 Victoria Avenue",
-                    zip_code="91739",
-                    neighborhood="Victoria Arbors"
+                    street="8765 Victoria Avenue", zip_code="91739", neighborhood="Victoria Arbors"
                 ),
                 price=695000,
                 features=PropertyFeatures(
-                    bedrooms=3, bathrooms=2.5, sqft=2200, lot_size_sqft=7000,
-                    garage_spaces=2, year_built=2015, has_spa=True,
-                    fireplace=True, hardwood_floors=True
+                    bedrooms=3,
+                    bathrooms=2.5,
+                    sqft=2200,
+                    lot_size_sqft=7000,
+                    garage_spaces=2,
+                    year_built=2015,
+                    has_spa=True,
+                    fireplace=True,
+                    hardwood_floors=True,
                 ),
                 property_type=PropertyType.SINGLE_FAMILY,
                 days_on_market=25,
                 price_per_sqft=315.91,
                 schools=[
-                    SchoolInfo(name="Victoria Elementary", type="elementary",
-                              rating=8, distance_miles=0.3, district="Central Elementary"),
-                    SchoolInfo(name="Los Osos High School", type="high",
-                              rating=7, distance_miles=0.8, district="Chaffey Joint Union")
+                    SchoolInfo(
+                        name="Victoria Elementary",
+                        type="elementary",
+                        rating=8,
+                        distance_miles=0.3,
+                        district="Central Elementary",
+                    ),
+                    SchoolInfo(
+                        name="Los Osos High School",
+                        type="high",
+                        rating=7,
+                        distance_miles=0.8,
+                        district="Chaffey Joint Union",
+                    ),
                 ],
                 commute_to_la=50,
                 walkability_score=65,
                 listing_date=datetime.now() - timedelta(days=25),
-                images=["https://example.com/prop2_1.jpg"]
+                images=["https://example.com/prop2_1.jpg"],
             ),
             Property(
                 id="prop_003",
                 tenant_id=tenant_id,
-                address=PropertyAddress(
-                    street="1234 Terra Vista Drive",
-                    zip_code="91737",
-                    neighborhood="Terra Vista"
-                ),
+                address=PropertyAddress(street="1234 Terra Vista Drive", zip_code="91737", neighborhood="Terra Vista"),
                 price=575000,
                 features=PropertyFeatures(
-                    bedrooms=3, bathrooms=2.0, sqft=1850, lot_size_sqft=6000,
-                    garage_spaces=2, year_built=2010, has_pool=False,
-                    updated_bathrooms=True, stainless_appliances=True
+                    bedrooms=3,
+                    bathrooms=2.0,
+                    sqft=1850,
+                    lot_size_sqft=6000,
+                    garage_spaces=2,
+                    year_built=2010,
+                    has_pool=False,
+                    updated_bathrooms=True,
+                    stainless_appliances=True,
                 ),
                 property_type=PropertyType.TOWNHOME,
                 days_on_market=8,
                 price_per_sqft=310.81,
                 schools=[
-                    SchoolInfo(name="Terra Vista Elementary", type="elementary",
-                              rating=7, distance_miles=0.4, district="Central Elementary")
+                    SchoolInfo(
+                        name="Terra Vista Elementary",
+                        type="elementary",
+                        rating=7,
+                        distance_miles=0.4,
+                        district="Central Elementary",
+                    )
                 ],
                 commute_to_la=55,
                 walkability_score=70,
                 listing_date=datetime.now() - timedelta(days=8),
-                images=["https://example.com/prop3_1.jpg"]
-            )
+                images=["https://example.com/prop3_1.jpg"],
+            ),
         ]
 
         # Apply preference filters
@@ -466,8 +507,10 @@ class JorgePropertyMatchingService:
             return False
 
         # Neighborhood filter
-        if (preferences.preferred_neighborhoods and
-            property.address.neighborhood not in preferences.preferred_neighborhoods):
+        if (
+            preferences.preferred_neighborhoods
+            and property.address.neighborhood not in preferences.preferred_neighborhoods
+        ):
             # Allow some flexibility - don't filter out completely
             pass
 
@@ -479,27 +522,25 @@ class JorgePropertyMatchingService:
 
         return True
 
-    async def _generate_hybrid_matches(self,
-                                      lead_id: str,
-                                      lead_data: Dict[str, Any],
-                                      lead_context: LeadScoreBreakdown,
-                                      preferences: LeadPropertyPreferences,
-                                      properties: List[Property],
-                                      algorithm: MatchingAlgorithm) -> List[PropertyMatch]:
+    async def _generate_hybrid_matches(
+        self,
+        lead_id: str,
+        lead_data: Dict[str, Any],
+        lead_context: LeadScoreBreakdown,
+        preferences: LeadPropertyPreferences,
+        properties: List[Property],
+        algorithm: MatchingAlgorithm,
+    ) -> List[PropertyMatch]:
         """Generate matches using hybrid neural + rules approach."""
         matches = []
 
         for i, property in enumerate(properties):
             try:
                 # Calculate neural score (if available)
-                neural_score = await self._calculate_neural_score(
-                    property, lead_data, lead_context, preferences
-                )
+                neural_score = await self._calculate_neural_score(property, lead_data, lead_context, preferences)
 
                 # Calculate rule-based score
-                rule_score = self._calculate_rule_score(
-                    property, lead_context, preferences
-                )
+                rule_score = self._calculate_rule_score(property, lead_context, preferences)
 
                 # Combine scores based on algorithm
                 final_score = self._combine_scores(neural_score, rule_score, algorithm)
@@ -521,10 +562,10 @@ class JorgePropertyMatchingService:
                         financial_fit="TBD",
                         lifestyle_fit="TBD",
                         market_timing="TBD",
-                        jorge_talking_points=[]
+                        jorge_talking_points=[],
                     ),
                     algorithm_used=algorithm,
-                    processing_time_ms=0  # Will be updated
+                    processing_time_ms=0,  # Will be updated
                 )
 
                 matches.append(match)
@@ -535,11 +576,13 @@ class JorgePropertyMatchingService:
 
         return matches
 
-    async def _calculate_neural_score(self,
-                                     property: Property,
-                                     lead_data: Dict[str, Any],
-                                     lead_context: LeadScoreBreakdown,
-                                     preferences: LeadPropertyPreferences) -> float:
+    async def _calculate_neural_score(
+        self,
+        property: Property,
+        lead_data: Dict[str, Any],
+        lead_context: LeadScoreBreakdown,
+        preferences: LeadPropertyPreferences,
+    ) -> float:
         """Calculate neural network-based matching score."""
         try:
             # TODO: Integrate with actual neural matcher when available
@@ -555,10 +598,9 @@ class JorgePropertyMatchingService:
             logger.warning(f"Neural scoring failed: {e}")
             return self._simulate_neural_score(property, lead_context, preferences)
 
-    def _simulate_neural_score(self,
-                              property: Property,
-                              lead_context: LeadScoreBreakdown,
-                              preferences: LeadPropertyPreferences) -> float:
+    def _simulate_neural_score(
+        self, property: Property, lead_context: LeadScoreBreakdown, preferences: LeadPropertyPreferences
+    ) -> float:
         """Simulate neural network scoring using sophisticated rules."""
         score = 0.0
 
@@ -616,10 +658,9 @@ class JorgePropertyMatchingService:
         else:
             return 0.6  # Default for other neighborhoods
 
-    def _calculate_rule_score(self,
-                             property: Property,
-                             lead_context: LeadScoreBreakdown,
-                             preferences: LeadPropertyPreferences) -> float:
+    def _calculate_rule_score(
+        self, property: Property, lead_context: LeadScoreBreakdown, preferences: LeadPropertyPreferences
+    ) -> float:
         """Calculate rule-based matching score using Jorge's expertise."""
         score = 0.0
 
@@ -640,10 +681,9 @@ class JorgePropertyMatchingService:
 
         return min(100.0, max(0.0, score))
 
-    def _score_financial_fit(self,
-                            property: Property,
-                            lead_context: LeadScoreBreakdown,
-                            preferences: LeadPropertyPreferences) -> float:
+    def _score_financial_fit(
+        self, property: Property, lead_context: LeadScoreBreakdown, preferences: LeadPropertyPreferences
+    ) -> float:
         """Score financial fit (0-1)."""
         score = 0.0
 
@@ -666,10 +706,9 @@ class JorgePropertyMatchingService:
 
         return min(1.0, score)
 
-    def _score_lifestyle_fit(self,
-                            property: Property,
-                            lead_context: LeadScoreBreakdown,
-                            preferences: LeadPropertyPreferences) -> float:
+    def _score_lifestyle_fit(
+        self, property: Property, lead_context: LeadScoreBreakdown, preferences: LeadPropertyPreferences
+    ) -> float:
         """Score lifestyle alignment (0-1)."""
         score = 0.0
 
@@ -684,8 +723,7 @@ class JorgePropertyMatchingService:
             score += 0.2
 
         # Neighborhood preference
-        if (preferences.preferred_neighborhoods and
-            property.address.neighborhood in preferences.preferred_neighborhoods):
+        if preferences.preferred_neighborhoods and property.address.neighborhood in preferences.preferred_neighborhoods:
             score += 0.3
         elif property.address.neighborhood in self.market_data["premium_neighborhoods"]:
             score += 0.2  # Still good even if not explicitly preferred
@@ -699,9 +737,7 @@ class JorgePropertyMatchingService:
 
         return min(1.0, score)
 
-    def _score_market_opportunity(self,
-                                 property: Property,
-                                 lead_context: LeadScoreBreakdown) -> float:
+    def _score_market_opportunity(self, property: Property, lead_context: LeadScoreBreakdown) -> float:
         """Score market opportunity and timing (0-1)."""
         score = 0.0
 
@@ -734,10 +770,9 @@ class JorgePropertyMatchingService:
 
         return min(1.0, score)
 
-    def _score_timeline_fit(self,
-                           property: Property,
-                           lead_context: LeadScoreBreakdown,
-                           preferences: LeadPropertyPreferences) -> float:
+    def _score_timeline_fit(
+        self, property: Property, lead_context: LeadScoreBreakdown, preferences: LeadPropertyPreferences
+    ) -> float:
         """Score timeline alignment (0-1)."""
         urgency_score = lead_context.timeline_urgency / 100.0
 
@@ -751,9 +786,7 @@ class JorgePropertyMatchingService:
         else:
             return 0.9  # Flexible timeline allows for any property
 
-    def _score_jorge_insights(self,
-                             property: Property,
-                             lead_context: LeadScoreBreakdown) -> float:
+    def _score_jorge_insights(self, property: Property, lead_context: LeadScoreBreakdown) -> float:
         """Apply Jorge's special market insights (0-1)."""
         score = 0.0
 
@@ -772,8 +805,7 @@ class JorgePropertyMatchingService:
         # Engagement quality consideration
         if lead_context.engagement_quality >= 80:
             # Highly engaged leads can appreciate premium features
-            if (property.features.has_pool or property.features.updated_kitchen or
-                property.features.granite_counters):
+            if property.features.has_pool or property.features.updated_kitchen or property.features.granite_counters:
                 score += 0.3
 
         return min(1.0, score)
@@ -816,10 +848,9 @@ class JorgePropertyMatchingService:
 
         return ranked_matches[:max_results]
 
-    async def _enhance_matches_with_explanations(self,
-                                               matches: List[PropertyMatch],
-                                               lead_context: LeadScoreBreakdown,
-                                               preferences: LeadPropertyPreferences) -> List[PropertyMatch]:
+    async def _enhance_matches_with_explanations(
+        self, matches: List[PropertyMatch], lead_context: LeadScoreBreakdown, preferences: LeadPropertyPreferences
+    ) -> List[PropertyMatch]:
         """Generate AI-powered explanations for matches."""
         enhanced_matches = []
 
@@ -836,10 +867,9 @@ class JorgePropertyMatchingService:
 
         return enhanced_matches
 
-    async def _generate_match_reasoning(self,
-                                      match: PropertyMatch,
-                                      lead_context: LeadScoreBreakdown,
-                                      preferences: LeadPropertyPreferences) -> MatchReasoning:
+    async def _generate_match_reasoning(
+        self, match: PropertyMatch, lead_context: LeadScoreBreakdown, preferences: LeadPropertyPreferences
+    ) -> MatchReasoning:
         """Generate AI-powered match reasoning."""
         try:
             prompt = self._build_reasoning_prompt(match, lead_context, preferences)
@@ -849,10 +879,9 @@ class JorgePropertyMatchingService:
             logger.warning(f"AI reasoning generation failed: {e}")
             return self._create_fallback_reasoning(match, lead_context)
 
-    def _build_reasoning_prompt(self,
-                               match: PropertyMatch,
-                               lead_context: LeadScoreBreakdown,
-                               preferences: LeadPropertyPreferences) -> str:
+    def _build_reasoning_prompt(
+        self, match: PropertyMatch, lead_context: LeadScoreBreakdown, preferences: LeadPropertyPreferences
+    ) -> str:
         """Build prompt for AI reasoning generation."""
         prop = match.property
         return f"""
@@ -862,7 +891,7 @@ class JorgePropertyMatchingService:
         - {prop.address.street}, {prop.address.neighborhood}
         - ${prop.price:,} | {prop.features.bedrooms}br/{prop.features.bathrooms}ba | {prop.features.sqft:,} sqft
         - Days on market: {prop.days_on_market}
-        - Schools: {[s.name + f' (Rating: {s.rating})' for s in prop.schools[:2]]}
+        - Schools: {[s.name + f" (Rating: {s.rating})" for s in prop.schools[:2]]}
         - Features: Pool: {prop.features.has_pool}, Updated Kitchen: {prop.features.updated_kitchen}
 
         BUYER PROFILE:
@@ -870,8 +899,8 @@ class JorgePropertyMatchingService:
         - Buying Stage: {lead_context.buying_stage.value}
         - Financial Readiness: {lead_context.financial_readiness}/100
         - Timeline: {lead_context.timeline_urgency}/100 urgency
-        - Budget: ${preferences.budget_min or 'flexible'} - ${preferences.budget_max or 'open'}
-        - Preferred Areas: {preferences.preferred_neighborhoods or 'flexible'}
+        - Budget: ${preferences.budget_min or "flexible"} - ${preferences.budget_max or "open"}
+        - Preferred Areas: {preferences.preferred_neighborhoods or "flexible"}
 
         MATCH SCORES:
         - Overall: {match.match_score:.1f}/100
@@ -896,7 +925,8 @@ class JorgePropertyMatchingService:
         """Parse AI reasoning response."""
         try:
             import re
-            json_match = re.search(r'\{.*\}', response, re.DOTALL)
+
+            json_match = re.search(r"\{.*\}", response, re.DOTALL)
             if json_match:
                 reasoning_data = json.loads(json_match.group())
                 return MatchReasoning(**reasoning_data)
@@ -905,7 +935,9 @@ class JorgePropertyMatchingService:
 
         return self._create_fallback_reasoning(match, None)
 
-    def _create_fallback_reasoning(self, match: PropertyMatch, lead_context: Optional[LeadScoreBreakdown]) -> MatchReasoning:
+    def _create_fallback_reasoning(
+        self, match: PropertyMatch, lead_context: Optional[LeadScoreBreakdown]
+    ) -> MatchReasoning:
         """Create fallback reasoning when AI generation fails."""
         prop = match.property
 
@@ -915,7 +947,9 @@ class JorgePropertyMatchingService:
         if match.match_score >= 80:
             primary_reasons.append(f"Excellent value at ${prop.price:,} in {prop.address.neighborhood}")
         elif match.match_score >= 60:
-            primary_reasons.append(f"Good value at ${prop.price:,} for {prop.features.bedrooms}br/{prop.features.bathrooms}ba")
+            primary_reasons.append(
+                f"Good value at ${prop.price:,} for {prop.features.bedrooms}br/{prop.features.bathrooms}ba"
+            )
 
         # Location reasoning
         if prop.address.neighborhood in self.market_data["premium_neighborhoods"]:
@@ -933,19 +967,17 @@ class JorgePropertyMatchingService:
             potential_concerns=["Schedule showing quickly in this competitive market"],
             jorge_talking_points=[
                 f"I know this {prop.address.neighborhood} neighborhood very well",
-                f"This property offers exceptional value at ${prop.price:,}"
+                f"This property offers exceptional value at ${prop.price:,}",
             ],
             client_script_suggestions=[
                 "Let me show you why this property is perfect for your family",
-                "I have insider knowledge of this neighborhood's market trends"
-            ]
+                "I have insider knowledge of this neighborhood's market trends",
+            ],
         )
 
-    async def _create_match_response(self,
-                                   matches: List[PropertyMatch],
-                                   total_considered: int,
-                                   algorithm: MatchingAlgorithm,
-                                   start_time: float) -> PropertyMatchResponse:
+    async def _create_match_response(
+        self, matches: List[PropertyMatch], total_considered: int, algorithm: MatchingAlgorithm, start_time: float
+    ) -> PropertyMatchResponse:
         """Create the final match response."""
         processing_time_ms = int((time.time() - start_time) * 1000)
 
@@ -966,7 +998,7 @@ class JorgePropertyMatchingService:
             avg_match_score=avg_score,
             best_match_score=best_score,
             recommendation_summary=summary,
-            model_version="jorge-hybrid-v1.0"
+            model_version="jorge-hybrid-v1.0",
         )
 
     async def _get_cached_matches(self, cache_key: str) -> Optional[PropertyMatchResponse]:
@@ -984,7 +1016,7 @@ class JorgePropertyMatchingService:
         try:
             # Mark as cache hit for next time
             response_dict = response.dict()
-            response_dict['cache_hit'] = True
+            response_dict["cache_hit"] = True
             cached_response = PropertyMatchResponse(**response_dict)
 
             await cache_service.set(cache_key, cached_response.json(), ttl=CACHE_TTL_MATCHES)
@@ -1001,13 +1033,12 @@ class JorgePropertyMatchingService:
             avg_match_score=0.0,
             best_match_score=0.0,
             recommendation_summary="No properties found matching criteria",
-            model_version="jorge-hybrid-v1.0"
+            model_version="jorge-hybrid-v1.0",
         )
 
-    async def _create_fallback_response(self,
-                                      request: PropertyMatchRequest,
-                                      start_time: float,
-                                      error: str) -> PropertyMatchResponse:
+    async def _create_fallback_response(
+        self, request: PropertyMatchRequest, start_time: float, error: str
+    ) -> PropertyMatchResponse:
         """Create fallback response when matching fails."""
         logger.error(f"Property matching failed for lead {request.lead_id}: {error}")
 
@@ -1019,21 +1050,21 @@ class JorgePropertyMatchingService:
             avg_match_score=0.0,
             best_match_score=0.0,
             recommendation_summary=f"Matching temporarily unavailable. Please try again.",
-            model_version="jorge-hybrid-v1.0"
+            model_version="jorge-hybrid-v1.0",
         )
 
     def _update_performance_metrics(self, start_time: float, cache_hit: bool) -> None:
         """Update service performance metrics."""
         processing_time = (time.time() - start_time) * 1000
 
-        self.performance_metrics['total_matches_generated'] += 1
+        self.performance_metrics["total_matches_generated"] += 1
 
         # Update rolling average processing time
-        current_avg = self.performance_metrics['avg_processing_time_ms']
-        total_requests = self.performance_metrics['total_matches_generated']
-        self.performance_metrics['avg_processing_time_ms'] = (
-            (current_avg * (total_requests - 1) + processing_time) / total_requests
-        )
+        current_avg = self.performance_metrics["avg_processing_time_ms"]
+        total_requests = self.performance_metrics["total_matches_generated"]
+        self.performance_metrics["avg_processing_time_ms"] = (
+            current_avg * (total_requests - 1) + processing_time
+        ) / total_requests
 
         # Update cache hit rate
         if cache_hit:
@@ -1043,12 +1074,12 @@ class JorgePropertyMatchingService:
     def get_performance_metrics(self) -> MatchingPerformanceMetrics:
         """Get current performance metrics."""
         return MatchingPerformanceMetrics(
-            avg_processing_time_ms=self.performance_metrics['avg_processing_time_ms'],
-            cache_hit_rate=self.performance_metrics['cache_hit_rate'],
-            neural_inference_time_ms=self.performance_metrics['neural_inference_time_ms'],
-            rules_processing_time_ms=self.performance_metrics['rules_processing_time_ms'],
+            avg_processing_time_ms=self.performance_metrics["avg_processing_time_ms"],
+            cache_hit_rate=self.performance_metrics["cache_hit_rate"],
+            neural_inference_time_ms=self.performance_metrics["neural_inference_time_ms"],
+            rules_processing_time_ms=self.performance_metrics["rules_processing_time_ms"],
             total_properties_evaluated=0,  # Would track this
-            matches_generated=self.performance_metrics['total_matches_generated']
+            matches_generated=self.performance_metrics["total_matches_generated"],
         )
 
     async def explain_specific_match(self, property_id: str, lead_id: str) -> Optional[MatchReasoning]:
@@ -1057,9 +1088,7 @@ class JorgePropertyMatchingService:
         # Implementation would fetch property, lead data, and generate explanation
         pass
 
-    async def update_lead_preferences(self,
-                                    lead_id: str,
-                                    preferences: LeadPropertyPreferences) -> None:
+    async def update_lead_preferences(self, lead_id: str, preferences: LeadPropertyPreferences) -> None:
         """Update cached lead preferences."""
         cache_key = f"jorge:preferences:{lead_id}"
         await cache_service.set(cache_key, preferences.json(), ttl=CACHE_TTL_PREFERENCES)
@@ -1079,6 +1108,6 @@ class JorgePropertyMatchingService:
                 "Victoria Arbors": 28,
                 "North Rancho Cucamonga": 22,
                 "Terra Vista": 18,
-                "Central Rancho": 15
-            }
+                "Central Rancho": 15,
+            },
         }

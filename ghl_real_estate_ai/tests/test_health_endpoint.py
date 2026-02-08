@@ -4,10 +4,11 @@ Test for comprehensive health check endpoint.
 Following TDD RED → GREEN → REFACTOR methodology.
 """
 
+import json
+from unittest.mock import MagicMock, patch
+
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock
-import json
 
 # Import the FastAPI app
 from ghl_real_estate_ai.api.main import app
@@ -91,7 +92,7 @@ class TestHealthEndpoint:
 
         Health endpoint should return unhealthy status when database is unreachable.
         """
-        with patch('ghl_real_estate_ai.api.routes.health.check_database_health') as mock_db:
+        with patch("ghl_real_estate_ai.api.routes.health.check_database_health") as mock_db:
             # Arrange
             mock_db.return_value = {"status": "unhealthy", "error": "Connection failed"}
 
@@ -110,11 +111,11 @@ class TestHealthEndpoint:
 
         Health endpoint should return degraded status when external services fail.
         """
-        with patch('ghl_real_estate_ai.api.routes.health.check_external_services') as mock_external:
+        with patch("ghl_real_estate_ai.api.routes.health.check_external_services") as mock_external:
             # Arrange
             mock_external.return_value = {
                 "ghl_api": {"status": "unhealthy", "error": "API timeout"},
-                "anthropic_api": {"status": "healthy", "response_time_ms": 150}
+                "anthropic_api": {"status": "healthy", "response_time_ms": 150},
             }
 
             # Act

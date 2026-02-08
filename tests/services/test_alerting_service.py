@@ -7,15 +7,15 @@ PagerDuty/Opsgenie formatting, and all 7 default alert rules.
 """
 
 import time
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from unittest.mock import patch, AsyncMock, MagicMock
 
 from ghl_real_estate_ai.services.jorge.alerting_service import (
-    AlertingService,
-    AlertChannelConfig,
-    AlertRule,
     Alert,
+    AlertChannelConfig,
+    AlertingService,
+    AlertRule,
     EscalationLevel,
     EscalationPolicy,
 )
@@ -131,9 +131,7 @@ class TestAlertingService:
 
         # Second check immediately -- should NOT trigger (cooldown = 300s)
         second_alerts = await service.check_alerts(stats)
-        high_error_second = [
-            a for a in second_alerts if a.rule_name == "high_error_rate"
-        ]
+        high_error_second = [a for a in second_alerts if a.rule_name == "high_error_rate"]
         assert len(high_error_second) == 0
 
     # ── 7. Condition errors are handled gracefully ─────────────────────
@@ -396,10 +394,12 @@ class TestEscalationPolicy:
     def test_pending_escalations_only_critical(self):
         policy = EscalationPolicy()
         critical = self._make_alert(
-            severity="critical", triggered_at=time.time() - 310,
+            severity="critical",
+            triggered_at=time.time() - 310,
         )
         warning = self._make_alert(
-            severity="warning", triggered_at=time.time() - 310,
+            severity="warning",
+            triggered_at=time.time() - 310,
         )
         results = policy.get_pending_escalations([critical, warning])
         assert len(results) == 1
@@ -409,7 +409,8 @@ class TestEscalationPolicy:
     def test_pending_escalations_excludes_acknowledged(self):
         policy = EscalationPolicy()
         alert = self._make_alert(
-            triggered_at=time.time() - 910, ack=True,
+            triggered_at=time.time() - 910,
+            ack=True,
         )
         assert policy.get_pending_escalations([alert]) == []
 
@@ -521,9 +522,7 @@ class TestAllRuleConditions:
     async def test_circular_handoff_spike_triggers(self):
         svc = AlertingService()
         alerts = await svc.check_alerts({"blocked_handoffs_last_hour": 15})
-        assert any(
-            a.rule_name == "circular_handoff_spike" for a in alerts
-        )
+        assert any(a.rule_name == "circular_handoff_spike" for a in alerts)
 
     @pytest.mark.asyncio
     async def test_rate_limit_breach_triggers(self):
@@ -577,7 +576,9 @@ class TestChannelSending:
         alert = self._make_alert()
 
         with patch.object(
-            svc, "_send_pagerduty_alert", new_callable=AsyncMock,
+            svc,
+            "_send_pagerduty_alert",
+            new_callable=AsyncMock,
         ) as mock_pd:
             await svc._send_webhook_alert(alert)
             mock_pd.assert_awaited_once_with(alert)
@@ -591,7 +592,9 @@ class TestChannelSending:
         alert = self._make_alert()
 
         with patch.object(
-            svc, "_send_opsgenie_alert", new_callable=AsyncMock,
+            svc,
+            "_send_opsgenie_alert",
+            new_callable=AsyncMock,
         ) as mock_og:
             await svc._send_webhook_alert(alert)
             mock_og.assert_awaited_once_with(alert)
@@ -683,9 +686,11 @@ class TestCheckAndSendAlerts:
         svc = AlertingService()
         stats = {"error_rate": 0.10}
 
-        with patch.object(svc, "_send_email_alert", new_callable=AsyncMock), \
-             patch.object(svc, "_send_slack_alert", new_callable=AsyncMock), \
-             patch.object(svc, "_send_webhook_alert", new_callable=AsyncMock):
+        with (
+            patch.object(svc, "_send_email_alert", new_callable=AsyncMock),
+            patch.object(svc, "_send_slack_alert", new_callable=AsyncMock),
+            patch.object(svc, "_send_webhook_alert", new_callable=AsyncMock),
+        ):
             alerts = await svc.check_and_send_alerts(stats)
 
         assert any(a.rule_name == "high_error_rate" for a in alerts)

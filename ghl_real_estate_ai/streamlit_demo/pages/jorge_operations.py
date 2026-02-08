@@ -15,22 +15,26 @@ Sections:
 7. GHL Integration Health
 """
 
-import streamlit as st
-import pandas as pd
-from datetime import datetime, timedelta
-from typing import Any, Dict, List
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import random
 import time
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
+
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import streamlit as st
+from plotly.subplots import make_subplots
 
 # Import bot services and config with graceful fallback
 try:
     from ghl_real_estate_ai.ghl_utils.jorge_config import (
         JorgeSellerConfig,
+    )
+    from ghl_real_estate_ai.ghl_utils.jorge_config import (
         settings as jorge_settings,
     )
+
     SUCCESS_METRICS = JorgeSellerConfig.SUCCESS_METRICS
     PERFORMANCE_THRESHOLDS = JorgeSellerConfig.PERFORMANCE_THRESHOLDS
 except ImportError:
@@ -79,6 +83,7 @@ SLA_RESPONSE_TIME = PERFORMANCE_THRESHOLDS["webhook_response_time"]  # 2.0s
 # Demo data generators (cached for near real-time refresh)
 # ---------------------------------------------------------------------------
 
+
 @st.cache_data(ttl=15)
 def get_bot_status_data() -> Dict[str, Dict[str, Any]]:
     """Per-bot operational status metrics (demo data)."""
@@ -92,9 +97,9 @@ def get_bot_status_data() -> Dict[str, Dict[str, Any]]:
             "enabled": enabled,
             "messages_today": msgs_today,
             "avg_response_time": avg_rt,
-            "status": "ok" if avg_rt < SLA_RESPONSE_TIME * 0.8 else (
-                "warning" if avg_rt < SLA_RESPONSE_TIME else "critical"
-            ),
+            "status": "ok"
+            if avg_rt < SLA_RESPONSE_TIME * 0.8
+            else ("warning" if avg_rt < SLA_RESPONSE_TIME else "critical"),
             "last_heartbeat": (now - timedelta(seconds=random.randint(2, 30))).isoformat(),
         }
     return data
@@ -133,12 +138,14 @@ def get_compliance_blocks() -> pd.DataFrame:
         contact_id = f"***{random.randint(1000, 9999)}"
         bot_mode = random.choice(BOT_NAMES)
         violation = random.choice(violation_types)
-        rows.append({
-            "Timestamp": ts.strftime("%Y-%m-%d %H:%M"),
-            "Contact ID": contact_id,
-            "Bot Mode": bot_mode,
-            "Violation Type": violation,
-        })
+        rows.append(
+            {
+                "Timestamp": ts.strftime("%Y-%m-%d %H:%M"),
+                "Contact ID": contact_id,
+                "Bot Mode": bot_mode,
+                "Violation Type": violation,
+            }
+        )
     df = pd.DataFrame(rows)
     df = df.sort_values("Timestamp", ascending=False).reset_index(drop=True)
     return df
@@ -152,10 +159,12 @@ def get_compliance_trend() -> pd.DataFrame:
         day = datetime.now() - timedelta(days=i)
         total_msgs = random.randint(200, 600)
         blocks = random.randint(0, max(1, int(total_msgs * 0.012)))
-        rows.append({
-            "Date": day.strftime("%Y-%m-%d"),
-            "Block Rate (%)": round((blocks / total_msgs) * 100, 3),
-        })
+        rows.append(
+            {
+                "Date": day.strftime("%Y-%m-%d"),
+                "Block Rate (%)": round((blocks / total_msgs) * 100, 3),
+            }
+        )
     return pd.DataFrame(rows)
 
 
@@ -236,6 +245,7 @@ def get_ghl_integration_health() -> Dict[str, Dict[str, Any]]:
 # Section renderers
 # ---------------------------------------------------------------------------
 
+
 def render_bot_status_header() -> None:
     """Section 1: Bot status cards with color-coded SLA indicators."""
     st.subheader("Bot Status Overview")
@@ -279,8 +289,7 @@ def render_bot_status_header() -> None:
                 delta_color=delta_color,
             )
             st.caption(
-                f"Enabled: {'Yes' if info['enabled'] else 'No'} | "
-                f"Last heartbeat: {info['last_heartbeat'][11:19]}"
+                f"Enabled: {'Yes' if info['enabled'] else 'No'} | Last heartbeat: {info['last_heartbeat'][11:19]}"
             )
 
 
@@ -351,14 +360,16 @@ def render_compliance_monitor() -> None:
         st.markdown("**Block Rate Trend (14 Days)**")
         trend_df = get_compliance_trend()
         fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=trend_df["Date"],
-            y=trend_df["Block Rate (%)"],
-            mode="lines+markers",
-            name="Block Rate",
-            line=dict(color="#e74c3c", width=2),
-            marker=dict(size=5),
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=trend_df["Date"],
+                y=trend_df["Block Rate (%)"],
+                mode="lines+markers",
+                name="Block Rate",
+                line=dict(color="#e74c3c", width=2),
+                marker=dict(size=5),
+            )
+        )
         fig.add_hline(
             y=1.0,
             line_dash="dash",
@@ -384,8 +395,7 @@ def render_handoff_tracker() -> None:
     success_rates = handoff_data["success_rates"]
 
     # Build Sankey node/link structures
-    labels = ["Lead (src)", "Buyer (src)", "Seller (src)",
-              "Buyer (dst)", "Seller (dst)", "Lead (dst)"]
+    labels = ["Lead (src)", "Buyer (src)", "Seller (src)", "Buyer (dst)", "Seller (dst)", "Lead (dst)"]
     # Map source/dest names to indices
     src_idx = {"Lead": 0, "Buyer": 1, "Seller": 2}
     dst_idx = {"Buyer": 3, "Seller": 4, "Lead": 5}
@@ -404,26 +414,34 @@ def render_handoff_tracker() -> None:
         link_labels.append(f"{direction}: {vol} handoffs ({sr:.0%} success)")
 
     node_colors = [
-        BOT_COLORS["Lead"], BOT_COLORS["Buyer"], BOT_COLORS["Seller"],
-        BOT_COLORS["Buyer"], BOT_COLORS["Seller"], BOT_COLORS["Lead"],
+        BOT_COLORS["Lead"],
+        BOT_COLORS["Buyer"],
+        BOT_COLORS["Seller"],
+        BOT_COLORS["Buyer"],
+        BOT_COLORS["Seller"],
+        BOT_COLORS["Lead"],
     ]
 
-    fig = go.Figure(data=[go.Sankey(
-        node=dict(
-            pad=20,
-            thickness=25,
-            line=dict(color="black", width=0.5),
-            label=labels,
-            color=node_colors,
-        ),
-        link=dict(
-            source=sources,
-            target=targets,
-            value=values,
-            label=link_labels,
-            color=[f"rgba(150,150,150,0.4)"] * len(sources),
-        ),
-    )])
+    fig = go.Figure(
+        data=[
+            go.Sankey(
+                node=dict(
+                    pad=20,
+                    thickness=25,
+                    line=dict(color="black", width=0.5),
+                    label=labels,
+                    color=node_colors,
+                ),
+                link=dict(
+                    source=sources,
+                    target=targets,
+                    value=values,
+                    label=link_labels,
+                    color=[f"rgba(150,150,150,0.4)"] * len(sources),
+                ),
+            )
+        ]
+    )
 
     fig.update_layout(
         title="Bot-to-Bot Handoff Flow",
@@ -454,7 +472,8 @@ def render_response_time_monitor() -> None:
     series = rt_data["series"]
 
     fig = make_subplots(
-        rows=len(BOT_NAMES), cols=1,
+        rows=len(BOT_NAMES),
+        cols=1,
         subplot_titles=[f"{bot} Bot" for bot in BOT_NAMES],
         vertical_spacing=0.08,
         shared_xaxes=True,
@@ -467,33 +486,58 @@ def render_response_time_monitor() -> None:
         color = BOT_COLORS[bot]
 
         # p50
-        fig.add_trace(go.Scatter(
-            x=timestamps, y=bot_series["p50"],
-            mode="lines", name=f"{bot} p50",
-            line=dict(color=color, width=2),
-            legendgroup=bot, showlegend=(row_idx == 1),
-        ), row=row_idx, col=1)
+        fig.add_trace(
+            go.Scatter(
+                x=timestamps,
+                y=bot_series["p50"],
+                mode="lines",
+                name=f"{bot} p50",
+                line=dict(color=color, width=2),
+                legendgroup=bot,
+                showlegend=(row_idx == 1),
+            ),
+            row=row_idx,
+            col=1,
+        )
 
         # p95
-        fig.add_trace(go.Scatter(
-            x=timestamps, y=bot_series["p95"],
-            mode="lines", name=f"{bot} p95",
-            line=dict(color=color, width=1.5, dash="dash"),
-            legendgroup=bot, showlegend=(row_idx == 1),
-        ), row=row_idx, col=1)
+        fig.add_trace(
+            go.Scatter(
+                x=timestamps,
+                y=bot_series["p95"],
+                mode="lines",
+                name=f"{bot} p95",
+                line=dict(color=color, width=1.5, dash="dash"),
+                legendgroup=bot,
+                showlegend=(row_idx == 1),
+            ),
+            row=row_idx,
+            col=1,
+        )
 
         # p99
-        fig.add_trace(go.Scatter(
-            x=timestamps, y=bot_series["p99"],
-            mode="lines", name=f"{bot} p99",
-            line=dict(color=color, width=1, dash="dot"),
-            legendgroup=bot, showlegend=(row_idx == 1),
-        ), row=row_idx, col=1)
+        fig.add_trace(
+            go.Scatter(
+                x=timestamps,
+                y=bot_series["p99"],
+                mode="lines",
+                name=f"{bot} p99",
+                line=dict(color=color, width=1, dash="dot"),
+                legendgroup=bot,
+                showlegend=(row_idx == 1),
+            ),
+            row=row_idx,
+            col=1,
+        )
 
         # SLA line
         fig.add_hline(
-            y=SLA_RESPONSE_TIME, row=row_idx, col=1,
-            line_dash="dash", line_color="red", line_width=1,
+            y=SLA_RESPONSE_TIME,
+            row=row_idx,
+            col=1,
+            line_dash="dash",
+            line_color="red",
+            line_width=1,
             annotation_text=f"SLA {SLA_RESPONSE_TIME}s" if row_idx == 1 else None,
         )
 
@@ -529,15 +573,15 @@ def render_qualification_funnel() -> None:
             stages = list(funnel.keys())
             values = list(funnel.values())
 
-            fig = go.Figure(go.Funnel(
-                y=stages,
-                x=values,
-                textinfo="value+percent initial+percent previous",
-                marker=dict(color=[
-                    "#3498db", "#2ecc71", "#f39c12", "#e67e22", "#e74c3c"
-                ]),
-                connector=dict(line=dict(color="#aaa", width=1)),
-            ))
+            fig = go.Figure(
+                go.Funnel(
+                    y=stages,
+                    x=values,
+                    textinfo="value+percent initial+percent previous",
+                    marker=dict(color=["#3498db", "#2ecc71", "#f39c12", "#e67e22", "#e74c3c"]),
+                    connector=dict(line=dict(color="#aaa", width=1)),
+                )
+            )
             fig.update_layout(
                 title=f"{bot} Bot Qualification Funnel",
                 height=380,
@@ -558,7 +602,9 @@ def render_qualification_funnel() -> None:
                     "Qualification Rate",
                     f"{qual_rate:.1%}",
                     delta=f"Target: {SUCCESS_METRICS['qualification_completion_rate']:.0%}",
-                    delta_color="normal" if qual_rate >= SUCCESS_METRICS["qualification_completion_rate"] else "inverse",
+                    delta_color="normal"
+                    if qual_rate >= SUCCESS_METRICS["qualification_completion_rate"]
+                    else "inverse",
                 )
             with c2:
                 st.metric(
@@ -604,6 +650,7 @@ def render_ghl_integration_health() -> None:
 # Main page
 # ---------------------------------------------------------------------------
 
+
 def main() -> None:
     """Render the full Jorge Bot Operations dashboard."""
     st.title("Jorge Bot Operations")
@@ -621,15 +668,17 @@ def main() -> None:
     st.divider()
 
     # Organize sections with tabs for a clean layout
-    tab_status, tab_temp, tab_compliance, tab_handoff, tab_rt, tab_funnel, tab_ghl = st.tabs([
-        "Bot Status",
-        "Temperature",
-        "Compliance",
-        "Handoffs",
-        "Response Times",
-        "Funnel",
-        "GHL Health",
-    ])
+    tab_status, tab_temp, tab_compliance, tab_handoff, tab_rt, tab_funnel, tab_ghl = st.tabs(
+        [
+            "Bot Status",
+            "Temperature",
+            "Compliance",
+            "Handoffs",
+            "Response Times",
+            "Funnel",
+            "GHL Health",
+        ]
+    )
 
     with tab_status:
         render_bot_status_header()

@@ -12,30 +12,35 @@ This module provides:
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from decimal import Decimal
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
 import pandas as pd
-from decimal import Decimal
 
-from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
-from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeConfig
+from ghl_real_estate_ai.services.cache_service import CacheService
+from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 
 logger = logging.getLogger(__name__)
 
+
 class ForecastTimeframe(Enum):
     """Business forecasting timeframes"""
+
     MONTHLY = "monthly"
     QUARTERLY = "quarterly"
     SEMI_ANNUAL = "semi_annual"
     ANNUAL = "annual"
     MULTI_YEAR = "multi_year"
 
+
 class BusinessMetricType(Enum):
     """Types of business metrics to forecast"""
+
     REVENUE = "revenue"
     COMMISSION = "commission"
     DEAL_VOLUME = "deal_volume"
@@ -44,17 +49,21 @@ class BusinessMetricType(Enum):
     TEAM_PERFORMANCE = "team_performance"
     TERRITORY_EXPANSION = "territory_expansion"
 
+
 class GrowthStrategy(Enum):
     """Growth strategy classifications"""
+
     AGGRESSIVE_EXPANSION = "aggressive_expansion"
     STEADY_GROWTH = "steady_growth"
     MARKET_PENETRATION = "market_penetration"
     DEFENSIVE_POSITIONING = "defensive_positioning"
     NICHE_SPECIALIZATION = "niche_specialization"
 
+
 @dataclass
 class RevenueForecast:
     """Revenue forecasting with confidence intervals"""
+
     timeframe: ForecastTimeframe
     base_forecast: Decimal
     optimistic_forecast: Decimal
@@ -66,9 +75,11 @@ class RevenueForecast:
     jorge_methodology_contribution: Decimal
     risk_adjusted_forecast: Decimal
 
+
 @dataclass
 class MarketShareProjection:
     """Market share growth projections"""
+
     current_market_share: float
     projected_market_share: Dict[str, float]  # by timeframe
     growth_trajectory: str  # 'accelerating', 'linear', 'plateauing'
@@ -78,9 +89,11 @@ class MarketShareProjection:
     jorge_competitive_advantages: List[str]
     market_penetration_score: float
 
+
 @dataclass
 class TeamPerformanceProjection:
     """Team performance and productivity projections"""
+
     current_team_size: int
     projected_team_size: Dict[str, int]
     productivity_metrics: Dict[str, Any]
@@ -90,9 +103,11 @@ class TeamPerformanceProjection:
     recruitment_requirements: Dict[str, int]
     team_revenue_contribution: Dict[str, Decimal]
 
+
 @dataclass
 class TerritoryExpansionAnalysis:
     """Territory expansion opportunity analysis"""
+
     current_territories: List[str]
     expansion_opportunities: List[Dict[str, Any]]
     market_entry_strategies: Dict[str, Any]
@@ -102,9 +117,11 @@ class TerritoryExpansionAnalysis:
     timeline_projections: Dict[str, int]
     jorge_methodology_fit: Dict[str, float]
 
+
 @dataclass
 class BusinessOpportunity:
     """Individual business opportunity assessment"""
+
     opportunity_type: str
     market_size: Decimal
     capture_potential: float
@@ -115,6 +132,7 @@ class BusinessOpportunity:
     competitive_advantage: List[str]
     implementation_strategy: str
     success_probability: float
+
 
 class BusinessForecastingEngine:
     """
@@ -129,40 +147,40 @@ class BusinessForecastingEngine:
 
         # Forecasting configurations
         self.forecasting_config = {
-            'accuracy_target': 0.95,
-            'confidence_threshold': 0.80,
-            'update_frequency': 3600,  # 1 hour
-            'historical_data_lookback': 730,  # 2 years
-            'seasonal_adjustment_factors': {
-                'spring_boost': 1.15,
-                'summer_peak': 1.25,
-                'fall_normalization': 1.0,
-                'winter_slowdown': 0.85
-            }
+            "accuracy_target": 0.95,
+            "confidence_threshold": 0.80,
+            "update_frequency": 3600,  # 1 hour
+            "historical_data_lookback": 730,  # 2 years
+            "seasonal_adjustment_factors": {
+                "spring_boost": 1.15,
+                "summer_peak": 1.25,
+                "fall_normalization": 1.0,
+                "winter_slowdown": 0.85,
+            },
         }
 
         # Jorge's business methodology
         self.jorge_business_methodology = {
-            'revenue_optimization_factors': [
-                '6_percent_commission_focus',
-                'premium_market_positioning',
-                'confrontational_efficiency',
-                'client_value_maximization',
-                'market_intelligence_leverage'
+            "revenue_optimization_factors": [
+                "6_percent_commission_focus",
+                "premium_market_positioning",
+                "confrontational_efficiency",
+                "client_value_maximization",
+                "market_intelligence_leverage",
             ],
-            'growth_strategy_principles': {
-                'quality_over_quantity': True,
-                'premium_positioning': True,
-                'methodology_consistency': True,
-                'team_excellence': True,
-                'market_dominance': True
+            "growth_strategy_principles": {
+                "quality_over_quantity": True,
+                "premium_positioning": True,
+                "methodology_consistency": True,
+                "team_excellence": True,
+                "market_dominance": True,
             },
-            'expansion_criteria': {
-                'minimum_market_size': 1000000,  # $1M+ median home values
-                'jorge_methodology_fit': 0.75,   # 75%+ fit score
-                'competition_vulnerability': 0.60,  # 60%+ market capture potential
-                'commission_defensibility': 0.80    # 80%+ 6% commission success rate
-            }
+            "expansion_criteria": {
+                "minimum_market_size": 1000000,  # $1M+ median home values
+                "jorge_methodology_fit": 0.75,  # 75%+ fit score
+                "competition_vulnerability": 0.60,  # 60%+ market capture potential
+                "commission_defensibility": 0.80,  # 80%+ 6% commission success rate
+            },
         }
 
         # Business intelligence cache and tracking
@@ -170,10 +188,12 @@ class BusinessForecastingEngine:
         self.historical_accuracy = {}
         self.market_intelligence = {}
 
-    async def forecast_revenue(self,
-                             timeframe: ForecastTimeframe,
-                             base_data: Dict[str, Any],
-                             market_conditions: Optional[Dict[str, Any]] = None) -> RevenueForecast:
+    async def forecast_revenue(
+        self,
+        timeframe: ForecastTimeframe,
+        base_data: Dict[str, Any],
+        market_conditions: Optional[Dict[str, Any]] = None,
+    ) -> RevenueForecast:
         """
         Forecast revenue with confidence intervals and scenario analysis
         """
@@ -222,15 +242,17 @@ class BusinessForecastingEngine:
             # Create revenue forecast
             forecast = RevenueForecast(
                 timeframe=timeframe,
-                base_forecast=Decimal(str(forecast_response.get('base_forecast', 500000))),
-                optimistic_forecast=Decimal(str(forecast_response.get('optimistic_forecast', 625000))),
-                conservative_forecast=Decimal(str(forecast_response.get('conservative_forecast', 400000))),
-                confidence_level=forecast_response.get('confidence_level', 0.85),
-                growth_rate=forecast_response.get('growth_rate', 15.0),
-                seasonal_adjustments=forecast_response.get('seasonal_adjustments', {}),
-                market_impact_factors=forecast_response.get('market_impact_factors', []),
-                jorge_methodology_contribution=Decimal(str(forecast_response.get('jorge_methodology_contribution', 75000))),
-                risk_adjusted_forecast=Decimal(str(forecast_response.get('risk_adjusted_forecast', 475000)))
+                base_forecast=Decimal(str(forecast_response.get("base_forecast", 500000))),
+                optimistic_forecast=Decimal(str(forecast_response.get("optimistic_forecast", 625000))),
+                conservative_forecast=Decimal(str(forecast_response.get("conservative_forecast", 400000))),
+                confidence_level=forecast_response.get("confidence_level", 0.85),
+                growth_rate=forecast_response.get("growth_rate", 15.0),
+                seasonal_adjustments=forecast_response.get("seasonal_adjustments", {}),
+                market_impact_factors=forecast_response.get("market_impact_factors", []),
+                jorge_methodology_contribution=Decimal(
+                    str(forecast_response.get("jorge_methodology_contribution", 75000))
+                ),
+                risk_adjusted_forecast=Decimal(str(forecast_response.get("risk_adjusted_forecast", 475000))),
             )
 
             # Cache forecast
@@ -243,10 +265,9 @@ class BusinessForecastingEngine:
             logger.error(f"Revenue forecasting failed: {str(e)}")
             raise
 
-    async def project_market_share_growth(self,
-                                        target_markets: List[str],
-                                        growth_strategy: GrowthStrategy,
-                                        investment_level: str = "moderate") -> MarketShareProjection:
+    async def project_market_share_growth(
+        self, target_markets: List[str], growth_strategy: GrowthStrategy, investment_level: str = "moderate"
+    ) -> MarketShareProjection:
         """
         Project market share growth and competitive positioning
         """
@@ -260,7 +281,9 @@ class BusinessForecastingEngine:
                 return MarketShareProjection(**cached_projection)
 
             # Analyze market share growth potential
-            market_analysis = await self._analyze_market_share_potential(target_markets, growth_strategy, investment_level)
+            market_analysis = await self._analyze_market_share_potential(
+                target_markets, growth_strategy, investment_level
+            )
 
             # Generate market share projection
             market_prompt = f"""
@@ -294,34 +317,38 @@ class BusinessForecastingEngine:
 
             # Create market share projection
             projection = MarketShareProjection(
-                current_market_share=market_response.get('current_market_share', 5.0),
+                current_market_share=market_response.get("current_market_share", 5.0),
                 projected_market_share={
-                    'quarterly': market_response.get('projected_market_share', {}).get('quarterly', 6.5),
-                    'annual': market_response.get('projected_market_share', {}).get('annual', 12.0),
-                    'multi_year': market_response.get('projected_market_share', {}).get('multi_year', 20.0)
+                    "quarterly": market_response.get("projected_market_share", {}).get("quarterly", 6.5),
+                    "annual": market_response.get("projected_market_share", {}).get("annual", 12.0),
+                    "multi_year": market_response.get("projected_market_share", {}).get("multi_year", 20.0),
                 },
-                growth_trajectory=market_response.get('growth_trajectory', 'linear'),
-                competitive_position=market_response.get('competitive_position', 'strong'),
-                market_expansion_opportunities=market_response.get('market_expansion_opportunities', []),
-                share_capture_strategies=market_response.get('share_capture_strategies', []),
-                jorge_competitive_advantages=market_response.get('jorge_competitive_advantages', []),
-                market_penetration_score=market_response.get('market_penetration_score', 75.0)
+                growth_trajectory=market_response.get("growth_trajectory", "linear"),
+                competitive_position=market_response.get("competitive_position", "strong"),
+                market_expansion_opportunities=market_response.get("market_expansion_opportunities", []),
+                share_capture_strategies=market_response.get("share_capture_strategies", []),
+                jorge_competitive_advantages=market_response.get("jorge_competitive_advantages", []),
+                market_penetration_score=market_response.get("market_penetration_score", 75.0),
             )
 
             # Cache projection
             await self.cache.set(cache_key, projection.__dict__, ttl=86400)
 
-            logger.info(f"Market share projection completed - Target annual share: {projection.projected_market_share['annual']}%")
+            logger.info(
+                f"Market share projection completed - Target annual share: {projection.projected_market_share['annual']}%"
+            )
             return projection
 
         except Exception as e:
             logger.error(f"Market share projection failed: {str(e)}")
             raise
 
-    async def forecast_team_performance(self,
-                                      current_team_data: Dict[str, Any],
-                                      growth_plans: Dict[str, Any],
-                                      timeframe: ForecastTimeframe = ForecastTimeframe.ANNUAL) -> TeamPerformanceProjection:
+    async def forecast_team_performance(
+        self,
+        current_team_data: Dict[str, Any],
+        growth_plans: Dict[str, Any],
+        timeframe: ForecastTimeframe = ForecastTimeframe.ANNUAL,
+    ) -> TeamPerformanceProjection:
         """
         Forecast team performance and productivity optimization
         """
@@ -369,33 +396,35 @@ class BusinessForecastingEngine:
 
             # Create team performance projection
             projection = TeamPerformanceProjection(
-                current_team_size=current_team_data.get('team_size', 5),
+                current_team_size=current_team_data.get("team_size", 5),
                 projected_team_size={
-                    'quarterly': team_response.get('projected_team_size', {}).get('quarterly', 6),
-                    'annual': team_response.get('projected_team_size', {}).get('annual', 10),
-                    'multi_year': team_response.get('projected_team_size', {}).get('multi_year', 20)
+                    "quarterly": team_response.get("projected_team_size", {}).get("quarterly", 6),
+                    "annual": team_response.get("projected_team_size", {}).get("annual", 10),
+                    "multi_year": team_response.get("projected_team_size", {}).get("multi_year", 20),
                 },
-                productivity_metrics=team_response.get('productivity_metrics', {}),
-                performance_optimization_potential=team_response.get('performance_optimization_potential', 25.0),
-                training_impact_forecast=team_response.get('training_impact_forecast', {}),
-                agent_retention_prediction=team_response.get('agent_retention_prediction', 85.0),
-                recruitment_requirements=team_response.get('recruitment_requirements', {}),
-                team_revenue_contribution=team_response.get('team_revenue_contribution', {})
+                productivity_metrics=team_response.get("productivity_metrics", {}),
+                performance_optimization_potential=team_response.get("performance_optimization_potential", 25.0),
+                training_impact_forecast=team_response.get("training_impact_forecast", {}),
+                agent_retention_prediction=team_response.get("agent_retention_prediction", 85.0),
+                recruitment_requirements=team_response.get("recruitment_requirements", {}),
+                team_revenue_contribution=team_response.get("team_revenue_contribution", {}),
             )
 
             # Cache projection
             await self.cache.set(cache_key, projection.__dict__, ttl=86400)
 
-            logger.info(f"Team performance forecast completed - Target annual size: {projection.projected_team_size['annual']}")
+            logger.info(
+                f"Team performance forecast completed - Target annual size: {projection.projected_team_size['annual']}"
+            )
             return projection
 
         except Exception as e:
             logger.error(f"Team performance forecasting failed: {str(e)}")
             raise
 
-    async def analyze_territory_expansion(self,
-                                        potential_territories: List[str],
-                                        expansion_strategy: str = "selective_growth") -> TerritoryExpansionAnalysis:
+    async def analyze_territory_expansion(
+        self, potential_territories: List[str], expansion_strategy: str = "selective_growth"
+    ) -> TerritoryExpansionAnalysis:
         """
         Analyze territory expansion opportunities and ROI projections
         """
@@ -409,7 +438,9 @@ class BusinessForecastingEngine:
                 return TerritoryExpansionAnalysis(**cached_analysis)
 
             # Evaluate expansion opportunities
-            expansion_evaluation = await self._evaluate_expansion_opportunities(potential_territories, expansion_strategy)
+            expansion_evaluation = await self._evaluate_expansion_opportunities(
+                potential_territories, expansion_strategy
+            )
 
             # Generate territory expansion analysis
             expansion_prompt = f"""
@@ -442,29 +473,31 @@ class BusinessForecastingEngine:
 
             # Create territory expansion analysis
             analysis = TerritoryExpansionAnalysis(
-                current_territories=expansion_response.get('current_territories', []),
-                expansion_opportunities=expansion_response.get('expansion_opportunities', []),
-                market_entry_strategies=expansion_response.get('market_entry_strategies', {}),
-                investment_requirements=expansion_response.get('investment_requirements', {}),
-                roi_projections=expansion_response.get('roi_projections', {}),
-                risk_assessments=expansion_response.get('risk_assessments', {}),
-                timeline_projections=expansion_response.get('timeline_projections', {}),
-                jorge_methodology_fit=expansion_response.get('jorge_methodology_fit', {})
+                current_territories=expansion_response.get("current_territories", []),
+                expansion_opportunities=expansion_response.get("expansion_opportunities", []),
+                market_entry_strategies=expansion_response.get("market_entry_strategies", {}),
+                investment_requirements=expansion_response.get("investment_requirements", {}),
+                roi_projections=expansion_response.get("roi_projections", {}),
+                risk_assessments=expansion_response.get("risk_assessments", {}),
+                timeline_projections=expansion_response.get("timeline_projections", {}),
+                jorge_methodology_fit=expansion_response.get("jorge_methodology_fit", {}),
             )
 
             # Cache analysis
             await self.cache.set(cache_key, analysis.__dict__, ttl=86400)
 
-            logger.info(f"Territory expansion analysis completed - {len(analysis.expansion_opportunities)} opportunities identified")
+            logger.info(
+                f"Territory expansion analysis completed - {len(analysis.expansion_opportunities)} opportunities identified"
+            )
             return analysis
 
         except Exception as e:
             logger.error(f"Territory expansion analysis failed: {str(e)}")
             raise
 
-    async def identify_business_opportunities(self,
-                                            opportunity_types: List[str],
-                                            risk_tolerance: str = "moderate") -> List[BusinessOpportunity]:
+    async def identify_business_opportunities(
+        self, opportunity_types: List[str], risk_tolerance: str = "moderate"
+    ) -> List[BusinessOpportunity]:
         """
         Identify and prioritize business opportunities
         """
@@ -511,20 +544,20 @@ class BusinessForecastingEngine:
 
             # Create business opportunities list
             opportunities = []
-            opportunities_data = opportunity_response.get('business_opportunities', [])
+            opportunities_data = opportunity_response.get("business_opportunities", [])
 
             for opp_data in opportunities_data:
                 opportunity = BusinessOpportunity(
-                    opportunity_type=opp_data.get('opportunity_type', 'unknown'),
-                    market_size=Decimal(str(opp_data.get('market_size', 1000000))),
-                    capture_potential=opp_data.get('capture_potential', 20.0),
-                    investment_required=Decimal(str(opp_data.get('investment_required', 100000))),
-                    projected_roi=opp_data.get('projected_roi', 25.0),
-                    timeframe_to_value=opp_data.get('timeframe_to_value', 12),
-                    risk_level=opp_data.get('risk_level', 'moderate'),
-                    competitive_advantage=opp_data.get('competitive_advantage', []),
-                    implementation_strategy=opp_data.get('implementation_strategy', ''),
-                    success_probability=opp_data.get('success_probability', 70.0)
+                    opportunity_type=opp_data.get("opportunity_type", "unknown"),
+                    market_size=Decimal(str(opp_data.get("market_size", 1000000))),
+                    capture_potential=opp_data.get("capture_potential", 20.0),
+                    investment_required=Decimal(str(opp_data.get("investment_required", 100000))),
+                    projected_roi=opp_data.get("projected_roi", 25.0),
+                    timeframe_to_value=opp_data.get("timeframe_to_value", 12),
+                    risk_level=opp_data.get("risk_level", "moderate"),
+                    competitive_advantage=opp_data.get("competitive_advantage", []),
+                    implementation_strategy=opp_data.get("implementation_strategy", ""),
+                    success_probability=opp_data.get("success_probability", 70.0),
                 )
                 opportunities.append(opportunity)
 
@@ -538,9 +571,9 @@ class BusinessForecastingEngine:
             logger.error(f"Business opportunity identification failed: {str(e)}")
             raise
 
-    async def generate_strategic_business_plan(self,
-                                             planning_horizon: ForecastTimeframe,
-                                             growth_objectives: Dict[str, Any]) -> Dict[str, Any]:
+    async def generate_strategic_business_plan(
+        self, planning_horizon: ForecastTimeframe, growth_objectives: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Generate comprehensive strategic business plan with forecasting
         """
@@ -548,39 +581,43 @@ class BusinessForecastingEngine:
             logger.info(f"Generating strategic business plan for: {planning_horizon.value}")
 
             # Gather all forecasting components
-            revenue_forecast = await self.forecast_revenue(planning_horizon, growth_objectives.get('revenue_data', {}))
+            revenue_forecast = await self.forecast_revenue(planning_horizon, growth_objectives.get("revenue_data", {}))
             market_share_projection = await self.project_market_share_growth(
-                growth_objectives.get('target_markets', []),
-                GrowthStrategy(growth_objectives.get('growth_strategy', 'steady_growth'))
+                growth_objectives.get("target_markets", []),
+                GrowthStrategy(growth_objectives.get("growth_strategy", "steady_growth")),
             )
             team_projection = await self.forecast_team_performance(
-                growth_objectives.get('team_data', {}),
-                growth_objectives.get('team_growth_plans', {}),
-                planning_horizon
+                growth_objectives.get("team_data", {}), growth_objectives.get("team_growth_plans", {}), planning_horizon
             )
             territory_analysis = await self.analyze_territory_expansion(
-                growth_objectives.get('potential_territories', [])
+                growth_objectives.get("potential_territories", [])
             )
             business_opportunities = await self.identify_business_opportunities(
-                growth_objectives.get('opportunity_types', [])
+                growth_objectives.get("opportunity_types", [])
             )
 
             # Create comprehensive strategic plan
             strategic_plan = {
-                'planning_horizon': planning_horizon.value,
-                'growth_objectives': growth_objectives,
-                'revenue_forecast': revenue_forecast.__dict__,
-                'market_share_projection': market_share_projection.__dict__,
-                'team_performance_projection': team_projection.__dict__,
-                'territory_expansion_analysis': territory_analysis.__dict__,
-                'business_opportunities': [opp.__dict__ for opp in business_opportunities],
-                'strategic_recommendations': await self._generate_strategic_recommendations(
-                    revenue_forecast, market_share_projection, team_projection, territory_analysis, business_opportunities
+                "planning_horizon": planning_horizon.value,
+                "growth_objectives": growth_objectives,
+                "revenue_forecast": revenue_forecast.__dict__,
+                "market_share_projection": market_share_projection.__dict__,
+                "team_performance_projection": team_projection.__dict__,
+                "territory_expansion_analysis": territory_analysis.__dict__,
+                "business_opportunities": [opp.__dict__ for opp in business_opportunities],
+                "strategic_recommendations": await self._generate_strategic_recommendations(
+                    revenue_forecast,
+                    market_share_projection,
+                    team_projection,
+                    territory_analysis,
+                    business_opportunities,
                 ),
-                'implementation_roadmap': await self._create_implementation_roadmap(planning_horizon, growth_objectives),
-                'risk_management_plan': await self._create_risk_management_plan(planning_horizon),
-                'success_metrics': await self._define_success_metrics(planning_horizon, growth_objectives),
-                'jorge_methodology_integration': await self._plan_methodology_integration(planning_horizon)
+                "implementation_roadmap": await self._create_implementation_roadmap(
+                    planning_horizon, growth_objectives
+                ),
+                "risk_management_plan": await self._create_risk_management_plan(planning_horizon),
+                "success_metrics": await self._define_success_metrics(planning_horizon, growth_objectives),
+                "jorge_methodology_integration": await self._plan_methodology_integration(planning_horizon),
             }
 
             logger.info(f"Strategic business plan generated for: {planning_horizon.value}")
@@ -591,67 +628,79 @@ class BusinessForecastingEngine:
             raise
 
     # Helper methods for analysis and data processing
-    async def _analyze_revenue_factors(self, timeframe: ForecastTimeframe, base_data: Dict[str, Any], market_conditions: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _analyze_revenue_factors(
+        self, timeframe: ForecastTimeframe, base_data: Dict[str, Any], market_conditions: Optional[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze factors affecting revenue forecast"""
         # Implement revenue factor analysis
         return {
-            'historical_trends': {},
-            'seasonal_patterns': {},
-            'market_conditions': market_conditions or {},
-            'competitive_factors': {},
-            'methodology_impact': {}
+            "historical_trends": {},
+            "seasonal_patterns": {},
+            "market_conditions": market_conditions or {},
+            "competitive_factors": {},
+            "methodology_impact": {},
         }
 
-    async def _analyze_market_share_potential(self, target_markets: List[str], growth_strategy: GrowthStrategy, investment_level: str) -> Dict[str, Any]:
+    async def _analyze_market_share_potential(
+        self, target_markets: List[str], growth_strategy: GrowthStrategy, investment_level: str
+    ) -> Dict[str, Any]:
         """Analyze market share growth potential"""
         # Implement market share analysis
         return {
-            'target_markets': target_markets,
-            'growth_strategy': growth_strategy.value,
-            'market_analysis': {},
-            'competitive_landscape': {},
-            'penetration_opportunities': {}
+            "target_markets": target_markets,
+            "growth_strategy": growth_strategy.value,
+            "market_analysis": {},
+            "competitive_landscape": {},
+            "penetration_opportunities": {},
         }
 
-    async def _analyze_team_performance_potential(self, current_team_data: Dict[str, Any], growth_plans: Dict[str, Any], timeframe: ForecastTimeframe) -> Dict[str, Any]:
+    async def _analyze_team_performance_potential(
+        self, current_team_data: Dict[str, Any], growth_plans: Dict[str, Any], timeframe: ForecastTimeframe
+    ) -> Dict[str, Any]:
         """Analyze team performance potential"""
         # Implement team performance analysis
         return {
-            'current_performance': current_team_data,
-            'growth_plans': growth_plans,
-            'optimization_opportunities': {},
-            'scaling_challenges': {},
-            'methodology_integration': {}
+            "current_performance": current_team_data,
+            "growth_plans": growth_plans,
+            "optimization_opportunities": {},
+            "scaling_challenges": {},
+            "methodology_integration": {},
         }
 
-    async def _evaluate_expansion_opportunities(self, potential_territories: List[str], expansion_strategy: str) -> Dict[str, Any]:
+    async def _evaluate_expansion_opportunities(
+        self, potential_territories: List[str], expansion_strategy: str
+    ) -> Dict[str, Any]:
         """Evaluate territory expansion opportunities"""
         # Implement expansion opportunity evaluation
         return {
-            'territory_assessments': {},
-            'market_opportunities': {},
-            'competitive_analysis': {},
-            'investment_requirements': {},
-            'risk_factors': {}
+            "territory_assessments": {},
+            "market_opportunities": {},
+            "competitive_analysis": {},
+            "investment_requirements": {},
+            "risk_factors": {},
         }
 
-    async def _analyze_business_opportunities(self, opportunity_types: List[str], risk_tolerance: str) -> Dict[str, Any]:
+    async def _analyze_business_opportunities(
+        self, opportunity_types: List[str], risk_tolerance: str
+    ) -> Dict[str, Any]:
         """Analyze business opportunities"""
         # Implement business opportunity analysis
         return {
-            'opportunity_types': opportunity_types,
-            'market_gaps': {},
-            'competitive_advantages': {},
-            'risk_assessments': {},
-            'value_potential': {}
+            "opportunity_types": opportunity_types,
+            "market_gaps": {},
+            "competitive_advantages": {},
+            "risk_assessments": {},
+            "value_potential": {},
         }
 
-    async def _generate_strategic_recommendations(self, revenue_forecast, market_share_projection, team_projection, territory_analysis, business_opportunities) -> List[str]:
+    async def _generate_strategic_recommendations(
+        self, revenue_forecast, market_share_projection, team_projection, territory_analysis, business_opportunities
+    ) -> List[str]:
         """Generate strategic recommendations based on forecasting"""
         recommendations = [
             f"Target revenue growth of {revenue_forecast.growth_rate}% through Jorge's methodology optimization",
             f"Increase market share to {market_share_projection.projected_market_share['annual']}% through strategic positioning",
-            f"Scale team to {team_projection.projected_team_size['annual']} agents while maintaining quality standards"
+            f"Scale team to {team_projection.projected_team_size['annual']} agents while maintaining quality standards",
         ]
 
         if territory_analysis.expansion_opportunities:
@@ -662,45 +711,39 @@ class BusinessForecastingEngine:
 
         return recommendations
 
-    async def _create_implementation_roadmap(self, planning_horizon: ForecastTimeframe, growth_objectives: Dict[str, Any]) -> Dict[str, Any]:
+    async def _create_implementation_roadmap(
+        self, planning_horizon: ForecastTimeframe, growth_objectives: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Create implementation roadmap"""
         # Implement roadmap creation
         return {
-            'timeline': planning_horizon.value,
-            'phases': {},
-            'milestones': {},
-            'resource_allocation': {},
-            'success_criteria': {}
+            "timeline": planning_horizon.value,
+            "phases": {},
+            "milestones": {},
+            "resource_allocation": {},
+            "success_criteria": {},
         }
 
     async def _create_risk_management_plan(self, planning_horizon: ForecastTimeframe) -> Dict[str, Any]:
         """Create risk management plan"""
         # Implement risk management planning
-        return {
-            'risk_categories': {},
-            'mitigation_strategies': {},
-            'contingency_plans': {},
-            'monitoring_metrics': {}
-        }
+        return {"risk_categories": {}, "mitigation_strategies": {}, "contingency_plans": {}, "monitoring_metrics": {}}
 
-    async def _define_success_metrics(self, planning_horizon: ForecastTimeframe, growth_objectives: Dict[str, Any]) -> Dict[str, Any]:
+    async def _define_success_metrics(
+        self, planning_horizon: ForecastTimeframe, growth_objectives: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Define success metrics for strategic plan"""
         # Implement success metrics definition
-        return {
-            'revenue_targets': {},
-            'market_share_goals': {},
-            'performance_kpis': {},
-            'quality_metrics': {}
-        }
+        return {"revenue_targets": {}, "market_share_goals": {}, "performance_kpis": {}, "quality_metrics": {}}
 
     async def _plan_methodology_integration(self, planning_horizon: ForecastTimeframe) -> Dict[str, Any]:
         """Plan Jorge methodology integration across growth"""
         # Implement methodology integration planning
         return {
-            'training_programs': {},
-            'quality_maintenance': {},
-            'scaling_strategies': {},
-            'performance_monitoring': {}
+            "training_programs": {},
+            "quality_maintenance": {},
+            "scaling_strategies": {},
+            "performance_monitoring": {},
         }
 
     async def cleanup(self):

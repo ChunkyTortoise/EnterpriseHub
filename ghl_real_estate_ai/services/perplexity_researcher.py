@@ -1,16 +1,19 @@
 """
 Perplexity Researcher Service - Deep research and market intelligence.
 
-Uses Perplexity AI to perform real-time web research and synthesize 
+Uses Perplexity AI to perform real-time web research and synthesize
 data-driven insights for real estate professionals.
 """
+
 import asyncio
 from typing import Any, Dict, List, Optional
+
 from ghl_real_estate_ai.core.llm_client import LLMClient, LLMProvider
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
+
 
 class PerplexityResearcher:
     """
@@ -20,26 +23,23 @@ class PerplexityResearcher:
     def __init__(self, api_key: Optional[str] = None):
         """
         Initialize the Perplexity researcher.
-        
+
         Args:
             api_key: Optional API key. Defaults to settings.perplexity_api_key.
         """
-        self.client = LLMClient(
-            provider="perplexity",
-            api_key=api_key or settings.perplexity_api_key
-        )
+        self.client = LLMClient(provider="perplexity", api_key=api_key or settings.perplexity_api_key)
         self.enabled = self.client.is_available()
         if not self.enabled:
             logger.warning("PerplexityResearcher disabled: PERPLEXITY_API_KEY not set")
 
     async def research_topic(self, topic: str, context: Optional[str] = None) -> str:
         """
-        Perform deep research on a general topic. 
-        
+        Perform deep research on a general topic.
+
         Args:
             topic: The research topic or question.
             context: Additional context to guide the research.
-            
+
         Returns:
             Synthesized research report.
         """
@@ -51,17 +51,13 @@ class PerplexityResearcher:
             "Your goal is to provide deep, data-driven insights with citations. "
             "Be objective, thorough, and professional."
         )
-        
+
         prompt = f"Research the following topic: {topic}"
         if context:
             prompt += f"\n\nAdditional Context: {context}"
-            
+
         try:
-            response = await self.client.agenerate(
-                prompt=prompt,
-                system_prompt=system_prompt,
-                max_tokens=4000
-            )
+            response = await self.client.agenerate(prompt=prompt, system_prompt=system_prompt, max_tokens=4000)
             return response.content
         except Exception as e:
             logger.error(f"Research failed: {e}")
@@ -98,7 +94,7 @@ class PerplexityResearcher:
         """
         topic = f"Find 3-5 US zip codes with high real estate investment potential meeting criteria: {criteria}"
         context = "Focus on net yield, cash-on-cash return, and stable market indicators. Return as structured list if possible."
-        
+
         report = await self.research_topic(topic, context)
         # In a real system, we'd use Claude to parse this report into structured JSON
         # For now, we return the report content as a 'reasoning' block
@@ -114,6 +110,7 @@ class PerplexityResearcher:
         # Integration with RAG engine would go here:
         # await rag_engine.update_document(f"market_trends_{location}", trends)
         return trends
+
 
 def get_perplexity_researcher() -> PerplexityResearcher:
     """Get global PerplexityResearcher instance."""

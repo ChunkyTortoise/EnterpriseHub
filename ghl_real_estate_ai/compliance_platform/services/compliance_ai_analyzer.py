@@ -131,9 +131,7 @@ class ComplianceAIAnalyzer:
         self._cache: Dict[str, Dict[str, Any]] = {}
         self._cache_ttl = 3600  # 1 hour default TTL
 
-        logger.info(
-            f"ComplianceAIAnalyzer initialized with caching={'enabled' if enable_caching else 'disabled'}"
-        )
+        logger.info(f"ComplianceAIAnalyzer initialized with caching={'enabled' if enable_caching else 'disabled'}")
 
     async def explain_risk_dimension(
         self,
@@ -169,9 +167,7 @@ class ComplianceAIAnalyzer:
             >>> print(result["key_concerns"])
             ["Insufficient model documentation", "Limited explainability features"]
         """
-        cache_key = self._get_cache_key(
-            "explain_risk_dimension", dimension, str(scores), model.model_id
-        )
+        cache_key = self._get_cache_key("explain_risk_dimension", dimension, str(scores), model.model_id)
 
         prompt = self._build_risk_prompt(dimension, scores, model, context)
 
@@ -297,21 +293,11 @@ class ComplianceAIAnalyzer:
 
             return {
                 "significance": result.get(
-                    "significance",
-                    f"Violation of {violation.regulation.value} policy: {violation.title}"
+                    "significance", f"Violation of {violation.regulation.value} policy: {violation.title}"
                 ),
-                "business_impact": result.get(
-                    "business_impact",
-                    self._estimate_business_impact(violation)
-                ),
-                "remediation_priority": result.get(
-                    "remediation_priority",
-                    violation.severity.value
-                ),
-                "suggested_actions": result.get(
-                    "suggested_actions",
-                    self._fallback_violation_actions(violation)
-                ),
+                "business_impact": result.get("business_impact", self._estimate_business_impact(violation)),
+                "remediation_priority": result.get("remediation_priority", violation.severity.value),
+                "suggested_actions": result.get("suggested_actions", self._fallback_violation_actions(violation)),
             }
 
         except Exception as e:
@@ -376,21 +362,11 @@ class ComplianceAIAnalyzer:
 
             return {
                 "prioritized_actions": result.get(
-                    "prioritized_actions",
-                    self._fallback_prioritized_actions(violations)
+                    "prioritized_actions", self._fallback_prioritized_actions(violations)
                 ),
-                "timeline": result.get(
-                    "timeline",
-                    self._estimate_timeline(violations)
-                ),
-                "resource_estimates": result.get(
-                    "resource_estimates",
-                    self._estimate_resources(violations)
-                ),
-                "quick_wins": result.get(
-                    "quick_wins",
-                    self._identify_quick_wins(violations)
-                ),
+                "timeline": result.get("timeline", self._estimate_timeline(violations)),
+                "resource_estimates": result.get("resource_estimates", self._estimate_resources(violations)),
+                "quick_wins": result.get("quick_wins", self._identify_quick_wins(violations)),
             }
 
         except Exception as e:
@@ -588,13 +564,15 @@ Provide analysis as JSON with keys: significance, business_impact, remediation_p
         """Build prompt for remediation roadmap generation."""
         violations_summary = []
         for v in violations[:10]:  # Limit to top 10 for token efficiency
-            violations_summary.append({
-                "title": v.title,
-                "regulation": v.regulation.value,
-                "severity": v.severity.value,
-                "days_open": v.days_open,
-                "is_overdue": v.is_overdue,
-            })
+            violations_summary.append(
+                {
+                    "title": v.title,
+                    "regulation": v.regulation.value,
+                    "severity": v.severity.value,
+                    "days_open": v.days_open,
+                    "is_overdue": v.is_overdue,
+                }
+            )
 
         severity_counts = {}
         for v in violations:
@@ -801,7 +779,7 @@ Focus on: overall compliance posture, key risks, regulatory exposure, and recomm
             pass
 
         # Try to extract JSON from markdown code blocks
-        json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', response_text, re.DOTALL)
+        json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", response_text, re.DOTALL)
         if json_match:
             try:
                 return json.loads(json_match.group(1))
@@ -809,7 +787,7 @@ Focus on: overall compliance posture, key risks, regulatory exposure, and recomm
                 pass
 
         # Try to find raw JSON object
-        json_match = re.search(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', response_text, re.DOTALL)
+        json_match = re.search(r"\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}", response_text, re.DOTALL)
         if json_match:
             try:
                 return json.loads(json_match.group(0))
@@ -824,17 +802,17 @@ Focus on: overall compliance posture, key risks, regulatory exposure, and recomm
         recommendations = []
 
         # Match numbered items
-        pattern = r'^\d+[\.\)]\s*(.+)$'
-        for line in response_text.split('\n'):
+        pattern = r"^\d+[\.\)]\s*(.+)$"
+        for line in response_text.split("\n"):
             match = re.match(pattern, line.strip())
             if match:
                 recommendations.append(match.group(1).strip())
 
         # If no numbered items, try bullet points
         if not recommendations:
-            for line in response_text.split('\n'):
+            for line in response_text.split("\n"):
                 line = line.strip()
-                if line.startswith(('- ', '* ', '+ ')):
+                if line.startswith(("- ", "* ", "+ ")):
                     recommendations.append(line[2:].strip())
 
         return recommendations
@@ -858,11 +836,8 @@ Focus on: overall compliance posture, key risks, regulatory exposure, and recomm
         """Generate complete fallback risk response."""
         return {
             "explanation": self._fallback_risk_explanation(dimension, scores),
-            "key_concerns": [
-                f"Low score in {k} ({v:.1f}/100)"
-                for k, v in scores.items()
-                if v < 60
-            ] or ["No critical concerns identified"],
+            "key_concerns": [f"Low score in {k} ({v:.1f}/100)" for k, v in scores.items() if v < 60]
+            or ["No critical concerns identified"],
             "mitigation_strategies": [
                 f"Review and improve {dimension} practices",
                 "Implement monitoring for continuous assessment",
@@ -885,9 +860,7 @@ Focus on: overall compliance posture, key risks, regulatory exposure, and recomm
 
         for dimension, score in sorted(score_map.items(), key=lambda x: x[1]):
             if score < 60:
-                recommendations.append(
-                    f"Priority: Improve {dimension} controls (current score: {score:.1f}/100)"
-                )
+                recommendations.append(f"Priority: Improve {dimension} controls (current score: {score:.1f}/100)")
             if len(recommendations) >= 5:
                 break
 
@@ -908,12 +881,14 @@ Focus on: overall compliance posture, key risks, regulatory exposure, and recomm
             actions.append("Immediate: Escalate to compliance team lead")
             actions.append("Within 24 hours: Document incident details and evidence")
 
-        actions.extend([
-            f"Review {violation.policy_name} requirements",
-            "Implement corrective controls",
-            "Update documentation and procedures",
-            "Schedule follow-up compliance verification",
-        ])
+        actions.extend(
+            [
+                f"Review {violation.policy_name} requirements",
+                "Implement corrective controls",
+                "Update documentation and procedures",
+                "Schedule follow-up compliance verification",
+            ]
+        )
 
         return actions[:5]
 
@@ -932,8 +907,7 @@ Focus on: overall compliance posture, key risks, regulatory exposure, and recomm
 
         if violation.potential_fine:
             impacts.append(
-                f"Potential financial exposure: {violation.potential_fine_currency} "
-                f"{violation.potential_fine:,.0f}"
+                f"Potential financial exposure: {violation.potential_fine_currency} {violation.potential_fine:,.0f}"
             )
 
         if violation.affected_data_subjects > 0:
@@ -969,18 +943,17 @@ Focus on: overall compliance posture, key risks, regulatory exposure, and recomm
             ViolationSeverity.INFORMATIONAL: 4,
         }
 
-        sorted_violations = sorted(
-            violations,
-            key=lambda v: (severity_order.get(v.severity, 5), -v.days_open)
-        )
+        sorted_violations = sorted(violations, key=lambda v: (severity_order.get(v.severity, 5), -v.days_open))
 
         for i, v in enumerate(sorted_violations[:10], 1):
-            actions.append({
-                "title": f"Remediate: {v.title}",
-                "priority": min(i, 5),
-                "category": v.regulation.value,
-                "estimated_hours": self._estimate_violation_hours(v),
-            })
+            actions.append(
+                {
+                    "title": f"Remediate: {v.title}",
+                    "priority": min(i, 5),
+                    "category": v.regulation.value,
+                    "estimated_hours": self._estimate_violation_hours(v),
+                }
+            )
 
         return actions
 
@@ -1048,11 +1021,13 @@ Focus on: overall compliance posture, key risks, regulatory exposure, and recomm
 
         # Add standard quick wins if list is short
         if len(quick_wins) < 3:
-            quick_wins.extend([
-                "Enable comprehensive audit logging",
-                "Update privacy policy with AI disclosures",
-                "Implement automated compliance monitoring",
-            ])
+            quick_wins.extend(
+                [
+                    "Enable comprehensive audit logging",
+                    "Update privacy policy with AI disclosures",
+                    "Implement automated compliance monitoring",
+                ]
+            )
 
         return quick_wins[:5]
 

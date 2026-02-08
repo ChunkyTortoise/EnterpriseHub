@@ -11,20 +11,35 @@ This module provides:
 - Document management and retention compliance
 """
 
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query, UploadFile, File
-from fastapi.responses import JSONResponse, FileResponse
-from typing import Dict, List, Optional, Any, Tuple, Union
-from datetime import datetime, timedelta
-from pydantic import BaseModel
-import logging
 import asyncio
 import json
+import logging
+from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-from ...compliance.security_framework import JorgeSecurityFramework, SecurityLevel, SecurityContext, AccessAction
-from ...compliance.compliance_automation_engine import ComplianceAutomationEngine, ComplianceRegulation, ComplianceStatus
-from ...compliance.privacy_protection_system import PrivacyProtectionSystem, PrivacyRight, PrivacyRegulation, DataCategory
-from ...compliance.audit_documentation_system import AuditDocumentationSystem, AuditEventType, AuditSeverity, DocumentType
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, UploadFile
+from fastapi.responses import FileResponse, JSONResponse
+from pydantic import BaseModel
+
+from ...compliance.audit_documentation_system import (
+    AuditDocumentationSystem,
+    AuditEventType,
+    AuditSeverity,
+    DocumentType,
+)
+from ...compliance.compliance_automation_engine import (
+    ComplianceAutomationEngine,
+    ComplianceRegulation,
+    ComplianceStatus,
+)
+from ...compliance.privacy_protection_system import (
+    DataCategory,
+    PrivacyProtectionSystem,
+    PrivacyRegulation,
+    PrivacyRight,
+)
+from ...compliance.security_framework import AccessAction, JorgeSecurityFramework, SecurityContext, SecurityLevel
 from ...services.auth_service import get_current_user
 from ...services.websocket_manager import WebSocketManager
 
@@ -40,11 +55,13 @@ audit_system = AuditDocumentationSystem()
 # WebSocket manager for real-time updates
 ws_manager = WebSocketManager()
 
+
 # Request/Response Models
 class ComplianceStatusRequest(BaseModel):
     regulation: Optional[str] = None
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
+
 
 class SecurityEventRequest(BaseModel):
     event_type: str
@@ -52,6 +69,7 @@ class SecurityEventRequest(BaseModel):
     description: str
     affected_systems: List[str]
     evidence: Optional[Dict[str, Any]] = None
+
 
 class AuditSearchRequest(BaseModel):
     event_type: Optional[str] = None
@@ -61,6 +79,7 @@ class AuditSearchRequest(BaseModel):
     end_date: Optional[datetime] = None
     compliance_tags: Optional[List[str]] = None
 
+
 class PrivacyRequestSubmission(BaseModel):
     subject_identifiers: Dict[str, str]
     request_type: str
@@ -68,11 +87,13 @@ class PrivacyRequestSubmission(BaseModel):
     description: str
     verification_documents: Optional[List[str]] = None
 
+
 class DocumentCreationRequest(BaseModel):
     document_type: str
     title: str
     content: str
     metadata: Optional[Dict[str, Any]] = None
+
 
 class ComplianceReportRequest(BaseModel):
     report_type: str
@@ -80,11 +101,11 @@ class ComplianceReportRequest(BaseModel):
     end_date: datetime
     regulation_scope: Optional[List[str]] = None
 
+
 # Compliance Status Monitoring
 @router.get("/status")
 async def get_compliance_status(
-    regulation: Optional[str] = Query(None),
-    current_user: Dict = Depends(get_current_user)
+    regulation: Optional[str] = Query(None), current_user: Dict = Depends(get_current_user)
 ):
     """
     Get current compliance status across all or specific regulations
@@ -103,38 +124,38 @@ async def get_compliance_status(
                     "status": "compliant",
                     "last_audit": "2024-01-15",
                     "next_due": "2024-04-15",
-                    "violations": 0
+                    "violations": 0,
                 },
                 "Fair_Housing": {
                     "score": 96.8,
                     "status": "compliant",
                     "last_audit": "2024-01-10",
                     "next_due": "2024-04-10",
-                    "violations": 0
+                    "violations": 0,
                 },
                 "GDPR": {
                     "score": 94.2,
                     "status": "warning",
                     "last_audit": "2024-01-20",
                     "next_due": "2024-07-20",
-                    "violations": 2
+                    "violations": 2,
                 },
                 "CCPA": {
                     "score": 97.1,
                     "status": "compliant",
                     "last_audit": "2024-01-12",
                     "next_due": "2024-07-12",
-                    "violations": 1
-                }
+                    "violations": 1,
+                },
             },
             "trends": {
                 "improvement_areas": ["GDPR consent management", "data retention automation"],
                 "strengths": ["RESPA compliance", "Fair Housing adherence"],
                 "upcoming_deadlines": [
                     {"regulation": "State Licensing", "deadline": "2024-04-08", "type": "renewal"},
-                    {"regulation": "MLS Rules", "deadline": "2024-04-18", "type": "audit"}
-                ]
-            }
+                    {"regulation": "MLS Rules", "deadline": "2024-04-18", "type": "audit"},
+                ],
+            },
         }
 
         # Filter by specific regulation if requested
@@ -145,8 +166,8 @@ async def get_compliance_status(
                     "data": compliance_data["regulations"][regulation],
                     "overall_context": {
                         "overall_score": compliance_data["overall_score"],
-                        "status": compliance_data["status"]
-                    }
+                        "status": compliance_data["status"],
+                    },
                 }
             else:
                 raise HTTPException(status_code=404, detail=f"Regulation {regulation} not found")
@@ -155,14 +176,14 @@ async def get_compliance_status(
         await audit_system.log_audit_event(
             AuditEventType.DATA_ACCESS,
             AuditSeverity.INFORMATIONAL,
-            current_user.get('user_id'),
+            current_user.get("user_id"),
             None,
             "api",
             "compliance_api",
             "get_compliance_status",
             "compliance_dashboard",
             "success",
-            {"regulation_filter": regulation}
+            {"regulation_filter": regulation},
         )
 
         return compliance_data
@@ -171,13 +192,14 @@ async def get_compliance_status(
         logger.error(f"Compliance status retrieval failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Status retrieval failed: {str(e)}")
 
+
 # Security Event Management
 @router.get("/security/events")
 async def get_security_events(
     severity: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     limit: int = Query(50, le=1000),
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
 ):
     """
     Get security events with filtering options
@@ -196,7 +218,7 @@ async def get_security_events(
                 "status": "investigating",
                 "affected_systems": ["Auth Service"],
                 "user_id": None,
-                "evidence": {"ip_address": "192.168.1.100", "attempt_count": 5}
+                "evidence": {"ip_address": "192.168.1.100", "attempt_count": 5},
             },
             {
                 "id": "evt_002",
@@ -207,7 +229,7 @@ async def get_security_events(
                 "status": "resolved",
                 "affected_systems": ["Client Database"],
                 "user_id": "john.doe",
-                "evidence": {"export_count": 150, "export_type": "csv"}
+                "evidence": {"export_count": 150, "export_type": "csv"},
             },
             {
                 "id": "evt_003",
@@ -218,8 +240,8 @@ async def get_security_events(
                 "status": "resolved",
                 "affected_systems": ["User Management"],
                 "user_id": "admin",
-                "evidence": {"permission_changed": "admin_access", "target_user": "john.doe"}
-            }
+                "evidence": {"permission_changed": "admin_access", "target_user": "john.doe"},
+            },
         ]
 
         # Apply filters
@@ -238,32 +260,30 @@ async def get_security_events(
         await audit_system.log_audit_event(
             AuditEventType.DATA_ACCESS,
             AuditSeverity.INFORMATIONAL,
-            current_user.get('user_id'),
+            current_user.get("user_id"),
             None,
             "api",
             "compliance_api",
             "get_security_events",
             "security_dashboard",
             "success",
-            {"severity_filter": severity, "status_filter": status, "limit": limit}
+            {"severity_filter": severity, "status_filter": status, "limit": limit},
         )
 
         return {
             "events": filtered_events,
             "total": len(security_events),
             "filtered": len(filtered_events),
-            "filters_applied": {"severity": severity, "status": status}
+            "filters_applied": {"severity": severity, "status": status},
         }
 
     except Exception as e:
         logger.error(f"Security events retrieval failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Security events retrieval failed: {str(e)}")
 
+
 @router.post("/security/events")
-async def create_security_event(
-    event: SecurityEventRequest,
-    current_user: Dict = Depends(get_current_user)
-):
+async def create_security_event(event: SecurityEventRequest, current_user: Dict = Depends(get_current_user)):
     """
     Create new security event
     """
@@ -279,32 +299,28 @@ async def create_security_event(
             "description": event.description,
             "status": "open",
             "affected_systems": event.affected_systems,
-            "reported_by": current_user.get('user_id'),
-            "evidence": event.evidence or {}
+            "reported_by": current_user.get("user_id"),
+            "evidence": event.evidence or {},
         }
 
         # Log security event creation
         await audit_system.log_audit_event(
             AuditEventType.SECURITY_INCIDENT,
             AuditSeverity.HIGH if event.severity in ["high", "critical"] else AuditSeverity.MEDIUM,
-            current_user.get('user_id'),
+            current_user.get("user_id"),
             None,
             "api",
             "compliance_api",
             "create_security_event",
             event_data["id"],
             "success",
-            {"event_type": event.event_type, "severity": event.severity}
+            {"event_type": event.event_type, "severity": event.severity},
         )
 
         # Broadcast security event to WebSocket clients
         await ws_manager.broadcast_to_group(
             "security_events",
-            {
-                "type": "security_event_created",
-                "event": event_data,
-                "timestamp": datetime.now().isoformat()
-            }
+            {"type": "security_event_created", "event": event_data, "timestamp": datetime.now().isoformat()},
         )
 
         return {"status": "created", "event": event_data}
@@ -313,12 +329,10 @@ async def create_security_event(
         logger.error(f"Security event creation failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Security event creation failed: {str(e)}")
 
+
 # Audit Trail Management
 @router.post("/audit/search")
-async def search_audit_records(
-    search: AuditSearchRequest,
-    current_user: Dict = Depends(get_current_user)
-):
+async def search_audit_records(search: AuditSearchRequest, current_user: Dict = Depends(get_current_user)):
     """
     Search audit records with comprehensive filtering
     """
@@ -347,31 +361,33 @@ async def search_audit_records(
         # Convert to API response format
         formatted_records = []
         for record in audit_records:
-            formatted_records.append({
-                "id": record.record_id,
-                "timestamp": record.timestamp.isoformat(),
-                "event_type": record.event_type.value,
-                "severity": record.severity.value,
-                "user_id": record.user_id,
-                "action": record.action,
-                "resource": record.resource,
-                "result": record.result,
-                "details": record.details,
-                "compliance_tags": record.compliance_tags
-            })
+            formatted_records.append(
+                {
+                    "id": record.record_id,
+                    "timestamp": record.timestamp.isoformat(),
+                    "event_type": record.event_type.value,
+                    "severity": record.severity.value,
+                    "user_id": record.user_id,
+                    "action": record.action,
+                    "resource": record.resource,
+                    "result": record.result,
+                    "details": record.details,
+                    "compliance_tags": record.compliance_tags,
+                }
+            )
 
         # Log audit search
         await audit_system.log_audit_event(
             AuditEventType.DATA_ACCESS,
             AuditSeverity.INFORMATIONAL,
-            current_user.get('user_id'),
+            current_user.get("user_id"),
             None,
             "api",
             "compliance_api",
             "search_audit_records",
             "audit_search",
             "success",
-            {"search_criteria": search_criteria, "results_count": len(formatted_records)}
+            {"search_criteria": search_criteria, "results_count": len(formatted_records)},
         )
 
         return {
@@ -380,18 +396,17 @@ async def search_audit_records(
             "search_criteria": search_criteria,
             "date_range": {
                 "start": search.start_date.isoformat() if search.start_date else None,
-                "end": search.end_date.isoformat() if search.end_date else None
-            }
+                "end": search.end_date.isoformat() if search.end_date else None,
+            },
         }
 
     except Exception as e:
         logger.error(f"Audit search failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Audit search failed: {str(e)}")
 
+
 @router.get("/audit/integrity")
-async def verify_audit_integrity(
-    current_user: Dict = Depends(get_current_user)
-):
+async def verify_audit_integrity(current_user: Dict = Depends(get_current_user)):
     """
     Verify audit trail integrity for tamper detection
     """
@@ -405,7 +420,7 @@ async def verify_audit_integrity(
         await audit_system.log_audit_event(
             AuditEventType.SYSTEM_CONFIGURATION,
             AuditSeverity.HIGH,
-            current_user.get('user_id'),
+            current_user.get("user_id"),
             None,
             "api",
             "compliance_api",
@@ -414,8 +429,8 @@ async def verify_audit_integrity(
             "success" if integrity_result["chain_valid"] else "failure",
             {
                 "chain_valid": integrity_result["chain_valid"],
-                "corrupted_records": len(integrity_result["corrupted_records"])
-            }
+                "corrupted_records": len(integrity_result["corrupted_records"]),
+            },
         )
 
         return integrity_result
@@ -424,12 +439,10 @@ async def verify_audit_integrity(
         logger.error(f"Audit integrity verification failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Integrity verification failed: {str(e)}")
 
+
 # Privacy Rights Management
 @router.post("/privacy/request")
-async def submit_privacy_request(
-    request: PrivacyRequestSubmission,
-    current_user: Dict = Depends(get_current_user)
-):
+async def submit_privacy_request(request: PrivacyRequestSubmission, current_user: Dict = Depends(get_current_user)):
     """
     Submit data subject privacy rights request
     """
@@ -441,14 +454,14 @@ async def submit_privacy_request(
             request.subject_identifiers,
             PrivacyRight(request.request_type),
             PrivacyRegulation(request.regulation),
-            request.description
+            request.description,
         )
 
         # Log privacy request submission
         await audit_system.log_audit_event(
             AuditEventType.PRIVACY_REQUEST,
             AuditSeverity.MEDIUM,
-            current_user.get('user_id'),
+            current_user.get("user_id"),
             None,
             "api",
             "compliance_api",
@@ -458,8 +471,8 @@ async def submit_privacy_request(
             {
                 "request_type": request.request_type,
                 "regulation": request.regulation,
-                "subject_identifiers": list(request.subject_identifiers.keys())
-            }
+                "subject_identifiers": list(request.subject_identifiers.keys()),
+            },
         )
 
         return {
@@ -469,18 +482,16 @@ async def submit_privacy_request(
             "regulation": privacy_request.regulation.value,
             "deadline": privacy_request.deadline.isoformat(),
             "verification_status": privacy_request.verification_status,
-            "processing_status": privacy_request.processing_status
+            "processing_status": privacy_request.processing_status,
         }
 
     except Exception as e:
         logger.error(f"Privacy request submission failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Privacy request submission failed: {str(e)}")
 
+
 @router.get("/privacy/requests/{request_id}")
-async def get_privacy_request_status(
-    request_id: str,
-    current_user: Dict = Depends(get_current_user)
-):
+async def get_privacy_request_status(request_id: str, current_user: Dict = Depends(get_current_user)):
     """
     Get privacy request status and details
     """
@@ -500,22 +511,22 @@ async def get_privacy_request_status(
             "processing_notes": [
                 "Request received and verified",
                 "Data collection in progress",
-                "Expected completion within 5 business days"
-            ]
+                "Expected completion within 5 business days",
+            ],
         }
 
         # Log privacy request status access
         await audit_system.log_audit_event(
             AuditEventType.PRIVACY_REQUEST,
             AuditSeverity.INFORMATIONAL,
-            current_user.get('user_id'),
+            current_user.get("user_id"),
             None,
             "api",
             "compliance_api",
             "get_privacy_request_status",
             request_id,
             "success",
-            {"request_id": request_id}
+            {"request_id": request_id},
         )
 
         return privacy_request_data
@@ -524,12 +535,13 @@ async def get_privacy_request_status(
         logger.error(f"Privacy request status retrieval failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Status retrieval failed: {str(e)}")
 
+
 # Compliance Reporting
 @router.post("/reports/generate")
 async def generate_compliance_report(
     report_request: ComplianceReportRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
 ):
     """
     Generate comprehensive compliance report
@@ -542,14 +554,14 @@ async def generate_compliance_report(
             report_request.report_type,
             (report_request.start_date, report_request.end_date),
             report_request.regulation_scope or ["RESPA", "Fair_Housing", "GDPR", "CCPA"],
-            current_user.get('user_id')
+            current_user.get("user_id"),
         )
 
         # Log report generation
         await audit_system.log_audit_event(
             AuditEventType.SYSTEM_CONFIGURATION,
             AuditSeverity.MEDIUM,
-            current_user.get('user_id'),
+            current_user.get("user_id"),
             None,
             "api",
             "compliance_api",
@@ -559,8 +571,8 @@ async def generate_compliance_report(
             {
                 "report_type": report_request.report_type,
                 "date_range": f"{report_request.start_date.isoformat()} to {report_request.end_date.isoformat()}",
-                "regulation_scope": report_request.regulation_scope
-            }
+                "regulation_scope": report_request.regulation_scope,
+            },
         )
 
         return {
@@ -572,18 +584,16 @@ async def generate_compliance_report(
             "risk_level": report.risk_level,
             "executive_summary": report.executive_summary,
             "findings_count": len(report.findings),
-            "recommendations_count": len(report.recommendations)
+            "recommendations_count": len(report.recommendations),
         }
 
     except Exception as e:
         logger.error(f"Compliance report generation failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Report generation failed: {str(e)}")
 
+
 @router.get("/reports/{report_id}")
-async def get_compliance_report(
-    report_id: str,
-    current_user: Dict = Depends(get_current_user)
-):
+async def get_compliance_report(report_id: str, current_user: Dict = Depends(get_current_user)):
     """
     Get compliance report details
     """
@@ -594,12 +604,9 @@ async def get_compliance_report(
         report_data = {
             "report_id": report_id,
             "report_type": "quarterly_compliance",
-            "reporting_period": {
-                "start": "2024-01-01T00:00:00Z",
-                "end": "2024-03-31T23:59:59Z"
-            },
+            "reporting_period": {"start": "2024-01-01T00:00:00Z", "end": "2024-03-31T23:59:59Z"},
             "generated_at": "2024-01-24T12:00:00Z",
-            "generated_by": current_user.get('user_id'),
+            "generated_by": current_user.get("user_id"),
             "status": "final",
             "compliance_score": 96.8,
             "risk_level": "low",
@@ -609,29 +616,29 @@ async def get_compliance_report(
                     "regulation": "GDPR",
                     "severity": "medium",
                     "description": "Consent refresh process could be automated",
-                    "recommendations": ["Implement automated consent renewal system"]
+                    "recommendations": ["Implement automated consent renewal system"],
                 }
             ],
             "recommendations": [
                 "Automate GDPR consent management",
                 "Enhance privacy notice clarity",
-                "Implement quarterly compliance reviews"
+                "Implement quarterly compliance reviews",
             ],
-            "attachments": ["evidence_package.zip", "audit_trail.json"]
+            "attachments": ["evidence_package.zip", "audit_trail.json"],
         }
 
         # Log report access
         await audit_system.log_audit_event(
             AuditEventType.DOCUMENT_ACCESS,
             AuditSeverity.INFORMATIONAL,
-            current_user.get('user_id'),
+            current_user.get("user_id"),
             None,
             "api",
             "compliance_api",
             "get_compliance_report",
             report_id,
             "success",
-            {"report_id": report_id}
+            {"report_id": report_id},
         )
 
         return report_data
@@ -640,11 +647,11 @@ async def get_compliance_report(
         logger.error(f"Compliance report retrieval failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Report retrieval failed: {str(e)}")
 
+
 # Document Management
 @router.post("/documents")
 async def create_compliance_document(
-    document_request: DocumentCreationRequest,
-    current_user: Dict = Depends(get_current_user)
+    document_request: DocumentCreationRequest, current_user: Dict = Depends(get_current_user)
 ):
     """
     Create new compliance document
@@ -657,8 +664,8 @@ async def create_compliance_document(
             DocumentType(document_request.document_type),
             document_request.title,
             document_request.content,
-            current_user.get('user_id'),
-            document_request.metadata
+            current_user.get("user_id"),
+            document_request.metadata,
         )
 
         return {
@@ -669,12 +676,13 @@ async def create_compliance_document(
             "version": document.version,
             "status": document.status.value,
             "created_at": document.created_at.isoformat(),
-            "file_path": document.file_path
+            "file_path": document.file_path,
         }
 
     except Exception as e:
         logger.error(f"Document creation failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Document creation failed: {str(e)}")
+
 
 # Export and Archive
 @router.get("/export/audit")
@@ -682,7 +690,7 @@ async def export_audit_data(
     format: str = Query("csv", pattern="^(Union[csv, json]|Union[pdf, zip])$"),
     start_date: datetime = Query(...),
     end_date: datetime = Query(...),
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
 ):
     """
     Export audit data for compliance or external analysis
@@ -692,21 +700,20 @@ async def export_audit_data(
 
         # Export audit data
         export_path = await audit_system.export_audit_data(
-            format,
-            (start_date, end_date),
-            {"user_id": current_user.get('user_id')}
+            format, (start_date, end_date), {"user_id": current_user.get("user_id")}
         )
 
         # Return file response
         return FileResponse(
             path=export_path,
             filename=f"audit_export_{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}.{format}",
-            media_type="application/octet-stream"
+            media_type="application/octet-stream",
         )
 
     except Exception as e:
         logger.error(f"Audit data export failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+
 
 # Real-time Monitoring WebSocket
 @router.websocket("/ws/monitoring")
@@ -727,7 +734,7 @@ async def compliance_monitoring_websocket(websocket):
                 "timestamp": datetime.now().isoformat(),
                 "overall_score": 96.8,
                 "critical_alerts": 0,
-                "active_incidents": 1
+                "active_incidents": 1,
             }
 
             await websocket.send_json(status_update)
@@ -735,6 +742,7 @@ async def compliance_monitoring_websocket(websocket):
     except Exception as e:
         logger.info("Client disconnected from compliance monitoring WebSocket")
         await ws_manager.disconnect(websocket, "compliance_monitoring")
+
 
 # Health check endpoint
 @router.get("/health")
@@ -749,15 +757,15 @@ async def compliance_health_check():
                 "security_framework": "operational",
                 "compliance_engine": "operational",
                 "privacy_system": "operational",
-                "audit_system": "operational"
+                "audit_system": "operational",
             },
             "metrics": {
                 "overall_compliance_score": 96.8,
                 "active_security_events": 3,
                 "audit_records_today": 247,
-                "privacy_requests_pending": 2
+                "privacy_requests_pending": 2,
             },
-            "last_check": datetime.now().isoformat()
+            "last_check": datetime.now().isoformat(),
         }
 
         return health_status
@@ -765,6 +773,7 @@ async def compliance_health_check():
     except Exception as e:
         logger.error(f"Compliance health check failed: {str(e)}")
         raise HTTPException(status_code=500, detail="Health check failed")
+
 
 # Initialize background monitoring
 @router.on_event("startup")
@@ -774,6 +783,7 @@ async def startup_compliance_monitoring():
     """
     asyncio.create_task(continuous_compliance_monitoring())
     logger.info("Compliance monitoring started")
+
 
 async def continuous_compliance_monitoring():
     """
@@ -798,6 +808,7 @@ async def continuous_compliance_monitoring():
         except Exception as e:
             logger.error(f"Continuous compliance monitoring error: {str(e)}")
             await asyncio.sleep(60)  # Wait 1 minute before retry
+
 
 @router.on_event("shutdown")
 async def shutdown_compliance_services():

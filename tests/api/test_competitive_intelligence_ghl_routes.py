@@ -3,16 +3,20 @@ Tests for Competitive Intelligence GHL Integration API Routes.
 Comprehensive test suite for GHL CRM integration endpoints.
 """
 
-import pytest
+import json
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 from fastapi.testclient import TestClient
-import json
 
 try:
-    from ghl_real_estate_ai.api.routes.competitive_intelligence_ghl import router, GHLMarketIntelligenceService
     from ghl_real_estate_ai.api.routes.competitive_intelligence_ghl import (
-        GHLCompetitorLead, MarketIntelligenceSync, CompetitiveResponseCampaign
+        CompetitiveResponseCampaign,
+        GHLCompetitorLead,
+        GHLMarketIntelligenceService,
+        MarketIntelligenceSync,
+        router,
     )
 except (ImportError, TypeError, AttributeError):
     pytest.skip("required imports unavailable", allow_module_level=True)
@@ -22,6 +26,7 @@ except (ImportError, TypeError, AttributeError):
 def client():
     """Create test client."""
     from fastapi import FastAPI
+
     app = FastAPI()
     app.include_router(router)
     return TestClient(app)
@@ -54,30 +59,15 @@ def sample_lead_data():
             "first_name": "John",
             "last_name": "Doe",
             "email": "john.doe@example.com",
-            "phone": "+1-555-123-4567"
+            "phone": "+1-555-123-4567",
         },
         "source": "website_form",
         "notes": [
-            {
-                "content": "Client mentioned working with ABC Realty before",
-                "created_at": "2024-01-15T10:30:00Z"
-            },
-            {
-                "content": "Looking at similar properties from XYZ Real Estate",
-                "created_at": "2024-01-16T14:20:00Z"
-            }
+            {"content": "Client mentioned working with ABC Realty before", "created_at": "2024-01-15T10:30:00Z"},
+            {"content": "Looking at similar properties from XYZ Real Estate", "created_at": "2024-01-16T14:20:00Z"},
         ],
-        "custom_fields": {
-            "budget_max": "750000",
-            "preferred_area": "downtown",
-            "property_type": "condo"
-        },
-        "activities": [
-            {
-                "type": "email_open",
-                "timestamp": "2024-01-17T09:15:00Z"
-            }
-        ]
+        "custom_fields": {"budget_max": "750000", "preferred_area": "downtown", "property_type": "condo"},
+        "activities": [{"type": "email_open", "timestamp": "2024-01-17T09:15:00Z"}],
     }
 
 
@@ -92,22 +82,16 @@ def sample_competitive_analysis():
             "indicators": [
                 "Mentioned working with ABC Realty",
                 "Comparing properties from multiple agents",
-                "Price-sensitive behavior patterns"
+                "Price-sensitive behavior patterns",
             ],
-            "risk_factors": [
-                "Existing relationship with competitor",
-                "Active comparison shopping"
-            ],
-            "opportunities": [
-                "Demonstrate superior market knowledge",
-                "Provide exclusive listings"
-            ]
+            "risk_factors": ["Existing relationship with competitor", "Active comparison shopping"],
+            "opportunities": ["Demonstrate superior market knowledge", "Provide exclusive listings"],
         },
         "actions": [
             "Schedule immediate follow-up call",
             "Send market analysis report",
-            "Provide exclusive property access"
-        ]
+            "Provide exclusive property access",
+        ],
     }
 
 
@@ -119,28 +103,18 @@ def sample_campaign_data():
         "trigger_type": "competitor_detection",
         "target_audience": {
             "tags": ["threat_medium", "competitor_abc_realty"],
-            "conditions": ["custom_field_competitor_name_equals_ABC Realty"]
+            "conditions": ["custom_field_competitor_name_equals_ABC Realty"],
         },
-        "response_strategy": {
-            "messaging": "market_expertise",
-            "timing": "immediate",
-            "channels": ["email", "sms"]
-        },
-        "automation_rules": [
-            {
-                "trigger": "tag_added",
-                "action": "send_email_sequence",
-                "delay_hours": 0
-            }
-        ],
-        "auto_start": True
+        "response_strategy": {"messaging": "market_expertise", "timing": "immediate", "channels": ["email", "sms"]},
+        "automation_rules": [{"trigger": "tag_added", "action": "send_email_sequence", "delay_hours": 0}],
+        "auto_start": True,
     }
 
 
 class TestAuthentication:
     """Test GHL authentication functionality."""
 
-    @patch('ghl_real_estate_ai.api.routes.competitive_intelligence_ghl.httpx.AsyncClient')
+    @patch("ghl_real_estate_ai.api.routes.competitive_intelligence_ghl.httpx.AsyncClient")
     async def test_successful_authentication(self, mock_httpx, mock_ghl_service):
         """Test successful GHL token validation."""
         # Mock successful authentication response
@@ -155,6 +129,7 @@ class TestAuthentication:
         service = GHLMarketIntelligenceService()
 
         from fastapi.security import HTTPAuthorizationCredentials
+
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="valid_token")
 
         result = await service.authenticate_ghl_request(credentials)
@@ -162,7 +137,7 @@ class TestAuthentication:
         assert result["id"] == "user_123"
         assert result["name"] == "Test User"
 
-    @patch('ghl_real_estate_ai.api.routes.competitive_intelligence_ghl.httpx.AsyncClient')
+    @patch("ghl_real_estate_ai.api.routes.competitive_intelligence_ghl.httpx.AsyncClient")
     async def test_invalid_authentication(self, mock_httpx, mock_ghl_service):
         """Test invalid GHL token handling."""
         # Mock failed authentication response
@@ -175,8 +150,8 @@ class TestAuthentication:
 
         service = GHLMarketIntelligenceService()
 
-        from fastapi.security import HTTPAuthorizationCredentials
         from fastapi import HTTPException
+        from fastapi.security import HTTPAuthorizationCredentials
 
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="invalid_token")
 
@@ -186,7 +161,7 @@ class TestAuthentication:
         assert exc_info.value.status_code == 401
         assert "Invalid GHL authentication token" in str(exc_info.value.detail)
 
-    @patch('ghl_real_estate_ai.api.routes.competitive_intelligence_ghl.httpx.AsyncClient')
+    @patch("ghl_real_estate_ai.api.routes.competitive_intelligence_ghl.httpx.AsyncClient")
     async def test_authentication_timeout(self, mock_httpx, mock_ghl_service):
         """Test authentication timeout handling."""
         import httpx
@@ -197,8 +172,8 @@ class TestAuthentication:
 
         service = GHLMarketIntelligenceService()
 
-        from fastapi.security import HTTPAuthorizationCredentials
         from fastapi import HTTPException
+        from fastapi.security import HTTPAuthorizationCredentials
 
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="timeout_token")
 
@@ -220,9 +195,7 @@ class TestLeadAnalysis:
         service.cache_service = AsyncMock()
         service._analyze_with_ai = AsyncMock(return_value=sample_competitive_analysis)
 
-        result = await service.analyze_lead_competitive_intelligence(
-            sample_lead_data, "test_token"
-        )
+        result = await service.analyze_lead_competitive_intelligence(sample_lead_data, "test_token")
 
         assert isinstance(result, GHLCompetitorLead)
         assert result.lead_id == "lead_123"
@@ -238,26 +211,26 @@ class TestLeadAnalysis:
         service.llm_client = AsyncMock()
 
         # Mock LLM response
-        mock_llm_response = json.dumps({
-            "competitor_name": "XYZ Real Estate",
-            "probability": 0.85,
-            "threat_level": "HIGH",
-            "insights": {
-                "indicators": ["Direct competitor mention in conversation"],
-                "risk_factors": ["Active engagement with competitor"],
-                "opportunities": ["Immediate competitive response needed"]
-            },
-            "actions": ["Schedule urgent consultation", "Provide market differentiation"]
-        })
+        mock_llm_response = json.dumps(
+            {
+                "competitor_name": "XYZ Real Estate",
+                "probability": 0.85,
+                "threat_level": "HIGH",
+                "insights": {
+                    "indicators": ["Direct competitor mention in conversation"],
+                    "risk_factors": ["Active engagement with competitor"],
+                    "opportunities": ["Immediate competitive response needed"],
+                },
+                "actions": ["Schedule urgent consultation", "Provide market differentiation"],
+            }
+        )
         service.llm_client.generate_response.return_value = mock_llm_response
 
         analysis_data = {
             "lead_source": "referral",
-            "communication_history": [
-                {"content": "I've been working with XYZ Real Estate agent Sarah"}
-            ],
+            "communication_history": [{"content": "I've been working with XYZ Real Estate agent Sarah"}],
             "property_interests": {"area": "downtown"},
-            "interaction_patterns": []
+            "interaction_patterns": [],
         }
 
         result = await service._analyze_with_ai(analysis_data)
@@ -272,26 +245,26 @@ class TestLeadAnalysis:
         service.llm_client = AsyncMock()
 
         # Mock LLM response with no competitor
-        mock_llm_response = json.dumps({
-            "competitor_name": None,
-            "probability": 0.1,
-            "threat_level": "LOW",
-            "insights": {
-                "indicators": ["No competitive mentions found"],
-                "risk_factors": [],
-                "opportunities": ["Build strong initial relationship"]
-            },
-            "actions": ["Standard follow-up process"]
-        })
+        mock_llm_response = json.dumps(
+            {
+                "competitor_name": None,
+                "probability": 0.1,
+                "threat_level": "LOW",
+                "insights": {
+                    "indicators": ["No competitive mentions found"],
+                    "risk_factors": [],
+                    "opportunities": ["Build strong initial relationship"],
+                },
+                "actions": ["Standard follow-up process"],
+            }
+        )
         service.llm_client.generate_response.return_value = mock_llm_response
 
         analysis_data = {
             "lead_source": "website",
-            "communication_history": [
-                {"content": "Looking for a new home in the area"}
-            ],
+            "communication_history": [{"content": "Looking for a new home in the area"}],
             "property_interests": {"budget": "500000"},
-            "interaction_patterns": []
+            "interaction_patterns": [],
         }
 
         result = await service._analyze_with_ai(analysis_data)
@@ -312,7 +285,7 @@ class TestLeadAnalysis:
             "lead_source": "form",
             "communication_history": [],
             "property_interests": {},
-            "interaction_patterns": []
+            "interaction_patterns": [],
         }
 
         result = await service._analyze_with_ai(analysis_data)
@@ -341,10 +314,8 @@ class TestLeadAnalysis:
 class TestCompetitiveResponseCampaigns:
     """Test competitive response campaign creation."""
 
-    @patch('ghl_real_estate_ai.api.routes.competitive_intelligence_ghl.httpx.AsyncClient')
-    async def test_create_competitive_response_campaign(
-        self, mock_httpx, mock_ghl_service, sample_campaign_data
-    ):
+    @patch("ghl_real_estate_ai.api.routes.competitive_intelligence_ghl.httpx.AsyncClient")
+    async def test_create_competitive_response_campaign(self, mock_httpx, mock_ghl_service, sample_campaign_data):
         """Test successful campaign creation."""
         # Mock successful GHL API response
         mock_response = MagicMock()
@@ -358,16 +329,14 @@ class TestCompetitiveResponseCampaigns:
         service = GHLMarketIntelligenceService()
         service.cache_service = AsyncMock()
 
-        result = await service.create_competitive_response_campaign(
-            sample_campaign_data, "test_token"
-        )
+        result = await service.create_competitive_response_campaign(sample_campaign_data, "test_token")
 
         assert isinstance(result, CompetitiveResponseCampaign)
         assert result.campaign_id == "campaign_789"
         assert result.trigger_type == "competitor_detection"
         assert result.is_active is True
 
-    @patch('ghl_real_estate_ai.api.routes.competitive_intelligence_ghl.httpx.AsyncClient')
+    @patch("ghl_real_estate_ai.api.routes.competitive_intelligence_ghl.httpx.AsyncClient")
     async def test_campaign_creation_failure(self, mock_httpx, mock_ghl_service, sample_campaign_data):
         """Test campaign creation failure handling."""
         # Mock failed GHL API response
@@ -384,9 +353,7 @@ class TestCompetitiveResponseCampaigns:
         from fastapi import HTTPException
 
         with pytest.raises(HTTPException) as exc_info:
-            await service.create_competitive_response_campaign(
-                sample_campaign_data, "test_token"
-            )
+            await service.create_competitive_response_campaign(sample_campaign_data, "test_token")
 
         assert exc_info.value.status_code == 400
         assert "Failed to create GHL campaign" in str(exc_info.value.detail)
@@ -410,15 +377,8 @@ class TestMarketIntelligenceSync:
         # This would normally be called in the endpoint
         sync_status = {
             "territory": territory,
-            "time_range": {
-                "hours": hours
-            },
-            "sync_summary": {
-                "total_syncs": 156,
-                "successful_syncs": 151,
-                "failed_syncs": 5,
-                "success_rate": 96.8
-            }
+            "time_range": {"hours": hours},
+            "sync_summary": {"total_syncs": 156, "successful_syncs": 151, "failed_syncs": 5, "success_rate": 96.8},
         }
 
         # Verify the cache key format and structure
@@ -434,13 +394,13 @@ class TestMarketIntelligenceSync:
             territory="austin",
             competitor_data={"sync_type": "full"},
             market_trends={"data_types": ["all"]},
-            sync_status="INITIATED"
+            sync_status="INITIATED",
         )
 
         service = GHLMarketIntelligenceService()
         service.cache_service = AsyncMock()
 
-        with patch('ghl_real_estate_ai.api.routes.competitive_intelligence_ghl.market_intelligence_service', service):
+        with patch("ghl_real_estate_ai.api.routes.competitive_intelligence_ghl.market_intelligence_service", service):
             await execute_market_intelligence_sync(sync_record, "test_token")
 
         # Verify sync record status was updated
@@ -471,8 +431,8 @@ class TestCompetitiveLandscapeInsights:
                 additional_data={
                     "market_presence": "strong",
                     "recent_activity": ["new_listing", "price_drop"],
-                    "recommendations": ["increase_marketing", "competitive_pricing"]
-                }
+                    "recommendations": ["increase_marketing", "competitive_pricing"],
+                },
             ),
             CompetitorDataPoint(
                 competitor_id="comp_2",
@@ -484,9 +444,9 @@ class TestCompetitiveLandscapeInsights:
                 additional_data={
                     "market_presence": "moderate",
                     "recent_activity": ["social_campaign"],
-                    "recommendations": ["monitor_activity"]
-                }
-            )
+                    "recommendations": ["monitor_activity"],
+                },
+            ),
         ]
 
         service.data_pipeline = AsyncMock()
@@ -512,10 +472,10 @@ class TestCompetitiveLandscapeInsights:
                 {
                     "name": data.competitor_name,
                     "threat_level": data.threat_level,
-                    "market_presence": data.additional_data.get("market_presence", "unknown")
+                    "market_presence": data.additional_data.get("market_presence", "unknown"),
                 }
                 for data in competitive_data[:10]
-            ]
+            ],
         }
 
         assert landscape_insights["competitive_metrics"]["total_competitors"] == 2
@@ -526,7 +486,7 @@ class TestCompetitiveLandscapeInsights:
 class TestBackgroundTasks:
     """Test background task functionality."""
 
-    @patch('ghl_real_estate_ai.api.routes.competitive_intelligence_ghl.httpx.AsyncClient')
+    @patch("ghl_real_estate_ai.api.routes.competitive_intelligence_ghl.httpx.AsyncClient")
     async def test_sync_competitive_insights_to_ghl(self, mock_httpx, sample_competitive_analysis):
         """Test syncing competitive insights to GHL contact."""
         from ghl_real_estate_ai.api.routes.competitive_intelligence_ghl import sync_competitive_insights_to_ghl
@@ -546,7 +506,7 @@ class TestBackgroundTasks:
             competitor_probability=0.75,
             competitive_insights=sample_competitive_analysis["insights"],
             threat_level="MEDIUM",
-            recommended_actions=["action1", "action2"]
+            recommended_actions=["action1", "action2"],
         )
 
         # Execute background task
@@ -576,10 +536,10 @@ class TestErrorHandling:
         service = GHLMarketIntelligenceService()
 
         assert service.ghl_api_base == "https://rest.gohighlevel.com/v1"
-        assert hasattr(service, 'cache_service')
-        assert hasattr(service, 'llm_client')
-        assert hasattr(service, 'data_pipeline')
-        assert hasattr(service, 'response_engine')
+        assert hasattr(service, "cache_service")
+        assert hasattr(service, "llm_client")
+        assert hasattr(service, "data_pipeline")
+        assert hasattr(service, "response_engine")
 
     async def test_llm_client_errors(self, mock_ghl_service):
         """Test LLM client error handling."""
@@ -591,7 +551,7 @@ class TestErrorHandling:
             "lead_source": "website",
             "communication_history": [],
             "property_interests": {},
-            "interaction_patterns": []
+            "interaction_patterns": [],
         }
 
         result = await service._analyze_with_ai(analysis_data)
@@ -607,13 +567,15 @@ class TestErrorHandling:
         service = GHLMarketIntelligenceService()
         service.cache_service = AsyncMock()
         service.cache_service.set_data.side_effect = Exception("Cache unavailable")
-        service._analyze_with_ai = AsyncMock(return_value={
-            "competitor_name": None,
-            "probability": 0.0,
-            "threat_level": "LOW",
-            "insights": {},
-            "actions": []
-        })
+        service._analyze_with_ai = AsyncMock(
+            return_value={
+                "competitor_name": None,
+                "probability": 0.0,
+                "threat_level": "LOW",
+                "insights": {},
+                "actions": [],
+            }
+        )
 
         # Should still complete analysis even if cache fails
         result = await service.analyze_lead_competitive_intelligence(sample_lead_data, "test_token")

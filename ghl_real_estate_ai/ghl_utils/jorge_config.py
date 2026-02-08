@@ -9,10 +9,10 @@ Author: Claude Code Assistant
 Created: 2026-01-19
 """
 
-from typing import Dict, List, Optional
-from dataclasses import dataclass
 import logging
 import os
+from dataclasses import dataclass
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ class JorgeSellerConfig:
 
     # ========== GHL INTEGRATION ==========
     # Workflow IDs for different seller temperatures
-    HOT_SELLER_WORKFLOW_ID = ""   # Set via HOT_SELLER_WORKFLOW_ID env var
+    HOT_SELLER_WORKFLOW_ID = ""  # Set via HOT_SELLER_WORKFLOW_ID env var
     WARM_SELLER_WORKFLOW_ID = ""  # Set via WARM_SELLER_WORKFLOW_ID env var
     AGENT_NOTIFICATION_WORKFLOW = ""  # Set via NOTIFY_AGENT_WORKFLOW_ID env var
 
@@ -91,7 +91,7 @@ class JorgeSellerConfig:
         "ai_valuation_price": "",
         "detected_persona": "",
         "psychology_type": "",
-        "urgency_level": ""
+        "urgency_level": "",
     }
 
     # ========== MESSAGE SETTINGS ==========
@@ -112,7 +112,7 @@ class JorgeSellerConfig:
         1: "What's got you considering wanting to sell, where would you move to?",
         2: "If our team sold your home within the next 30 to 45 days, would that pose a problem for you?",
         3: "How would you describe your home, would you say it's move-in ready or would it need some work?",
-        4: "What price would incentivize you to sell?"
+        4: "What price would incentivize you to sell?",
     }
 
     # Question field mapping for data extraction
@@ -120,7 +120,7 @@ class JorgeSellerConfig:
         1: {"field": "motivation", "secondary": "relocation_destination"},
         2: {"field": "timeline_acceptable", "secondary": "timeline_urgency"},
         3: {"field": "property_condition", "secondary": "repair_estimate"},
-        4: {"field": "price_expectation", "secondary": "price_flexibility"}
+        4: {"field": "price_expectation", "secondary": "price_flexibility"},
     }
 
     # ========== FRIENDLY CONSULTATION TEMPLATES ==========
@@ -129,30 +129,30 @@ class JorgeSellerConfig:
         "clarification_needed": [
             "I'd love to better understand your situation. Could you help me with that?",
             "I want to make sure I'm giving you the best advice. Can we clarify a few details?",
-            "To help you make the best decision, I'd like to understand your priorities better."
+            "To help you make the best decision, I'd like to understand your priorities better.",
         ],
         "supportive_follow_up": [
             "I'd be happy to help clarify: {question}",
             "Let me ask this in a helpful way: {question}",
-            "To give you the best guidance: {question}"
+            "To give you the best guidance: {question}",
         ],
         "timeline_discussion": [
             "What timeline would work best for your situation?",
             "Is this timeline something that feels comfortable for you?",
-            "I want to make sure this works with your schedule and needs."
+            "I want to make sure this works with your schedule and needs.",
         ],
         "price_conversation": [
             "What price range would feel right for you?",
             "I'd love to help you understand realistic market values.",
-            "What outcome would make this feel like a great decision?"
-        ]
+            "What outcome would make this feel like a great decision?",
+        ],
     }
 
     # ========== HOT SELLER HANDOFF MESSAGES ==========
     HOT_SELLER_HANDOFF_MESSAGES = [
         "Based on what you've shared, it sounds like we can really help you achieve your goals. I'd love to schedule a time to discuss your options in detail. What would work better for you, morning or afternoon?",
         "Perfect. You're a great fit for our program. I'm connecting you with our team now. Are mornings or afternoons better for a quick call?",
-        "You answered all my questions, which tells me you're serious. Let me get you scheduled with our team today. Morning or afternoon?"
+        "You answered all my questions, which tells me you're serious. Let me get you scheduled with our team today. Morning or afternoon?",
     ]
 
     # ========== BUYER BOT SETTINGS ==========
@@ -168,7 +168,7 @@ class JorgeSellerConfig:
         "hot_lead_conversion_rate": 0.15,  # 15% become hot leads
         "agent_handoff_rate": 0.20,  # 20% advance to agent calls
         "followup_engagement_rate": 0.30,  # 30% engage with follow-ups
-        "opt_out_rate": 0.05  # <5% request no contact
+        "opt_out_rate": 0.05,  # <5% request no contact
     }
 
     # Performance thresholds
@@ -176,7 +176,7 @@ class JorgeSellerConfig:
         "webhook_response_time": 2.0,  # Max 2 seconds
         "message_delivery_rate": 0.99,  # Min 99%
         "classification_accuracy": 0.90,  # Min 90% accuracy
-        "sms_compliance_rate": 1.0  # 100% SMS compliant
+        "sms_compliance_rate": 1.0,  # 100% SMS compliant
     }
 
     # ========== ENVIRONMENT SPECIFIC SETTINGS ==========
@@ -206,12 +206,7 @@ class JorgeSellerConfig:
         """Validate seller response quality"""
         response = response.strip()
 
-        validation_result = {
-            "is_valid": True,
-            "quality_score": 1.0,
-            "issues": [],
-            "provide_support": False
-        }
+        validation_result = {"is_valid": True, "quality_score": 1.0, "issues": [], "provide_support": False}
 
         # Check for very short responses (need more info)
         if len(response) < 10:
@@ -242,11 +237,11 @@ class JorgeSellerConfig:
         # Keep warm, professional language
         if cls.USE_WARM_LANGUAGE:
             # Allow basic punctuation and keep friendly tone
-            message = re.sub(r'[^\w\s,.!?]', '', message)
+            message = re.sub(r"[^\w\s,.!?]", "", message)
 
         # Remove hyphens (Jorge requirement)
         if cls.NO_HYPHENS:
-            message = message.replace('-', ' ')
+            message = message.replace("-", " ")
 
         # Remove robotic language patterns
         if cls.NO_ROBOTIC_LANGUAGE:
@@ -254,14 +249,14 @@ class JorgeSellerConfig:
                 r"I'm here to help",
                 r"Thank you for your time",
                 r"I appreciate your response",
-                r"Have a great day"
+                r"Have a great day",
             ]
             for pattern in robotic_patterns:
-                message = re.sub(pattern, '', message, flags=re.IGNORECASE)
+                message = re.sub(pattern, "", message, flags=re.IGNORECASE)
 
         # Ensure SMS length compliance
         if len(message) > cls.MAX_SMS_LENGTH:
-            message = message[:cls.MAX_SMS_LENGTH - 3] + "..."
+            message = message[: cls.MAX_SMS_LENGTH - 3] + "..."
 
         return message.strip()
 
@@ -272,20 +267,21 @@ class JorgeSellerConfig:
         questions_answered: int,
         timeline_acceptable: Optional[bool],
         response_quality: float,
-        responsiveness: float
+        responsiveness: float,
     ) -> str:
         """Classify seller temperature based on Jorge's criteria"""
 
         # Hot seller criteria (Jorge's exact requirements)
-        if (questions_answered == 4 and
-            timeline_acceptable is True and
-            response_quality >= cls.HOT_SELLER_MIN_RESPONSE_QUALITY and
-            responsiveness > 0.7):
+        if (
+            questions_answered == 4
+            and timeline_acceptable is True
+            and response_quality >= cls.HOT_SELLER_MIN_RESPONSE_QUALITY
+            and responsiveness > 0.7
+        ):
             return "hot"
 
         # Warm seller criteria
-        elif (questions_answered >= 3 and
-              response_quality >= cls.WARM_SELLER_MIN_RESPONSE_QUALITY):
+        elif questions_answered >= 3 and response_quality >= cls.WARM_SELLER_MIN_RESPONSE_QUALITY:
             return "warm"
 
         # Cold seller (default)
@@ -339,6 +335,7 @@ class JorgeSellerConfig:
 
 # ========== ENVIRONMENT CONFIGURATION ==========
 
+
 class JorgeEnvironmentSettings:
     """Environment-specific settings for Jorge's seller bot"""
 
@@ -355,10 +352,18 @@ class JorgeEnvironmentSettings:
         self.warm_seller_threshold = float(os.getenv("WARM_SELLER_THRESHOLD", "0.75"))
 
         # Temperature classification thresholds (configurable)
-        self.hot_questions_required = int(os.getenv("HOT_QUESTIONS_REQUIRED", str(JorgeSellerConfig.HOT_QUESTIONS_REQUIRED)))
-        self.hot_quality_threshold = float(os.getenv("HOT_QUALITY_THRESHOLD", str(JorgeSellerConfig.HOT_QUALITY_THRESHOLD)))
-        self.warm_questions_required = int(os.getenv("WARM_QUESTIONS_REQUIRED", str(JorgeSellerConfig.WARM_QUESTIONS_REQUIRED)))
-        self.warm_quality_threshold = float(os.getenv("WARM_QUALITY_THRESHOLD", str(JorgeSellerConfig.WARM_QUALITY_THRESHOLD)))
+        self.hot_questions_required = int(
+            os.getenv("HOT_QUESTIONS_REQUIRED", str(JorgeSellerConfig.HOT_QUESTIONS_REQUIRED))
+        )
+        self.hot_quality_threshold = float(
+            os.getenv("HOT_QUALITY_THRESHOLD", str(JorgeSellerConfig.HOT_QUALITY_THRESHOLD))
+        )
+        self.warm_questions_required = int(
+            os.getenv("WARM_QUESTIONS_REQUIRED", str(JorgeSellerConfig.WARM_QUESTIONS_REQUIRED))
+        )
+        self.warm_quality_threshold = float(
+            os.getenv("WARM_QUALITY_THRESHOLD", str(JorgeSellerConfig.WARM_QUALITY_THRESHOLD))
+        )
 
         # Message settings
         self.max_sms_length = int(os.getenv("MAX_SMS_LENGTH", "160"))
@@ -389,6 +394,7 @@ class JorgeEnvironmentSettings:
         if value:
             try:
                 import json
+
                 return json.loads(value)
             except json.JSONDecodeError:
                 return value.split(",")
@@ -451,6 +457,7 @@ class JorgeEnvironmentSettings:
 
 # ========== MARKET CONFIGURATION ==========
 
+
 class JorgeMarketManager:
     """Market configuration manager for Jorge bots"""
 
@@ -472,6 +479,7 @@ class JorgeMarketManager:
         if self._rancho_config is None:
             try:
                 from .jorge_rancho_config import rancho_config
+
                 self._rancho_config = rancho_config
             except ImportError:
                 # Fallback configuration
@@ -486,12 +494,9 @@ class JorgeMarketManager:
             "price_ranges": {
                 "entry_level": {"min": 500000, "max": 700000},
                 "mid_market": {"min": 700000, "max": 1200000},
-                "luxury": {"min": 1200000, "max": 7000000}
+                "luxury": {"min": 1200000, "max": 7000000},
             },
-            "regulatory": {
-                "license_authority": "DRE",
-                "state_regulations": "California Department of Real Estate"
-            }
+            "regulatory": {"license_authority": "DRE", "state_regulations": "California Department of Real Estate"},
         }
 
     def _create_fallback_config(self):
@@ -502,12 +507,9 @@ class JorgeMarketManager:
             "price_ranges": {
                 "entry_level": {"min": 500000, "max": 700000},
                 "mid_market": {"min": 700000, "max": 1200000},
-                "luxury": {"min": 1200000, "max": 7000000}
+                "luxury": {"min": 1200000, "max": 7000000},
             },
-            "regulatory": {
-                "license_authority": "DRE",
-                "state_regulations": "California Department of Real Estate"
-            }
+            "regulatory": {"license_authority": "DRE", "state_regulations": "California Department of Real Estate"},
         }
 
 
@@ -517,7 +519,7 @@ class JorgeMarketManager:
 @dataclass
 class BuyerBudgetConfig:
     """Centralized configuration for buyer budget and qualification thresholds.
-    
+
     This class externalizes all hardcoded budget ranges and thresholds from the
     Buyer Bot to support environment-based configuration overrides.
     """
@@ -578,7 +580,7 @@ class BuyerBudgetConfig:
     @classmethod
     def from_environment(cls) -> "BuyerBudgetConfig":
         """Create BuyerBudgetConfig instance with environment variable overrides.
-        
+
         Environment variables:
         - BUYER_BUDGET_RANGES: JSON-encoded budget ranges dict
         - BUYER_FINANCING_PRE_APPROVED_THRESHOLD: int (default 75)
@@ -594,7 +596,7 @@ class BuyerBudgetConfig:
         - BUYER_ROUTING_SCHEDULE_THRESHOLD: int (default 30)
         """
         import json
-        
+
         # Parse budget ranges from environment if provided
         budget_ranges = None
         budget_ranges_env = os.getenv("BUYER_BUDGET_RANGES")
@@ -603,7 +605,7 @@ class BuyerBudgetConfig:
                 budget_ranges = json.loads(budget_ranges_env)
             except json.JSONDecodeError:
                 logger.warning("Invalid BUYER_BUDGET_RANGES format, using defaults")
-        
+
         return cls(
             DEFAULT_BUDGET_RANGES=budget_ranges,
             FINANCING_PRE_APPROVED_THRESHOLD=int(os.getenv("BUYER_FINANCING_PRE_APPROVED_THRESHOLD", "75")),
@@ -693,7 +695,7 @@ __all__ = [
     "ACTIVATION_TAGS",
     "DEACTIVATION_TAGS",
     "CURRENT_MARKET",
-    "MARKET_CONFIG"
+    "MARKET_CONFIG",
 ]
 
 # Backward-compatible alias used by prediction, compliance, intelligence modules

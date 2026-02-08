@@ -167,9 +167,7 @@ class TemplateManagerService:
         # Description validation
         description = template.get("description", "")
         if len(description) < 10:
-            warnings.append(
-                "Description should be at least 10 characters for better discoverability"
-            )
+            warnings.append("Description should be at least 10 characters for better discoverability")
         if len(description) > 500:
             warnings.append("Description is very long. Consider shortening it.")
 
@@ -184,9 +182,7 @@ class TemplateManagerService:
         if steps_count == 0:
             errors.append("Template must have at least one step")
         elif steps_count > 20:
-            warnings.append(
-                f"Template has {steps_count} steps. Consider breaking into smaller workflows."
-            )
+            warnings.append(f"Template has {steps_count} steps. Consider breaking into smaller workflows.")
 
         # Category validation
         valid_categories = [
@@ -201,9 +197,7 @@ class TemplateManagerService:
             "custom",
         ]
         if template.get("category") not in valid_categories:
-            warnings.append(
-                f"Unknown category: {template.get('category')}. Will be set to 'custom'"
-            )
+            warnings.append(f"Unknown category: {template.get('category')}. Will be set to 'custom'")
 
         # Variables validation
         variables = template.get("variables", [])
@@ -224,13 +218,9 @@ class TemplateManagerService:
 
         is_valid = len(errors) == 0
 
-        return ValidationResult(
-            is_valid=is_valid, errors=errors, warnings=warnings, info=info
-        )
+        return ValidationResult(is_valid=is_valid, errors=errors, warnings=warnings, info=info)
 
-    def publish_template(
-        self, template: Dict[str, Any], visibility: str = "private"
-    ) -> Dict[str, Any]:
+    def publish_template(self, template: Dict[str, Any], visibility: str = "private") -> Dict[str, Any]:
         """
         Publish a template to marketplace or save privately
 
@@ -328,9 +318,7 @@ class TemplateManagerService:
 
         return templates
 
-    def update_template(
-        self, template_id: str, updates: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
+    def update_template(self, template_id: str, updates: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
         Update an existing template
 
@@ -373,9 +361,7 @@ class TemplateManagerService:
             return True
         return False
 
-    def customize_template(
-        self, template: Dict[str, Any], customizations: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def customize_template(self, template: Dict[str, Any], customizations: Dict[str, Any]) -> Dict[str, Any]:
         """
         Apply customizations to a template
 
@@ -419,9 +405,7 @@ def demo_template_manager():
             {
                 "action_id": "action_1",
                 "action_type": "send_sms",
-                "config": {
-                    "message": "Hi {{firstName}}, I'm {{agentName}} from {{companyName}}!"
-                },
+                "config": {"message": "Hi {{firstName}}, I'm {{agentName}} from {{companyName}}!"},
                 "conditions": [],
                 "delay_seconds": 0,
             }

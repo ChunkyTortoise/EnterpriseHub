@@ -2,19 +2,21 @@
 LaTeX Report Generator - High-End Market Intelligence
 Generates high-ticket, academic-style PDF reports for elite real estate leads.
 """
+
 import logging
 import os
-from typing import Dict, Any, List
 from datetime import datetime
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
+
 
 class LatexReportGenerator:
     """
     Produces professional LaTeX source code for real estate market reports.
     Designed to create a 'Perceived Value Moat' for Jorge Salas.
     """
-    
+
     def __init__(self):
         self.template = r"""
 \documentclass[11pt,a4paper]{article}
@@ -99,23 +101,27 @@ Days on Market (Avg) & <<DOM>> Days & <<DOM_DELTA>>\% \\
             "<<DELTA_PRICE>>": str(data.get("delta_price", 5.4)),
             "<<DOM>>": str(data.get("dom", 45)),
             "<<DOM_DELTA>>": str(data.get("dom_delta", -1.2)),
-            "<<STRATEGY_TEXT>>": data.get("strategy", "Proceed with assertive market positioning to capture current buyer demand.")
+            "<<STRATEGY_TEXT>>": data.get(
+                "strategy", "Proceed with assertive market positioning to capture current buyer demand."
+            ),
         }
-        
+
         for key, value in replacements.items():
             tex = tex.replace(key, str(value))
-            
+
         return tex
 
     def mock_pdf_render(self, tex_source: str) -> str:
         """
-        In production, this calls pdflatex. 
+        In production, this calls pdflatex.
         For the prototype, we return a success status and the source.
         """
         logger.info("LaTeX source generated successfully.")
         return "SUCCESS: LaTeX Source Ready for Compilation"
 
+
 _latex_gen = None
+
 
 def get_latex_report_generator() -> LatexReportGenerator:
     global _latex_gen

@@ -11,22 +11,23 @@ Tests cover:
 - White-glove service automation
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, AsyncMock
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 from ghl_real_estate_ai.services.premium_service_delivery_tracker import (
+    ClientServiceProfile,
     PremiumServiceDeliveryTracker,
     ServiceDeliverable,
-    ClientServiceProfile,
     ServiceMetrics,
-    ServiceTier,
-    ServiceStatus,
-    TouchpointType,
     ServiceStandard,
-    create_sample_client_profiles
+    ServiceStatus,
+    ServiceTier,
+    TouchpointType,
+    create_sample_client_profiles,
 )
 
 
@@ -34,14 +35,16 @@ from ghl_real_estate_ai.services.premium_service_delivery_tracker import (
 def service_tracker():
     """Initialize premium service delivery tracker for testing"""
     with patch.multiple(
-        'ghl_real_estate_ai.services.premium_service_delivery_tracker',
+        "ghl_real_estate_ai.services.premium_service_delivery_tracker",
         CacheService=Mock(),
         ClaudeAssistant=Mock(),
-        LLMClient=Mock()
+        LLMClient=Mock(),
     ):
         tracker = PremiumServiceDeliveryTracker()
         # Mock Claude responses
-        tracker.claude.generate_claude_response = AsyncMock(return_value="Service excellence achieved through consistent delivery of premium experiences and proactive client engagement.")
+        tracker.claude.generate_claude_response = AsyncMock(
+            return_value="Service excellence achieved through consistent delivery of premium experiences and proactive client engagement."
+        )
         return tracker
 
 
@@ -62,7 +65,7 @@ def white_glove_client():
         quality_average=96.2,
         response_time_average=0.3,
         privacy_requirements=98.0,
-        dedicated_service_manager="Senior Executive Specialist"
+        dedicated_service_manager="Senior Executive Specialist",
     )
 
 
@@ -82,7 +85,7 @@ def premium_client():
         on_time_delivery_rate=94.4,
         quality_average=88.1,
         response_time_average=2.1,
-        privacy_requirements=75.0
+        privacy_requirements=75.0,
     )
 
 
@@ -97,7 +100,7 @@ class TestServiceDeliverableManagement:
             deliverable_type=TouchpointType.INITIAL_CONSULTATION,
             service_tier=ServiceTier.WHITE_GLOVE,
             description="Executive consultation and comprehensive market analysis",
-            priority="high"
+            priority="high",
         )
 
         assert isinstance(deliverable, ServiceDeliverable)
@@ -115,7 +118,7 @@ class TestServiceDeliverableManagement:
             client_id="PREM-001",
             deliverable_type=TouchpointType.MARKET_ANALYSIS,
             service_tier=ServiceTier.PREMIUM,
-            description="Market analysis and property recommendations"
+            description="Market analysis and property recommendations",
         )
 
         assert deliverable.service_tier == ServiceTier.PREMIUM
@@ -126,9 +129,7 @@ class TestServiceDeliverableManagement:
     async def test_create_service_deliverable_standard(self, service_tracker):
         """Test creating standard service deliverable"""
         deliverable = await service_tracker.create_service_deliverable(
-            client_id="STD-001",
-            deliverable_type=TouchpointType.PROPERTY_TOUR,
-            service_tier=ServiceTier.STANDARD
+            client_id="STD-001", deliverable_type=TouchpointType.PROPERTY_TOUR, service_tier=ServiceTier.STANDARD
         )
 
         assert deliverable.service_tier == ServiceTier.STANDARD
@@ -146,7 +147,7 @@ class TestServiceDeliverableManagement:
             deliverable_type=TouchpointType.NEGOTIATION,
             service_tier=ServiceTier.WHITE_GLOVE,
             created_date=datetime.now(),
-            due_date=datetime.now() + timedelta(hours=8)
+            due_date=datetime.now() + timedelta(hours=8),
         )
 
         assignment = await service_tracker._auto_assign_deliverable(white_glove_deliverable)
@@ -159,7 +160,7 @@ class TestServiceDeliverableManagement:
             deliverable_type=TouchpointType.PROPERTY_TOUR,
             service_tier=ServiceTier.STANDARD,
             created_date=datetime.now(),
-            due_date=datetime.now() + timedelta(hours=72)
+            due_date=datetime.now() + timedelta(hours=72),
         )
 
         standard_assignment = await service_tracker._auto_assign_deliverable(standard_deliverable)
@@ -208,7 +209,7 @@ class TestServiceStatusManagement:
             deliverable_id="TEST-001",
             new_status=ServiceStatus.IN_PROGRESS,
             update_note="Started working on consultation preparation",
-            automated=False
+            automated=False,
         )
 
         assert result is True
@@ -221,7 +222,7 @@ class TestServiceStatusManagement:
             new_status=ServiceStatus.COMPLETED,
             update_note="Consultation completed successfully",
             quality_score=94.5,
-            automated=False
+            automated=False,
         )
 
         assert result is True
@@ -233,7 +234,7 @@ class TestServiceStatusManagement:
             deliverable_id="TEST-003",
             new_status=ServiceStatus.ESCALATED,
             update_note="Client requirements exceeded initial scope",
-            automated=True
+            automated=True,
         )
 
         assert result is True
@@ -354,7 +355,7 @@ class TestServiceExcellenceReporting:
             overall_satisfaction=65.0,  # Low satisfaction
             service_score=70.0,
             response_time_average=5.0,  # Slow response
-            on_time_delivery_rate=75.0  # Poor delivery
+            on_time_delivery_rate=75.0,  # Poor delivery
         )
 
         issues = service_tracker._identify_service_issues(problematic_client)
@@ -374,7 +375,7 @@ class TestServiceExcellenceReporting:
             overall_satisfaction=96.0,
             service_score=95.0,
             response_time_average=0.5,
-            on_time_delivery_rate=98.0
+            on_time_delivery_rate=98.0,
         )
 
         no_issues = service_tracker._identify_service_issues(excellent_client)
@@ -408,7 +409,7 @@ class TestServiceROICalculation:
                 client_name=f"Client {tier.value}",
                 service_tier=tier,
                 net_worth=10_000_000,
-                relationship_value=200_000
+                relationship_value=200_000,
             )
             for tier in [ServiceTier.STANDARD, ServiceTier.PREMIUM, ServiceTier.WHITE_GLOVE, ServiceTier.CONCIERGE]
         ]
@@ -429,7 +430,7 @@ class TestServicePlanCreation:
             client_id="WG-PLAN-001",
             service_tier=ServiceTier.WHITE_GLOVE,
             property_value_range=(2_000_000, 5_000_000),
-            timeline_months=12
+            timeline_months=12,
         )
 
         assert isinstance(service_plan, dict)
@@ -447,9 +448,7 @@ class TestServicePlanCreation:
     async def test_create_client_service_plan_premium(self, service_tracker):
         """Test creating premium service plan"""
         service_plan = await service_tracker.create_client_service_plan(
-            client_id="PREM-PLAN-001",
-            service_tier=ServiceTier.PREMIUM,
-            property_value_range=(750_000, 2_000_000)
+            client_id="PREM-PLAN-001", service_tier=ServiceTier.PREMIUM, property_value_range=(750_000, 2_000_000)
         )
 
         assert service_plan["service_tier"] == ServiceTier.PREMIUM.value
@@ -500,7 +499,7 @@ class TestAutomationAndWorkflows:
             deliverable_type=TouchpointType.INITIAL_CONSULTATION,
             service_tier=ServiceTier.WHITE_GLOVE,
             created_date=datetime.now(),
-            due_date=datetime.now() + timedelta(hours=8)
+            due_date=datetime.now() + timedelta(hours=8),
         )
 
         await service_tracker._schedule_automated_follow_ups(deliverable)
@@ -523,8 +522,7 @@ class TestAutomationAndWorkflows:
     async def test_handle_escalation(self, service_tracker):
         """Test service escalation handling"""
         escalation = await service_tracker._handle_escalation(
-            "ESCALATE-001",
-            "Client requirements exceeded scope and timeline"
+            "ESCALATE-001", "Client requirements exceeded scope and timeline"
         )
 
         assert isinstance(escalation, dict)
@@ -542,7 +540,7 @@ class TestDataValidationAndEdgeCases:
         deliverable = await service_tracker.create_service_deliverable(
             client_id="",  # Invalid client ID
             deliverable_type=TouchpointType.PROPERTY_TOUR,
-            service_tier=ServiceTier.PREMIUM
+            service_tier=ServiceTier.PREMIUM,
         )
 
         # Should handle gracefully
@@ -575,12 +573,10 @@ class TestIntegrationWithExistingSystems:
     @pytest.mark.asyncio
     async def test_integration_with_cache_service(self, service_tracker):
         """Test integration with cache service"""
-        with patch.object(service_tracker.cache, 'get', return_value=None):
-            with patch.object(service_tracker.cache, 'set', return_value=True):
+        with patch.object(service_tracker.cache, "get", return_value=None):
+            with patch.object(service_tracker.cache, "set", return_value=True):
                 deliverable = await service_tracker.create_service_deliverable(
-                    "CACHE-001",
-                    TouchpointType.MARKET_ANALYSIS,
-                    ServiceTier.PREMIUM
+                    "CACHE-001", TouchpointType.MARKET_ANALYSIS, ServiceTier.PREMIUM
                 )
                 assert deliverable is not None
 
@@ -624,7 +620,7 @@ class TestPerformance:
                 client_name=f"Batch Client {i}",
                 service_tier=ServiceTier.PREMIUM,
                 net_worth=5_000_000,
-                relationship_value=150_000
+                relationship_value=150_000,
             )
             large_batch.append(profile)
 

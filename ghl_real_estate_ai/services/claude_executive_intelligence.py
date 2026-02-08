@@ -2,20 +2,24 @@
 Claude Executive Intelligence Service
 Orchestrates a swarm of specialized agents for executive-level business intelligence.
 """
+
 import asyncio
 import json
-from typing import Dict, List, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
 from ghl_real_estate_ai.services.lead_swarm_service import BaseSwarmAgent
 
+
 class MarketAnalystAgent(BaseSwarmAgent):
     """Analyzes market trends and competitive landscape."""
+
     def __init__(self):
         super().__init__(
             name="Market Analyst",
             role="market_analyst",
-            description="Analyzes market trends, interest rates, and competitive positioning."
+            description="Analyzes market trends, interest rates, and competitive positioning.",
         )
 
     async def analyze(self, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -37,10 +41,7 @@ class MarketAnalystAgent(BaseSwarmAgent):
         - "economic_impact_score" (0-1)
         - "strategic_recommendation"
         """
-        response = await self.orchestrator.chat_query(
-            query=prompt,
-            context={"agent": self.name, "market": market}
-        )
+        response = await self.orchestrator.chat_query(query=prompt, context={"agent": self.name, "market": market})
         return self._parse_response(response.content)
 
     def _parse_response(self, content: str) -> Dict[str, Any]:
@@ -53,13 +54,15 @@ class MarketAnalystAgent(BaseSwarmAgent):
         except Exception:
             return {"market_sentiment": "Unknown", "raw_analysis": content}
 
+
 class PerformanceAnalystAgent(BaseSwarmAgent):
     """Analyzes team and system performance metrics."""
+
     def __init__(self):
         super().__init__(
             name="Performance Analyst",
             role="performance_analyst",
-            description="Analyzes conversion rates, response times, and agent efficiency."
+            description="Analyzes conversion rates, response times, and agent efficiency.",
         )
 
     async def analyze(self, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -67,7 +70,7 @@ class PerformanceAnalystAgent(BaseSwarmAgent):
         You are a Real Estate Operations & Performance Expert.
         Analyze the following performance metrics.
         
-        Metrics: {json.dumps(data.get('metrics', {}), default=str)}
+        Metrics: {json.dumps(data.get("metrics", {}), default=str)}
         
         Determine:
         1. Efficiency Bottlenecks
@@ -80,10 +83,7 @@ class PerformanceAnalystAgent(BaseSwarmAgent):
         - "critical_bottlenecks" (List)
         - "operational_efficiency_index" (0-1)
         """
-        response = await self.orchestrator.chat_query(
-            query=prompt,
-            context={"agent": self.name}
-        )
+        response = await self.orchestrator.chat_query(query=prompt, context={"agent": self.name})
         return self._parse_response(response.content)
 
     def _parse_response(self, content: str) -> Dict[str, Any]:
@@ -96,13 +96,15 @@ class PerformanceAnalystAgent(BaseSwarmAgent):
         except Exception:
             return {"performance_score": 0, "raw_analysis": content}
 
+
 class PipelineAnalystAgent(BaseSwarmAgent):
     """Analyzes pipeline velocity and deal flow."""
+
     def __init__(self):
         super().__init__(
             name="Pipeline Analyst",
             role="pipeline_analyst",
-            description="Analyzes lead velocity, deal sizes, and pipeline health."
+            description="Analyzes lead velocity, deal sizes, and pipeline health.",
         )
 
     async def analyze(self, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -110,7 +112,7 @@ class PipelineAnalystAgent(BaseSwarmAgent):
         You are a Pipeline Velocity Specialist.
         Analyze the current deal pipeline.
         
-        Pipeline Data: {json.dumps(data.get('pipeline', {}), default=str)}
+        Pipeline Data: {json.dumps(data.get("pipeline", {}), default=str)}
         
         Identify:
         1. Lead-to-Close Velocity
@@ -123,10 +125,7 @@ class PipelineAnalystAgent(BaseSwarmAgent):
         - "velocity_improvement_ops" (List)
         - "risk_score" (0-1)
         """
-        response = await self.orchestrator.chat_query(
-            query=prompt,
-            context={"agent": self.name}
-        )
+        response = await self.orchestrator.chat_query(query=prompt, context={"agent": self.name})
         return self._parse_response(response.content)
 
     def _parse_response(self, content: str) -> Dict[str, Any]:
@@ -139,19 +138,21 @@ class PipelineAnalystAgent(BaseSwarmAgent):
         except Exception:
             return {"pipeline_health": "Unknown", "raw_analysis": content}
 
+
 class StrategyAnalystAgent(BaseSwarmAgent):
     """Synthesizes all insights into strategic business recommendations."""
+
     def __init__(self):
         super().__init__(
             name="Strategic Advisor",
             role="strategic_advisor",
-            description="Synthesizes multi-dimensional insights into high-level strategy."
+            description="Synthesizes multi-dimensional insights into high-level strategy.",
         )
 
     async def analyze(self, data: Dict[str, Any]) -> Dict[str, Any]:
         # This agent should ideally take results from other agents
         swarm_results = data.get("swarm_results", {})
-        
+
         prompt = f"""
         You are the Chief Strategy Officer AI for a major Real Estate firm.
         Synthesize the following insights from your team of specialist agents.
@@ -169,10 +170,7 @@ class StrategyAnalystAgent(BaseSwarmAgent):
         - "strategic_horizon_view" (12-month outlook)
         - "confidence_in_strategy" (0-1)
         """
-        response = await self.orchestrator.chat_query(
-            query=prompt,
-            context={"agent": self.name}
-        )
+        response = await self.orchestrator.chat_query(query=prompt, context={"agent": self.name})
         return self._parse_response(response.content)
 
     def _parse_response(self, content: str) -> Dict[str, Any]:
@@ -185,8 +183,10 @@ class StrategyAnalystAgent(BaseSwarmAgent):
         except Exception:
             return {"executive_summary": "Analysis failed", "raw_analysis": content}
 
+
 class ExecutiveIntelligenceService:
     """Orchestrator for the Executive Intelligence Swarm."""
+
     def __init__(self):
         self.market_agent = MarketAnalystAgent()
         self.performance_agent = PerformanceAnalystAgent()
@@ -195,38 +195,37 @@ class ExecutiveIntelligenceService:
 
     async def run_executive_swarm(self, business_data: Dict[str, Any]) -> Dict[str, Any]:
         """Runs specialized agents in parallel and then synthesizes with Strategy Agent."""
-        
+
         # Phase 1: Parallel specialized analysis
         specialist_tasks = [
             self.market_agent.analyze(business_data),
             self.performance_agent.analyze(business_data),
-            self.pipeline_agent.analyze(business_data)
+            self.pipeline_agent.analyze(business_data),
         ]
-        
+
         specialist_results = await asyncio.gather(*specialist_tasks, return_exceptions=True)
-        
+
         swarm_results = {
             "Market Analysis": specialist_results[0],
             "Performance Analysis": specialist_results[1],
-            "Pipeline Analysis": specialist_results[2]
+            "Pipeline Analysis": specialist_results[2],
         }
-        
+
         # Phase 2: Strategic Synthesis
-        synthesis_data = {
-            "business_data": business_data,
-            "swarm_results": swarm_results
-        }
-        
+        synthesis_data = {"business_data": business_data, "swarm_results": swarm_results}
+
         strategy_result = await self.strategy_agent.analyze(synthesis_data)
-        
+
         return {
             "specialist_insights": swarm_results,
             "strategic_advisor": strategy_result,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
+
 
 # Singleton
 _executive_intelligence_service = None
+
 
 def get_executive_intelligence_service() -> ExecutiveIntelligenceService:
     global _executive_intelligence_service

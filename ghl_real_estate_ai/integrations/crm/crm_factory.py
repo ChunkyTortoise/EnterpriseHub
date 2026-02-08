@@ -13,21 +13,23 @@ This module provides:
 import asyncio
 import logging
 from abc import ABC, abstractmethod
-from datetime import datetime
-from typing import Dict, List, Optional, Any, Type, Union
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional, Type, Union
 
 import aiohttp
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...services.cache_service import CacheService
 from ...ghl_utils.jorge_config import JorgeConfig
+from ...services.cache_service import CacheService
 
 logger = logging.getLogger(__name__)
 
+
 class CRMType(Enum):
     """Supported CRM systems"""
+
     CHIME = "chime"
     TOP_PRODUCER = "top_producer"
     WISE_AGENT = "wise_agent"
@@ -36,9 +38,11 @@ class CRMType(Enum):
     LIONDESK = "liondesk"
     CUSTOM = "custom"
 
+
 @dataclass
 class CRMConfiguration:
     """CRM system configuration"""
+
     crm_type: CRMType
     api_endpoint: str
     api_key: str
@@ -48,13 +52,15 @@ class CRMConfiguration:
     organization_id: Optional[str] = None
     user_id: Optional[str] = None
     rate_limit: int = 60  # requests per minute
-    timeout: int = 30     # seconds
+    timeout: int = 30  # seconds
     custom_fields_mapping: Dict[str, str] = None
     webhook_url: Optional[str] = None
+
 
 @dataclass
 class Contact:
     """Universal contact representation"""
+
     id: str
     first_name: str
     last_name: str
@@ -73,9 +79,11 @@ class Contact:
     jorge_temperature: Optional[float] = None
     jorge_insights: Dict[str, Any] = None
 
+
 @dataclass
 class SyncResult:
     """CRM synchronization result"""
+
     success: bool
     contacts_synced: int
     contacts_updated: int
@@ -83,6 +91,7 @@ class SyncResult:
     errors: List[str]
     sync_duration: float
     last_sync_timestamp: datetime
+
 
 class BaseCRMConnector(ABC):
     """Abstract base class for CRM connectors"""
@@ -99,10 +108,9 @@ class BaseCRMConnector(ABC):
         pass
 
     @abstractmethod
-    async def get_contacts(self,
-                          limit: Optional[int] = None,
-                          offset: Optional[int] = None,
-                          modified_since: Optional[datetime] = None) -> List[Contact]:
+    async def get_contacts(
+        self, limit: Optional[int] = None, offset: Optional[int] = None, modified_since: Optional[datetime] = None
+    ) -> List[Contact]:
         """Retrieve contacts from CRM"""
         pass
 
@@ -139,8 +147,7 @@ class BaseCRMConnector(ABC):
     async def initialize(self):
         """Initialize CRM connector"""
         self.session = aiohttp.ClientSession(
-            timeout=aiohttp.ClientTimeout(total=self.config.timeout),
-            headers={'User-Agent': 'Jorge-AI-Platform/1.0'}
+            timeout=aiohttp.ClientTimeout(total=self.config.timeout), headers={"User-Agent": "Jorge-AI-Platform/1.0"}
         )
         return await self.authenticate()
 
@@ -165,6 +172,7 @@ class BaseCRMConnector(ABC):
         self.request_count += 1
         self.last_request_time = current_time
 
+
 class ChimeCRMConnector(BaseCRMConnector):
     """Chime CRM connector implementation"""
 
@@ -172,19 +180,14 @@ class ChimeCRMConnector(BaseCRMConnector):
         """Authenticate with Chime CRM"""
         try:
             auth_url = f"{self.config.api_endpoint}/auth/token"
-            auth_data = {
-                'api_key': self.config.api_key,
-                'api_secret': self.config.api_secret
-            }
+            auth_data = {"api_key": self.config.api_key, "api_secret": self.config.api_secret}
 
             await self._rate_limit_check()
             async with self.session.post(auth_url, json=auth_data) as response:
                 if response.status == 200:
                     auth_result = await response.json()
-                    self.config.oauth_token = auth_result.get('access_token')
-                    self.session.headers.update({
-                        'Authorization': f'Bearer {self.config.oauth_token}'
-                    })
+                    self.config.oauth_token = auth_result.get("access_token")
+                    self.session.headers.update({"Authorization": f"Bearer {self.config.oauth_token}"})
                     return True
                 else:
                     logger.error(f"Chime CRM authentication failed: {response.status}")
@@ -194,27 +197,26 @@ class ChimeCRMConnector(BaseCRMConnector):
             logger.error(f"Chime CRM authentication error: {str(e)}")
             return False
 
-    async def get_contacts(self,
-                          limit: Optional[int] = None,
-                          offset: Optional[int] = None,
-                          modified_since: Optional[datetime] = None) -> List[Contact]:
+    async def get_contacts(
+        self, limit: Optional[int] = None, offset: Optional[int] = None, modified_since: Optional[datetime] = None
+    ) -> List[Contact]:
         """Retrieve contacts from Chime CRM"""
         try:
             url = f"{self.config.api_endpoint}/contacts"
             params = {}
 
             if limit:
-                params['limit'] = limit
+                params["limit"] = limit
             if offset:
-                params['offset'] = offset
+                params["offset"] = offset
             if modified_since:
-                params['modified_since'] = modified_since.isoformat()
+                params["modified_since"] = modified_since.isoformat()
 
             await self._rate_limit_check()
             async with self.session.get(url, params=params) as response:
                 if response.status == 200:
                     data = await response.json()
-                    return [self._map_chime_to_contact(contact) for contact in data.get('contacts', [])]
+                    return [self._map_chime_to_contact(contact) for contact in data.get("contacts", [])]
                 else:
                     logger.error(f"Failed to get Chime contacts: {response.status}")
                     return []
@@ -278,13 +280,13 @@ class ChimeCRMConnector(BaseCRMConnector):
         """Search contacts in Chime CRM"""
         try:
             url = f"{self.config.api_endpoint}/contacts/search"
-            params = {'q': query}
+            params = {"q": query}
 
             await self._rate_limit_check()
             async with self.session.get(url, params=params) as response:
                 if response.status == 200:
                     data = await response.json()
-                    return [self._map_chime_to_contact(contact) for contact in data.get('contacts', [])]
+                    return [self._map_chime_to_contact(contact) for contact in data.get("contacts", [])]
                 else:
                     return []
 
@@ -296,11 +298,7 @@ class ChimeCRMConnector(BaseCRMConnector):
         """Add note to Chime contact"""
         try:
             url = f"{self.config.api_endpoint}/contacts/{contact_id}/notes"
-            note_data = {
-                'content': note,
-                'type': note_type,
-                'created_by': 'Jorge AI Platform'
-            }
+            note_data = {"content": note, "type": note_type, "created_by": "Jorge AI Platform"}
 
             await self._rate_limit_check()
             async with self.session.post(url, json=note_data) as response:
@@ -315,11 +313,11 @@ class ChimeCRMConnector(BaseCRMConnector):
         try:
             url = f"{self.config.api_endpoint}/contacts/{contact_id}/tasks"
             task_data = {
-                'title': task.get('title', 'Follow up'),
-                'description': task.get('description', ''),
-                'due_date': task.get('due_date'),
-                'priority': task.get('priority', 'normal'),
-                'created_by': 'Jorge AI Platform'
+                "title": task.get("title", "Follow up"),
+                "description": task.get("description", ""),
+                "due_date": task.get("due_date"),
+                "priority": task.get("priority", "normal"),
+                "created_by": "Jorge AI Platform",
             }
 
             await self._rate_limit_check()
@@ -333,38 +331,38 @@ class ChimeCRMConnector(BaseCRMConnector):
     def _map_chime_to_contact(self, chime_data: Dict[str, Any]) -> Contact:
         """Map Chime CRM data to universal Contact format"""
         return Contact(
-            id=str(chime_data.get('id', '')),
-            first_name=chime_data.get('first_name', ''),
-            last_name=chime_data.get('last_name', ''),
-            email=chime_data.get('email'),
-            phone=chime_data.get('phone'),
-            address=chime_data.get('address'),
-            city=chime_data.get('city'),
-            state=chime_data.get('state'),
-            zip_code=chime_data.get('zip_code'),
-            source=chime_data.get('source'),
-            status=chime_data.get('status'),
-            tags=chime_data.get('tags', []),
-            custom_fields=chime_data.get('custom_fields', {}),
-            created_date=self._parse_datetime(chime_data.get('created_at')),
-            last_modified=self._parse_datetime(chime_data.get('updated_at'))
+            id=str(chime_data.get("id", "")),
+            first_name=chime_data.get("first_name", ""),
+            last_name=chime_data.get("last_name", ""),
+            email=chime_data.get("email"),
+            phone=chime_data.get("phone"),
+            address=chime_data.get("address"),
+            city=chime_data.get("city"),
+            state=chime_data.get("state"),
+            zip_code=chime_data.get("zip_code"),
+            source=chime_data.get("source"),
+            status=chime_data.get("status"),
+            tags=chime_data.get("tags", []),
+            custom_fields=chime_data.get("custom_fields", {}),
+            created_date=self._parse_datetime(chime_data.get("created_at")),
+            last_modified=self._parse_datetime(chime_data.get("updated_at")),
         )
 
     def _map_contact_to_chime(self, contact: Contact) -> Dict[str, Any]:
         """Map universal Contact to Chime CRM format"""
         return {
-            'first_name': contact.first_name,
-            'last_name': contact.last_name,
-            'email': contact.email,
-            'phone': contact.phone,
-            'address': contact.address,
-            'city': contact.city,
-            'state': contact.state,
-            'zip_code': contact.zip_code,
-            'source': contact.source,
-            'status': contact.status,
-            'tags': contact.tags or [],
-            'custom_fields': contact.custom_fields or {}
+            "first_name": contact.first_name,
+            "last_name": contact.last_name,
+            "email": contact.email,
+            "phone": contact.phone,
+            "address": contact.address,
+            "city": contact.city,
+            "state": contact.state,
+            "zip_code": contact.zip_code,
+            "source": contact.source,
+            "status": contact.status,
+            "tags": contact.tags or [],
+            "custom_fields": contact.custom_fields or {},
         }
 
     def _parse_datetime(self, date_str: Optional[str]) -> Optional[datetime]:
@@ -372,9 +370,10 @@ class ChimeCRMConnector(BaseCRMConnector):
         if not date_str:
             return None
         try:
-            return datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+            return datetime.fromisoformat(date_str.replace("Z", "+00:00"))
         except:
             return None
+
 
 class TopProducerCRMConnector(BaseCRMConnector):
     """Top Producer CRM connector implementation"""
@@ -384,10 +383,9 @@ class TopProducerCRMConnector(BaseCRMConnector):
         # Implementation specific to Top Producer API
         return True
 
-    async def get_contacts(self,
-                          limit: Optional[int] = None,
-                          offset: Optional[int] = None,
-                          modified_since: Optional[datetime] = None) -> List[Contact]:
+    async def get_contacts(
+        self, limit: Optional[int] = None, offset: Optional[int] = None, modified_since: Optional[datetime] = None
+    ) -> List[Contact]:
         """Retrieve contacts from Top Producer CRM"""
         # Implementation specific to Top Producer API
         return []
@@ -421,6 +419,7 @@ class TopProducerCRMConnector(BaseCRMConnector):
         """Add task for Top Producer contact"""
         # Implementation specific to Top Producer API
         return True
+
 
 class CRMFactory:
     """
@@ -468,7 +467,7 @@ class CRMFactory:
                     api_key=chime_api_key,
                     api_secret=chime_api_secret,
                     rate_limit=100,
-                    webhook_url=self.config.get_env_var("CHIME_WEBHOOK_URL")
+                    webhook_url=self.config.get_env_var("CHIME_WEBHOOK_URL"),
                 )
 
             # Top Producer CRM configuration
@@ -478,7 +477,7 @@ class CRMFactory:
                     crm_type=CRMType.TOP_PRODUCER,
                     api_endpoint="https://api.topproducer.com/v2",
                     api_key=tp_api_key,
-                    rate_limit=60
+                    rate_limit=60,
                 )
 
             self.configurations = crm_configs
@@ -516,8 +515,7 @@ class CRMFactory:
         """Get list of available CRM types"""
         return list(self.connectors.keys())
 
-    async def sync_all_crms(self,
-                          modified_since: Optional[datetime] = None) -> Dict[str, SyncResult]:
+    async def sync_all_crms(self, modified_since: Optional[datetime] = None) -> Dict[str, SyncResult]:
         """Synchronize data from all configured CRMs"""
         try:
             sync_results = {}
@@ -525,9 +523,7 @@ class CRMFactory:
             # Sync each CRM in parallel
             sync_tasks = []
             for crm_id, connector in self.connectors.items():
-                task = asyncio.create_task(
-                    self._sync_single_crm(crm_id, connector, modified_since)
-                )
+                task = asyncio.create_task(self._sync_single_crm(crm_id, connector, modified_since))
                 sync_tasks.append((crm_id, task))
 
             # Wait for all sync operations to complete
@@ -544,7 +540,7 @@ class CRMFactory:
                         contacts_added=0,
                         errors=[str(e)],
                         sync_duration=0.0,
-                        last_sync_timestamp=datetime.now()
+                        last_sync_timestamp=datetime.now(),
                     )
 
             return sync_results
@@ -553,19 +549,15 @@ class CRMFactory:
             logger.error(f"CRM sync operation failed: {str(e)}")
             raise
 
-    async def _sync_single_crm(self,
-                             crm_id: str,
-                             connector: BaseCRMConnector,
-                             modified_since: Optional[datetime]) -> SyncResult:
+    async def _sync_single_crm(
+        self, crm_id: str, connector: BaseCRMConnector, modified_since: Optional[datetime]
+    ) -> SyncResult:
         """Synchronize single CRM system"""
         try:
             start_time = datetime.now()
 
             # Get contacts from CRM
-            contacts = await connector.get_contacts(
-                limit=1000,
-                modified_since=modified_since
-            )
+            contacts = await connector.get_contacts(limit=1000, modified_since=modified_since)
 
             # Process and store contacts
             # This would involve updating the local database
@@ -580,7 +572,7 @@ class CRMFactory:
                 contacts_added=len(contacts),  # Would be calculated during processing
                 errors=[],
                 sync_duration=sync_duration,
-                last_sync_timestamp=datetime.now()
+                last_sync_timestamp=datetime.now(),
             )
 
         except Exception as e:
@@ -597,6 +589,7 @@ class CRMFactory:
 
         except Exception as e:
             logger.error(f"CRM Factory cleanup failed: {str(e)}")
+
 
 # Global CRM factory instance
 crm_factory = CRMFactory()

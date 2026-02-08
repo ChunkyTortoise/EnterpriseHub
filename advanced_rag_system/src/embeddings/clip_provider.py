@@ -233,9 +233,7 @@ class CLIPEmbeddingProvider(EmbeddingProvider):
 
                 # Normalize if configured
                 if self.clip_config.normalize:
-                    text_features = torch.nn.functional.normalize(
-                        text_features, p=2, dim=1
-                    )
+                    text_features = torch.nn.functional.normalize(text_features, p=2, dim=1)
 
                 # Convert to list
                 batch_embeddings = text_features.cpu().numpy().tolist()
@@ -315,9 +313,7 @@ class CLIPEmbeddingProvider(EmbeddingProvider):
 
                 # Normalize if configured
                 if self.clip_config.normalize:
-                    image_features = torch.nn.functional.normalize(
-                        image_features, p=2, dim=1
-                    )
+                    image_features = torch.nn.functional.normalize(image_features, p=2, dim=1)
 
                 # Convert to list
                 batch_embeddings = image_features.cpu().numpy().tolist()
@@ -366,9 +362,7 @@ class CLIPEmbeddingProvider(EmbeddingProvider):
         embeddings = await self.embed_images([image_path])
         return embeddings[0]
 
-    async def embed_image_batch(
-        self, images: List[Union[str, "Image.Image"]]
-    ) -> List[List[float]]:
+    async def embed_image_batch(self, images: List[Union[str, "Image.Image"]]) -> List[List[float]]:
         """Generate embeddings for a batch of images (paths or PIL Images).
 
         Args:
@@ -428,9 +422,7 @@ class CLIPEmbeddingProvider(EmbeddingProvider):
                     image_features = self._model.get_image_features(**inputs)
 
                 if self.clip_config.normalize:
-                    image_features = torch.nn.functional.normalize(
-                        image_features, p=2, dim=1
-                    )
+                    image_features = torch.nn.functional.normalize(image_features, p=2, dim=1)
 
                 batch_embeddings = image_features.cpu().numpy().tolist()
                 embeddings.extend(batch_embeddings)
@@ -488,12 +480,14 @@ class CLIPEmbeddingProvider(EmbeddingProvider):
             Dictionary with model information including device
         """
         info = super().get_model_info()
-        info.update({
-            "device": self._device,
-            "supports_images": True,
-            "supports_text": True,
-            "embedding_space": "shared",
-        })
+        info.update(
+            {
+                "device": self._device,
+                "supports_images": True,
+                "supports_text": True,
+                "embedding_space": "shared",
+            }
+        )
         return info
 
     def _ensure_initialized(self) -> None:

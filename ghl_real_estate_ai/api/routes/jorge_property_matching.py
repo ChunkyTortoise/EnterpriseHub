@@ -12,20 +12,28 @@ Integrates with Jorge's Enhanced Lead Scorer and Neural Property Matcher.
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
 from enum import Enum
+from typing import Any, Dict, List, Optional, Union
 
-from fastapi import APIRouter, HTTPException, Query, Body, Depends
-from pydantic import BaseModel, Field, ConfigDict
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from pydantic import BaseModel, ConfigDict, Field
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.jorge_property_matching_service import JorgePropertyMatchingService
-from ghl_real_estate_ai.models.jorge_property_models import (
-    Property, PropertyMatch, PropertyMatchRequest, PropertyMatchResponse,
-    LeadPropertyPreferences, MatchReasoning, PropertyFilters,
-    ConfidenceLevel, MatchingAlgorithm, PropertyType, MatchingPerformanceMetrics
-)
 from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.models.jorge_property_models import (
+    ConfidenceLevel,
+    LeadPropertyPreferences,
+    MatchingAlgorithm,
+    MatchingPerformanceMetrics,
+    MatchReasoning,
+    Property,
+    PropertyFilters,
+    PropertyMatch,
+    PropertyMatchRequest,
+    PropertyMatchResponse,
+    PropertyType,
+)
+from ghl_real_estate_ai.services.jorge_property_matching_service import JorgePropertyMatchingService
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/jorge/property-matching", tags=["jorge-property-matching"])
@@ -33,17 +41,22 @@ router = APIRouter(prefix="/jorge/property-matching", tags=["jorge-property-matc
 
 # ================== REQUEST/RESPONSE MODELS ==================
 
+
 class PropertyMatchQuery(BaseModel):
     """Query parameters for property matching."""
+
     lead_id: str = Field(..., description="Lead ID for matching")
     max_results: int = Field(default=5, ge=1, le=20, description="Maximum number of matches to return")
     min_match_score: float = Field(default=50.0, ge=0, le=100, description="Minimum match score threshold")
-    algorithm: MatchingAlgorithm = Field(default=MatchingAlgorithm.JORGE_OPTIMIZED, description="Matching algorithm to use")
+    algorithm: MatchingAlgorithm = Field(
+        default=MatchingAlgorithm.JORGE_OPTIMIZED, description="Matching algorithm to use"
+    )
     force_refresh: bool = Field(default=False, description="Force refresh of cached results")
 
 
 class LeadPropertyPreferencesUpdate(BaseModel):
     """Update lead property preferences."""
+
     budget_min: Optional[float] = Field(None, description="Minimum budget")
     budget_max: Optional[float] = Field(None, description="Maximum budget")
     preferred_bedrooms: Optional[int] = Field(None, ge=1, le=10, description="Preferred number of bedrooms")
@@ -58,6 +71,7 @@ class LeadPropertyPreferencesUpdate(BaseModel):
 
 class PropertyMatchExplanationRequest(BaseModel):
     """Request for detailed property match explanation."""
+
     property_id: str = Field(..., description="Property ID")
     lead_id: str = Field(..., description="Lead ID")
     include_talking_points: bool = Field(default=True, description="Include Jorge's talking points")
@@ -66,6 +80,7 @@ class PropertyMatchExplanationRequest(BaseModel):
 
 class PropertyInventoryQuery(BaseModel):
     """Query for property inventory."""
+
     filters: Optional[PropertyFilters] = Field(None, description="Property filters")
     sort_by: str = Field(default="price", description="Sort field")
     sort_order: str = Field(default="asc", description="Sort order (asc/desc)")
@@ -75,6 +90,7 @@ class PropertyInventoryQuery(BaseModel):
 
 class PropertyMatchSummary(BaseModel):
     """Summary of property matching results."""
+
     lead_id: str
     total_matches: int
     avg_match_score: float
@@ -87,6 +103,7 @@ class PropertyMatchSummary(BaseModel):
 
 class MatchingPerformanceResponse(BaseModel):
     """Performance metrics response."""
+
     metrics: MatchingPerformanceMetrics
     recent_matches: int
     avg_processing_time_trend: str  # "improving", "stable", "declining"
@@ -96,6 +113,7 @@ class MatchingPerformanceResponse(BaseModel):
 
 # ================== DEPENDENCY INJECTION ==================
 
+
 def get_property_matching_service() -> JorgePropertyMatchingService:
     """Get property matching service instance."""
     return JorgePropertyMatchingService()
@@ -103,13 +121,14 @@ def get_property_matching_service() -> JorgePropertyMatchingService:
 
 # ================== API ENDPOINTS ==================
 
+
 @router.post("/matches", response_model=PropertyMatchResponse)
 async def find_property_matches(
     query: PropertyMatchQuery,
     lead_data: Dict[str, Any] = Body(..., description="Complete lead data and context"),
     preferences: Optional[LeadPropertyPreferences] = Body(None, description="Explicit lead preferences"),
     service: JorgePropertyMatchingService = Depends(get_property_matching_service),
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user),
 ):
     """
     Find optimal property matches for a lead using Jorge's hybrid AI approach.
@@ -129,13 +148,15 @@ async def find_property_matches(
             preferences=preferences,
             max_results=query.max_results,
             min_match_score=query.min_match_score,
-            algorithm=query.algorithm
+            algorithm=query.algorithm,
         )
 
         # Find matches
         response = await service.find_matches_for_lead(request)
 
-        logger.info(f"Found {len(response.matches)} matches for lead {query.lead_id} in {response.processing_time_ms}ms")
+        logger.info(
+            f"Found {len(response.matches)} matches for lead {query.lead_id} in {response.processing_time_ms}ms"
+        )
         return response
 
     except ValueError as e:
@@ -150,7 +171,7 @@ async def find_property_matches(
 async def get_match_summary(
     lead_id: str,
     service: JorgePropertyMatchingService = Depends(get_property_matching_service),
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user),
 ):
     """
     Get a summary of recent property matches for a lead.
@@ -169,8 +190,8 @@ async def get_match_summary(
             recommendations=[
                 "Schedule showing for top match in Alta Loma",
                 "Emphasize school district quality",
-                "Highlight negotiation opportunity"
-            ]
+                "Highlight negotiation opportunity",
+            ],
         )
 
     except Exception as e:
@@ -182,7 +203,7 @@ async def get_match_summary(
 async def explain_property_match(
     request: PropertyMatchExplanationRequest,
     service: JorgePropertyMatchingService = Depends(get_property_matching_service),
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user),
 ):
     """
     Generate detailed explanation for why a specific property matches a lead.
@@ -212,7 +233,7 @@ async def explain_property_match(
 async def get_lead_preferences(
     lead_id: str,
     service: JorgePropertyMatchingService = Depends(get_property_matching_service),
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user),
 ):
     """
     Get extracted property preferences for a lead.
@@ -230,7 +251,7 @@ async def get_lead_preferences(
             must_have_features=["updated_kitchen", "granite_counters"],
             nice_to_have_features=["pool", "hardwood_floors"],
             property_type_preference=PropertyType.SINGLE_FAMILY,
-            timeline_urgency="60d"
+            timeline_urgency="60d",
         )
 
         return preferences
@@ -245,7 +266,7 @@ async def update_lead_preferences(
     lead_id: str,
     updates: LeadPropertyPreferencesUpdate,
     service: JorgePropertyMatchingService = Depends(get_property_matching_service),
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user),
 ):
     """
     Update property preferences for a lead.
@@ -267,7 +288,7 @@ async def update_lead_preferences(
             must_have_features=updates.must_have_features or [],
             nice_to_have_features=updates.nice_to_have_features or [],
             property_type_preference=updates.property_type_preference,
-            timeline_urgency=updates.timeline_urgency
+            timeline_urgency=updates.timeline_urgency,
         )
 
         # Update preferences in service
@@ -288,7 +309,7 @@ async def get_property_inventory(
     page: int = Query(default=1, ge=1, description="Page number"),
     page_size: int = Query(default=20, ge=1, le=100, description="Page size"),
     service: JorgePropertyMatchingService = Depends(get_property_matching_service),
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user),
 ):
     """
     Get current property inventory with optional filtering.
@@ -300,6 +321,7 @@ async def get_property_inventory(
         property_filters = None
         if filters:
             import json
+
             filter_data = json.loads(filters)
             property_filters = PropertyFilters(**filter_data)
 
@@ -317,7 +339,7 @@ async def get_property_inventory(
                 "sqft": 2650,
                 "neighborhood": "Alta Loma",
                 "days_on_market": 12,
-                "price_per_sqft": 311.32
+                "price_per_sqft": 311.32,
             },
             {
                 "id": "prop_002",
@@ -328,8 +350,8 @@ async def get_property_inventory(
                 "sqft": 2200,
                 "neighborhood": "Victoria Arbors",
                 "days_on_market": 25,
-                "price_per_sqft": 315.91
-            }
+                "price_per_sqft": 315.91,
+            },
         ]
 
         return {
@@ -339,7 +361,7 @@ async def get_property_inventory(
             "page_size": page_size,
             "total_pages": 1,
             "market_stats": inventory_stats,
-            "filters_applied": property_filters.dict() if property_filters else None
+            "filters_applied": property_filters.dict() if property_filters else None,
         }
 
     except json.JSONDecodeError:
@@ -352,7 +374,7 @@ async def get_property_inventory(
 @router.get("/performance", response_model=MatchingPerformanceResponse)
 async def get_matching_performance(
     service: JorgePropertyMatchingService = Depends(get_property_matching_service),
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user),
 ):
     """
     Get performance metrics for the property matching system.
@@ -368,8 +390,8 @@ async def get_matching_performance(
             recommendations=[
                 "Cache hit rate is optimal",
                 "Neural inference time within target",
-                "Consider expanding property inventory"
-            ]
+                "Consider expanding property inventory",
+            ],
         )
 
     except Exception as e:
@@ -381,7 +403,7 @@ async def get_matching_performance(
 async def test_property_matching(
     sample_lead_data: Dict[str, Any] = Body(..., description="Sample lead data for testing"),
     service: JorgePropertyMatchingService = Depends(get_property_matching_service),
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user),
 ):
     """
     Test endpoint for property matching with sample data.
@@ -396,7 +418,7 @@ async def test_property_matching(
             lead_id="test_lead_001",
             lead_data=sample_lead_data,
             max_results=3,
-            algorithm=MatchingAlgorithm.JORGE_OPTIMIZED
+            algorithm=MatchingAlgorithm.JORGE_OPTIMIZED,
         )
 
         # Find matches
@@ -416,7 +438,7 @@ async def test_property_matching(
 async def get_market_insights(
     neighborhood: Optional[str] = Query(None, description="Specific neighborhood"),
     service: JorgePropertyMatchingService = Depends(get_property_matching_service),
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user),
 ):
     """
     Get market insights and trends for Rancho Cucamonga.
@@ -432,24 +454,24 @@ async def get_market_insights(
                 "inventory_level": "low",
                 "avg_days_on_market": 28,
                 "price_trend": "stable_growth",
-                "buyer_demand": "high"
+                "buyer_demand": "high",
             },
             "neighborhood_rankings": [
                 {"name": "Alta Loma", "score": 95, "trend": "hot"},
                 {"name": "Victoria Arbors", "score": 88, "trend": "warm"},
                 {"name": "North Rancho Cucamonga", "score": 92, "trend": "hot"},
-                {"name": "Terra Vista", "score": 75, "trend": "emerging"}
+                {"name": "Terra Vista", "score": 75, "trend": "emerging"},
             ],
             "investment_opportunities": [
                 "First-time buyer market in Terra Vista",
                 "Luxury upgrades in Alta Loma",
-                "Family homes near top schools"
+                "Family homes near top schools",
             ],
             "market_predictions": {
                 "next_30_days": "Continued strong demand",
                 "next_90_days": "Spring market surge expected",
-                "price_forecast": "+3-5% appreciation"
-            }
+                "price_forecast": "+3-5% appreciation",
+            },
         }
 
         return insights
@@ -461,10 +483,9 @@ async def get_market_insights(
 
 # ================== HEALTH CHECK ==================
 
+
 @router.get("/health", response_model=Dict[str, Any])
-async def health_check(
-    service: JorgePropertyMatchingService = Depends(get_property_matching_service)
-):
+async def health_check(service: JorgePropertyMatchingService = Depends(get_property_matching_service)):
     """
     Health check for property matching service.
     """
@@ -480,20 +501,16 @@ async def health_check(
                 "neural_matcher": "available",
                 "lead_scorer": "available",
                 "cache_service": "available",
-                "claude_assistant": "available"
+                "claude_assistant": "available",
             },
             "performance": {
                 "avg_response_time_ms": metrics.avg_processing_time_ms,
                 "cache_hit_rate": f"{metrics.cache_hit_rate:.1%}",
-                "total_matches_served": metrics.matches_generated
+                "total_matches_served": metrics.matches_generated,
             },
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     except Exception as e:
         logger.error(f"Health check failed: {e}")
-        return {
-            "status": "unhealthy",
-            "error": str(e),
-            "timestamp": datetime.utcnow().isoformat()
-        }
+        return {"status": "unhealthy", "error": str(e), "timestamp": datetime.utcnow().isoformat()}

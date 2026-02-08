@@ -24,13 +24,14 @@ from typing import Any, Callable, Dict, List, Optional, Protocol, Tuple, Union
 import numpy as np
 from pydantic import BaseModel, Field
 
-
 # ============================================================================
 # Data Models
 # ============================================================================
 
+
 class MetricResult(BaseModel):
     """Result of a metric calculation."""
+
     metric_name: str
     score: float
     details: Dict[str, Any] = Field(default_factory=dict)
@@ -39,6 +40,7 @@ class MetricResult(BaseModel):
 
 class EvaluationBatch(BaseModel):
     """Batch of evaluation results."""
+
     metric_name: str
     scores: List[float]
     aggregate_score: float
@@ -48,6 +50,7 @@ class EvaluationBatch(BaseModel):
 @dataclass
 class RetrievedContext:
     """A retrieved context chunk with relevance information."""
+
     content: str
     doc_id: str
     score: float
@@ -58,6 +61,7 @@ class RetrievedContext:
 @dataclass
 class RAGEvaluationSample:
     """A single RAG evaluation sample."""
+
     query: str
     answer: str
     retrieved_contexts: List[RetrievedContext]
@@ -70,6 +74,7 @@ class RAGEvaluationSample:
 # Base Metric Classes
 # ============================================================================
 
+
 class BaseMetric(ABC):
     """Abstract base class for all metrics."""
 
@@ -77,19 +82,11 @@ class BaseMetric(ABC):
         self.name = name
 
     @abstractmethod
-    async def compute(
-        self,
-        sample: RAGEvaluationSample,
-        **kwargs
-    ) -> MetricResult:
+    async def compute(self, sample: RAGEvaluationSample, **kwargs) -> MetricResult:
         """Compute the metric for a single sample."""
         pass
 
-    async def compute_batch(
-        self,
-        samples: List[RAGEvaluationSample],
-        **kwargs
-    ) -> EvaluationBatch:
+    async def compute_batch(self, samples: List[RAGEvaluationSample], **kwargs) -> EvaluationBatch:
         """Compute the metric for a batch of samples."""
         tasks = [self.compute(sample, **kwargs) for sample in samples]
         results = await asyncio.gather(*tasks)
@@ -108,7 +105,7 @@ class BaseMetric(ABC):
                 "p25": float(np.percentile(scores, 25)),
                 "p75": float(np.percentile(scores, 75)),
                 "p95": float(np.percentile(scores, 95)),
-            }
+            },
         )
 
 
@@ -116,31 +113,24 @@ class BaseMetric(ABC):
 # Answer Relevance Metrics
 # ============================================================================
 
+
 class AnswerRelevanceMetric(BaseMetric):
     """
     Measures how relevant the generated answer is to the query.
-    
+
     Uses multiple strategies:
     - Keyword overlap
     - Semantic similarity (if embeddings provided)
     - Query term coverage
     """
 
-    def __init__(
-        self,
-        embedding_fn: Optional[Callable[[str], List[float]]] = None,
-        semantic_weight: float = 0.5
-    ):
+    def __init__(self, embedding_fn: Optional[Callable[[str], List[float]]] = None, semantic_weight: float = 0.5):
         super().__init__("answer_relevance")
         self.embedding_fn = embedding_fn
         self.semantic_weight = semantic_weight
         self.keyword_weight = 1 - semantic_weight
 
-    async def compute(
-        self,
-        sample: RAGEvaluationSample,
-        **kwargs
-    ) -> MetricResult:
+    async def compute(self, sample: RAGEvaluationSample, **kwargs) -> MetricResult:
         query = sample.query.lower()
         answer = sample.answer.lower()
 
@@ -165,10 +155,7 @@ class AnswerRelevanceMetric(BaseMetric):
                 semantic_score = keyword_score  # Fallback
 
         # Combined score
-        final_score = (
-            self.keyword_weight * keyword_score +
-            self.semantic_weight * semantic_score
-        )
+        final_score = self.keyword_weight * keyword_score + self.semantic_weight * semantic_score
 
         return MetricResult(
             metric_name=self.name,
@@ -178,43 +165,235 @@ class AnswerRelevanceMetric(BaseMetric):
                 "semantic_score": semantic_score,
                 "query_terms": list(query_terms),
                 "matched_terms": list(query_terms & answer_terms),
-            }
+            },
         )
 
     def _extract_terms(self, text: str) -> List[str]:
         """Extract meaningful terms from text."""
         # Remove punctuation and split
-        words = re.findall(r'\b[a-zA-Z]{3,}\b', text.lower())
+        words = re.findall(r"\b[a-zA-Z]{3,}\b", text.lower())
         # Filter common stop words
         stop_words = {
-            'the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can',
-            'had', 'her', 'was', 'one', 'our', 'out', 'day', 'get', 'has',
-            'him', 'his', 'how', 'its', 'may', 'new', 'now', 'old', 'see',
-            'two', 'who', 'boy', 'did', 'she', 'use', 'her', 'way', 'many',
-            'oil', 'sit', 'set', 'run', 'eat', 'far', 'sea', 'eye', 'ago',
-            'off', 'too', 'any', 'try', 'ask', 'end', 'why', 'let', 'put',
-            'say', 'she', 'try', 'way', 'own', 'say', 'too', 'old', 'tell',
-            'very', 'when', 'much', 'would', 'there', 'their', 'what', 'said',
-            'each', 'which', 'will', 'about', 'could', 'other', 'after',
-            'first', 'never', 'these', 'think', 'where', 'being', 'every',
-            'great', 'might', 'shall', 'still', 'those', 'while', 'this',
-            'that', 'with', 'have', 'from', 'they', 'know', 'want', 'been',
-            'good', 'much', 'some', 'time', 'very', 'when', 'come', 'here',
-            'just', 'like', 'long', 'make', 'over', 'such', 'take', 'than',
-            'them', 'well', 'were', 'what', 'your', 'into', 'more', 'only',
-            'also', 'back', 'call', 'came', 'come', 'dont', 'find', 'give',
-            'going', 'help', 'home', 'keep', 'last', 'left', 'life', 'live',
-            'look', 'made', 'most', 'move', 'must', 'name', 'need', 'next',
-            'open', 'part', 'play', 'read', 'right', 'said', 'same', 'seem',
-            'show', 'side', 'small', 'sound', 'still', 'such', 'take', 'tell',
-            'than', 'that', 'them', 'then', 'there', 'they', 'thing', 'think',
-            'this', 'those', 'though', 'thought', 'three', 'through', 'together',
-            'told', 'took', 'turn', 'under', 'until', 'upon', 'using', 'want',
-            'well', 'went', 'were', 'what', 'when', 'where', 'which', 'while',
-            'white', 'who', 'whole', 'whom', 'whose', 'why', 'wide', 'wife',
-            'will', 'wind', 'wish', 'with', 'within', 'without', 'woman',
-            'wonder', 'word', 'work', 'world', 'would', 'write', 'wrong',
-            'year', 'young', 'youre'
+            "the",
+            "and",
+            "for",
+            "are",
+            "but",
+            "not",
+            "you",
+            "all",
+            "can",
+            "had",
+            "her",
+            "was",
+            "one",
+            "our",
+            "out",
+            "day",
+            "get",
+            "has",
+            "him",
+            "his",
+            "how",
+            "its",
+            "may",
+            "new",
+            "now",
+            "old",
+            "see",
+            "two",
+            "who",
+            "boy",
+            "did",
+            "she",
+            "use",
+            "her",
+            "way",
+            "many",
+            "oil",
+            "sit",
+            "set",
+            "run",
+            "eat",
+            "far",
+            "sea",
+            "eye",
+            "ago",
+            "off",
+            "too",
+            "any",
+            "try",
+            "ask",
+            "end",
+            "why",
+            "let",
+            "put",
+            "say",
+            "she",
+            "try",
+            "way",
+            "own",
+            "say",
+            "too",
+            "old",
+            "tell",
+            "very",
+            "when",
+            "much",
+            "would",
+            "there",
+            "their",
+            "what",
+            "said",
+            "each",
+            "which",
+            "will",
+            "about",
+            "could",
+            "other",
+            "after",
+            "first",
+            "never",
+            "these",
+            "think",
+            "where",
+            "being",
+            "every",
+            "great",
+            "might",
+            "shall",
+            "still",
+            "those",
+            "while",
+            "this",
+            "that",
+            "with",
+            "have",
+            "from",
+            "they",
+            "know",
+            "want",
+            "been",
+            "good",
+            "much",
+            "some",
+            "time",
+            "very",
+            "when",
+            "come",
+            "here",
+            "just",
+            "like",
+            "long",
+            "make",
+            "over",
+            "such",
+            "take",
+            "than",
+            "them",
+            "well",
+            "were",
+            "what",
+            "your",
+            "into",
+            "more",
+            "only",
+            "also",
+            "back",
+            "call",
+            "came",
+            "come",
+            "dont",
+            "find",
+            "give",
+            "going",
+            "help",
+            "home",
+            "keep",
+            "last",
+            "left",
+            "life",
+            "live",
+            "look",
+            "made",
+            "most",
+            "move",
+            "must",
+            "name",
+            "need",
+            "next",
+            "open",
+            "part",
+            "play",
+            "read",
+            "right",
+            "said",
+            "same",
+            "seem",
+            "show",
+            "side",
+            "small",
+            "sound",
+            "still",
+            "such",
+            "take",
+            "tell",
+            "than",
+            "that",
+            "them",
+            "then",
+            "there",
+            "they",
+            "thing",
+            "think",
+            "this",
+            "those",
+            "though",
+            "thought",
+            "three",
+            "through",
+            "together",
+            "told",
+            "took",
+            "turn",
+            "under",
+            "until",
+            "upon",
+            "using",
+            "want",
+            "well",
+            "went",
+            "were",
+            "what",
+            "when",
+            "where",
+            "which",
+            "while",
+            "white",
+            "who",
+            "whole",
+            "whom",
+            "whose",
+            "why",
+            "wide",
+            "wife",
+            "will",
+            "wind",
+            "wish",
+            "with",
+            "within",
+            "without",
+            "woman",
+            "wonder",
+            "word",
+            "work",
+            "world",
+            "would",
+            "write",
+            "wrong",
+            "year",
+            "young",
+            "youre",
         }
         return [w for w in words if w not in stop_words]
 
@@ -243,10 +422,11 @@ class AnswerRelevanceMetric(BaseMetric):
 # Context Precision/Recall Metrics
 # ============================================================================
 
+
 class ContextPrecisionMetric(BaseMetric):
     """
     Measures the precision of retrieved contexts.
-    
+
     Precision = (# of relevant retrieved contexts) / (total # of retrieved contexts)
     """
 
@@ -254,23 +434,14 @@ class ContextPrecisionMetric(BaseMetric):
         super().__init__("context_precision")
         self.relevance_threshold = relevance_threshold
 
-    async def compute(
-        self,
-        sample: RAGEvaluationSample,
-        **kwargs
-    ) -> MetricResult:
+    async def compute(self, sample: RAGEvaluationSample, **kwargs) -> MetricResult:
         contexts = sample.retrieved_contexts
 
         if not contexts:
-            return MetricResult(
-                metric_name=self.name,
-                score=0.0,
-                details={"error": "No contexts retrieved"}
-            )
+            return MetricResult(metric_name=self.name, score=0.0, details={"error": "No contexts retrieved"})
 
         relevant_count = sum(
-            1 for ctx in contexts
-            if ctx.is_relevant or ctx.relevance_score >= self.relevance_threshold
+            1 for ctx in contexts if ctx.is_relevant or ctx.relevance_score >= self.relevance_threshold
         )
 
         precision = relevant_count / len(contexts)
@@ -282,34 +453,26 @@ class ContextPrecisionMetric(BaseMetric):
                 "total_contexts": len(contexts),
                 "relevant_contexts": relevant_count,
                 "relevance_scores": [ctx.relevance_score for ctx in contexts],
-            }
+            },
         )
 
 
 class ContextRecallMetric(BaseMetric):
     """
     Measures the recall of retrieved contexts.
-    
+
     Recall = (# of relevant retrieved contexts) / (total # of relevant contexts expected)
     """
 
     def __init__(self):
         super().__init__("context_recall")
 
-    async def compute(
-        self,
-        sample: RAGEvaluationSample,
-        **kwargs
-    ) -> MetricResult:
+    async def compute(self, sample: RAGEvaluationSample, **kwargs) -> MetricResult:
         contexts = sample.retrieved_contexts
         expected_ids = set(sample.expected_doc_ids)
 
         if not expected_ids:
-            return MetricResult(
-                metric_name=self.name,
-                score=0.0,
-                details={"error": "No expected documents specified"}
-            )
+            return MetricResult(metric_name=self.name, score=0.0, details={"error": "No expected documents specified"})
 
         retrieved_ids = {ctx.doc_id for ctx in contexts}
         retrieved_relevant = len(retrieved_ids & expected_ids)
@@ -326,7 +489,7 @@ class ContextRecallMetric(BaseMetric):
                 "expected_ids": list(expected_ids),
                 "retrieved_ids": list(retrieved_ids),
                 "missed_ids": list(expected_ids - retrieved_ids),
-            }
+            },
         )
 
 
@@ -338,19 +501,11 @@ class ContextRelevanceMetric(BaseMetric):
     def __init__(self):
         super().__init__("context_relevance")
 
-    async def compute(
-        self,
-        sample: RAGEvaluationSample,
-        **kwargs
-    ) -> MetricResult:
+    async def compute(self, sample: RAGEvaluationSample, **kwargs) -> MetricResult:
         contexts = sample.retrieved_contexts
 
         if not contexts:
-            return MetricResult(
-                metric_name=self.name,
-                score=0.0,
-                details={"error": "No contexts retrieved"}
-            )
+            return MetricResult(metric_name=self.name, score=0.0, details={"error": "No contexts retrieved"})
 
         scores = [ctx.relevance_score for ctx in contexts]
         avg_relevance = np.mean(scores)
@@ -362,7 +517,7 @@ class ContextRelevanceMetric(BaseMetric):
                 "individual_scores": scores,
                 "max_score": max(scores),
                 "min_score": min(scores),
-            }
+            },
         )
 
 
@@ -370,36 +525,25 @@ class ContextRelevanceMetric(BaseMetric):
 # Faithfulness Metrics
 # ============================================================================
 
+
 class FaithfulnessMetric(BaseMetric):
     """
     Measures how faithful the answer is to the retrieved contexts.
-    
+
     Detects hallucinations by checking if answer claims are supported by context.
     """
 
-    def __init__(
-        self,
-        embedding_fn: Optional[Callable[[str], List[float]]] = None,
-        claim_threshold: float = 0.7
-    ):
+    def __init__(self, embedding_fn: Optional[Callable[[str], List[float]]] = None, claim_threshold: float = 0.7):
         super().__init__("faithfulness")
         self.embedding_fn = embedding_fn
         self.claim_threshold = claim_threshold
 
-    async def compute(
-        self,
-        sample: RAGEvaluationSample,
-        **kwargs
-    ) -> MetricResult:
+    async def compute(self, sample: RAGEvaluationSample, **kwargs) -> MetricResult:
         answer = sample.answer
         contexts = sample.retrieved_contexts
 
         if not contexts:
-            return MetricResult(
-                metric_name=self.name,
-                score=0.0,
-                details={"error": "No contexts to check against"}
-            )
+            return MetricResult(metric_name=self.name, score=0.0, details={"error": "No contexts to check against"})
 
         # Extract claims from answer
         claims = self._extract_claims(answer)
@@ -408,7 +552,7 @@ class FaithfulnessMetric(BaseMetric):
             return MetricResult(
                 metric_name=self.name,
                 score=1.0,  # No claims to verify = vacuously faithful
-                details={"claims": [], "supported": []}
+                details={"claims": [], "supported": []},
             )
 
         # Check each claim against contexts
@@ -421,10 +565,7 @@ class FaithfulnessMetric(BaseMetric):
             is_supported = await self._check_claim_support(claim, context_text)
             if is_supported:
                 supported_claims += 1
-            claim_results.append({
-                "claim": claim,
-                "supported": is_supported
-            })
+            claim_results.append({"claim": claim, "supported": is_supported})
 
         faithfulness = supported_claims / len(claims)
 
@@ -435,13 +576,13 @@ class FaithfulnessMetric(BaseMetric):
                 "total_claims": len(claims),
                 "supported_claims": supported_claims,
                 "claim_results": claim_results,
-            }
+            },
         )
 
     def _extract_claims(self, text: str) -> List[str]:
         """Extract factual claims from text."""
         # Split into sentences
-        sentences = re.split(r'[.!?]+', text)
+        sentences = re.split(r"[.!?]+", text)
         claims = []
 
         for sent in sentences:
@@ -451,16 +592,16 @@ class FaithfulnessMetric(BaseMetric):
 
             # Look for indicative patterns
             claim_indicators = [
-                r'is\s+a\s+\w+',  # "X is a Y"
-                r'are\s+\w+',     # "X are Y"
-                r'provides?',      # "X provides"
-                r'enables?',       # "X enables"
-                r'supports?',      # "X supports"
-                r'uses?',          # "X uses"
-                r'allows?',        # "X allows"
-                r'helps?',         # "X helps"
-                r'can\s+\w+',     # "X can Y"
-                r'will\s+\w+',    # "X will Y"
+                r"is\s+a\s+\w+",  # "X is a Y"
+                r"are\s+\w+",  # "X are Y"
+                r"provides?",  # "X provides"
+                r"enables?",  # "X enables"
+                r"supports?",  # "X supports"
+                r"uses?",  # "X uses"
+                r"allows?",  # "X allows"
+                r"helps?",  # "X helps"
+                r"can\s+\w+",  # "X can Y"
+                r"will\s+\w+",  # "X will Y"
             ]
 
             if any(re.search(pattern, sent, re.IGNORECASE) for pattern in claim_indicators):
@@ -493,8 +634,8 @@ class FaithfulnessMetric(BaseMetric):
 
     def _extract_terms(self, text: str) -> List[str]:
         """Extract meaningful terms."""
-        words = re.findall(r'\b[a-zA-Z]{4,}\b', text.lower())
-        stop_words = {'that', 'this', 'with', 'from', 'they', 'have', 'were', 'been'}
+        words = re.findall(r"\b[a-zA-Z]{4,}\b", text.lower())
+        stop_words = {"that", "this", "with", "from", "they", "have", "were", "been"}
         return [w for w in words if w not in stop_words]
 
     async def _get_embedding(self, text: str) -> List[float]:
@@ -523,22 +664,14 @@ class AnswerConsistencyMetric(BaseMetric):
     Measures consistency of answers across similar queries.
     """
 
-    def __init__(
-        self,
-        embedding_fn: Optional[Callable[[str], List[float]]] = None
-    ):
+    def __init__(self, embedding_fn: Optional[Callable[[str], List[float]]] = None):
         super().__init__("answer_consistency")
         self.embedding_fn = embedding_fn
 
-    async def compute(
-        self,
-        sample: RAGEvaluationSample,
-        comparison_answer: str,
-        **kwargs
-    ) -> MetricResult:
+    async def compute(self, sample: RAGEvaluationSample, comparison_answer: str, **kwargs) -> MetricResult:
         """
         Compute consistency between answer and a comparison answer.
-        
+
         For batch consistency, use compute_batch with multiple samples
         representing the same query asked multiple times.
         """
@@ -575,13 +708,13 @@ class AnswerConsistencyMetric(BaseMetric):
             details={
                 "jaccard_similarity": jaccard,
                 "semantic_similarity": semantic_sim,
-            }
+            },
         )
 
     def _extract_terms(self, text: str) -> List[str]:
         """Extract meaningful terms."""
-        words = re.findall(r'\b[a-zA-Z]{4,}\b', text.lower())
-        stop_words = {'that', 'this', 'with', 'from', 'they', 'have', 'were', 'been', 'than'}
+        words = re.findall(r"\b[a-zA-Z]{4,}\b", text.lower())
+        stop_words = {"that", "this", "with", "from", "they", "have", "were", "been", "than"}
         return [w for w in words if w not in stop_words]
 
     async def _get_embedding(self, text: str) -> List[float]:
@@ -609,33 +742,22 @@ class AnswerConsistencyMetric(BaseMetric):
 # Answer Similarity Metrics (BLEU, ROUGE)
 # ============================================================================
 
+
 class BLEUMetric(BaseMetric):
     """
     BLEU (Bilingual Evaluation Understudy) score for answer similarity.
-    
+
     Measures n-gram overlap between generated and reference answers.
     """
 
-    def __init__(
-        self,
-        max_n: int = 4,
-        weights: Optional[List[float]] = None
-    ):
+    def __init__(self, max_n: int = 4, weights: Optional[List[float]] = None):
         super().__init__("bleu")
         self.max_n = max_n
         self.weights = weights or [1.0 / max_n] * max_n
 
-    async def compute(
-        self,
-        sample: RAGEvaluationSample,
-        **kwargs
-    ) -> MetricResult:
+    async def compute(self, sample: RAGEvaluationSample, **kwargs) -> MetricResult:
         if not sample.ground_truth_answer:
-            return MetricResult(
-                metric_name=self.name,
-                score=0.0,
-                details={"error": "No ground truth answer provided"}
-            )
+            return MetricResult(metric_name=self.name, score=0.0, details={"error": "No ground truth answer provided"})
 
         candidate = sample.answer.lower()
         reference = sample.ground_truth_answer.lower()
@@ -648,9 +770,7 @@ class BLEUMetric(BaseMetric):
 
         # Geometric mean of precisions
         if all(p > 0 for p in precisions):
-            geo_mean = math.exp(
-                sum(w * math.log(p) for w, p in zip(self.weights, precisions))
-            )
+            geo_mean = math.exp(sum(w * math.log(p) for w, p in zip(self.weights, precisions)))
         else:
             geo_mean = 0.0
 
@@ -666,15 +786,10 @@ class BLEUMetric(BaseMetric):
                 "ngram_precisions": precisions,
                 "brevity_penalty": bp,
                 "geo_mean": geo_mean,
-            }
+            },
         )
 
-    def _ngram_precision(
-        self,
-        candidate: str,
-        reference: str,
-        n: int
-    ) -> float:
+    def _ngram_precision(self, candidate: str, reference: str, n: int) -> float:
         """Calculate n-gram precision."""
         cand_tokens = candidate.split()
         ref_tokens = reference.split()
@@ -697,7 +812,7 @@ class BLEUMetric(BaseMetric):
         """Get n-grams from tokens."""
         ngrams = []
         for i in range(len(tokens) - n + 1):
-            ngrams.append(tuple(tokens[i:i + n]))
+            ngrams.append(tuple(tokens[i : i + n]))
         return Counter(ngrams)
 
     def _brevity_penalty(self, candidate_len: int, reference_len: int) -> float:
@@ -712,7 +827,7 @@ class BLEUMetric(BaseMetric):
 class ROUGEMetric(BaseMetric):
     """
     ROUGE (Recall-Oriented Understudy for Gisting Evaluation) score.
-    
+
     Measures recall of n-grams in reference text.
     """
 
@@ -721,17 +836,9 @@ class ROUGEMetric(BaseMetric):
         self.n = n
         self.use_stemming = use_stemming
 
-    async def compute(
-        self,
-        sample: RAGEvaluationSample,
-        **kwargs
-    ) -> MetricResult:
+    async def compute(self, sample: RAGEvaluationSample, **kwargs) -> MetricResult:
         if not sample.ground_truth_answer:
-            return MetricResult(
-                metric_name=self.name,
-                score=0.0,
-                details={"error": "No ground truth answer provided"}
-            )
+            return MetricResult(metric_name=self.name, score=0.0, details={"error": "No ground truth answer provided"})
 
         candidate = self._preprocess(sample.answer)
         reference = self._preprocess(sample.ground_truth_answer)
@@ -741,11 +848,7 @@ class ROUGEMetric(BaseMetric):
         ref_ngrams = self._get_ngrams(reference.split(), self.n)
 
         if not ref_ngrams:
-            return MetricResult(
-                metric_name=self.name,
-                score=0.0,
-                details={"error": "No reference n-grams"}
-            )
+            return MetricResult(metric_name=self.name, score=0.0, details={"error": "No reference n-grams"})
 
         matches = sum((cand_ngrams & ref_ngrams).values())
         recall = matches / sum(ref_ngrams.values())
@@ -770,7 +873,7 @@ class ROUGEMetric(BaseMetric):
                 "precision": precision,
                 "f1": f1,
                 "matches": matches,
-            }
+            },
         )
 
     def _preprocess(self, text: str) -> str:
@@ -781,19 +884,19 @@ class ROUGEMetric(BaseMetric):
             words = text.split()
             stemmed = []
             for word in words:
-                for suffix in ['ing', 'ed', 'er', 'est', 'ly', 'tion', 's']:
+                for suffix in ["ing", "ed", "er", "est", "ly", "tion", "s"]:
                     if word.endswith(suffix) and len(word) > len(suffix) + 2:
-                        word = word[:-len(suffix)]
+                        word = word[: -len(suffix)]
                         break
                 stemmed.append(word)
-            text = ' '.join(stemmed)
+            text = " ".join(stemmed)
         return text
 
     def _get_ngrams(self, tokens: List[str], n: int) -> Counter:
         """Get n-grams."""
         ngrams = []
         for i in range(len(tokens) - n + 1):
-            ngrams.append(tuple(tokens[i:i + n]))
+            ngrams.append(tuple(tokens[i : i + n]))
         return Counter(ngrams)
 
 
@@ -801,10 +904,11 @@ class ROUGEMetric(BaseMetric):
 # Information Retrieval Metrics
 # ============================================================================
 
+
 class NDCGMetric(BaseMetric):
     """
     Normalized Discounted Cumulative Gain.
-    
+
     Measures ranking quality considering graded relevance.
     """
 
@@ -812,23 +916,15 @@ class NDCGMetric(BaseMetric):
         super().__init__(f"ndcg@{k}" if k else "ndcg")
         self.k = k
 
-    async def compute(
-        self,
-        sample: RAGEvaluationSample,
-        **kwargs
-    ) -> MetricResult:
+    async def compute(self, sample: RAGEvaluationSample, **kwargs) -> MetricResult:
         contexts = sample.retrieved_contexts
 
         if not contexts:
-            return MetricResult(
-                metric_name=self.name,
-                score=0.0,
-                details={"error": "No contexts retrieved"}
-            )
+            return MetricResult(metric_name=self.name, score=0.0, details={"error": "No contexts retrieved"})
 
         # Limit to k if specified
         if self.k:
-            contexts = contexts[:self.k]
+            contexts = contexts[: self.k]
 
         # Calculate DCG
         dcg = 0.0
@@ -837,12 +933,9 @@ class NDCGMetric(BaseMetric):
             dcg += relevance / math.log2(i + 2)  # +2 because i starts at 0
 
         # Calculate ideal DCG
-        ideal_relevances = sorted(
-            [ctx.relevance_score for ctx in sample.retrieved_contexts],
-            reverse=True
-        )
+        ideal_relevances = sorted([ctx.relevance_score for ctx in sample.retrieved_contexts], reverse=True)
         if self.k:
-            ideal_relevances = ideal_relevances[:self.k]
+            ideal_relevances = ideal_relevances[: self.k]
 
         idcg = 0.0
         for i, rel in enumerate(ideal_relevances):
@@ -857,33 +950,25 @@ class NDCGMetric(BaseMetric):
                 "dcg": dcg,
                 "idcg": idcg,
                 "k": self.k or len(contexts),
-            }
+            },
         )
 
 
 class MRRMetric(BaseMetric):
     """
     Mean Reciprocal Rank.
-    
+
     Measures the rank of the first relevant document.
     """
 
     def __init__(self):
         super().__init__("mrr")
 
-    async def compute(
-        self,
-        sample: RAGEvaluationSample,
-        **kwargs
-    ) -> MetricResult:
+    async def compute(self, sample: RAGEvaluationSample, **kwargs) -> MetricResult:
         contexts = sample.retrieved_contexts
 
         if not contexts:
-            return MetricResult(
-                metric_name=self.name,
-                score=0.0,
-                details={"error": "No contexts retrieved"}
-            )
+            return MetricResult(metric_name=self.name, score=0.0, details={"error": "No contexts retrieved"})
 
         # Find first relevant document
         for i, ctx in enumerate(contexts):
@@ -895,7 +980,7 @@ class MRRMetric(BaseMetric):
                     details={
                         "first_relevant_rank": i + 1,
                         "total_contexts": len(contexts),
-                    }
+                    },
                 )
 
         # No relevant document found
@@ -905,14 +990,14 @@ class MRRMetric(BaseMetric):
             details={
                 "first_relevant_rank": None,
                 "total_contexts": len(contexts),
-            }
+            },
         )
 
 
 class RecallAtKMetric(BaseMetric):
     """
     Recall at K metric.
-    
+
     Measures proportion of relevant documents found in top K.
     """
 
@@ -920,20 +1005,12 @@ class RecallAtKMetric(BaseMetric):
         super().__init__(f"recall@{k}")
         self.k = k
 
-    async def compute(
-        self,
-        sample: RAGEvaluationSample,
-        **kwargs
-    ) -> MetricResult:
-        contexts = sample.retrieved_contexts[:self.k]
+    async def compute(self, sample: RAGEvaluationSample, **kwargs) -> MetricResult:
+        contexts = sample.retrieved_contexts[: self.k]
         expected_ids = set(sample.expected_doc_ids)
 
         if not expected_ids:
-            return MetricResult(
-                metric_name=self.name,
-                score=0.0,
-                details={"error": "No expected documents specified"}
-            )
+            return MetricResult(metric_name=self.name, score=0.0, details={"error": "No expected documents specified"})
 
         retrieved_ids = {ctx.doc_id for ctx in contexts}
         retrieved_relevant = len(retrieved_ids & expected_ids)
@@ -947,14 +1024,14 @@ class RecallAtKMetric(BaseMetric):
                 "k": self.k,
                 "expected_count": len(expected_ids),
                 "retrieved_relevant": retrieved_relevant,
-            }
+            },
         )
 
 
 class PrecisionAtKMetric(BaseMetric):
     """
     Precision at K metric.
-    
+
     Measures proportion of retrieved documents that are relevant in top K.
     """
 
@@ -962,19 +1039,11 @@ class PrecisionAtKMetric(BaseMetric):
         super().__init__(f"precision@{k}")
         self.k = k
 
-    async def compute(
-        self,
-        sample: RAGEvaluationSample,
-        **kwargs
-    ) -> MetricResult:
-        contexts = sample.retrieved_contexts[:self.k]
+    async def compute(self, sample: RAGEvaluationSample, **kwargs) -> MetricResult:
+        contexts = sample.retrieved_contexts[: self.k]
 
         if not contexts:
-            return MetricResult(
-                metric_name=self.name,
-                score=0.0,
-                details={"error": "No contexts retrieved"}
-            )
+            return MetricResult(metric_name=self.name, score=0.0, details={"error": "No contexts retrieved"})
 
         relevant_count = sum(1 for ctx in contexts if ctx.is_relevant)
         precision = relevant_count / len(contexts)
@@ -986,7 +1055,7 @@ class PrecisionAtKMetric(BaseMetric):
                 "k": self.k,
                 "relevant_count": relevant_count,
                 "total_retrieved": len(contexts),
-            }
+            },
         )
 
 
@@ -994,35 +1063,30 @@ class PrecisionAtKMetric(BaseMetric):
 # Composite Metrics
 # ============================================================================
 
+
 class CompositeMetric(BaseMetric):
     """
     Combines multiple metrics into a single score.
     """
 
-    def __init__(
-        self,
-        metrics: List[Tuple[BaseMetric, float]],
-        name: str = "composite"
-    ):
+    def __init__(self, metrics: List[Tuple[BaseMetric, float]], name: str = "composite"):
         super().__init__(name)
         self.metrics = metrics
 
-    async def compute(
-        self,
-        sample: RAGEvaluationSample,
-        **kwargs
-    ) -> MetricResult:
+    async def compute(self, sample: RAGEvaluationSample, **kwargs) -> MetricResult:
         results = []
         weighted_sum = 0.0
         total_weight = 0.0
 
         for metric, weight in self.metrics:
             result = await metric.compute(sample, **kwargs)
-            results.append({
-                "metric": metric.name,
-                "score": result.score,
-                "weight": weight,
-            })
+            results.append(
+                {
+                    "metric": metric.name,
+                    "score": result.score,
+                    "weight": weight,
+                }
+            )
             weighted_sum += result.score * weight
             total_weight += weight
 
@@ -1034,14 +1098,10 @@ class CompositeMetric(BaseMetric):
             details={
                 "component_scores": results,
                 "weights": [w for _, w in self.metrics],
-            }
+            },
         )
 
-    async def compute_batch(
-        self,
-        samples: List[RAGEvaluationSample],
-        **kwargs
-    ) -> EvaluationBatch:
+    async def compute_batch(self, samples: List[RAGEvaluationSample], **kwargs) -> EvaluationBatch:
         """Compute batch with component metrics."""
         # Compute composite score for each sample
         composite_results = []
@@ -1074,6 +1134,7 @@ class CompositeMetric(BaseMetric):
 # ============================================================================
 # Metric Registry
 # ============================================================================
+
 
 class MetricRegistry:
     """Registry for available metrics."""
@@ -1125,19 +1186,18 @@ class MetricRegistry:
 # Convenience Functions
 # ============================================================================
 
+
 async def evaluate_rag_sample(
-    sample: RAGEvaluationSample,
-    metrics: List[str],
-    embedding_fn: Optional[Callable[[str], List[float]]] = None
+    sample: RAGEvaluationSample, metrics: List[str], embedding_fn: Optional[Callable[[str], List[float]]] = None
 ) -> Dict[str, MetricResult]:
     """
     Evaluate a RAG sample with multiple metrics.
-    
+
     Args:
         sample: The RAG evaluation sample
         metrics: List of metric names to compute
         embedding_fn: Optional embedding function for semantic metrics
-    
+
     Returns:
         Dictionary mapping metric names to results
     """
@@ -1149,28 +1209,22 @@ async def evaluate_rag_sample(
             result = await metric.compute(sample)
             results[metric_name] = result
         except Exception as e:
-            results[metric_name] = MetricResult(
-                metric_name=metric_name,
-                score=0.0,
-                details={"error": str(e)}
-            )
+            results[metric_name] = MetricResult(metric_name=metric_name, score=0.0, details={"error": str(e)})
 
     return results
 
 
 async def evaluate_rag_batch(
-    samples: List[RAGEvaluationSample],
-    metrics: List[str],
-    embedding_fn: Optional[Callable[[str], List[float]]] = None
+    samples: List[RAGEvaluationSample], metrics: List[str], embedding_fn: Optional[Callable[[str], List[float]]] = None
 ) -> Dict[str, EvaluationBatch]:
     """
     Evaluate a batch of RAG samples.
-    
+
     Args:
         samples: List of RAG evaluation samples
         metrics: List of metric names to compute
         embedding_fn: Optional embedding function
-    
+
     Returns:
         Dictionary mapping metric names to batch results
     """
@@ -1183,10 +1237,7 @@ async def evaluate_rag_batch(
             results[metric_name] = batch_result
         except Exception as e:
             results[metric_name] = EvaluationBatch(
-                metric_name=metric_name,
-                scores=[],
-                aggregate_score=0.0,
-                statistics={"error": str(e)}
+                metric_name=metric_name, scores=[], aggregate_score=0.0, statistics={"error": str(e)}
             )
 
     return results

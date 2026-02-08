@@ -23,13 +23,11 @@ test-fast:  ## Run tests without coverage
 	pytest
 
 lint:  ## Run all linters
-	flake8 .
-	black --check .
-	isort --check-only .
+	ruff check .
 
 format:  ## Auto-format code
-	black .
-	isort .
+	ruff check --fix .
+	ruff format .
 
 type-check:  ## Run type checking
 	mypy app.py modules/ utils/

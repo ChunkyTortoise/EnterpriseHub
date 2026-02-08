@@ -9,17 +9,19 @@ Features:
 - Secrets management guidelines
 """
 
+import logging
 import os
 import secrets
-import logging
-from typing import Dict, Any, Optional, List
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
 from pydantic import Field, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from enum import Enum
 
 
 class SecurityLevel(str, Enum):
     """Security level configurations."""
+
     DEVELOPMENT = "development"
     STAGING = "staging"
     PRODUCTION = "production"
@@ -122,24 +124,28 @@ class SecurityConfig(BaseSettings):
         """Set security defaults based on environment."""
         if v == SecurityLevel.PRODUCTION:
             # Production security defaults
-            info.data.update({
-                "require_https": True,
-                "enable_hsts": True,
-                "enable_csp": True,
-                "enable_security_monitoring": True,
-                "enable_threat_detection": True,
-                "auto_block_suspicious_ips": True,
-                "websocket_require_auth": True,
-                "rate_limit_requests_per_minute": 100,
-                "jwt_access_token_expire_minutes": 15,  # Shorter in production
-            })
+            info.data.update(
+                {
+                    "require_https": True,
+                    "enable_hsts": True,
+                    "enable_csp": True,
+                    "enable_security_monitoring": True,
+                    "enable_threat_detection": True,
+                    "auto_block_suspicious_ips": True,
+                    "websocket_require_auth": True,
+                    "rate_limit_requests_per_minute": 100,
+                    "jwt_access_token_expire_minutes": 15,  # Shorter in production
+                }
+            )
         elif v == SecurityLevel.DEVELOPMENT:
             # Development-friendly defaults
-            info.data.update({
-                "require_https": False,
-                "rate_limit_requests_per_minute": 1000,
-                "jwt_access_token_expire_minutes": 60,  # Longer for development
-            })
+            info.data.update(
+                {
+                    "require_https": False,
+                    "rate_limit_requests_per_minute": 1000,
+                    "jwt_access_token_expire_minutes": 60,  # Longer for development
+                }
+            )
         return v
 
     @field_validator("cors_allow_origins")
@@ -167,14 +173,16 @@ class SecurityConfig(BaseSettings):
 
         # Add production-specific directives
         if self.environment == SecurityLevel.PRODUCTION:
-            policy_parts.extend([
-                "frame-ancestors 'none'",
-                "form-action 'self'",
-                "base-uri 'self'",
-                "object-src 'none'",
-                "upgrade-insecure-requests",
-                "block-all-mixed-content"
-            ])
+            policy_parts.extend(
+                [
+                    "frame-ancestors 'none'",
+                    "form-action 'self'",
+                    "base-uri 'self'",
+                    "object-src 'none'",
+                    "upgrade-insecure-requests",
+                    "block-all-mixed-content",
+                ]
+            )
 
         if self.csp_report_uri:
             policy_parts.append(f"report-uri {self.csp_report_uri}")
@@ -186,17 +194,19 @@ class SecurityConfig(BaseSettings):
         headers = {}
 
         if self.enable_security_headers:
-            headers.update({
-                "X-Content-Type-Options": "nosniff",
-                "X-Frame-Options": "DENY",
-                "X-XSS-Protection": "0",  # Rely on CSP instead
-                "Referrer-Policy": "strict-origin-when-cross-origin",
-                "Permissions-Policy": (
-                    "accelerometer=(), camera=(), geolocation=(), "
-                    "gyroscope=(), magnetometer=(), microphone=(), "
-                    "payment=(), usb=()"
-                )
-            })
+            headers.update(
+                {
+                    "X-Content-Type-Options": "nosniff",
+                    "X-Frame-Options": "DENY",
+                    "X-XSS-Protection": "0",  # Rely on CSP instead
+                    "Referrer-Policy": "strict-origin-when-cross-origin",
+                    "Permissions-Policy": (
+                        "accelerometer=(), camera=(), geolocation=(), "
+                        "gyroscope=(), magnetometer=(), microphone=(), "
+                        "payment=(), usb=()"
+                    ),
+                }
+            )
 
         if self.enable_hsts and self.environment == SecurityLevel.PRODUCTION:
             headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
@@ -279,7 +289,7 @@ def create_security_config() -> SecurityConfig:
         logging.error(f"Failed to load security configuration: {e}")
         return SecurityConfig(
             jwt_secret_key=secrets.token_urlsafe(32),
-            environment=SecurityLevel.PRODUCTION  # Safe default
+            environment=SecurityLevel.PRODUCTION,  # Safe default
         )
 
 
@@ -304,7 +314,7 @@ PRODUCTION_SECURITY_CHECKLIST = [
     "✓ Regular security audits are scheduled",
     "✓ Incident response procedures are documented",
     "✓ Backup and recovery procedures are tested",
-    "✓ Security compliance requirements are met"
+    "✓ Security compliance requirements are met",
 ]
 
 # Example secure environment variables template

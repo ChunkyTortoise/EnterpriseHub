@@ -4,8 +4,9 @@ Tests for Jorge Cross-Bot Handoff Service.
 Validates tag-driven bot-to-bot transitions and handoff logic.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
     HandoffDecision,
@@ -132,10 +133,7 @@ class TestJorgeHandoffService:
         )
 
         # Find tracking tag
-        tracking_tags = [
-            a["tag"] for a in actions
-            if a["type"] == "add_tag" and "Handoff" in a["tag"]
-        ]
+        tracking_tags = [a["tag"] for a in actions if a["type"] == "add_tag" and "Handoff" in a["tag"]]
 
         assert "Handoff-Lead-to-Buyer" in tracking_tags
 
@@ -323,10 +321,7 @@ class TestJorgeHandoffService:
         )
 
         # Find tracking tag
-        tracking_tags = [
-            a["tag"] for a in actions
-            if a["type"] == "add_tag" and "Handoff" in a["tag"]
-        ]
+        tracking_tags = [a["tag"] for a in actions if a["type"] == "add_tag" and "Handoff" in a["tag"]]
 
         assert "Handoff-Seller-to-Buyer" in tracking_tags
 
@@ -347,9 +342,6 @@ class TestJorgeHandoffService:
         )
 
         # Find tracking tag
-        tracking_tags = [
-            a["tag"] for a in actions
-            if a["type"] == "add_tag" and "Handoff" in a["tag"]
-        ]
+        tracking_tags = [a["tag"] for a in actions if a["type"] == "add_tag" and "Handoff" in a["tag"]]
 
         assert "Handoff-Buyer-to-Seller" in tracking_tags

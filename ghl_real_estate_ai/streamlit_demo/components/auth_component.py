@@ -4,34 +4,45 @@ Streamlit Authentication Components.
 Provides login forms, user menus, and authentication UI elements.
 """
 
-import streamlit as st
 import asyncio
 from typing import Optional
 
-from ghl_real_estate_ai.services.auth_service import get_auth_service, User, UserRole
-from ghl_real_estate_ai.services.auth_middleware import (
-    check_streamlit_auth, set_streamlit_auth, clear_streamlit_auth,
-    require_streamlit_permission, format_user_role, get_user_permissions
-)
+import streamlit as st
+
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.auth_middleware import (
+    check_streamlit_auth,
+    clear_streamlit_auth,
+    format_user_role,
+    get_user_permissions,
+    require_streamlit_permission,
+    set_streamlit_auth,
+)
+from ghl_real_estate_ai.services.auth_service import User, UserRole, get_auth_service
 
 logger = get_logger(__name__)
+
 
 def check_authentication() -> Optional[User]:
     """Check if user is authenticated in current session."""
     return check_streamlit_auth()
+
 
 async def _authenticate_user(username: str, password: str) -> Optional[User]:
     """Authenticate user with credentials."""
     auth_service = get_auth_service()
     return await auth_service.authenticate_user(username, password)
 
+
 def render_login_form():
     """Render the login form."""
-    st.markdown("""
+    st.markdown(
+        """
     <div style="max-width: 400px; margin: 0 auto; padding: 2rem;">
         <div style="background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     st.markdown("### 🔐 Login")
 
@@ -82,6 +93,7 @@ def render_login_form():
 
     st.markdown("</div></div>", unsafe_allow_html=True)
 
+
 def render_user_menu(user: User):
     """Render user menu in sidebar."""
     with st.sidebar:
@@ -105,10 +117,14 @@ def render_user_menu(user: User):
             for resource, actions in permissions.items():
                 st.write(f"**{resource.title()}:**")
                 perms = []
-                if actions.get('read'): perms.append("👀 Read")
-                if actions.get('write'): perms.append("✏️ Write")
-                if actions.get('delete'): perms.append("🗑️ Delete")
+                if actions.get("read"):
+                    perms.append("👀 Read")
+                if actions.get("write"):
+                    perms.append("✏️ Write")
+                if actions.get("delete"):
+                    perms.append("🗑️ Delete")
                 st.write(" • ".join(perms) if perms else "❌ No access")
+
 
 def require_permission(user: User, resource: str, action: str) -> bool:
     """Check permission and show error if denied."""
@@ -117,6 +133,7 @@ def require_permission(user: User, resource: str, action: str) -> bool:
         return True
     except:
         return False
+
 
 def create_user_management_interface():
     """Create user management interface for admins."""
@@ -144,12 +161,7 @@ def create_user_management_interface():
 
                         auth_service = get_auth_service()
                         user = loop.run_until_complete(
-                            auth_service.create_user(
-                                new_username,
-                                new_email,
-                                new_password,
-                                UserRole(new_role)
-                            )
+                            auth_service.create_user(new_username, new_email, new_password, UserRole(new_role))
                         )
                         loop.close()
 
@@ -180,6 +192,7 @@ def create_user_management_interface():
             logger.error(f"Default user initialization error: {e}")
             st.error(f"❌ Error initializing users: {e}")
 
+
 def render_access_denied(resource: str, action: str):
     """Render access denied message."""
     st.error(f"""
@@ -189,6 +202,7 @@ def render_access_denied(resource: str, action: str):
 
     Please contact an administrator if you need access.
     """)
+
 
 def render_authentication_status():
     """Render current authentication status."""
@@ -201,10 +215,13 @@ def render_authentication_status():
         st.warning("🟡 Not authenticated")
         return None
 
+
 # Authentication decorators for Streamlit functions
+
 
 def auth_required(func):
     """Decorator requiring authentication for Streamlit functions."""
+
     def wrapper(*args, **kwargs):
         user = check_streamlit_auth()
         if not user:
@@ -212,23 +229,31 @@ def auth_required(func):
             render_login_form()
             st.stop()
         return func(user, *args, **kwargs)
+
     return wrapper
+
 
 def permission_required(resource: str, action: str):
     """Decorator requiring specific permission for Streamlit functions."""
+
     def decorator(func):
         def wrapper(*args, **kwargs):
             user = require_streamlit_permission(resource, action)
             return func(user, *args, **kwargs)
+
         return wrapper
+
     return decorator
+
 
 def admin_required(func):
     """Decorator requiring admin role for Streamlit functions."""
+
     def wrapper(*args, **kwargs):
         user = check_streamlit_auth()
         if not user or user.role != UserRole.ADMIN:
             render_access_denied("admin functions", "access")
             st.stop()
         return func(user, *args, **kwargs)
+
     return wrapper

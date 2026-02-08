@@ -11,17 +11,20 @@ Provides intelligent property alerts including:
 
 import asyncio
 import json
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Set
-from dataclasses import dataclass, asdict
-from enum import Enum
 import logging
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Set
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.services.austin_market_service import (
-    get_austin_market_service, PropertyListing, PropertyType, MarketCondition
-)
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.austin_market_service import (
+    MarketCondition,
+    PropertyListing,
+    PropertyType,
+    get_austin_market_service,
+)
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)
 
@@ -46,6 +49,7 @@ class AlertPriority(Enum):
 @dataclass
 class AlertCriteria:
     """Lead-specific alert criteria for property notifications."""
+
     lead_id: str
     min_price: Optional[float] = None
     max_price: Optional[float] = None
@@ -87,6 +91,7 @@ class AlertCriteria:
 @dataclass
 class PropertyAlert:
     """Property alert notification."""
+
     alert_id: str
     lead_id: str
     alert_type: AlertType
@@ -107,6 +112,7 @@ class PropertyAlert:
 @dataclass
 class MarketAlert:
     """General market condition alert."""
+
     alert_id: str
     alert_type: AlertType
     priority: AlertPriority
@@ -291,15 +297,15 @@ class PropertyAlertSystem:
                             market_data={
                                 "months_supply": metrics.months_supply,
                                 "inventory_count": metrics.inventory_count,
-                                "market_condition": metrics.market_condition.value
+                                "market_condition": metrics.market_condition.value,
                             },
                             recommendations=[
                                 "Act quickly on suitable properties",
                                 "Be prepared for competitive offers",
                                 "Consider expanding search criteria",
-                                "Pre-approval letter essential"
+                                "Pre-approval letter essential",
                             ],
-                            affects_leads=affected_leads
+                            affects_leads=affected_leads,
                         )
                         alerts.append(alert)
 
@@ -349,7 +355,7 @@ class PropertyAlertSystem:
                 self.check_market_opportunities(),
                 self.check_inventory_alerts(),
                 self.check_corporate_relocation_alerts(),
-                return_exceptions=True
+                return_exceptions=True,
             )
 
             return {
@@ -357,7 +363,7 @@ class PropertyAlertSystem:
                 "price_drops": results[1] if not isinstance(results[1], Exception) else [],
                 "opportunities": results[2] if not isinstance(results[2], Exception) else [],
                 "inventory": results[3] if not isinstance(results[3], Exception) else [],
-                "corporate": results[4] if not isinstance(results[4], Exception) else []
+                "corporate": results[4] if not isinstance(results[4], Exception) else [],
             }
 
         except Exception as e:
@@ -383,12 +389,14 @@ class PropertyAlertSystem:
                 "active": True,
                 "criteria": asdict(criteria),
                 "recent_alerts_count": len(recent_alerts),
-                "alerts_last_24h": len([a for a in recent_alerts if
-                    a.created_at > datetime.now() - timedelta(hours=24)]),
-                "high_priority_alerts": len([a for a in recent_alerts if
-                    a.priority in [AlertPriority.HIGH, AlertPriority.URGENT]]),
+                "alerts_last_24h": len(
+                    [a for a in recent_alerts if a.created_at > datetime.now() - timedelta(hours=24)]
+                ),
+                "high_priority_alerts": len(
+                    [a for a in recent_alerts if a.priority in [AlertPriority.HIGH, AlertPriority.URGENT]]
+                ),
                 "last_alert": recent_alerts[0].created_at.isoformat() if recent_alerts else None,
-                "alert_types_active": [alert_type.value for alert_type in AlertType]
+                "alert_types_active": [alert_type.value for alert_type in AlertType],
             }
 
             # Cache for 10 minutes
@@ -454,11 +462,12 @@ class PropertyAlertSystem:
 
         # Commute time
         if criteria.work_location and criteria.max_commute_time:
-            commute_data = await self.market_service.get_commute_analysis(
-                listing.coordinates, criteria.work_location
-            )
+            commute_data = await self.market_service.get_commute_analysis(listing.coordinates, criteria.work_location)
             # Parse commute time and check
-            if commute_data.get("driving", {}).get("time_rush_hour", "60 minutes") > f"{criteria.max_commute_time} minutes":
+            if (
+                commute_data.get("driving", {}).get("time_rush_hour", "60 minutes")
+                > f"{criteria.max_commute_time} minutes"
+            ):
                 return False
 
         return True
@@ -483,18 +492,20 @@ class PropertyAlertSystem:
                 "match_score": 85,
                 "match_reasons": match_reasons,
                 "market_position": "Well-priced for neighborhood",
-                "urgency": "Moderate - good neighborhood, expect interest"
+                "urgency": "Moderate - good neighborhood, expect interest",
             },
             action_items=[
                 "Schedule showing within 48 hours",
                 "Research comparable sales",
                 "Prepare pre-approval letter",
-                "Contact Jorge for neighborhood insights"
+                "Contact Jorge for neighborhood insights",
             ],
-            expiry_time=datetime.now() + timedelta(hours=48)
+            expiry_time=datetime.now() + timedelta(hours=48),
         )
 
-    async def _create_price_drop_alert(self, listing: PropertyListing, price_change: Dict[str, Any], criteria: AlertCriteria) -> PropertyAlert:
+    async def _create_price_drop_alert(
+        self, listing: PropertyListing, price_change: Dict[str, Any], criteria: AlertCriteria
+    ) -> PropertyAlert:
         """Create alert for price drop."""
         drop_amount = price_change["amount"]
         drop_percentage = (drop_amount / listing.price) * 100
@@ -511,15 +522,15 @@ class PropertyAlertSystem:
                 "drop_percentage": drop_percentage,
                 "new_price": listing.price,
                 "market_impact": "Increased competitiveness",
-                "seller_motivation": "High" if drop_percentage > 5 else "Moderate"
+                "seller_motivation": "High" if drop_percentage > 5 else "Moderate",
             },
             action_items=[
                 "Contact listing agent immediately",
                 "Schedule showing ASAP",
                 "Prepare competitive offer",
-                "Investigate reason for price drop"
+                "Investigate reason for price drop",
             ],
-            expiry_time=datetime.now() + timedelta(hours=24)
+            expiry_time=datetime.now() + timedelta(hours=24),
         )
 
     async def _calculate_opportunity_score(self, listing: PropertyListing) -> float:
@@ -549,7 +560,9 @@ class PropertyAlertSystem:
 
         return min(100, score)
 
-    async def _create_opportunity_alert(self, listing: PropertyListing, opportunity_score: float, criteria: AlertCriteria) -> PropertyAlert:
+    async def _create_opportunity_alert(
+        self, listing: PropertyListing, opportunity_score: float, criteria: AlertCriteria
+    ) -> PropertyAlert:
         """Create market opportunity alert."""
         return PropertyAlert(
             alert_id=f"opportunity_{listing.mls_id}_{criteria.lead_id}_{int(datetime.now().timestamp())}",
@@ -562,15 +575,15 @@ class PropertyAlertSystem:
                 "opportunity_score": opportunity_score,
                 "below_market": True,
                 "reasons": ["Below neighborhood median", "Good school district", "High tech appeal"],
-                "estimated_equity": "$45,000 immediate equity potential"
+                "estimated_equity": "$45,000 immediate equity potential",
             },
             action_items=[
                 "Schedule immediate showing",
                 "Prepare strong offer",
                 "Research property history",
-                "Consider quick close to strengthen offer"
+                "Consider quick close to strengthen offer",
             ],
-            expiry_time=datetime.now() + timedelta(hours=12)
+            expiry_time=datetime.now() + timedelta(hours=12),
         )
 
     async def _find_interested_leads(self, listing: PropertyListing) -> List[str]:
@@ -602,7 +615,7 @@ class PropertyAlertSystem:
                 "company": "Apple",
                 "announcement_date": datetime.now() - timedelta(days=3),
                 "impact": "Additional 5,000 jobs by 2025",
-                "location": "Round Rock campus"
+                "location": "Round Rock campus",
             }
         ]
 
@@ -627,15 +640,15 @@ class PropertyAlertSystem:
             detailed_analysis={
                 "event": event,
                 "market_impact": "Increased demand in preferred neighborhoods",
-                "timing_recommendation": "Consider acting sooner to avoid increased competition"
+                "timing_recommendation": "Consider acting sooner to avoid increased competition",
             },
             action_items=[
                 "Accelerate home search timeline",
                 "Consider pre-approval for higher amount",
                 "Expand search to adjacent neighborhoods",
-                "Monitor inventory levels closely"
+                "Monitor inventory levels closely",
             ],
-            expiry_time=datetime.now() + timedelta(days=7)
+            expiry_time=datetime.now() + timedelta(days=7),
         )
 
     async def _get_recent_alerts_for_lead(self, lead_id: str) -> List[PropertyAlert]:
@@ -646,6 +659,7 @@ class PropertyAlertSystem:
 
 # Global service instance
 _property_alert_system = None
+
 
 def get_property_alert_system() -> PropertyAlertSystem:
     """Get singleton instance of Property Alert System."""

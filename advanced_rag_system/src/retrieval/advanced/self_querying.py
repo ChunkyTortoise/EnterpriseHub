@@ -120,9 +120,7 @@ class SubQuery:
             return self.filters[0].to_chroma_filter()
 
         # Combine multiple filters with $and
-        return {
-            "$and": [f.to_chroma_filter() for f in self.filters]
-        }
+        return {"$and": [f.to_chroma_filter() for f in self.filters]}
 
 
 @dataclass
@@ -439,9 +437,7 @@ class QueryDecomposer:
 
         return filters
 
-    def _extract_temporal_range(
-        self, query: str
-    ) -> Optional[Tuple[datetime, datetime]]:
+    def _extract_temporal_range(self, query: str) -> Optional[Tuple[datetime, datetime]]:
         """Extract temporal range from query."""
         query_lower = query.lower()
         now = datetime.now()
@@ -617,8 +613,7 @@ class SelfQueryingSearcher:
         else:
             # Multiple sub-queries - execute in parallel
             tasks = [
-                self._execute_sub_query(sq, top_k // len(decomposed.sub_queries) + 5)
-                for sq in decomposed.sub_queries
+                self._execute_sub_query(sq, top_k // len(decomposed.sub_queries) + 5) for sq in decomposed.sub_queries
             ]
             results_list = await asyncio.gather(*tasks)
 
@@ -627,18 +622,15 @@ class SelfQueryingSearcher:
                 all_results.extend(results)
 
         # Combine results based on operator
-        combined_results = self._combine_results(
-            all_results, decomposed.operator, top_k
-        )
+        combined_results = self._combine_results(all_results, decomposed.operator, top_k)
 
         execution_time = (time.time() - start_time) * 1000
         self._update_stats(execution_time)
 
         # Check if filters were used
-        metadata_filter_used = (
-            apply_metadata_filters
-            and any(sq.filters for sq in decomposed.sub_queries)
-        ) or bool(decomposed.metadata_filters)
+        metadata_filter_used = (apply_metadata_filters and any(sq.filters for sq in decomposed.sub_queries)) or bool(
+            decomposed.metadata_filters
+        )
 
         if metadata_filter_used:
             self._stats["filter_applied_queries"] += 1
@@ -651,9 +643,7 @@ class SelfQueryingSearcher:
             metadata_filter_used=metadata_filter_used,
         )
 
-    async def _execute_sub_query(
-        self, sub_query: SubQuery, top_k: int
-    ) -> List[SearchResult]:
+    async def _execute_sub_query(self, sub_query: SubQuery, top_k: int) -> List[SearchResult]:
         """Execute a single sub-query.
 
         Args:
@@ -714,7 +704,7 @@ class SelfQueryingSearcher:
             # Boost score based on frequency
             for result in unique_results:
                 count = chunk_counts.get(result.chunk.id, 1)
-                result.score *= (1 + 0.1 * count)  # 10% boost per occurrence
+                result.score *= 1 + 0.1 * count  # 10% boost per occurrence
 
         # Sort by score and return top_k
         unique_results.sort(key=lambda r: r.score, reverse=True)
@@ -723,9 +713,7 @@ class SelfQueryingSearcher:
     def _update_stats(self, execution_time: float) -> None:
         """Update performance statistics."""
         n = self._stats["total_queries"]
-        self._stats["avg_execution_time_ms"] = (
-            self._stats["avg_execution_time_ms"] * (n - 1) + execution_time
-        ) / n
+        self._stats["avg_execution_time_ms"] = (self._stats["avg_execution_time_ms"] * (n - 1) + execution_time) / n
 
     def get_stats(self) -> Dict[str, Any]:
         """Get self-querying statistics.
@@ -735,12 +723,8 @@ class SelfQueryingSearcher:
         """
         return {
             **self._stats,
-            "decomposition_rate": (
-                self._stats["decomposed_queries"] / max(self._stats["total_queries"], 1)
-            ),
-            "filter_usage_rate": (
-                self._stats["filter_applied_queries"] / max(self._stats["total_queries"], 1)
-            ),
+            "decomposition_rate": (self._stats["decomposed_queries"] / max(self._stats["total_queries"], 1)),
+            "filter_usage_rate": (self._stats["filter_applied_queries"] / max(self._stats["total_queries"], 1)),
         }
 
     async def close(self) -> None:

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Simple import test to validate content_engine improvements."""
 
-import sys
 import os
+import sys
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(__file__))
@@ -12,17 +12,17 @@ print("Testing imports and basic functionality...")
 try:
     # Test that constants are defined
     from modules.content_engine import (
-        DEFAULT_MODEL,
-        DEFAULT_MAX_TOKENS,
-        MAX_RETRY_ATTEMPTS,
-        INITIAL_RETRY_DELAY,
-        RETRY_BACKOFF_FACTOR,
         API_TIMEOUT,
+        DEFAULT_MAX_TOKENS,
+        DEFAULT_MODEL,
+        INITIAL_RETRY_DELAY,
         LINKEDIN_CHAR_LIMIT,
-        OPTIMAL_POST_MIN_WORDS,
-        OPTIMAL_POST_MAX_WORDS,
-        MIN_HASHTAGS,
         MAX_HASHTAGS,
+        MAX_RETRY_ATTEMPTS,
+        MIN_HASHTAGS,
+        OPTIMAL_POST_MAX_WORDS,
+        OPTIMAL_POST_MIN_WORDS,
+        RETRY_BACKOFF_FACTOR,
         TEMPLATES,
         TONES,
     )
@@ -40,7 +40,7 @@ except ImportError as e:
 
 try:
     # Test helper functions
-    from modules.content_engine import _validate_template_and_tone, _build_prompt
+    from modules.content_engine import _build_prompt, _validate_template_and_tone
 
     print("\n✓ Helper functions imported successfully")
 

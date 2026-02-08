@@ -107,17 +107,17 @@ class DealCloserAI:
 
         # Build context prompt
         context = f"""
-Lead Name: {lead_context.get('name', 'Client')}
-Lead Stage: {lead_context.get('stage', 'Unknown')}
-Previous Interactions: {lead_context.get('interaction_count', 0)}
-Budget Range: ${lead_context.get('budget_min', 0):,} - ${lead_context.get('budget_max', 0):,}
+Lead Name: {lead_context.get("name", "Client")}
+Lead Stage: {lead_context.get("stage", "Unknown")}
+Previous Interactions: {lead_context.get("interaction_count", 0)}
+Budget Range: ${lead_context.get("budget_min", 0):,} - ${lead_context.get("budget_max", 0):,}
 """
 
         if property_context:
             context += f"""
-Property Address: {property_context.get('address', 'N/A')}
-Listing Price: ${property_context.get('price', 0):,}
-Property Type: {property_context.get('type', 'N/A')}
+Property Address: {property_context.get("address", "N/A")}
+Listing Price: ${property_context.get("price", 0):,}
+Property Type: {property_context.get("type", "N/A")}
 """
 
         prompt = f"""You are Jorge's AI closing assistant for his real estate business. A lead has raised an objection.
@@ -125,7 +125,7 @@ Property Type: {property_context.get('type', 'N/A')}
 {context}
 
 Lead's Objection: "{objection_text}"
-Detected Category: {objection_info.get('category', 'general')}
+Detected Category: {objection_info.get("category", "general")}
 
 Generate a professional, empathetic response that:
 1. Acknowledges their concern genuinely
@@ -149,12 +149,8 @@ Keep the response under 150 words and conversational."""
                 "response": response_text,
                 "objection_category": objection_info.get("category"),
                 "confidence": objection_info.get("confidence", 0.0),
-                "talking_points": self._extract_talking_points(
-                    objection_info.get("category")
-                ),
-                "follow_up_actions": self._suggest_follow_ups(
-                    objection_info.get("category")
-                ),
+                "talking_points": self._extract_talking_points(objection_info.get("category")),
+                "follow_up_actions": self._suggest_follow_ups(objection_info.get("category")),
                 "generated_at": datetime.now().isoformat(),
             }
 
@@ -319,15 +315,11 @@ Keep the response under 150 words and conversational."""
             "interaction_count": interaction_count,
             "recent_objections": len(recent_objections),
             "objection_categories": [obj["category"] for obj in recent_objections],
-            "recommendations": self._get_stage_recommendations(
-                stage, recent_objections
-            ),
+            "recommendations": self._get_stage_recommendations(stage, recent_objections),
             "next_touch_priority": "high" if recent_objections else "medium",
         }
 
-    def _get_stage_recommendations(
-        self, stage: str, objections: List[Dict]
-    ) -> List[str]:
+    def _get_stage_recommendations(self, stage: str, objections: List[Dict]) -> List[str]:
         """Get stage-specific recommendations."""
         recs = {
             "cold": [
@@ -417,7 +409,5 @@ if __name__ == "__main__":
     for obj in test_objections:
         print(f"Objection: '{obj}'")
         result = closer.detect_objection(obj)
-        print(
-            f"Category: {result['category']} (Confidence: {result['confidence']:.0%})"
-        )
+        print(f"Category: {result['category']} (Confidence: {result['confidence']:.0%})")
         print()

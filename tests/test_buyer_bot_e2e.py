@@ -2,6 +2,7 @@
 B2: End-to-end test for Jorge Buyer Bot 6-node workflow.
 Tests that the buyer bot can process a conversation without errors.
 """
+
 import asyncio
 import sys
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -76,21 +77,22 @@ async def test_buyer_bot_workflow():
         },
     ]
 
-    with patch("ghl_real_estate_ai.agents.jorge_buyer_bot.BuyerIntentDecoder") as MockDecoder, \
-         patch("ghl_real_estate_ai.agents.jorge_buyer_bot.ClaudeAssistant") as MockClaude, \
-         patch("ghl_real_estate_ai.agents.jorge_buyer_bot.get_event_publisher", return_value=mock_publisher), \
-         patch("ghl_real_estate_ai.agents.jorge_buyer_bot.PropertyMatcher") as MockMatcher, \
-         patch("ghl_real_estate_ai.agents.jorge_buyer_bot.get_ml_analytics_engine") as MockML, \
-         patch("ghl_real_estate_ai.agents.jorge_buyer_bot.BOT_INTELLIGENCE_AVAILABLE", False):
-
+    with (
+        patch("ghl_real_estate_ai.agents.jorge_buyer_bot.BuyerIntentDecoder") as MockDecoder,
+        patch("ghl_real_estate_ai.agents.jorge_buyer_bot.ClaudeAssistant") as MockClaude,
+        patch("ghl_real_estate_ai.agents.jorge_buyer_bot.get_event_publisher", return_value=mock_publisher),
+        patch("ghl_real_estate_ai.agents.jorge_buyer_bot.PropertyMatcher") as MockMatcher,
+        patch("ghl_real_estate_ai.agents.jorge_buyer_bot.get_ml_analytics_engine") as MockML,
+        patch("ghl_real_estate_ai.agents.jorge_buyer_bot.BOT_INTELLIGENCE_AVAILABLE", False),
+    ):
         # Configure mocks
         mock_decoder_instance = MockDecoder.return_value
         mock_decoder_instance.analyze_buyer.return_value = mock_profile
 
         mock_claude_instance = MockClaude.return_value
-        mock_claude_instance.generate_response = AsyncMock(return_value={
-            "content": "Found some great options matching your criteria in Rancho Cucamonga"
-        })
+        mock_claude_instance.generate_response = AsyncMock(
+            return_value={"content": "Found some great options matching your criteria in Rancho Cucamonga"}
+        )
 
         mock_matcher_instance = MockMatcher.return_value
         mock_matcher_instance.find_matches.return_value = sample_matches
@@ -119,15 +121,15 @@ async def test_buyer_bot_workflow():
         print(f"  buyer_temperature: {result.get('buyer_temperature', 'N/A')}")
 
         # Assertions
-        assert result.get("qualification_status") != "error", \
-            f"Workflow produced an error: {result.get('error')}"
+        assert result.get("qualification_status") != "error", f"Workflow produced an error: {result.get('error')}"
 
         # Workflow should complete with either a response or a scheduled action
         has_response = bool(result.get("response_content"))
         has_scheduled = result.get("follow_up_scheduled", False)
         has_next_action = bool(result.get("next_action"))
-        assert has_response or has_scheduled or has_next_action, \
+        assert has_response or has_scheduled or has_next_action, (
             "Workflow produced no response, no scheduled action, and no next action"
+        )
 
         print("\nAll buyer bot E2E assertions passed!")
         return result

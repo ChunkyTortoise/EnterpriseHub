@@ -77,18 +77,14 @@ class QualityAssuranceEngine:
                         >= cutoff
                     ]
                     if recent:
-                        total_conversations = (
-                            len(recent) * 15
-                        )  # Multiply to simulate higher volume for demo
+                        total_conversations = len(recent) * 15  # Multiply to simulate higher volume for demo
             except Exception:
                 pass  # Fallback to default
 
         # Generate realistic metrics for the demo
         pass_rate = round(random.uniform(91.0, 94.0), 1)
         overall_score = int(random.uniform(84, 89))
-        issues_count = int(
-            total_conversations * (1 - (pass_rate / 100)) * 1.5
-        )  # Approx logic
+        issues_count = int(total_conversations * (1 - (pass_rate / 100)) * 1.5)  # Approx logic
 
         return {
             "location_id": location_id,
@@ -127,42 +123,40 @@ class QualityAssuranceEngine:
                 "benchmarks": {"industry_avg": 82.5, "team_avg": 86.2},
                 "improvement_areas": [
                     {"topic": "Response Speed", "recommendation": "Decrease response time for pricing objections"},
-                    {"topic": "Closing logic", "recommendation": "More aggressive follow-up on 'Warm' leads"}
-                ]
+                    {"topic": "Closing logic", "recommendation": "More aggressive follow-up on 'Warm' leads"},
+                ],
             }
 
         # Scoring Logic: Multi-vector Sentiment & Accuracy Analysis
-        import pandas as pd
         import numpy as np
-        
+        import pandas as pd
+
         df = pd.DataFrame(raw_convos)
         # Simulate AI-based scoring for each conversation
-        df['politeness_score'] = [random.uniform(0.8, 0.98) for _ in range(len(df))]
-        df['accuracy_score'] = [random.uniform(0.75, 0.95) for _ in range(len(df))]
-        
-        avg_score = df[['politeness_score', 'accuracy_score']].mean().mean() * 100
-        
+        df["politeness_score"] = [random.uniform(0.8, 0.98) for _ in range(len(df))]
+        df["accuracy_score"] = [random.uniform(0.75, 0.95) for _ in range(len(df))]
+
+        avg_score = df[["politeness_score", "accuracy_score"]].mean().mean() * 100
+
         return {
             "overall_score": round(avg_score, 1),
             "grade": "A" if avg_score > 90 else "B+",
             "compliance_rate": round(random.uniform(91.0, 95.0), 1),
-            "empathy_score": round(df['politeness_score'].mean() * 10, 1),
+            "empathy_score": round(df["politeness_score"].mean() * 10, 1),
             "total_conversations": len(raw_convos),
-            "benchmarks": {
-                "industry_avg": 82.5,
-                "team_avg": round(df['accuracy_score'].mean() * 100, 1)
-            },
+            "benchmarks": {"industry_avg": 82.5, "team_avg": round(df["accuracy_score"].mean() * 100, 1)},
             "improvement_areas": [
                 {"topic": "Response Speed", "recommendation": "Decrease response time for pricing objections"},
-                {"topic": "Context Retention", "recommendation": "Improve memory of budget constraints across sessions"}
+                {
+                    "topic": "Context Retention",
+                    "recommendation": "Improve memory of budget constraints across sessions",
+                },
             ],
             "top_issue": "Slow response to financing questions",
-            "generated_at": datetime.now().isoformat()
+            "generated_at": datetime.now().isoformat(),
         }
 
-    def review_conversation(
-        self, conversation_id: str, messages: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    def review_conversation(self, conversation_id: str, messages: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         Review a conversation for quality issues
 

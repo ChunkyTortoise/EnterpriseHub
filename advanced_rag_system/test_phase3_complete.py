@@ -13,33 +13,24 @@ import uuid
 from typing import List
 
 from src.core.types import DocumentChunk, SearchResult
+from src.reranking import ReRankingConfig, ReRankingStrategy
 from src.retrieval.advanced_hybrid_searcher import AdvancedHybridSearcher, AdvancedSearchConfig
 from src.retrieval.query import ExpansionConfig, HyDEConfig
-from src.reranking import ReRankingConfig, ReRankingStrategy
 
 
 def create_test_corpus() -> List[DocumentChunk]:
     """Create a comprehensive test corpus for evaluation."""
     test_documents = [
         "Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed. It involves algorithms that can identify patterns in data and make predictions or decisions.",
-
         "Python is a high-level, interpreted programming language known for its simplicity and readability. It's widely used in data science, machine learning, web development, and automation due to its extensive libraries and frameworks.",
-
         "Neural networks are computational models inspired by biological neural networks in animal brains. They consist of interconnected nodes or neurons organized in layers, processing information through weighted connections that adjust during training.",
-
         "Deep learning is a subset of machine learning that uses neural networks with multiple hidden layers. It has achieved remarkable success in image recognition, natural language processing, and speech recognition tasks.",
-
         "Data science combines domain expertise, programming skills, and knowledge of mathematics and statistics to extract meaningful insights from data. It involves data collection, cleaning, analysis, and visualization.",
-
         "Natural language processing (NLP) is a branch of AI that helps computers understand, interpret, and manipulate human language. Applications include chatbots, translation services, and sentiment analysis.",
-
         "Computer vision enables machines to interpret and understand visual information from the world. It uses algorithms to identify, analyze, and process digital images and videos for various applications.",
-
         "Reinforcement learning is a type of machine learning where agents learn to make decisions by interacting with an environment. The agent receives rewards or penalties for actions, learning optimal strategies over time.",
-
         "Big data refers to datasets that are too large, complex, or rapidly changing for traditional data processing applications. It requires specialized tools and techniques for storage, processing, and analysis.",
-
-        "Artificial intelligence encompasses machine learning, deep learning, natural language processing, computer vision, and robotics. It aims to create systems that can perform tasks typically requiring human intelligence."
+        "Artificial intelligence encompasses machine learning, deep learning, natural language processing, computer vision, and robotics. It aims to create systems that can perform tasks typically requiring human intelligence.",
     ]
 
     chunks = []
@@ -48,8 +39,8 @@ def create_test_corpus() -> List[DocumentChunk]:
             id=str(uuid.uuid4()),
             document_id=str(uuid.uuid4()),
             content=content,
-            metadata={'topic': 'AI/ML', 'index': i},
-            index=i
+            metadata={"topic": "AI/ML", "index": i},
+            index=i,
         )
         chunks.append(chunk)
 
@@ -68,7 +59,7 @@ async def test_component_initialization():
         enable_intelligent_routing=True,
         expansion_config=ExpansionConfig(max_expansions=3),
         hyde_config=HyDEConfig(num_hypotheticals=1, max_length=200),
-        reranking_config=ReRankingConfig(strategy=ReRankingStrategy.WEIGHTED, top_k=20)
+        reranking_config=ReRankingConfig(strategy=ReRankingStrategy.WEIGHTED, top_k=20),
     )
 
     searcher = AdvancedHybridSearcher(config)
@@ -97,7 +88,7 @@ async def test_end_to_end_search():
         enable_hyde=True,
         enable_query_classification=True,
         enable_reranking=True,
-        max_total_time_ms=150
+        max_total_time_ms=150,
     )
 
     searcher = AdvancedHybridSearcher(config)
@@ -112,7 +103,7 @@ async def test_end_to_end_search():
         ("How do neural networks work?", "conceptual"),
         ("Compare deep learning and machine learning", "comparative"),
         ("Explain artificial intelligence concepts", "exploratory"),
-        ("Python programming for data science", "technical")
+        ("Python programming for data science", "technical"),
     ]
 
     results_summary = []
@@ -135,15 +126,17 @@ async def test_end_to_end_search():
         assert top_result.score > 0, "Invalid score for top result"
         assert top_result.chunk.content, "Empty content in result"
 
-        results_summary.append({
-            'query': query,
-            'results_count': len(results),
-            'search_time_ms': search_time,
-            'top_score': top_result.score,
-            'top_content_preview': top_result.chunk.content[:50] + "..."
-        })
+        results_summary.append(
+            {
+                "query": query,
+                "results_count": len(results),
+                "search_time_ms": search_time,
+                "top_score": top_result.score,
+                "top_content_preview": top_result.chunk.content[:50] + "...",
+            }
+        )
 
-        print(f"   Query: \"{query}\"")
+        print(f'   Query: "{query}"')
         print(f"   Results: {len(results)}, Time: {search_time:.1f}ms, Top score: {top_result.score:.3f}")
 
     await searcher.close()
@@ -160,10 +153,7 @@ async def test_performance_benchmarks():
     test_corpus = create_test_corpus() * 3  # 30 documents
 
     config = AdvancedSearchConfig(
-        enable_query_expansion=True,
-        enable_hyde=True,
-        enable_reranking=True,
-        max_total_time_ms=150
+        enable_query_expansion=True, enable_hyde=True, enable_reranking=True, max_total_time_ms=150
     )
 
     searcher = AdvancedHybridSearcher(config)
@@ -176,7 +166,7 @@ async def test_performance_benchmarks():
         "deep learning neural networks",
         "python data science",
         "artificial intelligence applications",
-        "natural language processing"
+        "natural language processing",
     ]
 
     total_times = []
@@ -204,7 +194,7 @@ async def test_performance_benchmarks():
 
     # Get component stats
     stats = await searcher.get_comprehensive_stats()
-    perf_stats = stats['performance']
+    perf_stats = stats["performance"]
 
     print(f"   Component breakdown:")
     print(f"   - Enhancement: {perf_stats['enhancement_time_ms']:.1f}ms")
@@ -214,11 +204,7 @@ async def test_performance_benchmarks():
     await searcher.close()
     print("✅ Performance benchmarks met")
 
-    return {
-        'avg_time_ms': avg_time,
-        'max_time_ms': max_time,
-        'component_stats': perf_stats
-    }
+    return {"avg_time_ms": avg_time, "max_time_ms": max_time, "component_stats": perf_stats}
 
 
 async def test_component_integration():
@@ -233,7 +219,7 @@ async def test_component_integration():
         enable_hyde=True,
         enable_query_classification=True,
         enable_reranking=True,
-        enable_intelligent_routing=True
+        enable_intelligent_routing=True,
     )
 
     searcher = AdvancedHybridSearcher(config)
@@ -244,12 +230,12 @@ async def test_component_integration():
     query = "What is machine learning?"
     enhanced_query, routing_info = await searcher._enhance_query(query)
 
-    assert enhanced_query != query or len(routing_info['expansions']) > 0, "Query enhancement not working"
-    assert 'query_type' in routing_info, "Query classification not working"
-    assert 'recommendations' in routing_info, "Routing recommendations not generated"
+    assert enhanced_query != query or len(routing_info["expansions"]) > 0, "Query enhancement not working"
+    assert "query_type" in routing_info, "Query classification not working"
+    assert "recommendations" in routing_info, "Routing recommendations not generated"
 
-    print(f"   Original: \"{query}\"")
-    print(f"   Enhanced: \"{enhanced_query[:50]}...\"")
+    print(f'   Original: "{query}"')
+    print(f'   Enhanced: "{enhanced_query[:50]}..."')
     print(f"   Type: {routing_info['query_type'].value}")
 
     # Test full pipeline
@@ -309,6 +295,7 @@ async def run_comprehensive_tests():
     except Exception as e:
         print(f"❌ Test failed: {str(e)}")
         import traceback
+
         traceback.print_exc()
         return False
 

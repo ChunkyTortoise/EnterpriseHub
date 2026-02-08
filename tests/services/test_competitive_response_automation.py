@@ -12,30 +12,31 @@ Tests cover:
 8. Audit logging and compliance
 """
 
-import pytest
 import asyncio
-from unittest.mock import Mock, AsyncMock, patch
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
 
-from ghl_real_estate_ai.services.competitive_response_automation import (
-    CompetitiveResponseEngine,
-    ResponseRule,
-    ResponseExecution,
-    ResponseType,
-    ResponseStatus,
-    ApprovalLevel,
-    ExecutionChannel,
-    GHLCRMExecutor,
-    EmailMarketingExecutor,
-    get_competitive_response_engine
-)
+import pytest
+
 from ghl_real_estate_ai.services.competitive_data_pipeline import (
+    CompetitorDataPoint,
+    DataSource,
     ThreatAssessment,
     ThreatLevel,
-    CompetitorDataPoint,
-    DataSource
+)
+from ghl_real_estate_ai.services.competitive_response_automation import (
+    ApprovalLevel,
+    CompetitiveResponseEngine,
+    EmailMarketingExecutor,
+    ExecutionChannel,
+    GHLCRMExecutor,
+    ResponseExecution,
+    ResponseRule,
+    ResponseStatus,
+    ResponseType,
+    get_competitive_response_engine,
 )
 
 
@@ -81,7 +82,7 @@ class TestCompetitiveResponseEngine:
             timeline="immediate",
             recommended_response="Review pricing strategy",
             response_urgency="high",
-            confidence_level=0.9
+            confidence_level=0.9,
         )
 
     @pytest.fixture
@@ -92,20 +93,16 @@ class TestCompetitiveResponseEngine:
             description="Respond to aggressive pricing threats",
             trigger_conditions=[
                 {"field": "threat_type", "operator": "equals", "value": "aggressive_pricing"},
-                {"field": "price_reduction", "operator": "greater_than", "value": 0.10}
+                {"field": "price_reduction", "operator": "greater_than", "value": 0.10},
             ],
             threat_level_threshold=ThreatLevel.MEDIUM,
             response_type=ResponseType.PRICING_ADJUSTMENT,
             response_actions=[
-                {
-                    "type": "price_analysis",
-                    "analyze_competitive_position": True,
-                    "recommend_pricing_strategy": True
-                }
+                {"type": "price_analysis", "analyze_competitive_position": True, "recommend_pricing_strategy": True}
             ],
             execution_channels=[ExecutionChannel.GHL_CRM],
             approval_level=ApprovalLevel.SUPERVISOR,
-            max_budget=Decimal("1000")
+            max_budget=Decimal("1000"),
         )
 
     @pytest.mark.asyncio
@@ -142,7 +139,7 @@ class TestCompetitiveResponseEngine:
             description="Valid test rule",
             trigger_conditions=[{"field": "test", "operator": "equals", "value": "value"}],
             response_actions=[{"type": "test_action"}],
-            max_budget=Decimal("100")
+            max_budget=Decimal("100"),
         )
 
         is_valid = await response_engine._validate_response_rule(valid_rule)
@@ -154,7 +151,7 @@ class TestCompetitiveResponseEngine:
             description="Invalid rule",
             trigger_conditions=[{"field": "test", "operator": "equals", "value": "value"}],
             response_actions=[{"type": "test_action"}],
-            max_budget=Decimal("100")
+            max_budget=Decimal("100"),
         )
 
         is_valid = await response_engine._validate_response_rule(invalid_rule)
@@ -166,7 +163,7 @@ class TestCompetitiveResponseEngine:
             description="Invalid rule",
             trigger_conditions=[{"field": "test", "operator": "equals", "value": "value"}],
             response_actions=[{"type": "test_action"}],
-            max_budget=Decimal("0")
+            max_budget=Decimal("0"),
         )
 
         is_valid = await response_engine._validate_response_rule(invalid_rule_budget)
@@ -184,7 +181,7 @@ class TestCompetitiveResponseEngine:
             data_source=DataSource.PRICE_MONITORING,
             data_type="pricing",
             raw_data={"price_reduction": 0.15},  # 15% reduction
-            confidence_score=0.9
+            confidence_score=0.9,
         )
         sample_threat_assessment.evidence = [evidence]
 
@@ -210,7 +207,7 @@ class TestCompetitiveResponseEngine:
             data_source=DataSource.PRICE_MONITORING,
             data_type="pricing",
             raw_data={"price_reduction": 0.15},
-            confidence_score=0.9
+            confidence_score=0.9,
         )
         sample_threat_assessment.evidence = [evidence]
 
@@ -232,12 +229,10 @@ class TestCompetitiveResponseEngine:
             description="Automatic response test",
             trigger_conditions=[{"field": "threat_type", "operator": "equals", "value": "aggressive_pricing"}],
             response_type=ResponseType.DEFENSIVE_MESSAGING,
-            response_actions=[
-                {"type": "add_tags", "tags": ["competitive_threat"], "target_leads": ["lead_001"]}
-            ],
+            response_actions=[{"type": "add_tags", "tags": ["competitive_threat"], "target_leads": ["lead_001"]}],
             execution_channels=[ExecutionChannel.GHL_CRM],
             approval_level=ApprovalLevel.AUTOMATIC,
-            max_budget=Decimal("100")
+            max_budget=Decimal("100"),
         )
 
         await response_engine.register_response_rule(auto_rule)
@@ -249,7 +244,7 @@ class TestCompetitiveResponseEngine:
             threat_level=ThreatLevel.HIGH,
             threat_type="aggressive_pricing",
             threat_description="Test threat",
-            confidence_level=0.9
+            confidence_level=0.9,
         )
 
         # Process threat
@@ -268,12 +263,10 @@ class TestCompetitiveResponseEngine:
             description="Rule requiring approval",
             trigger_conditions=[{"field": "threat_type", "operator": "equals", "value": "market_expansion"}],
             response_type=ResponseType.MARKETING_CAMPAIGN,
-            response_actions=[
-                {"type": "trigger_campaign", "campaign_id": "defensive", "budget": 500}
-            ],
+            response_actions=[{"type": "trigger_campaign", "campaign_id": "defensive", "budget": 500}],
             execution_channels=[ExecutionChannel.EMAIL_MARKETING],
             approval_level=ApprovalLevel.SUPERVISOR,
-            max_budget=Decimal("1000")
+            max_budget=Decimal("1000"),
         )
 
         await response_engine.register_response_rule(approval_rule)
@@ -285,7 +278,7 @@ class TestCompetitiveResponseEngine:
             threat_level=ThreatLevel.HIGH,
             threat_type="market_expansion",
             threat_description="Competitor expanding",
-            confidence_level=0.9
+            confidence_level=0.9,
         )
 
         # Process threat
@@ -298,9 +291,7 @@ class TestCompetitiveResponseEngine:
 
         # Test approval process
         approval_success = await response_engine.approve_response_execution(
-            execution.execution_id,
-            approved_by="supervisor_001",
-            approval_notes="Approved for competitive defense"
+            execution.execution_id, approved_by="supervisor_001", approval_notes="Approved for competitive defense"
         )
 
         assert approval_success is True
@@ -319,7 +310,7 @@ class TestCompetitiveResponseEngine:
             response_actions=[{"type": "expensive_action", "cost": 1000}],
             execution_channels=[ExecutionChannel.EMAIL_MARKETING],
             max_budget=Decimal("500"),  # Budget limit
-            total_cost=Decimal("500")   # Already at limit
+            total_cost=Decimal("500"),  # Already at limit
         )
 
         await response_engine.register_response_rule(budget_rule)
@@ -331,17 +322,14 @@ class TestCompetitiveResponseEngine:
             threat_level=ThreatLevel.HIGH,
             threat_type="aggressive_pricing",
             threat_description="Budget test threat",
-            confidence_level=0.9
+            confidence_level=0.9,
         )
 
         # Should trigger rule but not execute due to budget
         executions = await response_engine.process_threat_assessment(threat)
 
         # Should not create execution due to budget constraint
-        budget_exceeded_executions = [
-            e for e in executions
-            if e.rule_id == budget_rule.rule_id
-        ]
+        budget_exceeded_executions = [e for e in executions if e.rule_id == budget_rule.rule_id]
         assert len(budget_exceeded_executions) == 0
 
     @pytest.mark.asyncio
@@ -355,7 +343,7 @@ class TestCompetitiveResponseEngine:
             response_type=ResponseType.CUSTOMER_OUTREACH,
             response_actions=[{"type": "send_message"}],
             max_executions_per_day=2,  # Only 2 per day
-            max_budget=Decimal("1000")
+            max_budget=Decimal("1000"),
         )
 
         await response_engine.register_response_rule(rate_limited_rule)
@@ -368,7 +356,7 @@ class TestCompetitiveResponseEngine:
                 threat_level=ThreatLevel.MEDIUM,
                 threat_type="test_threat",
                 threat_description=f"Rate test threat {i}",
-                confidence_level=0.8
+                confidence_level=0.8,
             )
             for i in range(5)  # Try to trigger 5 times
         ]
@@ -376,10 +364,7 @@ class TestCompetitiveResponseEngine:
         executed_count = 0
         for threat in threats:
             executions = await response_engine.process_threat_assessment(threat)
-            rate_limited_executions = [
-                e for e in executions
-                if e.rule_id == rate_limited_rule.rule_id
-            ]
+            rate_limited_executions = [e for e in executions if e.rule_id == rate_limited_rule.rule_id]
             executed_count += len(rate_limited_executions)
 
         # Should only execute 2 times due to rate limiting
@@ -396,7 +381,7 @@ class TestCompetitiveResponseEngine:
             response_type=ResponseType.DEFENSIVE_MESSAGING,
             response_actions=[{"type": "send_message"}],
             cooldown_hours=24,  # 24 hour cooldown
-            max_budget=Decimal("1000")
+            max_budget=Decimal("1000"),
         )
 
         await response_engine.register_response_rule(cooldown_rule)
@@ -406,7 +391,7 @@ class TestCompetitiveResponseEngine:
             rule_id=cooldown_rule.rule_id,
             threat_id="threat_prev",
             status=ResponseStatus.COMPLETED,
-            completed_at=datetime.now() - timedelta(hours=12)  # 12 hours ago
+            completed_at=datetime.now() - timedelta(hours=12),  # 12 hours ago
         )
         response_engine.execution_history.append(recent_execution)
 
@@ -417,15 +402,12 @@ class TestCompetitiveResponseEngine:
             threat_level=ThreatLevel.MEDIUM,
             threat_type="cooldown_test",
             threat_description="Cooldown test threat",
-            confidence_level=0.8
+            confidence_level=0.8,
         )
 
         # Should not execute due to cooldown
         executions = await response_engine.process_threat_assessment(threat)
-        cooldown_executions = [
-            e for e in executions
-            if e.rule_id == cooldown_rule.rule_id
-        ]
+        cooldown_executions = [e for e in executions if e.rule_id == cooldown_rule.rule_id]
 
         assert len(cooldown_executions) == 0
 
@@ -445,7 +427,7 @@ class TestGHLCRMExecutor:
             execution_id="exec_test",
             rule_id="rule_test",
             threat_id="threat_test",
-            response_type=ResponseType.CUSTOMER_OUTREACH
+            response_type=ResponseType.CUSTOMER_OUTREACH,
         )
 
     @pytest.mark.asyncio
@@ -454,7 +436,7 @@ class TestGHLCRMExecutor:
         action = {
             "type": "add_tags",
             "target_leads": ["lead_001", "lead_002", "lead_003"],
-            "tags": ["competitive_threat", "high_priority"]
+            "tags": ["competitive_threat", "high_priority"],
         }
 
         result = await ghl_executor.execute_action(action, sample_execution)
@@ -472,7 +454,7 @@ class TestGHLCRMExecutor:
             "campaign_id": "defensive_campaign_001",
             "target_audience": "at_risk_leads",
             "estimated_reach": 150,
-            "cost": 75
+            "cost": 75,
         }
 
         result = await ghl_executor.execute_action(action, sample_execution)
@@ -488,11 +470,7 @@ class TestGHLCRMExecutor:
         """Test GHL opportunity creation execution"""
         action = {
             "type": "create_opportunity",
-            "opportunity_data": {
-                "name": "Competitive Response Opportunity",
-                "value": 5000,
-                "stage": "qualification"
-            }
+            "opportunity_data": {"name": "Competitive Response Opportunity", "value": 5000, "stage": "qualification"},
         }
 
         result = await ghl_executor.execute_action(action, sample_execution)
@@ -505,10 +483,7 @@ class TestGHLCRMExecutor:
     @pytest.mark.asyncio
     async def test_unknown_action_handling(self, ghl_executor, sample_execution):
         """Test handling of unknown action types"""
-        action = {
-            "type": "unknown_action",
-            "some_parameter": "test_value"
-        }
+        action = {"type": "unknown_action", "some_parameter": "test_value"}
 
         result = await ghl_executor.execute_action(action, sample_execution)
 
@@ -531,7 +506,7 @@ class TestEmailMarketingExecutor:
             execution_id="exec_email_test",
             rule_id="rule_email_test",
             threat_id="threat_email_test",
-            response_type=ResponseType.MARKETING_CAMPAIGN
+            response_type=ResponseType.MARKETING_CAMPAIGN,
         )
 
     @pytest.mark.asyncio
@@ -540,7 +515,7 @@ class TestEmailMarketingExecutor:
         action = {
             "type": "send_competitive_alert",
             "recipients": ["user1@example.com", "user2@example.com", "user3@example.com"],
-            "alert_content": "Competitor price reduction detected - immediate action required"
+            "alert_content": "Competitor price reduction detected - immediate action required",
         }
 
         result = await email_executor.execute_action(action, sample_execution)
@@ -556,7 +531,7 @@ class TestEmailMarketingExecutor:
         action = {
             "type": "value_proposition_email",
             "target_segment": "high_value_leads",
-            "template_id": "value_prop_template_001"
+            "template_id": "value_prop_template_001",
         }
 
         result = await email_executor.execute_action(action, sample_execution)
@@ -590,13 +565,13 @@ class TestPerformanceMetrics:
         for i in range(10):
             execution = ResponseExecution(
                 execution_id=f"exec_{i:03d}",
-                rule_id=f"rule_{i%3:03d}",
+                rule_id=f"rule_{i % 3:03d}",
                 threat_id=f"threat_{i:03d}",
                 response_type=list(ResponseType)[i % len(ResponseType)],
                 status=ResponseStatus.COMPLETED if i % 4 != 3 else ResponseStatus.FAILED,
                 cost=Decimal(str(50 + i * 25)),
                 execution_duration_ms=1000 + i * 200,
-                created_at=datetime.now() - timedelta(hours=i)
+                created_at=datetime.now() - timedelta(hours=i),
             )
             engine.execution_history.append(execution)
 
@@ -676,7 +651,7 @@ class TestPerformanceMetrics:
             response_type=ResponseType.DEFENSIVE_MESSAGING,
             response_actions=[{"type": "test_action"}],
             approval_level=ApprovalLevel.AUTOMATIC,
-            max_budget=Decimal("100")
+            max_budget=Decimal("100"),
         )
 
         await response_engine.register_response_rule(rule)
@@ -688,17 +663,18 @@ class TestPerformanceMetrics:
             threat_level=ThreatLevel.MEDIUM,
             threat_type="test",
             threat_description="Audit test threat",
-            confidence_level=0.8
+            confidence_level=0.8,
         )
 
         # Add evidence with trigger data
         from ghl_real_estate_ai.services.competitive_data_pipeline import CompetitorDataPoint, DataSource
+
         evidence = CompetitorDataPoint(
             competitor_id="comp_001",
             data_source=DataSource.WEB_SCRAPING,
             data_type="test",
             raw_data={"test": "audit"},
-            confidence_score=0.8
+            confidence_score=0.8,
         )
         threat.evidence = [evidence]
 
@@ -731,7 +707,7 @@ class TestPerformanceMetrics:
             response_type=ResponseType.PRICING_ADJUSTMENT,
             response_actions=[{"type": "invalid_action", "invalid_param": "test"}],
             approval_level=ApprovalLevel.AUTOMATIC,
-            max_budget=Decimal("100")
+            max_budget=Decimal("100"),
         )
 
         await response_engine.register_response_rule(error_rule)
@@ -743,17 +719,18 @@ class TestPerformanceMetrics:
             threat_level=ThreatLevel.MEDIUM,
             threat_type="test",
             threat_description="Error test threat",
-            confidence_level=0.8
+            confidence_level=0.8,
         )
 
         # Add evidence
         from ghl_real_estate_ai.services.competitive_data_pipeline import CompetitorDataPoint, DataSource
+
         evidence = CompetitorDataPoint(
             competitor_id="comp_001",
             data_source=DataSource.WEB_SCRAPING,
             data_type="test",
             raw_data={"test": "error"},
-            confidence_score=0.8
+            confidence_score=0.8,
         )
         threat.evidence = [evidence]
 

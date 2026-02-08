@@ -13,20 +13,23 @@ import asyncio
 import json
 import logging
 import time
-from datetime import datetime
-from typing import Dict, List, Optional, Any, Union, Tuple
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import streamlit as st
 
-from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
-from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 
 logger = get_logger(__name__)
 
+
 class VoiceInteractionType(Enum):
     """Types of voice interactions."""
+
     LEAD_QUALIFICATION = "lead_qualification"
     PROPERTY_SEARCH = "property_search"
     MARKET_INQUIRY = "market_inquiry"
@@ -34,17 +37,21 @@ class VoiceInteractionType(Enum):
     FOLLOWUP_CALL = "followup_call"
     GENERAL_INQUIRY = "general_inquiry"
 
+
 class VoiceAnalyticsType(Enum):
     """Types of voice analytics."""
+
     SENTIMENT_ANALYSIS = "sentiment"
     INTENT_DETECTION = "intent"
     EMOTION_RECOGNITION = "emotion"
     ENGAGEMENT_SCORING = "engagement"
     CONVERSION_PREDICTION = "conversion"
 
+
 @dataclass
 class VoiceInteraction:
     """Represents a voice interaction session."""
+
     interaction_id: str
     agent_id: str
     lead_id: Optional[str]
@@ -65,9 +72,11 @@ class VoiceInteraction:
         if self.conversion_indicators is None:
             self.conversion_indicators = []
 
+
 @dataclass
 class VoiceAnalytics:
     """Voice interaction analytics and insights."""
+
     interaction_id: str
     overall_sentiment: float  # -1.0 (negative) to 1.0 (positive)
     emotional_state: str  # "excited", "concerned", "neutral", "frustrated"
@@ -79,6 +88,7 @@ class VoiceAnalytics:
     recommended_actions: List[str]
     call_quality_score: float
     next_best_action: str
+
 
 class VoiceAIService:
     """
@@ -102,7 +112,7 @@ class VoiceAIService:
 
         try:
             # Initialize Claude assistant for voice processing
-            if hasattr(self.claude_assistant, 'initialize'):
+            if hasattr(self.claude_assistant, "initialize"):
                 await self.claude_assistant.initialize()
 
             logger.info("Voice AI Service initialized successfully")
@@ -117,7 +127,7 @@ class VoiceAIService:
         agent_id: str,
         interaction_type: VoiceInteractionType,
         lead_id: Optional[str] = None,
-        context: Dict[str, Any] = None
+        context: Dict[str, Any] = None,
     ) -> str:
         """
         Start a new voice interaction session.
@@ -134,7 +144,7 @@ class VoiceAIService:
             agent_id=agent_id,
             lead_id=lead_id,
             interaction_type=interaction_type,
-            start_time=datetime.now()
+            start_time=datetime.now(),
         )
 
         self.active_sessions[interaction_id] = interaction
@@ -144,17 +154,14 @@ class VoiceAIService:
             await self.cache.set(
                 f"voice_context_{interaction_id}",
                 context,
-                ttl=3600  # 1 hour session
+                ttl=3600,  # 1 hour session
             )
 
         logger.info(f"Started voice interaction: {interaction_id} ({interaction_type.value})")
         return interaction_id
 
     async def process_voice_input(
-        self,
-        interaction_id: str,
-        transcript: str,
-        audio_metadata: Optional[Dict[str, Any]] = None
+        self, interaction_id: str, transcript: str, audio_metadata: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
         Process voice input and generate AI response.
@@ -174,11 +181,7 @@ class VoiceAIService:
         analytics = await self._analyze_voice_input(interaction_id, transcript)
 
         # Generate intelligent AI response using Claude
-        ai_response = await self._generate_voice_response(
-            interaction,
-            transcript,
-            analytics
-        )
+        ai_response = await self._generate_voice_response(interaction, transcript, analytics)
 
         # Store response
         interaction.ai_responses.append(ai_response)
@@ -191,14 +194,10 @@ class VoiceAIService:
             "analytics": analytics.__dict__,
             "interaction_status": "active",
             "recommendations": analytics.recommended_actions,
-            "next_best_action": analytics.next_best_action
+            "next_best_action": analytics.next_best_action,
         }
 
-    async def _analyze_voice_input(
-        self,
-        interaction_id: str,
-        transcript: str
-    ) -> VoiceAnalytics:
+    async def _analyze_voice_input(self, interaction_id: str, transcript: str) -> VoiceAnalytics:
         """Analyze voice input for sentiment, intent, and conversion signals."""
 
         # Use Claude for sophisticated voice analysis
@@ -223,7 +222,7 @@ class VoiceAIService:
             analysis_response = await self.claude_assistant.chat_with_claude(
                 message=analysis_prompt,
                 conversation_id=f"voice_analysis_{interaction_id}",
-                system_prompt="You are an expert real estate voice analytics AI. Provide precise, actionable insights in JSON format."
+                system_prompt="You are an expert real estate voice analytics AI. Provide precise, actionable insights in JSON format.",
             )
 
             # Parse Claude's analysis (simplified for demo)
@@ -238,7 +237,7 @@ class VoiceAIService:
                 concerns_identified=["location_concerns", "price_sensitivity"],
                 recommended_actions=["schedule_showing", "send_listings"],
                 call_quality_score=0.88,
-                next_best_action="Schedule property viewing within 48 hours"
+                next_best_action="Schedule property viewing within 48 hours",
             )
 
             return analytics
@@ -248,10 +247,7 @@ class VoiceAIService:
             return self._get_fallback_analytics(interaction_id)
 
     async def _generate_voice_response(
-        self,
-        interaction: VoiceInteraction,
-        transcript: str,
-        analytics: VoiceAnalytics
+        self, interaction: VoiceInteraction, transcript: str, analytics: VoiceAnalytics
     ) -> str:
         """Generate intelligent AI response based on voice analysis."""
 
@@ -262,7 +258,7 @@ class VoiceAIService:
             "engagement": analytics.engagement_level,
             "conversion_probability": analytics.conversion_probability,
             "buying_signals": analytics.buying_signals,
-            "concerns": analytics.concerns_identified
+            "concerns": analytics.concerns_identified,
         }
 
         response_prompt = f"""
@@ -288,7 +284,7 @@ class VoiceAIService:
             response = await self.claude_assistant.chat_with_claude(
                 message=response_prompt,
                 conversation_id=f"voice_response_{interaction.interaction_id}",
-                system_prompt="You are Jorge, a friendly and knowledgeable real estate AI assistant speaking naturally in conversation."
+                system_prompt="You are Jorge, a friendly and knowledgeable real estate AI assistant speaking naturally in conversation.",
             )
 
             return response
@@ -316,7 +312,7 @@ class VoiceAIService:
             await self.cache.set(
                 f"voice_summary_{interaction_id}",
                 summary,
-                ttl=86400  # 24 hours
+                ttl=86400,  # 24 hours
             )
 
         # Clean up active session
@@ -353,7 +349,7 @@ class VoiceAIService:
             summary_response = await self.claude_assistant.chat_with_claude(
                 message=summary_prompt,
                 conversation_id=f"voice_summary_{interaction.interaction_id}",
-                system_prompt="You are an expert real estate conversation analyst. Provide actionable insights for CRM integration."
+                system_prompt="You are an expert real estate conversation analyst. Provide actionable insights for CRM integration.",
             )
 
             return {
@@ -362,7 +358,7 @@ class VoiceAIService:
                 "interaction_type": interaction.interaction_type.value,
                 "summary": summary_response,
                 "total_responses": len(interaction.ai_responses),
-                "completed_at": interaction.end_time.isoformat()
+                "completed_at": interaction.end_time.isoformat(),
             }
 
         except Exception as e:
@@ -383,23 +379,11 @@ class VoiceAIService:
             "top_intents": [
                 {"intent": "property_viewing", "count": 23},
                 {"intent": "market_inquiry", "count": 18},
-                {"intent": "budget_discussion", "count": 15}
+                {"intent": "budget_discussion", "count": 15},
             ],
-            "sentiment_distribution": {
-                "positive": 68.1,
-                "neutral": 23.4,
-                "negative": 8.5
-            },
-            "conversion_by_type": {
-                "lead_qualification": 45.2,
-                "property_search": 31.8,
-                "market_inquiry": 22.7
-            },
-            "ai_performance": {
-                "response_accuracy": 91.3,
-                "avg_response_time": 1.2,
-                "user_satisfaction": 4.6
-            }
+            "sentiment_distribution": {"positive": 68.1, "neutral": 23.4, "negative": 8.5},
+            "conversion_by_type": {"lead_qualification": 45.2, "property_search": 31.8, "market_inquiry": 22.7},
+            "ai_performance": {"response_accuracy": 91.3, "avg_response_time": 1.2, "user_satisfaction": 4.6},
         }
 
         return dashboard_data
@@ -417,7 +401,7 @@ class VoiceAIService:
             concerns_identified=[],
             recommended_actions=["continue_conversation"],
             call_quality_score=0.7,
-            next_best_action="Gather more information about client needs"
+            next_best_action="Gather more information about client needs",
         )
 
     def _get_fallback_response(self, interaction_type: VoiceInteractionType) -> str:
@@ -428,12 +412,11 @@ class VoiceAIService:
             VoiceInteractionType.MARKET_INQUIRY: "The current market has some great opportunities. What specific information can I share with you?",
             VoiceInteractionType.APPOINTMENT_BOOKING: "I'd be happy to schedule a time that works for you. What day works best?",
             VoiceInteractionType.FOLLOWUP_CALL: "Thanks for taking my call! I wanted to follow up on our previous conversation.",
-            VoiceInteractionType.GENERAL_INQUIRY: "I'm here to help with any questions you have about real estate. What can I assist you with?"
+            VoiceInteractionType.GENERAL_INQUIRY: "I'm here to help with any questions you have about real estate. What can I assist you with?",
         }
 
         return fallback_responses.get(
-            interaction_type,
-            "I'm here to help you with your real estate needs. How can I assist you today?"
+            interaction_type, "I'm here to help you with your real estate needs. How can I assist you today?"
         )
 
     def _get_fallback_summary(self, interaction: VoiceInteraction) -> Dict[str, Any]:
@@ -446,7 +429,7 @@ class VoiceAIService:
             "interaction_type": interaction.interaction_type.value,
             "summary": "Voice interaction completed successfully.",
             "total_responses": len(interaction.ai_responses),
-            "completed_at": interaction.end_time.isoformat()
+            "completed_at": interaction.end_time.isoformat(),
         }
 
     async def _ensure_initialized(self):
@@ -454,8 +437,10 @@ class VoiceAIService:
         if not self._initialized:
             await self.initialize()
 
+
 # Global service instance
 _voice_ai_service = None
+
 
 def get_voice_ai_service() -> VoiceAIService:
     """Get the global voice AI service instance."""
@@ -463,6 +448,7 @@ def get_voice_ai_service() -> VoiceAIService:
     if _voice_ai_service is None:
         _voice_ai_service = VoiceAIService()
     return _voice_ai_service
+
 
 @st.cache_resource
 def get_cached_voice_service() -> VoiceAIService:

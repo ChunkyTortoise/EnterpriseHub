@@ -4,10 +4,10 @@ Factory Pattern implementation for creating and managing scoring strategies
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Type, Union
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Type, Union
 
-from ..interfaces.property_scorer import PropertyScorer, TrainableScorer, AdaptiveScorer
+from ..interfaces.property_scorer import AdaptiveScorer, PropertyScorer, TrainableScorer
 from ..strategies.basic_property_scorer import BasicPropertyScorer
 from ..strategies.enhanced_property_scorer import EnhancedPropertyScorer
 
@@ -46,29 +46,30 @@ class ScoringFactory:
             name="basic",
             strategy_class=BasicPropertyScorer,
             config={
-                'description': 'Simple rule-based scoring',
-                'performance': 'fast',
-                'complexity': 'low',
-                'features': ['budget_matching', 'basic_location', 'simple_features']
-            }
+                "description": "Simple rule-based scoring",
+                "performance": "fast",
+                "complexity": "low",
+                "features": ["budget_matching", "basic_location", "simple_features"],
+            },
         )
 
         self.register_strategy(
             name="enhanced",
             strategy_class=EnhancedPropertyScorer,
             config={
-                'description': 'Advanced rule-based scoring with market analysis',
-                'performance': 'medium',
-                'complexity': 'medium',
-                'features': ['advanced_budget', 'geographic_analysis', 'market_timing']
-            }
+                "description": "Advanced rule-based scoring with market analysis",
+                "performance": "medium",
+                "complexity": "medium",
+                "features": ["advanced_budget", "geographic_analysis", "market_timing"],
+            },
         )
 
         # Set default strategy
         self._default_strategy_name = "enhanced"
 
-    def register_strategy(self, name: str, strategy_class: Type[PropertyScorer],
-                         config: Optional[Dict[str, Any]] = None) -> None:
+    def register_strategy(
+        self, name: str, strategy_class: Type[PropertyScorer], config: Optional[Dict[str, Any]] = None
+    ) -> None:
         """
         Register a new scoring strategy
 
@@ -118,7 +119,7 @@ class ScoringFactory:
             init_args.update(kwargs)
 
             # Remove non-constructor arguments
-            non_constructor_args = ['description', 'performance', 'complexity', 'features']
+            non_constructor_args = ["description", "performance", "complexity", "features"]
             for arg in non_constructor_args:
                 init_args.pop(arg, None)
 
@@ -126,7 +127,7 @@ class ScoringFactory:
             if name == "basic":
                 strategy = strategy_class()
             elif name == "enhanced":
-                market_data = init_args.pop('market_data', None)
+                market_data = init_args.pop("market_data", None)
                 strategy = strategy_class(market_data=market_data)
             else:
                 # For custom strategies, pass all remaining args
@@ -197,13 +198,13 @@ class ScoringFactory:
             config = self._strategy_configs[name]
 
             strategy_info = {
-                'name': name,
-                'class': strategy_class.__name__,
-                'module': strategy_class.__module__,
-                'is_default': name == self._default_strategy_name,
-                'is_trainable': issubclass(strategy_class, TrainableScorer),
-                'is_adaptive': issubclass(strategy_class, AdaptiveScorer),
-                **config
+                "name": name,
+                "class": strategy_class.__name__,
+                "module": strategy_class.__module__,
+                "is_default": name == self._default_strategy_name,
+                "is_trainable": issubclass(strategy_class, TrainableScorer),
+                "is_adaptive": issubclass(strategy_class, AdaptiveScorer),
+                **config,
             }
 
             strategies.append(strategy_info)
@@ -224,10 +225,10 @@ class ScoringFactory:
         Returns:
             Name of recommended strategy
         """
-        performance_priority = requirements.get('performance_priority', 'balanced')
-        complexity_tolerance = requirements.get('complexity_tolerance', 'medium')
-        features_needed = requirements.get('features_needed', [])
-        data_availability = requirements.get('data_availability', 'medium')
+        performance_priority = requirements.get("performance_priority", "balanced")
+        complexity_tolerance = requirements.get("complexity_tolerance", "medium")
+        features_needed = requirements.get("features_needed", [])
+        data_availability = requirements.get("data_availability", "medium")
 
         scores = {}
 
@@ -235,38 +236,38 @@ class ScoringFactory:
             score = 0
 
             # Performance scoring
-            strategy_performance = config.get('performance', 'medium')
-            if performance_priority == 'speed':
-                if strategy_performance == 'fast':
+            strategy_performance = config.get("performance", "medium")
+            if performance_priority == "speed":
+                if strategy_performance == "fast":
                     score += 3
-                elif strategy_performance == 'medium':
+                elif strategy_performance == "medium":
                     score += 1
-            elif performance_priority == 'accuracy':
-                if strategy_performance == 'slow':
+            elif performance_priority == "accuracy":
+                if strategy_performance == "slow":
                     score += 3
-                elif strategy_performance == 'medium':
+                elif strategy_performance == "medium":
                     score += 2
-                elif strategy_performance == 'fast':
+                elif strategy_performance == "fast":
                     score += 1
 
             # Complexity scoring
-            strategy_complexity = config.get('complexity', 'medium')
-            if complexity_tolerance == 'low' and strategy_complexity == 'low':
+            strategy_complexity = config.get("complexity", "medium")
+            if complexity_tolerance == "low" and strategy_complexity == "low":
                 score += 2
-            elif complexity_tolerance == 'medium' and strategy_complexity in ['low', 'medium']:
+            elif complexity_tolerance == "medium" and strategy_complexity in ["low", "medium"]:
                 score += 2
-            elif complexity_tolerance == 'high':
+            elif complexity_tolerance == "high":
                 score += 1  # All complexities acceptable
 
             # Feature matching
-            strategy_features = config.get('features', [])
+            strategy_features = config.get("features", [])
             feature_matches = len(set(features_needed) & set(strategy_features))
             score += feature_matches
 
             # Data requirements
-            if data_availability == 'limited' and strategy_complexity == 'low':
+            if data_availability == "limited" and strategy_complexity == "low":
                 score += 1
-            elif data_availability == 'rich' and strategy_complexity == 'high':
+            elif data_availability == "rich" and strategy_complexity == "high":
                 score += 1
 
             scores[name] = score
@@ -313,38 +314,30 @@ class ScoringFactory:
                 strategy = self.create_strategy(name)
 
                 # Basic validation
-                validation_result = {
-                    'is_valid': True,
-                    'errors': [],
-                    'warnings': []
-                }
+                validation_result = {"is_valid": True, "errors": [], "warnings": []}
 
                 # Test strategy creation
-                test_property = {'price': 500000, 'bedrooms': 3}
-                test_preferences = {'budget': 600000}
+                test_property = {"price": 500000, "bedrooms": 3}
+                test_preferences = {"budget": 600000}
 
                 try:
                     strategy.validate_inputs(test_property, test_preferences)
                 except Exception as e:
-                    validation_result['errors'].append(f"Input validation failed: {e}")
+                    validation_result["errors"].append(f"Input validation failed: {e}")
 
                 # Test scoring
                 try:
                     result = strategy.calculate_score(test_property, test_preferences)
-                    if not hasattr(result, 'overall_score'):
-                        validation_result['errors'].append("Invalid scoring result format")
+                    if not hasattr(result, "overall_score"):
+                        validation_result["errors"].append("Invalid scoring result format")
                 except Exception as e:
-                    validation_result['errors'].append(f"Scoring failed: {e}")
+                    validation_result["errors"].append(f"Scoring failed: {e}")
 
-                validation_result['is_valid'] = len(validation_result['errors']) == 0
+                validation_result["is_valid"] = len(validation_result["errors"]) == 0
                 results[name] = validation_result
 
             except Exception as e:
-                results[name] = {
-                    'is_valid': False,
-                    'errors': [f"Strategy creation failed: {e}"],
-                    'warnings': []
-                }
+                results[name] = {"is_valid": False, "errors": [f"Strategy creation failed: {e}"], "warnings": []}
 
         return results
 
@@ -377,14 +370,14 @@ class ScoringFactory:
         config = self._strategy_configs[name]
 
         return {
-            'name': name,
-            'class': strategy_class.__name__,
-            'module': strategy_class.__module__,
-            'config': config,
-            'is_default': name == self._default_strategy_name,
-            'is_trainable': issubclass(strategy_class, TrainableScorer),
-            'is_adaptive': issubclass(strategy_class, AdaptiveScorer),
-            'docstring': strategy_class.__doc__
+            "name": name,
+            "class": strategy_class.__name__,
+            "module": strategy_class.__module__,
+            "config": config,
+            "is_default": name == self._default_strategy_name,
+            "is_trainable": issubclass(strategy_class, TrainableScorer),
+            "is_adaptive": issubclass(strategy_class, AdaptiveScorer),
+            "docstring": strategy_class.__doc__,
         }
 
     def export_configurations(self) -> Dict[str, Any]:
@@ -395,9 +388,9 @@ class ScoringFactory:
             Dictionary with all configurations
         """
         return {
-            'strategies': self._strategy_configs.copy(),
-            'default_strategy': self._default_strategy_name,
-            'registered_count': len(self._registered_strategies)
+            "strategies": self._strategy_configs.copy(),
+            "default_strategy": self._default_strategy_name,
+            "registered_count": len(self._registered_strategies),
         }
 
     def import_configurations(self, config: Dict[str, Any]) -> None:
@@ -407,14 +400,14 @@ class ScoringFactory:
         Args:
             config: Configuration dictionary to import
         """
-        if 'default_strategy' in config:
-            default = config['default_strategy']
+        if "default_strategy" in config:
+            default = config["default_strategy"]
             if default in self._registered_strategies:
                 self._default_strategy_name = default
 
-        if 'strategies' in config:
+        if "strategies" in config:
             # Update existing configurations
-            for name, strategy_config in config['strategies'].items():
+            for name, strategy_config in config["strategies"].items():
                 if name in self._strategy_configs:
                     self._strategy_configs[name].update(strategy_config)
 

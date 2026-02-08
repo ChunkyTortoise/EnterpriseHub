@@ -13,27 +13,29 @@ Comprehensive test suite covering:
 Target Coverage: 85%+ on realtime_behavioral_network.py
 """
 
+import asyncio
+import queue
+import time
+from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 import pytest_asyncio
-import asyncio
-import time
-import queue
-from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime, timedelta
 
 from ghl_real_estate_ai.services.realtime_behavioral_network import (
-    RealTimeBehavioralNetwork,
-    RealTimeTrigger,
-    TriggerType,
+    BehavioralAnalysisAgentType,
+    BehavioralInsight,
+    BehavioralPattern,
     BehavioralSignal,
     BehavioralSignalType,
-    BehavioralPattern,
-    BehavioralInsight,
-    BehavioralAnalysisAgentType,
-    SignalDetectorAgent,
+    IntentPredictorAgent,
     PatternRecognizerAgent,
-    IntentPredictorAgent
+    RealTimeBehavioralNetwork,
+    RealTimeTrigger,
+    SignalDetectorAgent,
+    TriggerType,
 )
+
 
 # Test fixtures and data
 @pytest.fixture
@@ -51,11 +53,12 @@ def sample_trigger():
             "context": "Viewed premium listing for 15+ minutes",
             "urgency": "high",
             "confidence": 0.9,
-            "recommendations": ["call_immediately", "send_property_info", "schedule_showing"]
+            "recommendations": ["call_immediately", "send_property_info", "schedule_showing"],
         },
         priority=4,
-        expiration_time=datetime.now() + timedelta(hours=1)
+        expiration_time=datetime.now() + timedelta(hours=1),
     )
+
 
 @pytest.fixture
 def sample_behavioral_signal():
@@ -73,9 +76,10 @@ def sample_behavioral_signal():
         context_data={
             "time_spent_seconds": 300,
             "scroll_depth": 0.8,
-            "clicked_elements": ["gallery", "details", "contact"]
-        }
+            "clicked_elements": ["gallery", "details", "contact"],
+        },
     )
+
 
 @pytest_asyncio.fixture
 async def behavioral_network():
@@ -109,16 +113,16 @@ class TestSendImmediateAlert:
     async def test_send_immediate_alert_success(self, behavioral_network, sample_trigger):
         """Test successful immediate alert sending."""
         # Mock _get_lead_details to return lead data
-        behavioral_network._get_lead_details = AsyncMock(return_value={
-            "name": "John Smith",
-            "email": "john@example.com",
-            "phone": "+1234567890"
-        })
+        behavioral_network._get_lead_details = AsyncMock(
+            return_value={"name": "John Smith", "email": "john@example.com", "phone": "+1234567890"}
+        )
 
         # Mock internal alert methods
-        behavioral_network._send_email_alert = AsyncMock(return_value={'success': True, 'message_id': 'email_123'})
-        behavioral_network._send_slack_alert = AsyncMock(return_value={'success': True, 'message_id': 'slack_123'})
-        behavioral_network._send_dashboard_notification = AsyncMock(return_value={'success': True, 'notification_id': 'dash_123'})
+        behavioral_network._send_email_alert = AsyncMock(return_value={"success": True, "message_id": "email_123"})
+        behavioral_network._send_slack_alert = AsyncMock(return_value={"success": True, "message_id": "slack_123"})
+        behavioral_network._send_dashboard_notification = AsyncMock(
+            return_value={"success": True, "notification_id": "dash_123"}
+        )
         behavioral_network._store_alert_audit = AsyncMock()
 
         # Execute method
@@ -141,16 +145,16 @@ class TestSendImmediateAlert:
 
         # Verify trigger execution result
         assert sample_trigger.execution_result is not None
-        assert sample_trigger.execution_result['success'] is True
+        assert sample_trigger.execution_result["success"] is True
 
     @pytest.mark.asyncio
     async def test_send_immediate_alert_no_lead_data(self, behavioral_network, sample_trigger):
         """Test alert handling when lead data is not in cache (fallback used)."""
         # _get_lead_details returns None -> service uses fallback data
         behavioral_network._get_lead_details = AsyncMock(return_value=None)
-        behavioral_network._send_email_alert = AsyncMock(return_value={'success': True})
-        behavioral_network._send_slack_alert = AsyncMock(return_value={'success': True})
-        behavioral_network._send_dashboard_notification = AsyncMock(return_value={'success': True})
+        behavioral_network._send_email_alert = AsyncMock(return_value={"success": True})
+        behavioral_network._send_slack_alert = AsyncMock(return_value={"success": True})
+        behavioral_network._send_dashboard_notification = AsyncMock(return_value={"success": True})
         behavioral_network._store_alert_audit = AsyncMock()
 
         # Should not crash, should use fallback data
@@ -164,15 +168,13 @@ class TestSendImmediateAlert:
         """Test multi-channel alert sending for high priority."""
         sample_trigger.priority = 5  # Critical priority
 
-        behavioral_network._get_lead_details = AsyncMock(return_value={
-            "name": "John Smith",
-            "email": "john@example.com",
-            "phone": "+1234567890"
-        })
-        behavioral_network._send_email_alert = AsyncMock(return_value={'success': True})
-        behavioral_network._send_sms_alert = AsyncMock(return_value={'success': True})
-        behavioral_network._send_slack_alert = AsyncMock(return_value={'success': True})
-        behavioral_network._send_dashboard_notification = AsyncMock(return_value={'success': True})
+        behavioral_network._get_lead_details = AsyncMock(
+            return_value={"name": "John Smith", "email": "john@example.com", "phone": "+1234567890"}
+        )
+        behavioral_network._send_email_alert = AsyncMock(return_value={"success": True})
+        behavioral_network._send_sms_alert = AsyncMock(return_value={"success": True})
+        behavioral_network._send_slack_alert = AsyncMock(return_value={"success": True})
+        behavioral_network._send_dashboard_notification = AsyncMock(return_value={"success": True})
         behavioral_network._store_alert_audit = AsyncMock()
 
         await behavioral_network._send_immediate_alert(sample_trigger)
@@ -181,7 +183,7 @@ class TestSendImmediateAlert:
         behavioral_network._send_email_alert.assert_called_once()
         behavioral_network._send_sms_alert.assert_called_once()
 
-        assert sample_trigger.execution_result['success'] is True
+        assert sample_trigger.execution_result["success"] is True
 
 
 class TestNotifyAgent:
@@ -190,26 +192,18 @@ class TestNotifyAgent:
     @pytest.mark.asyncio
     async def test_notify_agent_assigned_agent(self, behavioral_network, sample_trigger):
         """Test notifying assigned agent."""
-        behavioral_network._get_lead_details = AsyncMock(return_value={
-            "name": "John Smith",
-            "email": "john@example.com",
-            "phone": "+1234567890"
-        })
-        behavioral_network._get_agent_assignment = AsyncMock(return_value={
-            "agent_id": "agent_123",
-            "agent_info": {
-                "name": "Sarah Wilson",
-                "email": "sarah@realestate.com",
-                "phone": "+1987654321"
-            },
-            "workload_info": {
-                "current_leads": 15,
-                "priority_leads": 3,
-                "availability_score": 0.8
+        behavioral_network._get_lead_details = AsyncMock(
+            return_value={"name": "John Smith", "email": "john@example.com", "phone": "+1234567890"}
+        )
+        behavioral_network._get_agent_assignment = AsyncMock(
+            return_value={
+                "agent_id": "agent_123",
+                "agent_info": {"name": "Sarah Wilson", "email": "sarah@realestate.com", "phone": "+1987654321"},
+                "workload_info": {"current_leads": 15, "priority_leads": 3, "availability_score": 0.8},
             }
-        })
-        behavioral_network._send_agent_dashboard_notification = AsyncMock(return_value={'success': True})
-        behavioral_network._send_agent_email_notification = AsyncMock(return_value={'success': True})
+        )
+        behavioral_network._send_agent_dashboard_notification = AsyncMock(return_value={"success": True})
+        behavioral_network._send_agent_email_notification = AsyncMock(return_value={"success": True})
         behavioral_network._update_agent_workload = AsyncMock()
         behavioral_network._store_notification_audit = AsyncMock()
         behavioral_network._schedule_agent_followup_reminder = AsyncMock()
@@ -227,49 +221,44 @@ class TestNotifyAgent:
 
         # Verify trigger result
         assert sample_trigger.execution_result is not None
-        assert sample_trigger.execution_result['success'] is True
-        assert sample_trigger.execution_result['agent_id'] == 'agent_123'
+        assert sample_trigger.execution_result["success"] is True
+        assert sample_trigger.execution_result["agent_id"] == "agent_123"
 
     @pytest.mark.asyncio
     async def test_notify_agent_no_available_agent(self, behavioral_network, sample_trigger):
         """Test behavior when no agents are available."""
-        behavioral_network._get_lead_details = AsyncMock(return_value={
-            "name": "John Smith",
-            "email": "john@example.com"
-        })
+        behavioral_network._get_lead_details = AsyncMock(
+            return_value={"name": "John Smith", "email": "john@example.com"}
+        )
         behavioral_network._get_agent_assignment = AsyncMock(return_value=None)
 
         result = await behavioral_network._notify_agent(sample_trigger)
 
         # Should return failure when no agent available
         assert result is not None
-        assert result['success'] is False
-        assert result['reason'] == 'no_agent_available'
+        assert result["success"] is False
+        assert result["reason"] == "no_agent_available"
 
     @pytest.mark.asyncio
     async def test_notify_agent_multi_channel_notification(self, behavioral_network, sample_trigger):
         """Test multi-channel agent notification for critical priority."""
         sample_trigger.priority = 5
-        sample_trigger.action_payload['urgency'] = 'critical'
+        sample_trigger.action_payload["urgency"] = "critical"
 
-        behavioral_network._get_lead_details = AsyncMock(return_value={
-            "name": "John Smith",
-            "email": "john@example.com",
-            "phone": "+1234567890"
-        })
-        behavioral_network._get_agent_assignment = AsyncMock(return_value={
-            "agent_id": "agent_123",
-            "agent_info": {
-                "name": "Sarah Wilson",
-                "email": "sarah@realestate.com",
-                "phone": "+1987654321"
-            },
-            "workload_info": {}
-        })
-        behavioral_network._send_agent_dashboard_notification = AsyncMock(return_value={'success': True})
-        behavioral_network._send_agent_email_notification = AsyncMock(return_value={'success': True})
-        behavioral_network._send_agent_push_notification = AsyncMock(return_value={'success': True})
-        behavioral_network._send_agent_sms_notification = AsyncMock(return_value={'success': True})
+        behavioral_network._get_lead_details = AsyncMock(
+            return_value={"name": "John Smith", "email": "john@example.com", "phone": "+1234567890"}
+        )
+        behavioral_network._get_agent_assignment = AsyncMock(
+            return_value={
+                "agent_id": "agent_123",
+                "agent_info": {"name": "Sarah Wilson", "email": "sarah@realestate.com", "phone": "+1987654321"},
+                "workload_info": {},
+            }
+        )
+        behavioral_network._send_agent_dashboard_notification = AsyncMock(return_value={"success": True})
+        behavioral_network._send_agent_email_notification = AsyncMock(return_value={"success": True})
+        behavioral_network._send_agent_push_notification = AsyncMock(return_value={"success": True})
+        behavioral_network._send_agent_sms_notification = AsyncMock(return_value={"success": True})
         behavioral_network._update_agent_workload = AsyncMock()
         behavioral_network._store_notification_audit = AsyncMock()
         behavioral_network._schedule_agent_followup_reminder = AsyncMock()
@@ -290,12 +279,12 @@ class TestSetPriorityFlag:
     async def test_set_priority_flag_success(self, behavioral_network, sample_trigger):
         """Test successful priority flag setting."""
         # Mock all internal priority flag methods
-        behavioral_network._set_ghl_priority_flag = AsyncMock(return_value={'success': True})
-        behavioral_network._set_internal_priority_flag = AsyncMock(return_value={'success': True})
-        behavioral_network._cache_priority_status = AsyncMock(return_value={'success': True})
-        behavioral_network._update_lead_priority_scoring = AsyncMock(return_value={'success': True})
-        behavioral_network._trigger_priority_workflow = AsyncMock(return_value={'success': True})
-        behavioral_network._schedule_priority_flag_review = AsyncMock(return_value={'success': True})
+        behavioral_network._set_ghl_priority_flag = AsyncMock(return_value={"success": True})
+        behavioral_network._set_internal_priority_flag = AsyncMock(return_value={"success": True})
+        behavioral_network._cache_priority_status = AsyncMock(return_value={"success": True})
+        behavioral_network._update_lead_priority_scoring = AsyncMock(return_value={"success": True})
+        behavioral_network._trigger_priority_workflow = AsyncMock(return_value={"success": True})
+        behavioral_network._schedule_priority_flag_review = AsyncMock(return_value={"success": True})
         behavioral_network._store_priority_flag_audit = AsyncMock()
         behavioral_network._send_priority_flag_notifications = AsyncMock()
 
@@ -310,8 +299,8 @@ class TestSetPriorityFlag:
         behavioral_network._schedule_priority_flag_review.assert_called_once()
 
         # Verify result
-        assert result['success'] is True
-        assert result['successful_operations'] == 6
+        assert result["success"] is True
+        assert result["successful_operations"] == 6
 
     @pytest.mark.asyncio
     async def test_priority_escalation_partial_failure(self, behavioral_network, sample_trigger):
@@ -320,20 +309,20 @@ class TestSetPriorityFlag:
         sample_trigger.action_payload["urgency"] = "critical"
 
         # Some succeed, some fail
-        behavioral_network._set_ghl_priority_flag = AsyncMock(return_value={'success': True})
+        behavioral_network._set_ghl_priority_flag = AsyncMock(return_value={"success": True})
         behavioral_network._set_internal_priority_flag = AsyncMock(side_effect=Exception("DB error"))
-        behavioral_network._cache_priority_status = AsyncMock(return_value={'success': True})
-        behavioral_network._update_lead_priority_scoring = AsyncMock(return_value={'success': True})
+        behavioral_network._cache_priority_status = AsyncMock(return_value={"success": True})
+        behavioral_network._update_lead_priority_scoring = AsyncMock(return_value={"success": True})
         behavioral_network._trigger_priority_workflow = AsyncMock(side_effect=Exception("Workflow error"))
-        behavioral_network._schedule_priority_flag_review = AsyncMock(return_value={'success': True})
+        behavioral_network._schedule_priority_flag_review = AsyncMock(return_value={"success": True})
         behavioral_network._store_priority_flag_audit = AsyncMock()
         behavioral_network._send_priority_flag_notifications = AsyncMock()
 
         result = await behavioral_network._set_priority_flag(sample_trigger)
 
         # Success if at least one operation succeeded
-        assert result['success'] is True
-        assert result['successful_operations'] == 4  # 4 of 6 succeeded
+        assert result["success"] is True
+        assert result["successful_operations"] == 4  # 4 of 6 succeeded
 
     @pytest.mark.asyncio
     async def test_set_priority_flag_complete_failure(self, behavioral_network, sample_trigger):
@@ -351,8 +340,8 @@ class TestSetPriorityFlag:
         result = await behavioral_network._set_priority_flag(sample_trigger)
 
         # Should report failure (0 successful operations)
-        assert result['success'] is False
-        assert result['successful_operations'] == 0
+        assert result["success"] is False
+        assert result["successful_operations"] == 0
 
 
 class TestSendAutomatedResponse:
@@ -361,27 +350,29 @@ class TestSendAutomatedResponse:
     @pytest.mark.asyncio
     async def test_send_automated_response_email(self, behavioral_network, sample_trigger):
         """Test automated email response."""
-        behavioral_network._get_lead_details = AsyncMock(return_value={
-            "name": "John Smith",
-            "email": "john@example.com",
-            "phone": "+1234567890",
-            "source": "website"
-        })
-        behavioral_network._get_behavioral_context = AsyncMock(return_value={
-            "currently_active": False,
-            "session_duration": 300,
-            "page_views": 5
-        })
-        behavioral_network._determine_response_strategy = AsyncMock(return_value={
-            "channel": "email",
-            "template": "behavioral_engagement",
-            "personalization": {"urgency": "high"},
-            "ai_enhanced": True,
-            "follow_up_sequence": "standard_nurture"
-        })
-        behavioral_network._send_automated_email_response = AsyncMock(return_value={'success': True})
-        behavioral_network._send_automated_in_app_response = AsyncMock(return_value={'success': True})
-        behavioral_network._schedule_automated_follow_up_sequence = AsyncMock(return_value={'success': True})
+        behavioral_network._get_lead_details = AsyncMock(
+            return_value={
+                "name": "John Smith",
+                "email": "john@example.com",
+                "phone": "+1234567890",
+                "source": "website",
+            }
+        )
+        behavioral_network._get_behavioral_context = AsyncMock(
+            return_value={"currently_active": False, "session_duration": 300, "page_views": 5}
+        )
+        behavioral_network._determine_response_strategy = AsyncMock(
+            return_value={
+                "channel": "email",
+                "template": "behavioral_engagement",
+                "personalization": {"urgency": "high"},
+                "ai_enhanced": True,
+                "follow_up_sequence": "standard_nurture",
+            }
+        )
+        behavioral_network._send_automated_email_response = AsyncMock(return_value={"success": True})
+        behavioral_network._send_automated_in_app_response = AsyncMock(return_value={"success": True})
+        behavioral_network._schedule_automated_follow_up_sequence = AsyncMock(return_value={"success": True})
         behavioral_network._store_automated_response_audit = AsyncMock()
         behavioral_network._update_automated_response_tracking = AsyncMock()
         behavioral_network._setup_response_performance_monitoring = AsyncMock()
@@ -392,28 +383,26 @@ class TestSendAutomatedResponse:
         behavioral_network._send_automated_email_response.assert_called_once()
 
         # Verify result
-        assert result['success'] is True
-        assert result['response_channel'] == 'email'
+        assert result["success"] is True
+        assert result["response_channel"] == "email"
 
     @pytest.mark.asyncio
     async def test_send_automated_response_sms(self, behavioral_network, sample_trigger):
         """Test automated SMS response."""
-        behavioral_network._get_lead_details = AsyncMock(return_value={
-            "name": "John Smith",
-            "phone": "+1234567890",
-            "source": "website"
-        })
-        behavioral_network._get_behavioral_context = AsyncMock(return_value={
-            "currently_active": False
-        })
-        behavioral_network._determine_response_strategy = AsyncMock(return_value={
-            "channel": "sms",
-            "template": "quick_followup",
-            "personalization": {"urgency": "medium"},
-            "ai_enhanced": False
-        })
-        behavioral_network._send_automated_sms_response = AsyncMock(return_value={'success': True})
-        behavioral_network._send_automated_in_app_response = AsyncMock(return_value={'success': True})
+        behavioral_network._get_lead_details = AsyncMock(
+            return_value={"name": "John Smith", "phone": "+1234567890", "source": "website"}
+        )
+        behavioral_network._get_behavioral_context = AsyncMock(return_value={"currently_active": False})
+        behavioral_network._determine_response_strategy = AsyncMock(
+            return_value={
+                "channel": "sms",
+                "template": "quick_followup",
+                "personalization": {"urgency": "medium"},
+                "ai_enhanced": False,
+            }
+        )
+        behavioral_network._send_automated_sms_response = AsyncMock(return_value={"success": True})
+        behavioral_network._send_automated_in_app_response = AsyncMock(return_value={"success": True})
         behavioral_network._store_automated_response_audit = AsyncMock()
         behavioral_network._update_automated_response_tracking = AsyncMock()
         behavioral_network._setup_response_performance_monitoring = AsyncMock()
@@ -422,7 +411,7 @@ class TestSendAutomatedResponse:
 
         # Verify SMS was sent
         behavioral_network._send_automated_sms_response.assert_called_once()
-        assert result['success'] is True
+        assert result["success"] is True
 
     @pytest.mark.asyncio
     async def test_send_automated_response_no_lead_data(self, behavioral_network, sample_trigger):
@@ -432,24 +421,19 @@ class TestSendAutomatedResponse:
 
         result = await behavioral_network._send_automated_response(sample_trigger)
 
-        assert result['success'] is False
-        assert result['reason'] == 'no_lead_data'
+        assert result["success"] is False
+        assert result["reason"] == "no_lead_data"
 
     @pytest.mark.asyncio
     async def test_send_automated_response_communication_failure(self, behavioral_network, sample_trigger):
         """Test handling when communication services fail."""
-        behavioral_network._get_lead_details = AsyncMock(return_value={
-            "name": "John Smith",
-            "email": "john@example.com"
-        })
-        behavioral_network._get_behavioral_context = AsyncMock(return_value={
-            "currently_active": False
-        })
-        behavioral_network._determine_response_strategy = AsyncMock(return_value={
-            "channel": "email",
-            "template": "default",
-            "personalization": {}
-        })
+        behavioral_network._get_lead_details = AsyncMock(
+            return_value={"name": "John Smith", "email": "john@example.com"}
+        )
+        behavioral_network._get_behavioral_context = AsyncMock(return_value={"currently_active": False})
+        behavioral_network._determine_response_strategy = AsyncMock(
+            return_value={"channel": "email", "template": "default", "personalization": {}}
+        )
         behavioral_network._send_automated_email_response = AsyncMock(side_effect=Exception("Email error"))
         behavioral_network._send_automated_in_app_response = AsyncMock(side_effect=Exception("App error"))
         behavioral_network._store_automated_response_audit = AsyncMock()
@@ -459,8 +443,8 @@ class TestSendAutomatedResponse:
         result = await behavioral_network._send_automated_response(sample_trigger)
 
         # Should still complete without crashing, reporting failure
-        assert result['success'] is False
-        assert result['successful_responses'] == 0
+        assert result["success"] is False
+        assert result["successful_responses"] == 0
 
 
 class TestDeliverPersonalizedContent:
@@ -469,47 +453,46 @@ class TestDeliverPersonalizedContent:
     @pytest.mark.asyncio
     async def test_deliver_personalized_content_success(self, behavioral_network, sample_trigger):
         """Test successful personalized content delivery."""
-        behavioral_network._get_comprehensive_lead_profile = AsyncMock(return_value={
-            "lead_id": "lead_456",
-            "name": "John Smith",
-            "email": "john@example.com",
-            "preferences": {"budget": "400k-600k", "location": "Austin, TX"}
-        })
-        behavioral_network._get_behavioral_insights_history = AsyncMock(return_value={
-            "total_visits": 15,
-            "property_views": 8,
-            "abandonment_risk": False,
-            "high_intent_signals": True
-        })
-        behavioral_network._get_content_preferences = AsyncMock(return_value={
-            "preferred_content_types": ["email", "interactive"]
-        })
-        behavioral_network._generate_content_strategy = AsyncMock(return_value={
-            "personalization_level": "high",
-            "content_types": ["email", "report", "interactive"],
-            "delivery_channels": ["email", "website"],
-            "theme": "property_recommendations",
-            "target_intent": "buying_interest",
-            "ai_generated": True,
-            "version": "1.0"
-        })
-        behavioral_network._generate_personalized_email_content = AsyncMock(return_value={
-            "subject": "Personalized Recommendations",
-            "content": "AI-generated content"
-        })
-        behavioral_network._deliver_email_content = AsyncMock(return_value={'success': True})
-        behavioral_network._generate_dynamic_website_content = AsyncMock(return_value={
-            "widgets": ["recommendations"]
-        })
-        behavioral_network._deliver_website_content = AsyncMock(return_value={'success': True})
-        behavioral_network._generate_personalized_property_report = AsyncMock(return_value={
-            "report_type": "analysis"
-        })
-        behavioral_network._deliver_property_report = AsyncMock(return_value={'success': True})
-        behavioral_network._generate_interactive_content = AsyncMock(return_value={
-            "tools": ["calculator"]
-        })
-        behavioral_network._deliver_interactive_content = AsyncMock(return_value={'success': True})
+        behavioral_network._get_comprehensive_lead_profile = AsyncMock(
+            return_value={
+                "lead_id": "lead_456",
+                "name": "John Smith",
+                "email": "john@example.com",
+                "preferences": {"budget": "400k-600k", "location": "Austin, TX"},
+            }
+        )
+        behavioral_network._get_behavioral_insights_history = AsyncMock(
+            return_value={
+                "total_visits": 15,
+                "property_views": 8,
+                "abandonment_risk": False,
+                "high_intent_signals": True,
+            }
+        )
+        behavioral_network._get_content_preferences = AsyncMock(
+            return_value={"preferred_content_types": ["email", "interactive"]}
+        )
+        behavioral_network._generate_content_strategy = AsyncMock(
+            return_value={
+                "personalization_level": "high",
+                "content_types": ["email", "report", "interactive"],
+                "delivery_channels": ["email", "website"],
+                "theme": "property_recommendations",
+                "target_intent": "buying_interest",
+                "ai_generated": True,
+                "version": "1.0",
+            }
+        )
+        behavioral_network._generate_personalized_email_content = AsyncMock(
+            return_value={"subject": "Personalized Recommendations", "content": "AI-generated content"}
+        )
+        behavioral_network._deliver_email_content = AsyncMock(return_value={"success": True})
+        behavioral_network._generate_dynamic_website_content = AsyncMock(return_value={"widgets": ["recommendations"]})
+        behavioral_network._deliver_website_content = AsyncMock(return_value={"success": True})
+        behavioral_network._generate_personalized_property_report = AsyncMock(return_value={"report_type": "analysis"})
+        behavioral_network._deliver_property_report = AsyncMock(return_value={"success": True})
+        behavioral_network._generate_interactive_content = AsyncMock(return_value={"tools": ["calculator"]})
+        behavioral_network._deliver_interactive_content = AsyncMock(return_value={"success": True})
         behavioral_network._update_content_preferences = AsyncMock()
         behavioral_network._store_content_delivery_audit = AsyncMock()
         behavioral_network._setup_content_engagement_tracking = AsyncMock()
@@ -520,9 +503,9 @@ class TestDeliverPersonalizedContent:
         # Verify content generation and delivery
         behavioral_network._get_comprehensive_lead_profile.assert_called_once_with("lead_456")
         behavioral_network._generate_content_strategy.assert_called_once()
-        assert result['success'] is True
-        assert result['personalization_level'] == 'high'
-        assert result['content_theme'] == 'property_recommendations'
+        assert result["success"] is True
+        assert result["personalization_level"] == "high"
+        assert result["content_theme"] == "property_recommendations"
 
     @pytest.mark.asyncio
     async def test_deliver_personalized_content_no_profile(self, behavioral_network, sample_trigger):
@@ -533,31 +516,29 @@ class TestDeliverPersonalizedContent:
 
         result = await behavioral_network._deliver_personalized_content(sample_trigger)
 
-        assert result['success'] is False
-        assert result['reason'] == 'no_lead_profile'
+        assert result["success"] is False
+        assert result["reason"] == "no_lead_profile"
 
     @pytest.mark.asyncio
     async def test_channel_optimization(self, behavioral_network, sample_trigger):
         """Test optimal channel selection for content delivery."""
-        behavioral_network._get_comprehensive_lead_profile = AsyncMock(return_value={
-            "lead_id": "lead_456",
-            "name": "John Smith",
-            "email": "john@example.com"
-        })
-        behavioral_network._get_behavioral_insights_history = AsyncMock(return_value={
-            "abandonment_risk": False
-        })
+        behavioral_network._get_comprehensive_lead_profile = AsyncMock(
+            return_value={"lead_id": "lead_456", "name": "John Smith", "email": "john@example.com"}
+        )
+        behavioral_network._get_behavioral_insights_history = AsyncMock(return_value={"abandonment_risk": False})
         behavioral_network._get_content_preferences = AsyncMock(return_value={})
-        behavioral_network._generate_content_strategy = AsyncMock(return_value={
-            "personalization_level": "medium",
-            "content_types": ["email"],
-            "delivery_channels": ["email"],
-            "theme": "market_insights",
-            "target_intent": "information_seeking",
-            "ai_generated": False
-        })
+        behavioral_network._generate_content_strategy = AsyncMock(
+            return_value={
+                "personalization_level": "medium",
+                "content_types": ["email"],
+                "delivery_channels": ["email"],
+                "theme": "market_insights",
+                "target_intent": "information_seeking",
+                "ai_generated": False,
+            }
+        )
         behavioral_network._generate_personalized_email_content = AsyncMock(return_value={})
-        behavioral_network._deliver_email_content = AsyncMock(return_value={'success': True})
+        behavioral_network._deliver_email_content = AsyncMock(return_value={"success": True})
         behavioral_network._update_content_preferences = AsyncMock()
         behavioral_network._store_content_delivery_audit = AsyncMock()
         behavioral_network._setup_content_engagement_tracking = AsyncMock()
@@ -565,7 +546,7 @@ class TestDeliverPersonalizedContent:
 
         result = await behavioral_network._deliver_personalized_content(sample_trigger)
 
-        assert result['success'] is True
+        assert result["success"] is True
         behavioral_network._deliver_email_content.assert_called_once()
 
 
@@ -576,9 +557,7 @@ class TestBehavioralAnalysisAgents:
     def mock_llm_client(self):
         """Mock LLM client."""
         client = AsyncMock()
-        client.generate.return_value = AsyncMock(
-            content="Analysis: High intent lead based on behavioral patterns"
-        )
+        client.generate.return_value = AsyncMock(content="Analysis: High intent lead based on behavioral patterns")
         return client
 
     @pytest.mark.asyncio
@@ -606,7 +585,7 @@ class TestBehavioralAnalysisAgents:
                 lead_id="lead_456",
                 signal_type=BehavioralSignalType.PROPERTY_VIEW,
                 timestamp=datetime.now() - timedelta(minutes=i),
-                interaction_value=8.0 + i
+                interaction_value=8.0 + i,
             )
             signals.append(signal)
 
@@ -627,16 +606,16 @@ class TestBehavioralAnalysisAgents:
                 lead_id="lead_456",
                 signal_type=BehavioralSignalType.CALCULATOR_USAGE,
                 timestamp=datetime.now(),
-                interaction_value=10.0
+                interaction_value=10.0,
             ),
             BehavioralSignal(
                 signal_id="form_signal",
                 lead_id="lead_456",
                 signal_type=BehavioralSignalType.FORM_INTERACTION,
                 timestamp=datetime.now(),
-                interaction_value=9.0
+                interaction_value=9.0,
             ),
-            sample_behavioral_signal
+            sample_behavioral_signal,
         ]
 
         context = {"batch_size": len(signals)}
@@ -663,11 +642,11 @@ class TestRealTimeBehavioralNetwork:
     @pytest.mark.asyncio
     async def test_signal_ingestion(self, behavioral_network, sample_behavioral_signal):
         """Test behavioral signal ingestion."""
-        initial_count = behavioral_network.network_stats['total_signals_processed']
+        initial_count = behavioral_network.network_stats["total_signals_processed"]
 
         behavioral_network.ingest_behavioral_signal(sample_behavioral_signal)
 
-        assert behavioral_network.network_stats['total_signals_processed'] == initial_count + 1
+        assert behavioral_network.network_stats["total_signals_processed"] == initial_count + 1
 
     @pytest.mark.asyncio
     async def test_signal_queue_overflow_handling(self, behavioral_network):
@@ -678,7 +657,7 @@ class TestRealTimeBehavioralNetwork:
                 signal_id=f"signal_{i}",
                 lead_id=f"lead_{i}",
                 signal_type=BehavioralSignalType.PAGE_VIEW,
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
             behavioral_network.ingest_behavioral_signal(signal)
 
@@ -700,7 +679,7 @@ class TestRealTimeBehavioralNetwork:
             recommended_actions=["immediate_contact"],
             trigger_suggestions=[TriggerType.IMMEDIATE_ALERT, TriggerType.AGENT_NOTIFICATION],
             behavioral_score=85.0,
-            processing_time_ms=100.0
+            processing_time_ms=100.0,
         )
 
         # Test trigger generation
@@ -717,22 +696,20 @@ class TestRealTimeBehavioralNetwork:
         sample_trigger.priority = 5  # High priority
 
         # Mock internal methods called during trigger execution
-        behavioral_network._get_lead_details = AsyncMock(return_value={
-            "name": "John Smith",
-            "email": "john@example.com",
-            "phone": "+1234567890"
-        })
-        behavioral_network._send_email_alert = AsyncMock(return_value={'success': True})
-        behavioral_network._send_sms_alert = AsyncMock(return_value={'success': True})
-        behavioral_network._send_slack_alert = AsyncMock(return_value={'success': True})
-        behavioral_network._send_dashboard_notification = AsyncMock(return_value={'success': True})
+        behavioral_network._get_lead_details = AsyncMock(
+            return_value={"name": "John Smith", "email": "john@example.com", "phone": "+1234567890"}
+        )
+        behavioral_network._send_email_alert = AsyncMock(return_value={"success": True})
+        behavioral_network._send_sms_alert = AsyncMock(return_value={"success": True})
+        behavioral_network._send_slack_alert = AsyncMock(return_value={"success": True})
+        behavioral_network._send_dashboard_notification = AsyncMock(return_value={"success": True})
         behavioral_network._store_alert_audit = AsyncMock()
 
         await behavioral_network._execute_trigger(sample_trigger)
 
         assert sample_trigger.executed is True
         assert sample_trigger.execution_result is not None
-        assert sample_trigger.execution_result.get('success') is True
+        assert sample_trigger.execution_result.get("success") is True
 
 
 class TestIntegrationWorkflows:
@@ -754,74 +731,73 @@ class TestIntegrationWorkflows:
                 "context": "Viewed multiple luxury properties in target area",
                 "urgency": "critical",
                 "confidence": 0.95,
-                "recommendations": ["call_now", "send_listings"]
+                "recommendations": ["call_now", "send_listings"],
             },
             priority=5,
-            expiration_time=datetime.now() + timedelta(hours=1)
+            expiration_time=datetime.now() + timedelta(hours=1),
         )
 
         # Mock all internal helper methods used by the 5 TODO methods
-        behavioral_network._get_lead_details = AsyncMock(return_value={
-            "name": "Urgent Lead",
-            "email": "urgent@example.com",
-            "phone": "+1111111111"
-        })
-        behavioral_network._send_email_alert = AsyncMock(return_value={'success': True})
-        behavioral_network._send_sms_alert = AsyncMock(return_value={'success': True})
-        behavioral_network._send_slack_alert = AsyncMock(return_value={'success': True})
-        behavioral_network._send_dashboard_notification = AsyncMock(return_value={'success': True})
+        behavioral_network._get_lead_details = AsyncMock(
+            return_value={"name": "Urgent Lead", "email": "urgent@example.com", "phone": "+1111111111"}
+        )
+        behavioral_network._send_email_alert = AsyncMock(return_value={"success": True})
+        behavioral_network._send_sms_alert = AsyncMock(return_value={"success": True})
+        behavioral_network._send_slack_alert = AsyncMock(return_value={"success": True})
+        behavioral_network._send_dashboard_notification = AsyncMock(return_value={"success": True})
         behavioral_network._store_alert_audit = AsyncMock()
 
-        behavioral_network._get_agent_assignment = AsyncMock(return_value={
-            "agent_id": "agent_1",
-            "agent_info": {"name": "Agent", "email": "agent@test.com", "phone": "+12223334444"},
-            "workload_info": {}
-        })
-        behavioral_network._send_agent_dashboard_notification = AsyncMock(return_value={'success': True})
-        behavioral_network._send_agent_email_notification = AsyncMock(return_value={'success': True})
-        behavioral_network._send_agent_push_notification = AsyncMock(return_value={'success': True})
-        behavioral_network._send_agent_sms_notification = AsyncMock(return_value={'success': True})
+        behavioral_network._get_agent_assignment = AsyncMock(
+            return_value={
+                "agent_id": "agent_1",
+                "agent_info": {"name": "Agent", "email": "agent@test.com", "phone": "+12223334444"},
+                "workload_info": {},
+            }
+        )
+        behavioral_network._send_agent_dashboard_notification = AsyncMock(return_value={"success": True})
+        behavioral_network._send_agent_email_notification = AsyncMock(return_value={"success": True})
+        behavioral_network._send_agent_push_notification = AsyncMock(return_value={"success": True})
+        behavioral_network._send_agent_sms_notification = AsyncMock(return_value={"success": True})
         behavioral_network._update_agent_workload = AsyncMock()
         behavioral_network._store_notification_audit = AsyncMock()
         behavioral_network._schedule_agent_followup_reminder = AsyncMock()
 
-        behavioral_network._set_ghl_priority_flag = AsyncMock(return_value={'success': True})
-        behavioral_network._set_internal_priority_flag = AsyncMock(return_value={'success': True})
-        behavioral_network._cache_priority_status = AsyncMock(return_value={'success': True})
-        behavioral_network._update_lead_priority_scoring = AsyncMock(return_value={'success': True})
-        behavioral_network._trigger_priority_workflow = AsyncMock(return_value={'success': True})
-        behavioral_network._schedule_priority_flag_review = AsyncMock(return_value={'success': True})
+        behavioral_network._set_ghl_priority_flag = AsyncMock(return_value={"success": True})
+        behavioral_network._set_internal_priority_flag = AsyncMock(return_value={"success": True})
+        behavioral_network._cache_priority_status = AsyncMock(return_value={"success": True})
+        behavioral_network._update_lead_priority_scoring = AsyncMock(return_value={"success": True})
+        behavioral_network._trigger_priority_workflow = AsyncMock(return_value={"success": True})
+        behavioral_network._schedule_priority_flag_review = AsyncMock(return_value={"success": True})
         behavioral_network._store_priority_flag_audit = AsyncMock()
         behavioral_network._send_priority_flag_notifications = AsyncMock()
 
         behavioral_network._get_behavioral_context = AsyncMock(return_value={"currently_active": False})
-        behavioral_network._determine_response_strategy = AsyncMock(return_value={
-            "channel": "email", "template": "urgent", "personalization": {}
-        })
-        behavioral_network._send_automated_email_response = AsyncMock(return_value={'success': True})
-        behavioral_network._send_automated_in_app_response = AsyncMock(return_value={'success': True})
+        behavioral_network._determine_response_strategy = AsyncMock(
+            return_value={"channel": "email", "template": "urgent", "personalization": {}}
+        )
+        behavioral_network._send_automated_email_response = AsyncMock(return_value={"success": True})
+        behavioral_network._send_automated_in_app_response = AsyncMock(return_value={"success": True})
         behavioral_network._store_automated_response_audit = AsyncMock()
         behavioral_network._update_automated_response_tracking = AsyncMock()
         behavioral_network._setup_response_performance_monitoring = AsyncMock()
 
-        behavioral_network._get_comprehensive_lead_profile = AsyncMock(return_value={
-            "lead_id": "lead_urgent",
-            "email": "urgent@example.com"
-        })
-        behavioral_network._get_behavioral_insights_history = AsyncMock(return_value={
-            "abandonment_risk": False
-        })
+        behavioral_network._get_comprehensive_lead_profile = AsyncMock(
+            return_value={"lead_id": "lead_urgent", "email": "urgent@example.com"}
+        )
+        behavioral_network._get_behavioral_insights_history = AsyncMock(return_value={"abandonment_risk": False})
         behavioral_network._get_content_preferences = AsyncMock(return_value={})
-        behavioral_network._generate_content_strategy = AsyncMock(return_value={
-            "personalization_level": "high",
-            "content_types": ["email"],
-            "delivery_channels": ["email"],
-            "theme": "urgent_properties",
-            "target_intent": "buying_intent",
-            "ai_generated": True
-        })
+        behavioral_network._generate_content_strategy = AsyncMock(
+            return_value={
+                "personalization_level": "high",
+                "content_types": ["email"],
+                "delivery_channels": ["email"],
+                "theme": "urgent_properties",
+                "target_intent": "buying_intent",
+                "ai_generated": True,
+            }
+        )
         behavioral_network._generate_personalized_email_content = AsyncMock(return_value={})
-        behavioral_network._deliver_email_content = AsyncMock(return_value={'success': True})
+        behavioral_network._deliver_email_content = AsyncMock(return_value={"success": True})
         behavioral_network._update_content_preferences = AsyncMock()
         behavioral_network._store_content_delivery_audit = AsyncMock()
         behavioral_network._setup_content_engagement_tracking = AsyncMock()
@@ -849,7 +825,7 @@ class TestIntegrationWorkflows:
                 lead_id="lead_456",
                 signal_type=BehavioralSignalType.PROPERTY_VIEW if i % 2 == 0 else BehavioralSignalType.CALCULATOR_USAGE,
                 timestamp=datetime.now() - timedelta(minutes=i),
-                interaction_value=7.0 + i
+                interaction_value=7.0 + i,
             )
             signals.append(signal)
 
@@ -857,7 +833,7 @@ class TestIntegrationWorkflows:
         await behavioral_network._process_signals_batch(signals)
 
         # Verify processing completed without errors
-        assert behavioral_network.network_stats['total_insights_generated'] >= 0
+        assert behavioral_network.network_stats["total_insights_generated"] >= 0
 
     @pytest.mark.asyncio
     async def test_error_recovery_in_processing_pipeline(self, behavioral_network):
@@ -866,12 +842,14 @@ class TestIntegrationWorkflows:
         behavioral_network.signal_detector.process_signals = AsyncMock(side_effect=Exception("Agent Error"))
 
         # Create test signals
-        signals = [BehavioralSignal(
-            signal_id="signal_error",
-            lead_id="lead_456",
-            signal_type=BehavioralSignalType.PAGE_VIEW,
-            timestamp=datetime.now()
-        )]
+        signals = [
+            BehavioralSignal(
+                signal_id="signal_error",
+                lead_id="lead_456",
+                signal_type=BehavioralSignalType.PAGE_VIEW,
+                timestamp=datetime.now(),
+            )
+        ]
 
         # Should handle gracefully
         await behavioral_network._process_signals_batch(signals)
@@ -893,22 +871,24 @@ class TestPerformanceMetrics:
                 signal_id=f"perf_signal_{i}",
                 lead_id=f"lead_{i}",
                 signal_type=BehavioralSignalType.PAGE_VIEW,
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
             behavioral_network.ingest_behavioral_signal(signal)
 
         # Verify stats updated
-        assert behavioral_network.network_stats['total_signals_processed'] > initial_stats['total_signals_processed']
+        assert behavioral_network.network_stats["total_signals_processed"] > initial_stats["total_signals_processed"]
 
     @pytest.mark.asyncio
     async def test_processing_latency_measurement(self, behavioral_network):
         """Test processing latency measurement."""
-        signals = [BehavioralSignal(
-            signal_id="latency_signal",
-            lead_id="lead_456",
-            signal_type=BehavioralSignalType.PROPERTY_VIEW,
-            timestamp=datetime.now()
-        )]
+        signals = [
+            BehavioralSignal(
+                signal_id="latency_signal",
+                lead_id="lead_456",
+                signal_type=BehavioralSignalType.PROPERTY_VIEW,
+                timestamp=datetime.now(),
+            )
+        ]
 
         start_time = time.time()
         await behavioral_network._process_signals_batch(signals)
@@ -916,6 +896,7 @@ class TestPerformanceMetrics:
 
         # Should complete in reasonable time
         assert processing_time < 5.0, f"Processing took {processing_time:.3f}s"
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--cov=ghl_real_estate_ai.services.realtime_behavioral_network"])

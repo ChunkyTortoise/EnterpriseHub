@@ -4,21 +4,22 @@ Automated Compliance Monitoring & Risk Assessment System
 """
 
 import asyncio
-import json
-import re
-from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple, Union
-from enum import Enum
-import logging
-from concurrent.futures import ThreadPoolExecutor
 import hashlib
+import json
+import logging
+import re
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 logger = logging.getLogger(__name__)
 
 
 class ViolationType(Enum):
     """Types of compliance violations"""
+
     FAIR_HOUSING = "fair_housing"
     TREC_REGULATORY = "trec_regulatory"
     PRIVACY_BREACH = "privacy_breach"
@@ -30,6 +31,7 @@ class ViolationType(Enum):
 
 class RiskLevel(Enum):
     """Risk severity levels"""
+
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -38,14 +40,16 @@ class RiskLevel(Enum):
 
 class AlertSeverity(Enum):
     """Alert severity classifications"""
-    EMERGENCY = "emergency"         # Immediate intervention required
-    CRITICAL = "critical"           # Prompt review needed
-    WARNING = "warning"             # Attention recommended
-    NOTICE = "notice"              # Awareness notification
+
+    EMERGENCY = "emergency"  # Immediate intervention required
+    CRITICAL = "critical"  # Prompt review needed
+    WARNING = "warning"  # Attention recommended
+    NOTICE = "notice"  # Awareness notification
 
 
 class ComplianceStatus(Enum):
     """Compliance status classifications"""
+
     COMPLIANT = "compliant"
     AT_RISK = "at_risk"
     VIOLATION = "violation"
@@ -56,6 +60,7 @@ class ComplianceStatus(Enum):
 @dataclass
 class ComplianceViolation:
     """Compliance violation detection result"""
+
     violation_id: str
     violation_type: ViolationType
     severity: RiskLevel
@@ -74,6 +79,7 @@ class ComplianceViolation:
 @dataclass
 class RiskAssessment:
     """Comprehensive risk assessment result"""
+
     assessment_id: str
     entity_id: str  # transaction, lead, agent, etc.
     entity_type: str
@@ -90,6 +96,7 @@ class RiskAssessment:
 @dataclass
 class DocumentComplianceResult:
     """Document compliance analysis result"""
+
     document_id: str
     document_type: str
     compliance_score: float  # 0.0-1.0
@@ -106,6 +113,7 @@ class DocumentComplianceResult:
 @dataclass
 class ComplianceAlert:
     """Real-time compliance alert"""
+
     alert_id: str
     severity: AlertSeverity
     violation_type: ViolationType
@@ -122,6 +130,7 @@ class ComplianceAlert:
 @dataclass
 class PrivacyComplianceCheck:
     """Privacy regulation compliance result"""
+
     check_id: str
     regulation_type: str  # GDPR, CCPA, etc.
     data_subject_id: str
@@ -168,7 +177,7 @@ class EnhancedComplianceRisk:
             "violations_detected": 0,
             "violations_prevented": 0,
             "risk_assessments_completed": 0,
-            "training_triggered": 0
+            "training_triggered": 0,
         }
 
     async def monitor_conversation_compliance(
@@ -176,7 +185,7 @@ class EnhancedComplianceRisk:
         conversation_text: str,
         agent_id: str,
         customer_id: Optional[str] = None,
-        conversation_context: Dict[str, Any] = None
+        conversation_context: Dict[str, Any] = None,
     ) -> List[ComplianceViolation]:
         """
         Real-time conversation compliance monitoring
@@ -200,9 +209,7 @@ class EnhancedComplianceRisk:
             violations.extend(fair_housing_violations)
 
             # TREC regulatory compliance
-            trec_violations = await self._check_trec_compliance(
-                conversation_text, agent_id, conversation_context
-            )
+            trec_violations = await self._check_trec_compliance(conversation_text, agent_id, conversation_context)
             violations.extend(trec_violations)
 
             # Privacy compliance check
@@ -232,7 +239,7 @@ class EnhancedComplianceRisk:
         self,
         transaction_data: Dict[str, Any],
         involved_parties: List[Dict[str, Any]],
-        contract_documents: List[Dict[str, Any]] = None
+        contract_documents: List[Dict[str, Any]] = None,
     ) -> RiskAssessment:
         """
         Comprehensive transaction risk assessment
@@ -259,21 +266,16 @@ class EnhancedComplianceRisk:
                 "legal_risk": legal_risk,
                 "financial_risk": financial_risk,
                 "operational_risk": operational_risk,
-                "reputational_risk": reputational_risk
+                "reputational_risk": reputational_risk,
             }
 
             overall_risk = self._calculate_weighted_risk(risk_factors)
 
             # Identify critical risks
-            critical_risks = [
-                risk_type for risk_type, score in risk_factors.items()
-                if score >= 0.8
-            ]
+            critical_risks = [risk_type for risk_type, score in risk_factors.items() if score >= 0.8]
 
             # Generate mitigation recommendations
-            mitigation_recs = await self._generate_mitigation_recommendations(
-                risk_factors, transaction_data
-            )
+            mitigation_recs = await self._generate_mitigation_recommendations(risk_factors, transaction_data)
 
             # Determine monitoring requirements
             monitoring_reqs = await self._determine_monitoring_requirements(
@@ -281,9 +283,7 @@ class EnhancedComplianceRisk:
             )
 
             # Set escalation triggers
-            escalation_triggers = await self._define_escalation_triggers(
-                overall_risk, critical_risks
-            )
+            escalation_triggers = await self._define_escalation_triggers(overall_risk, critical_risks)
 
             assessment = RiskAssessment(
                 assessment_id=assessment_id,
@@ -296,7 +296,7 @@ class EnhancedComplianceRisk:
                 monitoring_requirements=monitoring_reqs,
                 review_frequency=self._determine_review_frequency(overall_risk),
                 escalation_triggers=escalation_triggers,
-                assessment_timestamp=datetime.now()
+                assessment_timestamp=datetime.now(),
             )
 
             # Store assessment
@@ -314,10 +314,7 @@ class EnhancedComplianceRisk:
             return self._create_fallback_risk_assessment(transaction_data)
 
     async def verify_document_compliance(
-        self,
-        document_content: str,
-        document_type: str,
-        transaction_context: Dict[str, Any] = None
+        self, document_content: str, document_type: str, transaction_context: Dict[str, Any] = None
     ) -> DocumentComplianceResult:
         """
         Verify document compliance with regulatory requirements
@@ -344,9 +341,7 @@ class EnhancedComplianceRisk:
             )
 
             # Analyze potentially problematic clauses
-            problematic_clauses = await self._analyze_problematic_clauses(
-                document_content, document_type
-            )
+            problematic_clauses = await self._analyze_problematic_clauses(document_content, document_type)
 
             # Verify regulatory compliance
             regulatory_compliance = await self._verify_regulatory_compliance(
@@ -364,9 +359,7 @@ class EnhancedComplianceRisk:
             )
 
             # Determine approval status
-            approval_status = self._determine_approval_status(
-                compliance_score, missing_elements, problematic_clauses
-            )
+            approval_status = self._determine_approval_status(compliance_score, missing_elements, problematic_clauses)
 
             result = DocumentComplianceResult(
                 document_id=document_id,
@@ -379,7 +372,7 @@ class EnhancedComplianceRisk:
                 recommendations=recommendations,
                 approval_status=approval_status,
                 review_notes=f"Automated compliance analysis completed",
-                analysis_timestamp=datetime.now()
+                analysis_timestamp=datetime.now(),
             )
 
             logger.info(f"Document compliance verification completed: {compliance_score:.2f} score")
@@ -391,10 +384,7 @@ class EnhancedComplianceRisk:
             return self._create_fallback_document_result(document_type)
 
     async def check_privacy_compliance(
-        self,
-        customer_id: str,
-        data_processing_activities: List[Dict[str, Any]],
-        regulation_type: str = "CCPA"
+        self, customer_id: str, data_processing_activities: List[Dict[str, Any]], regulation_type: str = "CCPA"
     ) -> PrivacyComplianceCheck:
         """
         Check privacy regulation compliance for customer data
@@ -411,9 +401,7 @@ class EnhancedComplianceRisk:
             check_id = self._generate_privacy_check_id(customer_id, regulation_type)
 
             # Verify consent status
-            consent_status = await self._verify_consent_status(
-                customer_id, data_processing_activities
-            )
+            consent_status = await self._verify_consent_status(customer_id, data_processing_activities)
 
             # Extract data categories
             data_categories = await self._extract_data_categories(data_processing_activities)
@@ -422,19 +410,13 @@ class EnhancedComplianceRisk:
             processing_purposes = await self._identify_processing_purposes(data_processing_activities)
 
             # Check retention compliance
-            retention_compliance = await self._check_retention_compliance(
-                customer_id, data_categories, regulation_type
-            )
+            retention_compliance = await self._check_retention_compliance(customer_id, data_categories, regulation_type)
 
             # Verify access rights compliance
-            access_rights_honored = await self._verify_access_rights(
-                customer_id, regulation_type
-            )
+            access_rights_honored = await self._verify_access_rights(customer_id, regulation_type)
 
             # Assess breach risk
-            breach_risk = await self._assess_privacy_breach_risk(
-                data_categories, processing_purposes, consent_status
-            )
+            breach_risk = await self._assess_privacy_breach_risk(data_categories, processing_purposes, consent_status)
 
             # Generate recommendations
             recommendations = await self._generate_privacy_recommendations(
@@ -452,7 +434,7 @@ class EnhancedComplianceRisk:
                 access_rights_honored=access_rights_honored,
                 breach_risk_level=breach_risk,
                 recommendations=recommendations,
-                check_timestamp=datetime.now()
+                check_timestamp=datetime.now(),
             )
 
             logger.info(f"Privacy compliance check completed for {customer_id}")
@@ -464,10 +446,7 @@ class EnhancedComplianceRisk:
             return self._create_fallback_privacy_check(customer_id, regulation_type)
 
     async def generate_compliance_report(
-        self,
-        report_type: str,
-        date_range: Tuple[datetime, datetime],
-        entity_filter: Optional[str] = None
+        self, report_type: str, date_range: Tuple[datetime, datetime], entity_filter: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Generate comprehensive compliance report
@@ -496,44 +475,39 @@ class EnhancedComplianceRisk:
                     "period": f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
                     "generated_timestamp": datetime.now().isoformat(),
                     "entity_filter": entity_filter,
-                    "total_entities": len(violations_data) + len(risk_data)
+                    "total_entities": len(violations_data) + len(risk_data),
                 },
-
                 "executive_summary": {
                     "overall_compliance_score": metrics_data["overall_score"],
                     "total_violations": len(violations_data),
                     "high_risk_items": metrics_data["high_risk_count"],
                     "training_completion_rate": metrics_data["training_completion"],
-                    "key_findings": metrics_data["key_findings"]
+                    "key_findings": metrics_data["key_findings"],
                 },
-
                 "violation_analysis": {
                     "by_type": violations_data["by_type"],
                     "by_severity": violations_data["by_severity"],
                     "trends": violations_data["trends"],
-                    "repeat_violations": violations_data["repeat_violations"]
+                    "repeat_violations": violations_data["repeat_violations"],
                 },
-
                 "risk_assessment": {
                     "high_risk_entities": risk_data["high_risk"],
                     "risk_trends": risk_data["trends"],
                     "mitigation_effectiveness": risk_data["mitigation_stats"],
-                    "emerging_risks": risk_data["emerging_risks"]
+                    "emerging_risks": risk_data["emerging_risks"],
                 },
-
                 "training_analysis": {
                     "completion_rates": training_data["completion_rates"],
                     "effectiveness_scores": training_data["effectiveness"],
                     "knowledge_gaps": training_data["gaps"],
-                    "recommendations": training_data["recommendations"]
+                    "recommendations": training_data["recommendations"],
                 },
-
                 "recommendations": {
                     "immediate_actions": await self._generate_immediate_actions(violations_data, risk_data),
                     "policy_updates": await self._recommend_policy_updates(violations_data),
                     "training_priorities": await self._prioritize_training_needs(training_data),
-                    "monitoring_enhancements": await self._recommend_monitoring_improvements(metrics_data)
-                }
+                    "monitoring_enhancements": await self._recommend_monitoring_improvements(metrics_data),
+                },
             }
 
             logger.info(f"Compliance report generated: {report_type} for {start_date} to {end_date}")
@@ -548,29 +522,85 @@ class EnhancedComplianceRisk:
         """Initialize Fair Housing violation detection patterns"""
         return {
             "race_ethnicity": [
-                "white", "black", "hispanic", "latino", "asian", "african american",
-                "caucasian", "minority", "ethnic", "race", "racial", "colored"
+                "white",
+                "black",
+                "hispanic",
+                "latino",
+                "asian",
+                "african american",
+                "caucasian",
+                "minority",
+                "ethnic",
+                "race",
+                "racial",
+                "colored",
             ],
             "religion": [
-                "christian", "jewish", "muslim", "islamic", "catholic", "protestant",
-                "religious", "church", "temple", "mosque", "faith"
+                "christian",
+                "jewish",
+                "muslim",
+                "islamic",
+                "catholic",
+                "protestant",
+                "religious",
+                "church",
+                "temple",
+                "mosque",
+                "faith",
             ],
             "national_origin": [
-                "foreign", "immigrant", "accent", "english", "american", "native",
-                "citizen", "visa", "passport", "country", "nationality"
+                "foreign",
+                "immigrant",
+                "accent",
+                "english",
+                "american",
+                "native",
+                "citizen",
+                "visa",
+                "passport",
+                "country",
+                "nationality",
             ],
             "familial_status": [
-                "children", "kids", "family", "pregnant", "pregnancy", "single parent",
-                "divorced", "married", "bachelor", "couple", "childless"
+                "children",
+                "kids",
+                "family",
+                "pregnant",
+                "pregnancy",
+                "single parent",
+                "divorced",
+                "married",
+                "bachelor",
+                "couple",
+                "childless",
             ],
             "disability": [
-                "disabled", "disability", "handicap", "wheelchair", "blind", "deaf",
-                "mental", "physical", "medication", "accessible", "accommodation"
+                "disabled",
+                "disability",
+                "handicap",
+                "wheelchair",
+                "blind",
+                "deaf",
+                "mental",
+                "physical",
+                "medication",
+                "accessible",
+                "accommodation",
             ],
             "gender": [
-                "male", "female", "man", "woman", "gender", "sex", "masculine", "feminine",
-                "ladies", "gentlemen", "boys", "girls"
-            ]
+                "male",
+                "female",
+                "man",
+                "woman",
+                "gender",
+                "sex",
+                "masculine",
+                "feminine",
+                "ladies",
+                "gentlemen",
+                "boys",
+                "girls",
+            ],
         }
 
     def _initialize_trec_requirements(self) -> Dict[str, Any]:
@@ -579,18 +609,18 @@ class EnhancedComplianceRisk:
             "license_disclosure": {
                 "required": True,
                 "format": "agent_name, license_number, brokerage_name",
-                "placement": "all_written_communications"
+                "placement": "all_written_communications",
             },
             "advertising_compliance": {
                 "brokerage_name": "required_in_ads",
                 "license_number": "required_for_individual_ads",
-                "equal_housing": "required_logo_statement"
+                "equal_housing": "required_logo_statement",
             },
             "disclosure_requirements": {
                 "property_condition": "seller_disclosure_notice",
                 "agency_relationships": "information_about_brokerage_services",
-                "earnest_money": "written_receipt_required"
-            }
+                "earnest_money": "written_receipt_required",
+            },
         }
 
     def _initialize_privacy_rules(self) -> Dict[str, Any]:
@@ -599,29 +629,21 @@ class EnhancedComplianceRisk:
             "ccpa": {
                 "consent_required": ["sale_of_data", "sensitive_personal_info"],
                 "disclosure_required": ["data_collection", "use_purposes", "third_party_sharing"],
-                "rights": ["access", "deletion", "opt_out", "non_discrimination"]
+                "rights": ["access", "deletion", "opt_out", "non_discrimination"],
             },
             "gdpr": {
                 "lawful_basis": ["consent", "legitimate_interest", "contract"],
                 "data_subject_rights": ["access", "rectification", "erasure", "portability"],
-                "breach_notification": "72_hours_to_authority"
-            }
+                "breach_notification": "72_hours_to_authority",
+            },
         }
 
     def _initialize_risk_weights(self) -> Dict[str, float]:
         """Initialize risk assessment weights"""
-        return {
-            "legal_risk": 0.25,
-            "financial_risk": 0.30,
-            "operational_risk": 0.25,
-            "reputational_risk": 0.20
-        }
+        return {"legal_risk": 0.25, "financial_risk": 0.30, "operational_risk": 0.25, "reputational_risk": 0.20}
 
     async def _check_fair_housing_compliance(
-        self,
-        conversation_text: str,
-        agent_id: str,
-        customer_id: Optional[str]
+        self, conversation_text: str, agent_id: str, customer_id: Optional[str]
     ) -> List[ComplianceViolation]:
         """Check conversation for Fair Housing violations"""
         violations = []
@@ -631,9 +653,7 @@ class EnhancedComplianceRisk:
             for pattern in patterns:
                 if pattern in text_lower:
                     # Context analysis to determine if it's actually discriminatory
-                    is_violation = await self._analyze_discrimination_context(
-                        conversation_text, pattern, category
-                    )
+                    is_violation = await self._analyze_discrimination_context(conversation_text, pattern, category)
 
                     if is_violation:
                         violation = ComplianceViolation(
@@ -651,27 +671,30 @@ class EnhancedComplianceRisk:
                                 "Pause conversation",
                                 "Provide agent guidance",
                                 "Document incident",
-                                "Schedule Fair Housing training"
+                                "Schedule Fair Housing training",
                             ],
                             training_required=True,
-                            detected_timestamp=datetime.now()
+                            detected_timestamp=datetime.now(),
                         )
                         violations.append(violation)
 
         return violations
 
-    async def _analyze_discrimination_context(
-        self,
-        conversation_text: str,
-        pattern: str,
-        category: str
-    ) -> bool:
+    async def _analyze_discrimination_context(self, conversation_text: str, pattern: str, category: str) -> bool:
         """Analyze context to determine if pattern indicates discrimination"""
 
         # Simple context analysis - in production would use more sophisticated NLP
         discriminatory_contexts = [
-            "prefer", "only", "not", "don't want", "avoid", "exclude",
-            "better if", "ideal", "looking for", "must be"
+            "prefer",
+            "only",
+            "not",
+            "don't want",
+            "avoid",
+            "exclude",
+            "better if",
+            "ideal",
+            "looking for",
+            "must be",
         ]
 
         # Look for discriminatory language patterns around the flagged term
@@ -701,7 +724,7 @@ class EnhancedComplianceRisk:
             notification_sent=False,
             resolved=False,
             created_timestamp=datetime.now(),
-            resolved_timestamp=None
+            resolved_timestamp=None,
         )
 
         self.compliance_alerts.append(alert)
@@ -748,13 +771,14 @@ class EnhancedComplianceRisk:
             monitoring_requirements=["Weekly check-ins"],
             review_frequency="weekly",
             escalation_triggers=["Manual escalation required"],
-            assessment_timestamp=datetime.now()
+            assessment_timestamp=datetime.now(),
         )
 
     # Additional fallback and helper methods...
 
 
 # Factory functions
+
 
 async def create_enhanced_compliance_risk() -> EnhancedComplianceRisk:
     """Factory function to create configured compliance and risk management system"""
@@ -768,9 +792,7 @@ if __name__ == "__main__":
 
         # Test conversation monitoring
         conversation = "I prefer to work with families without children in this neighborhood."
-        violations = await compliance_system.monitor_conversation_compliance(
-            conversation, "agent_123", "customer_456"
-        )
+        violations = await compliance_system.monitor_conversation_compliance(conversation, "agent_123", "customer_456")
 
         print(f"Detected {len(violations)} violations:")
         for violation in violations:

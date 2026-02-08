@@ -18,27 +18,33 @@ Performance: <5ms message latency, 1000+ concurrent connections
 
 import asyncio
 import json
+import logging
 import time
 import uuid
-from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Set, Optional, Any, Callable, Union
-from dataclasses import dataclass, asdict
-from enum import Enum
-import logging
 from collections import defaultdict, deque
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta, timezone
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Set, Union
 
 from fastapi import WebSocket, WebSocketDisconnect
+
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.websocket_server import (
-    RealTimeEvent, EventType, WebSocketManager, get_websocket_manager
-)
 from ghl_real_estate_ai.services.auth_service import UserRole
 from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.websocket_server import (
+    EventType,
+    RealTimeEvent,
+    WebSocketManager,
+    get_websocket_manager,
+)
 
 logger = get_logger(__name__)
 
+
 class BIChannelType(Enum):
     """BI-specific WebSocket channel types."""
+
     DASHBOARD = "dashboard"
     ANALYTICS = "analytics"
     ALERTS = "alerts"
@@ -47,16 +53,20 @@ class BIChannelType(Enum):
     SYSTEM_HEALTH = "system_health"
     DRILL_DOWN = "drill_down"
 
+
 class MessagePriority(Enum):
     """Message priority levels for intelligent routing."""
+
     CRITICAL = "critical"
     HIGH = "high"
     NORMAL = "normal"
     LOW = "low"
 
+
 @dataclass
 class BIConnection:
     """Enhanced connection info for BI WebSocket clients."""
+
     websocket: WebSocket
     connection_id: str
     user_id: Optional[int]
@@ -70,9 +80,11 @@ class BIConnection:
     error_count: int
     throttle_state: Dict[str, Any]
 
+
 @dataclass
 class BIMessage:
     """BI-specific message format."""
+
     channel: BIChannelType
     event_type: str
     component: Optional[str]
@@ -85,15 +97,18 @@ class BIMessage:
     requires_ack: bool = False
     ttl_seconds: Optional[int] = None
 
+
 @dataclass
 class ChannelMetrics:
     """Metrics for BI channel performance."""
+
     total_messages: int = 0
     messages_per_minute: float = 0.0
     active_connections: int = 0
     avg_latency_ms: float = 0.0
     error_rate: float = 0.0
     throttled_messages: int = 0
+
 
 class BIWebSocketManager:
     """
@@ -130,7 +145,7 @@ class BIWebSocketManager:
             MessagePriority.CRITICAL: 100,  # messages per minute
             MessagePriority.HIGH: 50,
             MessagePriority.NORMAL: 30,
-            MessagePriority.LOW: 10
+            MessagePriority.LOW: 10,
         }
 
         # Background tasks
@@ -150,7 +165,7 @@ class BIWebSocketManager:
         self.background_tasks = [
             asyncio.create_task(self._metrics_reporter()),
             asyncio.create_task(self._connection_monitor()),
-            asyncio.create_task(self._message_processor())
+            asyncio.create_task(self._message_processor()),
         ]
 
         logger.info("BI WebSocket Manager started")
@@ -178,7 +193,7 @@ class BIWebSocketManager:
         user_id: Optional[int] = None,
         user_role: Optional[UserRole] = None,
         channels: Optional[List[str]] = None,
-        components: Optional[List[str]] = None
+        components: Optional[List[str]] = None,
     ) -> str:
         """
         Connect a BI dashboard client with enhanced features.
@@ -229,7 +244,7 @@ class BIWebSocketManager:
                 connection_quality=1.0,
                 message_count=0,
                 error_count=0,
-                throttle_state={}
+                throttle_state={},
             )
 
             # Store connection
@@ -254,14 +269,14 @@ class BIWebSocketManager:
                         "connection_id": connection_id,
                         "subscribed_channels": [c.value for c in subscribed_channels],
                         "subscribed_components": list(subscribed_components),
-                        "server_time": datetime.now(timezone.utc).isoformat()
+                        "server_time": datetime.now(timezone.utc).isoformat(),
                     },
                     priority=MessagePriority.HIGH,
                     location_id=location_id,
                     target_roles=None,
                     timestamp=datetime.now(timezone.utc),
-                    message_id=f"welcome_{connection_id}"
-                )
+                    message_id=f"welcome_{connection_id}",
+                ),
             )
 
             logger.info(f"BI client connected: {connection_id} (location: {location_id})")
@@ -307,10 +322,7 @@ class BIWebSocketManager:
         logger.info(f"BI client disconnected: {connection_id}")
 
     async def broadcast_bi_message(
-        self,
-        message: BIMessage,
-        filter_by_location: bool = True,
-        filter_by_role: bool = True
+        self, message: BIMessage, filter_by_location: bool = True, filter_by_role: bool = True
     ):
         """
         Broadcast a BI message to relevant subscribers.
@@ -321,11 +333,7 @@ class BIWebSocketManager:
             filter_by_role: Filter by user role
         """
         # Get relevant connections
-        target_connections = self._get_target_connections(
-            message,
-            filter_by_location,
-            filter_by_role
-        )
+        target_connections = self._get_target_connections(message, filter_by_location, filter_by_role)
 
         if not target_connections:
             logger.debug(f"No target connections for message: {message.event_type}")
@@ -335,9 +343,7 @@ class BIWebSocketManager:
         send_tasks = []
         for connection_id in target_connections:
             if self._should_send_message(connection_id, message):
-                task = asyncio.create_task(
-                    self._send_message_to_connection(connection_id, message)
-                )
+                task = asyncio.create_task(self._send_message_to_connection(connection_id, message))
                 send_tasks.append(task)
 
         # Wait for all sends to complete
@@ -358,7 +364,7 @@ class BIWebSocketManager:
         component: str,
         data: Dict[str, Any],
         location_id: str = "default",
-        priority: MessagePriority = MessagePriority.NORMAL
+        priority: MessagePriority = MessagePriority.NORMAL,
     ):
         """
         Send a dashboard component update.
@@ -378,7 +384,7 @@ class BIWebSocketManager:
             location_id=location_id,
             target_roles=None,
             timestamp=datetime.now(timezone.utc),
-            message_id=f"update_{component}_{int(time.time() * 1000)}"
+            message_id=f"update_{component}_{int(time.time() * 1000)}",
         )
 
         await self.broadcast_bi_message(message)
@@ -388,7 +394,7 @@ class BIWebSocketManager:
         analytics_type: str,
         data: Dict[str, Any],
         location_id: str = "default",
-        target_roles: Optional[Set[UserRole]] = None
+        target_roles: Optional[Set[UserRole]] = None,
     ):
         """Send an analytics update to subscribed clients."""
         message = BIMessage(
@@ -400,25 +406,20 @@ class BIWebSocketManager:
             location_id=location_id,
             target_roles=target_roles,
             timestamp=datetime.now(timezone.utc),
-            message_id=f"analytics_{analytics_type}_{int(time.time() * 1000)}"
+            message_id=f"analytics_{analytics_type}_{int(time.time() * 1000)}",
         )
 
         await self.broadcast_bi_message(message)
 
     async def send_performance_alert(
-        self,
-        alert_type: str,
-        severity: str,
-        message: str,
-        data: Dict[str, Any],
-        location_id: str = "default"
+        self, alert_type: str, severity: str, message: str, data: Dict[str, Any], location_id: str = "default"
     ):
         """Send a performance alert to dashboard clients."""
         priority = {
             "critical": MessagePriority.CRITICAL,
             "high": MessagePriority.HIGH,
             "medium": MessagePriority.NORMAL,
-            "low": MessagePriority.LOW
+            "low": MessagePriority.LOW,
         }.get(severity, MessagePriority.NORMAL)
 
         bi_message = BIMessage(
@@ -429,23 +430,19 @@ class BIWebSocketManager:
                 "severity": severity,
                 "message": message,
                 "alert_data": data,
-                "alert_id": f"alert_{int(time.time() * 1000)}"
+                "alert_id": f"alert_{int(time.time() * 1000)}",
             },
             priority=priority,
             location_id=location_id,
             target_roles={UserRole.ADMIN, UserRole.MANAGER},  # Admin/Manager only
             timestamp=datetime.now(timezone.utc),
             message_id=f"alert_{alert_type}_{int(time.time() * 1000)}",
-            requires_ack=severity in ["critical", "high"]
+            requires_ack=severity in ["critical", "high"],
         )
 
         await self.broadcast_bi_message(bi_message)
 
-    async def subscribe_to_channel(
-        self,
-        connection_id: str,
-        channel: Union[BIChannelType, str]
-    ):
+    async def subscribe_to_channel(self, connection_id: str, channel: Union[BIChannelType, str]):
         """Subscribe a connection to a BI channel."""
         if connection_id not in self.bi_connections:
             return
@@ -463,11 +460,7 @@ class BIWebSocketManager:
 
         logger.debug(f"Connection {connection_id} subscribed to channel {channel.value}")
 
-    async def subscribe_to_component(
-        self,
-        connection_id: str,
-        component: str
-    ):
+    async def subscribe_to_component(self, connection_id: str, component: str):
         """Subscribe a connection to a specific component updates."""
         if connection_id not in self.bi_connections:
             return
@@ -478,12 +471,7 @@ class BIWebSocketManager:
 
         logger.debug(f"Connection {connection_id} subscribed to component {component}")
 
-    def _get_target_connections(
-        self,
-        message: BIMessage,
-        filter_by_location: bool,
-        filter_by_role: bool
-    ) -> Set[str]:
+    def _get_target_connections(self, message: BIMessage, filter_by_location: bool, filter_by_role: bool) -> Set[str]:
         """Get target connections for a message based on filters."""
         # Start with channel subscribers
         target_connections = self.channel_subscriptions.get(message.channel, set()).copy()
@@ -545,7 +533,7 @@ class BIWebSocketManager:
 
         # Clean old throttle state entries
         for key in list(connection.throttle_state.keys()):
-            if int(key.split('_')[0]) < minute_key - 5:  # Keep last 5 minutes
+            if int(key.split("_")[0]) < minute_key - 5:  # Keep last 5 minutes
                 del connection.throttle_state[key]
 
         return True
@@ -574,7 +562,7 @@ class BIWebSocketManager:
                 "data": message.data,
                 "priority": message.priority.value,
                 "timestamp": message.timestamp.isoformat(),
-                "message_id": message.message_id
+                "message_id": message.message_id,
             }
 
             # Send message
@@ -627,13 +615,12 @@ class BIWebSocketManager:
                     "bi_websocket_metrics",
                     {
                         "channels": {
-                            channel.value: asdict(metrics)
-                            for channel, metrics in self.channel_metrics.items()
+                            channel.value: asdict(metrics) for channel, metrics in self.channel_metrics.items()
                         },
                         "total_connections": len(self.bi_connections),
-                        "timestamp": current_time
+                        "timestamp": current_time,
                     },
-                    ttl=300  # 5 minutes
+                    ttl=300,  # 5 minutes
                 )
 
                 # Wait 30 seconds before next report
@@ -691,23 +678,19 @@ class BIWebSocketManager:
         return {
             "total_connections": len(self.bi_connections),
             "channel_subscriptions": {
-                channel.value: len(connections)
-                for channel, connections in self.channel_subscriptions.items()
+                channel.value: len(connections) for channel, connections in self.channel_subscriptions.items()
             },
             "component_subscriptions": {
-                component: len(connections)
-                for component, connections in self.component_subscriptions.items()
+                component: len(connections) for component, connections in self.component_subscriptions.items()
             },
-            "channel_metrics": {
-                channel.value: asdict(metrics)
-                for channel, metrics in self.channel_metrics.items()
-            },
+            "channel_metrics": {channel.value: asdict(metrics) for channel, metrics in self.channel_metrics.items()},
             "connection_quality": {
-                "average": sum(conn.connection_quality for conn in self.bi_connections.values()) / max(1, len(self.bi_connections)),
-                "poor_quality_count": sum(1 for conn in self.bi_connections.values() if conn.connection_quality < 0.7)
+                "average": sum(conn.connection_quality for conn in self.bi_connections.values())
+                / max(1, len(self.bi_connections)),
+                "poor_quality_count": sum(1 for conn in self.bi_connections.values() if conn.connection_quality < 0.7),
             },
             "background_tasks_running": len([task for task in self.background_tasks if not task.done()]),
-            "is_running": self.is_running
+            "is_running": self.is_running,
         }
 
     async def handle_bi_websocket(
@@ -717,7 +700,7 @@ class BIWebSocketManager:
         user_id: Optional[int] = None,
         user_role: Optional[UserRole] = None,
         channels: Optional[List[str]] = None,
-        components: Optional[List[str]] = None
+        components: Optional[List[str]] = None,
     ):
         """
         Handle a BI WebSocket connection with automatic message loop.
@@ -730,7 +713,7 @@ class BIWebSocketManager:
             user_id=user_id,
             user_role=user_role,
             channels=channels,
-            components=components
+            components=components,
         )
 
         try:
@@ -780,8 +763,10 @@ class BIWebSocketManager:
         else:
             logger.warning(f"Unknown message type from {connection_id}: {message_type}")
 
+
 # Global BI WebSocket manager instance
 _bi_websocket_manager = None
+
 
 def get_bi_websocket_manager() -> BIWebSocketManager:
     """Get singleton BI WebSocket manager instance."""
@@ -790,12 +775,10 @@ def get_bi_websocket_manager() -> BIWebSocketManager:
         _bi_websocket_manager = BIWebSocketManager()
     return _bi_websocket_manager
 
+
 # Integration with existing event publisher
 async def publish_bi_dashboard_update(
-    component: str,
-    data: Dict[str, Any],
-    location_id: str = "default",
-    priority: str = "normal"
+    component: str, data: Dict[str, Any], location_id: str = "default", priority: str = "normal"
 ):
     """Convenience function to publish BI dashboard updates."""
     manager = get_bi_websocket_manager()
@@ -804,29 +787,22 @@ async def publish_bi_dashboard_update(
         "critical": MessagePriority.CRITICAL,
         "high": MessagePriority.HIGH,
         "normal": MessagePriority.NORMAL,
-        "low": MessagePriority.LOW
+        "low": MessagePriority.LOW,
     }
 
     await manager.send_dashboard_update(
         component=component,
         data=data,
         location_id=location_id,
-        priority=priority_map.get(priority, MessagePriority.NORMAL)
+        priority=priority_map.get(priority, MessagePriority.NORMAL),
     )
 
+
 async def publish_bi_performance_alert(
-    alert_type: str,
-    severity: str,
-    message: str,
-    data: Dict[str, Any],
-    location_id: str = "default"
+    alert_type: str, severity: str, message: str, data: Dict[str, Any], location_id: str = "default"
 ):
     """Convenience function to publish BI performance alerts."""
     manager = get_bi_websocket_manager()
     await manager.send_performance_alert(
-        alert_type=alert_type,
-        severity=severity,
-        message=message,
-        data=data,
-        location_id=location_id
+        alert_type=alert_type, severity=severity, message=message, data=data, location_id=location_id
     )

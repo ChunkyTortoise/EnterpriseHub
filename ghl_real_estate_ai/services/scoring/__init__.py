@@ -6,44 +6,40 @@ Supports runtime strategy switching, performance monitoring, and enterprise feat
 """
 
 # Core interfaces and results
-from .property_scorer import (
-    PropertyScorer,
-    TrainableScorer,
-    AdaptiveScorer,
-    ScoringResult,
-    ScoringContext,
-    ConfidenceLevel
-)
-
 # Concrete strategy implementations
 from .basic_scorer import BasicPropertyScorer
 from .enhanced_scorer import EnhancedPropertyScorer
 
 # Strategy Pattern context and factory
 from .property_matcher_context import PropertyMatcherContext
-from .scoring_factory import ScoringFactory, get_scoring_factory, create_strategy
+from .property_scorer import (
+    AdaptiveScorer,
+    ConfidenceLevel,
+    PropertyScorer,
+    ScoringContext,
+    ScoringResult,
+    TrainableScorer,
+)
+from .scoring_factory import ScoringFactory, create_strategy, get_scoring_factory
 
 # Convenience exports for common usage patterns
 __all__ = [
     # Core interfaces
-    'PropertyScorer',
-    'TrainableScorer',
-    'AdaptiveScorer',
-    'ScoringResult',
-    'ScoringContext',
-    'ConfidenceLevel',
-
+    "PropertyScorer",
+    "TrainableScorer",
+    "AdaptiveScorer",
+    "ScoringResult",
+    "ScoringContext",
+    "ConfidenceLevel",
     # Concrete strategies
-    'BasicPropertyScorer',
-    'EnhancedPropertyScorer',
-
+    "BasicPropertyScorer",
+    "EnhancedPropertyScorer",
     # Pattern implementation
-    'PropertyMatcherContext',
-    'ScoringFactory',
-
+    "PropertyMatcherContext",
+    "ScoringFactory",
     # Factory functions
-    'get_scoring_factory',
-    'create_strategy'
+    "get_scoring_factory",
+    "create_strategy",
 ]
 
 
@@ -51,7 +47,7 @@ def create_property_matcher(
     strategy_name: str = "enhanced",
     fallback_strategy: str = "basic",
     enable_caching: bool = False,
-    enable_monitoring: bool = True
+    enable_monitoring: bool = True,
 ) -> PropertyMatcherContext:
     """
     Create a complete property matcher with strategy and fallback.
@@ -82,15 +78,11 @@ def create_property_matcher(
         strategy=primary,
         fallback_strategy=fallback,
         enable_performance_monitoring=enable_monitoring,
-        enable_caching=enable_caching
+        enable_caching=enable_caching,
     )
 
 
-def quick_score_property(
-    property_data: dict,
-    lead_preferences: dict,
-    strategy: str = "enhanced"
-) -> ScoringResult:
+def quick_score_property(property_data: dict, lead_preferences: dict, strategy: str = "enhanced") -> ScoringResult:
     """
     Quick property scoring with minimal setup.
 
@@ -120,26 +112,26 @@ def get_strategy_recommendations() -> dict:
         Dictionary with scenario-based strategy recommendations
     """
     return {
-        'high_volume': {
-            'strategy': 'basic',
-            'description': 'Fast scoring for 100+ properties',
-            'throughput': '1000+ properties/second'
+        "high_volume": {
+            "strategy": "basic",
+            "description": "Fast scoring for 100+ properties",
+            "throughput": "1000+ properties/second",
         },
-        'balanced': {
-            'strategy': 'enhanced',
-            'description': 'Balanced accuracy and performance',
-            'throughput': '200-500 properties/second'
+        "balanced": {
+            "strategy": "enhanced",
+            "description": "Balanced accuracy and performance",
+            "throughput": "200-500 properties/second",
         },
-        'accuracy_focused': {
-            'strategy': 'enhanced',
-            'description': 'Maximum accuracy with 15-factor analysis',
-            'throughput': '200-500 properties/second'
+        "accuracy_focused": {
+            "strategy": "enhanced",
+            "description": "Maximum accuracy with 15-factor analysis",
+            "throughput": "200-500 properties/second",
         },
-        'real_time': {
-            'strategy': 'basic',
-            'description': 'Sub-second response time',
-            'throughput': '1000+ properties/second'
-        }
+        "real_time": {
+            "strategy": "basic",
+            "description": "Sub-second response time",
+            "throughput": "1000+ properties/second",
+        },
     }
 
 

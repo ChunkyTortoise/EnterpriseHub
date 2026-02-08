@@ -5,25 +5,22 @@ Multi-Modal Conversation Intelligence Engine for Real Estate AI Platform
 
 import asyncio
 import json
+import logging
 import re
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple, Union
 from enum import Enum
-import logging
-from concurrent.futures import ThreadPoolExecutor
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-from ghl_real_estate_ai.models.intelligence_context import (
-    IntentClassification,
-    ConversationContext,
-    CustomerProfile
-)
+from ghl_real_estate_ai.models.intelligence_context import ConversationContext, CustomerProfile, IntentClassification
 
 logger = logging.getLogger(__name__)
 
 
 class IntentCategory(Enum):
     """Primary intent classifications with confidence thresholds"""
+
     IMMEDIATE_BUYER = "immediate_buyer"
     IMMEDIATE_SELLER = "immediate_seller"
     RESEARCH_PHASE = "research_phase"
@@ -35,22 +32,25 @@ class IntentCategory(Enum):
 
 class UrgencyLevel(Enum):
     """Timeline urgency classification"""
+
     IMMEDIATE = "immediate"  # <30 days
-    MODERATE = "moderate"    # 1-6 months
-    FLEXIBLE = "flexible"    # 6+ months
+    MODERATE = "moderate"  # 1-6 months
+    FLEXIBLE = "flexible"  # 6+ months
     UNDETERMINED = "undetermined"
 
 
 class PriceSensitivity(Enum):
     """Customer price sensitivity levels"""
-    HIGH = "high"           # Negotiates aggressively
-    MEDIUM = "medium"       # Standard negotiations
-    LOW = "low"             # Price less important than other factors
+
+    HIGH = "high"  # Negotiates aggressively
+    MEDIUM = "medium"  # Standard negotiations
+    LOW = "low"  # Price less important than other factors
 
 
 @dataclass
 class IntentAnalysisResult:
     """Comprehensive intent analysis results"""
+
     primary_intent: IntentCategory
     confidence_score: float
     urgency_level: UrgencyLevel
@@ -68,6 +68,7 @@ class IntentAnalysisResult:
 @dataclass
 class VoiceAnalysisResult:
     """Voice pattern analysis results"""
+
     sentiment_score: float  # -1.0 to 1.0
     confidence_level: float  # 0.0 to 1.0
     urgency_indicators: List[str]
@@ -79,6 +80,7 @@ class VoiceAnalysisResult:
 @dataclass
 class BehavioralSignals:
     """Customer behavioral pattern data"""
+
     website_session_duration: Optional[int]  # seconds
     pages_visited: Optional[int]
     search_patterns: List[str]
@@ -105,56 +107,109 @@ class EnhancedIntentDecoder:
             "family_focused": ["cedar park", "round rock", "pflugerville", "lakeway"],
             "urban_core": ["downtown", "soco", "rainey street", "south first"],
             "tech_corridor": ["domain", "arboretum", "northwest hills"],
-            "creative": ["south austin", "east cesar chavez", "holly"]
+            "creative": ["south austin", "east cesar chavez", "holly"],
         }
 
         self.intent_patterns = {
             IntentCategory.IMMEDIATE_BUYER: [
-                "pre-approved", "ready to buy", "need to close", "looking to purchase",
-                "house hunting", "want to make offer", "closing date", "already sold"
+                "pre-approved",
+                "ready to buy",
+                "need to close",
+                "looking to purchase",
+                "house hunting",
+                "want to make offer",
+                "closing date",
+                "already sold",
             ],
             IntentCategory.IMMEDIATE_SELLER: [
-                "need to sell", "listing my house", "market my property", "quick sale",
-                "already moved", "job transfer", "divorce", "estate sale"
+                "need to sell",
+                "listing my house",
+                "market my property",
+                "quick sale",
+                "already moved",
+                "job transfer",
+                "divorce",
+                "estate sale",
             ],
             IntentCategory.RESEARCH_PHASE: [
-                "thinking about", "considering", "maybe", "exploring options",
-                "just curious", "what if", "someday", "future"
+                "thinking about",
+                "considering",
+                "maybe",
+                "exploring options",
+                "just curious",
+                "what if",
+                "someday",
+                "future",
             ],
             IntentCategory.INVESTMENT_OPPORTUNITY: [
-                "investment property", "rental income", "cash flow", "fix and flip",
-                "multiple properties", "portfolio", "ROI", "cap rate"
-            ]
+                "investment property",
+                "rental income",
+                "cash flow",
+                "fix and flip",
+                "multiple properties",
+                "portfolio",
+                "ROI",
+                "cap rate",
+            ],
         }
 
         self.urgency_indicators = {
             UrgencyLevel.IMMEDIATE: [
-                "urgent", "ASAP", "immediately", "this month", "by end of",
-                "deadline", "closing soon", "need to move"
+                "urgent",
+                "ASAP",
+                "immediately",
+                "this month",
+                "by end of",
+                "deadline",
+                "closing soon",
+                "need to move",
             ],
             UrgencyLevel.MODERATE: [
-                "within", "by summer", "next few months", "before end of year",
-                "spring market", "fall market"
+                "within",
+                "by summer",
+                "next few months",
+                "before end of year",
+                "spring market",
+                "fall market",
             ],
             UrgencyLevel.FLEXIBLE: [
-                "eventually", "no rush", "when the time is right", "flexible",
-                "watching market", "waiting for"
-            ]
+                "eventually",
+                "no rush",
+                "when the time is right",
+                "flexible",
+                "watching market",
+                "waiting for",
+            ],
         }
 
         self.price_sensitivity_patterns = {
             PriceSensitivity.HIGH: [
-                "best deal", "negotiate", "discount", "lowest price", "can't afford",
-                "too expensive", "budget constraints", "need to save"
+                "best deal",
+                "negotiate",
+                "discount",
+                "lowest price",
+                "can't afford",
+                "too expensive",
+                "budget constraints",
+                "need to save",
             ],
             PriceSensitivity.MEDIUM: [
-                "fair price", "reasonable", "competitive", "market value",
-                "good deal", "worth it"
+                "fair price",
+                "reasonable",
+                "competitive",
+                "market value",
+                "good deal",
+                "worth it",
             ],
             PriceSensitivity.LOW: [
-                "price is fine", "don't care about", "quality matters", "best in area",
-                "premium", "luxury", "whatever it takes"
-            ]
+                "price is fine",
+                "don't care about",
+                "quality matters",
+                "best in area",
+                "premium",
+                "luxury",
+                "whatever it takes",
+            ],
         }
 
     async def analyze_customer_interaction(
@@ -163,7 +218,7 @@ class EnhancedIntentDecoder:
         conversation_history: List[Dict[str, Any]],
         voice_data: Optional[bytes] = None,
         behavioral_signals: Optional[BehavioralSignals] = None,
-        customer_profile: Optional[CustomerProfile] = None
+        customer_profile: Optional[CustomerProfile] = None,
     ) -> IntentAnalysisResult:
         """
         Comprehensive multi-modal intent analysis
@@ -187,7 +242,7 @@ class EnhancedIntentDecoder:
                 self._analyze_urgency_level(text_content, conversation_history),
                 self._analyze_price_sensitivity(text_content, conversation_history),
                 self._extract_location_preferences(text_content),
-                self._identify_motivators_and_risks(text_content, conversation_history)
+                self._identify_motivators_and_risks(text_content, conversation_history),
             ]
 
             # Add voice analysis if available
@@ -216,7 +271,7 @@ class EnhancedIntentDecoder:
                 intent_result[1],  # base text confidence
                 voice_analysis.confidence_level if voice_analysis else 0.5,
                 behavioral_adjustment,
-                len(conversation_history)
+                len(conversation_history),
             )
 
             # Predict timeline and budget
@@ -230,8 +285,7 @@ class EnhancedIntentDecoder:
 
             # Prepare handoff context
             handoff_context = self._prepare_handoff_context(
-                intent_result[0], motivators, risks, location_preferences,
-                voice_analysis, behavioral_signals
+                intent_result[0], motivators, risks, location_preferences, voice_analysis, behavioral_signals
             )
 
             analysis_result = IntentAnalysisResult(
@@ -246,13 +300,15 @@ class EnhancedIntentDecoder:
                 risk_factors=risks,
                 recommended_agent=recommended_agent,
                 handoff_context=handoff_context,
-                analysis_timestamp=datetime.now()
+                analysis_timestamp=datetime.now(),
             )
 
             # Log performance metrics
             processing_time = (datetime.now() - start_time).total_seconds() * 1000
-            logger.info(f"Intent analysis completed in {processing_time:.1f}ms, "
-                       f"confidence: {final_confidence:.2f}, agent: {recommended_agent}")
+            logger.info(
+                f"Intent analysis completed in {processing_time:.1f}ms, "
+                f"confidence: {final_confidence:.2f}, agent: {recommended_agent}"
+            )
 
             return analysis_result
 
@@ -262,15 +318,12 @@ class EnhancedIntentDecoder:
             return self._create_fallback_result()
 
     async def _analyze_text_intent(
-        self,
-        text_content: str,
-        conversation_history: List[Dict[str, Any]]
+        self, text_content: str, conversation_history: List[Dict[str, Any]]
     ) -> Tuple[IntentCategory, float]:
         """Analyze text content for primary intent classification"""
 
         text_lower = text_content.lower()
-        all_text = " ".join([text_lower] +
-                           [msg.get("content", "").lower() for msg in conversation_history[-5:]])
+        all_text = " ".join([text_lower] + [msg.get("content", "").lower() for msg in conversation_history[-5:]])
 
         intent_scores = {}
 
@@ -305,15 +358,12 @@ class EnhancedIntentDecoder:
         return best_intent, confidence
 
     async def _analyze_urgency_level(
-        self,
-        text_content: str,
-        conversation_history: List[Dict[str, Any]]
+        self, text_content: str, conversation_history: List[Dict[str, Any]]
     ) -> UrgencyLevel:
         """Analyze timeline urgency from conversation"""
 
         text_lower = text_content.lower()
-        all_text = " ".join([text_lower] +
-                           [msg.get("content", "").lower() for msg in conversation_history[-3:]])
+        all_text = " ".join([text_lower] + [msg.get("content", "").lower() for msg in conversation_history[-3:]])
 
         urgency_scores = {}
 
@@ -327,15 +377,12 @@ class EnhancedIntentDecoder:
         return max(urgency_scores, key=urgency_scores.get)
 
     async def _analyze_price_sensitivity(
-        self,
-        text_content: str,
-        conversation_history: List[Dict[str, Any]]
+        self, text_content: str, conversation_history: List[Dict[str, Any]]
     ) -> PriceSensitivity:
         """Analyze customer price sensitivity patterns"""
 
         text_lower = text_content.lower()
-        all_text = " ".join([text_lower] +
-                           [msg.get("content", "").lower() for msg in conversation_history[-3:]])
+        all_text = " ".join([text_lower] + [msg.get("content", "").lower() for msg in conversation_history[-3:]])
 
         sensitivity_scores = {}
 
@@ -360,22 +407,19 @@ class EnhancedIntentDecoder:
                     found_locations.append(neighborhood)
 
         # Also look for zip codes
-        zip_pattern = r'\b787\d{2}\b'
+        zip_pattern = r"\b787\d{2}\b"
         zip_codes = re.findall(zip_pattern, text_content)
         found_locations.extend(zip_codes)
 
         return found_locations
 
     async def _identify_motivators_and_risks(
-        self,
-        text_content: str,
-        conversation_history: List[Dict[str, Any]]
+        self, text_content: str, conversation_history: List[Dict[str, Any]]
     ) -> Tuple[List[str], List[str]]:
         """Identify key motivating factors and risk indicators"""
 
         text_lower = text_content.lower()
-        all_text = " ".join([text_lower] +
-                           [msg.get("content", "").lower() for msg in conversation_history[-5:]])
+        all_text = " ".join([text_lower] + [msg.get("content", "").lower() for msg in conversation_history[-5:]])
 
         motivators = []
         risks = []
@@ -386,7 +430,7 @@ class EnhancedIntentDecoder:
             "growing_family": ["baby", "expecting", "kids", "family", "schools"],
             "investment": ["investment", "rental", "income", "portfolio"],
             "downsizing": ["empty nest", "too big", "smaller", "maintenance"],
-            "upgrade": ["bigger", "nicer", "luxury", "dream home"]
+            "upgrade": ["bigger", "nicer", "luxury", "dream home"],
         }
 
         for motivator, patterns in motivator_patterns.items():
@@ -398,7 +442,7 @@ class EnhancedIntentDecoder:
             "financing_issues": ["credit", "pre-approval", "loan", "financing"],
             "timeline_pressure": ["deadline", "urgent", "need to sell"],
             "market_uncertainty": ["market", "prices", "timing", "waiting"],
-            "first_time_buyer": ["first time", "never bought", "don't know"]
+            "first_time_buyer": ["first time", "never bought", "don't know"],
         }
 
         for risk, patterns in risk_patterns.items():
@@ -421,7 +465,7 @@ class EnhancedIntentDecoder:
             urgency_indicators=[],
             emotional_state="neutral",
             speaking_pace="normal",
-            voice_stress_level=0.3
+            voice_stress_level=0.3,
         )
 
     def _analyze_behavioral_signals(self, signals: BehavioralSignals) -> float:
@@ -445,18 +489,13 @@ class EnhancedIntentDecoder:
         # Search pattern analysis
         if signals.search_patterns:
             high_intent_searches = ["mortgage", "pre-approval", "real estate agent", "buy house"]
-            if any(search in " ".join(signals.search_patterns).lower()
-                   for search in high_intent_searches):
+            if any(search in " ".join(signals.search_patterns).lower() for search in high_intent_searches):
                 adjustment += 0.1
 
         return min(adjustment, 0.3)  # Cap at 30% adjustment
 
     def _calculate_composite_confidence(
-        self,
-        text_confidence: float,
-        voice_confidence: float,
-        behavioral_adjustment: float,
-        conversation_length: int
+        self, text_confidence: float, voice_confidence: float, behavioral_adjustment: float, conversation_length: int
     ) -> float:
         """Calculate final confidence score from multiple sources"""
 
@@ -483,7 +522,7 @@ class EnhancedIntentDecoder:
             UrgencyLevel.IMMEDIATE: "1-4 weeks",
             UrgencyLevel.MODERATE: "1-6 months",
             UrgencyLevel.FLEXIBLE: "6+ months",
-            UrgencyLevel.UNDETERMINED: "3-12 months"
+            UrgencyLevel.UNDETERMINED: "3-12 months",
         }
 
         base_timeline = timeline_map[urgency]
@@ -496,23 +535,17 @@ class EnhancedIntentDecoder:
 
         return base_timeline
 
-    def _estimate_budget_range(
-        self,
-        text_content: str,
-        conversation_history: List[Dict]
-    ) -> Optional[Tuple[int, int]]:
+    def _estimate_budget_range(self, text_content: str, conversation_history: List[Dict]) -> Optional[Tuple[int, int]]:
         """Estimate budget range from conversation content"""
 
-        all_text = text_content + " " + " ".join(
-            msg.get("content", "") for msg in conversation_history[-5:]
-        )
+        all_text = text_content + " " + " ".join(msg.get("content", "") for msg in conversation_history[-5:])
 
         # Look for explicit price mentions
         price_patterns = [
-            r'\$(\d+(?:,\d{3})*(?:k|K)?)',
-            r'(\d+(?:,\d{3})*(?:k|K)?) dollars?',
-            r'around (\d+(?:,\d{3})*(?:k|K)?)',
-            r'budget.{0,10}(\d+(?:,\d{3})*(?:k|K)?)'
+            r"\$(\d+(?:,\d{3})*(?:k|K)?)",
+            r"(\d+(?:,\d{3})*(?:k|K)?) dollars?",
+            r"around (\d+(?:,\d{3})*(?:k|K)?)",
+            r"budget.{0,10}(\d+(?:,\d{3})*(?:k|K)?)",
         ]
 
         prices = []
@@ -521,10 +554,10 @@ class EnhancedIntentDecoder:
             for match in matches:
                 try:
                     # Handle 'k' suffix
-                    if match.lower().endswith('k'):
-                        price = int(match[:-1].replace(',', '')) * 1000
+                    if match.lower().endswith("k"):
+                        price = int(match[:-1].replace(",", "")) * 1000
                     else:
-                        price = int(match.replace(',', ''))
+                        price = int(match.replace(",", ""))
 
                     # Only consider realistic Austin price ranges
                     if 100000 <= price <= 5000000:
@@ -541,11 +574,7 @@ class EnhancedIntentDecoder:
         return None
 
     def _determine_agent_routing(
-        self,
-        intent: IntentCategory,
-        confidence: float,
-        urgency: UrgencyLevel,
-        budget_range: Optional[Tuple[int, int]]
+        self, intent: IntentCategory, confidence: float, urgency: UrgencyLevel, budget_range: Optional[Tuple[int, int]]
     ) -> str:
         """Determine optimal agent routing based on analysis results"""
 
@@ -580,7 +609,7 @@ class EnhancedIntentDecoder:
         risks: List[str],
         locations: List[str],
         voice_analysis: Optional[VoiceAnalysisResult],
-        behavioral_signals: Optional[BehavioralSignals]
+        behavioral_signals: Optional[BehavioralSignals],
     ) -> Dict[str, Any]:
         """Prepare comprehensive context for agent handoff"""
 
@@ -589,45 +618,48 @@ class EnhancedIntentDecoder:
                 "category": intent.value,
                 "key_motivators": motivators,
                 "risk_factors": risks,
-                "preferred_locations": locations
+                "preferred_locations": locations,
             },
             "conversation_insights": {
-                "engagement_level": "high" if behavioral_signals and
-                                              behavioral_signals.website_session_duration and
-                                              behavioral_signals.website_session_duration > 300 else "medium",
+                "engagement_level": "high"
+                if behavioral_signals
+                and behavioral_signals.website_session_duration
+                and behavioral_signals.website_session_duration > 300
+                else "medium",
                 "response_urgency": voice_analysis.urgency_indicators if voice_analysis else [],
-                "emotional_state": voice_analysis.emotional_state if voice_analysis else "neutral"
+                "emotional_state": voice_analysis.emotional_state if voice_analysis else "neutral",
             },
             "recommended_approach": self._get_approach_recommendations(intent, motivators, risks),
             "escalation_triggers": self._get_escalation_triggers(intent, risks),
-            "rapport_builders": self._get_rapport_builders(motivators, locations)
+            "rapport_builders": self._get_rapport_builders(motivators, locations),
         }
 
         return context
 
     def _get_approach_recommendations(
-        self,
-        intent: IntentCategory,
-        motivators: List[str],
-        risks: List[str]
+        self, intent: IntentCategory, motivators: List[str], risks: List[str]
     ) -> List[str]:
         """Generate recommended conversation approaches"""
 
         recommendations = []
 
         if intent == IntentCategory.IMMEDIATE_BUYER:
-            recommendations.extend([
-                "Focus on available inventory matching their criteria",
-                "Discuss pre-approval status and financing readiness",
-                "Emphasize competitive market conditions"
-            ])
+            recommendations.extend(
+                [
+                    "Focus on available inventory matching their criteria",
+                    "Discuss pre-approval status and financing readiness",
+                    "Emphasize competitive market conditions",
+                ]
+            )
 
         elif intent == IntentCategory.IMMEDIATE_SELLER:
-            recommendations.extend([
-                "Start with market analysis and pricing discussion",
-                "Assess property condition and preparation needs",
-                "Discuss timeline and marketing strategy"
-            ])
+            recommendations.extend(
+                [
+                    "Start with market analysis and pricing discussion",
+                    "Assess property condition and preparation needs",
+                    "Discuss timeline and marketing strategy",
+                ]
+            )
 
         if "financing_issues" in risks:
             recommendations.append("Address financing options and lender connections")
@@ -688,13 +720,14 @@ class EnhancedIntentDecoder:
                 "intent_summary": {"category": "unknown"},
                 "recommended_approach": ["Use general qualification questions"],
                 "escalation_triggers": ["Agent unable to determine intent"],
-                "rapport_builders": ["Ask about their real estate needs"]
+                "rapport_builders": ["Ask about their real estate needs"],
             },
-            analysis_timestamp=datetime.now()
+            analysis_timestamp=datetime.now(),
         )
 
 
 # Factory functions for easy integration
+
 
 async def create_enhanced_intent_decoder() -> EnhancedIntentDecoder:
     """Factory function to create configured intent decoder"""
@@ -705,7 +738,7 @@ async def analyze_customer_intent(
     text_content: str,
     conversation_history: List[Dict[str, Any]] = None,
     voice_data: Optional[bytes] = None,
-    behavioral_data: Optional[Dict[str, Any]] = None
+    behavioral_data: Optional[Dict[str, Any]] = None,
 ) -> IntentAnalysisResult:
     """
     Convenience function for quick intent analysis
@@ -725,19 +758,19 @@ async def analyze_customer_intent(
     behavioral_signals = None
     if behavioral_data:
         behavioral_signals = BehavioralSignals(
-            website_session_duration=behavioral_data.get('session_duration'),
-            pages_visited=behavioral_data.get('pages_visited'),
-            search_patterns=behavioral_data.get('search_patterns', []),
-            email_engagement=behavioral_data.get('email_engagement'),
-            phone_response_time=behavioral_data.get('phone_response_time'),
-            previous_contact_attempts=behavioral_data.get('contact_attempts')
+            website_session_duration=behavioral_data.get("session_duration"),
+            pages_visited=behavioral_data.get("pages_visited"),
+            search_patterns=behavioral_data.get("search_patterns", []),
+            email_engagement=behavioral_data.get("email_engagement"),
+            phone_response_time=behavioral_data.get("phone_response_time"),
+            previous_contact_attempts=behavioral_data.get("contact_attempts"),
         )
 
     return await decoder.analyze_customer_interaction(
         text_content=text_content,
         conversation_history=conversation_history or [],
         voice_data=voice_data,
-        behavioral_signals=behavioral_signals
+        behavioral_signals=behavioral_signals,
     )
 
 

@@ -36,10 +36,10 @@ from ghl_real_estate_ai.api.schemas.ghl import (
 )
 from ghl_real_estate_ai.services.compliance_guard import ComplianceStatus
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_webhook_event(
     message_body: str,
@@ -93,21 +93,25 @@ def _load_test_patches(
 
         # Seller engine mock (instant return)
         mock_seller_engine = MagicMock()
-        mock_seller_engine.process_seller_response = AsyncMock(return_value={
-            "temperature": "warm",
-            "message": "What price would incentivize you to sell?",
-            "questions_answered": 2,
-            "actions": [{"type": "add_tag", "tag": "Warm-Seller"}],
-        })
+        mock_seller_engine.process_seller_response = AsyncMock(
+            return_value={
+                "temperature": "warm",
+                "message": "What price would incentivize you to sell?",
+                "questions_answered": 2,
+                "actions": [{"type": "add_tag", "tag": "Warm-Seller"}],
+            }
+        )
 
         # Buyer bot mock (instant return)
         mock_buyer_bot = MagicMock()
-        mock_buyer_bot.process_buyer_conversation = AsyncMock(return_value={
-            "buyer_temperature": "warm",
-            "is_qualified": False,
-            "financial_readiness_score": 55,
-            "response_content": "What area interests you most?",
-        })
+        mock_buyer_bot.process_buyer_conversation = AsyncMock(
+            return_value={
+                "buyer_temperature": "warm",
+                "is_qualified": False,
+                "financial_readiness_score": 55,
+                "response_content": "What area interests you most?",
+            }
+        )
 
         # Lead conversation manager mock (instant return)
         mock_ai_response = MagicMock()
@@ -122,9 +126,7 @@ def _load_test_patches(
         mock_conv_mgr.get_conversation_history = AsyncMock(return_value=[])
 
         mock_compliance = MagicMock()
-        mock_compliance.audit_message = AsyncMock(
-            return_value=(ComplianceStatus.PASSED, "", [])
-        )
+        mock_compliance.audit_message = AsyncMock(return_value=(ComplianceStatus.PASSED, "", []))
 
         mock_tenant = MagicMock()
         mock_tenant.get_tenant_config = AsyncMock(return_value=None)
@@ -141,29 +143,43 @@ def _load_test_patches(
         )
 
         mock_lead_source_tracker = MagicMock()
-        mock_lead_source_tracker.analyze_lead_source = AsyncMock(
-            side_effect=Exception("skip")
-        )
+        mock_lead_source_tracker.analyze_lead_source = AsyncMock(side_effect=Exception("skip"))
 
-        with patch("ghl_real_estate_ai.api.routes.webhook.analytics_service", MagicMock(track_event=AsyncMock())), \
-             patch("ghl_real_estate_ai.api.routes.webhook.ghl_client_default", mock_ghl_client), \
-             patch("ghl_real_estate_ai.api.routes.webhook.jorge_settings", mock_jorge_settings), \
-             patch("ghl_real_estate_ai.api.routes.webhook.settings", mock_config_settings), \
-             patch("ghl_real_estate_ai.api.routes.webhook.compliance_guard", mock_compliance), \
-             patch("ghl_real_estate_ai.api.routes.webhook.tenant_service", mock_tenant), \
-             patch("ghl_real_estate_ai.api.routes.webhook.conversation_manager", mock_conv_mgr), \
-             patch("ghl_real_estate_ai.api.routes.webhook._get_lead_scorer", return_value=mock_lead_scorer), \
-             patch("ghl_real_estate_ai.api.routes.webhook.lead_source_tracker", mock_lead_source_tracker), \
-             patch("ghl_real_estate_ai.api.routes.webhook.attribution_analytics", MagicMock(track_daily_metrics=AsyncMock())), \
-             patch("ghl_real_estate_ai.api.routes.webhook.pricing_optimizer", MagicMock(calculate_lead_price=AsyncMock())), \
-             patch("ghl_real_estate_ai.api.routes.webhook.subscription_manager", MagicMock(get_active_subscription=AsyncMock(return_value=None))), \
-             patch("ghl_real_estate_ai.api.routes.webhook.calendar_scheduler", MagicMock()), \
-             patch("ghl_real_estate_ai.api.routes.webhook.handoff_service", MagicMock(
-                 evaluate_handoff=AsyncMock(return_value=None),
-                 execute_handoff=AsyncMock(return_value=[]),
-             )), \
-             patch("ghl_real_estate_ai.services.jorge.jorge_seller_engine.JorgeSellerEngine", return_value=mock_seller_engine), \
-             patch("ghl_real_estate_ai.agents.jorge_buyer_bot.JorgeBuyerBot", return_value=mock_buyer_bot):
+        with (
+            patch("ghl_real_estate_ai.api.routes.webhook.analytics_service", MagicMock(track_event=AsyncMock())),
+            patch("ghl_real_estate_ai.api.routes.webhook.ghl_client_default", mock_ghl_client),
+            patch("ghl_real_estate_ai.api.routes.webhook.jorge_settings", mock_jorge_settings),
+            patch("ghl_real_estate_ai.api.routes.webhook.settings", mock_config_settings),
+            patch("ghl_real_estate_ai.api.routes.webhook.compliance_guard", mock_compliance),
+            patch("ghl_real_estate_ai.api.routes.webhook.tenant_service", mock_tenant),
+            patch("ghl_real_estate_ai.api.routes.webhook.conversation_manager", mock_conv_mgr),
+            patch("ghl_real_estate_ai.api.routes.webhook._get_lead_scorer", return_value=mock_lead_scorer),
+            patch("ghl_real_estate_ai.api.routes.webhook.lead_source_tracker", mock_lead_source_tracker),
+            patch(
+                "ghl_real_estate_ai.api.routes.webhook.attribution_analytics",
+                MagicMock(track_daily_metrics=AsyncMock()),
+            ),
+            patch(
+                "ghl_real_estate_ai.api.routes.webhook.pricing_optimizer", MagicMock(calculate_lead_price=AsyncMock())
+            ),
+            patch(
+                "ghl_real_estate_ai.api.routes.webhook.subscription_manager",
+                MagicMock(get_active_subscription=AsyncMock(return_value=None)),
+            ),
+            patch("ghl_real_estate_ai.api.routes.webhook.calendar_scheduler", MagicMock()),
+            patch(
+                "ghl_real_estate_ai.api.routes.webhook.handoff_service",
+                MagicMock(
+                    evaluate_handoff=AsyncMock(return_value=None),
+                    execute_handoff=AsyncMock(return_value=[]),
+                ),
+            ),
+            patch(
+                "ghl_real_estate_ai.services.jorge.jorge_seller_engine.JorgeSellerEngine",
+                return_value=mock_seller_engine,
+            ),
+            patch("ghl_real_estate_ai.agents.jorge_buyer_bot.JorgeBuyerBot", return_value=mock_buyer_bot),
+        ):
             yield {
                 "seller_engine": mock_seller_engine,
                 "buyer_bot": mock_buyer_bot,
@@ -201,6 +217,7 @@ def _assert_p99(times: list[float], target_seconds: float, label: str):
 # ===========================================================================
 # Load Tests
 # ===========================================================================
+
 
 @pytest.mark.performance
 class TestJorgePlatformLoadTesting:
@@ -346,9 +363,7 @@ class TestJorgePlatformLoadTesting:
             if decision is None:
                 return {"elapsed": elapsed, "correct": False, "reason": "no_decision"}
 
-            actions = await service.execute_handoff(
-                decision, contact_id=f"handoff_load_{idx:03d}"
-            )
+            actions = await service.execute_handoff(decision, contact_id=f"handoff_load_{idx:03d}")
 
             elapsed = time.perf_counter() - start
 
@@ -357,9 +372,7 @@ class TestJorgePlatformLoadTesting:
             add_tags = [a["tag"] for a in actions if a["type"] == "add_tag"]
 
             correct = (
-                "Needs Qualifying" in remove_tags
-                and "Buyer-Lead" in add_tags
-                and "Handoff-Lead-to-Buyer" in add_tags
+                "Needs Qualifying" in remove_tags and "Buyer-Lead" in add_tags and "Handoff-Lead-to-Buyer" in add_tags
             )
 
             return {"elapsed": elapsed, "correct": correct}
@@ -370,8 +383,7 @@ class TestJorgePlatformLoadTesting:
         # All handoffs should be correct
         correct_count = sum(1 for r in results if r["correct"])
         assert correct_count == 100, (
-            f"Handoff correctness: {correct_count}/100 "
-            f"(failures: {[r for r in results if not r['correct']]})"
+            f"Handoff correctness: {correct_count}/100 (failures: {[r for r in results if not r['correct']]})"
         )
 
         # Timing check

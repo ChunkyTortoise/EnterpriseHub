@@ -16,14 +16,15 @@ Author: Claude Sonnet 4
 Date: 2026-01-09
 """
 
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Dict, Any, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 
 class LeadSegment(str, Enum):
     """Lead segment classifications"""
+
     FIRST_TIME_BUYER = "first_time_buyer"
     INVESTOR = "investor"
     LUXURY = "luxury"
@@ -32,6 +33,7 @@ class LeadSegment(str, Enum):
 
 class MarketCondition(str, Enum):
     """Market condition states"""
+
     SELLERS_MARKET = "sellers_market"
     BUYERS_MARKET = "buyers_market"
     BALANCED = "balanced"
@@ -41,6 +43,7 @@ class MarketCondition(str, Enum):
 @dataclass
 class ScoringWeights:
     """Feature weights for lead scoring"""
+
     engagement_score: float = 0.20
     response_time: float = 0.15
     page_views: float = 0.10
@@ -62,45 +65,45 @@ class DynamicScoringDemo:
         """Initialize default weight profiles for each segment"""
         return {
             LeadSegment.FIRST_TIME_BUYER: ScoringWeights(
-                engagement_score=0.25,      # Higher - need education
+                engagement_score=0.25,  # Higher - need education
                 response_time=0.15,
-                page_views=0.15,            # Higher - browse more
-                budget_match=0.15,          # Lower - less certain
-                timeline_urgency=0.10,      # Lower - take longer
+                page_views=0.15,  # Higher - browse more
+                budget_match=0.15,  # Lower - less certain
+                timeline_urgency=0.10,  # Lower - take longer
                 property_matches=0.10,
                 communication_quality=0.08,
-                source_quality=0.02
+                source_quality=0.02,
             ),
             LeadSegment.INVESTOR: ScoringWeights(
-                engagement_score=0.15,      # Lower - analytical
-                response_time=0.20,         # Higher - speed critical
-                page_views=0.08,            # Lower - know what they want
-                budget_match=0.25,          # Higher - ROI focused
+                engagement_score=0.15,  # Lower - analytical
+                response_time=0.20,  # Higher - speed critical
+                page_views=0.08,  # Lower - know what they want
+                budget_match=0.25,  # Higher - ROI focused
                 timeline_urgency=0.15,
-                property_matches=0.12,      # Higher - specific criteria
-                communication_quality=0.03, # Lower - brief
-                source_quality=0.02
+                property_matches=0.12,  # Higher - specific criteria
+                communication_quality=0.03,  # Lower - brief
+                source_quality=0.02,
             ),
             LeadSegment.LUXURY: ScoringWeights(
                 engagement_score=0.18,
-                response_time=0.12,         # Lower - expect service
+                response_time=0.12,  # Lower - expect service
                 page_views=0.12,
                 budget_match=0.18,
-                timeline_urgency=0.08,      # Lower - take time
-                property_matches=0.20,      # Higher - very specific
-                communication_quality=0.20, # Higher - relationship
-                source_quality=0.02
+                timeline_urgency=0.08,  # Lower - take time
+                property_matches=0.20,  # Higher - very specific
+                communication_quality=0.20,  # Higher - relationship
+                source_quality=0.02,
             ),
             LeadSegment.SELLER: ScoringWeights(
                 engagement_score=0.20,
                 response_time=0.18,
-                page_views=0.05,            # Lower - not browsing
+                page_views=0.05,  # Lower - not browsing
                 budget_match=0.15,
-                timeline_urgency=0.25,      # Higher - when to sell
-                property_matches=0.05,      # Not applicable
+                timeline_urgency=0.25,  # Higher - when to sell
+                property_matches=0.05,  # Not applicable
                 communication_quality=0.15,
-                source_quality=0.02
-            )
+                source_quality=0.02,
+            ),
         }
 
     def _initialize_market_adjustments(self) -> Dict[LeadSegment, Dict[MarketCondition, Dict[str, float]]]:
@@ -108,53 +111,53 @@ class DynamicScoringDemo:
         return {
             LeadSegment.FIRST_TIME_BUYER: {
                 MarketCondition.SELLERS_MARKET: {
-                    "timeline_urgency": 0.3,   # Urgency matters more
-                    "budget_match": 0.2        # Budget certainty critical
+                    "timeline_urgency": 0.3,  # Urgency matters more
+                    "budget_match": 0.2,  # Budget certainty critical
                 },
                 MarketCondition.BUYERS_MARKET: {
-                    "engagement_score": 0.2,   # More education needed
-                    "page_views": 0.1          # Can browse leisurely
-                }
+                    "engagement_score": 0.2,  # More education needed
+                    "page_views": 0.1,  # Can browse leisurely
+                },
             },
             LeadSegment.INVESTOR: {
                 MarketCondition.SELLERS_MARKET: {
-                    "response_time": 0.4,      # Speed is everything
-                    "timeline_urgency": 0.2
+                    "response_time": 0.4,  # Speed is everything
+                    "timeline_urgency": 0.2,
                 },
                 MarketCondition.BUYERS_MARKET: {
-                    "budget_match": 0.3,       # More negotiation room
-                    "property_matches": 0.15
-                }
-            }
+                    "budget_match": 0.3,  # More negotiation room
+                    "property_matches": 0.15,
+                },
+            },
         }
 
     def detect_segment(self, context: Dict[str, Any]) -> LeadSegment:
         """Auto-detect lead segment from context"""
-        prefs = context.get('extracted_preferences', {})
-        budget_str = str(prefs.get('budget', '0')).replace('$', '').replace(',', '')
+        prefs = context.get("extracted_preferences", {})
+        budget_str = str(prefs.get("budget", "0")).replace("$", "").replace(",", "")
 
         try:
-            if 'k' in budget_str.lower():
-                budget = float(budget_str.lower().replace('k', '')) * 1000
-            elif 'm' in budget_str.lower():
-                budget = float(budget_str.lower().replace('m', '')) * 1000000
+            if "k" in budget_str.lower():
+                budget = float(budget_str.lower().replace("k", "")) * 1000
+            elif "m" in budget_str.lower():
+                budget = float(budget_str.lower().replace("m", "")) * 1000000
             else:
-                budget = float(''.join(c for c in budget_str if c.isdigit() or c == '.'))
+                budget = float("".join(c for c in budget_str if c.isdigit() or c == "."))
         except:
             budget = 0
 
-        intent = prefs.get('motivation', '').lower()
+        intent = prefs.get("motivation", "").lower()
 
         # Luxury indicators
-        if budget > 1500000 or 'luxury' in intent:
+        if budget > 1500000 or "luxury" in intent:
             return LeadSegment.LUXURY
 
         # Investor indicators
-        if 'investment' in intent or 'investor' in intent or 'roi' in intent:
+        if "investment" in intent or "investor" in intent or "roi" in intent:
             return LeadSegment.INVESTOR
 
         # Seller indicators
-        if 'sell' in intent or 'selling' in intent:
+        if "sell" in intent or "selling" in intent:
             return LeadSegment.SELLER
 
         # Default to first-time buyer
@@ -173,10 +176,7 @@ class DynamicScoringDemo:
             return MarketCondition.BALANCED
 
     def apply_market_adjustments(
-        self,
-        weights: ScoringWeights,
-        segment: LeadSegment,
-        market_condition: MarketCondition
+        self, weights: ScoringWeights, segment: LeadSegment, market_condition: MarketCondition
     ) -> ScoringWeights:
         """Apply market condition adjustments to weights"""
 
@@ -202,19 +202,19 @@ class DynamicScoringDemo:
 
     def calculate_score(self, context: Dict[str, Any], weights: ScoringWeights) -> Dict[str, Any]:
         """Calculate lead score using provided weights"""
-        prefs = context.get('extracted_preferences', {})
-        messages = context.get('conversation_history', [])
+        prefs = context.get("extracted_preferences", {})
+        messages = context.get("conversation_history", [])
 
         # Extract features (simplified)
         features = {
-            'engagement_score': min(len(messages) / 5.0, 1.0),
-            'response_time': 0.8,  # Simulated good response
-            'page_views': min(len(messages) * 2 / 10.0, 1.0),
-            'budget_match': 0.7 if prefs.get('budget') else 0.3,
-            'timeline_urgency': 0.9 if 'asap' in str(prefs.get('timeline', '')).lower() else 0.5,
-            'property_matches': 0.6,  # Simulated
-            'communication_quality': min(len(' '.join(m.get('content', '') for m in messages)) / 100.0, 1.0),
-            'source_quality': 0.8
+            "engagement_score": min(len(messages) / 5.0, 1.0),
+            "response_time": 0.8,  # Simulated good response
+            "page_views": min(len(messages) * 2 / 10.0, 1.0),
+            "budget_match": 0.7 if prefs.get("budget") else 0.3,
+            "timeline_urgency": 0.9 if "asap" in str(prefs.get("timeline", "")).lower() else 0.5,
+            "property_matches": 0.6,  # Simulated
+            "communication_quality": min(len(" ".join(m.get("content", "") for m in messages)) / 100.0, 1.0),
+            "source_quality": 0.8,
         }
 
         # Calculate weighted score
@@ -232,18 +232,18 @@ class DynamicScoringDemo:
 
         # Determine classification
         if final_score >= 70:
-            classification = 'hot'
+            classification = "hot"
         elif final_score >= 50:
-            classification = 'warm'
+            classification = "warm"
         else:
-            classification = 'cold'
+            classification = "cold"
 
         return {
-            'score': round(final_score, 1),
-            'classification': classification,
-            'features': features,
-            'contributions': contributions,
-            'weights_used': weight_dict
+            "score": round(final_score, 1),
+            "classification": classification,
+            "features": features,
+            "contributions": contributions,
+            "weights_used": weight_dict,
         }
 
     def score_lead(self, context: Dict[str, Any]) -> Dict[str, Any]:
@@ -264,12 +264,14 @@ class DynamicScoringDemo:
         result = self.calculate_score(context, adjusted_weights)
 
         # Add metadata
-        result.update({
-            'segment': segment.value,
-            'market_condition': market_condition.value,
-            'base_weights': asdict(base_weights),
-            'adjusted_weights': asdict(adjusted_weights)
-        })
+        result.update(
+            {
+                "segment": segment.value,
+                "market_condition": market_condition.value,
+                "base_weights": asdict(base_weights),
+                "adjusted_weights": asdict(adjusted_weights),
+            }
+        )
 
         return result
 
@@ -284,48 +286,46 @@ def main():
     # Sample lead contexts
     test_leads = {
         "First-Time Buyer": {
-            'extracted_preferences': {
-                'budget': '$450,000',
-                'location': 'Austin, TX',
-                'timeline': 'next 6 months',
-                'bedrooms': 3,
-                'financing': 'need pre-approval'
+            "extracted_preferences": {
+                "budget": "$450,000",
+                "location": "Austin, TX",
+                "timeline": "next 6 months",
+                "bedrooms": 3,
+                "financing": "need pre-approval",
             },
-            'conversation_history': [
-                {'content': 'We are first-time homebuyers looking for our starter home'},
-                {'content': 'Budget is around $450k, want good schools'},
-                {'content': 'Not sure about the process, need guidance'}
-            ]
+            "conversation_history": [
+                {"content": "We are first-time homebuyers looking for our starter home"},
+                {"content": "Budget is around $450k, want good schools"},
+                {"content": "Not sure about the process, need guidance"},
+            ],
         },
-
         "Investor": {
-            'extracted_preferences': {
-                'budget': '$800,000',
-                'location': 'Austin, TX',
-                'timeline': 'ASAP',
-                'motivation': 'investment property'
+            "extracted_preferences": {
+                "budget": "$800,000",
+                "location": "Austin, TX",
+                "timeline": "ASAP",
+                "motivation": "investment property",
             },
-            'conversation_history': [
-                {'content': 'Looking for investment properties in Austin'},
-                {'content': 'Need positive cash flow, $800k budget'},
-                {'content': 'Can close quickly if numbers work'}
-            ]
+            "conversation_history": [
+                {"content": "Looking for investment properties in Austin"},
+                {"content": "Need positive cash flow, $800k budget"},
+                {"content": "Can close quickly if numbers work"},
+            ],
         },
-
         "Luxury Buyer": {
-            'extracted_preferences': {
-                'budget': '$2,500,000',
-                'location': 'Austin, TX - Westlake',
-                'timeline': 'within a year',
-                'bedrooms': 5,
-                'must_haves': 'pool, wine cellar'
+            "extracted_preferences": {
+                "budget": "$2,500,000",
+                "location": "Austin, TX - Westlake",
+                "timeline": "within a year",
+                "bedrooms": 5,
+                "must_haves": "pool, wine cellar",
             },
-            'conversation_history': [
-                {'content': 'Relocating from California, looking for luxury home'},
-                {'content': 'Budget up to $2.5M, want premium location'},
-                {'content': 'Timeline flexible, quality more important'}
-            ]
-        }
+            "conversation_history": [
+                {"content": "Relocating from California, looking for luxury home"},
+                {"content": "Budget up to $2.5M, want premium location"},
+                {"content": "Timeline flexible, quality more important"},
+            ],
+        },
     }
 
     print(f"\n🌡️  Current Market Condition: {demo.get_market_condition().value.replace('_', ' ').title()}")
@@ -342,13 +342,15 @@ def main():
         print(f"   Market Impact: {result['market_condition'].replace('_', ' ').title()}")
 
         # Show top contributing factors
-        top_factors = sorted(result['contributions'].items(), key=lambda x: x[1], reverse=True)[:3]
+        top_factors = sorted(result["contributions"].items(), key=lambda x: x[1], reverse=True)[:3]
         print(f"   Top Factors:")
         for factor, contribution in top_factors:
-            weight = result['weights_used'][factor]
-            feature_value = result['features'][factor]
-            print(f"     • {factor.replace('_', ' ').title()}: {contribution:.3f} "
-                  f"(weight: {weight:.2f}, value: {feature_value:.2f})")
+            weight = result["weights_used"][factor]
+            feature_value = result["features"][factor]
+            print(
+                f"     • {factor.replace('_', ' ').title()}: {contribution:.3f} "
+                f"(weight: {weight:.2f}, value: {feature_value:.2f})"
+            )
 
         print()
 
@@ -357,14 +359,16 @@ def main():
     print("   Union[Feature, First]-Union[Time, Investor] | Luxury")
     print("   " + "-" * 55)
 
-    features = ['engagement_score', 'response_time', 'budget_match', 'timeline_urgency', 'communication_quality']
+    features = ["engagement_score", "response_time", "budget_match", "timeline_urgency", "communication_quality"]
 
     for feature in features:
         ftb_weight = demo.segment_profiles[LeadSegment.FIRST_TIME_BUYER].__dict__[feature]
         inv_weight = demo.segment_profiles[LeadSegment.INVESTOR].__dict__[feature]
         lux_weight = demo.segment_profiles[LeadSegment.LUXURY].__dict__[feature]
 
-        print(f"   {feature.replace('_', ' ').title():24} | {ftb_weight:8.2f}   | {inv_weight:6.2f}   | {lux_weight:6.2f}")
+        print(
+            f"   {feature.replace('_', ' ').title():24} | {ftb_weight:8.2f}   | {inv_weight:6.2f}   | {lux_weight:6.2f}"
+        )
 
     print("\n🧪 A/B Testing Framework:")
     print("   • Variant A: Higher engagement weight (0.30 vs 0.20)")

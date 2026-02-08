@@ -2,10 +2,10 @@
 CrossEncoderReRanker, and CohereReRanker.
 """
 
-import pytest
-from uuid import uuid4
 from typing import List
+from uuid import uuid4
 
+import pytest
 from src.core.types import DocumentChunk, Metadata, SearchResult
 from src.reranking.base import (
     BaseReRanker,
@@ -14,13 +14,13 @@ from src.reranking.base import (
     ReRankingResult,
     ReRankingStrategy,
 )
+from src.reranking.cohere_reranker import CohereConfig, CohereReRanker
 from src.reranking.cross_encoder import CrossEncoderReRanker
-from src.reranking.cohere_reranker import CohereReRanker, CohereConfig
-
 
 # ---------------------------------------------------------------------------
 # Shared fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def sample_results() -> List[SearchResult]:
@@ -41,8 +41,8 @@ def sample_results() -> List[SearchResult]:
 # MockReRanker tests
 # ===========================================================================
 
-class TestMockReRanker:
 
+class TestMockReRanker:
     @pytest.mark.asyncio
     async def test_lifecycle(self):
         ranker = MockReRanker()
@@ -111,8 +111,8 @@ class TestMockReRanker:
 # BaseReRanker utility tests
 # ===========================================================================
 
-class TestBaseReRankerUtilities:
 
+class TestBaseReRankerUtilities:
     @pytest.fixture
     def ranker(self):
         return MockReRanker()
@@ -124,8 +124,7 @@ class TestBaseReRankerUtilities:
         """All same scores returns results unchanged."""
         ranker = MockReRanker()
         same_score_results = [
-            SearchResult(chunk=r.chunk, score=0.5, rank=r.rank, distance=r.distance)
-            for r in sample_results
+            SearchResult(chunk=r.chunk, score=0.5, rank=r.rank, distance=r.distance) for r in sample_results
         ]
         normalized = ranker._normalize_scores(same_score_results)
         assert len(normalized) == 3
@@ -202,8 +201,8 @@ class TestBaseReRankerUtilities:
 # CrossEncoderReRanker tests (fallback mode — no sentence-transformers)
 # ===========================================================================
 
-class TestCrossEncoderReRanker:
 
+class TestCrossEncoderReRanker:
     def test_initialization_without_sentence_transformers(self):
         """Should create successfully even without sentence-transformers."""
         ranker = CrossEncoderReRanker()
@@ -238,6 +237,7 @@ class TestCrossEncoderReRanker:
     async def test_not_initialized_raises(self, sample_results):
         ranker = CrossEncoderReRanker()
         from src.core.exceptions import RetrievalError
+
         with pytest.raises(RetrievalError, match="not initialized"):
             await ranker.rerank("test", sample_results)
 
@@ -257,8 +257,8 @@ class TestCrossEncoderReRanker:
 # CohereReRanker tests (fallback mode — no cohere package)
 # ===========================================================================
 
-class TestCohereReRanker:
 
+class TestCohereReRanker:
     def test_initialization_without_cohere(self):
         """Should create successfully even without cohere installed."""
         config = CohereConfig(model="rerank-english-v2.0")
@@ -269,6 +269,7 @@ class TestCohereReRanker:
     async def test_initialize_fallback(self):
         """When cohere module is not available, should still initialize in fallback mode."""
         from unittest.mock import patch as _patch
+
         import src.reranking.cohere_reranker as cohere_mod
 
         # Force COHERE_AVAILABLE = False to test fallback path
@@ -282,6 +283,7 @@ class TestCohereReRanker:
     async def test_rerank_fallback(self, sample_results):
         """When no client, uses fallback scoring."""
         from unittest.mock import patch as _patch
+
         import src.reranking.cohere_reranker as cohere_mod
 
         with _patch.object(cohere_mod, "COHERE_AVAILABLE", False):
@@ -294,6 +296,7 @@ class TestCohereReRanker:
     @pytest.mark.asyncio
     async def test_rerank_empty(self):
         from unittest.mock import patch as _patch
+
         import src.reranking.cohere_reranker as cohere_mod
 
         with _patch.object(cohere_mod, "COHERE_AVAILABLE", False):
@@ -306,6 +309,7 @@ class TestCohereReRanker:
     async def test_not_initialized_raises(self, sample_results):
         ranker = CohereReRanker()
         from src.core.exceptions import RetrievalError
+
         with pytest.raises(RetrievalError, match="not initialized"):
             await ranker.rerank("test", sample_results)
 

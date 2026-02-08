@@ -25,7 +25,7 @@ Example:
     limiter = RateLimiter(
         config=RateLimitConfig(rate=100, burst=150)
     )
-    
+
     async with limiter.acquire(key="user_123") as result:
         if not result.allowed:
             raise HTTPException(status_code=429)
@@ -34,7 +34,7 @@ Example:
     # Direct usage with headers
     limiter = RateLimiter(config=RateLimitConfig(rate=100, window=60))
     allowed, headers = await limiter.check_limit(key="user_123")
-    
+
     if not allowed:
         return Response(
             status_code=429,
@@ -367,9 +367,7 @@ class MemoryRateLimitStorage(RateLimitStorage):
             self._windows[key] = []
 
         # Remove old entries
-        self._windows[key] = [
-            ts for ts in self._windows[key] if ts > window_start
-        ]
+        self._windows[key] = [ts for ts in self._windows[key] if ts > window_start]
 
         current_count = len(self._windows[key])
 
@@ -460,6 +458,7 @@ class RedisRateLimitStorage(RateLimitStorage):
         if self._redis is None:
             try:
                 import redis.asyncio as aioredis
+
                 self._redis = await aioredis.from_url(
                     self.redis_url,
                     encoding="utf-8",
@@ -738,6 +737,7 @@ class RateLimiter:
                 return await process(request)
             ```
         """
+
         def decorator(func: F) -> F:
             @functools.wraps(func)
             async def async_wrapper(*args: Any, **kwargs: Any) -> Any:

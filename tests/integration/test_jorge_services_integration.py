@@ -10,13 +10,14 @@ Verifies interactions between the 4 Jorge monitoring services:
 All services are singletons reset before and after each test to ensure isolation.
 """
 
-import pytest
-from unittest.mock import patch, AsyncMock
+from unittest.mock import AsyncMock, patch
 
-from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
-from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
-from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
+import pytest
+
 from ghl_real_estate_ai.services.jorge.ab_testing_service import ABTestingService
+from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
+from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
+from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
 
 
 @pytest.fixture(autouse=True)
@@ -51,9 +52,7 @@ class TestJorgeServicesIntegration:
         stats = await tracker.get_bot_stats("lead_bot", window="1h")
 
         # Verify the P95 actually exceeds the SLA target
-        assert stats["p95"] > 2000.0, (
-            f"Expected P95 > 2000ms for alert trigger, got {stats['p95']}"
-        )
+        assert stats["p95"] > 2000.0, f"Expected P95 > 2000ms for alert trigger, got {stats['p95']}"
 
         # Build a stats dict shaped for AlertingService default rules
         alert_stats = {
@@ -67,10 +66,7 @@ class TestJorgeServicesIntegration:
 
         # The sla_violation rule should fire because lead_bot P95 > 2000
         sla_alerts = [a for a in triggered if a.rule_name == "sla_violation"]
-        assert len(sla_alerts) >= 1, (
-            f"Expected sla_violation alert, got rules: "
-            f"{[a.rule_name for a in triggered]}"
-        )
+        assert len(sla_alerts) >= 1, f"Expected sla_violation alert, got rules: {[a.rule_name for a in triggered]}"
         assert sla_alerts[0].severity == "critical"
 
     @pytest.mark.asyncio
@@ -141,9 +137,7 @@ class TestJorgeServicesIntegration:
             await tracker.track_operation("lead_bot", "process", duration, success=True)
 
             # Record a conversion outcome for each contact
-            await ab_service.record_outcome(
-                "tone_test", contact_id, variant, "conversion", value=1.0
-            )
+            await ab_service.record_outcome("tone_test", contact_id, variant, "conversion", value=1.0)
 
         # Verify A/B results
         results = ab_service.get_experiment_results("tone_test")
@@ -197,10 +191,7 @@ class TestJorgeServicesIntegration:
 
             # high_error_rate rule should fire (error_rate > 0.05)
             error_alerts = [a for a in triggered if a.rule_name == "high_error_rate"]
-            assert len(error_alerts) >= 1, (
-                f"Expected high_error_rate alert, got: "
-                f"{[a.rule_name for a in triggered]}"
-            )
+            assert len(error_alerts) >= 1, f"Expected high_error_rate alert, got: {[a.rule_name for a in triggered]}"
             assert error_alerts[0].severity == "critical"
 
             # Verify send_alert was called for each triggered alert

@@ -16,34 +16,35 @@ Test Coverage:
 Author: Jorge's Real Estate AI Platform - Phase 3.1 Testing
 """
 
-import pytest
 import asyncio
-import time
 import json
-from unittest.mock import AsyncMock, Mock, patch
+import time
 from datetime import datetime, timezone
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
 
-# Import service under test
-from ghl_real_estate_ai.services.bot_intelligence_middleware import (
-    BotIntelligenceMiddleware,
-    get_bot_intelligence_middleware
-)
-
-# Import models
-from ghl_real_estate_ai.models.intelligence_context import (
-    BotIntelligenceContext,
-    PropertyIntelligence,
-    ConversationIntelligence,
-    PreferenceIntelligence,
-    IntelligencePerformanceMetrics
-)
+import pytest
 
 # Import Phase 2 service models for mocking
 from ghl_real_estate_ai.api.schemas.phase2_intelligence_models import (
     AdvancedPropertyMatchAPI,
     ConversationInsightAPI,
-    PreferenceProfileAPI
+    PreferenceProfileAPI,
+)
+
+# Import models
+from ghl_real_estate_ai.models.intelligence_context import (
+    BotIntelligenceContext,
+    ConversationIntelligence,
+    IntelligencePerformanceMetrics,
+    PreferenceIntelligence,
+    PropertyIntelligence,
+)
+
+# Import service under test
+from ghl_real_estate_ai.services.bot_intelligence_middleware import (
+    BotIntelligenceMiddleware,
+    get_bot_intelligence_middleware,
 )
 
 
@@ -55,7 +56,7 @@ class TestBotIntelligenceMiddleware:
         """Mock cache service for testing."""
         mock_cache = AsyncMock()
         mock_cache.get.return_value = None  # Default: cache miss
-        mock_cache.set.return_value = True   # Default: successful cache set
+        mock_cache.set.return_value = True  # Default: successful cache set
         return mock_cache
 
     @pytest.fixture
@@ -73,16 +74,16 @@ class TestBotIntelligenceMiddleware:
         # Default successful response with numeric attributes the service expects
         mock_match = Mock()
         mock_match.to_dict = lambda: {
-            'property_id': 'prop_123',
-            'overall_score': 0.95,
-            'behavioral_fit': 0.88,
-            'presentation_strategy': {'value': 'lifestyle_match'},
-            'optimal_presentation_time': '2024-01-25T10:00:00Z'
+            "property_id": "prop_123",
+            "overall_score": 0.95,
+            "behavioral_fit": 0.88,
+            "presentation_strategy": {"value": "lifestyle_match"},
+            "optimal_presentation_time": "2024-01-25T10:00:00Z",
         }
         mock_match.confidence_score = 0.95
-        mock_match.presentation_strategy = Mock(value='lifestyle_match')
-        mock_match.optimal_presentation_time = '2024-01-25T10:00:00Z'
-        mock_match.behavioral_reasoning = 'Strong behavioral fit based on lifestyle preferences'
+        mock_match.presentation_strategy = Mock(value="lifestyle_match")
+        mock_match.optimal_presentation_time = "2024-01-25T10:00:00Z"
+        mock_match.behavioral_reasoning = "Strong behavioral fit based on lifestyle preferences"
 
         mock_matches = [mock_match]
 
@@ -98,33 +99,26 @@ class TestBotIntelligenceMiddleware:
         mock_insight = Mock()
         mock_insight.objections_detected = [
             Mock(
-                objection_type=Mock(value='price'),
+                objection_type=Mock(value="price"),
                 severity=0.7,
                 confidence=0.85,
-                context='Concerned about market value',
-                suggested_responses=['Market analysis shows competitive pricing']
+                context="Concerned about market value",
+                suggested_responses=["Market analysis shows competitive pricing"],
             )
         ]
-        mock_insight.sentiment_timeline = Mock(
-            overall_sentiment=0.6,
-            trend='improving'
-        )
+        mock_insight.sentiment_timeline = Mock(overall_sentiment=0.6, trend="improving")
         mock_insight.quality_metrics = Mock(
             overall_score=78.5,
             coaching_opportunities=[
                 Mock(
-                    area=Mock(value='objection_handling'),
-                    priority='high',
-                    description='Improve price objection response'
+                    area=Mock(value="objection_handling"),
+                    priority="high",
+                    description="Improve price objection response",
                 )
-            ]
+            ],
         )
         mock_insight.response_recommendations = [
-            Mock(
-                response_text='Let me show you recent comparable sales',
-                confidence=0.9,
-                tone='consultative'
-            )
+            Mock(response_text="Let me show you recent comparable sales", confidence=0.9, tone="consultative")
         ]
 
         mock_service.analyze_conversation_with_insights.return_value = mock_insight
@@ -143,10 +137,10 @@ class TestBotIntelligenceMiddleware:
         mock_profile.bedrooms_max = 4
         mock_profile.bathrooms_min = 2
         mock_profile.bathrooms_max = None
-        mock_profile.move_timeline = '3_months'
+        mock_profile.move_timeline = "3_months"
         mock_profile.profile_completeness = 0.75
-        mock_profile.location_preferences = {'austin_central': 0.8, 'austin_south': 0.6}
-        mock_profile.feature_preferences = {'pool': True, 'garage': True}
+        mock_profile.location_preferences = {"austin_central": 0.8, "austin_south": 0.6}
+        mock_profile.feature_preferences = {"pool": True, "garage": True}
         mock_profile.urgency_level = 0.7
 
         mock_engine.get_preference_profile.return_value = mock_profile
@@ -157,32 +151,23 @@ class TestBotIntelligenceMiddleware:
     def sample_conversation_context(self) -> List[Dict[str, Any]]:
         """Sample conversation context for testing."""
         return [
+            {"role": "user", "content": "I need to sell my house quickly", "timestamp": "2024-01-25T09:00:00Z"},
             {
-                'role': 'user',
-                'content': 'I need to sell my house quickly',
-                'timestamp': '2024-01-25T09:00:00Z'
+                "role": "assistant",
+                "content": "I understand your urgency. What's your timeline?",
+                "timestamp": "2024-01-25T09:01:00Z",
             },
             {
-                'role': 'assistant',
-                'content': 'I understand your urgency. What\'s your timeline?',
-                'timestamp': '2024-01-25T09:01:00Z'
+                "role": "user",
+                "content": "Need to sell within 3 months, job relocation",
+                "timestamp": "2024-01-25T09:02:00Z",
             },
-            {
-                'role': 'user',
-                'content': 'Need to sell within 3 months, job relocation',
-                'timestamp': '2024-01-25T09:02:00Z'
-            }
         ]
 
     @pytest.fixture
     def sample_preferences(self) -> Dict[str, Any]:
         """Sample preferences for testing."""
-        return {
-            'budget_max': 600000,
-            'bedrooms': 3,
-            'location': 'austin_central',
-            'timeline': '3_months'
-        }
+        return {"budget_max": 600000, "bedrooms": 3, "location": "austin_central", "timeline": "3_months"}
 
     @pytest.fixture
     def middleware_service(
@@ -191,7 +176,7 @@ class TestBotIntelligenceMiddleware:
         mock_event_publisher,
         mock_property_matching_engine,
         mock_conversation_intelligence,
-        mock_preference_learning
+        mock_preference_learning,
     ) -> BotIntelligenceMiddleware:
         """Create middleware service with mocked dependencies."""
         middleware = BotIntelligenceMiddleware()
@@ -207,10 +192,7 @@ class TestBotIntelligenceMiddleware:
 
     @pytest.mark.asyncio
     async def test_enhance_bot_context_cache_miss_success(
-        self,
-        middleware_service,
-        sample_conversation_context,
-        sample_preferences
+        self, middleware_service, sample_conversation_context, sample_preferences
     ):
         """Test successful intelligence gathering on cache miss."""
         # Arrange
@@ -228,7 +210,7 @@ class TestBotIntelligenceMiddleware:
             lead_id=lead_id,
             location_id=location_id,
             conversation_context=sample_conversation_context,
-            preferences=sample_preferences
+            preferences=sample_preferences,
         )
         latency_ms = (time.time() - start_time) * 1000
 
@@ -258,17 +240,14 @@ class TestBotIntelligenceMiddleware:
         # Verify caching
         middleware_service.cache.set.assert_called_once()
         cache_call = middleware_service.cache.set.call_args
-        assert cache_call[1]['ttl'] == 300  # 5-minute TTL
+        assert cache_call[1]["ttl"] == 300  # 5-minute TTL
 
         # Verify event publishing
         middleware_service.event_publisher.publish_lead_update.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_enhance_bot_context_cache_hit(
-        self,
-        middleware_service,
-        sample_conversation_context,
-        sample_preferences
+        self, middleware_service, sample_conversation_context, sample_preferences
     ):
         """Test cache hit scenario with quick response."""
         # Arrange
@@ -277,9 +256,7 @@ class TestBotIntelligenceMiddleware:
         bot_type = "jorge-buyer"
 
         # Create cached context
-        cached_context = BotIntelligenceContext.create_fallback(
-            lead_id, location_id, bot_type
-        )
+        cached_context = BotIntelligenceContext.create_fallback(lead_id, location_id, bot_type)
         cached_context.cache_hit = True
 
         # Mock cache hit
@@ -292,7 +269,7 @@ class TestBotIntelligenceMiddleware:
             lead_id=lead_id,
             location_id=location_id,
             conversation_context=sample_conversation_context,
-            preferences=sample_preferences
+            preferences=sample_preferences,
         )
         latency_ms = (time.time() - start_time) * 1000
 
@@ -314,10 +291,7 @@ class TestBotIntelligenceMiddleware:
 
     @pytest.mark.asyncio
     async def test_parallel_intelligence_gathering_performance(
-        self,
-        middleware_service,
-        sample_conversation_context,
-        sample_preferences
+        self, middleware_service, sample_conversation_context, sample_preferences
     ):
         """Test parallel execution performance of Phase 2 services."""
         # Arrange
@@ -329,18 +303,18 @@ class TestBotIntelligenceMiddleware:
         async def delayed_property_matching(*args, **kwargs):
             await asyncio.sleep(0.05)  # 50ms delay
             match = Mock()
-            match.to_dict = lambda: {'property_id': 'prop_123', 'overall_score': 0.8}
+            match.to_dict = lambda: {"property_id": "prop_123", "overall_score": 0.8}
             match.confidence_score = 0.8
-            match.presentation_strategy = Mock(value='lifestyle_match')
-            match.optimal_presentation_time = '2024-01-25T10:00:00Z'
-            match.behavioral_reasoning = 'Behavioral fit'
+            match.presentation_strategy = Mock(value="lifestyle_match")
+            match.optimal_presentation_time = "2024-01-25T10:00:00Z"
+            match.behavioral_reasoning = "Behavioral fit"
             return [match]
 
         async def delayed_conversation_analysis(*args, **kwargs):
             await asyncio.sleep(0.05)  # 50ms delay
             mock_insight = Mock()
             mock_insight.objections_detected = []
-            mock_insight.sentiment_timeline = Mock(overall_sentiment=0.0, trend='stable')
+            mock_insight.sentiment_timeline = Mock(overall_sentiment=0.0, trend="stable")
             mock_insight.quality_metrics = Mock(overall_score=50.0, coaching_opportunities=[])
             mock_insight.response_recommendations = []
             return mock_insight
@@ -367,7 +341,7 @@ class TestBotIntelligenceMiddleware:
             lead_id=lead_id,
             location_id=location_id,
             conversation_context=sample_conversation_context,
-            preferences=sample_preferences
+            preferences=sample_preferences,
         )
         total_latency_ms = (time.time() - start_time) * 1000
 
@@ -382,12 +356,7 @@ class TestBotIntelligenceMiddleware:
         assert not result.cache_hit
 
     @pytest.mark.asyncio
-    async def test_service_failure_fallback(
-        self,
-        middleware_service,
-        sample_conversation_context,
-        sample_preferences
-    ):
+    async def test_service_failure_fallback(self, middleware_service, sample_conversation_context, sample_preferences):
         """Test graceful fallback when Phase 2 services fail."""
         # Arrange
         lead_id = "lead_123"
@@ -396,7 +365,9 @@ class TestBotIntelligenceMiddleware:
 
         # Make services fail
         middleware_service.property_matcher.find_behavioral_matches.side_effect = Exception("Property service down")
-        middleware_service.conversation_intelligence.analyze_conversation_with_insights.side_effect = Exception("Conversation service down")
+        middleware_service.conversation_intelligence.analyze_conversation_with_insights.side_effect = Exception(
+            "Conversation service down"
+        )
         middleware_service.preference_learning.get_preference_profile.side_effect = Exception("Preference service down")
 
         # Act
@@ -405,7 +376,7 @@ class TestBotIntelligenceMiddleware:
             lead_id=lead_id,
             location_id=location_id,
             conversation_context=sample_conversation_context,
-            preferences=sample_preferences
+            preferences=sample_preferences,
         )
 
         # Assert
@@ -423,12 +394,7 @@ class TestBotIntelligenceMiddleware:
         # by checking that empty fallback intelligence was returned.
 
     @pytest.mark.asyncio
-    async def test_partial_service_failure(
-        self,
-        middleware_service,
-        sample_conversation_context,
-        sample_preferences
-    ):
+    async def test_partial_service_failure(self, middleware_service, sample_conversation_context, sample_preferences):
         """Test partial service failure with some services working."""
         # Arrange
         lead_id = "lead_123"
@@ -444,7 +410,7 @@ class TestBotIntelligenceMiddleware:
             lead_id=lead_id,
             location_id=location_id,
             conversation_context=sample_conversation_context,
-            preferences=sample_preferences
+            preferences=sample_preferences,
         )
 
         # Assert
@@ -462,12 +428,7 @@ class TestBotIntelligenceMiddleware:
         # performance_metrics.service_failures. Verify graceful degradation instead.
 
     @pytest.mark.asyncio
-    async def test_cache_service_failure(
-        self,
-        middleware_service,
-        sample_conversation_context,
-        sample_preferences
-    ):
+    async def test_cache_service_failure(self, middleware_service, sample_conversation_context, sample_preferences):
         """Test behavior when cache service fails."""
         # Arrange
         lead_id = "lead_123"
@@ -484,7 +445,7 @@ class TestBotIntelligenceMiddleware:
             lead_id=lead_id,
             location_id=location_id,
             conversation_context=sample_conversation_context,
-            preferences=sample_preferences
+            preferences=sample_preferences,
         )
 
         # Assert
@@ -498,12 +459,7 @@ class TestBotIntelligenceMiddleware:
         assert result.conversation_intelligence.overall_sentiment == 0.6
 
     @pytest.mark.asyncio
-    async def test_event_publishing_failure(
-        self,
-        middleware_service,
-        sample_conversation_context,
-        sample_preferences
-    ):
+    async def test_event_publishing_failure(self, middleware_service, sample_conversation_context, sample_preferences):
         """Test behavior when event publishing fails."""
         # Arrange
         lead_id = "lead_123"
@@ -519,7 +475,7 @@ class TestBotIntelligenceMiddleware:
             lead_id=lead_id,
             location_id=location_id,
             conversation_context=sample_conversation_context,
-            preferences=sample_preferences
+            preferences=sample_preferences,
         )
 
         # Assert
@@ -540,28 +496,23 @@ class TestBotIntelligenceMiddleware:
         # _total_enhancements is incremented separately in enhance_bot_context)
         middleware_service._update_metrics(120.5)  # Within target
         middleware_service._update_metrics(250.0)  # Above target
-        middleware_service._update_metrics(80.0)   # Within target
+        middleware_service._update_metrics(80.0)  # Within target
         middleware_service._total_enhancements += 3  # Simulate 3 enhancements
 
         # Act
         updated_metrics = middleware_service.get_metrics()
 
         # Assert
-        assert updated_metrics['total_enhancements'] == initial_metrics['total_enhancements'] + 3
-        assert updated_metrics['avg_latency_ms'] > 0
-        assert updated_metrics['latency_p95_ms'] > 0
-        assert updated_metrics['latency_p99_ms'] > 0
+        assert updated_metrics["total_enhancements"] == initial_metrics["total_enhancements"] + 3
+        assert updated_metrics["avg_latency_ms"] > 0
+        assert updated_metrics["latency_p95_ms"] > 0
+        assert updated_metrics["latency_p99_ms"] > 0
 
         # Performance status should reflect mixed results
-        assert updated_metrics['performance_status'] in ['excellent', 'good', 'degraded']
+        assert updated_metrics["performance_status"] in ["excellent", "good", "degraded"]
 
     @pytest.mark.asyncio
-    async def test_different_bot_types(
-        self,
-        middleware_service,
-        sample_conversation_context,
-        sample_preferences
-    ):
+    async def test_different_bot_types(self, middleware_service, sample_conversation_context, sample_preferences):
         """Test intelligence gathering for different bot types."""
         lead_id = "lead_123"
         location_id = "austin"
@@ -574,7 +525,7 @@ class TestBotIntelligenceMiddleware:
                 lead_id=lead_id,
                 location_id=location_id,
                 conversation_context=sample_conversation_context,
-                preferences=sample_preferences
+                preferences=sample_preferences,
             )
 
             # Assert
@@ -584,11 +535,7 @@ class TestBotIntelligenceMiddleware:
             assert result.location_id == location_id
 
     @pytest.mark.asyncio
-    async def test_empty_conversation_context(
-        self,
-        middleware_service,
-        sample_preferences
-    ):
+    async def test_empty_conversation_context(self, middleware_service, sample_preferences):
         """Test behavior with empty conversation context."""
         # Arrange
         lead_id = "lead_123"
@@ -602,7 +549,7 @@ class TestBotIntelligenceMiddleware:
             lead_id=lead_id,
             location_id=location_id,
             conversation_context=empty_conversation,
-            preferences=sample_preferences
+            preferences=sample_preferences,
         )
 
         # Assert
@@ -615,11 +562,7 @@ class TestBotIntelligenceMiddleware:
         assert result.preference_intelligence is not None
 
     @pytest.mark.asyncio
-    async def test_no_preferences_provided(
-        self,
-        middleware_service,
-        sample_conversation_context
-    ):
+    async def test_no_preferences_provided(self, middleware_service, sample_conversation_context):
         """Test behavior when no preferences are provided."""
         # Arrange
         lead_id = "lead_123"
@@ -632,7 +575,7 @@ class TestBotIntelligenceMiddleware:
             lead_id=lead_id,
             location_id=location_id,
             conversation_context=sample_conversation_context,
-            preferences=None
+            preferences=None,
         )
 
         # Assert
@@ -648,12 +591,7 @@ class TestBotIntelligenceMiddleware:
         assert result.preference_intelligence is not None
 
     @pytest.mark.asyncio
-    async def test_service_timeout_handling(
-        self,
-        middleware_service,
-        sample_conversation_context,
-        sample_preferences
-    ):
+    async def test_service_timeout_handling(self, middleware_service, sample_conversation_context, sample_preferences):
         """Test handling of service timeouts."""
         # Arrange
         lead_id = "lead_123"
@@ -674,7 +612,7 @@ class TestBotIntelligenceMiddleware:
             lead_id=lead_id,
             location_id=location_id,
             conversation_context=sample_conversation_context,
-            preferences=sample_preferences
+            preferences=sample_preferences,
         )
         total_time = time.time() - start_time
 
@@ -708,11 +646,11 @@ class TestBotIntelligenceMiddlewareIntegration:
 
         # Assert
         assert isinstance(health, dict)
-        assert 'service' in health
-        assert 'status' in health
-        assert 'version' in health
-        assert 'metrics' in health
-        assert health['service'] == 'BotIntelligenceMiddleware'
+        assert "service" in health
+        assert "status" in health
+        assert "version" in health
+        assert "metrics" in health
+        assert health["service"] == "BotIntelligenceMiddleware"
 
 
 class TestIntelligenceContextModels:
@@ -722,9 +660,7 @@ class TestIntelligenceContextModels:
         """Test BotIntelligenceContext JSON serialization/deserialization."""
         # Arrange
         original_context = BotIntelligenceContext.create_fallback(
-            lead_id="lead_123",
-            location_id="austin",
-            bot_type="jorge-seller"
+            lead_id="lead_123", location_id="austin", bot_type="jorge-seller"
         )
 
         # Act
@@ -741,9 +677,7 @@ class TestIntelligenceContextModels:
         """Test PropertyIntelligence model creation and methods."""
         # Act
         property_intel = PropertyIntelligence(
-            top_matches=[{'property_id': 'prop_123', 'score': 0.9}],
-            match_count=1,
-            best_match_score=0.9
+            top_matches=[{"property_id": "prop_123", "score": 0.9}], match_count=1, best_match_score=0.9
         )
 
         # Assert
@@ -753,8 +687,8 @@ class TestIntelligenceContextModels:
 
         # Test to_dict conversion
         data = property_intel.to_dict()
-        assert 'top_matches' in data
-        assert 'match_count' in data
+        assert "top_matches" in data
+        assert "match_count" in data
 
         # Test from_dict reconstruction
         reconstructed = PropertyIntelligence.from_dict(data)
@@ -764,17 +698,17 @@ class TestIntelligenceContextModels:
         """Test ConversationIntelligence model creation and methods."""
         # Act
         conversation_intel = ConversationIntelligence(
-            objections_detected=[{'type': 'price', 'severity': 0.7}],
+            objections_detected=[{"type": "price", "severity": 0.7}],
             overall_sentiment=0.6,
-            sentiment_trend='improving',
+            sentiment_trend="improving",
             conversation_quality_score=78.5,
             coaching_opportunities=[],
-            response_recommendations=[]
+            response_recommendations=[],
         )
 
         # Assert
         assert conversation_intel.overall_sentiment == 0.6
-        assert conversation_intel.sentiment_trend == 'improving'
+        assert conversation_intel.sentiment_trend == "improving"
         assert conversation_intel.conversation_quality_score == 78.5
         assert len(conversation_intel.objections_detected) == 1
 
@@ -782,24 +716,22 @@ class TestIntelligenceContextModels:
         """Test PreferenceIntelligence model creation and methods."""
         # Act
         preference_intel = PreferenceIntelligence(
-            preference_profile={'budget_max': 600000},
+            preference_profile={"budget_max": 600000},
             profile_completeness=0.75,
-            budget_range={'min': 400000, 'max': 600000},
-            urgency_level=0.7
+            budget_range={"min": 400000, "max": 600000},
+            urgency_level=0.7,
         )
 
         # Assert
         assert preference_intel.profile_completeness == 0.75
         assert preference_intel.urgency_level == 0.7
-        assert preference_intel.budget_range['max'] == 600000
+        assert preference_intel.budget_range["max"] == 600000
 
     def test_fallback_context_creation(self):
         """Test fallback context creation for error scenarios."""
         # Act
         fallback_context = BotIntelligenceContext.create_fallback(
-            lead_id="lead_123",
-            location_id="austin",
-            bot_type="jorge-buyer"
+            lead_id="lead_123", location_id="austin", bot_type="jorge-buyer"
         )
 
         # Assert
@@ -813,7 +745,7 @@ class TestIntelligenceContextModels:
         assert fallback_context.preference_intelligence.profile_completeness == 0.0
 
         # Should have failure recorded in performance metrics
-        assert 'fallback_context_created' in fallback_context.performance_metrics.service_failures
+        assert "fallback_context_created" in fallback_context.performance_metrics.service_failures
 
 
 if __name__ == "__main__":

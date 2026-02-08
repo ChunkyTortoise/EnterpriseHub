@@ -35,7 +35,6 @@ from ghl_real_estate_ai.compliance_platform.models.risk_models import (
     RiskTrend,
 )
 
-
 # ============================================================================
 # FIXTURES - Sample data for analytics tests
 # ============================================================================
@@ -64,19 +63,23 @@ def sample_violation_history() -> List[Dict[str, Any]]:
     # Normal pattern: 1-2 violations per week
     for week in range(4):
         for _ in range(2):
-            violations.append({
-                "timestamp": base_time + timedelta(days=week * 7 + (week % 3)),
-                "severity": "medium",
-                "regulation": "gdpr",
-            })
+            violations.append(
+                {
+                    "timestamp": base_time + timedelta(days=week * 7 + (week % 3)),
+                    "severity": "medium",
+                    "regulation": "gdpr",
+                }
+            )
 
     # Surge in last 3 days: 5 violations
     for i in range(5):
-        violations.append({
-            "timestamp": base_time + timedelta(days=28 + i % 3),
-            "severity": "high" if i % 2 == 0 else "medium",
-            "regulation": "eu_ai_act",
-        })
+        violations.append(
+            {
+                "timestamp": base_time + timedelta(days=28 + i % 3),
+                "severity": "high" if i % 2 == 0 else "medium",
+                "regulation": "eu_ai_act",
+            }
+        )
 
     return violations
 
@@ -226,9 +229,7 @@ class MockPredictiveScorer:
         current_risk_score = weighted_score / total_weight if total_weight > 0 else 0
 
         # Apply trend adjustments
-        trend_adjustments = sum(
-            i.trend_percentage for i in indicators if i.trend == "declining"
-        )
+        trend_adjustments = sum(i.trend_percentage for i in indicators if i.trend == "declining")
         projected_score = min(100, current_risk_score + trend_adjustments)
 
         # Determine risk level
@@ -292,37 +293,42 @@ class MockPredictiveScorer:
         # Based on declining indicators
         for indicator in indicators:
             if indicator.trend == "declining":
-                recommendations.append({
-                    "category": indicator.category.value,
-                    "action": f"Address declining {indicator.name}",
-                    "priority": "high" if indicator.value >= indicator.threshold_critical else "medium",
-                    "expected_impact": f"Reduce {indicator.category.value} risk by {indicator.trend_percentage:.1f}%",
-                    "estimated_effort": "2-4 weeks",
-                })
+                recommendations.append(
+                    {
+                        "category": indicator.category.value,
+                        "action": f"Address declining {indicator.name}",
+                        "priority": "high" if indicator.value >= indicator.threshold_critical else "medium",
+                        "expected_impact": f"Reduce {indicator.category.value} risk by {indicator.trend_percentage:.1f}%",
+                        "estimated_effort": "2-4 weeks",
+                    }
+                )
 
         # Based on violation probability
         if predictions.get("violation_probability", 0) > 0.5:
-            recommendations.append({
-                "category": "compliance",
-                "action": "Conduct immediate compliance review",
-                "priority": "critical" if predictions["violation_probability"] > 0.7 else "high",
-                "expected_impact": "Reduce violation probability by 30-50%",
-                "estimated_effort": "1-2 weeks",
-            })
+            recommendations.append(
+                {
+                    "category": "compliance",
+                    "action": "Conduct immediate compliance review",
+                    "priority": "critical" if predictions["violation_probability"] > 0.7 else "high",
+                    "expected_impact": "Reduce violation probability by 30-50%",
+                    "estimated_effort": "1-2 weeks",
+                }
+            )
 
         # Based on risk score trend
         if predictions.get("trend_direction") == "declining":
-            recommendations.append({
-                "category": "risk_management",
-                "action": "Implement enhanced monitoring",
-                "priority": "high",
-                "expected_impact": "Early detection of compliance drift",
-                "estimated_effort": "1 week",
-            })
+            recommendations.append(
+                {
+                    "category": "risk_management",
+                    "action": "Implement enhanced monitoring",
+                    "priority": "high",
+                    "expected_impact": "Early detection of compliance drift",
+                    "estimated_effort": "1 week",
+                }
+            )
 
         return sorted(
-            recommendations,
-            key=lambda x: {"critical": 0, "high": 1, "medium": 2, "low": 3}.get(x["priority"], 4)
+            recommendations, key=lambda x: {"critical": 0, "high": 1, "medium": 2, "low": 3}.get(x["priority"], 4)
         )
 
     def _calculate_trend(self, values: List[float]) -> float:
@@ -349,9 +355,7 @@ class MockPredictiveScorer:
             return "limited"
         return "minimal"
 
-    def _calculate_severity_distribution(
-        self, violations: List[Dict[str, Any]]
-    ) -> Dict[str, float]:
+    def _calculate_severity_distribution(self, violations: List[Dict[str, Any]]) -> Dict[str, float]:
         """Calculate severity distribution from violation history"""
         if not violations:
             return {"critical": 0.05, "high": 0.15, "medium": 0.5, "low": 0.3}
@@ -419,14 +423,8 @@ class MockAnomalyDetector:
         recent_window = now - timedelta(days=window_days)
         historical_window = recent_window - timedelta(days=window_days * 3)
 
-        recent_violations = [
-            v for v in violations
-            if v["timestamp"] >= recent_window
-        ]
-        historical_violations = [
-            v for v in violations
-            if historical_window <= v["timestamp"] < recent_window
-        ]
+        recent_violations = [v for v in violations if v["timestamp"] >= recent_window]
+        historical_violations = [v for v in violations if historical_window <= v["timestamp"] < recent_window]
 
         recent_rate = len(recent_violations) / window_days
         historical_rate = len(historical_violations) / (window_days * 3) if historical_violations else 0.1
@@ -468,11 +466,13 @@ class MockAnomalyDetector:
         for i in range(1, len(sorted_dates)):
             gap = (sorted_dates[i] - sorted_dates[i - 1]).days
             if gap > expected_frequency_days:
-                gaps.append({
-                    "start": sorted_dates[i - 1].isoformat(),
-                    "end": sorted_dates[i].isoformat(),
-                    "gap_days": gap,
-                })
+                gaps.append(
+                    {
+                        "start": sorted_dates[i - 1].isoformat(),
+                        "end": sorted_dates[i].isoformat(),
+                        "gap_days": gap,
+                    }
+                )
 
         # Check current gap
         days_since_last = (datetime.now(timezone.utc) - sorted_dates[-1]).days
@@ -504,14 +504,8 @@ class MockAnomalyDetector:
             }
 
         now = datetime.now(timezone.utc)
-        recent = [
-            r for r in risk_history
-            if r["timestamp"] >= now - timedelta(days=window_days)
-        ]
-        older = [
-            r for r in risk_history
-            if r["timestamp"] < now - timedelta(days=window_days)
-        ]
+        recent = [r for r in risk_history if r["timestamp"] >= now - timedelta(days=window_days)]
+        older = [r for r in risk_history if r["timestamp"] < now - timedelta(days=window_days)]
 
         if not recent or not older:
             return {
@@ -545,9 +539,7 @@ class MockAnomalyDetector:
             return 0.0
         return (value - mean) / std_dev
 
-    def calculate_iqr_bounds(
-        self, values: List[float]
-    ) -> Tuple[float, float, float, float]:
+    def calculate_iqr_bounds(self, values: List[float]) -> Tuple[float, float, float, float]:
         """Calculate IQR-based anomaly bounds"""
         if len(values) < 4:
             raise ValueError("Need at least 4 values for IQR calculation")
@@ -980,10 +972,7 @@ class TestAnomalyDetection:
         """Test risk escalation detection with stable scores"""
         # Arrange - stable risk scores
         now = datetime.now(timezone.utc)
-        risk_history = [
-            {"timestamp": now - timedelta(days=i * 3), "risk_score": 50 + (i % 3)}
-            for i in range(10)
-        ]
+        risk_history = [{"timestamp": now - timedelta(days=i * 3), "risk_score": 50 + (i % 3)} for i in range(10)]
 
         # Act
         result = await detector.detect_risk_escalation(
@@ -1152,8 +1141,7 @@ class TestAnalyticsIntegration:
         """Test analytics behavior with minimal/degraded data"""
         # Arrange - minimal data
         minimal_history = [
-            {"timestamp": datetime.now(timezone.utc) - timedelta(days=i), "score": 70 + i}
-            for i in range(5)
+            {"timestamp": datetime.now(timezone.utc) - timedelta(days=i), "score": 70 + i} for i in range(5)
         ]
 
         # Act

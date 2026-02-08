@@ -7,37 +7,34 @@ geographic regions.
 """
 
 from .base_market_service import BaseMarketService, MarketMetrics
-from .registry import MarketRegistry, get_market_registry, get_market_service
-from .config_schemas import MarketConfig, NeighborhoodConfig, EmployerConfig
 from .concrete_services import (
-    ConcreteMarketService,
     AustinMarketService,
+    ConcreteMarketService,
     DallasMarketService,
     HoustonMarketService,
+    RanchoCucamongaMarketService,
     SanAntonioMarketService,
-    RanchoCucamongaMarketService
 )
+from .config_schemas import EmployerConfig, MarketConfig, NeighborhoodConfig
+from .registry import MarketRegistry, get_market_registry, get_market_service
 
 __all__ = [
     # Base classes
     "BaseMarketService",
     "MarketMetrics",
-    
     # Registry
-    "MarketRegistry", 
+    "MarketRegistry",
     "get_market_registry",
     "get_market_service",
-    
     # Configuration
     "MarketConfig",
-    "NeighborhoodConfig", 
+    "NeighborhoodConfig",
     "EmployerConfig",
-    
     # Concrete services
     "ConcreteMarketService",
     "AustinMarketService",
     "DallasMarketService",
-    "HoustonMarketService", 
+    "HoustonMarketService",
     "SanAntonioMarketService",
-    "RanchoCucamongaMarketService"
+    "RanchoCucamongaMarketService",
 ]

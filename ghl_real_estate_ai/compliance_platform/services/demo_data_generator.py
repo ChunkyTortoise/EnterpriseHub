@@ -13,8 +13,8 @@ from ..models.compliance_models import (
     AIModelRegistration,
     ComplianceStatus,
     PolicyViolation,
-    RiskLevel,
     RegulationType,
+    RiskLevel,
     ViolationSeverity,
 )
 
@@ -297,10 +297,7 @@ class DemoDataGenerator:
             List of model dictionaries
         """
         models = []
-        templates = random.sample(
-            self.MODEL_TEMPLATES,
-            min(count, len(self.MODEL_TEMPLATES))
-        )
+        templates = random.sample(self.MODEL_TEMPLATES, min(count, len(self.MODEL_TEMPLATES)))
 
         for i, template in enumerate(templates):
             model = {
@@ -338,10 +335,7 @@ class DemoDataGenerator:
             List of PolicyViolation instances
         """
         violations = []
-        templates = random.sample(
-            self.VIOLATION_TEMPLATES,
-            min(count, len(self.VIOLATION_TEMPLATES))
-        )
+        templates = random.sample(self.VIOLATION_TEMPLATES, min(count, len(self.VIOLATION_TEMPLATES)))
 
         for template in templates:
             model_id = random.choice(model_ids)
@@ -376,15 +370,17 @@ class DemoDataGenerator:
         scores = []
         for _ in range(model_count):
             base_score = random.uniform(60, 98)
-            scores.append({
-                "overall_score": round(base_score, 1),
-                "transparency": round(random.uniform(base_score - 15, min(100, base_score + 10)), 1),
-                "fairness": round(random.uniform(base_score - 10, min(100, base_score + 10)), 1),
-                "accountability": round(random.uniform(base_score - 10, min(100, base_score + 10)), 1),
-                "robustness": round(random.uniform(base_score - 15, min(100, base_score + 10)), 1),
-                "privacy": round(random.uniform(base_score - 10, min(100, base_score + 10)), 1),
-                "security": round(random.uniform(base_score - 5, min(100, base_score + 10)), 1),
-            })
+            scores.append(
+                {
+                    "overall_score": round(base_score, 1),
+                    "transparency": round(random.uniform(base_score - 15, min(100, base_score + 10)), 1),
+                    "fairness": round(random.uniform(base_score - 10, min(100, base_score + 10)), 1),
+                    "accountability": round(random.uniform(base_score - 10, min(100, base_score + 10)), 1),
+                    "robustness": round(random.uniform(base_score - 15, min(100, base_score + 10)), 1),
+                    "privacy": round(random.uniform(base_score - 10, min(100, base_score + 10)), 1),
+                    "security": round(random.uniform(base_score - 5, min(100, base_score + 10)), 1),
+                }
+            )
         return scores
 
     def generate_trend_data(self, days: int = 90) -> List[Dict[str, Any]]:
@@ -412,13 +408,15 @@ class DemoDataGenerator:
             violation_reduction = i * 0.05
             violations = max(1, int(base_violations - violation_reduction + random.randint(-1, 1)))
 
-            data.append({
-                "date": date.strftime("%Y-%m-%d"),
-                "compliance_score": round(score, 1),
-                "active_violations": violations,
-                "models_assessed": random.randint(8, 12),
-                "high_risk_count": random.randint(2, 4),
-            })
+            data.append(
+                {
+                    "date": date.strftime("%Y-%m-%d"),
+                    "compliance_score": round(score, 1),
+                    "active_violations": violations,
+                    "models_assessed": random.randint(8, 12),
+                    "high_risk_count": random.randint(2, 4),
+                }
+            )
 
         return data
 
@@ -450,12 +448,14 @@ class DemoDataGenerator:
             for regulation in regulations:
                 # Generate realistic risk scores
                 risk_score = random.randint(10, 85)
-                heatmap_data.append({
-                    "category": category,
-                    "regulation": regulation,
-                    "risk_score": risk_score,
-                    "status": "critical" if risk_score > 70 else "warning" if risk_score > 40 else "normal",
-                })
+                heatmap_data.append(
+                    {
+                        "category": category,
+                        "regulation": regulation,
+                        "risk_score": risk_score,
+                        "status": "critical" if risk_score > 70 else "warning" if risk_score > 40 else "normal",
+                    }
+                )
 
         return heatmap_data
 
@@ -502,17 +502,17 @@ class DemoDataGenerator:
                         "No user-facing explanation interfaces for clinicians",
                         "SHAP outputs not integrated into clinical workflows",
                         "Missing documentation of training data characteristics",
-                        "Insufficient versioning and changelog documentation"
+                        "Insufficient versioning and changelog documentation",
                     ],
                     "mitigation_strategies": [
                         "Implement SHAP values visualization in clinical UI with clinical context",
                         "Create comprehensive model cards (NIST AI 600-1, Google Model Cards)",
                         "Develop clinician-facing explanation dashboard",
                         "Establish automated documentation generation on model updates",
-                        "Conduct quarterly documentation audits per EU AI Act Annex IV"
+                        "Conduct quarterly documentation audits per EU AI Act Annex IV",
                     ],
                     "implementation_timeline": "8-12 weeks",
-                    "resource_estimate": {"engineering": 320, "compliance": 80, "clinical_review": 120}
+                    "resource_estimate": {"engineering": 320, "compliance": 80, "clinical_review": 120},
                 },
                 "fairness": {
                     "score": 72,
@@ -528,17 +528,17 @@ class DemoDataGenerator:
                         "Training data skewed toward majority populations (73% vs. 27%)",
                         "No intersectional bias analysis (age + gender combinations)",
                         "Missing fairness metrics monitoring in production",
-                        "Limited documentation of fairness testing methodology"
+                        "Limited documentation of fairness testing methodology",
                     ],
                     "mitigation_strategies": [
                         "Conduct fairness audit quarterly using ISO/IEC 42001 framework",
                         "Implement Fairlearn/AI Fairness 360 bias detection in CI/CD",
                         "Expand training data with balanced representation (target 40%+ minority)",
                         "Add intersectional fairness monitoring (age × gender × ethnicity)",
-                        "Establish clinical review board for bias assessment"
+                        "Establish clinical review board for bias assessment",
                     ],
                     "implementation_timeline": "10-14 weeks",
-                    "resource_estimate": {"engineering": 240, "data_science": 160, "compliance": 100}
+                    "resource_estimate": {"engineering": 240, "data_science": 160, "compliance": 100},
                 },
                 "accountability": {
                     "score": 81,
@@ -553,17 +553,17 @@ class DemoDataGenerator:
                         "Incident response SLA: 48 hours (required: 4 hours for HIPAA breaches)",
                         "Model change log incomplete for versions prior to 2024",
                         "No documented appeals process for AI-driven decisions",
-                        "Missing human-in-the-loop verification documentation"
+                        "Missing human-in-the-loop verification documentation",
                     ],
                     "mitigation_strategies": [
                         "Implement immutable audit logging (blockchain or write-once storage)",
                         "Establish 4-hour incident response protocol with automated alerting",
                         "Migrate audit logs to 7-year retention with compliance indexing",
                         "Create formal appeals process documented in patient-facing materials",
-                        "Implement human review checkpoints for high-confidence predictions"
+                        "Implement human review checkpoints for high-confidence predictions",
                     ],
                     "implementation_timeline": "6-9 weeks",
-                    "resource_estimate": {"engineering": 280, "compliance": 120, "operations": 80}
+                    "resource_estimate": {"engineering": 280, "compliance": 120, "operations": 80},
                 },
                 "robustness": {
                     "score": 74,
@@ -578,17 +578,17 @@ class DemoDataGenerator:
                         "Real-time model drift detection: 90-day lag (should be 24-48 hours)",
                         "Limited out-of-distribution detection for unusual imaging patterns",
                         "No graceful degradation path when confidence drops below threshold",
-                        "Version rollback procedures not tested in 18 months"
+                        "Version rollback procedures not tested in 18 months",
                     ],
                     "mitigation_strategies": [
                         "Implement adversarial robustness testing (ImageNet-C, JPEG compression)",
                         "Deploy real-time drift detection with 4-hour alert threshold",
                         "Add out-of-distribution detection layer (Mahalanobis, isolation forest)",
                         "Establish automatic prediction hold when confidence < 0.65",
-                        "Conduct monthly rollback drills with documented procedures"
+                        "Conduct monthly rollback drills with documented procedures",
                     ],
                     "implementation_timeline": "12-16 weeks",
-                    "resource_estimate": {"ml_engineering": 400, "qa": 200, "devops": 120}
+                    "resource_estimate": {"ml_engineering": 400, "qa": 200, "devops": 120},
                 },
                 "privacy": {
                     "score": 77,
@@ -603,17 +603,17 @@ class DemoDataGenerator:
                         "No automated data deletion after training cycle completion",
                         "Access logs retained only 180 days (HIPAA minimum: 6 years)",
                         "4 data processors lack current Business Associate Agreements",
-                        "De-identification methods not validated against HIPAA Safe Harbor standards"
+                        "De-identification methods not validated against HIPAA Safe Harbor standards",
                     ],
                     "mitigation_strategies": [
                         "Upgrade PHI encryption to AES-256 across all storage layers",
                         "Implement automated data purging with cryptographic erasure verification",
                         "Extend access log retention to 6 years with immutable storage",
                         "Execute BAAs with remaining 4 processors within 30 days",
-                        "Conduct HIPAA Safe Harbor validation audit on de-identification methods"
+                        "Conduct HIPAA Safe Harbor validation audit on de-identification methods",
                     ],
                     "implementation_timeline": "8-11 weeks",
-                    "resource_estimate": {"security": 280, "compliance": 160, "engineering": 120}
+                    "resource_estimate": {"security": 280, "compliance": 160, "engineering": 120},
                 },
                 "security": {
                     "score": 83,
@@ -628,18 +628,18 @@ class DemoDataGenerator:
                         "No model poisoning detection or input validation framework",
                         "Federated learning pipeline lacks differential privacy guarantees",
                         "Security testing: annual penetration testing (should be quarterly)",
-                        "Incident response plan exists but not exercised in 14 months"
+                        "Incident response plan exists but not exercised in 14 months",
                     ],
                     "mitigation_strategies": [
                         "Patch all CVEs and implement automated dependency vulnerability scanning",
                         "Add input validation framework with anomaly detection",
                         "Integrate differential privacy into federated learning (ε=1.0 privacy budget)",
                         "Schedule quarterly penetration testing with ML-focused attack scenarios",
-                        "Conduct tabletop incident response exercise quarterly"
+                        "Conduct tabletop incident response exercise quarterly",
                     ],
                     "implementation_timeline": "10-14 weeks",
-                    "resource_estimate": {"security": 320, "ml_engineering": 160, "devops": 100}
-                }
+                    "resource_estimate": {"security": 320, "ml_engineering": 160, "devops": 100},
+                },
             },
             "violation_explanations": {
                 "critical": {
@@ -658,8 +658,8 @@ class DemoDataGenerator:
                     "escalation_path": "Chief Compliance Officer → C-Suite → Board Compliance Committee",
                     "example_violations": [
                         "Unencrypted PHI storage (HIPAA 45 CFR 164.312(a)(2)(i))",
-                        "High-risk AI deployed without human oversight (EU AI Act Article 26)"
-                    ]
+                        "High-risk AI deployed without human oversight (EU AI Act Article 26)",
+                    ],
                 },
                 "high": {
                     "severity_level": "HIGH",
@@ -677,8 +677,8 @@ class DemoDataGenerator:
                     "escalation_path": "Compliance Director → Chief Compliance Officer → CEO",
                     "example_violations": [
                         "Insufficient human oversight mechanisms (EU AI Act Annex III)",
-                        "Missing DPIA for high-risk processing (GDPR Article 35)"
-                    ]
+                        "Missing DPIA for high-risk processing (GDPR Article 35)",
+                    ],
                 },
                 "medium": {
                     "severity_level": "MEDIUM",
@@ -695,9 +695,9 @@ class DemoDataGenerator:
                     "escalation_path": "Compliance Team → Compliance Director",
                     "example_violations": [
                         "Incomplete technical documentation (EU AI Act Annex IV)",
-                        "Missing AI system disclosure to end-users"
-                    ]
-                }
+                        "Missing AI system disclosure to end-users",
+                    ],
+                },
             },
             "executive_summary": (
                 "## Compliance Executive Summary\n\n"
@@ -731,7 +731,7 @@ class DemoDataGenerator:
                     "qa_testing": 200,
                     "legal_review": 80,
                     "devops": 120,
-                    "clinical_review": 120
+                    "clinical_review": 120,
                 },
                 "phases": [
                     {
@@ -742,16 +742,23 @@ class DemoDataGenerator:
                             "Upgrade PHI encryption AES-128 → AES-256",
                             "Extend audit log retention to 6 years",
                             "Execute pending Business Associate Agreements",
-                            "Implement 24-hour model monitoring alerts"
+                            "Implement 24-hour model monitoring alerts",
                         ],
                         "deliverables": [
                             "Encryption migration completed with zero downtime",
                             "Audit log migration to immutable storage (S3 Object Lock / Azure Immutable Blobs)",
                             "4 executed BAAs with compliance verification",
-                            "Real-time drift detection dashboard deployed"
+                            "Real-time drift detection dashboard deployed",
                         ],
-                        "risks": ["Service interruption during encryption migration", "Data compliance during migration"],
-                        "mitigation": ["Blue-green deployment", "Data replication verification", "Regulatory pre-notification"]
+                        "risks": [
+                            "Service interruption during encryption migration",
+                            "Data compliance during migration",
+                        ],
+                        "mitigation": [
+                            "Blue-green deployment",
+                            "Data replication verification",
+                            "Regulatory pre-notification",
+                        ],
                     },
                     {
                         "phase": "Phase 2: Transparency & Explainability",
@@ -761,16 +768,16 @@ class DemoDataGenerator:
                             "Develop comprehensive model cards (NIST AI 600-1 standard)",
                             "Implement SHAP value visualization in clinical UI",
                             "Create automated documentation generation pipeline",
-                            "Establish clinician-facing explanation dashboard"
+                            "Establish clinician-facing explanation dashboard",
                         ],
                         "deliverables": [
                             "Model cards for all 12 active models in production",
                             "SHAP integration in diagnostic recommendation flow",
                             "Documentation auto-generation on each model update",
-                            "Clinician explanation interface with audit logging"
+                            "Clinician explanation interface with audit logging",
                         ],
                         "risks": ["Clinician workflow disruption", "Documentation maintenance burden"],
-                        "mitigation": ["UX testing with 10+ clinicians", "Template-driven documentation automation"]
+                        "mitigation": ["UX testing with 10+ clinicians", "Template-driven documentation automation"],
                     },
                     {
                         "phase": "Phase 3: Fairness & Bias Governance",
@@ -780,16 +787,16 @@ class DemoDataGenerator:
                             "Conduct intersectional bias audit (demographic + intersection)",
                             "Implement automated bias detection in CI/CD (Fairlearn)",
                             "Establish diversity in training data targets (40%+ underrepresented)",
-                            "Create fairness monitoring dashboard with alerts"
+                            "Create fairness monitoring dashboard with alerts",
                         ],
                         "deliverables": [
                             "Baseline fairness audit report (racial, gender, age, intersectional)",
                             "Fairness gates in model training pipeline",
                             "Training data diversity plan with acquisition milestones",
-                            "Quarterly fairness audit schedule established"
+                            "Quarterly fairness audit schedule established",
                         ],
                         "risks": ["Data acquisition costs", "Model performance trade-offs"],
-                        "mitigation": ["Partner with healthcare data providers", "Performance degradation testing"]
+                        "mitigation": ["Partner with healthcare data providers", "Performance degradation testing"],
                     },
                     {
                         "phase": "Phase 4: Accountability & Governance",
@@ -799,17 +806,17 @@ class DemoDataGenerator:
                             "Implement immutable audit logging (blockchain or write-once)",
                             "Establish formal appeals process for AI-driven decisions",
                             "Create incident response protocol with 4-hour SLA",
-                            "Document version control and rollback procedures"
+                            "Document version control and rollback procedures",
                         ],
                         "deliverables": [
                             "Immutable audit log infrastructure deployed",
                             "Patient-facing appeals process documentation",
                             "Incident response playbook with automation",
-                            "Monthly rollback drill schedule"
+                            "Monthly rollback drill schedule",
                         ],
                         "risks": ["Incident response overhead", "Patient communication complexity"],
-                        "mitigation": ["Automated incident routing", "Template-driven patient communications"]
-                    }
+                        "mitigation": ["Automated incident routing", "Template-driven patient communications"],
+                    },
                 ],
                 "success_metrics": {
                     "transparency_score_target": 85,
@@ -821,15 +828,15 @@ class DemoDataGenerator:
                     "overall_compliance_target": 89,
                     "critical_violations_target": 0,
                     "high_violations_target": 0,
-                    "medium_violations_open_days_target": 30
+                    "medium_violations_open_days_target": 30,
                 },
                 "governance": {
                     "steering_committee": "CTO + Chief Compliance Officer + VP Operations",
                     "meeting_frequency": "Weekly during 90-day sprint, then monthly",
                     "decision_authority": "Steering committee approves phase gates, escalates blockers",
-                    "communication_cadence": "Daily standup (team), weekly status (leadership), bi-weekly board"
-                }
-            }
+                    "communication_cadence": "Daily standup (team), weekly status (leadership), bi-weekly board",
+                },
+            },
         }
 
     def generate_full_demo_dataset(self) -> Dict[str, Any]:

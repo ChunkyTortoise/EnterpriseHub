@@ -9,17 +9,19 @@ from __future__ import annotations
 import asyncio
 import time
 import warnings
-from typing import List, Optional, Dict, Any
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 from src.core.config import get_settings
-from src.core.exceptions import RetrievalError, RateLimitError
+from src.core.exceptions import RateLimitError, RetrievalError
 from src.core.types import SearchResult
+
 from .base import BaseReRanker, ReRankingConfig, ReRankingResult
 
 # Optional import for Cohere client
 try:
     import cohere
+
     COHERE_AVAILABLE = True
 except ImportError:
     COHERE_AVAILABLE = False
@@ -42,7 +44,7 @@ class CohereConfig:
     """
 
     api_key: Optional[str] = None
-    model: str = 'rerank-english-v2.0'
+    model: str = "rerank-english-v2.0"
     max_chunks_per_doc: int = 10
     return_documents: bool = False
     top_n: Optional[int] = None
@@ -71,11 +73,7 @@ class CohereReRanker(BaseReRanker):
         ```
     """
 
-    def __init__(
-        self,
-        cohere_config: Optional[CohereConfig] = None,
-        config: Optional[ReRankingConfig] = None
-    ):
+    def __init__(self, cohere_config: Optional[CohereConfig] = None, config: Optional[ReRankingConfig] = None):
         """Initialize Cohere re-ranker.
 
         Args:
@@ -90,10 +88,7 @@ class CohereReRanker(BaseReRanker):
 
         # Check availability
         if not COHERE_AVAILABLE:
-            warnings.warn(
-                "cohere package not available. CohereReRanker will use fallback implementation.",
-                UserWarning
-            )
+            warnings.warn("cohere package not available. CohereReRanker will use fallback implementation.", UserWarning)
 
     def _get_api_key(self) -> str:
         """Get Cohere API key from config or environment.
@@ -109,17 +104,18 @@ class CohereReRanker(BaseReRanker):
         if not api_key:
             # Try to get from environment via settings
             settings = get_settings()
-            api_key = getattr(settings, 'cohere_api_key', None)
+            api_key = getattr(settings, "cohere_api_key", None)
 
         if not api_key:
             # Try common environment variable names
             import os
-            api_key = os.getenv('COHERE_API_KEY') or os.getenv('CO_API_KEY')
+
+            api_key = os.getenv("COHERE_API_KEY") or os.getenv("CO_API_KEY")
 
         if not api_key:
             raise RetrievalError(
                 "Cohere API key not found. Set COHERE_API_KEY environment variable or provide in config.",
-                error_code="MISSING_API_KEY"
+                error_code="MISSING_API_KEY",
             )
 
         return api_key
@@ -136,10 +132,7 @@ class CohereReRanker(BaseReRanker):
         try:
             if COHERE_AVAILABLE:
                 api_key = self._get_api_key()
-                self.client = cohere.Client(
-                    api_key=api_key,
-                    timeout=self.cohere_config.timeout_seconds
-                )
+                self.client = cohere.Client(api_key=api_key, timeout=self.cohere_config.timeout_seconds)
 
                 # Test the connection with a simple request
                 await self._test_connection()
@@ -167,11 +160,8 @@ class CohereReRanker(BaseReRanker):
             await loop.run_in_executor(
                 None,
                 lambda: self.client.rerank(
-                    query="test",
-                    documents=["test document"],
-                    model=self.cohere_config.model,
-                    top_n=1
-                )
+                    query="test", documents=["test document"], model=self.cohere_config.model, top_n=1
+                ),
             )
         except Exception as e:
             raise RetrievalError(f"Cohere API connection test failed: {str(e)}") from e
@@ -188,12 +178,12 @@ class CohereReRanker(BaseReRanker):
             Dictionary with model information
         """
         return {
-            'name': self.cohere_config.model,
-            'type': 'cohere-api',
-            'provider': 'Cohere',
-            'max_chunks_per_doc': self.cohere_config.max_chunks_per_doc,
-            'initialized': self._initialized,
-            'cohere_available': COHERE_AVAILABLE
+            "name": self.cohere_config.model,
+            "type": "cohere-api",
+            "provider": "Cohere",
+            "max_chunks_per_doc": self.cohere_config.max_chunks_per_doc,
+            "initialized": self._initialized,
+            "cohere_available": COHERE_AVAILABLE,
         }
 
     async def rerank(self, query: str, results: List[SearchResult]) -> ReRankingResult:
@@ -221,7 +211,7 @@ class CohereReRanker(BaseReRanker):
                 reranked_count=0,
                 processing_time_ms=0.0,
                 model_info=self.get_model_info(),
-                scores_changed=False
+                scores_changed=False,
             )
 
         original_count = len(results)
@@ -238,7 +228,7 @@ class CohereReRanker(BaseReRanker):
                     reranked_count=0,
                     processing_time_ms=(time.time() - start_time) * 1000,
                     model_info=self.get_model_info(),
-                    scores_changed=False
+                    scores_changed=False,
                 )
 
             # Get relevance scores from Cohere
@@ -255,7 +245,7 @@ class CohereReRanker(BaseReRanker):
 
             # Add back any results that were filtered out
             if len(filtered_results) < len(results):
-                remaining_results = results[len(filtered_results):]
+                remaining_results = results[len(filtered_results) :]
                 final_results.extend(remaining_results)
 
             processing_time = (time.time() - start_time) * 1000
@@ -266,7 +256,7 @@ class CohereReRanker(BaseReRanker):
                 reranked_count=working_count,
                 processing_time_ms=processing_time,
                 model_info=self.get_model_info(),
-                scores_changed=working_count > 0
+                scores_changed=working_count > 0,
             )
 
         except Exception as e:
@@ -341,8 +331,8 @@ class CohereReRanker(BaseReRanker):
                         model=self.cohere_config.model,
                         top_n=self.cohere_config.top_n,
                         return_documents=self.cohere_config.return_documents,
-                        max_chunks_per_doc=self.cohere_config.max_chunks_per_doc
-                    )
+                        max_chunks_per_doc=self.cohere_config.max_chunks_per_doc,
+                    ),
                 )
                 return response
 
@@ -355,7 +345,7 @@ class CohereReRanker(BaseReRanker):
 
                 # Exponential backoff for retries
                 if attempt < self.cohere_config.max_retries - 1:
-                    delay = self.cohere_config.retry_delay * (2 ** attempt)
+                    delay = self.cohere_config.retry_delay * (2**attempt)
                     await asyncio.sleep(delay)
 
         # All retries failed
@@ -375,7 +365,7 @@ class CohereReRanker(BaseReRanker):
         """
         try:
             # Cohere returns results with relevance scores
-            if not hasattr(response, 'results'):
+            if not hasattr(response, "results"):
                 # Fallback to neutral scores
                 return [0.5] * expected_count
 
@@ -454,9 +444,9 @@ class CohereReRanker(BaseReRanker):
         estimated_cost = (search_units / 1000) * cost_per_1000_units
 
         return {
-            'search_units': search_units,
-            'estimated_cost_usd': estimated_cost,
-            'cost_per_1000_units': cost_per_1000_units,
-            'currency': 'USD',
-            'note': 'Estimate based on approximate pricing - check current Cohere rates'
+            "search_units": search_units,
+            "estimated_cost_usd": estimated_cost,
+            "cost_per_1000_units": cost_per_1000_units,
+            "currency": "USD",
+            "note": "Estimate based on approximate pricing - check current Cohere rates",
         }

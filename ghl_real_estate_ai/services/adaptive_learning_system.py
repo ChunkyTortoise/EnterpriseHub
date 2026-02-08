@@ -16,30 +16,31 @@ Achieves 25-40% continuous improvement in agent system effectiveness over time.
 Date: January 17, 2026
 Status: Advanced Adaptive Learning Platform with Agent Feedback Loops
 """
-import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Callable
-from dataclasses import dataclass, field
-from enum import Enum
-import logging
-import json
-import statistics
-from collections import defaultdict, deque
-import numpy as np
-from abc import ABC, abstractmethod
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.core.llm_client import get_llm_client
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
+import asyncio
+import json
+import logging
+import statistics
+from abc import ABC, abstractmethod
+from collections import defaultdict, deque
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
+import numpy as np
 
 # Import all the agent systems for learning integration
 from ghl_real_estate_ai.agents.lead_intelligence_swarm import get_lead_intelligence_swarm
+from ghl_real_estate_ai.core.llm_client import get_llm_client
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.autonomous_followup_engine import get_autonomous_followup_engine
-from ghl_real_estate_ai.services.predictive_lead_routing import get_predictive_lead_router
-from ghl_real_estate_ai.services.content_personalization_swarm import get_content_personalization_swarm
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.competitive_intelligence_system import get_competitive_intelligence_system
-from ghl_real_estate_ai.services.revenue_attribution_system import get_revenue_attribution_system
+from ghl_real_estate_ai.services.content_personalization_swarm import get_content_personalization_swarm
+from ghl_real_estate_ai.services.predictive_lead_routing import get_predictive_lead_router
 from ghl_real_estate_ai.services.realtime_behavioral_network import get_realtime_behavioral_network
+from ghl_real_estate_ai.services.revenue_attribution_system import get_revenue_attribution_system
 
 logger = get_logger(__name__)
 
@@ -154,10 +155,10 @@ class LearningAgent(ABC):
         self.agent_type = agent_type
         self.llm_client = llm_client
         self.learning_stats = {
-            'insights_generated': 0,
-            'optimizations_suggested': 0,
-            'successful_adaptations': 0,
-            'avg_improvement_achieved': 0.0
+            "insights_generated": 0,
+            "optimizations_suggested": 0,
+            "successful_adaptations": 0,
+            "avg_improvement_achieved": 0.0,
         }
 
     @abstractmethod
@@ -165,7 +166,7 @@ class LearningAgent(ABC):
         self,
         performance_data: Dict[AgentSystemType, List[PerformanceMetric]],
         historical_adaptations: List[AdaptationResult],
-        context: Dict[str, Any]
+        context: Dict[str, Any],
     ) -> List[LearningInsight]:
         """Analyze performance data and generate learning insights."""
         pass
@@ -187,7 +188,7 @@ class PerformanceMonitorAgent(LearningAgent):
         self,
         performance_data: Dict[AgentSystemType, List[PerformanceMetric]],
         historical_adaptations: List[AdaptationResult],
-        context: Dict[str, Any]
+        context: Dict[str, Any],
     ) -> List[LearningInsight]:
         """Monitor performance and detect degradation or improvement opportunities."""
         try:
@@ -199,9 +200,7 @@ class PerformanceMonitorAgent(LearningAgent):
                     self.performance_baselines[system_type] = self._establish_baseline(metrics)
 
                 # Detect performance degradation
-                degradation_insights = await self._detect_performance_degradation(
-                    system_type, metrics
-                )
+                degradation_insights = await self._detect_performance_degradation(system_type, metrics)
                 insights.extend(degradation_insights)
 
                 # Detect improvement opportunities
@@ -211,9 +210,7 @@ class PerformanceMonitorAgent(LearningAgent):
                 insights.extend(improvement_insights)
 
                 # Detect anomalous patterns
-                anomaly_insights = await self._detect_performance_anomalies(
-                    system_type, metrics
-                )
+                anomaly_insights = await self._detect_performance_anomalies(system_type, metrics)
                 insights.extend(anomaly_insights)
 
             return insights
@@ -242,9 +239,7 @@ class PerformanceMonitorAgent(LearningAgent):
             return {}
 
     async def _detect_performance_degradation(
-        self,
-        system_type: AgentSystemType,
-        metrics: List[PerformanceMetric]
+        self, system_type: AgentSystemType, metrics: List[PerformanceMetric]
     ) -> List[LearningInsight]:
         """Detect performance degradation compared to baseline."""
         try:
@@ -256,7 +251,8 @@ class PerformanceMonitorAgent(LearningAgent):
 
             # Group recent metrics by type
             recent_metrics = [
-                m for m in metrics
+                m
+                for m in metrics
                 if (datetime.now() - m.timestamp).total_seconds() < 86400  # Last 24 hours
             ]
 
@@ -297,17 +293,17 @@ class PerformanceMonitorAgent(LearningAgent):
                             insight_description=f"Performance degradation detected in {metric_type_str}: {degradation:.1%} decline from baseline",
                             optimization_type=OptimizationType.THRESHOLD_ADJUSTMENT,
                             recommended_changes={
-                                'metric_type': metric_type_str,
-                                'current_value': current_avg,
-                                'baseline_value': baseline_value,
-                                'degradation_percentage': degradation,
-                                'recommended_action': 'investigate_and_optimize'
+                                "metric_type": metric_type_str,
+                                "current_value": current_avg,
+                                "baseline_value": baseline_value,
+                                "degradation_percentage": degradation,
+                                "recommended_action": "investigate_and_optimize",
                             },
                             expected_improvement=min(degradation * 50, 20.0),  # Conservative estimate
                             confidence_score=0.85,
                             priority=4 if degradation > threshold * 2 else 3,
                             validation_required=True,
-                            implementation_complexity="medium"
+                            implementation_complexity="medium",
                         )
                         insights.append(insight)
 
@@ -321,10 +317,7 @@ class PerformanceMonitorAgent(LearningAgent):
             return []
 
     async def _detect_improvement_opportunities(
-        self,
-        system_type: AgentSystemType,
-        metrics: List[PerformanceMetric],
-        adaptations: List[AdaptationResult]
+        self, system_type: AgentSystemType, metrics: List[PerformanceMetric], adaptations: List[AdaptationResult]
     ) -> List[LearningInsight]:
         """Detect opportunities for performance improvement."""
         try:
@@ -332,8 +325,12 @@ class PerformanceMonitorAgent(LearningAgent):
 
             # Look for patterns in successful adaptations
             successful_adaptations = [
-                a for a in adaptations
-                if a.system_type == system_type and a.success and a.improvement_achieved and a.improvement_achieved > 0.05
+                a
+                for a in adaptations
+                if a.system_type == system_type
+                and a.success
+                and a.improvement_achieved
+                and a.improvement_achieved > 0.05
             ]
 
             if successful_adaptations:
@@ -353,16 +350,17 @@ class PerformanceMonitorAgent(LearningAgent):
                             insight_description=f"Opportunity for {opt_type.value} optimization based on {len(improvements)} successful past applications",
                             optimization_type=opt_type,
                             recommended_changes={
-                                'optimization_type': opt_type.value,
-                                'success_rate': len(improvements) / len([a for a in adaptations if a.optimization_applied == opt_type]),
-                                'avg_historical_improvement': avg_improvement,
-                                'confidence_based_on_history': True
+                                "optimization_type": opt_type.value,
+                                "success_rate": len(improvements)
+                                / len([a for a in adaptations if a.optimization_applied == opt_type]),
+                                "avg_historical_improvement": avg_improvement,
+                                "confidence_based_on_history": True,
                             },
                             expected_improvement=avg_improvement * 0.7,  # Conservative estimate
                             confidence_score=min(0.9, 0.5 + len(improvements) * 0.1),
                             priority=3,
                             validation_required=True,
-                            implementation_complexity="low" if len(improvements) >= 5 else "medium"
+                            implementation_complexity="low" if len(improvements) >= 5 else "medium",
                         )
                         insights.append(insight)
 
@@ -373,9 +371,7 @@ class PerformanceMonitorAgent(LearningAgent):
             return []
 
     async def _detect_performance_anomalies(
-        self,
-        system_type: AgentSystemType,
-        metrics: List[PerformanceMetric]
+        self, system_type: AgentSystemType, metrics: List[PerformanceMetric]
     ) -> List[LearningInsight]:
         """Detect anomalous performance patterns."""
         try:
@@ -405,16 +401,16 @@ class PerformanceMonitorAgent(LearningAgent):
                         insight_description=f"High variance detected in {metric_type.value}: {len(outliers)} outliers out of {len(values)} measurements",
                         optimization_type=OptimizationType.CONFIDENCE_RECALIBRATION,
                         recommended_changes={
-                            'metric_type': metric_type.value,
-                            'outlier_count': len(outliers),
-                            'variance_level': 'high',
-                            'recommended_action': 'investigate_inconsistency'
+                            "metric_type": metric_type.value,
+                            "outlier_count": len(outliers),
+                            "variance_level": "high",
+                            "recommended_action": "investigate_inconsistency",
                         },
                         expected_improvement=10.0,  # Conservative estimate
                         confidence_score=0.75,
                         priority=2,
                         validation_required=True,
-                        implementation_complexity="medium"
+                        implementation_complexity="medium",
                     )
                     insights.append(insight)
 
@@ -435,16 +431,14 @@ class OptimizationAnalyzerAgent(LearningAgent):
         self,
         performance_data: Dict[AgentSystemType, List[PerformanceMetric]],
         historical_adaptations: List[AdaptationResult],
-        context: Dict[str, Any]
+        context: Dict[str, Any],
     ) -> List[LearningInsight]:
         """Analyze optimization opportunities using advanced techniques."""
         try:
             insights = []
 
             # Analyze parameter sensitivity
-            sensitivity_insights = await self._analyze_parameter_sensitivity(
-                performance_data, historical_adaptations
-            )
+            sensitivity_insights = await self._analyze_parameter_sensitivity(performance_data, historical_adaptations)
             insights.extend(sensitivity_insights)
 
             # Analyze cross-system optimization opportunities
@@ -466,9 +460,7 @@ class OptimizationAnalyzerAgent(LearningAgent):
             return []
 
     async def _analyze_parameter_sensitivity(
-        self,
-        performance_data: Dict[AgentSystemType, List[PerformanceMetric]],
-        adaptations: List[AdaptationResult]
+        self, performance_data: Dict[AgentSystemType, List[PerformanceMetric]], adaptations: List[AdaptationResult]
     ) -> List[LearningInsight]:
         """Analyze which parameters are most sensitive to optimization."""
         try:
@@ -494,16 +486,16 @@ class OptimizationAnalyzerAgent(LearningAgent):
                             insight_description=f"High sensitivity detected for {opt_type.value}: {avg_improvement:.1%} average improvement",
                             optimization_type=opt_type,
                             recommended_changes={
-                                'optimization_focus': opt_type.value,
-                                'avg_improvement': avg_improvement,
-                                'success_rate': success_rate,
-                                'sample_size': len(improvements)
+                                "optimization_focus": opt_type.value,
+                                "avg_improvement": avg_improvement,
+                                "success_rate": success_rate,
+                                "sample_size": len(improvements),
                             },
                             expected_improvement=avg_improvement,
                             confidence_score=min(0.95, 0.5 + success_rate * 0.5),
                             priority=4 if avg_improvement > 0.2 else 3,
                             validation_required=False,
-                            implementation_complexity="low"
+                            implementation_complexity="low",
                         )
                         insights.append(insight)
 
@@ -514,9 +506,7 @@ class OptimizationAnalyzerAgent(LearningAgent):
             return []
 
     async def _analyze_cross_system_optimizations(
-        self,
-        performance_data: Dict[AgentSystemType, List[PerformanceMetric]],
-        adaptations: List[AdaptationResult]
+        self, performance_data: Dict[AgentSystemType, List[PerformanceMetric]], adaptations: List[AdaptationResult]
     ) -> List[LearningInsight]:
         """Analyze optimization opportunities that span multiple systems."""
         try:
@@ -534,15 +524,15 @@ class OptimizationAnalyzerAgent(LearningAgent):
                         insight_description=f"Strong correlation ({correlation:.2f}) detected between {system1.value} and {system2.value}",
                         optimization_type=OptimizationType.CONSENSUS_WEIGHT_UPDATE,
                         recommended_changes={
-                            'correlated_system': system2.value,
-                            'correlation_strength': correlation,
-                            'optimization_strategy': 'coordinate_optimization'
+                            "correlated_system": system2.value,
+                            "correlation_strength": correlation,
+                            "optimization_strategy": "coordinate_optimization",
                         },
                         expected_improvement=15.0,  # Conservative cross-system improvement
                         confidence_score=min(0.9, abs(correlation)),
                         priority=3,
                         validation_required=True,
-                        implementation_complexity="high"
+                        implementation_complexity="high",
                     )
                     insights.append(insight)
 
@@ -562,14 +552,18 @@ class OptimizationAnalyzerAgent(LearningAgent):
             systems = list(performance_data.keys())
 
             for i, system1 in enumerate(systems):
-                for system2 in systems[i+1:]:
+                for system2 in systems[i + 1 :]:
                     # Get overlapping time periods
                     system1_metrics = performance_data[system1]
                     system2_metrics = performance_data[system2]
 
                     # Simple correlation based on success rate metrics
-                    system1_values = [m.value for m in system1_metrics if m.metric_type == LearningMetricType.SUCCESS_RATE]
-                    system2_values = [m.value for m in system2_metrics if m.metric_type == LearningMetricType.SUCCESS_RATE]
+                    system1_values = [
+                        m.value for m in system1_metrics if m.metric_type == LearningMetricType.SUCCESS_RATE
+                    ]
+                    system2_values = [
+                        m.value for m in system2_metrics if m.metric_type == LearningMetricType.SUCCESS_RATE
+                    ]
 
                     if len(system1_values) >= 3 and len(system2_values) >= 3:
                         # Calculate simple correlation (would use more sophisticated method in production)
@@ -592,7 +586,7 @@ class OptimizationAnalyzerAgent(LearningAgent):
         self,
         performance_data: Dict[AgentSystemType, List[PerformanceMetric]],
         adaptations: List[AdaptationResult],
-        context: Dict[str, Any]
+        context: Dict[str, Any],
     ) -> List[LearningInsight]:
         """Use Claude for advanced optimization analysis."""
         try:
@@ -603,15 +597,27 @@ class OptimizationAnalyzerAgent(LearningAgent):
                     recent_metrics = [m for m in metrics if (datetime.now() - m.timestamp).days <= 7]
                     if recent_metrics:
                         performance_summary[system.value] = {
-                            'metric_count': len(recent_metrics),
-                            'avg_success_rate': statistics.mean([m.value for m in recent_metrics if m.metric_type == LearningMetricType.SUCCESS_RATE]) if any(m.metric_type == LearningMetricType.SUCCESS_RATE for m in recent_metrics) else None,
-                            'avg_latency': statistics.mean([m.value for m in recent_metrics if m.metric_type == LearningMetricType.LATENCY]) if any(m.metric_type == LearningMetricType.LATENCY for m in recent_metrics) else None
+                            "metric_count": len(recent_metrics),
+                            "avg_success_rate": statistics.mean(
+                                [m.value for m in recent_metrics if m.metric_type == LearningMetricType.SUCCESS_RATE]
+                            )
+                            if any(m.metric_type == LearningMetricType.SUCCESS_RATE for m in recent_metrics)
+                            else None,
+                            "avg_latency": statistics.mean(
+                                [m.value for m in recent_metrics if m.metric_type == LearningMetricType.LATENCY]
+                            )
+                            if any(m.metric_type == LearningMetricType.LATENCY for m in recent_metrics)
+                            else None,
                         }
 
             adaptation_summary = {
-                'total_adaptations': len(adaptations),
-                'successful_adaptations': len([a for a in adaptations if a.success]),
-                'avg_improvement': statistics.mean([a.improvement_achieved for a in adaptations if a.improvement_achieved is not None]) if any(a.improvement_achieved is not None for a in adaptations) else 0
+                "total_adaptations": len(adaptations),
+                "successful_adaptations": len([a for a in adaptations if a.success]),
+                "avg_improvement": statistics.mean(
+                    [a.improvement_achieved for a in adaptations if a.improvement_achieved is not None]
+                )
+                if any(a.improvement_achieved is not None for a in adaptations)
+                else 0,
             }
 
             prompt = f"""
@@ -637,9 +643,7 @@ class OptimizationAnalyzerAgent(LearningAgent):
             Keep recommendations concrete and actionable.
             """
 
-            response = await self.llm_client.generate(
-                prompt=prompt, max_tokens=600, temperature=0.4
-            )
+            response = await self.llm_client.generate(prompt=prompt, max_tokens=600, temperature=0.4)
 
             if response.content:
                 # Parse Claude's recommendations into insights
@@ -650,15 +654,15 @@ class OptimizationAnalyzerAgent(LearningAgent):
                     insight_description="Advanced optimization analysis using AI insights",
                     optimization_type=OptimizationType.MODEL_RETRAINING,
                     recommended_changes={
-                        'analysis_source': 'claude_ai',
-                        'recommendations': response.content[:500],  # Truncate if too long
-                        'analysis_timestamp': datetime.now().isoformat()
+                        "analysis_source": "claude_ai",
+                        "recommendations": response.content[:500],  # Truncate if too long
+                        "analysis_timestamp": datetime.now().isoformat(),
                     },
                     expected_improvement=12.0,  # Conservative estimate
                     confidence_score=0.75,
                     priority=3,
                     validation_required=True,
-                    implementation_complexity="high"
+                    implementation_complexity="high",
                 )
                 return [insight]
 
@@ -679,22 +683,18 @@ class FeedbackIntegratorAgent(LearningAgent):
         self,
         performance_data: Dict[AgentSystemType, List[PerformanceMetric]],
         historical_adaptations: List[AdaptationResult],
-        context: Dict[str, Any]
+        context: Dict[str, Any],
     ) -> List[LearningInsight]:
         """Analyze feedback integration opportunities."""
         try:
             insights = []
 
             # Analyze feedback loop effectiveness
-            feedback_insights = await self._analyze_feedback_loops(
-                performance_data, historical_adaptations
-            )
+            feedback_insights = await self._analyze_feedback_loops(performance_data, historical_adaptations)
             insights.extend(feedback_insights)
 
             # Identify learning acceleration opportunities
-            acceleration_insights = await self._identify_learning_acceleration(
-                performance_data, context
-            )
+            acceleration_insights = await self._identify_learning_acceleration(performance_data, context)
             insights.extend(acceleration_insights)
 
             return insights
@@ -704,26 +704,30 @@ class FeedbackIntegratorAgent(LearningAgent):
             return []
 
     async def _analyze_feedback_loops(
-        self,
-        performance_data: Dict[AgentSystemType, List[PerformanceMetric]],
-        adaptations: List[AdaptationResult]
+        self, performance_data: Dict[AgentSystemType, List[PerformanceMetric]], adaptations: List[AdaptationResult]
     ) -> List[LearningInsight]:
         """Analyze the effectiveness of current feedback loops."""
         try:
             insights = []
 
             # Analyze adaptation success rates over time
-            recent_adaptations = [
-                a for a in adaptations
-                if (datetime.now() - a.timestamp).days <= 30
-            ]
+            recent_adaptations = [a for a in adaptations if (datetime.now() - a.timestamp).days <= 30]
 
             if len(recent_adaptations) >= 5:
                 success_rate = len([a for a in recent_adaptations if a.success]) / len(recent_adaptations)
-                avg_improvement = statistics.mean([
-                    a.improvement_achieved for a in recent_adaptations
-                    if a.improvement_achieved is not None and a.improvement_achieved > 0
-                ]) if any(a.improvement_achieved is not None and a.improvement_achieved > 0 for a in recent_adaptations) else 0
+                avg_improvement = (
+                    statistics.mean(
+                        [
+                            a.improvement_achieved
+                            for a in recent_adaptations
+                            if a.improvement_achieved is not None and a.improvement_achieved > 0
+                        ]
+                    )
+                    if any(
+                        a.improvement_achieved is not None and a.improvement_achieved > 0 for a in recent_adaptations
+                    )
+                    else 0
+                )
 
                 if success_rate < 0.7 or avg_improvement < 0.05:
                     insight = LearningInsight(
@@ -733,17 +737,17 @@ class FeedbackIntegratorAgent(LearningAgent):
                         insight_description=f"Feedback loop effectiveness needs improvement: {success_rate:.1%} success rate, {avg_improvement:.1%} avg improvement",
                         optimization_type=OptimizationType.CORRELATION_PATTERN_UPDATE,
                         recommended_changes={
-                            'current_success_rate': success_rate,
-                            'current_avg_improvement': avg_improvement,
-                            'target_success_rate': 0.8,
-                            'target_avg_improvement': 0.1,
-                            'feedback_loop_enhancement': True
+                            "current_success_rate": success_rate,
+                            "current_avg_improvement": avg_improvement,
+                            "target_success_rate": 0.8,
+                            "target_avg_improvement": 0.1,
+                            "feedback_loop_enhancement": True,
                         },
                         expected_improvement=15.0,
                         confidence_score=0.8,
                         priority=4,
                         validation_required=True,
-                        implementation_complexity="medium"
+                        implementation_complexity="medium",
                     )
                     insights.append(insight)
 
@@ -754,9 +758,7 @@ class FeedbackIntegratorAgent(LearningAgent):
             return []
 
     async def _identify_learning_acceleration(
-        self,
-        performance_data: Dict[AgentSystemType, List[PerformanceMetric]],
-        context: Dict[str, Any]
+        self, performance_data: Dict[AgentSystemType, List[PerformanceMetric]], context: Dict[str, Any]
     ) -> List[LearningInsight]:
         """Identify opportunities to accelerate learning."""
         try:
@@ -768,7 +770,7 @@ class FeedbackIntegratorAgent(LearningAgent):
                     # Group metrics by week to analyze trend
                     weekly_performance = defaultdict(list)
                     for metric in metrics:
-                        week_key = metric.timestamp.strftime('%Y-W%U')
+                        week_key = metric.timestamp.strftime("%Y-W%U")
                         if metric.metric_type == LearningMetricType.SUCCESS_RATE:
                             weekly_performance[week_key].append(metric.value)
 
@@ -794,16 +796,16 @@ class FeedbackIntegratorAgent(LearningAgent):
                                     insight_description=f"Slow learning detected for {system_type.value}: only {improvement_trend:.1%} improvement over 4 weeks",
                                     optimization_type=OptimizationType.FEATURE_IMPORTANCE_UPDATE,
                                     recommended_changes={
-                                        'learning_rate_increase': True,
-                                        'exploration_enhancement': True,
-                                        'feedback_frequency_increase': True,
-                                        'current_trend': improvement_trend
+                                        "learning_rate_increase": True,
+                                        "exploration_enhancement": True,
+                                        "feedback_frequency_increase": True,
+                                        "current_trend": improvement_trend,
                                     },
                                     expected_improvement=20.0,
                                     confidence_score=0.75,
                                     priority=3,
                                     validation_required=True,
-                                    implementation_complexity="medium"
+                                    implementation_complexity="medium",
                                 )
                                 insights.append(insight)
 
@@ -855,12 +857,12 @@ class AdaptiveLearningSystem:
 
         # Performance tracking
         self.learning_stats = {
-            'learning_cycles_completed': 0,
-            'total_insights_generated': 0,
-            'successful_adaptations': 0,
-            'average_improvement_achieved': 0.0,
-            'system_optimization_history': defaultdict(list),
-            'last_learning_cycle': None
+            "learning_cycles_completed": 0,
+            "total_insights_generated": 0,
+            "successful_adaptations": 0,
+            "average_improvement_achieved": 0.0,
+            "system_optimization_history": defaultdict(list),
+            "last_learning_cycle": None,
         }
 
     async def start_adaptive_learning(self):
@@ -891,7 +893,7 @@ class AdaptiveLearningSystem:
 
         except Exception as e:
             logger.error(f"Error in immediate learning cycle: {e}")
-            return {'error': str(e), 'success': False}
+            return {"error": str(e), "success": False}
 
     async def _learning_scheduler(self):
         """Schedule periodic learning cycles."""
@@ -921,16 +923,18 @@ class AdaptiveLearningSystem:
 
             # 3. Prepare learning context
             learning_context = {
-                'cycle_number': self.learning_cycle_count + 1,
-                'total_systems': len(self.agent_systems),
-                'learning_start_time': cycle_start,
-                'system_stats': await self._get_system_stats()
+                "cycle_number": self.learning_cycle_count + 1,
+                "total_systems": len(self.agent_systems),
+                "learning_start_time": cycle_start,
+                "system_stats": await self._get_system_stats(),
             }
 
             # 4. Deploy learning agents in parallel
             learning_tasks = [
                 self.performance_monitor.analyze_and_learn(performance_data, historical_adaptations, learning_context),
-                self.optimization_analyzer.analyze_and_learn(performance_data, historical_adaptations, learning_context),
+                self.optimization_analyzer.analyze_and_learn(
+                    performance_data, historical_adaptations, learning_context
+                ),
                 self.feedback_integrator.analyze_and_learn(performance_data, historical_adaptations, learning_context),
             ]
 
@@ -954,15 +958,17 @@ class AdaptiveLearningSystem:
             cycle_duration = (datetime.now() - cycle_start).total_seconds()
 
             cycle_results = {
-                'success': True,
-                'cycle_number': self.learning_cycle_count + 1,
-                'duration_seconds': cycle_duration,
-                'insights_generated': len(all_insights),
-                'adaptations_applied': len(adaptations_applied),
-                'successful_validations': len([v for v in validation_results if v.validation_passed]),
-                'systems_optimized': len(set(insight.system_affected for insight in all_insights)),
-                'average_expected_improvement': statistics.mean([i.expected_improvement for i in all_insights]) if all_insights else 0,
-                'timestamp': cycle_start.isoformat()
+                "success": True,
+                "cycle_number": self.learning_cycle_count + 1,
+                "duration_seconds": cycle_duration,
+                "insights_generated": len(all_insights),
+                "adaptations_applied": len(adaptations_applied),
+                "successful_validations": len([v for v in validation_results if v.validation_passed]),
+                "systems_optimized": len(set(insight.system_affected for insight in all_insights)),
+                "average_expected_improvement": statistics.mean([i.expected_improvement for i in all_insights])
+                if all_insights
+                else 0,
+                "timestamp": cycle_start.isoformat(),
             }
 
             logger.info(
@@ -971,13 +977,13 @@ class AdaptiveLearningSystem:
             )
 
             self.learning_cycle_count += 1
-            self.learning_stats['last_learning_cycle'] = datetime.now()
+            self.learning_stats["last_learning_cycle"] = datetime.now()
 
             return cycle_results
 
         except Exception as e:
             logger.error(f"Error in learning cycle: {e}")
-            return {'success': False, 'error': str(e)}
+            return {"success": False, "error": str(e)}
 
     async def _collect_performance_data(self) -> Dict[AgentSystemType, List[PerformanceMetric]]:
         """Collect performance data from all agent systems."""
@@ -987,8 +993,10 @@ class AdaptiveLearningSystem:
             for system_type, system_instance in self.agent_systems.items():
                 try:
                     # Get system statistics (each system has different stat methods)
-                    if hasattr(system_instance, 'get_stats') or hasattr(system_instance, 'get_swarm_stats'):
-                        stats_method = getattr(system_instance, 'get_stats', None) or getattr(system_instance, 'get_swarm_stats', None)
+                    if hasattr(system_instance, "get_stats") or hasattr(system_instance, "get_swarm_stats"):
+                        stats_method = getattr(system_instance, "get_stats", None) or getattr(
+                            system_instance, "get_swarm_stats", None
+                        )
                         if stats_method:
                             stats = stats_method()
                         else:
@@ -1020,14 +1028,14 @@ class AdaptiveLearningSystem:
 
             # Define mapping from common stat keys to metric types
             stat_mappings = {
-                'success_rate': LearningMetricType.SUCCESS_RATE,
-                'accuracy': LearningMetricType.ACCURACY,
-                'avg_processing_time': LearningMetricType.LATENCY,
-                'avg_confidence': LearningMetricType.CONFIDENCE_CALIBRATION,
-                'error_rate': LearningMetricType.ERROR_RATE,
-                'throughput': LearningMetricType.THROUGHPUT,
-                'conversion_rate': LearningMetricType.CONVERSION_IMPACT,
-                'consensus_confidence': LearningMetricType.CONFIDENCE_CALIBRATION
+                "success_rate": LearningMetricType.SUCCESS_RATE,
+                "accuracy": LearningMetricType.ACCURACY,
+                "avg_processing_time": LearningMetricType.LATENCY,
+                "avg_confidence": LearningMetricType.CONFIDENCE_CALIBRATION,
+                "error_rate": LearningMetricType.ERROR_RATE,
+                "throughput": LearningMetricType.THROUGHPUT,
+                "conversion_rate": LearningMetricType.CONVERSION_IMPACT,
+                "consensus_confidence": LearningMetricType.CONFIDENCE_CALIBRATION,
             }
 
             # Extract metrics from stats
@@ -1041,8 +1049,8 @@ class AdaptiveLearningSystem:
                             metric_type=metric_type,
                             value=float(value),
                             confidence=0.8,  # Default confidence
-                            context={'stat_source': stat_key},
-                            timestamp=timestamp
+                            context={"stat_source": stat_key},
+                            timestamp=timestamp,
                         )
                         metrics.append(metric)
 
@@ -1065,16 +1073,16 @@ class AdaptiveLearningSystem:
                 for data in cached_adaptations:
                     try:
                         adaptation = AdaptationResult(
-                            adaptation_id=data['adaptation_id'],
-                            system_type=AgentSystemType(data['system_type']),
-                            optimization_applied=OptimizationType(data['optimization_applied']),
-                            changes_made=data['changes_made'],
-                            pre_adaptation_performance=data['pre_adaptation_performance'],
-                            post_adaptation_performance=data.get('post_adaptation_performance'),
-                            improvement_achieved=data.get('improvement_achieved'),
-                            success=data['success'],
-                            validation_passed=data.get('validation_passed', False),
-                            timestamp=datetime.fromisoformat(data['timestamp'])
+                            adaptation_id=data["adaptation_id"],
+                            system_type=AgentSystemType(data["system_type"]),
+                            optimization_applied=OptimizationType(data["optimization_applied"]),
+                            changes_made=data["changes_made"],
+                            pre_adaptation_performance=data["pre_adaptation_performance"],
+                            post_adaptation_performance=data.get("post_adaptation_performance"),
+                            improvement_achieved=data.get("improvement_achieved"),
+                            success=data["success"],
+                            validation_passed=data.get("validation_passed", False),
+                            timestamp=datetime.fromisoformat(data["timestamp"]),
                         )
                         adaptations.append(adaptation)
                     except Exception as e:
@@ -1092,36 +1100,34 @@ class AdaptiveLearningSystem:
     async def _get_system_stats(self) -> Dict[str, Any]:
         """Get aggregated statistics across all systems."""
         try:
-            total_stats = {
-                'systems_active': 0,
-                'total_agents_deployed': 0,
-                'avg_system_performance': 0.0
-            }
+            total_stats = {"systems_active": 0, "total_agents_deployed": 0, "avg_system_performance": 0.0}
 
             performance_scores = []
             for system_type, system_instance in self.agent_systems.items():
                 try:
-                    if hasattr(system_instance, 'get_stats') or hasattr(system_instance, 'get_swarm_stats'):
-                        total_stats['systems_active'] += 1
+                    if hasattr(system_instance, "get_stats") or hasattr(system_instance, "get_swarm_stats"):
+                        total_stats["systems_active"] += 1
 
                         # Get stats and extract performance indicators
-                        stats_method = getattr(system_instance, 'get_stats', None) or getattr(system_instance, 'get_swarm_stats', None)
+                        stats_method = getattr(system_instance, "get_stats", None) or getattr(
+                            system_instance, "get_swarm_stats", None
+                        )
                         if stats_method:
                             stats = stats_method()
 
                             # Extract performance score
-                            if 'consensus_confidence' in stats:
-                                performance_scores.append(stats['consensus_confidence'])
-                            elif 'success_rate' in stats:
-                                performance_scores.append(stats['success_rate'])
-                            elif 'overall_effectiveness' in stats:
-                                performance_scores.append(stats['overall_effectiveness'])
+                            if "consensus_confidence" in stats:
+                                performance_scores.append(stats["consensus_confidence"])
+                            elif "success_rate" in stats:
+                                performance_scores.append(stats["success_rate"])
+                            elif "overall_effectiveness" in stats:
+                                performance_scores.append(stats["overall_effectiveness"])
 
                 except Exception as e:
                     logger.error(f"Error getting stats from {system_type.value}: {e}")
 
             if performance_scores:
-                total_stats['avg_system_performance'] = statistics.mean(performance_scores)
+                total_stats["avg_system_performance"] = statistics.mean(performance_scores)
 
             return total_stats
 
@@ -1153,7 +1159,9 @@ class AdaptiveLearningSystem:
     async def _apply_adaptation(self, insight: LearningInsight) -> Optional[AdaptationResult]:
         """Apply a specific adaptation based on a learning insight."""
         try:
-            logger.info(f"🔧 Applying adaptation: {insight.optimization_type.value} for {insight.system_affected.value}")
+            logger.info(
+                f"🔧 Applying adaptation: {insight.optimization_type.value} for {insight.system_affected.value}"
+            )
 
             # Create adaptation record
             adaptation_id = f"adapt_{insight.system_affected.value}_{int(datetime.now().timestamp())}"
@@ -1174,10 +1182,10 @@ class AdaptiveLearningSystem:
                 success=changes_made is not None,
                 validation_passed=False,  # Will be determined in validation
                 metadata={
-                    'insight_id': insight.insight_id,
-                    'expected_improvement': insight.expected_improvement,
-                    'implementation_complexity': insight.implementation_complexity
-                }
+                    "insight_id": insight.insight_id,
+                    "expected_improvement": insight.expected_improvement,
+                    "implementation_complexity": insight.implementation_complexity,
+                },
             )
 
             self.total_adaptations_applied += 1
@@ -1195,16 +1203,16 @@ class AdaptiveLearningSystem:
                 return {}
 
             # Get current stats
-            if hasattr(system_instance, 'get_stats'):
+            if hasattr(system_instance, "get_stats"):
                 stats = system_instance.get_stats()
-            elif hasattr(system_instance, 'get_swarm_stats'):
+            elif hasattr(system_instance, "get_swarm_stats"):
                 stats = system_instance.get_swarm_stats()
             else:
                 return {}
 
             # Extract key performance metrics
             performance = {}
-            performance_keys = ['success_rate', 'accuracy', 'consensus_confidence', 'overall_effectiveness']
+            performance_keys = ["success_rate", "accuracy", "consensus_confidence", "overall_effectiveness"]
 
             for key in performance_keys:
                 if key in stats and isinstance(stats[key], (int, float)):
@@ -1223,13 +1231,16 @@ class AdaptiveLearningSystem:
             # interface with each system's specific optimization methods
 
             if insight.optimization_type == OptimizationType.THRESHOLD_ADJUSTMENT:
-                return {'threshold_adjusted': True, 'new_threshold': 0.75}
+                return {"threshold_adjusted": True, "new_threshold": 0.75}
             elif insight.optimization_type == OptimizationType.CONFIDENCE_RECALIBRATION:
-                return {'confidence_recalibrated': True, 'calibration_factor': 1.1}
+                return {"confidence_recalibrated": True, "calibration_factor": 1.1}
             elif insight.optimization_type == OptimizationType.PARAMETER_TUNING:
-                return {'parameters_tuned': True, 'parameters_adjusted': ['consensus_threshold', 'confidence_threshold']}
+                return {
+                    "parameters_tuned": True,
+                    "parameters_adjusted": ["consensus_threshold", "confidence_threshold"],
+                }
             else:
-                return {'optimization_logged': True, 'type': insight.optimization_type.value}
+                return {"optimization_logged": True, "type": insight.optimization_type.value}
 
         except Exception as e:
             logger.error(f"Error executing optimization: {e}")
@@ -1250,7 +1261,7 @@ class AdaptiveLearningSystem:
                 improvement = 0.0
                 if adaptation.pre_adaptation_performance and post_performance:
                     # Compare key metrics
-                    for metric in ['success_rate', 'accuracy', 'consensus_confidence']:
+                    for metric in ["success_rate", "accuracy", "consensus_confidence"]:
                         if metric in adaptation.pre_adaptation_performance and metric in post_performance:
                             pre_value = adaptation.pre_adaptation_performance[metric]
                             post_value = post_performance[metric]
@@ -1277,49 +1288,52 @@ class AdaptiveLearningSystem:
             return adaptations
 
     def _update_learning_stats(
-        self,
-        insights: List[LearningInsight],
-        adaptations: List[AdaptationResult],
-        validations: List[AdaptationResult]
+        self, insights: List[LearningInsight], adaptations: List[AdaptationResult], validations: List[AdaptationResult]
     ):
         """Update learning system statistics."""
         try:
-            self.learning_stats['learning_cycles_completed'] += 1
-            self.learning_stats['total_insights_generated'] += len(insights)
+            self.learning_stats["learning_cycles_completed"] += 1
+            self.learning_stats["total_insights_generated"] += len(insights)
 
             # Update adaptation stats
             successful_adaptations = [a for a in validations if a.validation_passed]
-            self.learning_stats['successful_adaptations'] += len(successful_adaptations)
+            self.learning_stats["successful_adaptations"] += len(successful_adaptations)
 
             # Update average improvement
-            improvements = [a.improvement_achieved for a in successful_adaptations if a.improvement_achieved is not None]
+            improvements = [
+                a.improvement_achieved for a in successful_adaptations if a.improvement_achieved is not None
+            ]
             if improvements:
-                current_avg = self.learning_stats['average_improvement_achieved']
-                total_successful = self.learning_stats['successful_adaptations']
+                current_avg = self.learning_stats["average_improvement_achieved"]
+                total_successful = self.learning_stats["successful_adaptations"]
 
                 if total_successful > len(improvements):
                     # Update running average
-                    new_avg = (current_avg * (total_successful - len(improvements)) + sum(improvements)) / total_successful
-                    self.learning_stats['average_improvement_achieved'] = new_avg
+                    new_avg = (
+                        current_avg * (total_successful - len(improvements)) + sum(improvements)
+                    ) / total_successful
+                    self.learning_stats["average_improvement_achieved"] = new_avg
                 else:
-                    self.learning_stats['average_improvement_achieved'] = statistics.mean(improvements)
+                    self.learning_stats["average_improvement_achieved"] = statistics.mean(improvements)
 
             # Track per-system optimization history
             for adaptation in validations:
                 system_key = adaptation.system_type.value
-                self.learning_stats['system_optimization_history'][system_key].append({
-                    'timestamp': adaptation.timestamp.isoformat(),
-                    'optimization_type': adaptation.optimization_applied.value,
-                    'improvement': adaptation.improvement_achieved or 0,
-                    'success': adaptation.validation_passed
-                })
+                self.learning_stats["system_optimization_history"][system_key].append(
+                    {
+                        "timestamp": adaptation.timestamp.isoformat(),
+                        "optimization_type": adaptation.optimization_applied.value,
+                        "improvement": adaptation.improvement_achieved or 0,
+                        "success": adaptation.validation_passed,
+                    }
+                )
 
         except Exception as e:
             logger.error(f"Error updating learning stats: {e}")
 
     def get_learning_stats(self) -> Dict[str, Any]:
         """Get comprehensive learning system statistics."""
-        uptime = datetime.now() - self.learning_stats.get('system_start_time', datetime.now())
+        uptime = datetime.now() - self.learning_stats.get("system_start_time", datetime.now())
 
         return {
             "system_status": "adaptive_learning_with_agent_feedback_loops",
@@ -1331,71 +1345,76 @@ class AdaptiveLearningSystem:
             "total_adaptations_applied": self.total_adaptations_applied,
             "performance_stats": self.learning_stats,
             "system_integration": {
-                system_type.value: type(system).__name__
-                for system_type, system in self.agent_systems.items()
+                system_type.value: type(system).__name__ for system_type, system in self.agent_systems.items()
             },
             "optimization_types_supported": [opt.value for opt in OptimizationType],
             "metric_types_tracked": [metric.value for metric in LearningMetricType],
-            "last_learning_cycle": self.learning_stats.get('last_learning_cycle', {})
+            "last_learning_cycle": self.learning_stats.get("last_learning_cycle", {}),
         }
 
     async def get_system_improvement_report(self, days: int = 30) -> Dict[str, Any]:
         """Generate a comprehensive system improvement report."""
         try:
             report = {
-                'report_period_days': days,
-                'generated_at': datetime.now().isoformat(),
-                'overall_improvement': {},
-                'system_specific_improvements': {},
-                'top_optimizations': [],
-                'learning_effectiveness': {}
+                "report_period_days": days,
+                "generated_at": datetime.now().isoformat(),
+                "overall_improvement": {},
+                "system_specific_improvements": {},
+                "top_optimizations": [],
+                "learning_effectiveness": {},
             }
 
             # Calculate overall improvement metrics
-            if self.learning_stats['successful_adaptations'] > 0:
-                report['overall_improvement'] = {
-                    'average_improvement_per_adaptation': self.learning_stats['average_improvement_achieved'],
-                    'total_successful_adaptations': self.learning_stats['successful_adaptations'],
-                    'learning_cycles_completed': self.learning_stats['learning_cycles_completed'],
-                    'improvement_velocity': self.learning_stats['average_improvement_achieved'] * self.learning_stats['learning_cycles_completed']
+            if self.learning_stats["successful_adaptations"] > 0:
+                report["overall_improvement"] = {
+                    "average_improvement_per_adaptation": self.learning_stats["average_improvement_achieved"],
+                    "total_successful_adaptations": self.learning_stats["successful_adaptations"],
+                    "learning_cycles_completed": self.learning_stats["learning_cycles_completed"],
+                    "improvement_velocity": self.learning_stats["average_improvement_achieved"]
+                    * self.learning_stats["learning_cycles_completed"],
                 }
 
             # System-specific improvements
             for system_type in AgentSystemType:
-                system_history = self.learning_stats['system_optimization_history'].get(system_type.value, [])
+                system_history = self.learning_stats["system_optimization_history"].get(system_type.value, [])
                 if system_history:
                     recent_history = [
-                        h for h in system_history
-                        if (datetime.now() - datetime.fromisoformat(h['timestamp'])).days <= days
+                        h
+                        for h in system_history
+                        if (datetime.now() - datetime.fromisoformat(h["timestamp"])).days <= days
                     ]
 
                     if recent_history:
-                        avg_improvement = statistics.mean([h['improvement'] for h in recent_history])
-                        success_rate = len([h for h in recent_history if h['success']]) / len(recent_history)
+                        avg_improvement = statistics.mean([h["improvement"] for h in recent_history])
+                        success_rate = len([h for h in recent_history if h["success"]]) / len(recent_history)
 
-                        report['system_specific_improvements'][system_type.value] = {
-                            'adaptations_applied': len(recent_history),
-                            'average_improvement': avg_improvement,
-                            'success_rate': success_rate,
-                            'top_optimization_type': max(
-                                set(h['optimization_type'] for h in recent_history),
-                                key=lambda x: len([h for h in recent_history if h['optimization_type'] == x])
-                            ) if recent_history else None
+                        report["system_specific_improvements"][system_type.value] = {
+                            "adaptations_applied": len(recent_history),
+                            "average_improvement": avg_improvement,
+                            "success_rate": success_rate,
+                            "top_optimization_type": max(
+                                set(h["optimization_type"] for h in recent_history),
+                                key=lambda x: len([h for h in recent_history if h["optimization_type"] == x]),
+                            )
+                            if recent_history
+                            else None,
                         }
 
             # Learning effectiveness
-            if self.learning_stats['learning_cycles_completed'] > 0:
-                report['learning_effectiveness'] = {
-                    'insights_per_cycle': self.learning_stats['total_insights_generated'] / self.learning_stats['learning_cycles_completed'],
-                    'adaptations_per_cycle': self.learning_stats['successful_adaptations'] / self.learning_stats['learning_cycles_completed'],
-                    'system_improvement_rate': self.learning_stats['average_improvement_achieved']
+            if self.learning_stats["learning_cycles_completed"] > 0:
+                report["learning_effectiveness"] = {
+                    "insights_per_cycle": self.learning_stats["total_insights_generated"]
+                    / self.learning_stats["learning_cycles_completed"],
+                    "adaptations_per_cycle": self.learning_stats["successful_adaptations"]
+                    / self.learning_stats["learning_cycles_completed"],
+                    "system_improvement_rate": self.learning_stats["average_improvement_achieved"],
                 }
 
             return report
 
         except Exception as e:
             logger.error(f"Error generating improvement report: {e}")
-            return {'error': str(e)}
+            return {"error": str(e)}
 
 
 # Global singleton

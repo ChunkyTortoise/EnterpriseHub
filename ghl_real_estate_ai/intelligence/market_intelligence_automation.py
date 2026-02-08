@@ -9,26 +9,25 @@ Built for Jorge's Real Estate AI Platform - Phase 7: Advanced AI Intelligence
 """
 
 import asyncio
-import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
 import json
+import logging
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
-import pandas as pd
 import numpy as np
-from sklearn.ensemble import IsolationForest
-from sklearn.preprocessing import StandardScaler
-from scipy import stats
+import pandas as pd
 import requests
 from anthropic import AsyncAnthropic
+from scipy import stats
+from sklearn.ensemble import IsolationForest
+from sklearn.preprocessing import StandardScaler
 
-from ghl_real_estate_ai.services.cache_service import CacheService
-from ghl_real_estate_ai.services.event_publisher import EventPublisher
 from ghl_real_estate_ai.analytics.competitive_intelligence_dashboard import CompetitiveIntelligenceSystem
 from ghl_real_estate_ai.prediction.market_intelligence_analyzer import MarketIntelligenceAnalyzer
-
+from ghl_real_estate_ai.services.cache_service import CacheService
+from ghl_real_estate_ai.services.event_publisher import EventPublisher
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -57,6 +56,7 @@ class TrendSeverity(Enum):
 @dataclass
 class MarketTrendAlert:
     """Market trend detection alert"""
+
     trend_id: str
     trend_type: MarketTrendType
     severity: TrendSeverity
@@ -74,6 +74,7 @@ class MarketTrendAlert:
 @dataclass
 class CompetitivePositioningAlert:
     """Competitive positioning alert"""
+
     alert_id: str
     competitor_name: str
     positioning_change: str
@@ -89,6 +90,7 @@ class CompetitivePositioningAlert:
 @dataclass
 class MarketOpportunity:
     """Identified market opportunity"""
+
     opportunity_id: str
     opportunity_type: str
     market_area: str
@@ -122,14 +124,14 @@ class EnhancedMarketIntelligenceAutomation:
 
         # Phase 7 configuration
         self.phase7_config = {
-            'trend_detection_sensitivity': 0.85,
-            'alert_frequency_minutes': 30,
-            'competitive_analysis_interval': 60,
-            'opportunity_scan_interval': 120,
-            'jorge_commission_rate': 0.06,
-            'market_data_retention_days': 90,
-            'claude_insight_generation': True,
-            'automated_response_generation': True
+            "trend_detection_sensitivity": 0.85,
+            "alert_frequency_minutes": 30,
+            "competitive_analysis_interval": 60,
+            "opportunity_scan_interval": 120,
+            "jorge_commission_rate": 0.06,
+            "market_data_retention_days": 90,
+            "claude_insight_generation": True,
+            "automated_response_generation": True,
         }
 
         # Initialize Claude for strategic insights
@@ -159,7 +161,7 @@ class EnhancedMarketIntelligenceAutomation:
             self._automated_trend_detection(),
             self._automated_competitive_monitoring(),
             self._automated_opportunity_scanning(),
-            self._automated_strategic_insights_generation()
+            self._automated_strategic_insights_generation(),
         ]
 
         await asyncio.gather(*tasks)
@@ -180,11 +182,11 @@ class EnhancedMarketIntelligenceAutomation:
                 await self.cache.set(
                     "market_trends",
                     [trend.__dict__ for trend in trends],
-                    ttl=1800  # 30 minutes
+                    ttl=1800,  # 30 minutes
                 )
 
                 # Wait before next detection cycle
-                await asyncio.sleep(self.phase7_config['alert_frequency_minutes'] * 60)
+                await asyncio.sleep(self.phase7_config["alert_frequency_minutes"] * 60)
 
             except Exception as e:
                 logger.error(f"Error in automated trend detection: {e}")
@@ -221,15 +223,11 @@ class EnhancedMarketIntelligenceAutomation:
 
             # Filter and rank trends by significance
             significant_trends = [
-                trend for trend in trends
-                if trend.confidence_score >= self.phase7_config['trend_detection_sensitivity']
+                trend for trend in trends if trend.confidence_score >= self.phase7_config["trend_detection_sensitivity"]
             ]
 
             # Sort by severity and confidence
-            significant_trends.sort(
-                key=lambda x: (x.severity.value, x.confidence_score),
-                reverse=True
-            )
+            significant_trends.sort(key=lambda x: (x.severity.value, x.confidence_score), reverse=True)
 
             logger.info(f"Detected {len(significant_trends)} significant market trends")
             return significant_trends
@@ -242,10 +240,10 @@ class EnhancedMarketIntelligenceAutomation:
         """Analyze price trends for anomalies and opportunities"""
         trends = []
 
-        if 'price_history' not in data:
+        if "price_history" not in data:
             return trends
 
-        prices = np.array(data['price_history'])
+        prices = np.array(data["price_history"])
 
         # Calculate price change momentum
         if len(prices) >= 7:
@@ -265,16 +263,16 @@ class EnhancedMarketIntelligenceAutomation:
                     recommended_actions=[
                         "Accelerate seller prospecting in this area",
                         "Adjust pricing strategy for new listings",
-                        "Consider commission rate defense strategies"
+                        "Consider commission rate defense strategies",
                     ],
                     data_points={
-                        'price_trend': recent_trend,
-                        'volatility': price_volatility,
-                        'current_price': float(prices[-1])
+                        "price_trend": recent_trend,
+                        "volatility": price_volatility,
+                        "current_price": float(prices[-1]),
                     },
                     detection_timestamp=datetime.now(),
                     predicted_duration="1-2 weeks",
-                    affected_price_ranges=[f"${int(prices[-1] * 0.9)}-${int(prices[-1] * 1.1)}"]
+                    affected_price_ranges=[f"${int(prices[-1] * 0.9)}-${int(prices[-1] * 1.1)}"],
                 )
                 trends.append(alert)
 
@@ -291,16 +289,16 @@ class EnhancedMarketIntelligenceAutomation:
                     recommended_actions=[
                         "Focus on buyer prospecting opportunities",
                         "Adjust seller expectations in pricing consultations",
-                        "Emphasize Jorge's market expertise in negotiations"
+                        "Emphasize Jorge's market expertise in negotiations",
                     ],
                     data_points={
-                        'price_trend': recent_trend,
-                        'volatility': price_volatility,
-                        'current_price': float(prices[-1])
+                        "price_trend": recent_trend,
+                        "volatility": price_volatility,
+                        "current_price": float(prices[-1]),
                     },
                     detection_timestamp=datetime.now(),
                     predicted_duration="2-4 weeks",
-                    affected_price_ranges=[f"${int(prices[-1] * 0.9)}-${int(prices[-1] * 1.1)}"]
+                    affected_price_ranges=[f"${int(prices[-1] * 0.9)}-${int(prices[-1] * 1.1)}"],
                 )
                 trends.append(alert)
 
@@ -310,14 +308,14 @@ class EnhancedMarketIntelligenceAutomation:
         """Analyze inventory trends for supply/demand imbalances"""
         trends = []
 
-        if 'inventory_data' not in data:
+        if "inventory_data" not in data:
             return trends
 
-        inventory = data['inventory_data']
+        inventory = data["inventory_data"]
 
         # Calculate months of supply
-        if 'active_listings' in inventory and 'monthly_sales' in inventory:
-            months_supply = inventory['active_listings'] / max(inventory['monthly_sales'], 1)
+        if "active_listings" in inventory and "monthly_sales" in inventory:
+            months_supply = inventory["active_listings"] / max(inventory["monthly_sales"], 1)
 
             # Inventory shortage detection (seller's market)
             if months_supply < 2.0:
@@ -333,16 +331,16 @@ class EnhancedMarketIntelligenceAutomation:
                         "Intensify seller prospecting - premium market conditions",
                         "Prepare buyers for competitive bidding strategies",
                         "Emphasize Jorge's negotiation expertise",
-                        "Defend full commission rates due to market value"
+                        "Defend full commission rates due to market value",
                     ],
                     data_points={
-                        'months_supply': months_supply,
-                        'active_listings': inventory['active_listings'],
-                        'monthly_sales': inventory['monthly_sales']
+                        "months_supply": months_supply,
+                        "active_listings": inventory["active_listings"],
+                        "monthly_sales": inventory["monthly_sales"],
                     },
                     detection_timestamp=datetime.now(),
                     predicted_duration="1-3 months",
-                    affected_price_ranges=["All price ranges - market-wide impact"]
+                    affected_price_ranges=["All price ranges - market-wide impact"],
                 )
                 trends.append(alert)
 
@@ -360,16 +358,16 @@ class EnhancedMarketIntelligenceAutomation:
                         "Focus on buyer prospecting - favorable conditions",
                         "Prepare sellers for realistic pricing expectations",
                         "Emphasize Jorge's marketing expertise for sellers",
-                        "Consider strategic pricing below market to accelerate sales"
+                        "Consider strategic pricing below market to accelerate sales",
                     ],
                     data_points={
-                        'months_supply': months_supply,
-                        'active_listings': inventory['active_listings'],
-                        'monthly_sales': inventory['monthly_sales']
+                        "months_supply": months_supply,
+                        "active_listings": inventory["active_listings"],
+                        "monthly_sales": inventory["monthly_sales"],
                     },
                     detection_timestamp=datetime.now(),
                     predicted_duration="2-6 months",
-                    affected_price_ranges=["All price ranges - market-wide impact"]
+                    affected_price_ranges=["All price ranges - market-wide impact"],
                 )
                 trends.append(alert)
 
@@ -388,7 +386,7 @@ class EnhancedMarketIntelligenceAutomation:
                         await self._process_competitive_alert(alert)
 
                 # Wait before next monitoring cycle
-                await asyncio.sleep(self.phase7_config['competitive_analysis_interval'] * 60)
+                await asyncio.sleep(self.phase7_config["competitive_analysis_interval"] * 60)
 
             except Exception as e:
                 logger.error(f"Error in competitive monitoring: {e}")
@@ -402,21 +400,21 @@ class EnhancedMarketIntelligenceAutomation:
 
             alerts = []
 
-            for competitor in competitive_data.get('competitors', []):
+            for competitor in competitive_data.get("competitors", []):
                 # Analyze commission rate changes
-                if 'commission_changes' in competitor:
+                if "commission_changes" in competitor:
                     alert = await self._analyze_commission_rate_threats(competitor)
                     if alert:
                         alerts.append(alert)
 
                 # Analyze market share changes
-                if 'market_share_change' in competitor:
+                if "market_share_change" in competitor:
                     alert = await self._analyze_market_share_threats(competitor)
                     if alert:
                         alerts.append(alert)
 
                 # Analyze service offering changes
-                if 'service_changes' in competitor:
+                if "service_changes" in competitor:
                     alert = await self._analyze_service_differentiation_threats(competitor)
                     if alert:
                         alerts.append(alert)
@@ -429,14 +427,14 @@ class EnhancedMarketIntelligenceAutomation:
 
     async def _analyze_commission_rate_threats(self, competitor: Dict) -> Optional[CompetitivePositioningAlert]:
         """Analyze competitive commission rate threats"""
-        if competitor['commission_changes']['new_rate'] < self.phase7_config['jorge_commission_rate']:
+        if competitor["commission_changes"]["new_rate"] < self.phase7_config["jorge_commission_rate"]:
             # Calculate threat level
-            rate_difference = self.phase7_config['jorge_commission_rate'] - competitor['commission_changes']['new_rate']
+            rate_difference = self.phase7_config["jorge_commission_rate"] - competitor["commission_changes"]["new_rate"]
             threat_level = TrendSeverity.HIGH if rate_difference > 0.02 else TrendSeverity.MEDIUM
 
             return CompetitivePositioningAlert(
                 alert_id=f"commission_threat_{competitor['name']}_{int(datetime.now().timestamp())}",
-                competitor_name=competitor['name'],
+                competitor_name=competitor["name"],
                 positioning_change=f"Reduced commission to {competitor['commission_changes']['new_rate']:.1%}",
                 threat_level=threat_level,
                 market_impact="Potential price pressure on commission rates",
@@ -444,21 +442,21 @@ class EnhancedMarketIntelligenceAutomation:
                     "Emphasize value-based commission defense",
                     "Highlight Jorge's superior results and expertise",
                     "Document competitive advantages in client presentations",
-                    "Consider selective rate matching for high-value clients only"
+                    "Consider selective rate matching for high-value clients only",
                 ],
                 commission_rate_comparison={
-                    'jorge_rate': self.phase7_config['jorge_commission_rate'],
-                    'competitor_rate': competitor['commission_changes']['new_rate'],
-                    'market_average': competitor.get('market_average_rate', 0.055)
+                    "jorge_rate": self.phase7_config["jorge_commission_rate"],
+                    "competitor_rate": competitor["commission_changes"]["new_rate"],
+                    "market_average": competitor.get("market_average_rate", 0.055),
                 },
                 competitive_advantages=[
                     "Jorge's confrontational qualification methodology",
                     "Superior deal conversion rates",
                     "Advanced AI-powered client matching",
-                    "Proven track record and market expertise"
+                    "Proven track record and market expertise",
                 ],
                 action_timeline="Immediate - within 48 hours",
-                detection_timestamp=datetime.now()
+                detection_timestamp=datetime.now(),
             )
 
         return None
@@ -466,7 +464,7 @@ class EnhancedMarketIntelligenceAutomation:
     async def generate_strategic_market_insights(self) -> Dict[str, Any]:
         """Generate strategic market insights using Claude AI"""
         if not self.claude_available:
-            return {'error': 'Claude AI not available'}
+            return {"error": "Claude AI not available"}
 
         try:
             # Gather market intelligence data
@@ -497,24 +495,21 @@ class EnhancedMarketIntelligenceAutomation:
                 response = await self.claude_client.messages.create(
                     model="claude-3-sonnet-20240229",
                     max_tokens=1500,
-                    messages=[{
-                        "role": "user",
-                        "content": insight_prompt
-                    }]
+                    messages=[{"role": "user", "content": insight_prompt}],
                 )
 
                 insights = {
-                    'strategic_insights': response.content[0].text,
-                    'generated_at': datetime.now().isoformat(),
-                    'data_sources': ['market_trends', 'competitive_intelligence', 'market_analysis'],
-                    'confidence_level': 'high',
-                    'action_timeline': '30 days'
+                    "strategic_insights": response.content[0].text,
+                    "generated_at": datetime.now().isoformat(),
+                    "data_sources": ["market_trends", "competitive_intelligence", "market_analysis"],
+                    "confidence_level": "high",
+                    "action_timeline": "30 days",
                 }
             else:
                 insights = {
-                    'strategic_insights': 'Claude AI insights generation temporarily unavailable',
-                    'generated_at': datetime.now().isoformat(),
-                    'status': 'fallback_mode'
+                    "strategic_insights": "Claude AI insights generation temporarily unavailable",
+                    "generated_at": datetime.now().isoformat(),
+                    "status": "fallback_mode",
                 }
 
             # Cache insights
@@ -524,7 +519,7 @@ class EnhancedMarketIntelligenceAutomation:
 
         except Exception as e:
             logger.error(f"Error generating strategic insights: {e}")
-            return {'error': str(e)}
+            return {"error": str(e)}
 
     async def _collect_market_data(self) -> Dict[str, Dict]:
         """Collect comprehensive market data from various sources"""
@@ -536,13 +531,13 @@ class EnhancedMarketIntelligenceAutomation:
             market_analysis = await self.market_analyzer.get_market_analysis()
 
             # Structure data by market area
-            if market_analysis and 'area_analysis' in market_analysis:
-                for area, analysis in market_analysis['area_analysis'].items():
+            if market_analysis and "area_analysis" in market_analysis:
+                for area, analysis in market_analysis["area_analysis"].items():
                     market_data[area] = {
-                        'price_history': analysis.get('price_trends', []),
-                        'inventory_data': analysis.get('inventory', {}),
-                        'sales_data': analysis.get('sales_metrics', {}),
-                        'economic_indicators': analysis.get('economic_factors', {})
+                        "price_history": analysis.get("price_trends", []),
+                        "inventory_data": analysis.get("inventory", {}),
+                        "sales_data": analysis.get("sales_metrics", {}),
+                        "economic_indicators": analysis.get("economic_factors", {}),
                     }
 
             # Add synthetic data for demonstration if no real data
@@ -558,7 +553,7 @@ class EnhancedMarketIntelligenceAutomation:
     async def _generate_sample_market_data(self) -> Dict[str, Dict]:
         """Generate sample market data for testing and development"""
         base_price = 450000
-        areas = ['Downtown', 'Suburbs', 'Waterfront', 'Historic District']
+        areas = ["Downtown", "Suburbs", "Waterfront", "Historic District"]
 
         sample_data = {}
 
@@ -574,20 +569,20 @@ class EnhancedMarketIntelligenceAutomation:
                 price_history.append(max(200000, price))  # Minimum price floor
 
             sample_data[area] = {
-                'price_history': price_history,
-                'inventory_data': {
-                    'active_listings': np.random.randint(50, 300),
-                    'monthly_sales': np.random.randint(20, 80),
-                    'new_listings': np.random.randint(30, 100)
+                "price_history": price_history,
+                "inventory_data": {
+                    "active_listings": np.random.randint(50, 300),
+                    "monthly_sales": np.random.randint(20, 80),
+                    "new_listings": np.random.randint(30, 100),
                 },
-                'sales_data': {
-                    'median_dom': np.random.randint(15, 60),
-                    'sale_to_list_ratio': 0.95 + np.random.random() * 0.1
+                "sales_data": {
+                    "median_dom": np.random.randint(15, 60),
+                    "sale_to_list_ratio": 0.95 + np.random.random() * 0.1,
                 },
-                'economic_indicators': {
-                    'employment_rate': 0.93 + np.random.random() * 0.05,
-                    'population_growth': np.random.random() * 0.03
-                }
+                "economic_indicators": {
+                    "employment_rate": 0.93 + np.random.random() * 0.05,
+                    "population_growth": np.random.random() * 0.03,
+                },
             }
 
         return sample_data
@@ -602,13 +597,13 @@ class EnhancedMarketIntelligenceAutomation:
             await self.event_publisher.publish_market_intelligence_event(
                 event_type="market_trend_alert",
                 data={
-                    'trend_id': trend.trend_id,
-                    'trend_type': trend.trend_type.value,
-                    'severity': trend.severity.value,
-                    'market_area': trend.market_area,
-                    'description': trend.trend_description,
-                    'recommended_actions': trend.recommended_actions
-                }
+                    "trend_id": trend.trend_id,
+                    "trend_type": trend.trend_type.value,
+                    "severity": trend.severity.value,
+                    "market_area": trend.market_area,
+                    "description": trend.trend_description,
+                    "recommended_actions": trend.recommended_actions,
+                },
             )
 
             logger.info(f"Processed market trend alert: {trend.trend_type.value} in {trend.market_area}")
@@ -628,7 +623,7 @@ class EnhancedMarketIntelligenceAutomation:
                     await self._process_market_opportunity(opportunity)
 
                 # Wait before next scan
-                await asyncio.sleep(self.phase7_config['opportunity_scan_interval'] * 60)
+                await asyncio.sleep(self.phase7_config["opportunity_scan_interval"] * 60)
 
             except Exception as e:
                 logger.error(f"Error in opportunity scanning: {e}")
@@ -642,8 +637,8 @@ class EnhancedMarketIntelligenceAutomation:
 
             for area, data in market_data.items():
                 # Opportunity: Undervalued market areas
-                if 'price_history' in data and len(data['price_history']) >= 7:
-                    prices = np.array(data['price_history'])
+                if "price_history" in data and len(data["price_history"]) >= 7:
+                    prices = np.array(data["price_history"])
                     recent_avg = np.mean(prices[-7:])
                     month_avg = np.mean(prices[-30:]) if len(prices) >= 30 else recent_avg
 
@@ -652,56 +647,56 @@ class EnhancedMarketIntelligenceAutomation:
                             opportunity_id=f"undervalued_{area}_{int(datetime.now().timestamp())}",
                             opportunity_type="Undervalued Market Entry",
                             market_area=area,
-                            potential_value=month_avg * 0.1 * self.phase7_config['jorge_commission_rate'],
+                            potential_value=month_avg * 0.1 * self.phase7_config["jorge_commission_rate"],
                             confidence_score=0.85,
                             time_sensitivity="High - 2-4 weeks",
                             entry_strategy=[
                                 "Target buyer prospecting in this area",
                                 "Identify distressed or motivated sellers",
-                                "Position Jorge as market opportunity expert"
+                                "Position Jorge as market opportunity expert",
                             ],
                             resource_requirements={
-                                'marketing_budget': 2000,
-                                'time_investment': '10 hours/week',
-                                'lead_generation_focus': 'buyers'
+                                "marketing_budget": 2000,
+                                "time_investment": "10 hours/week",
+                                "lead_generation_focus": "buyers",
                             },
                             success_probability=0.75,
-                            jorge_commission_projection=month_avg * 0.05 * self.phase7_config['jorge_commission_rate'],
-                            competitive_landscape={'competition_level': 'medium', 'differentiation_opportunity': 'high'}
+                            jorge_commission_projection=month_avg * 0.05 * self.phase7_config["jorge_commission_rate"],
+                            competitive_landscape={
+                                "competition_level": "medium",
+                                "differentiation_opportunity": "high",
+                            },
                         )
                         opportunities.append(opportunity)
 
                 # Opportunity: High inventory turnover areas
-                inventory = data.get('inventory_data', {})
-                if inventory.get('monthly_sales', 0) > 50 and inventory.get('active_listings', 0) < 100:
+                inventory = data.get("inventory_data", {})
+                if inventory.get("monthly_sales", 0) > 50 and inventory.get("active_listings", 0) < 100:
                     opportunity = MarketOpportunity(
                         opportunity_id=f"hot_market_{area}_{int(datetime.now().timestamp())}",
                         opportunity_type="High-Velocity Market",
                         market_area=area,
-                        potential_value=500000 * self.phase7_config['jorge_commission_rate'],
+                        potential_value=500000 * self.phase7_config["jorge_commission_rate"],
                         confidence_score=0.9,
                         time_sensitivity="Immediate - market hot",
                         entry_strategy=[
                             "Intensive seller prospecting",
                             "Fast-track listing preparation",
-                            "Premium pricing strategy"
+                            "Premium pricing strategy",
                         ],
                         resource_requirements={
-                            'marketing_budget': 5000,
-                            'time_investment': '20 hours/week',
-                            'lead_generation_focus': 'sellers'
+                            "marketing_budget": 5000,
+                            "time_investment": "20 hours/week",
+                            "lead_generation_focus": "sellers",
                         },
                         success_probability=0.85,
-                        jorge_commission_projection=500000 * 0.1 * self.phase7_config['jorge_commission_rate'],
-                        competitive_landscape={'competition_level': 'high', 'commission_defense_required': True}
+                        jorge_commission_projection=500000 * 0.1 * self.phase7_config["jorge_commission_rate"],
+                        competitive_landscape={"competition_level": "high", "commission_defense_required": True},
                     )
                     opportunities.append(opportunity)
 
             # Sort by potential value and probability
-            opportunities.sort(
-                key=lambda x: x.potential_value * x.success_probability,
-                reverse=True
-            )
+            opportunities.sort(key=lambda x: x.potential_value * x.success_probability, reverse=True)
 
             return opportunities
 
@@ -717,10 +712,9 @@ class EnhancedMarketIntelligenceAutomation:
                 insights = await self.generate_strategic_market_insights()
 
                 # Publish insights event
-                if 'strategic_insights' in insights:
+                if "strategic_insights" in insights:
                     await self.event_publisher.publish_market_intelligence_event(
-                        event_type="strategic_insights_updated",
-                        data=insights
+                        event_type="strategic_insights_updated", data=insights
                     )
 
                 # Wait 4 hours before next generation
@@ -735,32 +729,31 @@ class EnhancedMarketIntelligenceAutomation:
         try:
             # Collect all market intelligence data
             dashboard_data = {
-                'market_trends': await self.cache.get("market_trends") or [],
-                'competitive_alerts': [],  # Would be populated by competitive monitoring
-                'market_opportunities': [],  # Would be populated by opportunity scanning
-                'strategic_insights': await self.cache.get("strategic_insights") or {},
-                'market_summary': {
-                    'total_active_alerts': len(self.active_alerts),
-                    'critical_trends': len([
-                        alert for alert in self.active_alerts.values()
-                        if alert.severity == TrendSeverity.CRITICAL
-                    ]),
-                    'market_health_score': 0.85,  # Would be calculated from various factors
-                    'last_updated': datetime.now().isoformat()
+                "market_trends": await self.cache.get("market_trends") or [],
+                "competitive_alerts": [],  # Would be populated by competitive monitoring
+                "market_opportunities": [],  # Would be populated by opportunity scanning
+                "strategic_insights": await self.cache.get("strategic_insights") or {},
+                "market_summary": {
+                    "total_active_alerts": len(self.active_alerts),
+                    "critical_trends": len(
+                        [alert for alert in self.active_alerts.values() if alert.severity == TrendSeverity.CRITICAL]
+                    ),
+                    "market_health_score": 0.85,  # Would be calculated from various factors
+                    "last_updated": datetime.now().isoformat(),
                 },
-                'jorge_performance_metrics': {
-                    'commission_rate_defense': 0.95,  # 95% of deals at full 6% rate
-                    'market_share_growth': 0.15,  # 15% growth this quarter
-                    'competitive_advantage_score': 0.88,
-                    'client_satisfaction': 0.92
-                }
+                "jorge_performance_metrics": {
+                    "commission_rate_defense": 0.95,  # 95% of deals at full 6% rate
+                    "market_share_growth": 0.15,  # 15% growth this quarter
+                    "competitive_advantage_score": 0.88,
+                    "client_satisfaction": 0.92,
+                },
             }
 
             return dashboard_data
 
         except Exception as e:
             logger.error(f"Error getting dashboard data: {e}")
-            return {'error': str(e)}
+            return {"error": str(e)}
 
 
 # Factory function for easy initialization
@@ -772,6 +765,7 @@ async def create_market_intelligence_automation() -> EnhancedMarketIntelligenceA
 
 # Example usage
 if __name__ == "__main__":
+
     async def main():
         # Initialize the system
         automation = await create_market_intelligence_automation()

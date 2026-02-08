@@ -17,47 +17,56 @@ This service enables validation of 99.9% uptime and performance claims.
 
 import asyncio
 import json
-import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Union, Callable
-from dataclasses import dataclass, asdict
-from enum import Enum
 import logging
-import psutil
-import aiohttp
+import time
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
 from decimal import Decimal
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Union
 
-from ghl_real_estate_ai.services.database_service import get_database, DatabaseService
-from ghl_real_estate_ai.services.cache_service import get_cache_service
+import aiohttp
+import psutil
+
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.database_service import DatabaseService, get_database
 
 logger = get_logger(__name__)
 
+
 class AlertSeverity(Enum):
     """Alert severity levels"""
+
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
     INFO = "info"
 
+
 class MetricType(Enum):
     """Types of metrics tracked"""
+
     COUNTER = "counter"
     GAUGE = "gauge"
     HISTOGRAM = "histogram"
     TIMER = "timer"
 
+
 class ServiceStatus(Enum):
     """Service health status"""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
     DOWN = "down"
 
+
 @dataclass
 class Metric:
     """Performance metric data point"""
+
     name: str
     value: Union[float, int]
     metric_type: MetricType
@@ -65,9 +74,11 @@ class Metric:
     tags: Dict[str, str] = None
     unit: Optional[str] = None
 
+
 @dataclass
 class Alert:
     """Alert/incident data"""
+
     alert_id: str
     severity: AlertSeverity
     title: str
@@ -81,9 +92,11 @@ class Alert:
     acknowledged: bool = False
     acknowledged_by: Optional[str] = None
 
+
 @dataclass
 class ServiceHealth:
     """Service health status"""
+
     service_name: str
     status: ServiceStatus
     last_check: datetime
@@ -91,6 +104,7 @@ class ServiceHealth:
     error_rate: Optional[float] = None
     availability_percentage: Optional[float] = None
     details: Optional[Dict[str, Any]] = None
+
 
 class ProductionMonitoringService:
     """Production-ready monitoring and alerting service"""
@@ -111,22 +125,19 @@ class ProductionMonitoringService:
             "response_time_p99_ms": {"high": 5000, "critical": 10000},
             "error_rate_percentage": {"medium": 1.0, "high": 5.0, "critical": 10.0},
             "throughput_requests_per_second": {"medium": 10, "high": 5, "critical": 1},
-
             # Business Metrics Thresholds
             "lead_conversion_rate": {"medium": 2.0, "high": 1.5, "critical": 1.0},
             "daily_revenue": {"medium": 5000, "high": 2000, "critical": 1000},
             "ai_attribution_confidence": {"medium": 0.7, "high": 0.6, "critical": 0.5},
-
             # System Health Thresholds
             "cpu_usage_percentage": {"medium": 70, "high": 85, "critical": 95},
             "memory_usage_percentage": {"medium": 75, "high": 90, "critical": 95},
             "disk_usage_percentage": {"medium": 80, "high": 90, "critical": 95},
             "database_connections": {"medium": 15, "high": 18, "critical": 20},
-
             # AI Model Performance Thresholds
             "model_accuracy": {"medium": 0.85, "high": 0.80, "critical": 0.75},
             "model_latency_ms": {"medium": 200, "high": 500, "critical": 1000},
-            "model_error_rate": {"medium": 0.02, "high": 0.05, "critical": 0.10}
+            "model_error_rate": {"medium": 0.02, "high": 0.05, "critical": 0.10},
         }
 
         # Service endpoints for health checks
@@ -138,7 +149,7 @@ class ProductionMonitoringService:
             "behavioral_triggers": "http://localhost:8000/health/behavioral",
             "streamlit_dashboard": "http://localhost:8501/health",
             "database": "internal_check",
-            "redis_cache": "internal_check"
+            "redis_cache": "internal_check",
         }
 
         # Active alerts
@@ -170,17 +181,12 @@ class ProductionMonitoringService:
         value: Union[float, int],
         metric_type: MetricType,
         tags: Dict[str, str] = None,
-        unit: str = None
+        unit: str = None,
     ):
         """Record a performance metric"""
 
         metric = Metric(
-            name=name,
-            value=value,
-            metric_type=metric_type,
-            timestamp=datetime.utcnow(),
-            tags=tags or {},
-            unit=unit
+            name=name, value=value, metric_type=metric_type, timestamp=datetime.utcnow(), tags=tags or {}, unit=unit
         )
 
         # Store metric
@@ -192,52 +198,29 @@ class ProductionMonitoringService:
         # Update real-time dashboards
         await self._update_realtime_dashboard(metric)
 
-    async def record_response_time(
-        self,
-        endpoint: str,
-        response_time_ms: float,
-        status_code: int,
-        method: str = "GET"
-    ):
+    async def record_response_time(self, endpoint: str, response_time_ms: float, status_code: int, method: str = "GET"):
         """Record API response time"""
 
         tags = {
             "endpoint": endpoint,
             "status_code": str(status_code),
             "method": method,
-            "status_class": f"{status_code // 100}xx"
+            "status_class": f"{status_code // 100}xx",
         }
 
         await self.record_metric(
-            "http_response_time",
-            response_time_ms,
-            MetricType.HISTOGRAM,
-            tags=tags,
-            unit="milliseconds"
+            "http_response_time", response_time_ms, MetricType.HISTOGRAM, tags=tags, unit="milliseconds"
         )
 
         # Track error rate
         is_error = status_code >= 400
-        await self.record_metric(
-            "http_request_total",
-            1,
-            MetricType.COUNTER,
-            tags=tags
-        )
+        await self.record_metric("http_request_total", 1, MetricType.COUNTER, tags=tags)
 
         if is_error:
-            await self.record_metric(
-                "http_errors_total",
-                1,
-                MetricType.COUNTER,
-                tags=tags
-            )
+            await self.record_metric("http_errors_total", 1, MetricType.COUNTER, tags=tags)
 
     async def record_business_metric(
-        self,
-        metric_name: str,
-        value: Union[float, int, Decimal],
-        business_context: Dict[str, Any] = None
+        self, metric_name: str, value: Union[float, int, Decimal], business_context: Dict[str, Any] = None
     ):
         """Record business/revenue metrics"""
 
@@ -253,87 +236,42 @@ class ProductionMonitoringService:
             value,
             MetricType.GAUGE,
             tags=tags,
-            unit=self._get_business_metric_unit(metric_name)
+            unit=self._get_business_metric_unit(metric_name),
         )
 
     async def record_ai_model_performance(
-        self,
-        model_name: str,
-        accuracy: float,
-        latency_ms: float,
-        predictions_count: int,
-        error_count: int = 0
+        self, model_name: str, accuracy: float, latency_ms: float, predictions_count: int, error_count: int = 0
     ):
         """Record AI model performance metrics"""
 
         tags = {"model": model_name}
 
         # Accuracy
-        await self.record_metric(
-            "ai_model_accuracy",
-            accuracy,
-            MetricType.GAUGE,
-            tags=tags,
-            unit="ratio"
-        )
+        await self.record_metric("ai_model_accuracy", accuracy, MetricType.GAUGE, tags=tags, unit="ratio")
 
         # Latency
-        await self.record_metric(
-            "ai_model_latency",
-            latency_ms,
-            MetricType.HISTOGRAM,
-            tags=tags,
-            unit="milliseconds"
-        )
+        await self.record_metric("ai_model_latency", latency_ms, MetricType.HISTOGRAM, tags=tags, unit="milliseconds")
 
         # Throughput
-        await self.record_metric(
-            "ai_model_predictions",
-            predictions_count,
-            MetricType.COUNTER,
-            tags=tags
-        )
+        await self.record_metric("ai_model_predictions", predictions_count, MetricType.COUNTER, tags=tags)
 
         # Error rate
         if predictions_count > 0:
             error_rate = error_count / predictions_count
-            await self.record_metric(
-                "ai_model_error_rate",
-                error_rate,
-                MetricType.GAUGE,
-                tags=tags,
-                unit="ratio"
-            )
+            await self.record_metric("ai_model_error_rate", error_rate, MetricType.GAUGE, tags=tags, unit="ratio")
 
     async def record_revenue_attribution(
-        self,
-        attributed_revenue: Decimal,
-        confidence: float,
-        ai_system: str,
-        conversion_id: str
+        self, attributed_revenue: Decimal, confidence: float, ai_system: str, conversion_id: str
     ):
         """Record revenue attribution metrics"""
 
-        tags = {
-            "ai_system": ai_system,
-            "conversion_id": conversion_id
-        }
+        tags = {"ai_system": ai_system, "conversion_id": conversion_id}
 
         await self.record_metric(
-            "revenue_attributed",
-            float(attributed_revenue),
-            MetricType.COUNTER,
-            tags=tags,
-            unit="dollars"
+            "revenue_attributed", float(attributed_revenue), MetricType.COUNTER, tags=tags, unit="dollars"
         )
 
-        await self.record_metric(
-            "attribution_confidence",
-            confidence,
-            MetricType.GAUGE,
-            tags=tags,
-            unit="ratio"
-        )
+        await self.record_metric("attribution_confidence", confidence, MetricType.GAUGE, tags=tags, unit="ratio")
 
     # ============================================================================
     # HEALTH MONITORING
@@ -361,7 +299,7 @@ class ProductionMonitoringService:
                 response_time_ms=response_time,
                 error_rate=health_data.get("error_rate"),
                 availability_percentage=health_data.get("availability_percentage"),
-                details=health_data.get("details")
+                details=health_data.get("details"),
             )
 
         except Exception as e:
@@ -371,7 +309,7 @@ class ProductionMonitoringService:
                 status=ServiceStatus.DOWN,
                 last_check=datetime.utcnow(),
                 response_time_ms=(time.time() - start_time) * 1000,
-                details={"error": str(e)}
+                details={"error": str(e)},
             )
 
     async def _check_database_health(self) -> Dict[str, Any]:
@@ -386,10 +324,7 @@ class ProductionMonitoringService:
         else:
             status = ServiceStatus.UNHEALTHY
 
-        return {
-            "status": status,
-            "details": health_data
-        }
+        return {"status": status, "details": health_data}
 
     async def _check_cache_health(self) -> Dict[str, Any]:
         """Check Redis cache health"""
@@ -400,56 +335,35 @@ class ProductionMonitoringService:
             result = await self.cache.get(test_key)
 
             if result == "ok":
-                return {
-                    "status": ServiceStatus.HEALTHY,
-                    "details": {"cache_responsive": True}
-                }
+                return {"status": ServiceStatus.HEALTHY, "details": {"cache_responsive": True}}
             else:
                 return {
                     "status": ServiceStatus.UNHEALTHY,
-                    "details": {"cache_responsive": False, "error": "Cache read/write failed"}
+                    "details": {"cache_responsive": False, "error": "Cache read/write failed"},
                 }
 
         except Exception as e:
-            return {
-                "status": ServiceStatus.DOWN,
-                "details": {"error": str(e)}
-            }
+            return {"status": ServiceStatus.DOWN, "details": {"error": str(e)}}
 
     async def _check_http_service_health(self, service_name: str) -> Dict[str, Any]:
         """Check HTTP service health"""
         endpoint = self.service_endpoints.get(service_name)
         if not endpoint:
-            return {
-                "status": ServiceStatus.UNHEALTHY,
-                "details": {"error": "No health check endpoint configured"}
-            }
+            return {"status": ServiceStatus.UNHEALTHY, "details": {"error": "No health check endpoint configured"}}
 
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(endpoint, timeout=5) as response:
                     if response.status == 200:
                         response_data = await response.json()
-                        return {
-                            "status": ServiceStatus.HEALTHY,
-                            "details": response_data
-                        }
+                        return {"status": ServiceStatus.HEALTHY, "details": response_data}
                     else:
-                        return {
-                            "status": ServiceStatus.DEGRADED,
-                            "details": {"http_status": response.status}
-                        }
+                        return {"status": ServiceStatus.DEGRADED, "details": {"http_status": response.status}}
 
         except asyncio.TimeoutError:
-            return {
-                "status": ServiceStatus.DOWN,
-                "details": {"error": "Health check timeout"}
-            }
+            return {"status": ServiceStatus.DOWN, "details": {"error": "Health check timeout"}}
         except Exception as e:
-            return {
-                "status": ServiceStatus.DOWN,
-                "details": {"error": str(e)}
-            }
+            return {"status": ServiceStatus.DOWN, "details": {"error": str(e)}}
 
     async def get_system_overview(self) -> Dict[str, Any]:
         """Get comprehensive system health overview"""
@@ -481,7 +395,7 @@ class ProductionMonitoringService:
             "system_metrics": system_metrics,
             "performance_summary": performance_summary,
             "active_alerts": active_alerts,
-            "last_updated": datetime.utcnow().isoformat()
+            "last_updated": datetime.utcnow().isoformat(),
         }
 
     # ============================================================================
@@ -530,7 +444,7 @@ class ProductionMonitoringService:
                 current_value=current_value,
                 threshold_value=threshold_config.get(severity.value),
                 severity=severity,
-                metric_tags=metric.tags
+                metric_tags=metric.tags,
             )
         else:
             # Check if we should resolve any existing alerts for this metric
@@ -542,7 +456,7 @@ class ProductionMonitoringService:
         current_value: float,
         threshold_value: float,
         severity: AlertSeverity,
-        metric_tags: Dict[str, str] = None
+        metric_tags: Dict[str, str] = None,
     ):
         """Trigger an alert"""
 
@@ -558,7 +472,7 @@ class ProductionMonitoringService:
             metric_name=metric_name,
             threshold_value=threshold_value,
             current_value=current_value,
-            triggered_at=datetime.utcnow()
+            triggered_at=datetime.utcnow(),
         )
 
         # Store alert
@@ -643,10 +557,7 @@ class ProductionMonitoringService:
                     # Record health metrics
                     status_value = 1 if health.status == ServiceStatus.HEALTHY else 0
                     await self.record_metric(
-                        "service_health",
-                        status_value,
-                        MetricType.GAUGE,
-                        tags={"service": service_name}
+                        "service_health", status_value, MetricType.GAUGE, tags={"service": service_name}
                     )
 
                     if health.response_time_ms:
@@ -655,7 +566,7 @@ class ProductionMonitoringService:
                             health.response_time_ms,
                             MetricType.HISTOGRAM,
                             tags={"service": service_name},
-                            unit="milliseconds"
+                            unit="milliseconds",
                         )
 
                 await asyncio.sleep(self.health_check_interval)
@@ -672,12 +583,7 @@ class ProductionMonitoringService:
                 system_metrics = await self._get_system_metrics()
 
                 for metric_name, value in system_metrics.items():
-                    await self.record_metric(
-                        metric_name,
-                        value,
-                        MetricType.GAUGE,
-                        tags={"component": "system"}
-                    )
+                    await self.record_metric(metric_name, value, MetricType.GAUGE, tags={"component": "system"})
 
                 await asyncio.sleep(60)  # Collect system metrics every minute
 
@@ -735,8 +641,8 @@ class ProductionMonitoringService:
                 "metric_name": metric.name,
                 "metric_value": metric.value,
                 "metric_type": metric.metric_type.value,
-                "tags": metric.tags
-            }
+                "tags": metric.tags,
+            },
         }
 
         await self.db.log_communication(comm_data)
@@ -747,11 +653,7 @@ class ProductionMonitoringService:
         recent_metrics = await self.cache.get(cache_key) or []
 
         # Add new metric
-        recent_metrics.append({
-            "timestamp": metric.timestamp.isoformat(),
-            "value": metric.value,
-            "tags": metric.tags
-        })
+        recent_metrics.append({"timestamp": metric.timestamp.isoformat(), "value": metric.value, "tags": metric.tags})
 
         # Keep last 100 data points
         if len(recent_metrics) > 100:
@@ -774,8 +676,8 @@ class ProductionMonitoringService:
                 "alert_data": asdict(alert),
                 "alert_id": alert.alert_id,
                 "severity": alert.severity.value,
-                "service": alert.service
-            }
+                "service": alert.service,
+            },
         }
 
         await self.db.log_communication(comm_data)
@@ -795,8 +697,8 @@ class ProductionMonitoringService:
             "status": "resolved",
             "metadata": {
                 "alert_id": alert.alert_id,
-                "resolved_at": alert.resolved_at.isoformat() if alert.resolved_at else None
-            }
+                "resolved_at": alert.resolved_at.isoformat() if alert.resolved_at else None,
+            },
         }
 
         await self.db.log_communication(comm_data)
@@ -816,7 +718,7 @@ class ProductionMonitoringService:
             memory_percent = memory.percent
 
             # Disk usage
-            disk = psutil.disk_usage('/')
+            disk = psutil.disk_usage("/")
             disk_percent = disk.percent
 
             # Network I/O
@@ -829,7 +731,7 @@ class ProductionMonitoringService:
                 "memory_usage_percentage": memory_percent,
                 "disk_usage_percentage": disk_percent,
                 "network_bytes_sent": network_bytes_sent,
-                "network_bytes_received": network_bytes_recv
+                "network_bytes_received": network_bytes_recv,
             }
 
         except Exception as e:
@@ -846,7 +748,7 @@ class ProductionMonitoringService:
                 "daily_conversions": 12,
                 "lead_conversion_rate": 3.2,
                 "ai_attribution_percentage": 68.5,
-                "customer_satisfaction_score": 4.7
+                "customer_satisfaction_score": 4.7,
             }
 
         except Exception as e:
@@ -882,7 +784,7 @@ class ProductionMonitoringService:
             "value": metric.value,
             "timestamp": metric.timestamp.isoformat(),
             "unit": metric.unit,
-            "tags": metric.tags
+            "tags": metric.tags,
         }
 
         await self.cache.set(dashboard_key, dashboard_data, ttl=300)  # 5 minutes
@@ -922,11 +824,13 @@ class ProductionMonitoringService:
         else:
             return "value"
 
+
 # ============================================================================
 # SERVICE FACTORY AND HELPERS
 # ============================================================================
 
 _monitoring_service: Optional[ProductionMonitoringService] = None
+
 
 async def get_monitoring_service() -> ProductionMonitoringService:
     """Get global monitoring service instance"""
@@ -938,30 +842,36 @@ async def get_monitoring_service() -> ProductionMonitoringService:
 
     return _monitoring_service
 
+
 # Convenience functions for common monitoring operations
 async def track_performance(endpoint: str, response_time_ms: float, status_code: int):
     """Convenience function to track API performance"""
     service = await get_monitoring_service()
     await service.record_response_time(endpoint, response_time_ms, status_code)
 
+
 async def track_business_kpi(metric_name: str, value: Union[float, Decimal]):
     """Convenience function to track business KPIs"""
     service = await get_monitoring_service()
     await service.record_business_metric(metric_name, value)
+
 
 async def track_ai_performance(model_name: str, accuracy: float, latency_ms: float, predictions: int):
     """Convenience function to track AI model performance"""
     service = await get_monitoring_service()
     await service.record_ai_model_performance(model_name, accuracy, latency_ms, predictions)
 
+
 async def get_system_health() -> Dict[str, Any]:
     """Convenience function to get system health overview"""
     service = await get_monitoring_service()
     return await service.get_system_overview()
 
+
 # Performance monitoring decorator
 def monitor_performance(endpoint_name: str = None):
     """Decorator to automatically monitor function performance"""
+
     def decorator(func):
         async def wrapper(*args, **kwargs):
             start_time = time.time()
@@ -979,9 +889,12 @@ def monitor_performance(endpoint_name: str = None):
                 raise
 
         return wrapper
+
     return decorator
 
+
 if __name__ == "__main__":
+
     async def test_monitoring_service():
         """Test monitoring service functionality"""
         service = ProductionMonitoringService()
@@ -1000,7 +913,7 @@ if __name__ == "__main__":
         await service.record_metric(
             "response_time_p95_ms",
             6000,  # Above critical threshold
-            MetricType.GAUGE
+            MetricType.GAUGE,
         )
 
         print("Monitoring service test completed")

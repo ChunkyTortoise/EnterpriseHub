@@ -13,23 +13,24 @@ Performance Integration:
 Jorge's methodology integration with 6% commission validation and confrontational qualification patterns.
 """
 
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Union
-from enum import Enum
-from decimal import Decimal
-from uuid import UUID
 import json
+from datetime import datetime, timedelta
+from decimal import Decimal
+from enum import Enum
+from typing import Any, Dict, List, Optional, Union
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
 from pydantic.types import confloat, conint, constr
-
 
 # =====================================================================================
 # Enums for Type Safety and Validation
 # =====================================================================================
 
+
 class PresentationStrategyAPI(str, Enum):
     """Property presentation strategy recommendations."""
+
     STANDARD = "standard"
     FEATURE_FOCUSED = "feature_focused"
     PRICE_VALUE = "price_value"
@@ -42,6 +43,7 @@ class PresentationStrategyAPI(str, Enum):
 
 class ObjectionTypeAPI(str, Enum):
     """Real estate objection categories for detection and response."""
+
     PRICE_CONCERN = "price_concern"
     TIMING_OBJECTION = "timing_objection"
     LOCATION_PREFERENCE = "location_preference"
@@ -54,6 +56,7 @@ class ObjectionTypeAPI(str, Enum):
 
 class SentimentLevelAPI(str, Enum):
     """Sentiment classification levels for conversation analysis."""
+
     VERY_POSITIVE = "very_positive"
     POSITIVE = "positive"
     NEUTRAL = "neutral"
@@ -64,6 +67,7 @@ class SentimentLevelAPI(str, Enum):
 
 class CoachingAreaAPI(str, Enum):
     """Coaching opportunity focus areas."""
+
     OBJECTION_HANDLING = "objection_handling"
     RAPPORT_BUILDING = "rapport_building"
     CLOSING_TECHNIQUE = "closing_technique"
@@ -76,6 +80,7 @@ class CoachingAreaAPI(str, Enum):
 
 class PreferenceSourceAPI(str, Enum):
     """Source of preference learning data."""
+
     CONVERSATION_ANALYSIS = "conversation_analysis"
     PROPERTY_INTERACTION = "property_interaction"
     SEARCH_BEHAVIOR = "search_behavior"
@@ -88,6 +93,7 @@ class PreferenceSourceAPI(str, Enum):
 
 class PreferenceCategoryAPI(str, Enum):
     """Categories of client preferences for learning."""
+
     PROPERTY_FEATURES = "property_features"
     LOCATION_PREFERENCES = "location_preferences"
     LIFESTYLE_FACTORS = "lifestyle_factors"
@@ -100,6 +106,7 @@ class PreferenceCategoryAPI(str, Enum):
 
 class DriftTypeAPI(str, Enum):
     """Types of preference drift for change analysis."""
+
     EXPANSION = "expansion"
     NARROWING = "narrowing"
     SHIFT = "shift"
@@ -114,38 +121,38 @@ class DriftTypeAPI(str, Enum):
 # Base Models with Common Patterns
 # =====================================================================================
 
+
 class TimestampedModel(BaseModel):
     """Base model with consistent timestamp handling."""
+
     created_at: datetime = Field(default_factory=datetime.now, description="Creation timestamp")
     updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
 
-    model_config = ConfigDict(json_encoders={
-            datetime: lambda v: v.isoformat()
-        })
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
 
 class PerformanceModel(BaseModel):
     """Base model with performance tracking."""
+
     processing_time_ms: Optional[int] = Field(None, ge=0, description="Processing time in milliseconds")
     cache_used: bool = Field(False, description="Whether cached data was used")
     confidence_score: confloat(ge=0.0, le=1.0) = Field(0.0, description="Result confidence level")
 
-    model_config = ConfigDict(json_schema_extra={
-            "example": {
-                "processing_time_ms": 45,
-                "cache_used": True,
-                "confidence_score": 0.89
-            }
-        })
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"processing_time_ms": 45, "cache_used": True, "confidence_score": 0.89}}
+    )
 
 
 class JorgeIntegrationModel(BaseModel):
     """Base model with Jorge methodology integration."""
+
     jorge_methodology_score: Optional[confloat(ge=0.0, le=1.0)] = Field(None, description="Jorge methodology alignment")
     commission_amount: Optional[Decimal] = Field(None, description="Jorge's 6% commission calculation")
-    confrontational_effectiveness: Optional[confloat(ge=0.0, le=1.0)] = Field(None, description="Confrontational approach effectiveness")
+    confrontational_effectiveness: Optional[confloat(ge=0.0, le=1.0)] = Field(
+        None, description="Confrontational approach effectiveness"
+    )
 
-    @field_validator('commission_amount')
+    @field_validator("commission_amount")
     @classmethod
     def validate_commission_calculation(cls, v):
         """Validate Jorge's 6% commission calculation."""
@@ -153,21 +160,25 @@ class JorgeIntegrationModel(BaseModel):
             raise ValueError("Commission amount must be positive")
         return v
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "jorge_methodology_score": 0.94,
                 "commission_amount": "29100.00",
-                "confrontational_effectiveness": 0.89
+                "confrontational_effectiveness": 0.89,
             }
-        })
+        }
+    )
 
 
 # =====================================================================================
 # Phase 2.2: Advanced Property Matching Models
 # =====================================================================================
 
+
 class PropertyMatchingFiltersAPI(BaseModel):
     """Filters for property matching requests."""
+
     min_score: confloat(ge=0.0, le=1.0) = Field(0.6, description="Minimum match score threshold")
     max_results: conint(ge=1, le=50) = Field(10, description="Maximum number of results")
     include_behavioral_analysis: bool = Field(True, description="Include behavioral weighting")
@@ -175,20 +186,23 @@ class PropertyMatchingFiltersAPI(BaseModel):
     price_range: Optional[Dict[str, int]] = Field(None, description="Price range filter")
     neighborhoods: Optional[List[str]] = Field(None, description="Neighborhood filter")
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "min_score": 0.7,
                 "max_results": 5,
                 "include_behavioral_analysis": True,
                 "property_types": ["single_family", "condo"],
                 "price_range": {"min": 400000, "max": 600000},
-                "neighborhoods": ["Domain", "West Lake Hills"]
+                "neighborhoods": ["Domain", "West Lake Hills"],
             }
-        })
+        }
+    )
 
 
 class BehavioralMatchWeightsAPI(PerformanceModel):
     """Behavioral weighting for property matching algorithm."""
+
     feature_weight: confloat(ge=0.0, le=1.0) = Field(description="Weight for property features")
     location_weight: confloat(ge=0.0, le=1.0) = Field(description="Weight for location factors")
     price_weight: confloat(ge=0.0, le=1.0) = Field(description="Weight for pricing factors")
@@ -196,8 +210,12 @@ class BehavioralMatchWeightsAPI(PerformanceModel):
     lifestyle_weight: confloat(ge=0.0, le=1.0) = Field(description="Weight for lifestyle alignment")
 
     # Behavioral insights from conversation analysis
-    conversation_insights: Dict[str, Any] = Field(default_factory=dict, description="Insights from conversation analysis")
-    adjusted_feature_priorities: Dict[str, float] = Field(default_factory=dict, description="ML-adjusted feature priorities")
+    conversation_insights: Dict[str, Any] = Field(
+        default_factory=dict, description="Insights from conversation analysis"
+    )
+    adjusted_feature_priorities: Dict[str, float] = Field(
+        default_factory=dict, description="ML-adjusted feature priorities"
+    )
     engagement_indicators: List[str] = Field(default_factory=list, description="Engagement pattern indicators")
     decision_urgency: str = Field("medium", description="Decision-making urgency level")
 
@@ -205,7 +223,7 @@ class BehavioralMatchWeightsAPI(PerformanceModel):
     @classmethod
     def validate_weights_sum(cls, values):
         """Ensure behavioral weights are properly balanced."""
-        weight_fields = ['feature_weight', 'location_weight', 'price_weight', 'urgency_weight', 'lifestyle_weight']
+        weight_fields = ["feature_weight", "location_weight", "price_weight", "urgency_weight", "lifestyle_weight"]
         total_weight = sum(values.get(field, 0) for field in weight_fields if values.get(field) is not None)
 
         if total_weight > 0 and not (0.8 <= total_weight <= 1.2):  # Allow some flexibility
@@ -213,7 +231,8 @@ class BehavioralMatchWeightsAPI(PerformanceModel):
 
         return values
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "feature_weight": 0.25,
                 "location_weight": 0.20,
@@ -223,26 +242,26 @@ class BehavioralMatchWeightsAPI(PerformanceModel):
                 "conversation_insights": {
                     "home_office_emphasis": 0.9,
                     "pool_interest": 0.7,
-                    "decision_timeframe": "urgent"
+                    "decision_timeframe": "urgent",
                 },
-                "adjusted_feature_priorities": {
-                    "home_office": 0.95,
-                    "pool": 0.75,
-                    "garage": 0.85
-                },
+                "adjusted_feature_priorities": {"home_office": 0.95, "pool": 0.75, "garage": 0.85},
                 "engagement_indicators": ["specific_questions", "timeline_urgency"],
-                "decision_urgency": "high"
+                "decision_urgency": "high",
             }
-        })
+        }
+    )
 
 
 class AdvancedPropertyMatchAPI(PerformanceModel, JorgeIntegrationModel):
     """Single property match result with advanced scoring."""
+
     property_id: str = Field(description="Unique property identifier")
     overall_score: confloat(ge=0.0, le=1.0) = Field(description="Overall match score")
 
     # Scoring components
-    base_compatibility_score: confloat(ge=0.0, le=1.0) = Field(description="Base compatibility without behavioral analysis")
+    base_compatibility_score: confloat(ge=0.0, le=1.0) = Field(
+        description="Base compatibility without behavioral analysis"
+    )
     behavioral_fit: confloat(ge=0.0, le=1.0) = Field(description="Behavioral enhancement score")
     engagement_prediction: confloat(ge=0.0, le=1.0) = Field(description="Predicted client engagement level")
     urgency_match: confloat(ge=0.0, le=1.0) = Field(description="Match to client's urgency level")
@@ -263,9 +282,12 @@ class AdvancedPropertyMatchAPI(PerformanceModel, JorgeIntegrationModel):
 
     # Ranking and competitiveness
     rank: Optional[int] = Field(None, ge=1, description="Rank among all matches")
-    market_competitiveness: confloat(ge=0.0, le=1.0) = Field(0.5, description="Market competition level for this property")
+    market_competitiveness: confloat(ge=0.0, le=1.0) = Field(
+        0.5, description="Market competition level for this property"
+    )
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "property_id": "prop_12345",
                 "overall_score": 0.89,
@@ -278,91 +300,91 @@ class AdvancedPropertyMatchAPI(PerformanceModel, JorgeIntegrationModel):
                     "bedrooms": 4,
                     "bathrooms": 3,
                     "square_footage": 2650,
-                    "neighborhood": "Domain"
+                    "neighborhood": "Domain",
                 },
-                "feature_matches": {
-                    "home_office": 0.95,
-                    "pool": 0.85,
-                    "garage": 0.90
-                },
+                "feature_matches": {"home_office": 0.95, "pool": 0.85, "garage": 0.90},
                 "location_score": 0.87,
                 "presentation_strategy": "lifestyle_match",
                 "key_selling_points": [
                     "Perfect home office setup for remote work",
                     "Pool for family entertainment",
-                    "Prime Domain location"
+                    "Prime Domain location",
                 ],
                 "potential_objections": ["Price point", "HOA fees"],
                 "match_reasoning": "Exceptional match based on explicit home office requirement and lifestyle preferences.",
                 "rank": 1,
                 "market_competitiveness": 0.85,
-                "jorge_methodology_score": 0.92
+                "jorge_methodology_score": 0.92,
             }
-        })
+        }
+    )
 
 
 class PropertyMatchRequestAPI(BaseModel):
     """Request for advanced property matching analysis."""
+
     lead_id: constr(min_length=1) = Field(description="Lead identifier")
     preferences: Dict[str, Any] = Field(description="Lead preferences and requirements")
-    conversation_history: Optional[List[Dict[str, Any]]] = Field(None, description="Recent conversation data for behavioral analysis")
+    conversation_history: Optional[List[Dict[str, Any]]] = Field(
+        None, description="Recent conversation data for behavioral analysis"
+    )
     filters: Optional[PropertyMatchingFiltersAPI] = Field(None, description="Additional filtering options")
     context: Optional[Dict[str, Any]] = Field(None, description="Additional context for matching")
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "lead_id": "lead_12345",
                 "preferences": {
                     "price_range": {"min": 400000, "max": 600000},
                     "bedrooms": {"min": 3, "ideal": 4},
-                    "lifestyle_features": {"home_office": 0.9, "pool": 0.7}
+                    "lifestyle_features": {"home_office": 0.9, "pool": 0.7},
                 },
                 "conversation_history": [
                     {
                         "message": "We absolutely need a home office",
                         "timestamp": "2025-01-25T10:00:00Z",
-                        "engagement_score": 0.9
+                        "engagement_score": 0.9,
                     }
                 ],
-                "filters": {
-                    "min_score": 0.7,
-                    "max_results": 5
-                }
+                "filters": {"min_score": 0.7, "max_results": 5},
             }
-        })
+        }
+    )
 
 
 class PropertyMatchResponseAPI(PerformanceModel):
     """Response from property matching analysis."""
+
     matches: List[AdvancedPropertyMatchAPI] = Field(description="Matched properties with scores")
     total_found: int = Field(ge=0, description="Total properties found")
     behavioral_weights: BehavioralMatchWeightsAPI = Field(description="Applied behavioral weights")
     analysis_timestamp: datetime = Field(default_factory=datetime.now, description="Analysis completion time")
     market_insights: Dict[str, Any] = Field(default_factory=dict, description="Market condition insights")
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "matches": [
-                    {
-                        "property_id": "prop_12345",
-                        "overall_score": 0.89,
-                        "presentation_strategy": "lifestyle_match"
-                    }
+                    {"property_id": "prop_12345", "overall_score": 0.89, "presentation_strategy": "lifestyle_match"}
                 ],
                 "total_found": 1,
                 "processing_time_ms": 85,
                 "cache_used": False,
-                "confidence_score": 0.89
+                "confidence_score": 0.89,
             }
-        })
+        }
+    )
 
 
 # =====================================================================================
 # Phase 2.3: Conversation Intelligence Models
 # =====================================================================================
 
+
 class SentimentTimelinePointAPI(BaseModel):
     """Single point in conversation sentiment timeline."""
+
     timestamp_offset_seconds: int = Field(ge=0, description="Seconds from conversation start")
     sentiment_score: confloat(ge=-1.0, le=1.0) = Field(description="Sentiment score (-1 to 1)")
     sentiment_classification: SentimentLevelAPI = Field(description="Categorical sentiment level")
@@ -371,7 +393,8 @@ class SentimentTimelinePointAPI(BaseModel):
     trigger_phrase: Optional[str] = Field(None, description="Phrase that triggered this sentiment")
     topic_context: Optional[str] = Field(None, description="What was being discussed")
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "timestamp_offset_seconds": 120,
                 "sentiment_score": 0.7,
@@ -379,13 +402,15 @@ class SentimentTimelinePointAPI(BaseModel):
                 "confidence": 0.89,
                 "speaker": "user",
                 "trigger_phrase": "that sounds perfect",
-                "topic_context": "property_features"
+                "topic_context": "property_features",
             }
-        })
+        }
+    )
 
 
 class ObjectionDetectionAPI(PerformanceModel):
     """Detected objection with response recommendations."""
+
     objection_id: str = Field(description="Unique objection identifier")
     objection_category: ObjectionTypeAPI = Field(description="Type of objection detected")
     objection_text: str = Field(description="Actual objection content")
@@ -394,7 +419,9 @@ class ObjectionDetectionAPI(PerformanceModel):
 
     # Response handling
     agent_response: Optional[str] = Field(None, description="Agent's response to objection")
-    response_effectiveness_score: Optional[confloat(ge=0.0, le=1.0)] = Field(None, description="How well objection was handled")
+    response_effectiveness_score: Optional[confloat(ge=0.0, le=1.0)] = Field(
+        None, description="How well objection was handled"
+    )
     objection_resolved: bool = Field(False, description="Whether objection was successfully addressed")
     follow_up_needed: bool = Field(True, description="Whether follow-up is required")
 
@@ -405,7 +432,8 @@ class ObjectionDetectionAPI(PerformanceModel):
     # Context
     conversation_context: Optional[str] = Field(None, description="Surrounding conversation context")
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "objection_id": "obj_12345",
                 "objection_category": "price_concern",
@@ -418,16 +446,18 @@ class ObjectionDetectionAPI(PerformanceModel):
                 "follow_up_needed": True,
                 "suggested_responses": [
                     "Let me show you the recent comparable sales data",
-                    "This pricing reflects the premium location and recent upgrades"
+                    "This pricing reflects the premium location and recent upgrades",
                 ],
                 "coaching_notes": "Could have used more data to support pricing",
-                "confidence_score": 0.92
+                "confidence_score": 0.92,
             }
-        })
+        }
+    )
 
 
 class CoachingOpportunityAPI(TimestampedModel, PerformanceModel):
     """Identified coaching opportunity for agent improvement."""
+
     opportunity_id: str = Field(description="Unique coaching opportunity identifier")
     conversation_id: str = Field(description="Source conversation identifier")
     agent_user_id: Optional[str] = Field(None, description="Agent who needs coaching")
@@ -453,7 +483,8 @@ class CoachingOpportunityAPI(TimestampedModel, PerformanceModel):
     manager_notified: bool = Field(False, description="Whether manager has been notified")
     follow_up_scheduled: Optional[datetime] = Field(None, description="Scheduled follow-up time")
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "opportunity_id": "coach_12345",
                 "conversation_id": "conv_67890",
@@ -465,17 +496,19 @@ class CoachingOpportunityAPI(TimestampedModel, PerformanceModel):
                 "recommended_approach": "Ask follow-up questions to get specific timelines",
                 "suggested_scripts": [
                     "What specific date do you need to be in your new home?",
-                    "Help me understand your ideal timeline for moving"
+                    "Help me understand your ideal timeline for moving",
                 ],
                 "coaching_status": "identified",
                 "manager_notified": False,
-                "confidence_score": 0.85
+                "confidence_score": 0.85,
             }
-        })
+        }
+    )
 
 
 class ConversationInsightAPI(PerformanceModel, JorgeIntegrationModel, TimestampedModel):
     """Comprehensive conversation analysis results."""
+
     conversation_id: str = Field(description="Conversation identifier")
     lead_id: str = Field(description="Lead identifier")
 
@@ -504,7 +537,8 @@ class ConversationInsightAPI(PerformanceModel, JorgeIntegrationModel, Timestampe
     priority_follow_up_topics: List[str] = Field(default_factory=list, description="Priority topics for follow-up")
     suggested_timeline: Optional[str] = Field(None, description="Suggested follow-up timeline")
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "conversation_id": "conv_12345",
                 "lead_id": "lead_67890",
@@ -519,18 +553,17 @@ class ConversationInsightAPI(PerformanceModel, JorgeIntegrationModel, Timestampe
                 "key_topics": ["home_office", "price_range", "timeline"],
                 "buying_signals": ["specific_questions", "timeline_urgency"],
                 "concern_indicators": ["price_sensitivity"],
-                "recommended_next_actions": [
-                    "Schedule property viewing",
-                    "Provide market analysis"
-                ],
+                "recommended_next_actions": ["Schedule property viewing", "Provide market analysis"],
                 "jorge_methodology_score": 0.91,
-                "confrontational_effectiveness": 0.87
+                "confrontational_effectiveness": 0.87,
             }
-        })
+        }
+    )
 
 
 class ConversationAnalysisRequestAPI(BaseModel):
     """Request for conversation intelligence analysis."""
+
     conversation_id: constr(min_length=1) = Field(description="Conversation identifier")
     lead_id: constr(min_length=1) = Field(description="Lead identifier")
     conversation_history: List[Dict[str, Any]] = Field(description="Complete conversation messages")
@@ -538,7 +571,8 @@ class ConversationAnalysisRequestAPI(BaseModel):
     analysis_type: str = Field("comprehensive", description="Type of analysis to perform")
     include_coaching: bool = Field(True, description="Include coaching opportunity detection")
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "conversation_id": "conv_12345",
                 "lead_id": "lead_67890",
@@ -546,23 +580,25 @@ class ConversationAnalysisRequestAPI(BaseModel):
                     {
                         "role": "user",
                         "content": "I'm interested in properties with home offices",
-                        "timestamp": "2025-01-25T10:00:00Z"
+                        "timestamp": "2025-01-25T10:00:00Z",
                     },
                     {
                         "role": "agent",
                         "content": "Great! I have several properties that would be perfect",
-                        "timestamp": "2025-01-25T10:01:00Z"
-                    }
+                        "timestamp": "2025-01-25T10:01:00Z",
+                    },
                 ],
                 "enable_preference_learning": True,
                 "analysis_type": "comprehensive",
-                "include_coaching": True
+                "include_coaching": True,
             }
-        })
+        }
+    )
 
 
 class ConversationResponseAPI(PerformanceModel):
     """Complete conversation analysis response."""
+
     insights: ConversationInsightAPI = Field(description="Core conversation insights")
     objections: List[ObjectionDetectionAPI] = Field(description="Detected objections")
     coaching_opportunities: List[CoachingOpportunityAPI] = Field(description="Coaching opportunities")
@@ -570,46 +606,32 @@ class ConversationResponseAPI(PerformanceModel):
     analysis_timestamp: datetime = Field(default_factory=datetime.now, description="Analysis completion time")
     recommendations: List[str] = Field(description="Next-step recommendations")
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
-                "insights": {
-                    "conversation_id": "conv_12345",
-                    "overall_engagement_score": 0.85
-                },
-                "objections": [
-                    {
-                        "objection_category": "price_concern",
-                        "severity_level": 3
-                    }
-                ],
-                "coaching_opportunities": [
-                    {
-                        "opportunity_type": "closing_technique",
-                        "priority_level": 4
-                    }
-                ],
-                "sentiment_timeline": [
-                    {
-                        "sentiment_score": 0.7,
-                        "sentiment_classification": "positive"
-                    }
-                ],
+                "insights": {"conversation_id": "conv_12345", "overall_engagement_score": 0.85},
+                "objections": [{"objection_category": "price_concern", "severity_level": 3}],
+                "coaching_opportunities": [{"opportunity_type": "closing_technique", "priority_level": 4}],
+                "sentiment_timeline": [{"sentiment_score": 0.7, "sentiment_classification": "positive"}],
                 "recommendations": [
                     "Schedule property viewing within 48 hours",
-                    "Address price concerns with market data"
+                    "Address price concerns with market data",
                 ],
                 "processing_time_ms": 340,
-                "confidence_score": 0.89
+                "confidence_score": 0.89,
             }
-        })
+        }
+    )
 
 
 # =====================================================================================
 # Phase 2.4: Client Preference Learning Models
 # =====================================================================================
 
+
 class PreferenceLearningEventAPI(TimestampedModel, PerformanceModel):
     """Individual preference learning event for audit trail."""
+
     event_id: str = Field(description="Unique event identifier")
     client_id: str = Field(description="Client identifier")
 
@@ -645,7 +667,8 @@ class PreferenceLearningEventAPI(TimestampedModel, PerformanceModel):
     validation_notes: Optional[str] = Field(None, description="Validation feedback")
     false_positive_flag: bool = Field(False, description="Marked as false positive")
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "event_id": "evt_12345",
                 "client_id": "client_67890",
@@ -654,26 +677,24 @@ class PreferenceLearningEventAPI(TimestampedModel, PerformanceModel):
                 "source_reference": "conv_12345",
                 "preference_category": "lifestyle_factors",
                 "learned_preference": {
-                    "home_office": {
-                        "importance": 0.95,
-                        "confidence": 0.92,
-                        "context": "explicit_requirement"
-                    }
+                    "home_office": {"importance": 0.95, "confidence": 0.92, "context": "explicit_requirement"}
                 },
                 "evidence_strength": 0.92,
                 "source_context": {
                     "conversation_segment": "We absolutely need a home office",
-                    "speaker_emphasis": "high"
+                    "speaker_emphasis": "high",
                 },
                 "profile_impact_score": 0.15,
                 "created_new_preference": True,
-                "confidence_score": 0.92
+                "confidence_score": 0.92,
             }
-        })
+        }
+    )
 
 
 class PreferenceDriftDetectionAPI(TimestampedModel, PerformanceModel):
     """Detected drift in client preferences."""
+
     drift_id: str = Field(description="Unique drift detection identifier")
     client_id: str = Field(description="Client identifier")
 
@@ -704,7 +725,8 @@ class PreferenceDriftDetectionAPI(TimestampedModel, PerformanceModel):
     resolution_action: Optional[str] = Field(None, description="Action taken to resolve drift")
     resolution_timestamp: Optional[datetime] = Field(None, description="When drift was resolved")
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "drift_id": "drift_12345",
                 "client_id": "client_67890",
@@ -714,26 +736,20 @@ class PreferenceDriftDetectionAPI(TimestampedModel, PerformanceModel):
                 "previous_preference": {"modern": 0.8, "traditional": 0.2},
                 "new_preference": {"modern": 0.4, "traditional": 0.6},
                 "confidence_change": -0.2,
-                "triggering_events": [
-                    {
-                        "event": "viewed_traditional_property",
-                        "timestamp": "2025-01-24T15:30:00Z"
-                    }
-                ],
+                "triggering_events": [{"event": "viewed_traditional_property", "timestamp": "2025-01-24T15:30:00Z"}],
                 "significance_level": 0.85,
                 "impact_on_matching": 0.6,
-                "recommended_actions": [
-                    "Confirm style preference with client",
-                    "Update property matching criteria"
-                ],
+                "recommended_actions": ["Confirm style preference with client", "Update property matching criteria"],
                 "agent_notified": False,
-                "confidence_score": 0.85
+                "confidence_score": 0.85,
             }
-        })
+        }
+    )
 
 
 class PreferenceProfileAPI(TimestampedModel, PerformanceModel):
     """Complete client preference profile."""
+
     client_id: str = Field(description="Client identifier")
     location_id: str = Field(description="Location identifier")
 
@@ -746,21 +762,31 @@ class PreferenceProfileAPI(TimestampedModel, PerformanceModel):
 
     # Core property preferences (JSON structures for flexibility)
     bedrooms_preference: Dict[str, Any] = Field(default_factory=dict, description="Bedroom preferences with confidence")
-    bathrooms_preference: Dict[str, Any] = Field(default_factory=dict, description="Bathroom preferences with confidence")
-    square_footage_preference: Dict[str, Any] = Field(default_factory=dict, description="Size preferences with confidence")
+    bathrooms_preference: Dict[str, Any] = Field(
+        default_factory=dict, description="Bathroom preferences with confidence"
+    )
+    square_footage_preference: Dict[str, Any] = Field(
+        default_factory=dict, description="Size preferences with confidence"
+    )
     price_range_preference: Dict[str, Any] = Field(default_factory=dict, description="Price range with confidence")
 
     # Style and aesthetic preferences
-    property_style_preferences: Dict[str, float] = Field(default_factory=dict, description="Style preferences (modern: 0.8)")
+    property_style_preferences: Dict[str, float] = Field(
+        default_factory=dict, description="Style preferences (modern: 0.8)"
+    )
     property_age_preference: Dict[str, float] = Field(default_factory=dict, description="Age preferences")
     condition_preferences: Dict[str, float] = Field(default_factory=dict, description="Condition preferences")
 
     # Location and lifestyle preferences
-    location_preferences: Dict[str, Any] = Field(default_factory=dict, description="Location and neighborhood preferences")
+    location_preferences: Dict[str, Any] = Field(
+        default_factory=dict, description="Location and neighborhood preferences"
+    )
     lifestyle_features: Dict[str, float] = Field(default_factory=dict, description="Feature importance scores")
 
     # Communication and decision-making
-    communication_preferences: Dict[str, Any] = Field(default_factory=dict, description="Communication style preferences")
+    communication_preferences: Dict[str, Any] = Field(
+        default_factory=dict, description="Communication style preferences"
+    )
     decision_making_style: Dict[str, Any] = Field(default_factory=dict, description="Decision-making patterns")
 
     # Financial and timeline preferences
@@ -783,7 +809,7 @@ class PreferenceProfileAPI(TimestampedModel, PerformanceModel):
     last_prediction_timestamp: Optional[datetime] = Field(None, description="Last property prediction time")
     prediction_cache: Dict[str, Any] = Field(default_factory=dict, description="Cached prediction results")
 
-    @field_validator('profile_completeness_percentage')
+    @field_validator("profile_completeness_percentage")
     @classmethod
     def validate_completeness_percentage(cls, v):
         """Ensure completeness percentage is valid."""
@@ -791,7 +817,8 @@ class PreferenceProfileAPI(TimestampedModel, PerformanceModel):
             raise ValueError("Profile completeness must be between 0 and 100")
         return v
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "client_id": "client_12345",
                 "location_id": "loc_67890",
@@ -800,41 +827,22 @@ class PreferenceProfileAPI(TimestampedModel, PerformanceModel):
                 "profile_completeness_percentage": 75,
                 "learning_sessions_count": 12,
                 "total_data_points": 35,
-                "bedrooms_preference": {
-                    "min": 3,
-                    "max": 4,
-                    "ideal": 3,
-                    "confidence": 0.89
-                },
-                "price_range_preference": {
-                    "min": 400000,
-                    "max": 550000,
-                    "confidence": 0.92
-                },
-                "property_style_preferences": {
-                    "modern": 0.85,
-                    "contemporary": 0.75,
-                    "traditional": 0.25
-                },
-                "lifestyle_features": {
-                    "home_office": 0.95,
-                    "pool": 0.65,
-                    "garage": 0.88
-                },
-                "feature_priority_scores": {
-                    "price": 0.95,
-                    "location": 0.82,
-                    "home_office": 0.90
-                },
+                "bedrooms_preference": {"min": 3, "max": 4, "ideal": 3, "confidence": 0.89},
+                "price_range_preference": {"min": 400000, "max": 550000, "confidence": 0.92},
+                "property_style_preferences": {"modern": 0.85, "contemporary": 0.75, "traditional": 0.25},
+                "lifestyle_features": {"home_office": 0.95, "pool": 0.65, "garage": 0.88},
+                "feature_priority_scores": {"price": 0.95, "location": 0.82, "home_office": 0.90},
                 "deal_breaker_features": ["busy_road", "no_garage"],
                 "prediction_accuracy_score": 0.87,
-                "consistency_score": 0.82
+                "consistency_score": 0.82,
             }
-        })
+        }
+    )
 
 
 class PreferenceLearningRequestAPI(BaseModel):
     """Request for preference learning analysis."""
+
     client_id: constr(min_length=1) = Field(description="Client identifier")
     source_type: PreferenceSourceAPI = Field(description="Source type for learning")
 
@@ -846,25 +854,28 @@ class PreferenceLearningRequestAPI(BaseModel):
 
     # Learning configuration
     learning_config: Dict[str, Any] = Field(default_factory=dict, description="Learning algorithm configuration")
-    confidence_threshold: confloat(ge=0.0, le=1.0) = Field(0.6, description="Minimum confidence for preference learning")
+    confidence_threshold: confloat(ge=0.0, le=1.0) = Field(
+        0.6, description="Minimum confidence for preference learning"
+    )
 
     @model_validator(mode="before")
     @classmethod
     def validate_source_data(cls, values):
         """Ensure appropriate data is provided for source type."""
-        source_type = values.get('source_type')
+        source_type = values.get("source_type")
 
         if source_type == PreferenceSourceAPI.CONVERSATION_ANALYSIS:
-            if not values.get('conversation_data') and not values.get('conversation_analysis'):
+            if not values.get("conversation_data") and not values.get("conversation_analysis"):
                 raise ValueError("Conversation data or analysis required for conversation source type")
 
         elif source_type == PreferenceSourceAPI.PROPERTY_INTERACTION:
-            if not values.get('property_id') or not values.get('interaction_data'):
+            if not values.get("property_id") or not values.get("interaction_data"):
                 raise ValueError("Property ID and interaction data required for property interaction source type")
 
         return values
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "client_id": "client_12345",
                 "source_type": "conversation_analysis",
@@ -873,20 +884,23 @@ class PreferenceLearningRequestAPI(BaseModel):
                         "message": "We absolutely need a home office",
                         "timestamp": "2025-01-25T10:00:00Z",
                         "speaker": "user",
-                        "confidence": 0.95
+                        "confidence": 0.95,
                     }
                 ],
-                "confidence_threshold": 0.7
+                "confidence_threshold": 0.7,
             }
-        })
+        }
+    )
 
 
 # =====================================================================================
 # Cross-Track Coordination Models
 # =====================================================================================
 
+
 class CrossTrackHandoffRequestAPI(BaseModel):
     """Request for cross-track handoff coordination."""
+
     lead_id: constr(min_length=1) = Field(description="Lead ID transitioning")
     client_id: constr(min_length=1) = Field(description="Client ID after transition")
     qualification_score: confloat(ge=0.0, le=1.0) = Field(description="Lead qualification score")
@@ -898,7 +912,8 @@ class CrossTrackHandoffRequestAPI(BaseModel):
     preserve_preferences: bool = Field(True, description="Preserve learned preferences")
     preserve_property_matches: bool = Field(True, description="Preserve property matching history")
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "lead_id": "lead_12345",
                 "client_id": "client_67890",
@@ -907,13 +922,15 @@ class CrossTrackHandoffRequestAPI(BaseModel):
                 "agent_notes": "Highly engaged lead, ready for property viewings",
                 "preserve_conversation_context": True,
                 "preserve_preferences": True,
-                "preserve_property_matches": True
+                "preserve_property_matches": True,
             }
-        })
+        }
+    )
 
 
 class LeadToClientTransitionAPI(PerformanceModel, TimestampedModel):
     """Response for lead-to-client handoff coordination."""
+
     transition_id: str = Field(description="Unique transition identifier")
     lead_id: str = Field(description="Original lead ID")
     client_id: str = Field(description="New client ID")
@@ -929,12 +946,17 @@ class LeadToClientTransitionAPI(PerformanceModel, TimestampedModel):
 
     # Next steps for client experience
     next_steps: List[str] = Field(description="Recommended next steps for client journey")
-    priority_actions: List[str] = Field(default_factory=list, description="High-priority actions for immediate follow-up")
+    priority_actions: List[str] = Field(
+        default_factory=list, description="High-priority actions for immediate follow-up"
+    )
 
     # Intelligence summary
-    intelligence_summary: Dict[str, Any] = Field(default_factory=dict, description="Summary of transferred intelligence")
+    intelligence_summary: Dict[str, Any] = Field(
+        default_factory=dict, description="Summary of transferred intelligence"
+    )
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "transition_id": "trans_12345",
                 "lead_id": "lead_67890",
@@ -947,62 +969,53 @@ class LeadToClientTransitionAPI(PerformanceModel, TimestampedModel):
                 "next_steps": [
                     "Schedule property viewings",
                     "Prepare financing pre-approval",
-                    "Set up automated property alerts"
+                    "Set up automated property alerts",
                 ],
-                "priority_actions": [
-                    "Contact within 24 hours",
-                    "Schedule viewing for top 3 properties"
-                ],
+                "priority_actions": ["Contact within 24 hours", "Schedule viewing for top 3 properties"],
                 "processing_time_ms": 145,
-                "confidence_score": 0.94
+                "confidence_score": 0.94,
             }
-        })
+        }
+    )
 
 
 # =====================================================================================
 # Common Response and Error Models
 # =====================================================================================
 
+
 class HealthCheckResponseAPI(BaseModel):
     """Health check response for Phase 2 intelligence services."""
+
     overall_status: str = Field(description="Overall service health (healthy/degraded/error)")
     location_id: str = Field(description="Location being monitored")
     services: Dict[str, Dict[str, Any]] = Field(description="Individual service health details")
     timestamp: datetime = Field(default_factory=datetime.now, description="Health check timestamp")
     performance_targets: Dict[str, int] = Field(description="Performance targets for validation")
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "overall_status": "healthy",
                 "location_id": "loc_12345",
                 "services": {
-                    "property_matching": {
-                        "status": "healthy",
-                        "avg_response_time": 85,
-                        "cache_hit_rate": 0.89
-                    },
-                    "conversation_intelligence": {
-                        "status": "healthy",
-                        "avg_processing_time": 340,
-                        "accuracy": 0.91
-                    },
-                    "preference_learning": {
-                        "status": "healthy",
-                        "avg_update_time": 35,
-                        "learning_accuracy": 0.87
-                    }
+                    "property_matching": {"status": "healthy", "avg_response_time": 85, "cache_hit_rate": 0.89},
+                    "conversation_intelligence": {"status": "healthy", "avg_processing_time": 340, "accuracy": 0.91},
+                    "preference_learning": {"status": "healthy", "avg_update_time": 35, "learning_accuracy": 0.87},
                 },
                 "performance_targets": {
                     "property_matching_ms": 100,
                     "conversation_analysis_ms": 500,
-                    "preference_learning_ms": 50
-                }
+                    "preference_learning_ms": 50,
+                },
             }
-        })
+        }
+    )
 
 
 class ErrorResponseAPI(BaseModel):
     """Standardized error response for Phase 2 intelligence APIs."""
+
     error_code: str = Field(description="Machine-readable error code")
     error_message: str = Field(description="Human-readable error message")
     details: Optional[Dict[str, Any]] = Field(None, description="Additional error details")
@@ -1014,24 +1027,27 @@ class ErrorResponseAPI(BaseModel):
     retry_recommended: bool = Field(False, description="Whether retry is recommended")
     estimated_resolution_time: Optional[str] = Field(None, description="Estimated time to resolution")
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "error_code": "PROPERTY_MATCHING_TIMEOUT",
                 "error_message": "Property matching analysis timed out after 5 seconds",
                 "details": {
                     "service": "advanced_property_matching",
                     "timeout_threshold": 5000,
-                    "actual_processing_time": 5250
+                    "actual_processing_time": 5250,
                 },
                 "fallback_available": True,
                 "retry_recommended": True,
-                "estimated_resolution_time": "2 minutes"
+                "estimated_resolution_time": "2 minutes",
             }
-        })
+        }
+    )
 
 
 class PaginationResponseAPI(BaseModel):
     """Pagination information for list responses."""
+
     page: int = Field(1, ge=1, description="Current page number")
     page_size: int = Field(20, ge=1, le=100, description="Items per page")
     total_items: int = Field(ge=0, description="Total number of items")
@@ -1043,85 +1059,97 @@ class PaginationResponseAPI(BaseModel):
     @classmethod
     def calculate_pagination_fields(cls, values):
         """Calculate pagination fields based on totals."""
-        page = values.get('page', 1)
-        page_size = values.get('page_size', 20)
-        total_items = values.get('total_items', 0)
+        page = values.get("page", 1)
+        page_size = values.get("page_size", 20)
+        total_items = values.get("total_items", 0)
 
         total_pages = max(1, (total_items + page_size - 1) // page_size)
         has_next = page < total_pages
         has_previous = page > 1
 
-        values.update({
-            'total_pages': total_pages,
-            'has_next': has_next,
-            'has_previous': has_previous
-        })
+        values.update({"total_pages": total_pages, "has_next": has_next, "has_previous": has_previous})
 
         return values
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "page": 2,
                 "page_size": 20,
                 "total_items": 127,
                 "total_pages": 7,
                 "has_next": True,
-                "has_previous": True
+                "has_previous": True,
             }
-        })
+        }
+    )
 
 
 # =====================================================================================
 # WebSocket Event Models
 # =====================================================================================
 
+
 class WebSocketEventAPI(BaseModel):
     """Base WebSocket event for real-time updates."""
+
     event_type: str = Field(description="Type of event")
     timestamp: datetime = Field(default_factory=datetime.now, description="Event timestamp")
     location_id: str = Field(description="Location identifier")
     user_id: Optional[str] = Field(None, description="User who triggered event")
     event_data: Dict[str, Any] = Field(description="Event-specific data")
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "event_type": "property_match_generated",
                 "timestamp": "2025-01-25T10:30:00Z",
                 "location_id": "loc_12345",
                 "user_id": "user_67890",
-                "event_data": {
-                    "lead_id": "lead_123",
-                    "property_id": "prop_456",
-                    "match_score": 0.89
-                }
+                "event_data": {"lead_id": "lead_123", "property_id": "prop_456", "match_score": 0.89},
             }
-        })
+        }
+    )
 
 
 # Export all models for easy importing
 __all__ = [
     # Enums
-    "PresentationStrategyAPI", "ObjectionTypeAPI", "SentimentLevelAPI",
-    "CoachingAreaAPI", "PreferenceSourceAPI", "PreferenceCategoryAPI", "DriftTypeAPI",
-
+    "PresentationStrategyAPI",
+    "ObjectionTypeAPI",
+    "SentimentLevelAPI",
+    "CoachingAreaAPI",
+    "PreferenceSourceAPI",
+    "PreferenceCategoryAPI",
+    "DriftTypeAPI",
     # Base Models
-    "TimestampedModel", "PerformanceModel", "JorgeIntegrationModel",
-
+    "TimestampedModel",
+    "PerformanceModel",
+    "JorgeIntegrationModel",
     # Property Matching Models
-    "PropertyMatchingFiltersAPI", "BehavioralMatchWeightsAPI", "AdvancedPropertyMatchAPI",
-    "PropertyMatchRequestAPI", "PropertyMatchResponseAPI",
-
+    "PropertyMatchingFiltersAPI",
+    "BehavioralMatchWeightsAPI",
+    "AdvancedPropertyMatchAPI",
+    "PropertyMatchRequestAPI",
+    "PropertyMatchResponseAPI",
     # Conversation Intelligence Models
-    "SentimentTimelinePointAPI", "ObjectionDetectionAPI", "CoachingOpportunityAPI",
-    "ConversationInsightAPI", "ConversationAnalysisRequestAPI", "ConversationResponseAPI",
-
+    "SentimentTimelinePointAPI",
+    "ObjectionDetectionAPI",
+    "CoachingOpportunityAPI",
+    "ConversationInsightAPI",
+    "ConversationAnalysisRequestAPI",
+    "ConversationResponseAPI",
     # Preference Learning Models
-    "PreferenceLearningEventAPI", "PreferenceDriftDetectionAPI", "PreferenceProfileAPI",
+    "PreferenceLearningEventAPI",
+    "PreferenceDriftDetectionAPI",
+    "PreferenceProfileAPI",
     "PreferenceLearningRequestAPI",
-
     # Cross-Track Coordination Models
-    "CrossTrackHandoffRequestAPI", "LeadToClientTransitionAPI",
-
+    "CrossTrackHandoffRequestAPI",
+    "LeadToClientTransitionAPI",
     # Common Models
-    "HealthCheckResponseAPI", "ErrorResponseAPI", "PaginationResponseAPI", "WebSocketEventAPI"
+    "HealthCheckResponseAPI",
+    "ErrorResponseAPI",
+    "PaginationResponseAPI",
+    "WebSocketEventAPI",
 ]

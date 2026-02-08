@@ -16,34 +16,35 @@ Uses unittest.mock for all external services (Claude API, GHL client, event publ
 ML analytics engine). Follows patterns from test_buyer_bot.py.
 """
 
-import pytest
 import asyncio
-from datetime import datetime, timezone
 import os
-from unittest.mock import Mock, AsyncMock, MagicMock, patch
+from datetime import datetime, timezone
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pytest
 
 from ghl_real_estate_ai.agents.jorge_seller_bot import (
-    JorgeSellerBot,
-    JorgeFeatureConfig,
-    QualificationResult,
-    ConversationMemory,
     AdaptiveQuestionEngine,
+    ConversationMemory,
+    JorgeFeatureConfig,
+    JorgeSellerBot,
+    QualificationResult,
     get_jorge_seller_bot,
 )
 from ghl_real_estate_ai.models.lead_scoring import (
-    LeadIntentProfile,
-    FinancialReadinessScore,
-    PsychologicalCommitmentScore,
-    MotivationSignals,
-    TimelineCommitment,
     ConditionRealism,
+    FinancialReadinessScore,
+    LeadIntentProfile,
+    MotivationSignals,
     PriceResponsiveness,
+    PsychologicalCommitmentScore,
+    TimelineCommitment,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers to build mock intent profiles at various temperature levels
 # ---------------------------------------------------------------------------
+
 
 def _make_frs(total: float, classification: str) -> FinancialReadinessScore:
     return FinancialReadinessScore(
@@ -86,18 +87,16 @@ def _make_profile(
 # Shared fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def mock_dependencies():
     """Patch core external service constructors so JorgeSellerBot can instantiate."""
-    with patch(
-        "ghl_real_estate_ai.agents.jorge_seller_bot.LeadIntentDecoder"
-    ) as mock_intent, patch(
-        "ghl_real_estate_ai.agents.jorge_seller_bot.ClaudeAssistant"
-    ) as mock_claude, patch(
-        "ghl_real_estate_ai.agents.jorge_seller_bot.get_event_publisher"
-    ) as mock_events, patch(
-        "ghl_real_estate_ai.agents.jorge_seller_bot.get_ml_analytics_engine"
-    ) as mock_ml:
+    with (
+        patch("ghl_real_estate_ai.agents.jorge_seller_bot.LeadIntentDecoder") as mock_intent,
+        patch("ghl_real_estate_ai.agents.jorge_seller_bot.ClaudeAssistant") as mock_claude,
+        patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_event_publisher") as mock_events,
+        patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_ml_analytics_engine") as mock_ml,
+    ):
         mock_intent_instance = MagicMock()
         mock_intent.return_value = mock_intent_instance
 
@@ -211,12 +210,16 @@ class TestFactoryMethods:
         bot = get_jorge_seller_bot("progressive")
         assert bot.config.enable_progressive_skills is True
 
-    @patch.dict("os.environ", {
-        "ENABLE_PROGRESSIVE_SKILLS": "true",
-        "ENABLE_AGENT_MESH": "true",
-        "ENABLE_MCP_INTEGRATION": "true",
-        "ENABLE_ADAPTIVE_QUESTIONING": "true",
-    }, clear=False)
+    @patch.dict(
+        "os.environ",
+        {
+            "ENABLE_PROGRESSIVE_SKILLS": "true",
+            "ENABLE_AGENT_MESH": "true",
+            "ENABLE_MCP_INTEGRATION": "true",
+            "ENABLE_ADAPTIVE_QUESTIONING": "true",
+        },
+        clear=False,
+    )
     def test_get_jorge_seller_bot_enterprise(self, mock_dependencies):
         """get_jorge_seller_bot loads from env vars, so set all flags."""
         bot = get_jorge_seller_bot("enterprise")
@@ -327,18 +330,14 @@ class TestStallDetection:
 
     @pytest.mark.asyncio
     async def test_detects_thinking_stall(self, bot, seller_state_warm):
-        seller_state_warm["conversation_history"] = [
-            {"role": "user", "content": "I'm still thinking about it"}
-        ]
+        seller_state_warm["conversation_history"] = [{"role": "user", "content": "I'm still thinking about it"}]
         result = await bot.detect_stall(seller_state_warm)
         assert result["stall_detected"] is True
         assert result["detected_stall_type"] == "thinking"
 
     @pytest.mark.asyncio
     async def test_detects_get_back_stall(self, bot, seller_state_warm):
-        seller_state_warm["conversation_history"] = [
-            {"role": "user", "content": "I'll get back to you later"}
-        ]
+        seller_state_warm["conversation_history"] = [{"role": "user", "content": "I'll get back to you later"}]
         result = await bot.detect_stall(seller_state_warm)
         assert result["stall_detected"] is True
         assert result["detected_stall_type"] == "get_back"
@@ -354,9 +353,7 @@ class TestStallDetection:
 
     @pytest.mark.asyncio
     async def test_detects_agent_stall(self, bot, seller_state_warm):
-        seller_state_warm["conversation_history"] = [
-            {"role": "user", "content": "I already have an agent"}
-        ]
+        seller_state_warm["conversation_history"] = [{"role": "user", "content": "I already have an agent"}]
         result = await bot.detect_stall(seller_state_warm)
         assert result["stall_detected"] is True
         assert result["detected_stall_type"] == "agent"
@@ -415,9 +412,7 @@ class TestAnalyzeIntent:
         assert result["seller_temperature"] == "cold"
 
     @pytest.mark.asyncio
-    async def test_analyze_intent_emits_events(
-        self, mock_dependencies, disabled_config, seller_state_warm
-    ):
+    async def test_analyze_intent_emits_events(self, mock_dependencies, disabled_config, seller_state_warm):
         profile = _make_profile(frs_total=60, pcs_total=60, classification="Warm Lead")
         mock_dependencies["intent_decoder"].analyze_lead.return_value = profile
 
@@ -482,9 +477,7 @@ class TestGenerateJorgeResponse:
     """Verify response generation calls Claude and returns content."""
 
     @pytest.mark.asyncio
-    async def test_response_generated_from_claude(
-        self, mock_dependencies, disabled_config, seller_state_warm
-    ):
+    async def test_response_generated_from_claude(self, mock_dependencies, disabled_config, seller_state_warm):
         bot = JorgeSellerBot(config=disabled_config)
         seller_state_warm["intent_profile"] = _make_profile()
         seller_state_warm["current_tone"] = "CONSULTATIVE"
@@ -498,9 +491,7 @@ class TestGenerateJorgeResponse:
         mock_dependencies["claude"].analyze_with_context.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_response_uses_stall_template_when_stall(
-        self, mock_dependencies, disabled_config, seller_state_warm
-    ):
+    async def test_response_uses_stall_template_when_stall(self, mock_dependencies, disabled_config, seller_state_warm):
         bot = JorgeSellerBot(config=disabled_config)
         seller_state_warm["intent_profile"] = _make_profile()
         seller_state_warm["current_tone"] = "UNDERSTANDING"
@@ -516,9 +507,7 @@ class TestGenerateJorgeResponse:
         assert "zestimate" in prompt_text.lower() or "online estimates" in prompt_text.lower()
 
     @pytest.mark.asyncio
-    async def test_response_fallback_on_claude_empty(
-        self, mock_dependencies, disabled_config, seller_state_warm
-    ):
+    async def test_response_fallback_on_claude_empty(self, mock_dependencies, disabled_config, seller_state_warm):
         """When Claude returns empty content/analysis, fallback message is used."""
         mock_dependencies["claude"].analyze_with_context = AsyncMock(return_value={})
 
@@ -543,18 +532,14 @@ class TestExecuteFollowUp:
     """Verify follow-up execution increments counter and uses correct template."""
 
     @pytest.mark.asyncio
-    async def test_follow_up_increments_count(
-        self, mock_dependencies, disabled_config, seller_state_warm
-    ):
+    async def test_follow_up_increments_count(self, mock_dependencies, disabled_config, seller_state_warm):
         bot = JorgeSellerBot(config=disabled_config)
         seller_state_warm["follow_up_count"] = 2
         result = await bot.execute_follow_up(seller_state_warm)
         assert result["follow_up_count"] == 3
 
     @pytest.mark.asyncio
-    async def test_follow_up_uses_stage_template(
-        self, mock_dependencies, disabled_config, seller_state_warm
-    ):
+    async def test_follow_up_uses_stage_template(self, mock_dependencies, disabled_config, seller_state_warm):
         bot = JorgeSellerBot(config=disabled_config)
         seller_state_warm["current_journey_stage"] = "listing_prep"
         result = await bot.execute_follow_up(seller_state_warm)
@@ -570,9 +555,7 @@ class TestProcessSellerMessage:
     """Integration test: the full LangGraph workflow invocation."""
 
     @pytest.mark.asyncio
-    async def test_process_seller_message_returns_response(
-        self, mock_dependencies, disabled_config
-    ):
+    async def test_process_seller_message_returns_response(self, mock_dependencies, disabled_config):
         profile = _make_profile(frs_total=60, pcs_total=55, classification="Warm Lead")
         mock_dependencies["intent_decoder"].analyze_lead.return_value = profile
 
@@ -580,18 +563,14 @@ class TestProcessSellerMessage:
         result = await bot.process_seller_message(
             lead_id="seller_001",
             lead_name="Jane Smith",
-            history=[
-                {"role": "user", "content": "I want to sell my home in Victoria"}
-            ],
+            history=[{"role": "user", "content": "I want to sell my home in Victoria"}],
         )
 
         assert result["response_content"]
         assert result["intent_profile"] is not None
 
     @pytest.mark.asyncio
-    async def test_process_seller_message_with_stall(
-        self, mock_dependencies, disabled_config
-    ):
+    async def test_process_seller_message_with_stall(self, mock_dependencies, disabled_config):
         profile = _make_profile(frs_total=30, pcs_total=20, classification="Lukewarm")
         mock_dependencies["intent_decoder"].analyze_lead.return_value = profile
 
@@ -636,9 +615,9 @@ class TestRouting:
             enable_bot_intelligence=False,
         )
         bot = JorgeSellerBot(config=config)
-        assert bot._route_adaptive_action(
-            {"adaptive_mode": "calendar_focused", "next_action": "respond"}
-        ) == "fast_track"
+        assert (
+            bot._route_adaptive_action({"adaptive_mode": "calendar_focused", "next_action": "respond"}) == "fast_track"
+        )
 
     def test_adaptive_route_end(self, mock_dependencies):
         config = JorgeFeatureConfig(
@@ -647,9 +626,7 @@ class TestRouting:
             enable_bot_intelligence=False,
         )
         bot = JorgeSellerBot(config=config)
-        assert bot._route_adaptive_action(
-            {"adaptive_mode": "standard_qualification", "next_action": "end"}
-        ) == "end"
+        assert bot._route_adaptive_action({"adaptive_mode": "standard_qualification", "next_action": "end"}) == "end"
 
 
 # =========================================================================
@@ -754,9 +731,7 @@ class TestErrorHandling:
     async def test_claude_api_exception_in_response_generation(
         self, mock_dependencies, disabled_config, seller_state_warm
     ):
-        mock_dependencies["claude"].analyze_with_context = AsyncMock(
-            side_effect=Exception("Claude API rate limit")
-        )
+        mock_dependencies["claude"].analyze_with_context = AsyncMock(side_effect=Exception("Claude API rate limit"))
         bot = JorgeSellerBot(config=disabled_config)
         seller_state_warm["intent_profile"] = _make_profile()
         seller_state_warm["current_tone"] = "CONSULTATIVE"
@@ -768,9 +743,7 @@ class TestErrorHandling:
             await bot.generate_jorge_response(seller_state_warm)
 
     @pytest.mark.asyncio
-    async def test_strategy_fallback_when_ml_fails(
-        self, mock_dependencies, disabled_config, seller_state_warm
-    ):
+    async def test_strategy_fallback_when_ml_fails(self, mock_dependencies, disabled_config, seller_state_warm):
         """When Track 3.1 ML calls fail, strategy falls back to base logic."""
         # Enable Track 3.1 but make it fail
         config = JorgeFeatureConfig(

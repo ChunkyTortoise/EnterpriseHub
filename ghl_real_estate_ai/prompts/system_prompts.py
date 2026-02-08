@@ -343,6 +343,7 @@ Ask these questions ONE AT A TIME, in this exact order:
 5. Be direct, almost confrontational - this is Jorge's style
 """
 
+
 def build_seller_system_prompt(
     contact_name: str,
     conversation_stage: str,
@@ -351,7 +352,7 @@ def build_seller_system_prompt(
     relevant_knowledge: str = "",
     is_returning_seller: bool = False,
     hours_since: float = 0,
-    **kwargs
+    **kwargs,
 ) -> str:
     """
     Build Jorge's seller system prompt with confrontational tone.
@@ -375,19 +376,18 @@ def build_seller_system_prompt(
 
     # Format seller data
     if extracted_seller_data:
-        seller_prefs_text = "\n".join([
-            f"- {key.replace('_', ' ').title()}: {value}"
-            for key, value in extracted_seller_data.items()
-            if value is not None
-        ])
+        seller_prefs_text = "\n".join(
+            [
+                f"- {key.replace('_', ' ').title()}: {value}"
+                for key, value in extracted_seller_data.items()
+                if value is not None
+            ]
+        )
     else:
         seller_prefs_text = "No seller data collected yet"
 
     # Jorge's hot seller detection
-    if (questions_answered == 4 and
-        extracted_seller_data.get("timeline_acceptable") and
-        seller_temperature == "hot"):
-
+    if questions_answered == 4 and extracted_seller_data.get("timeline_acceptable") and seller_temperature == "hot":
         # Hot seller handoff prompt
         handoff_prompt = f"""
         {contact_name} has answered all 4 questions and is a HOT SELLER.
@@ -422,7 +422,7 @@ def build_seller_system_prompt(
         contact_name=contact_name,
         questions_answered=questions_answered,
         seller_temperature=seller_temperature,
-        seller_preferences=seller_prefs_text
+        seller_preferences=seller_prefs_text,
     )
 
     # Add next question context
@@ -437,9 +437,15 @@ def _get_next_seller_question(seller_data: dict) -> str:
     """Get the next unanswered question in Jorge's sequence"""
     questions = [
         ("motivation", "What's got you considering wanting to sell, where would you move to?"),
-        ("timeline_acceptable", "If our team sold your home within the next 30 to 45 days, would that pose a problem for you?"),
-        ("property_condition", "How would you describe your home, would you say it's move-in ready or would it need some work?"),
-        ("price_expectation", "What price would incentivize you to sell?")
+        (
+            "timeline_acceptable",
+            "If our team sold your home within the next 30 to 45 days, would that pose a problem for you?",
+        ),
+        (
+            "property_condition",
+            "How would you describe your home, would you say it's move-in ready or would it need some work?",
+        ),
+        ("price_expectation", "What price would incentivize you to sell?"),
     ]
 
     for field, question in questions:
@@ -447,19 +453,14 @@ def _get_next_seller_question(seller_data: dict) -> str:
             return question
     return None  # All questions answered
 
+
 # ==============================================================================
 # OBJECTION HANDLING PROMPTS
 # ==============================================================================
 
 OBJECTION_HANDLERS = {
     "price_too_high": {
-        "trigger_phrases": [
-            "too expensive",
-            "out of my budget",
-            "can't afford",
-            "price is high",
-            "overpriced"
-        ],
+        "trigger_phrases": ["too expensive", "out of my budget", "can't afford", "price is high", "overpriced"],
         "response_template": """I totally understand—Austin prices can feel steep. Here's some context:
 
 {property_name} is actually priced {percentage_vs_market} compared to similar homes in {neighborhood}. {Comparable_sales_data}.
@@ -474,15 +475,15 @@ Which sounds most interesting?""",
             "Acknowledge the concern genuinely",
             "Provide market context with data",
             "Offer 2-3 actionable alternatives",
-            "Avoid dismissing their budget constraints"
-        ]
+            "Avoid dismissing their budget constraints",
+        ],
     },
     "need_to_think": {
         "trigger_phrases": [
             "need to think about it",
             "let me talk to my spouse",
             "not ready to decide",
-            "want to sleep on it"
+            "want to sleep on it",
         ],
         "response_template": """Absolutely—buying a home is a huge decision. Take the time you need.
 
@@ -496,16 +497,11 @@ No pressure at all—just here to help when you're ready.""",
             "Validate their need for time",
             "Offer resources to aid their decision",
             "Keep the door open without pressure",
-            "Ask if there's a specific concern blocking them"
-        ]
+            "Ask if there's a specific concern blocking them",
+        ],
     },
     "credit_concerns": {
-        "trigger_phrases": [
-            "bad credit",
-            "low credit score",
-            "credit issues",
-            "can i qualify"
-        ],
+        "trigger_phrases": ["bad credit", "low credit score", "credit issues", "can i qualify"],
         "response_template": """Credit challenges are super common, and there are real solutions:
 
 - **FHA loans**: Accept scores as low as 580 (or 500 with 10% down)
@@ -517,8 +513,8 @@ Want me to connect you with a lender who specializes in credit rebuilding? They 
             "Normalize credit challenges (reduce shame)",
             "Provide specific solutions and timelines",
             "Offer lender referral immediately",
-            "Emphasize it's fixable, not permanent"
-        ]
+            "Emphasize it's fixable, not permanent",
+        ],
     },
     "market_timing": {
         "trigger_phrases": [
@@ -526,7 +522,7 @@ Want me to connect you with a lender who specializes in credit rebuilding? They 
             "market going to crash",
             "prices will drop",
             "wait for rates to fall",
-            "bad time to buy"
+            "bad time to buy",
         ],
         "response_template": """I get it—timing the market is tempting. Here's the reality:
 
@@ -545,15 +541,15 @@ That said—if you're not financially ready, waiting makes total sense. Where ar
             "Acknowledge the valid concern",
             "Provide historical data to counter speculation",
             "Show math: waiting often costs more",
-            "Offer personalized assessment, not blanket advice"
-        ]
+            "Offer personalized assessment, not blanket advice",
+        ],
     },
     "inspection_issues": {
         "trigger_phrases": [
             "inspection found problems",
             "roof needs replacing",
             "foundation issues",
-            "expensive repairs"
+            "expensive repairs",
         ],
         "response_template": """Inspection issues are stressful, but they're also negotiating leverage:
 
@@ -569,15 +565,15 @@ Want me to connect you with {agent_name} to strategize the best approach?""",
             "Frame as opportunity, not disaster",
             "Provide cost estimates for transparency",
             "Outline all options clearly",
-            "Offer agent support for negotiation"
-        ]
+            "Offer agent support for negotiation",
+        ],
     },
     "down_payment_concerns": {
         "trigger_phrases": [
             "don't have 20 percent",
             "can't afford down payment",
             "how much down",
-            "need down payment help"
+            "need down payment help",
         ],
         "response_template": """Good news: 20% down is a myth. Here's what's actually available:
 
@@ -596,9 +592,9 @@ Want me to connect you with a lender who can walk through your specific options?
             "Bust the 20% myth immediately",
             "Show specific programs with real numbers",
             "Offer creative solutions",
-            "Provide lender referral"
-        ]
-    }
+            "Provide lender referral",
+        ],
+    },
 }
 
 # ==============================================================================
@@ -711,6 +707,7 @@ What works best for you? I'll send a calendar invite right after."
 # CONTEXT-AWARE RESPONSE BUILDER
 # ==============================================================================
 
+
 def build_system_prompt(
     contact_name: str = "there",
     conversation_stage: str = "qualifying",
@@ -725,7 +722,7 @@ def build_system_prompt(
     property_recommendations: str = "",
     is_returning_lead: bool = False,
     hours_since: float = 0,
-    predictive_score: Any = None
+    predictive_score: Any = None,
 ) -> str:
     """
     Build complete system prompt with current context.
@@ -759,35 +756,34 @@ def build_system_prompt(
             extracted_seller_data=extracted_preferences or {},
             relevant_knowledge=relevant_knowledge,
             is_returning_seller=is_returning_lead,
-            hours_since=hours_since
+            hours_since=hours_since,
         )
 
     # ML Insights (Predictive Scoring)
     ml_context = ""
     if predictive_score:
-        prob = getattr(predictive_score, 'closing_probability', 0)
-        priority = getattr(predictive_score, 'priority_level', 'LOW')
-        if hasattr(priority, 'value'): priority = priority.value
-        
+        prob = getattr(predictive_score, "closing_probability", 0)
+        priority = getattr(predictive_score, "priority_level", "LOW")
+        if hasattr(priority, "value"):
+            priority = priority.value
+
         ml_context = f"\n\n## ML LEAD INSIGHTS\n- **Closing Probability**: {prob:.1%}\n- **Priority Level**: {priority.upper()}\n"
-        if hasattr(predictive_score, 'positive_signals') and predictive_score.positive_signals:
+        if hasattr(predictive_score, "positive_signals") and predictive_score.positive_signals:
             ml_context += f"- **Key Strengths**: {', '.join(predictive_score.positive_signals[:2])}\n"
 
     # Continue with existing buyer logic...
     # Format extracted preferences
     if extracted_preferences:
-        prefs_text = "\n".join([
-            f"- {key.replace('_', ' ').title()}: {value}"
-            for key, value in extracted_preferences.items()
-            if value
-        ])
+        prefs_text = "\n".join(
+            [f"- {key.replace('_', ' ').title()}: {value}" for key, value in extracted_preferences.items() if value]
+        )
     else:
         prefs_text = "None gathered yet (this is your first interaction)"
 
     # Add returning lead context
     returning_context = ""
     if is_returning_lead:
-        time_str = f"{int(hours_since)} hours" if hours_since < 48 else f"{int(hours_since/24)} days"
+        time_str = f"{int(hours_since)} hours" if hours_since < 48 else f"{int(hours_since / 24)} days"
         returning_context = f"\n\n## RETURNING LEAD CONTEXT\nThis lead is returning after {time_str}. "
         returning_context += "Acknowledge the gap if it feels natural, e.g., 'Hey [Name], glad you're back!' or 'Hey, just following up on our last chat.' "
         returning_context += "Use the 'Extracted Preferences' below to show you remember them."
@@ -799,7 +795,9 @@ def build_system_prompt(
 
     # Add appointment status if provided
     if appointment_status:
-        calendar_context += f"\n\n## APPOINTMENT STATUS\n{appointment_status}\nConfirm this to the user in your response."
+        calendar_context += (
+            f"\n\n## APPOINTMENT STATUS\n{appointment_status}\nConfirm this to the user in your response."
+        )
 
     # Add property recommendations if provided
     property_context = ""
@@ -809,9 +807,7 @@ def build_system_prompt(
     # Add qualification prompt if in qualifying stage
     qualification_section = ""
     if conversation_stage == "qualifying":
-        qualification_section = "\n\n" + (
-            QUALIFICATION_PROMPT_BUYER if is_buyer else QUALIFICATION_PROMPT_SELLER
-        )
+        qualification_section = "\n\n" + (QUALIFICATION_PROMPT_BUYER if is_buyer else QUALIFICATION_PROMPT_SELLER)
 
     # Build final prompt
     system_prompt = BASE_SYSTEM_PROMPT.format(
@@ -820,7 +816,7 @@ def build_system_prompt(
         lead_score=lead_score,
         ml_insights=ml_context,
         extracted_preferences=prefs_text,
-        relevant_knowledge=relevant_knowledge or "No specific knowledge retrieved yet."
+        relevant_knowledge=relevant_knowledge or "No specific knowledge retrieved yet.",
     )
 
     return system_prompt + calendar_context + property_context + qualification_section
@@ -867,10 +863,10 @@ if __name__ == "__main__":
             "budget": "$400k max",
             "location": "Round Rock or Pflugerville",
             "timeline": "End of June",
-            "must_haves": "3 bedrooms, good schools"
+            "must_haves": "3 bedrooms, good schools",
         },
         relevant_knowledge="Pflugerville has excellent schools (8-9/10 ratings). Median home price is $375k. Low property taxes compared to Austin.",
-        is_buyer=True
+        is_buyer=True,
     )
 
     print("=" * 80)
@@ -887,8 +883,8 @@ if __name__ == "__main__":
             "percentage_vs_market": "3% below market average",
             "neighborhood": "Hyde Park",
             "comparable_sales_data": "3 similar homes sold for $680k-700k in the past 60 days",
-            "nearby_affordable": "Mueller or North Loop"
-        }
+            "nearby_affordable": "Mueller or North Loop",
+        },
     )
 
     print("=" * 80)
@@ -904,6 +900,5 @@ REENGAGEMENT_PROMPTS = {
     "no_response_24h": "Hey {name}, just checking in - is it still a priority of yours to {action} or have you given up?",
     "no_response_48h": "Hey, are you actually still looking to {action} or should we close your file?",
     "cold_lead_followup": "Quick question - is now still a good time for you to {action}?",
-    "general_check_in": "Hey {name}, still interested or should we move on?"
+    "general_check_in": "Hey {name}, still interested or should we move on?",
 }
-

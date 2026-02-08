@@ -3,12 +3,13 @@ Test Suite for ML-Enhanced Property Matcher
 Comprehensive testing for confidence scoring and ML features
 """
 
-import pytest
-import numpy as np
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 from unittest.mock import Mock, patch
 
-from ghl_real_estate_ai.services.property_matcher_ml import PropertyMatcherML, ConfidenceScore
+import numpy as np
+import pytest
+
+from ghl_real_estate_ai.services.property_matcher_ml import ConfidenceScore, PropertyMatcherML
 
 
 class TestConfidenceScore:
@@ -23,7 +24,7 @@ class TestConfidenceScore:
             feature_match=85.0,
             market_context=88.0,
             reasoning=["Great price", "Perfect location"],
-            confidence_level="high"
+            confidence_level="high",
         )
 
         assert score.overall == 85.5
@@ -50,12 +51,7 @@ class TestPropertyMatcherML:
         return {
             "id": "prop_123",
             "price": 750000,
-            "address": {
-                "street": "123 Oak Street",
-                "neighborhood": "Downtown",
-                "city": "Austin",
-                "zip": "78701"
-            },
+            "address": {"street": "123 Oak Street", "neighborhood": "Downtown", "city": "Austin", "zip": "78701"},
             "bedrooms": 3,
             "bathrooms": 2.5,
             "sqft": 2100,
@@ -66,7 +62,7 @@ class TestPropertyMatcherML:
             "crime_score": 7.2,
             "walkability_score": 85,
             "days_on_market": 15,
-            "price_per_sqft": 357.14
+            "price_per_sqft": 357.14,
         }
 
     @pytest.fixture
@@ -79,7 +75,7 @@ class TestPropertyMatcherML:
             "property_type": "Single Family",
             "must_haves": ["garage", "good_schools"],
             "nice_to_haves": ["pool", "walkable"],
-            "max_commute_time": 30
+            "max_commute_time": 30,
         }
 
     @pytest.fixture
@@ -214,23 +210,26 @@ class TestPropertyMatcherML:
         # Mock property data
         properties = [
             {
-                "id": "prop_1", "price": 750000, "address": {"neighborhood": "Downtown"},
-                "bedrooms": 3, "amenities": ["pool", "garage"], "days_on_market": 15
+                "id": "prop_1",
+                "price": 750000,
+                "address": {"neighborhood": "Downtown"},
+                "bedrooms": 3,
+                "amenities": ["pool", "garage"],
+                "days_on_market": 15,
             },
             {
-                "id": "prop_2", "price": 850000, "address": {"neighborhood": "Westlake"},
-                "bedrooms": 4, "amenities": ["garage"], "days_on_market": 45
-            }
+                "id": "prop_2",
+                "price": 850000,
+                "address": {"neighborhood": "Westlake"},
+                "bedrooms": 4,
+                "amenities": ["garage"],
+                "days_on_market": 45,
+            },
         ]
 
-        preferences = {
-            "budget": 800000,
-            "location": "Downtown",
-            "bedrooms": 3,
-            "must_haves": ["garage"]
-        }
+        preferences = {"budget": 800000, "location": "Downtown", "bedrooms": 3, "must_haves": ["garage"]}
 
-        with patch.object(matcher, 'listings', properties):
+        with patch.object(matcher, "listings", properties):
             matches = matcher.find_enhanced_matches(preferences, limit=2)
 
             assert len(matches) <= 2
@@ -243,7 +242,7 @@ class TestPropertyMatcherML:
     def test_ml_model_integration_placeholder(self, matcher):
         """Test placeholder for future ML model integration"""
         # This test documents where ML models would be integrated
-        assert hasattr(matcher, 'ml_models')
+        assert hasattr(matcher, "ml_models")
         assert matcher.ml_models is None  # Currently placeholder
 
         # Test the model training pipeline structure
@@ -253,7 +252,7 @@ class TestPropertyMatcherML:
         # This would be the interface for training
         # result = matcher.train_confidence_model(features, labels)
         # For now, just test the method exists
-        assert hasattr(matcher, 'train_confidence_model')
+        assert hasattr(matcher, "train_confidence_model")
 
     def test_feature_importance_analysis(self, matcher, sample_property, sample_preferences):
         """Test feature importance for interpretability"""
@@ -301,14 +300,14 @@ class TestMLIntegrationFramework:
         pipeline = MLFeaturePipeline()
 
         # Test feature categories
-        assert hasattr(pipeline, 'numerical_features')
-        assert hasattr(pipeline, 'categorical_features')
-        assert hasattr(pipeline, 'derived_features')
+        assert hasattr(pipeline, "numerical_features")
+        assert hasattr(pipeline, "categorical_features")
+        assert hasattr(pipeline, "derived_features")
 
         # Test transformation methods
-        assert hasattr(pipeline, 'normalize_price_features')
-        assert hasattr(pipeline, 'encode_categorical_features')
-        assert hasattr(pipeline, 'create_interaction_features')
+        assert hasattr(pipeline, "normalize_price_features")
+        assert hasattr(pipeline, "encode_categorical_features")
+        assert hasattr(pipeline, "create_interaction_features")
 
     def test_model_registry_interface(self):
         """Test the model registry for different algorithms"""
@@ -317,16 +316,16 @@ class TestMLIntegrationFramework:
         registry = MLModelRegistry()
 
         # Test different algorithm strategies
-        assert hasattr(registry, 'register_model')
-        assert hasattr(registry, 'get_model')
-        assert hasattr(registry, 'list_models')
+        assert hasattr(registry, "register_model")
+        assert hasattr(registry, "get_model")
+        assert hasattr(registry, "list_models")
 
         # Test model types that could be supported
         expected_models = [
-            'random_forest_confidence',
-            'gradient_boost_match',
-            'neural_preference_scorer',
-            'market_trend_predictor'
+            "random_forest_confidence",
+            "gradient_boost_match",
+            "neural_preference_scorer",
+            "market_trend_predictor",
         ]
 
         for model_name in expected_models:
@@ -341,13 +340,7 @@ class TestPropertyMatcherUIIntegration:
     def test_enhanced_property_matcher_integration(self):
         """Test that the enhanced matcher integrates with existing UI"""
         # Mock the enhanced matcher being used in the UI component
-        sample_lead_context = {
-            'extracted_preferences': {
-                'budget': 750000,
-                'location': 'Downtown',
-                'bedrooms': 3
-            }
-        }
+        sample_lead_context = {"extracted_preferences": {"budget": 750000, "location": "Downtown", "bedrooms": 3}}
 
         # This test ensures the interface remains compatible
         from ghl_real_estate_ai.streamlit_demo.components.property_matcher_ai import generate_property_matches
@@ -358,7 +351,7 @@ class TestPropertyMatcherUIIntegration:
 
         # Each match should have the required fields for UI display
         for match in matches:
-            assert 'address' in match
-            assert 'price' in match
-            assert 'match_score' in match
-            assert 'match_reasons' in match
+            assert "address" in match
+            assert "price" in match
+            assert "match_score" in match
+            assert "match_reasons" in match

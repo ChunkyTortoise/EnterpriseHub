@@ -18,18 +18,19 @@ Features:
 
 import asyncio
 import json
+import logging
 import time
-import uuid
 import traceback
-from typing import Dict, Any, Optional, List, Callable, Union
-from enum import Enum
+import uuid
 from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Union
+
 from fastapi import WebSocket, WebSocketDisconnect, status
 from fastapi.websockets import WebSocketState
-import logging
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.utils.async_utils import safe_create_task
 
 logger = get_logger(__name__)
@@ -37,6 +38,7 @@ logger = get_logger(__name__)
 
 class ConnectionState(Enum):
     """WebSocket connection states for Jorge's platform."""
+
     CONNECTING = "connecting"
     CONNECTED = "connected"
     RECONNECTING = "reconnecting"
@@ -47,6 +49,7 @@ class ConnectionState(Enum):
 
 class ErrorSeverity(Enum):
     """Error severity levels for WebSocket errors."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -95,10 +98,7 @@ class WebSocketErrorManager:
         self.heartbeat_interval = 30.0
 
     async def register_connection(
-        self,
-        websocket: WebSocket,
-        connection_type: str = "general",
-        client_info: Optional[Dict[str, Any]] = None
+        self, websocket: WebSocket, connection_type: str = "general", client_info: Optional[Dict[str, Any]] = None
     ) -> str:
         """Register a new WebSocket connection with error handling."""
 
@@ -110,8 +110,7 @@ class WebSocketErrorManager:
             self.connections[connection_id] = websocket
             self.connection_states[connection_id] = ConnectionState.CONNECTED
             self.connection_metrics[connection_id] = ConnectionMetrics(
-                connection_id=connection_id,
-                established_at=time.time()
+                connection_id=connection_id, established_at=time.time()
             )
 
             logger.info(
@@ -120,8 +119,8 @@ class WebSocketErrorManager:
                     "connection_id": connection_id,
                     "connection_type": connection_type,
                     "client_info": client_info or {},
-                    "jorge_platform": True
-                }
+                    "jorge_platform": True,
+                },
             )
 
             # Start connection monitoring
@@ -130,26 +129,17 @@ class WebSocketErrorManager:
             return connection_id
 
         except Exception as e:
-            await self._handle_connection_error(
-                connection_id=connection_id,
-                error=e,
-                context="connection_registration"
-            )
+            await self._handle_connection_error(connection_id=connection_id, error=e, context="connection_registration")
             raise
 
-    async def send_message(
-        self,
-        connection_id: str,
-        message: Dict[str, Any],
-        message_type: str = "data"
-    ) -> bool:
+    async def send_message(self, connection_id: str, message: Dict[str, Any], message_type: str = "data") -> bool:
         """Send message with comprehensive error handling."""
 
         if connection_id not in self.connections:
             await self._handle_connection_error(
                 connection_id=connection_id,
                 error=Exception(f"Connection {connection_id} not found"),
-                context="message_send"
+                context="message_send",
             )
             return False
 
@@ -179,25 +169,18 @@ class WebSocketErrorManager:
 
         except Exception as e:
             await self._handle_message_error(
-                connection_id=connection_id,
-                message=message,
-                error=e,
-                direction="outbound"
+                connection_id=connection_id, message=message, error=e, direction="outbound"
             )
             return False
 
-    async def receive_message(
-        self,
-        connection_id: str,
-        timeout: Optional[float] = None
-    ) -> Optional[Dict[str, Any]]:
+    async def receive_message(self, connection_id: str, timeout: Optional[float] = None) -> Optional[Dict[str, Any]]:
         """Receive message with error handling and validation."""
 
         if connection_id not in self.connections:
             await self._handle_connection_error(
                 connection_id=connection_id,
                 error=Exception(f"Connection {connection_id} not found"),
-                context="message_receive"
+                context="message_receive",
             )
             return None
 
@@ -206,10 +189,7 @@ class WebSocketErrorManager:
         try:
             # Receive with timeout
             if timeout:
-                raw_message = await asyncio.wait_for(
-                    websocket.receive_json(),
-                    timeout=timeout
-                )
+                raw_message = await asyncio.wait_for(websocket.receive_json(), timeout=timeout)
             else:
                 raw_message = await websocket.receive_json()
 
@@ -233,28 +213,16 @@ class WebSocketErrorManager:
 
         except json.JSONDecodeError as e:
             await self._handle_message_error(
-                connection_id=connection_id,
-                message=None,
-                error=e,
-                direction="inbound",
-                error_type="json_decode"
+                connection_id=connection_id, message=None, error=e, direction="inbound", error_type="json_decode"
             )
             return None
 
         except Exception as e:
-            await self._handle_message_error(
-                connection_id=connection_id,
-                message=None,
-                error=e,
-                direction="inbound"
-            )
+            await self._handle_message_error(connection_id=connection_id, message=None, error=e, direction="inbound")
             return None
 
     async def disconnect_connection(
-        self,
-        connection_id: str,
-        reason: str = "server_disconnect",
-        close_code: int = status.WS_1000_NORMAL_CLOSURE
+        self, connection_id: str, reason: str = "server_disconnect", close_code: int = status.WS_1000_NORMAL_CLOSURE
     ):
         """Gracefully disconnect a WebSocket connection."""
 
@@ -272,18 +240,13 @@ class WebSocketErrorManager:
 
         except Exception as e:
             logger.warning(
-                f"Error during graceful disconnect: {e}",
-                extra={"connection_id": connection_id, "reason": reason}
+                f"Error during graceful disconnect: {e}", extra={"connection_id": connection_id, "reason": reason}
             )
 
         finally:
             await self._cleanup_connection(connection_id, reason)
 
-    async def _validate_message(
-        self,
-        message: Dict[str, Any],
-        message_type: str
-    ) -> Dict[str, Any]:
+    async def _validate_message(self, message: Dict[str, Any], message_type: str) -> Dict[str, Any]:
         """Validate outbound message format."""
 
         # Base message structure
@@ -291,7 +254,7 @@ class WebSocketErrorManager:
             "type": message_type,
             "timestamp": time.time(),
             "data": message.get("data", {}),
-            "correlation_id": message.get("correlation_id", self._generate_correlation_id())
+            "correlation_id": message.get("correlation_id", self._generate_correlation_id()),
         }
 
         # Jorge-specific validation
@@ -303,7 +266,7 @@ class WebSocketErrorManager:
             validated["error"] = {
                 "type": message.get("error_type", "unknown"),
                 "message": message.get("error_message", "An error occurred"),
-                "recoverable": message.get("recoverable", True)
+                "recoverable": message.get("recoverable", True),
             }
 
         # Size validation
@@ -313,10 +276,7 @@ class WebSocketErrorManager:
 
         return validated
 
-    async def _validate_received_message(
-        self,
-        message: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _validate_received_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
         """Validate inbound message format."""
 
         # Required fields
@@ -340,12 +300,7 @@ class WebSocketErrorManager:
 
         return message
 
-    async def _handle_connection_error(
-        self,
-        connection_id: str,
-        error: Exception,
-        context: str
-    ):
+    async def _handle_connection_error(self, connection_id: str, error: Exception, context: str):
         """Handle connection-level errors."""
 
         error_info = WebSocketError(
@@ -357,7 +312,7 @@ class WebSocketErrorManager:
             timestamp=time.time(),
             recoverable=self._is_recoverable_error(error, context),
             details={"context": context},
-            stack_trace=traceback.format_exc() if settings.environment == "development" else None
+            stack_trace=traceback.format_exc() if settings.environment == "development" else None,
         )
 
         await self._log_error(error_info)
@@ -380,7 +335,7 @@ class WebSocketErrorManager:
         message: Optional[Dict[str, Any]],
         error: Exception,
         direction: str,
-        error_type: str = "message_error"
+        error_type: str = "message_error",
     ):
         """Handle message-level errors."""
 
@@ -392,10 +347,7 @@ class WebSocketErrorManager:
             severity=ErrorSeverity.MEDIUM,
             timestamp=time.time(),
             recoverable=True,
-            details={
-                "direction": direction,
-                "message_preview": str(message)[:200] if message else "N/A"
-            }
+            details={"direction": direction, "message_preview": str(message)[:200] if message else "N/A"},
         )
 
         await self._log_error(error_info)
@@ -409,9 +361,9 @@ class WebSocketErrorManager:
                         "error_type": error_type,
                         "error_message": "Invalid message format",
                         "error_id": error_info.error_id,
-                        "guidance": self._get_message_error_guidance(error_type)
+                        "guidance": self._get_message_error_guidance(error_type),
                     },
-                    message_type="error"
+                    message_type="error",
                 )
             except Exception:
                 # If we can't send error response, the connection is likely broken
@@ -422,11 +374,7 @@ class WebSocketErrorManager:
 
         logger.info(
             f"WebSocket client disconnected: {connection_id}",
-            extra={
-                "connection_id": connection_id,
-                "reason": reason,
-                "jorge_platform": True
-            }
+            extra={"connection_id": connection_id, "reason": reason, "jorge_platform": True},
         )
 
         await self._cleanup_connection(connection_id, reason)
@@ -442,7 +390,7 @@ class WebSocketErrorManager:
             severity=ErrorSeverity.MEDIUM,
             timestamp=time.time(),
             recoverable=True,
-            details={"timeout_duration": self.connection_timeout}
+            details={"timeout_duration": self.connection_timeout},
         )
 
         await self._log_error(error_info)
@@ -455,9 +403,9 @@ class WebSocketErrorManager:
                     "error_type": "timeout",
                     "error_message": "Connection timeout - please check your network",
                     "error_id": error_info.error_id,
-                    "guidance": "Refresh the page to reconnect"
+                    "guidance": "Refresh the page to reconnect",
                 },
-                message_type="error"
+                message_type="error",
             )
         except Exception:
             # Connection is likely broken
@@ -474,13 +422,13 @@ class WebSocketErrorManager:
         if metrics.reconnection_attempts >= self.max_reconnection_attempts:
             logger.warning(
                 f"Max reconnection attempts reached for {connection_id}",
-                extra={"connection_id": connection_id, "attempts": metrics.reconnection_attempts}
+                extra={"connection_id": connection_id, "attempts": metrics.reconnection_attempts},
             )
             await self._cleanup_connection(connection_id, "max_reconnections")
             return
 
         # Exponential backoff
-        delay = self.reconnection_base_delay * (2 ** metrics.reconnection_attempts)
+        delay = self.reconnection_base_delay * (2**metrics.reconnection_attempts)
         await asyncio.sleep(delay)
 
         metrics.reconnection_attempts += 1
@@ -488,7 +436,7 @@ class WebSocketErrorManager:
 
         logger.info(
             f"Attempting reconnection {metrics.reconnection_attempts} for {connection_id}",
-            extra={"connection_id": connection_id, "delay": delay}
+            extra={"connection_id": connection_id, "delay": delay},
         )
 
     async def _monitor_connection(self, connection_id: str):
@@ -503,9 +451,7 @@ class WebSocketErrorManager:
 
                 # Send heartbeat
                 await self.send_message(
-                    connection_id=connection_id,
-                    message={"heartbeat": True},
-                    message_type="heartbeat"
+                    connection_id=connection_id, message={"heartbeat": True}, message_type="heartbeat"
                 )
 
                 # Check for inactive connections
@@ -516,15 +462,12 @@ class WebSocketErrorManager:
                     if inactive_time > self.connection_timeout:
                         logger.warning(
                             f"Connection {connection_id} inactive for {inactive_time:.1f}s",
-                            extra={"connection_id": connection_id, "inactive_time": inactive_time}
+                            extra={"connection_id": connection_id, "inactive_time": inactive_time},
                         )
                         break
 
             except Exception as e:
-                logger.error(
-                    f"Connection monitoring error: {e}",
-                    extra={"connection_id": connection_id}
-                )
+                logger.error(f"Connection monitoring error: {e}", extra={"connection_id": connection_id})
                 break
 
         # Cleanup if loop ended
@@ -544,11 +487,7 @@ class WebSocketErrorManager:
 
         logger.info(
             f"WebSocket connection cleaned up: {connection_id}",
-            extra={
-                "connection_id": connection_id,
-                "reason": reason,
-                "jorge_platform": True
-            }
+            extra={"connection_id": connection_id, "reason": reason, "jorge_platform": True},
         )
 
     async def _send_disconnect_notification(self, connection_id: str, reason: str):
@@ -560,9 +499,9 @@ class WebSocketErrorManager:
                 message={
                     "disconnect_reason": reason,
                     "message": "Connection will be closed",
-                    "guidance": "Please refresh the page to reconnect"
+                    "guidance": "Please refresh the page to reconnect",
                 },
-                message_type="disconnect"
+                message_type="disconnect",
             )
         except Exception:
             # Ignore errors during disconnect notification
@@ -575,7 +514,7 @@ class WebSocketErrorManager:
             ErrorSeverity.LOW: logger.info,
             ErrorSeverity.MEDIUM: logger.warning,
             ErrorSeverity.HIGH: logger.error,
-            ErrorSeverity.CRITICAL: logger.critical
+            ErrorSeverity.CRITICAL: logger.critical,
         }.get(error_info.severity, logger.error)
 
         log_method(
@@ -588,8 +527,8 @@ class WebSocketErrorManager:
                 "recoverable": error_info.recoverable,
                 "details": error_info.details,
                 "stack_trace": error_info.stack_trace,
-                "jorge_platform": True
-            }
+                "jorge_platform": True,
+            },
         )
 
     def _determine_error_severity(self, error: Exception, context: str) -> ErrorSeverity:
@@ -625,7 +564,7 @@ class WebSocketErrorManager:
             "validation": "Message is missing required fields. Check the message structure.",
             "size_limit": "Message is too large. Maximum size is 64KB.",
             "rate_limit": "Too many messages sent. Please slow down.",
-            "unknown": "An error occurred processing your message. Please try again."
+            "unknown": "An error occurred processing your message. Please try again.",
         }
 
         return guidance_map.get(error_type, guidance_map["unknown"])
@@ -655,23 +594,19 @@ class WebSocketErrorManager:
         return {
             "connection_id": connection_id,
             "state": self.connection_states[connection_id].value,
-            "metrics": self.connection_metrics.get(connection_id).__dict__ if connection_id in self.connection_metrics else None,
-            "is_connected": connection_id in self.connections
+            "metrics": self.connection_metrics.get(connection_id).__dict__
+            if connection_id in self.connection_metrics
+            else None,
+            "is_connected": connection_id in self.connections,
         }
 
     def get_all_connections(self) -> List[Dict[str, Any]]:
         """Get status of all connections."""
 
-        return [
-            self.get_connection_status(conn_id)
-            for conn_id in self.connection_states.keys()
-        ]
+        return [self.get_connection_status(conn_id) for conn_id in self.connection_states.keys()]
 
     async def broadcast_message(
-        self,
-        message: Dict[str, Any],
-        message_type: str = "broadcast",
-        exclude_connections: Optional[List[str]] = None
+        self, message: Dict[str, Any], message_type: str = "broadcast", exclude_connections: Optional[List[str]] = None
     ) -> Dict[str, bool]:
         """Broadcast message to all connections."""
 
@@ -697,10 +632,8 @@ def get_websocket_error_manager() -> WebSocketErrorManager:
 
 # Convenience decorators for WebSocket endpoints
 
-def websocket_error_handler(
-    connection_type: str = "general",
-    auto_reconnect: bool = True
-):
+
+def websocket_error_handler(connection_type: str = "general", auto_reconnect: bool = True):
     """Decorator to add error handling to WebSocket endpoints."""
 
     def decorator(func):
@@ -709,10 +642,7 @@ def websocket_error_handler(
             connection_id = None
 
             try:
-                connection_id = await manager.register_connection(
-                    websocket=websocket,
-                    connection_type=connection_type
-                )
+                connection_id = await manager.register_connection(websocket=websocket, connection_type=connection_type)
 
                 # Call the original endpoint function
                 return await func(websocket, connection_id, *args, **kwargs)
@@ -723,9 +653,7 @@ def websocket_error_handler(
             except Exception as e:
                 if connection_id:
                     await manager._handle_connection_error(
-                        connection_id=connection_id,
-                        error=e,
-                        context="endpoint_execution"
+                        connection_id=connection_id, error=e, context="endpoint_execution"
                     )
                 raise
             finally:
@@ -733,4 +661,5 @@ def websocket_error_handler(
                     await manager._cleanup_connection(connection_id, "endpoint_complete")
 
         return wrapper
+
     return decorator

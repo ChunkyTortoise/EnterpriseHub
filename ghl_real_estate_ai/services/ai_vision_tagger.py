@@ -1,18 +1,22 @@
 """
 AI Vision Tagger - Claude 3.5 Sonnet powered image analysis.
 
-Analyzes property photos to extract high-value "Lifestyle Tags" 
+Analyzes property photos to extract high-value "Lifestyle Tags"
 and architectural features.
 """
+
 import base64
 import os
+from typing import Dict, List, Optional
+
 import requests
-from typing import List, Dict, Optional
 from anthropic import Anthropic
+
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
+
 
 class VisionTagger:
     def __init__(self, api_key: Optional[str] = None):
@@ -72,9 +76,12 @@ class VisionTagger:
             logger.error(f"Vision Tagging Failed for {image_url}: {e}")
             return []
 
+
 if __name__ == "__main__":
     # Test with a sample image
     tagger = VisionTagger()
-    sample_url = "https://images.unsplash.com/photo-1600585014340-be6161a56a0c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+    sample_url = (
+        "https://images.unsplash.com/photo-1600585014340-be6161a56a0c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+    )
     tags = tagger.analyze_property_image(sample_url)
     print(f"Sample Tags: {tags}")

@@ -4,29 +4,31 @@ Creates unbeatable competitive advantages through domain-specific AI models.
 Trained on millions of customer interactions that competitors can't access.
 """
 
-from typing import Dict, List, Optional, Any, Union, Tuple
-from datetime import datetime, timedelta
-from decimal import Decimal
 import asyncio
-import uuid
 import json
 import logging
-from dataclasses import dataclass, asdict
-from enum import Enum
-import numpy as np
+import uuid
 from abc import ABC, abstractmethod
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from decimal import Decimal
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import numpy as np
 
 from ..core.llm_client import LLMClient
+from ..intelligence.collective_learning_engine import CollectiveLearningEngine
 from ..services.cache_service import CacheService
 from ..services.database_service import DatabaseService
 from ..services.enhanced_error_handling import enhanced_error_handler
-from ..intelligence.collective_learning_engine import CollectiveLearningEngine
 
 logger = logging.getLogger(__name__)
 
 
 class IndustryVertical(Enum):
     """Industry verticals for custom model training."""
+
     REAL_ESTATE = "real_estate"
     AUTOMOTIVE = "automotive"
     INSURANCE = "insurance"
@@ -41,6 +43,7 @@ class IndustryVertical(Enum):
 
 class ModelCapability(Enum):
     """AI model capabilities."""
+
     LEAD_QUALIFICATION = "lead_qualification"
     CONVERSATION_INTELLIGENCE = "conversation_intelligence"
     PREDICTIVE_ANALYTICS = "predictive_analytics"
@@ -53,16 +56,18 @@ class ModelCapability(Enum):
 
 class ModelAccuracyTier(Enum):
     """Model accuracy tiers based on training data volume."""
-    BRONZE = "bronze"        # <10K interactions
-    SILVER = "silver"        # 10K-100K interactions
-    GOLD = "gold"           # 100K-1M interactions
-    PLATINUM = "platinum"    # 1M-10M interactions
-    DIAMOND = "diamond"      # >10M interactions
+
+    BRONZE = "bronze"  # <10K interactions
+    SILVER = "silver"  # 10K-100K interactions
+    GOLD = "gold"  # 100K-1M interactions
+    PLATINUM = "platinum"  # 1M-10M interactions
+    DIAMOND = "diamond"  # >10M interactions
 
 
 @dataclass
 class ModelTrainingData:
     """Training data configuration for custom models."""
+
     vertical: IndustryVertical
     capability: ModelCapability
     interaction_count: int
@@ -77,6 +82,7 @@ class ModelTrainingData:
 @dataclass
 class CustomModel:
     """Custom industry-specific AI model."""
+
     model_id: str
     name: str
     vertical: IndustryVertical
@@ -95,6 +101,7 @@ class CustomModel:
 @dataclass
 class ModelPerformanceMetrics:
     """Comprehensive model performance metrics."""
+
     model_id: str
     accuracy_score: float
     precision: float
@@ -110,6 +117,7 @@ class ModelPerformanceMetrics:
 @dataclass
 class TrainingPipeline:
     """Model training pipeline configuration."""
+
     pipeline_id: str
     vertical: IndustryVertical
     capability: ModelCapability
@@ -164,7 +172,7 @@ class RealEstateModelTrainer(IndustryModelTrainer):
             "dataset": anonymized_data,
             "sample_count": len(anonymized_data.get("lead_interactions", [])),
             "quality_score": await self._calculate_data_quality(anonymized_data),
-            "coverage_metrics": await self._calculate_coverage_metrics(anonymized_data)
+            "coverage_metrics": await self._calculate_coverage_metrics(anonymized_data),
         }
 
     async def train_model(self, training_data: Dict[str, Any]) -> CustomModel:
@@ -178,9 +186,7 @@ class RealEstateModelTrainer(IndustryModelTrainer):
 
         # Fine-tune base Claude model
         trained_model = await self._fine_tune_claude_model(
-            base_model="claude-3.5-sonnet",
-            training_data=training_data["dataset"],
-            config=model_config
+            base_model="claude-3.5-sonnet", training_data=training_data["dataset"], config=model_config
         )
 
         # Calculate accuracy tier based on data volume
@@ -202,14 +208,14 @@ class RealEstateModelTrainer(IndustryModelTrainer):
                 anonymization_level="full",
                 last_updated=datetime.utcnow(),
                 geographic_coverage=["US", "CA", "UK", "AU"],
-                language_coverage=["en"]
+                language_coverage=["en"],
             ),
             accuracy_metrics=await self._calculate_accuracy_metrics(trained_model, training_data),
             competitive_advantage=await self._calculate_competitive_advantage(training_data),
             deployment_status="ready",
             created_at=datetime.utcnow(),
             last_trained=datetime.utcnow(),
-            usage_statistics={"inferences": 0, "customers": 0}
+            usage_statistics={"inferences": 0, "customers": 0},
         )
 
     async def validate_model(self, model: CustomModel) -> Dict[str, float]:
@@ -218,7 +224,7 @@ class RealEstateModelTrainer(IndustryModelTrainer):
             "lead_qualification_accuracy": 0.92,
             "false_positive_rate": 0.05,
             "response_time_improvement": 0.45,
-            "customer_satisfaction_score": 0.88
+            "customer_satisfaction_score": 0.88,
         }
         return validation_results
 
@@ -230,7 +236,7 @@ class RealEstateModelTrainer(IndustryModelTrainer):
                 "interaction_type": "initial_inquiry",
                 "lead_score": 85,
                 "outcome": "qualified",
-                "metadata": {"source": "website", "time_to_response": 300}
+                "metadata": {"source": "website", "time_to_response": 300},
             }
             # ... thousands more interactions
         ]
@@ -267,22 +273,15 @@ class RealEstateModelTrainer(IndustryModelTrainer):
 
     async def _calculate_coverage_metrics(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Calculate coverage metrics for training data."""
-        return {
-            "geographic_coverage": 0.85,
-            "demographic_coverage": 0.78,
-            "use_case_coverage": 0.92
-        }
+        return {"geographic_coverage": 0.85, "demographic_coverage": 0.78, "use_case_coverage": 0.92}
 
     async def _get_model_configuration(self, capability: ModelCapability) -> Dict[str, Any]:
         """Get model configuration for specific capability."""
-        return {
-            "learning_rate": 0.0001,
-            "batch_size": 32,
-            "epochs": 10,
-            "validation_split": 0.2
-        }
+        return {"learning_rate": 0.0001, "batch_size": 32, "epochs": 10, "validation_split": 0.2}
 
-    async def _fine_tune_claude_model(self, base_model: str, training_data: Dict[str, Any], config: Dict[str, Any]) -> Any:
+    async def _fine_tune_claude_model(
+        self, base_model: str, training_data: Dict[str, Any], config: Dict[str, Any]
+    ) -> Any:
         """Fine-tune Claude model with custom data."""
         # This would integrate with Anthropic's fine-tuning API when available
         # For now, simulate the process
@@ -304,12 +303,7 @@ class RealEstateModelTrainer(IndustryModelTrainer):
 
     async def _calculate_accuracy_metrics(self, trained_model: Any, training_data: Dict[str, Any]) -> Dict[str, float]:
         """Calculate comprehensive accuracy metrics."""
-        return {
-            "overall_accuracy": 0.94,
-            "precision": 0.92,
-            "recall": 0.89,
-            "f1_score": 0.905
-        }
+        return {"overall_accuracy": 0.94, "precision": 0.92, "recall": 0.89, "f1_score": 0.905}
 
     async def _calculate_competitive_advantage(self, training_data: Dict[str, Any]) -> float:
         """Calculate competitive advantage score based on unique data."""
@@ -333,11 +327,13 @@ class CustomIndustryModels:
     - Industry-specific knowledge that competitors can't replicate
     """
 
-    def __init__(self,
-                 llm_client: LLMClient,
-                 cache_service: CacheService,
-                 database_service: DatabaseService,
-                 collective_learning: CollectiveLearningEngine):
+    def __init__(
+        self,
+        llm_client: LLMClient,
+        cache_service: CacheService,
+        database_service: DatabaseService,
+        collective_learning: CollectiveLearningEngine,
+    ):
         self.llm_client = llm_client
         self.cache = cache_service
         self.db = database_service
@@ -358,10 +354,9 @@ class CustomIndustryModels:
         logger.info("Custom Industry Models Manager initialized")
 
     @enhanced_error_handler
-    async def train_industry_specific_model(self,
-                                          vertical: IndustryVertical,
-                                          capability: ModelCapability,
-                                          force_retrain: bool = False) -> CustomModel:
+    async def train_industry_specific_model(
+        self, vertical: IndustryVertical, capability: ModelCapability, force_retrain: bool = False
+    ) -> CustomModel:
         """
         Train domain-specific AI model on customer data.
 
@@ -432,7 +427,7 @@ class CustomIndustryModels:
             "model_performance": [],
             "competitive_analysis": {},
             "business_impact": {},
-            "improvement_opportunities": []
+            "improvement_opportunities": [],
         }
 
         for model in models:
@@ -473,7 +468,7 @@ class CustomIndustryModels:
             "models_improved": 0,
             "performance_gains": {},
             "new_capabilities": [],
-            "competitive_advantage_increase": 0.0
+            "competitive_advantage_increase": 0.0,
         }
 
         for model in self.deployed_models.values():
@@ -498,7 +493,9 @@ class CustomIndustryModels:
 
                             improvement_results["models_improved"] += 1
                             improvement_results["performance_gains"][model.model_id] = improvement_metrics
-                            improvement_results["competitive_advantage_increase"] += improvement_metrics["advantage_gain"]
+                            improvement_results["competitive_advantage_increase"] += improvement_metrics[
+                                "advantage_gain"
+                            ]
 
             except Exception as e:
                 logger.error(f"Model improvement failed for {model.model_id}: {e}")
@@ -522,7 +519,7 @@ class CustomIndustryModels:
             "industry_coverage": {},
             "competitive_replication_difficulty": 0.0,
             "switching_cost_estimate": Decimal("0"),
-            "time_to_replicate_years": 0.0
+            "time_to_replicate_years": 0.0,
         }
 
         # Aggregate data across all models
@@ -539,12 +536,14 @@ class CustomIndustryModels:
         # Calculate aggregate quality score
         total_models = len(self.deployed_models)
         if total_models > 0:
-            moat_analysis["data_quality_score"] = sum(
-                model.training_data.quality_score for model in self.deployed_models.values()
-            ) / total_models
+            moat_analysis["data_quality_score"] = (
+                sum(model.training_data.quality_score for model in self.deployed_models.values()) / total_models
+            )
 
         # Calculate competitive replication difficulty
-        moat_analysis["competitive_replication_difficulty"] = await self._calculate_replication_difficulty(moat_analysis)
+        moat_analysis["competitive_replication_difficulty"] = await self._calculate_replication_difficulty(
+            moat_analysis
+        )
 
         # Estimate switching costs for customers
         moat_analysis["switching_cost_estimate"] = await self._estimate_customer_switching_costs(moat_analysis)
@@ -556,7 +555,9 @@ class CustomIndustryModels:
 
     # Private implementation methods
 
-    async def _get_existing_model(self, vertical: IndustryVertical, capability: ModelCapability) -> Optional[CustomModel]:
+    async def _get_existing_model(
+        self, vertical: IndustryVertical, capability: ModelCapability
+    ) -> Optional[CustomModel]:
         """Get existing model for vertical and capability."""
         for model in self.deployed_models.values():
             if model.vertical == vertical and model.capability == capability:
@@ -580,7 +581,7 @@ class CustomIndustryModels:
             "unique_data_volume": model.training_data.interaction_count,
             "quality_advantage": model.training_data.quality_score,
             "market_coverage": len(model.training_data.geographic_coverage),
-            "competitive_differentiation": model.competitive_advantage
+            "competitive_differentiation": model.competitive_advantage,
         }
 
         await self.cache.set(f"competitive_metrics_{model.model_id}", metrics, ttl=3600 * 24)
@@ -604,7 +605,7 @@ class CustomIndustryModels:
             customer_satisfaction=usage_stats.get("customer_satisfaction", 0.0),
             business_impact_score=await self._calculate_business_impact_score(model),
             competitive_differentiation=model.competitive_advantage,
-            cost_per_inference=await self._calculate_cost_per_inference(model)
+            cost_per_inference=await self._calculate_cost_per_inference(model),
         )
 
     async def _analyze_competitive_position(self, model: CustomModel) -> Dict[str, Any]:
@@ -613,7 +614,7 @@ class CustomIndustryModels:
             "data_advantage_months": (model.training_data.interaction_count / 10000),  # Months of data advantage
             "quality_advantage": model.training_data.quality_score - 0.7,  # Advantage over typical model
             "geographic_advantage": len(model.training_data.geographic_coverage),
-            "replication_difficulty": model.competitive_advantage
+            "replication_difficulty": model.competitive_advantage,
         }
 
     async def _calculate_business_impact(self, model: CustomModel) -> Dict[str, Any]:
@@ -624,7 +625,7 @@ class CustomIndustryModels:
             "revenue_attribution": Decimal(str(usage_stats.get("inferences", 0) * 0.50)),  # $0.50 per inference
             "cost_savings": Decimal(str(usage_stats.get("inferences", 0) * 0.05)),  # $0.05 savings per inference
             "customer_retention_impact": 0.12,  # 12% retention improvement
-            "upsell_conversion_impact": 0.08  # 8% upsell improvement
+            "upsell_conversion_impact": 0.08,  # 8% upsell improvement
         }
 
     async def _identify_model_improvements(self, models: List[CustomModel]) -> List[Dict[str, Any]]:
@@ -633,13 +634,15 @@ class CustomIndustryModels:
 
         for model in models:
             if model.accuracy_metrics.get("overall_accuracy", 0) < 0.95:
-                opportunities.append({
-                    "model_id": model.model_id,
-                    "opportunity": "Accuracy improvement through additional training data",
-                    "current_accuracy": model.accuracy_metrics.get("overall_accuracy", 0),
-                    "potential_improvement": 0.05,
-                    "required_data_samples": 10000
-                })
+                opportunities.append(
+                    {
+                        "model_id": model.model_id,
+                        "opportunity": "Accuracy improvement through additional training data",
+                        "current_accuracy": model.accuracy_metrics.get("overall_accuracy", 0),
+                        "potential_improvement": 0.05,
+                        "required_data_samples": 10000,
+                    }
+                )
 
         return opportunities
 
@@ -658,21 +661,20 @@ class CustomIndustryModels:
 
         return {
             "should_improve": days_since_update > 30,
-            "reasons": ["Scheduled monthly update"] if days_since_update > 30 else []
+            "reasons": ["Scheduled monthly update"] if days_since_update > 30 else [],
         }
 
     async def _collect_incremental_training_data(self, model: CustomModel) -> Dict[str, Any]:
         """Collect new training data since last model update."""
         # Get new interactions from collective learning engine
         new_patterns = await self.collective_learning.generate_predictive_insights(
-            f"new training data for {model.vertical.value}",
-            {"since_date": model.last_trained}
+            f"new training data for {model.vertical.value}", {"since_date": model.last_trained}
         )
 
         return {
             "sample_count": 5000,  # New samples collected
             "quality_score": 0.89,
-            "patterns": new_patterns
+            "patterns": new_patterns,
         }
 
     async def _perform_incremental_training(self, model: CustomModel, new_data: Dict[str, Any]) -> CustomModel:
@@ -686,15 +688,14 @@ class CustomIndustryModels:
 
     async def _validate_model_improvements(self, original: CustomModel, improved: CustomModel) -> Dict[str, Any]:
         """Validate improvements in model performance."""
-        accuracy_improvement = (
-            improved.accuracy_metrics.get("overall_accuracy", 0) -
-            original.accuracy_metrics.get("overall_accuracy", 0)
+        accuracy_improvement = improved.accuracy_metrics.get("overall_accuracy", 0) - original.accuracy_metrics.get(
+            "overall_accuracy", 0
         )
 
         return {
             "improvement_score": accuracy_improvement,
             "accuracy_gain": accuracy_improvement,
-            "advantage_gain": accuracy_improvement * 0.5  # Half of accuracy gain as advantage
+            "advantage_gain": accuracy_improvement * 0.5,  # Half of accuracy gain as advantage
         }
 
     async def _calculate_replication_difficulty(self, moat_analysis: Dict[str, Any]) -> float:
@@ -729,11 +730,7 @@ class CustomIndustryModels:
 
     async def _get_model_usage_statistics(self, model_id: str) -> Dict[str, Any]:
         """Get usage statistics for model."""
-        return {
-            "inferences": 50000,
-            "avg_response_time": 150.0,
-            "customer_satisfaction": 0.92
-        }
+        return {"inferences": 50000, "avg_response_time": 150.0, "customer_satisfaction": 0.92}
 
     async def _calculate_business_impact_score(self, model: CustomModel) -> float:
         """Calculate business impact score for model."""

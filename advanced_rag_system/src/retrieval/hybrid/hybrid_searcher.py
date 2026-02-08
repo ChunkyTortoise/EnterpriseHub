@@ -14,7 +14,6 @@ from typing import Any, Dict, List, Optional, Union
 
 from src.core.exceptions import RetrievalError
 from src.core.types import DocumentChunk, SearchResult
-from src.retrieval.sparse.bm25_index import BM25Index, BM25Config
 from src.retrieval.dense import DenseRetriever
 from src.retrieval.hybrid.fusion import (
     FusionConfig,
@@ -22,6 +21,7 @@ from src.retrieval.hybrid.fusion import (
     WeightedScoreFusion,
     deduplicate_results,
 )
+from src.retrieval.sparse.bm25_index import BM25Config, BM25Index
 
 
 @dataclass
@@ -49,8 +49,6 @@ class HybridSearchConfig:
     top_k_final: int = 20
     dense_threshold: float = 0.0
     sparse_threshold: float = 0.0
-
-
 
 
 class HybridSearcher:
@@ -83,7 +81,9 @@ class HybridSearcher:
 
         # Initialize fusion algorithm
         if self.hybrid_config.fusion_method == "rrf":
-            self.fusion_algorithm: Union[ReciprocalRankFusion, WeightedScoreFusion] = ReciprocalRankFusion(self.fusion_config)
+            self.fusion_algorithm: Union[ReciprocalRankFusion, WeightedScoreFusion] = ReciprocalRankFusion(
+                self.fusion_config
+            )
         elif self.hybrid_config.fusion_method == "weighted":
             self.fusion_algorithm = WeightedScoreFusion(self.fusion_config)
         else:
@@ -102,8 +102,7 @@ class HybridSearcher:
                 await self.dense_retriever.initialize()
         except Exception as e:
             raise RetrievalError(
-                message=f"Failed to initialize hybrid searcher: {str(e)}",
-                error_code="INITIALIZATION_ERROR"
+                message=f"Failed to initialize hybrid searcher: {str(e)}", error_code="INITIALIZATION_ERROR"
             ) from e
 
     async def add_documents(self, chunks: List[DocumentChunk]) -> None:
@@ -128,8 +127,10 @@ class HybridSearcher:
 
             # Add to sparse index (sync - wrap in coroutine)
             if self.sparse_retriever:
+
                 async def add_sparse():
                     self.sparse_retriever.add_documents(chunks)
+
                 tasks.append(add_sparse())
 
             # Execute all indexing operations in parallel
@@ -138,8 +139,7 @@ class HybridSearcher:
 
         except Exception as e:
             raise RetrievalError(
-                message=f"Failed to add documents to hybrid index: {str(e)}",
-                error_code="HYBRID_INDEX_ERROR"
+                message=f"Failed to add documents to hybrid index: {str(e)}", error_code="HYBRID_INDEX_ERROR"
             ) from e
 
     async def search(self, query: str) -> List[SearchResult]:
@@ -168,14 +168,8 @@ class HybridSearcher:
                 dense_results, sparse_results = await self._search_sequential(query)
 
             # Filter results by thresholds
-            dense_results = [
-                r for r in dense_results
-                if r.score >= self.hybrid_config.dense_threshold
-            ]
-            sparse_results = [
-                r for r in sparse_results
-                if r.score >= self.hybrid_config.sparse_threshold
-            ]
+            dense_results = [r for r in dense_results if r.score >= self.hybrid_config.dense_threshold]
+            sparse_results = [r for r in sparse_results if r.score >= self.hybrid_config.sparse_threshold]
 
             # Fuse results
             if dense_results and sparse_results:
@@ -183,17 +177,17 @@ class HybridSearcher:
                 fused_results = self.fusion_algorithm.fuse_results(dense_results, sparse_results)
             elif dense_results:
                 # Only dense results
-                fused_results = dense_results[:self.hybrid_config.top_k_final]
+                fused_results = dense_results[: self.hybrid_config.top_k_final]
             elif sparse_results:
                 # Only sparse results
-                fused_results = sparse_results[:self.hybrid_config.top_k_final]
+                fused_results = sparse_results[: self.hybrid_config.top_k_final]
             else:
                 # No results from either retriever
                 fused_results = []
 
             # Deduplicate and limit results
             final_results = deduplicate_results(fused_results)
-            final_results = final_results[:self.hybrid_config.top_k_final]
+            final_results = final_results[: self.hybrid_config.top_k_final]
 
             # Update search metadata
             search_time_ms = (time.perf_counter() - start_time) * 1000
@@ -204,10 +198,7 @@ class HybridSearcher:
             return final_results
 
         except Exception as e:
-            raise RetrievalError(
-                message=f"Hybrid search failed: {str(e)}",
-                error_code="HYBRID_SEARCH_ERROR"
-            ) from e
+            raise RetrievalError(message=f"Hybrid search failed: {str(e)}", error_code="HYBRID_SEARCH_ERROR") from e
 
     async def _search_parallel(self, query: str) -> tuple[List[SearchResult], List[SearchResult]]:
         """Execute dense and sparse search in parallel.
@@ -291,12 +282,7 @@ class HybridSearcher:
         if self.sparse_retriever is None:
             return []
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            None,
-            self.sparse_retriever.search,
-            query,
-            self.hybrid_config.top_k_sparse
-        )
+        return await loop.run_in_executor(None, self.sparse_retriever.search, query, self.hybrid_config.top_k_sparse)
 
     async def _create_empty_results_task(self) -> List[SearchResult]:
         """Create an async task that returns empty results.
@@ -353,7 +339,7 @@ class HybridSearcher:
                 "top_k_final": self.hybrid_config.top_k_final,
             },
             "document_count": self.document_count,
-            "retrievers": {}
+            "retrievers": {},
         }
 
         # Get dense retriever stats
@@ -373,7 +359,7 @@ class HybridSearcher:
                         "k1": self.sparse_retriever.config.k1,
                         "b": self.sparse_retriever.config.b,
                         "epsilon": self.sparse_retriever.config.epsilon,
-                    }
+                    },
                 }
             except Exception:
                 stats["retrievers"]["sparse"] = {"error": "Unable to get stats"}

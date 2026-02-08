@@ -37,90 +37,79 @@ For more examples, see examples.py and the documentation.
 """
 
 from .container import (
-    DIContainer,
-    ServiceLifetime,
-    ServiceState,
-    ServiceMetadata,
-    ResolverContext,
     CircularDependencyError,
-    ServiceNotFoundError,
+    DIContainer,
+    IServiceProvider,
+    ResolverContext,
     ServiceConfigurationError,
-    IServiceProvider
+    ServiceLifetime,
+    ServiceMetadata,
+    ServiceNotFoundError,
+    ServiceState,
 )
-
-from .service_registration import (
-    ServiceRegistrar,
-    YamlConfigurationProvider,
-    JsonConfigurationProvider,
-    EnvironmentVariableProvider,
-    ServiceConfig,
-    EnvironmentConfig,
-    IServiceConfigurationProvider,
-    RealEstateServiceRegistrar,
-    service,
-    singleton,
-    transient,
-    scoped
+from .examples import RealEstateServiceComposer, run_development_example, run_testing_example
+from .factories import (
+    FACTORY_REGISTRY,
+    create_configuration_service,
+    create_hybrid_repository,
+    create_json_repository,
+    create_mls_repository,
+    create_mock_repository,
+    create_performance_monitor,
+    create_property_matcher_context,
+    create_property_repository,
+    create_rag_repository,
+    create_repository_property_matcher,
+    create_scoring_factory,
+    get_factory,
 )
-
+from .health_checks import (
+    cache_backend_health_check,
+    configuration_service_health_check,
+    container_health_check,
+    data_service_health_check,
+    get_health_check,
+    repository_health_check,
+    scoring_service_health_check,
+)
 from .pattern_integration import (
     RealEstateServiceOrchestrator,
     RepositoryPatternIntegration,
     StrategyPatternIntegration,
-    initialize_real_estate_services
+    initialize_real_estate_services,
 )
-
 from .performance import (
     OptimizedDIContainer,
-    PerformanceMonitor,
     PerformanceMetrics,
+    PerformanceMonitor,
+    RealEstatePerformanceOptimizer,
     ServiceCache,
-    RealEstatePerformanceOptimizer
 )
-
+from .service_registration import (
+    EnvironmentConfig,
+    EnvironmentVariableProvider,
+    IServiceConfigurationProvider,
+    JsonConfigurationProvider,
+    RealEstateServiceRegistrar,
+    ServiceConfig,
+    ServiceRegistrar,
+    YamlConfigurationProvider,
+    scoped,
+    service,
+    singleton,
+    transient,
+)
 from .testing_support import (
-    TestDIContainer,
-    MockServiceFactory,
-    TestScenarioBuilder,
     IntegrationTestHelper,
+    MockServiceFactory,
     PerformanceTestHelper,
-    test_container,
-    scenario_builder,
-    assert_service_registered,
+    TestDIContainer,
+    TestScenarioBuilder,
     assert_mock_called,
-    assert_service_healthy
-)
-
-from .health_checks import (
-    repository_health_check,
-    data_service_health_check,
-    cache_backend_health_check,
-    scoring_service_health_check,
-    configuration_service_health_check,
-    container_health_check,
-    get_health_check
-)
-
-from .factories import (
-    create_property_repository,
-    create_json_repository,
-    create_mls_repository,
-    create_rag_repository,
-    create_hybrid_repository,
-    create_mock_repository,
-    create_property_matcher_context,
-    create_scoring_factory,
-    create_performance_monitor,
-    create_configuration_service,
-    create_repository_property_matcher,
-    get_factory,
-    FACTORY_REGISTRY
-)
-
-from .examples import (
-    RealEstateServiceComposer,
-    run_development_example,
-    run_testing_example
+    assert_service_healthy,
+    assert_service_registered,
+    scenario_builder,
+    test_container,
 )
 
 # Version information
@@ -135,67 +124,56 @@ __all__ = [
     "ServiceState",
     "ServiceMetadata",
     "IServiceProvider",
-
     # Exceptions
     "CircularDependencyError",
     "ServiceNotFoundError",
     "ServiceConfigurationError",
-
     # Service registration
     "ServiceRegistrar",
     "YamlConfigurationProvider",
     "JsonConfigurationProvider",
     "EnvironmentVariableProvider",
     "RealEstateServiceRegistrar",
-
     # Decorators
     "service",
     "singleton",
     "transient",
     "scoped",
-
     # Pattern integration
     "RealEstateServiceOrchestrator",
     "RepositoryPatternIntegration",
     "StrategyPatternIntegration",
     "initialize_real_estate_services",
-
     # Performance
     "OptimizedDIContainer",
     "PerformanceMonitor",
     "RealEstatePerformanceOptimizer",
-
     # Testing
     "TestDIContainer",
     "MockServiceFactory",
     "TestScenarioBuilder",
     "IntegrationTestHelper",
     "PerformanceTestHelper",
-
     # Health checks
     "repository_health_check",
     "container_health_check",
     "get_health_check",
-
     # Factories
     "create_property_repository",
     "create_json_repository",
     "create_mls_repository",
     "get_factory",
-
     # Examples
     "RealEstateServiceComposer",
     "run_development_example",
     "run_testing_example",
-
     # Fixtures for pytest
     "test_container",
     "scenario_builder",
-
     # Assertions for testing
     "assert_service_registered",
     "assert_mock_called",
-    "assert_service_healthy"
+    "assert_service_healthy",
 ]
 
 
@@ -204,8 +182,7 @@ def get_version():
     return __version__
 
 
-def create_real_estate_container(name: str = "real_estate",
-                                enable_monitoring: bool = True) -> DIContainer:
+def create_real_estate_container(name: str = "real_estate", enable_monitoring: bool = True) -> DIContainer:
     """
     Create a DI container pre-configured for real estate applications.
 
@@ -234,11 +211,7 @@ def create_optimized_real_estate_container(base_container: DIContainer) -> Optim
     Returns:
         OptimizedDIContainer with real estate optimizations
     """
-    optimized = OptimizedDIContainer(
-        base_container,
-        enable_caching=True,
-        enable_monitoring=True
-    )
+    optimized = OptimizedDIContainer(base_container, enable_caching=True, enable_monitoring=True)
 
     # Apply real estate optimizations
     RealEstatePerformanceOptimizer.configure_container_for_real_estate(optimized)
@@ -248,84 +221,35 @@ def create_optimized_real_estate_container(base_container: DIContainer) -> Optim
 
 # Configuration helpers
 DEFAULT_DEVELOPMENT_CONFIG = {
-    'repositories': {
-        'JsonRepository': {
-            'type': 'json',
-            'config': {
-                'data_paths': ['./data/knowledge_base/austin_market_demo_data.json'],
-                'cache_ttl': 300
-            },
-            'enable_caching': True
+    "repositories": {
+        "JsonRepository": {
+            "type": "json",
+            "config": {"data_paths": ["./data/knowledge_base/austin_market_demo_data.json"], "cache_ttl": 300},
+            "enable_caching": True,
         }
     },
-    'strategies': {
-        'scoring': {
-            'strategies': {
-                'basic': {'enabled': True},
-                'enhanced': {'enabled': True}
-            }
-        }
-    },
-    'monitoring': {
-        'enabled': True
-    }
+    "strategies": {"scoring": {"strategies": {"basic": {"enabled": True}, "enhanced": {"enabled": True}}}},
+    "monitoring": {"enabled": True},
 }
 
 DEFAULT_PRODUCTION_CONFIG = {
-    'repositories': {
-        'MLSRepository': {
-            'type': 'mls',
-            'config': {
-                'rate_limit': 10,
-                'timeout': 30,
-                'retry_attempts': 3
-            },
-            'enable_caching': True,
-            'cache_config': {
-                'backend': 'redis',
-                'ttl': 1800
-            }
+    "repositories": {
+        "MLSRepository": {
+            "type": "mls",
+            "config": {"rate_limit": 10, "timeout": 30, "retry_attempts": 3},
+            "enable_caching": True,
+            "cache_config": {"backend": "redis", "ttl": 1800},
         }
     },
-    'strategies': {
-        'scoring': {
-            'strategies': {
-                'enhanced': {'enabled': True}
-            }
-        }
-    },
-    'caching': {
-        'redis': {
-            'enabled': True,
-            'key_prefix': 'ghl_prod_cache:'
-        }
-    },
-    'monitoring': {
-        'enabled': True,
-        'slow_service_threshold_ms': 50.0
-    }
+    "strategies": {"scoring": {"strategies": {"enhanced": {"enabled": True}}}},
+    "caching": {"redis": {"enabled": True, "key_prefix": "ghl_prod_cache:"}},
+    "monitoring": {"enabled": True, "slow_service_threshold_ms": 50.0},
 }
 
 DEFAULT_TESTING_CONFIG = {
-    'repositories': {
-        'MockRepository': {
-            'type': 'mock',
-            'config': {
-                'mock_data_count': 100,
-                'seed': 12345
-            }
-        }
-    },
-    'strategies': {
-        'scoring': {
-            'strategies': {
-                'mock': {'enabled': True}
-            }
-        }
-    },
-    'monitoring': {
-        'enabled': False
-    }
+    "repositories": {"MockRepository": {"type": "mock", "config": {"mock_data_count": 100, "seed": 12345}}},
+    "strategies": {"scoring": {"strategies": {"mock": {"enabled": True}}}},
+    "monitoring": {"enabled": False},
 }
 
 
@@ -340,9 +264,9 @@ def get_default_config(environment: str = "development") -> dict:
         Default configuration dictionary
     """
     configs = {
-        'development': DEFAULT_DEVELOPMENT_CONFIG,
-        'production': DEFAULT_PRODUCTION_CONFIG,
-        'testing': DEFAULT_TESTING_CONFIG
+        "development": DEFAULT_DEVELOPMENT_CONFIG,
+        "production": DEFAULT_PRODUCTION_CONFIG,
+        "testing": DEFAULT_TESTING_CONFIG,
     }
 
     return configs.get(environment, DEFAULT_DEVELOPMENT_CONFIG).copy()

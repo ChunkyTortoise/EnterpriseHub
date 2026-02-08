@@ -10,19 +10,20 @@ Generates synthetic documents, queries, and ground truth data for:
 Provides consistent, reproducible test data across benchmark runs.
 """
 
-import random
 import hashlib
-import uuid
-from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional, Tuple
-from dataclasses import dataclass, asdict
-from pathlib import Path
 import json
+import random
+import uuid
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 
 @dataclass
 class Document:
     """Standard document structure for testing."""
+
     id: str
     content: str
     title: str
@@ -35,6 +36,7 @@ class Document:
 @dataclass
 class TestQuery:
     """Test query with expected results."""
+
     id: str
     query: str
     expected_docs: List[str]
@@ -66,18 +68,16 @@ class TestDataGenerator:
                 "Performance characteristics show {performance} under typical workloads. "
                 "Common challenges include {challenge1} and {challenge2}. "
                 "Best practices recommend {practice1}, {practice2}, and regular {practice3}.",
-
                 "{technology} architecture consists of {component1}, {component2}, and {component3}. "
                 "The {component1} handles {responsibility1} while {component2} manages {responsibility2}. "
                 "Scalability is achieved through {scaling_method} and {optimization}. "
                 "Monitoring involves tracking {metric1}, {metric2}, and {metric3}. "
                 "Troubleshooting typically focuses on {issue1} and {issue2}.",
-
                 "Advanced {technology} features include {feature1}, {feature2}, and {feature3}. "
                 "The {feature1} enables {capability1} through {mechanism}. "
                 "Integration patterns support {pattern1} and {pattern2} architectures. "
                 "Security considerations include {security1}, {security2}, and {security3}. "
-                "Future developments focus on {development1} and {development2}."
+                "Future developments focus on {development1} and {development2}.",
             ],
             "business": [
                 "The business impact of {technology} includes {impact1}, {impact2}, and {impact3}. "
@@ -85,18 +85,16 @@ class TestDataGenerator:
                 "Implementation costs typically involve {cost1}, {cost2}, and {cost3}. "
                 "Risk factors include {risk1} and {risk2}, mitigated by {mitigation}. "
                 "Success metrics focus on {metric1}, {metric2}, and {metric3}.",
-
                 "Market analysis reveals {trend1} and {trend2} in {technology} adoption. "
                 "Competitive advantages include {advantage1}, {advantage2}, and {advantage3}. "
                 "Customer requirements emphasize {requirement1} and {requirement2}. "
                 "Pricing strategies consider {factor1}, {factor2}, and {factor3}. "
                 "Partnership opportunities exist in {area1} and {area2}.",
-
                 "Strategic planning for {technology} involves {strategy1}, {strategy2}, and {strategy3}. "
                 "Resource allocation prioritizes {priority1} and {priority2}. "
                 "Timeline considerations include {milestone1}, {milestone2}, and {milestone3}. "
                 "Stakeholder engagement requires {engagement1} and {engagement2}. "
-                "Success criteria are measured by {criteria1} and {criteria2}."
+                "Success criteria are measured by {criteria1} and {criteria2}.",
             ],
             "operational": [
                 "Operational procedures for {technology} include {procedure1}, {procedure2}, and {procedure3}. "
@@ -104,35 +102,57 @@ class TestDataGenerator:
                 "Monitoring dashboards track {indicator1}, {indicator2}, and {indicator3}. "
                 "Alert thresholds are set for {threshold1} and {threshold2}. "
                 "Recovery procedures address {scenario1} and {scenario2}.",
-
                 "Performance optimization focuses on {optimization1}, {optimization2}, and {optimization3}. "
                 "Capacity planning considers {factor1}, {factor2}, and {factor3}. "
                 "Backup strategies include {strategy1} and {strategy2}. "
                 "Security protocols enforce {protocol1}, {protocol2}, and {protocol3}. "
                 "Compliance requirements mandate {requirement1} and {requirement2}.",
-
                 "Incident response procedures cover {incident1}, {incident2}, and {incident3}. "
                 "Escalation paths involve {escalation1} and {escalation2}. "
                 "Documentation standards require {standard1} and {standard2}. "
                 "Training programs address {training1} and {training2}. "
-                "Quality assurance includes {qa1} and {qa2}."
-            ]
+                "Quality assurance includes {qa1} and {qa2}.",
+            ],
         }
 
         # Technology domains
         self.technologies = [
-            "vector databases", "semantic search", "embedding models",
-            "retrieval systems", "neural networks", "transformer models",
-            "attention mechanisms", "language models", "information retrieval",
-            "machine learning", "deep learning", "natural language processing"
+            "vector databases",
+            "semantic search",
+            "embedding models",
+            "retrieval systems",
+            "neural networks",
+            "transformer models",
+            "attention mechanisms",
+            "language models",
+            "information retrieval",
+            "machine learning",
+            "deep learning",
+            "natural language processing",
         ]
 
         # Content vocabulary for template filling
         self.vocabulary = {
-            "concept": ["semantic similarity", "vector indexing", "dense retrieval", "sparse retrieval",
-                       "hybrid search", "neural ranking", "attention mechanisms", "contextual understanding"],
-            "method": ["HNSW indexing", "LSH hashing", "k-means clustering", "transformer encoding",
-                      "contrastive learning", "metric learning", "fine-tuning", "distillation"],
+            "concept": [
+                "semantic similarity",
+                "vector indexing",
+                "dense retrieval",
+                "sparse retrieval",
+                "hybrid search",
+                "neural ranking",
+                "attention mechanisms",
+                "contextual understanding",
+            ],
+            "method": [
+                "HNSW indexing",
+                "LSH hashing",
+                "k-means clustering",
+                "transformer encoding",
+                "contrastive learning",
+                "metric learning",
+                "fine-tuning",
+                "distillation",
+            ],
             "benefit1": ["improved accuracy", "faster retrieval", "better scalability", "reduced latency"],
             "benefit2": ["enhanced relevance", "lower costs", "simplified architecture", "better user experience"],
             "benefit3": ["easier maintenance", "improved reliability", "better security", "increased throughput"],
@@ -143,15 +163,11 @@ class TestDataGenerator:
             "challenge2": ["cold start problems", "domain adaptation", "evaluation difficulties"],
             "practice1": ["regular reindexing", "continuous monitoring", "automated testing"],
             "practice2": ["proper data preprocessing", "effective caching strategies", "security audits"],
-            "practice3": ["performance tuning", "backup procedures", "documentation updates"]
+            "practice3": ["performance tuning", "backup procedures", "documentation updates"],
         }
 
     def generate_synthetic_documents(
-        self,
-        count: int = 1000,
-        domains: Optional[List[str]] = None,
-        min_length: int = 100,
-        max_length: int = 500
+        self, count: int = 1000, domains: Optional[List[str]] = None, min_length: int = 100, max_length: int = 500
     ) -> List[Document]:
         """
         Generate synthetic documents for testing.
@@ -208,9 +224,9 @@ class TestDataGenerator:
                     "synthetic": True,
                     "generation_seed": self.seed,
                     "word_count": len(content.split()),
-                    "char_count": len(content)
+                    "char_count": len(content),
                 },
-                created_at=self._generate_timestamp(i, count)
+                created_at=self._generate_timestamp(i, count),
             )
 
             documents.append(document)
@@ -218,10 +234,7 @@ class TestDataGenerator:
         return documents
 
     def generate_test_queries(
-        self,
-        count: int = 100,
-        documents: Optional[List[Document]] = None,
-        query_types: Optional[List[str]] = None
+        self, count: int = 100, documents: Optional[List[Document]] = None, query_types: Optional[List[str]] = None
     ) -> List[TestQuery]:
         """
         Generate test queries with ground truth relevance.
@@ -284,8 +297,8 @@ class TestDataGenerator:
                     "domain": domain,
                     "technology": technology,
                     "synthetic": True,
-                    "generation_seed": self.seed
-                }
+                    "generation_seed": self.seed,
+                },
             )
 
             queries.append(query)
@@ -293,10 +306,7 @@ class TestDataGenerator:
         return queries
 
     def generate_performance_test_data(
-        self,
-        num_documents: int = 10000,
-        num_queries: int = 1000,
-        complexity_levels: Optional[List[str]] = None
+        self, num_documents: int = 10000, num_queries: int = 1000, complexity_levels: Optional[List[str]] = None
     ) -> Tuple[List[Document], List[TestQuery]]:
         """
         Generate comprehensive test data for performance benchmarking.
@@ -327,19 +337,13 @@ class TestDataGenerator:
             long_docs = domain_count - short_docs - medium_docs  # 400-800 words
 
             # Generate short documents
-            documents.extend(self.generate_synthetic_documents(
-                short_docs, [domain], 50, 150
-            ))
+            documents.extend(self.generate_synthetic_documents(short_docs, [domain], 50, 150))
 
             # Generate medium documents
-            documents.extend(self.generate_synthetic_documents(
-                medium_docs, [domain], 150, 400
-            ))
+            documents.extend(self.generate_synthetic_documents(medium_docs, [domain], 150, 400))
 
             # Generate long documents
-            documents.extend(self.generate_synthetic_documents(
-                long_docs, [domain], 400, 800
-            ))
+            documents.extend(self.generate_synthetic_documents(long_docs, [domain], 400, 800))
 
         # Generate queries with complexity distribution
         queries = []
@@ -356,9 +360,7 @@ class TestDataGenerator:
             else:
                 query_types = ["analytical", "multi_intent"]
 
-            complexity_queries = self.generate_test_queries(
-                complexity_count, documents, query_types
-            )
+            complexity_queries = self.generate_test_queries(complexity_count, documents, query_types)
 
             # Override difficulty based on complexity level
             for query in complexity_queries:
@@ -368,12 +370,7 @@ class TestDataGenerator:
 
         return documents, queries
 
-    def save_test_data(
-        self,
-        documents: List[Document],
-        queries: List[TestQuery],
-        output_dir: str
-    ) -> Dict[str, str]:
+    def save_test_data(self, documents: List[Document], queries: List[TestQuery], output_dir: str) -> Dict[str, str]:
         """
         Save generated test data to files.
 
@@ -390,12 +387,12 @@ class TestDataGenerator:
 
         # Save documents
         docs_file = output_path / "test_documents.json"
-        with docs_file.open('w') as f:
+        with docs_file.open("w") as f:
             json.dump([asdict(doc) for doc in documents], f, indent=2)
 
         # Save queries
         queries_file = output_path / "test_queries.json"
-        with queries_file.open('w') as f:
+        with queries_file.open("w") as f:
             json.dump([asdict(query) for query in queries], f, indent=2)
 
         # Save metadata
@@ -410,18 +407,14 @@ class TestDataGenerator:
             "statistics": {
                 "avg_doc_length": sum(len(doc.content.split()) for doc in documents) / len(documents),
                 "avg_query_length": sum(len(query.query.split()) for query in queries) / len(queries),
-                "difficulty_distribution": self._calculate_difficulty_distribution(queries)
-            }
+                "difficulty_distribution": self._calculate_difficulty_distribution(queries),
+            },
         }
 
-        with metadata_file.open('w') as f:
+        with metadata_file.open("w") as f:
             json.dump(metadata, f, indent=2)
 
-        return {
-            "documents": str(docs_file),
-            "queries": str(queries_file),
-            "metadata": str(metadata_file)
-        }
+        return {"documents": str(docs_file), "queries": str(queries_file), "metadata": str(metadata_file)}
 
     # Private helper methods
 
@@ -437,14 +430,30 @@ class TestDataGenerator:
 
         # Fill any remaining generic placeholders
         placeholders = [
-            "component1", "component2", "component3",
-            "responsibility1", "responsibility2",
-            "scaling_method", "optimization",
-            "metric1", "metric2", "metric3",
-            "issue1", "issue2", "feature1", "feature2", "feature3",
-            "capability1", "mechanism", "pattern1", "pattern2",
-            "security1", "security2", "security3",
-            "development1", "development2"
+            "component1",
+            "component2",
+            "component3",
+            "responsibility1",
+            "responsibility2",
+            "scaling_method",
+            "optimization",
+            "metric1",
+            "metric2",
+            "metric3",
+            "issue1",
+            "issue2",
+            "feature1",
+            "feature2",
+            "feature3",
+            "capability1",
+            "mechanism",
+            "pattern1",
+            "pattern2",
+            "security1",
+            "security2",
+            "security3",
+            "development1",
+            "development2",
         ]
 
         for placeholder in placeholders:
@@ -455,7 +464,9 @@ class TestDataGenerator:
                 elif placeholder.startswith("responsibility"):
                     replacement = f"{random.choice(['data management', 'query processing', 'result ranking', 'cache management'])}"
                 elif placeholder.startswith("metric"):
-                    replacement = f"{random.choice(['latency', 'throughput', 'accuracy', 'memory usage', 'CPU utilization'])}"
+                    replacement = (
+                        f"{random.choice(['latency', 'throughput', 'accuracy', 'memory usage', 'CPU utilization'])}"
+                    )
                 else:
                     replacement = f"system {placeholder.replace('1', '').replace('2', '').replace('3', '')}"
 
@@ -472,7 +483,7 @@ class TestDataGenerator:
             f"Understanding {technology.title()} Architecture",
             f"{technology.title()} Performance Optimization",
             f"{domain.title()} Guide to {technology.title()}",
-            f"{technology.title()} Troubleshooting Manual"
+            f"{technology.title()} Troubleshooting Manual",
         ]
         return random.choice(title_patterns)
 
@@ -491,43 +502,39 @@ class TestDataGenerator:
                 f"What is {technology}?",
                 f"Define {technology} and its components",
                 f"Explain the concept of {technology}",
-                f"What are the key features of {technology}?"
+                f"What are the key features of {technology}?",
             ],
             "conceptual": [
                 f"How does {technology} work?",
                 f"What are the principles behind {technology}?",
                 f"Explain the architecture of {technology}",
-                f"What is the theory behind {technology}?"
+                f"What is the theory behind {technology}?",
             ],
             "procedural": [
                 f"How to implement {technology}?",
                 f"Steps to deploy {technology} in production",
                 f"Best practices for {technology} implementation",
-                f"How to configure {technology} for optimal performance?"
+                f"How to configure {technology} for optimal performance?",
             ],
             "comparative": [
                 f"Compare {technology} with alternative approaches",
                 f"What are the advantages of {technology}?",
                 f"When should you use {technology}?",
-                f"What are the trade-offs of {technology}?"
+                f"What are the trade-offs of {technology}?",
             ],
             "analytical": [
                 f"Analyze the performance characteristics of {technology}",
                 f"What factors affect {technology} efficiency?",
                 f"Evaluate the scalability of {technology}",
-                f"What are the limitations of {technology}?"
-            ]
+                f"What are the limitations of {technology}?",
+            ],
         }
 
         patterns = query_patterns.get(query_type, query_patterns["factual"])
         return random.choice(patterns)
 
     def _find_relevant_documents(
-        self,
-        query: str,
-        technology: str,
-        domain: str,
-        doc_groups: Dict[str, List[Document]]
+        self, query: str, technology: str, domain: str, doc_groups: Dict[str, List[Document]]
     ) -> Tuple[List[str], List[float]]:
         """Find relevant documents and generate relevance scores."""
         # Primary match: same technology and domain
@@ -598,19 +605,14 @@ class TestDataGenerator:
         difficulties = [query.difficulty for query in queries]
         total = len(difficulties)
 
-        return {
-            difficulty: difficulties.count(difficulty) / total
-            for difficulty in set(difficulties)
-        }
+        return {difficulty: difficulties.count(difficulty) / total for difficulty in set(difficulties)}
 
 
 # Convenience functions for common use cases
 
+
 def generate_benchmark_data(
-    num_docs: int = 1000,
-    num_queries: int = 100,
-    output_dir: str = "test_data",
-    seed: int = 42
+    num_docs: int = 1000, num_queries: int = 100, output_dir: str = "test_data", seed: int = 42
 ) -> Dict[str, str]:
     """Generate complete benchmark dataset."""
     generator = TestDataGenerator(seed)

@@ -2,7 +2,9 @@
 GHL Real Estate AI - Interactive Demo
 Main Streamlit Application
 """
+
 import streamlit as st
+
 st.write("DEBUG: App is starting...")
 import sys
 from pathlib import Path
@@ -15,13 +17,13 @@ if str(project_root) not in sys.path:
 from streamlit_demo.components.chat_interface import render_chat_interface
 from streamlit_demo.components.lead_dashboard import render_lead_dashboard
 from streamlit_demo.components.property_cards import render_property_matches
-from streamlit_demo.mock_services.mock_claude import MockClaudeService
 from streamlit_demo.mock_services.conversation_state import (
-    init_conversation_state,
     add_message,
+    calculate_lead_score,
+    init_conversation_state,
     update_extracted_data,
-    calculate_lead_score
 )
+from streamlit_demo.mock_services.mock_claude import MockClaudeService
 
 # Page config
 st.set_page_config(
@@ -29,9 +31,7 @@ st.set_page_config(
     page_icon="🏠",
     layout="wide",
     initial_sidebar_state="expanded",
-    menu_items={
-        'About': "AI-Powered Lead Qualification System for Real Estate Professionals"
-    }
+    menu_items={"About": "AI-Powered Lead Qualification System for Real Estate Professionals"},
 )
 
 # Load custom CSS
@@ -41,14 +41,15 @@ if css_path.exists():
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # Initialize services
-if 'claude_service' not in st.session_state:
+if "claude_service" not in st.session_state:
     st.session_state.claude_service = MockClaudeService()
 
 # Initialize conversation state
 init_conversation_state()
 
 # Header with branding
-st.markdown("""
+st.markdown(
+    """
 <div style='background: linear-gradient(135deg, #006AFF 0%, #0052CC 100%); 
             padding: 2rem; border-radius: 12px; margin-bottom: 2rem; color: white;'>
     <h1 style='margin: 0; font-size: 2.5rem; font-weight: 700; color: white;'>
@@ -61,7 +62,9 @@ st.markdown("""
         ✨ Professional, Direct, Curious | 🎯 Smart Context Awareness | 📱 SMS-Optimized
     </div>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # Sidebar - Scenario selector
 with st.sidebar:
@@ -73,24 +76,24 @@ with st.sidebar:
     if st.button("Apply Scenario"):
         st.session_state.messages = []
         st.session_state.extracted_data = {}
-        
+
         if selected_scenario == "Cold Lead Example":
-            add_message('user', "Looking for a house in Austin")
+            add_message("user", "Looking for a house in Austin")
             response, data = st.session_state.claude_service.generate_response("Looking for a house in Austin", [], {})
-            add_message('assistant', response)
+            add_message("assistant", response)
             update_extracted_data(data)
         elif selected_scenario == "Warm Lead Example":
-            add_message('user', "Your prices are too high")
+            add_message("user", "Your prices are too high")
             response, data = st.session_state.claude_service.generate_response("Your prices are too high", [], {})
-            add_message('assistant', response)
+            add_message("assistant", response)
             update_extracted_data(data)
         elif selected_scenario == "Hot Lead Example":
             msg = "I'm pre-approved for $400k, need to move ASAP, love Hyde Park"
-            add_message('user', msg)
+            add_message("user", msg)
             response, data = st.session_state.claude_service.generate_response(msg, [], {})
-            add_message('assistant', response)
+            add_message("assistant", response)
             update_extracted_data(data)
-            
+
         calculate_lead_score()
         st.rerun()
 
@@ -126,17 +129,15 @@ with col1:
 
     if user_input:
         # Add user message
-        add_message('user', user_input)
+        add_message("user", user_input)
 
         # Generate AI response
         response, updated_data = st.session_state.claude_service.generate_response(
-            user_input,
-            st.session_state.messages,
-            st.session_state.extracted_data
+            user_input, st.session_state.messages, st.session_state.extracted_data
         )
 
         # Update state
-        add_message('assistant', response)
+        add_message("assistant", response)
         update_extracted_data(updated_data)
         calculate_lead_score()
 
@@ -153,7 +154,8 @@ render_property_matches()
 
 # Footer
 st.markdown("---")
-st.markdown("""
+st.markdown(
+    """
 <div style='text-align: center; padding: 2rem; background: #F7F8FA; border-radius: 12px; margin-top: 3rem;'>
     <div style='color: #2A2A33; font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;'>
         🚀 Production-Ready AI System
@@ -165,4 +167,6 @@ st.markdown("""
         Phase 3 Union[Complete, 300]+ Tests Union[Passing, Multi]-Tenant Union[Architecture, Enterprise] Security
     </div>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)

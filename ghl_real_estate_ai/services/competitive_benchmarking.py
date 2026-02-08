@@ -89,16 +89,12 @@ class BenchmarkingEngine:
 
         for metric_name, metric_value in metrics.items():
             if metric_name in benchmarks:
-                comparison = self._compare_metric(
-                    metric_name, metric_value, benchmarks[metric_name]
-                )
+                comparison = self._compare_metric(metric_name, metric_value, benchmarks[metric_name])
                 comparisons[metric_name] = comparison
                 overall_scores.append(comparison["percentile_score"])
 
         # Calculate overall ranking
-        avg_percentile = (
-            sum(overall_scores) / len(overall_scores) if overall_scores else 0
-        )
+        avg_percentile = sum(overall_scores) / len(overall_scores) if overall_scores else 0
         overall_ranking = self._calculate_ranking(avg_percentile)
 
         # Identify strengths and weaknesses
@@ -106,9 +102,7 @@ class BenchmarkingEngine:
         opportunities = self._identify_opportunities(comparisons)
 
         # Generate recommendations
-        recommendations = self._generate_benchmark_recommendations(
-            comparisons, benchmarks
-        )
+        recommendations = self._generate_benchmark_recommendations(comparisons, benchmarks)
 
         return {
             "location_id": location_id,
@@ -123,9 +117,7 @@ class BenchmarkingEngine:
             "generated_at": datetime.now().isoformat(),
         }
 
-    def _compare_metric(
-        self, metric_name: str, your_value: float, benchmark_data: Dict[str, float]
-    ) -> Dict[str, Any]:
+    def _compare_metric(self, metric_name: str, your_value: float, benchmark_data: Dict[str, float]) -> Dict[str, Any]:
         """Compare a single metric against benchmarks"""
 
         # Determine if higher is better (varies by metric)
@@ -165,11 +157,7 @@ class BenchmarkingEngine:
         if not higher_is_better:
             diff = -diff  # Invert for metrics where lower is better
 
-        percent_diff = (
-            (diff / benchmark_data["average"] * 100)
-            if benchmark_data["average"] != 0
-            else 0
-        )
+        percent_diff = (diff / benchmark_data["average"] * 100) if benchmark_data["average"] != 0 else 0
 
         return {
             "metric": metric_name,
@@ -250,17 +238,13 @@ class BenchmarkingEngine:
 
         # Sort by percentile
         strengths.sort(
-            key=lambda x: comparisons[x["metric"].lower().replace(" ", "_")][
-                "percentile"
-            ],
+            key=lambda x: comparisons[x["metric"].lower().replace(" ", "_")]["percentile"],
             reverse=True,
         )
 
         return strengths
 
-    def _identify_opportunities(
-        self, comparisons: Dict[str, Any]
-    ) -> List[Dict[str, str]]:
+    def _identify_opportunities(self, comparisons: Dict[str, Any]) -> List[Dict[str, str]]:
         """Identify improvement opportunities"""
         opportunities = []
 

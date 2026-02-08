@@ -121,10 +121,7 @@ class MemoryCacheBackend:
         size = len(pickle.dumps(value))
 
         # Check if we need to evict
-        while (
-            len(self._cache) >= self.max_size
-            or self._current_memory + size > self.max_memory_bytes
-        ):
+        while len(self._cache) >= self.max_size or self._current_memory + size > self.max_memory_bytes:
             if not self._access_order:
                 break
             await self._evict_lru()
@@ -228,6 +225,7 @@ class RedisCacheBackend:
         """Establish connection to Redis."""
         try:
             import redis.asyncio as aioredis
+
             self._client = aioredis.from_url(
                 self.redis_url,
                 decode_responses=False,

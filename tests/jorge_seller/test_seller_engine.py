@@ -1,26 +1,29 @@
-import pytest
-from unittest.mock import Mock, AsyncMock, MagicMock, patch
-from datetime import datetime
 import time
+from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pytest
+
 from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine, SellerQuestions
+
 
 @pytest.fixture
 def mock_conversation_manager():
     manager = AsyncMock()
-    manager.get_context.return_value = {
-        "seller_preferences": {},
-        "conversation_history": []
-    }
+    manager.get_context.return_value = {"seller_preferences": {}, "conversation_history": []}
     manager.extract_seller_data.return_value = {}
     return manager
+
 
 @pytest.fixture
 def mock_ghl_client():
     return AsyncMock()
 
+
 @pytest.fixture
 def seller_engine(mock_conversation_manager, mock_ghl_client):
     return JorgeSellerEngine(mock_conversation_manager, mock_ghl_client)
+
 
 @pytest.mark.asyncio
 async def test_process_seller_response_initial(seller_engine, mock_conversation_manager):
@@ -28,22 +31,23 @@ async def test_process_seller_response_initial(seller_engine, mock_conversation_
     contact_id = "test_contact"
     user_message = "I want to sell my house"
     location_id = "test_location"
-    
+
     mock_conversation_manager.extract_seller_data.return_value = {
         "motivation": "relocation",
         "questions_answered": 1,
-        "response_quality": 0.8
+        "response_quality": 0.8,
     }
-    
+
     # Execute
     result = await seller_engine.process_seller_response(contact_id, user_message, location_id)
-    
+
     # Assert
     assert result["temperature"] == "cold"  # Not enough questions answered
     assert "actions" in result
     assert result["questions_answered"] == 1
     # Should ask next question (Timeline)
     assert SellerQuestions.TIMELINE in result["message"] or "30 to 45 days" in result["message"]
+
 
 @pytest.mark.asyncio
 async def test_hot_seller_qualification(seller_engine, mock_conversation_manager):
@@ -60,7 +64,7 @@ async def test_hot_seller_qualification(seller_engine, mock_conversation_manager
         "price_expectation": 500000,
         "questions_answered": 4,
         "response_quality": 0.9,
-        "contact_name": "John"
+        "contact_name": "John",
     }
 
     # Execute
@@ -68,17 +72,17 @@ async def test_hot_seller_qualification(seller_engine, mock_conversation_manager
 
     # Assert
     assert result["temperature"] == "hot"
-    
+
     # Check for hot lead actions
     action_types = [a["type"] for a in result["actions"]]
     assert "trigger_workflow" in action_types
     assert "add_tag" in action_types
-    
+
     # Check for specific tags
     tags = [a["tag"] for a in result["actions"] if a["type"] == "add_tag"]
     assert "Hot-Seller" in tags
     assert "Seller-Qualified" in tags
-    
+
     # Check handoff message
     assert "schedule" in result["message"].lower() or "team" in result["message"].lower()
 
@@ -86,25 +90,26 @@ async def test_hot_seller_qualification(seller_engine, mock_conversation_manager
     async def test_warm_seller_qualification(seller_engine, mock_conversation_manager):
         # Setup
         contact_id = "warm_lead"
-        user_message = "I am definitely interested" # "definitely" triggers 0.8 quality score in engine
+        user_message = "I am definitely interested"  # "definitely" triggers 0.8 quality score in engine
         location_id = "test_location"
-    
+
         # 3 questions answered, okay quality
         mock_conversation_manager.extract_seller_data.return_value = {
             "motivation": "relocation",
             "timeline_acceptable": False,
             "property_condition": "move-in ready",
             "questions_answered": 3,
-            "response_quality": 0.6
+            "response_quality": 0.6,
         }
-    
+
         # Execute
         result = await seller_engine.process_seller_response(contact_id, user_message, location_id)
-    
+
         # Assert
         assert result["temperature"] == "warm"
         tags = [a["tag"] for a in result["actions"] if a["type"] == "add_tag"]
         assert "Warm-Seller" in tags
+
 
 @pytest.mark.asyncio
 async def test_confrontational_response_poor_quality(seller_engine, mock_conversation_manager):
@@ -117,7 +122,7 @@ async def test_confrontational_response_poor_quality(seller_engine, mock_convers
         "questions_answered": 1,
         "response_quality": 0.2,  # Low quality
         "last_user_message": "idk maybe",
-        "contact_name": "Bob"
+        "contact_name": "Bob",
     }
 
     # Execute
@@ -127,7 +132,7 @@ async def test_confrontational_response_poor_quality(seller_engine, mock_convers
     # Should generate a confrontational follow-up
     # We can't easily assert exact text due to randomness, but we can check it's not the next question directly
     # or that it contains some "confrontational" language
-    pass # The engine logic handles this, relying on tone engine tests for specific content
+    pass  # The engine logic handles this, relying on tone engine tests for specific content
 
 
 @pytest.mark.asyncio
@@ -148,11 +153,11 @@ async def test_vapi_retry_on_failure(seller_engine, mock_conversation_manager):
         "response_quality": 0.95,  # Explicit high quality
         "contact_name": "John Doe",
         "phone": "+15125551234",
-        "property_address": "123 Main St"
+        "property_address": "123 Main St",
     }
 
     # Mock VapiService to fail first 2 times, succeed on 3rd
-    with patch('ghl_real_estate_ai.services.vapi_service.VapiService') as MockVapi:
+    with patch("ghl_real_estate_ai.services.vapi_service.VapiService") as MockVapi:
         mock_vapi_instance = MockVapi.return_value
         # First two calls fail, third succeeds
         mock_vapi_instance.trigger_outbound_call.side_effect = [False, False, True]
@@ -200,11 +205,11 @@ async def test_vapi_retry_all_attempts_fail(seller_engine, mock_conversation_man
         "response_quality": 0.95,  # Explicit high quality
         "contact_name": "Jane Smith",
         "phone": "+15125555678",
-        "property_address": "456 Oak Ave"
+        "property_address": "456 Oak Ave",
     }
 
     # Mock VapiService to always fail
-    with patch('ghl_real_estate_ai.services.vapi_service.VapiService') as MockVapi:
+    with patch("ghl_real_estate_ai.services.vapi_service.VapiService") as MockVapi:
         mock_vapi_instance = MockVapi.return_value
         # All 3 attempts fail
         mock_vapi_instance.trigger_outbound_call.return_value = False
@@ -264,8 +269,9 @@ async def test_configurable_thresholds_custom_hot():
     temperature_result = await seller_engine._calculate_seller_temperature(seller_data)
 
     # Assert - should be HOT with custom thresholds (3 questions >= 3, quality 0.65 >= 0.6, timeline True)
-    assert temperature_result["temperature"] == "hot", \
+    assert temperature_result["temperature"] == "hot", (
         f"Expected 'hot' but got '{temperature_result['temperature']}' with custom thresholds"
+    )
 
     # Verify thresholds were applied
     assert "analytics" in temperature_result
@@ -303,8 +309,9 @@ async def test_configurable_thresholds_custom_warm():
     temperature_result = await seller_engine._calculate_seller_temperature(seller_data)
 
     # Assert - should be WARM with custom thresholds (2 questions >= 2, quality 0.45 >= 0.4)
-    assert temperature_result["temperature"] == "warm", \
+    assert temperature_result["temperature"] == "warm", (
         f"Expected 'warm' but got '{temperature_result['temperature']}' with custom thresholds"
+    )
 
     # Verify thresholds were applied
     assert "analytics" in temperature_result
@@ -332,7 +339,7 @@ async def test_default_thresholds_backward_compatibility(mock_conversation_manag
         "price_expectation": 500000,
         "questions_answered": 4,
         "response_quality": 0.9,
-        "contact_name": "Default User"
+        "contact_name": "Default User",
     }
 
     # Execute

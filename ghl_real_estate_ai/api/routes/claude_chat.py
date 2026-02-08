@@ -2,23 +2,26 @@
 Claude Chat API - Real-time intelligent chat interface
 Handles interactive queries with full context integration
 """
-from fastapi import APIRouter, HTTPException, Depends
+
+import asyncio
+import json
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from typing import Dict, List, Any, Optional
-import json
-import asyncio
-from datetime import datetime
 
-from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator, ClaudeOrchestrator
-from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.core.service_registry import get_service_registry
+from ghl_real_estate_ai.services.claude_orchestrator import ClaudeOrchestrator, get_claude_orchestrator
+from ghl_real_estate_ai.services.memory_service import MemoryService
 
 router = APIRouter(prefix="/claude", tags=["claude-chat"])
 
 
 class ChatQueryRequest(BaseModel):
     """Request format for chat queries"""
+
     message: str
     contact_id: Optional[str] = None
     location_id: Optional[str] = None
@@ -30,6 +33,7 @@ class ChatQueryRequest(BaseModel):
 
 class ChatQueryResponse(BaseModel):
     """Response format for chat queries"""
+
     success: bool
     message: str
     reasoning: Optional[str] = None
@@ -45,6 +49,7 @@ class ChatQueryResponse(BaseModel):
 
 class ConversationHistoryResponse(BaseModel):
     """Response format for conversation history"""
+
     success: bool
     messages: List[Dict[str, Any]] = []
     conversation_id: str
@@ -52,10 +57,7 @@ class ConversationHistoryResponse(BaseModel):
 
 
 @router.post("/query", response_model=ChatQueryResponse)
-async def chat_query(
-    request: ChatQueryRequest,
-    claude: ClaudeOrchestrator = Depends(get_claude_orchestrator)
-):
+async def chat_query(request: ChatQueryRequest, claude: ClaudeOrchestrator = Depends(get_claude_orchestrator)):
     """
     Process a chat query with full context integration.
 
@@ -69,38 +71,23 @@ async def chat_query(
             "location_id": request.location_id,
             "selected_lead_name": request.selected_lead_name,
             "conversation_mode": request.conversation_mode,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         # Add lead options if available (for demo context)
         if request.selected_lead_name:
-            context["selected_lead"] = {
-                "name": request.selected_lead_name,
-                "context": "Available from session state"
-            }
+            context["selected_lead"] = {"name": request.selected_lead_name, "context": "Available from session state"}
 
         # Process query through Claude orchestrator
-        claude_response = await claude.chat_query(
-            query=request.message,
-            context=context,
-            lead_id=request.contact_id
-        )
+        claude_response = await claude.chat_query(query=request.message, context=context, lead_id=request.contact_id)
 
         # Store interaction in memory if contact_id provided
         if request.contact_id and request.include_context:
             try:
                 memory_service = MemoryService()
+                await memory_service.add_interaction(request.contact_id, request.message, "user", request.location_id)
                 await memory_service.add_interaction(
-                    request.contact_id,
-                    request.message,
-                    "user",
-                    request.location_id
-                )
-                await memory_service.add_interaction(
-                    request.contact_id,
-                    claude_response.content,
-                    "assistant",
-                    request.location_id
+                    request.contact_id, claude_response.content, "assistant", request.location_id
                 )
             except Exception as e:
                 # Don't fail the request if memory storage fails
@@ -116,25 +103,20 @@ async def chat_query(
             recommended_actions=claude_response.recommended_actions,
             tool_executions=claude_response.metadata.get("tool_executions", []),
             response_time_ms=claude_response.response_time_ms,
-            conversation_id=request.contact_id
+            conversation_id=request.contact_id,
         )
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error processing chat query: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error processing chat query: {str(e)}")
 
 
 @router.post("/query-stream")
-async def chat_query_stream(
-    request: ChatQueryRequest,
-    claude: ClaudeOrchestrator = Depends(get_claude_orchestrator)
-):
+async def chat_query_stream(request: ChatQueryRequest, claude: ClaudeOrchestrator = Depends(get_claude_orchestrator)):
     """
     Streaming version of chat query for real-time responses.
     Returns Server-Sent Events (SSE) stream.
     """
+
     async def generate_stream():
         try:
             # Build context (same as non-streaming)
@@ -143,7 +125,7 @@ async def chat_query_stream(
                 "location_id": request.location_id,
                 "selected_lead_name": request.selected_lead_name,
                 "conversation_mode": request.conversation_mode,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
             # Process streaming query
@@ -151,7 +133,7 @@ async def chat_query_stream(
                 task_type=claude.ClaudeTaskType.CHAT_QUERY,
                 context=context,
                 prompt=f"Jorge asks: {request.message}",
-                streaming=True
+                streaming=True,
             )
 
             # Stream response tokens
@@ -170,19 +152,12 @@ async def chat_query_stream(
     return StreamingResponse(
         generate_stream(),
         media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive"
-        }
+        headers={"Cache-Control": "no-cache", "Connection": "keep-alive"},
     )
 
 
 @router.get("/conversation/{contact_id}", response_model=ConversationHistoryResponse)
-async def get_conversation_history(
-    contact_id: str,
-    location_id: Optional[str] = None,
-    limit: int = 50
-):
+async def get_conversation_history(contact_id: str, location_id: Optional[str] = None, limit: int = 50):
     """
     Retrieve conversation history for a contact.
     """
@@ -202,17 +177,11 @@ async def get_conversation_history(
         }
 
         return ConversationHistoryResponse(
-            success=True,
-            messages=messages,
-            conversation_id=contact_id,
-            lead_context=lead_context
+            success=True, messages=messages, conversation_id=contact_id, lead_context=lead_context
         )
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error retrieving conversation history: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error retrieving conversation history: {str(e)}")
 
 
 @router.post("/lead-analysis/{lead_id}")
@@ -220,7 +189,7 @@ async def analyze_lead_comprehensive(
     lead_id: str,
     include_scoring: bool = True,
     include_churn: bool = True,
-    claude: ClaudeOrchestrator = Depends(get_claude_orchestrator)
+    claude: ClaudeOrchestrator = Depends(get_claude_orchestrator),
 ):
     """
     Generate comprehensive Claude-powered lead analysis.
@@ -228,9 +197,7 @@ async def analyze_lead_comprehensive(
     """
     try:
         response = await claude.analyze_lead(
-            lead_id=lead_id,
-            include_scoring=include_scoring,
-            include_churn_analysis=include_churn
+            lead_id=lead_id, include_scoring=include_scoring, include_churn_analysis=include_churn
         )
 
         return {
@@ -239,14 +206,11 @@ async def analyze_lead_comprehensive(
             "reasoning": response.reasoning,
             "recommended_actions": response.recommended_actions,
             "sources": response.sources,
-            "response_time_ms": response.response_time_ms
+            "response_time_ms": response.response_time_ms,
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error analyzing lead: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error analyzing lead: {str(e)}")
 
 
 @router.post("/generate-script")
@@ -255,17 +219,14 @@ async def generate_script(
     script_type: str,
     channel: str = "sms",
     variants: int = 1,
-    claude: ClaudeOrchestrator = Depends(get_claude_orchestrator)
+    claude: ClaudeOrchestrator = Depends(get_claude_orchestrator),
 ):
     """
     Generate personalized scripts for lead communication.
     """
     try:
         response = await claude.generate_script(
-            lead_id=lead_id,
-            script_type=script_type,
-            channel=channel,
-            variants=variants
+            lead_id=lead_id, script_type=script_type, channel=channel, variants=variants
         )
 
         return {
@@ -273,14 +234,11 @@ async def generate_script(
             "script": response.content,
             "reasoning": response.reasoning,
             "recommended_actions": response.recommended_actions,
-            "response_time_ms": response.response_time_ms
+            "response_time_ms": response.response_time_ms,
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error generating script: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error generating script: {str(e)}")
 
 
 @router.post("/synthesize-report")
@@ -288,16 +246,14 @@ async def synthesize_report(
     metrics: Dict[str, Any],
     report_type: str = "weekly_summary",
     market_context: Optional[Dict[str, Any]] = None,
-    claude: ClaudeOrchestrator = Depends(get_claude_orchestrator)
+    claude: ClaudeOrchestrator = Depends(get_claude_orchestrator),
 ):
     """
     Generate narrative reports from quantitative metrics.
     """
     try:
         response = await claude.synthesize_report(
-            metrics=metrics,
-            report_type=report_type,
-            market_context=market_context
+            metrics=metrics, report_type=report_type, market_context=market_context
         )
 
         return {
@@ -305,24 +261,16 @@ async def synthesize_report(
             "report": response.content,
             "reasoning": response.reasoning,
             "recommended_actions": response.recommended_actions,
-            "response_time_ms": response.response_time_ms
+            "response_time_ms": response.response_time_ms,
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error synthesizing report: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error synthesizing report: {str(e)}")
 
 
 @router.get("/performance-metrics")
-async def get_performance_metrics(
-    claude: ClaudeOrchestrator = Depends(get_claude_orchestrator)
-):
+async def get_performance_metrics(claude: ClaudeOrchestrator = Depends(get_claude_orchestrator)):
     """
     Get Claude orchestrator performance metrics.
     """
-    return {
-        "success": True,
-        "metrics": claude.get_performance_metrics()
-    }
+    return {"success": True, "metrics": claude.get_performance_metrics()}

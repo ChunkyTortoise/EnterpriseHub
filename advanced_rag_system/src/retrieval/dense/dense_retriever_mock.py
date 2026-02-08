@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import time
 from typing import List, Optional
+
 import numpy as np
 
 from src.core.exceptions import RetrievalError
@@ -27,7 +28,7 @@ class MockDenseRetriever:
         collection_name: str = "mock_dense_retrieval",
         embedding_model: str = "mock-embedding-model",
         dimensions: int = 1536,
-        distance_metric: str = "cosine"
+        distance_metric: str = "cosine",
     ):
         """Initialize mock dense retriever."""
         self._collection_name = collection_name
@@ -73,9 +74,18 @@ class MockDenseRetriever:
 
         # Add some topic signals based on keywords
         keywords = {
-            'python': 100, 'programming': 101, 'code': 102, 'data': 103,
-            'machine': 104, 'learning': 105, 'artificial': 106, 'intelligence': 107,
-            'database': 108, 'query': 109, 'search': 110, 'retrieval': 111
+            "python": 100,
+            "programming": 101,
+            "code": 102,
+            "data": 103,
+            "machine": 104,
+            "learning": 105,
+            "artificial": 106,
+            "intelligence": 107,
+            "database": 108,
+            "query": 109,
+            "search": 110,
+            "retrieval": 111,
         }
 
         for keyword, idx in keywords.items():
@@ -87,7 +97,7 @@ class MockDenseRetriever:
         np.random.seed(text_hash)
         noise = np.random.normal(0, 0.1, min(50, self._dimensions - 150))
         if len(noise) < self._dimensions - 150:
-            embedding[150:150+len(noise)] = noise
+            embedding[150 : 150 + len(noise)] = noise
 
         # Normalize to unit vector
         norm = np.linalg.norm(embedding)
@@ -164,7 +174,7 @@ class MockDenseRetriever:
                         score=float(similarity),
                         rank=rank_idx + 1,
                         distance=float(1.0 - similarity),
-                        explanation=f"mock_dense | model={self._embedding_model}"
+                        explanation=f"mock_dense | model={self._embedding_model}",
                     )
                     results.append(result)
 
@@ -212,5 +222,5 @@ class MockDenseRetriever:
             "distance_metric": self._distance_metric,
             "initialized": self._initialized,
             "mock_retriever": True,
-            "embeddings_stored": len(self._embeddings)
+            "embeddings_stored": len(self._embeddings),
         }

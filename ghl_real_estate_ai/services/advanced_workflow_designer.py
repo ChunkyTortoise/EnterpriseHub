@@ -14,18 +14,20 @@ Features:
 - Performance simulation
 """
 
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass, field, asdict
-from datetime import datetime, timedelta
-from enum import Enum
 import json
 import logging
 from collections import defaultdict
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
+
 class NodeType(Enum):
     """Types of workflow nodes"""
+
     START = "start"
     ACTION = "action"
     CONDITION = "condition"
@@ -35,16 +37,20 @@ class NodeType(Enum):
     END = "end"
     TRIGGER = "trigger"
 
+
 class ValidationType(Enum):
     """Validation rule types"""
+
     ERROR = "error"
     WARNING = "warning"
     INFO = "info"
     SUCCESS = "success"
 
+
 @dataclass
 class WorkflowNode:
     """Visual workflow node representation"""
+
     node_id: str
     node_type: NodeType
     name: str
@@ -55,26 +61,32 @@ class WorkflowNode:
     validation_status: str = "pending"
     validation_messages: List[Dict[str, str]] = field(default_factory=list)
 
+
 @dataclass
 class WorkflowConnection:
     """Connection between workflow nodes"""
+
     connection_id: str
     source_node_id: str
     target_node_id: str
     condition: Optional[Dict[str, Any]] = None
     label: str = ""
 
+
 @dataclass
 class ValidationResult:
     """Workflow validation result"""
+
     is_valid: bool
     errors: List[Dict[str, Any]] = field(default_factory=list)
     warnings: List[Dict[str, Any]] = field(default_factory=list)
     suggestions: List[Dict[str, Any]] = field(default_factory=list)
 
+
 @dataclass
 class WorkflowDesign:
     """Complete workflow design"""
+
     design_id: str
     name: str
     description: str
@@ -84,6 +96,7 @@ class WorkflowDesign:
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
     version: int = 1
+
 
 class AdvancedWorkflowDesigner:
     """Advanced visual workflow designer"""
@@ -103,79 +116,79 @@ class AdvancedWorkflowDesigner:
         """Initialize node templates for common actions"""
 
         return {
-            'smart_email': {
-                'name': 'Smart Email',
-                'description': 'Send personalized email with intelligent timing',
-                'node_type': NodeType.ACTION,
-                'icon': 'email',
-                'color': '#3b82f6',
-                'config_schema': {
-                    'subject': {'type': 'string', 'required': True, 'placeholder': 'Email subject'},
-                    'template_id': {'type': 'select', 'options': ['welcome', 'follow_up', 'nurture']},
-                    'personalization_level': {'type': 'select', 'options': ['basic', 'advanced', 'premium']},
-                    'timing_optimization': {'type': 'boolean', 'default': True}
-                }
+            "smart_email": {
+                "name": "Smart Email",
+                "description": "Send personalized email with intelligent timing",
+                "node_type": NodeType.ACTION,
+                "icon": "email",
+                "color": "#3b82f6",
+                "config_schema": {
+                    "subject": {"type": "string", "required": True, "placeholder": "Email subject"},
+                    "template_id": {"type": "select", "options": ["welcome", "follow_up", "nurture"]},
+                    "personalization_level": {"type": "select", "options": ["basic", "advanced", "premium"]},
+                    "timing_optimization": {"type": "boolean", "default": True},
+                },
             },
-            'smart_sms': {
-                'name': 'Smart SMS',
-                'description': 'Send personalized SMS with timing optimization',
-                'node_type': NodeType.ACTION,
-                'icon': 'message-circle',
-                'color': '#10b981',
-                'config_schema': {
-                    'message': {'type': 'textarea', 'required': True, 'placeholder': 'SMS message'},
-                    'timing_check': {'type': 'boolean', 'default': True},
-                    'character_limit': {'type': 'number', 'default': 160}
-                }
+            "smart_sms": {
+                "name": "Smart SMS",
+                "description": "Send personalized SMS with timing optimization",
+                "node_type": NodeType.ACTION,
+                "icon": "message-circle",
+                "color": "#10b981",
+                "config_schema": {
+                    "message": {"type": "textarea", "required": True, "placeholder": "SMS message"},
+                    "timing_check": {"type": "boolean", "default": True},
+                    "character_limit": {"type": "number", "default": 160},
+                },
             },
-            'lead_scoring': {
-                'name': 'Lead Scoring',
-                'description': 'Update lead score based on behavior',
-                'node_type': NodeType.ACTION,
-                'icon': 'trending-up',
-                'color': '#8b5cf6',
-                'config_schema': {
-                    'scoring_factors': {'type': 'multi-select', 'options': ['behavioral', 'demographic', 'engagement']},
-                    'weight_adjustment': {'type': 'number', 'min': 0, 'max': 100}
-                }
+            "lead_scoring": {
+                "name": "Lead Scoring",
+                "description": "Update lead score based on behavior",
+                "node_type": NodeType.ACTION,
+                "icon": "trending-up",
+                "color": "#8b5cf6",
+                "config_schema": {
+                    "scoring_factors": {"type": "multi-select", "options": ["behavioral", "demographic", "engagement"]},
+                    "weight_adjustment": {"type": "number", "min": 0, "max": 100},
+                },
             },
-            'property_matching': {
-                'name': 'Property Matching',
-                'description': 'Find and send matching properties',
-                'node_type': NodeType.ACTION,
-                'icon': 'home',
-                'color': '#f59e0b',
-                'config_schema': {
-                    'max_properties': {'type': 'number', 'default': 5, 'min': 1, 'max': 20},
-                    'match_criteria': {'type': 'json', 'placeholder': 'Matching criteria'},
-                    'include_new_listings': {'type': 'boolean', 'default': True}
-                }
+            "property_matching": {
+                "name": "Property Matching",
+                "description": "Find and send matching properties",
+                "node_type": NodeType.ACTION,
+                "icon": "home",
+                "color": "#f59e0b",
+                "config_schema": {
+                    "max_properties": {"type": "number", "default": 5, "min": 1, "max": 20},
+                    "match_criteria": {"type": "json", "placeholder": "Matching criteria"},
+                    "include_new_listings": {"type": "boolean", "default": True},
+                },
             },
-            'wait_delay': {
-                'name': 'Wait/Delay',
-                'description': 'Add delay between actions',
-                'node_type': NodeType.DELAY,
-                'icon': 'clock',
-                'color': '#6b7280',
-                'config_schema': {
-                    'delay_type': {'type': 'select', 'options': ['fixed', 'smart_timing', 'business_hours']},
-                    'delay_amount': {'type': 'number', 'required': True},
-                    'delay_unit': {'type': 'select', 'options': ['minutes', 'hours', 'days']}
-                }
+            "wait_delay": {
+                "name": "Wait/Delay",
+                "description": "Add delay between actions",
+                "node_type": NodeType.DELAY,
+                "icon": "clock",
+                "color": "#6b7280",
+                "config_schema": {
+                    "delay_type": {"type": "select", "options": ["fixed", "smart_timing", "business_hours"]},
+                    "delay_amount": {"type": "number", "required": True},
+                    "delay_unit": {"type": "select", "options": ["minutes", "hours", "days"]},
+                },
             },
-            'condition_check': {
-                'name': 'Condition Check',
-                'description': 'Branch workflow based on conditions',
-                'node_type': NodeType.CONDITION,
-                'icon': 'git-branch',
-                'color': '#ef4444',
-                'config_schema': {
-                    'conditions': {'type': 'condition_builder'},
-                    'logic_operator': {'type': 'select', 'options': ['AND', 'OR']},
-                    'true_path': {'type': 'string', 'placeholder': 'True condition path'},
-                    'false_path': {'type': 'string', 'placeholder': 'False condition path'}
-                }
-            }
+            "condition_check": {
+                "name": "Condition Check",
+                "description": "Branch workflow based on conditions",
+                "node_type": NodeType.CONDITION,
+                "icon": "git-branch",
+                "color": "#ef4444",
+                "config_schema": {
+                    "conditions": {"type": "condition_builder"},
+                    "logic_operator": {"type": "select", "options": ["AND", "OR"]},
+                    "true_path": {"type": "string", "placeholder": "True condition path"},
+                    "false_path": {"type": "string", "placeholder": "False condition path"},
+                },
+            },
         }
 
     def _initialize_validation_rules(self) -> List[Dict[str, Any]]:
@@ -183,42 +196,39 @@ class AdvancedWorkflowDesigner:
 
         return [
             {
-                'rule_id': 'start_node_required',
-                'type': ValidationType.ERROR,
-                'message': 'Workflow must have exactly one start node',
-                'check': lambda design: len([n for n in design.nodes.values() if n.node_type == NodeType.START]) == 1
+                "rule_id": "start_node_required",
+                "type": ValidationType.ERROR,
+                "message": "Workflow must have exactly one start node",
+                "check": lambda design: len([n for n in design.nodes.values() if n.node_type == NodeType.START]) == 1,
             },
             {
-                'rule_id': 'no_orphaned_nodes',
-                'type': ValidationType.WARNING,
-                'message': 'Some nodes are not connected to the main workflow',
-                'check': self._check_orphaned_nodes
+                "rule_id": "no_orphaned_nodes",
+                "type": ValidationType.WARNING,
+                "message": "Some nodes are not connected to the main workflow",
+                "check": self._check_orphaned_nodes,
             },
             {
-                'rule_id': 'condition_branches',
-                'type': ValidationType.ERROR,
-                'message': 'Condition nodes must have exactly 2 outgoing connections',
-                'check': self._check_condition_branches
+                "rule_id": "condition_branches",
+                "type": ValidationType.ERROR,
+                "message": "Condition nodes must have exactly 2 outgoing connections",
+                "check": self._check_condition_branches,
             },
             {
-                'rule_id': 'circular_references',
-                'type': ValidationType.ERROR,
-                'message': 'Workflow contains circular references',
-                'check': self._check_circular_references
+                "rule_id": "circular_references",
+                "type": ValidationType.ERROR,
+                "message": "Workflow contains circular references",
+                "check": self._check_circular_references,
             },
             {
-                'rule_id': 'unreachable_nodes',
-                'type': ValidationType.WARNING,
-                'message': 'Some nodes are unreachable from start',
-                'check': self._check_unreachable_nodes
-            }
+                "rule_id": "unreachable_nodes",
+                "type": ValidationType.WARNING,
+                "message": "Some nodes are unreachable from start",
+                "check": self._check_unreachable_nodes,
+            },
         ]
 
     async def create_new_design(
-        self,
-        name: str,
-        description: str = "",
-        template_id: Optional[str] = None
+        self, name: str, description: str = "", template_id: Optional[str] = None
     ) -> WorkflowDesign:
         """Create a new workflow design"""
 
@@ -241,11 +251,7 @@ class AdvancedWorkflowDesigner:
             description=description,
             nodes=nodes,
             connections=connections,
-            metadata={
-                'source_template': template_id,
-                'created_by': 'designer',
-                'auto_layout': True
-            }
+            metadata={"source_template": template_id, "created_by": "designer", "auto_layout": True},
         )
 
         self.designs[design_id] = design
@@ -262,7 +268,7 @@ class AdvancedWorkflowDesigner:
             name="Start",
             description="Workflow entry point",
             position={"x": 100, "y": 100},
-            config={"triggers": []}
+            config={"triggers": []},
         )
 
         end_node = WorkflowNode(
@@ -271,28 +277,22 @@ class AdvancedWorkflowDesigner:
             name="End",
             description="Workflow completion",
             position={"x": 400, "y": 100},
-            config={}
+            config={},
         )
 
         connection = WorkflowConnection(
-            connection_id="conn_1",
-            source_node_id="start_1",
-            target_node_id="end_1",
-            label="Default path"
+            connection_id="conn_1", source_node_id="start_1", target_node_id="end_1", label="Default path"
         )
 
-        nodes = {
-            "start_1": start_node,
-            "end_1": end_node
-        }
+        nodes = {"start_1": start_node, "end_1": end_node}
 
-        connections = {
-            "conn_1": connection
-        }
+        connections = {"conn_1": connection}
 
         return nodes, connections
 
-    async def _convert_template_to_visual(self, template) -> Tuple[Dict[str, WorkflowNode], Dict[str, WorkflowConnection]]:
+    async def _convert_template_to_visual(
+        self, template
+    ) -> Tuple[Dict[str, WorkflowNode], Dict[str, WorkflowConnection]]:
         """Convert workflow template to visual design"""
 
         nodes = {}
@@ -307,7 +307,7 @@ class AdvancedWorkflowDesigner:
             name="Start",
             description="Workflow entry point",
             position={"x": 100, "y": y_position},
-            config={"triggers": template.triggers}
+            config={"triggers": template.triggers},
         )
         nodes["start_1"] = start_node
 
@@ -315,15 +315,15 @@ class AdvancedWorkflowDesigner:
         previous_node_id = "start_1"
 
         for i, step in enumerate(template.steps):
-            node_id = f"node_{i+1}"
+            node_id = f"node_{i + 1}"
             x_position = 100 + (i + 1) * x_spacing
 
             # Determine node type from step type
-            if step.get('type') in ['smart_email', 'smart_sms', 'property_matching', 'lead_scoring']:
+            if step.get("type") in ["smart_email", "smart_sms", "property_matching", "lead_scoring"]:
                 node_type = NodeType.ACTION
-            elif 'condition' in step.get('type', '').lower():
+            elif "condition" in step.get("type", "").lower():
                 node_type = NodeType.CONDITION
-            elif step.get('type') == 'wait':
+            elif step.get("type") == "wait":
                 node_type = NodeType.DELAY
             else:
                 node_type = NodeType.ACTION
@@ -331,21 +331,18 @@ class AdvancedWorkflowDesigner:
             node = WorkflowNode(
                 node_id=node_id,
                 node_type=node_type,
-                name=step.get('name', f'Step {i+1}'),
-                description=step.get('description', ''),
+                name=step.get("name", f"Step {i + 1}"),
+                description=step.get("description", ""),
                 position={"x": x_position, "y": y_position},
-                config=step.get('config', {}),
-                connections=[]
+                config=step.get("config", {}),
+                connections=[],
             )
             nodes[node_id] = node
 
             # Create connection from previous node
-            conn_id = f"conn_{i+1}"
+            conn_id = f"conn_{i + 1}"
             connection = WorkflowConnection(
-                connection_id=conn_id,
-                source_node_id=previous_node_id,
-                target_node_id=node_id,
-                label=""
+                connection_id=conn_id, source_node_id=previous_node_id, target_node_id=node_id, label=""
             )
             connections[conn_id] = connection
 
@@ -358,17 +355,14 @@ class AdvancedWorkflowDesigner:
             name="End",
             description="Workflow completion",
             position={"x": 100 + (len(template.steps) + 1) * x_spacing, "y": y_position},
-            config={}
+            config={},
         )
         nodes["end_1"] = end_node
 
         # Connect last step to end
         if template.steps:
             final_conn = WorkflowConnection(
-                connection_id=f"conn_final",
-                source_node_id=previous_node_id,
-                target_node_id="end_1",
-                label=""
+                connection_id=f"conn_final", source_node_id=previous_node_id, target_node_id="end_1", label=""
             )
             connections["conn_final"] = final_conn
 
@@ -380,7 +374,7 @@ class AdvancedWorkflowDesigner:
         node_type: str,
         position: Dict[str, float],
         name: Optional[str] = None,
-        config: Optional[Dict[str, Any]] = None
+        config: Optional[Dict[str, Any]] = None,
     ) -> Optional[WorkflowNode]:
         """Add new node to workflow design"""
 
@@ -396,12 +390,12 @@ class AdvancedWorkflowDesigner:
 
         node = WorkflowNode(
             node_id=node_id,
-            node_type=NodeType(template.get('node_type', NodeType.ACTION)),
-            name=name or template.get('name', node_type.title()),
-            description=template.get('description', ''),
+            node_type=NodeType(template.get("node_type", NodeType.ACTION)),
+            name=name or template.get("name", node_type.title()),
+            description=template.get("description", ""),
             position=position,
             config=config or {},
-            connections=[]
+            connections=[],
         )
 
         design.nodes[node_id] = node
@@ -419,7 +413,7 @@ class AdvancedWorkflowDesigner:
         source_node_id: str,
         target_node_id: str,
         condition: Optional[Dict[str, Any]] = None,
-        label: str = ""
+        label: str = "",
     ) -> Optional[WorkflowConnection]:
         """Create connection between two nodes"""
 
@@ -439,7 +433,7 @@ class AdvancedWorkflowDesigner:
             source_node_id=source_node_id,
             target_node_id=target_node_id,
             condition=condition,
-            label=label
+            label=label,
         )
 
         design.connections[conn_id] = connection
@@ -455,12 +449,7 @@ class AdvancedWorkflowDesigner:
         logger.debug(f"Connected {source_node_id} -> {target_node_id} in design {design_id}")
         return connection
 
-    async def update_node_config(
-        self,
-        design_id: str,
-        node_id: str,
-        config: Dict[str, Any]
-    ) -> bool:
+    async def update_node_config(self, design_id: str, node_id: str, config: Dict[str, Any]) -> bool:
         """Update node configuration"""
 
         design = self.designs.get(design_id)
@@ -518,10 +507,7 @@ class AdvancedWorkflowDesigner:
 
         design = self.designs.get(design_id)
         if not design:
-            return ValidationResult(
-                is_valid=False,
-                errors=[{"message": "Design not found", "type": "critical"}]
-            )
+            return ValidationResult(is_valid=False, errors=[{"message": "Design not found", "type": "critical"}])
 
         errors = []
         warnings = []
@@ -530,18 +516,18 @@ class AdvancedWorkflowDesigner:
         # Run all validation rules
         for rule in self.validation_rules:
             try:
-                if not rule['check'](design):
+                if not rule["check"](design):
                     validation_item = {
-                        "rule_id": rule['rule_id'],
-                        "message": rule['message'],
-                        "type": rule['type'].value
+                        "rule_id": rule["rule_id"],
+                        "message": rule["message"],
+                        "type": rule["type"].value,
                     }
 
-                    if rule['type'] == ValidationType.ERROR:
+                    if rule["type"] == ValidationType.ERROR:
                         errors.append(validation_item)
-                    elif rule['type'] == ValidationType.WARNING:
+                    elif rule["type"] == ValidationType.WARNING:
                         warnings.append(validation_item)
-                    elif rule['type'] == ValidationType.INFO:
+                    elif rule["type"] == ValidationType.INFO:
                         suggestions.append(validation_item)
 
             except Exception as e:
@@ -552,12 +538,7 @@ class AdvancedWorkflowDesigner:
 
         is_valid = len(errors) == 0
 
-        return ValidationResult(
-            is_valid=is_valid,
-            errors=errors,
-            warnings=warnings,
-            suggestions=suggestions
-        )
+        return ValidationResult(is_valid=is_valid, errors=errors, warnings=warnings, suggestions=suggestions)
 
     async def _auto_validate_design(self, design: WorkflowDesign):
         """Auto-validate design and update node status"""
@@ -565,14 +546,14 @@ class AdvancedWorkflowDesigner:
         validation = await self.validate_design(design.design_id)
 
         # Update overall design validation status
-        design.metadata['validation_status'] = 'valid' if validation.is_valid else 'invalid'
-        design.metadata['last_validation'] = datetime.now().isoformat()
+        design.metadata["validation_status"] = "valid" if validation.is_valid else "invalid"
+        design.metadata["last_validation"] = datetime.now().isoformat()
 
         # Update individual node validation status
         for node in design.nodes.values():
             node_validation = await self._validate_node(node, design)
             if node_validation:
-                node.validation_status = 'valid' if len(node_validation) == 0 else 'warning'
+                node.validation_status = "valid" if len(node_validation) == 0 else "warning"
                 node.validation_messages = node_validation
 
     async def _validate_node(self, node: WorkflowNode, design: WorkflowDesign) -> List[Dict[str, str]]:
@@ -582,24 +563,24 @@ class AdvancedWorkflowDesigner:
 
         # Check required config fields
         if node.node_type == NodeType.ACTION:
-            template = self.node_templates.get(node.name.lower().replace(' ', '_'), {})
-            config_schema = template.get('config_schema', {})
+            template = self.node_templates.get(node.name.lower().replace(" ", "_"), {})
+            config_schema = template.get("config_schema", {})
 
             for field, schema in config_schema.items():
-                if schema.get('required', False) and field not in node.config:
-                    messages.append({
-                        "type": "error",
-                        "field": field,
-                        "message": f"Required field '{field}' is missing"
-                    })
+                if schema.get("required", False) and field not in node.config:
+                    messages.append(
+                        {"type": "error", "field": field, "message": f"Required field '{field}' is missing"}
+                    )
 
         # Check connection requirements
         if node.node_type == NodeType.CONDITION and len(node.connections) != 2:
-            messages.append({
-                "type": "error",
-                "field": "connections",
-                "message": "Condition nodes must have exactly 2 outgoing connections"
-            })
+            messages.append(
+                {
+                    "type": "error",
+                    "field": "connections",
+                    "message": "Condition nodes must have exactly 2 outgoing connections",
+                }
+            )
 
         return messages
 
@@ -609,47 +590,35 @@ class AdvancedWorkflowDesigner:
         messages = []
 
         # Get template schema
-        template = self.node_templates.get(node.name.lower().replace(' ', '_'), {})
-        config_schema = template.get('config_schema', {})
+        template = self.node_templates.get(node.name.lower().replace(" ", "_"), {})
+        config_schema = template.get("config_schema", {})
 
         for field, schema in config_schema.items():
             value = node.config.get(field)
 
             # Required field check
-            if schema.get('required', False) and (value is None or value == ''):
-                messages.append({
-                    "type": "error",
-                    "field": field,
-                    "message": f"Field '{field}' is required"
-                })
+            if schema.get("required", False) and (value is None or value == ""):
+                messages.append({"type": "error", "field": field, "message": f"Field '{field}' is required"})
                 continue
 
             if value is not None:
                 # Type validation
-                field_type = schema.get('type')
-                if field_type == 'number' and not isinstance(value, (int, float)):
-                    messages.append({
-                        "type": "error",
-                        "field": field,
-                        "message": f"Field '{field}' must be a number"
-                    })
+                field_type = schema.get("type")
+                if field_type == "number" and not isinstance(value, (int, float)):
+                    messages.append({"type": "error", "field": field, "message": f"Field '{field}' must be a number"})
 
                 # Range validation
-                if field_type == 'number':
-                    min_val = schema.get('min')
-                    max_val = schema.get('max')
+                if field_type == "number":
+                    min_val = schema.get("min")
+                    max_val = schema.get("max")
                     if min_val is not None and value < min_val:
-                        messages.append({
-                            "type": "warning",
-                            "field": field,
-                            "message": f"Value should be at least {min_val}"
-                        })
+                        messages.append(
+                            {"type": "warning", "field": field, "message": f"Value should be at least {min_val}"}
+                        )
                     if max_val is not None and value > max_val:
-                        messages.append({
-                            "type": "warning",
-                            "field": field,
-                            "message": f"Value should be at most {max_val}"
-                        })
+                        messages.append(
+                            {"type": "warning", "field": field, "message": f"Value should be at most {max_val}"}
+                        )
 
         return messages
 
@@ -671,10 +640,7 @@ class AdvancedWorkflowDesigner:
 
         for node in design.nodes.values():
             if node.node_type == NodeType.CONDITION:
-                outgoing_connections = len([
-                    c for c in design.connections.values()
-                    if c.source_node_id == node.node_id
-                ])
+                outgoing_connections = len([c for c in design.connections.values() if c.source_node_id == node.node_id])
                 if outgoing_connections != 2:
                     return False
         return True
@@ -687,10 +653,7 @@ class AdvancedWorkflowDesigner:
             rec_stack.add(node_id)
 
             # Check all connected nodes
-            connected_nodes = [
-                c.target_node_id for c in design.connections.values()
-                if c.source_node_id == node_id
-            ]
+            connected_nodes = [c.target_node_id for c in design.connections.values() if c.source_node_id == node_id]
 
             for connected_node in connected_nodes:
                 if connected_node not in visited:
@@ -735,8 +698,7 @@ class AdvancedWorkflowDesigner:
 
             # Add connected nodes to queue
             connected_nodes = [
-                c.target_node_id for c in design.connections.values()
-                if c.source_node_id == current_node
+                c.target_node_id for c in design.connections.values() if c.source_node_id == current_node
             ]
             queue.extend(connected_nodes)
 
@@ -755,40 +717,45 @@ class AdvancedWorkflowDesigner:
         for node in action_nodes:
             # Check if next node is also an action
             next_nodes = [
-                design.nodes[c.target_node_id] for c in design.connections.values()
-                if c.source_node_id == node.node_id
+                design.nodes[c.target_node_id] for c in design.connections.values() if c.source_node_id == node.node_id
             ]
 
             if any(n.node_type == NodeType.ACTION for n in next_nodes):
                 consecutive_actions += 1
 
         if consecutive_actions > 0:
-            suggestions.append({
-                "type": "optimization",
-                "message": f"Consider adding delays between {consecutive_actions} consecutive actions",
-                "action": "add_delays",
-                "priority": "medium"
-            })
+            suggestions.append(
+                {
+                    "type": "optimization",
+                    "message": f"Consider adding delays between {consecutive_actions} consecutive actions",
+                    "action": "add_delays",
+                    "priority": "medium",
+                }
+            )
 
         # Suggest lead scoring updates
-        has_scoring = any('scoring' in n.name.lower() for n in design.nodes.values())
+        has_scoring = any("scoring" in n.name.lower() for n in design.nodes.values())
         if not has_scoring and len(action_nodes) > 2:
-            suggestions.append({
-                "type": "enhancement",
-                "message": "Consider adding lead scoring to track engagement",
-                "action": "add_lead_scoring",
-                "priority": "medium"
-            })
+            suggestions.append(
+                {
+                    "type": "enhancement",
+                    "message": "Consider adding lead scoring to track engagement",
+                    "action": "add_lead_scoring",
+                    "priority": "medium",
+                }
+            )
 
         # Suggest A/B testing for email nodes
-        email_nodes = [n for n in design.nodes.values() if 'email' in n.name.lower()]
+        email_nodes = [n for n in design.nodes.values() if "email" in n.name.lower()]
         if len(email_nodes) > 0:
-            suggestions.append({
-                "type": "optimization",
-                "message": "Consider A/B testing your email content and timing",
-                "action": "enable_ab_testing",
-                "priority": "low"
-            })
+            suggestions.append(
+                {
+                    "type": "optimization",
+                    "message": "Consider A/B testing your email content and timing",
+                    "action": "enable_ab_testing",
+                    "priority": "low",
+                }
+            )
 
         return suggestions
 
@@ -811,12 +778,9 @@ class AdvancedWorkflowDesigner:
 
             for node_index, node_id in enumerate(nodes_in_layer):
                 x_position = 100 + node_index * layer_width
-                design.nodes[node_id].position = {
-                    "x": x_position,
-                    "y": y_position
-                }
+                design.nodes[node_id].position = {"x": x_position, "y": y_position}
 
-        design.metadata['auto_layout_applied'] = datetime.now().isoformat()
+        design.metadata["auto_layout_applied"] = datetime.now().isoformat()
         design.updated_at = datetime.now()
 
         logger.debug(f"Applied auto-layout to design {design_id}")
@@ -842,7 +806,8 @@ class AdvancedWorkflowDesigner:
             for node_id in current_layer:
                 # Find connected nodes
                 connected_nodes = [
-                    c.target_node_id for c in design.connections.values()
+                    c.target_node_id
+                    for c in design.connections.values()
                     if c.source_node_id == node_id and c.target_node_id not in visited
                 ]
                 next_layer.extend(connected_nodes)
@@ -870,7 +835,7 @@ class AdvancedWorkflowDesigner:
             "description": design.description,
             "steps": [],
             "triggers": [],
-            "global_config": design.metadata
+            "global_config": design.metadata,
         }
 
         # Get execution order
@@ -889,14 +854,11 @@ class AdvancedWorkflowDesigner:
                 "type": self._map_node_type_to_action(node),
                 "config": node.config.copy(),
                 "branches": [],
-                "default_next_step_id": None
+                "default_next_step_id": None,
             }
 
             # Handle connections and conditions
-            outgoing_connections = [
-                c for c in design.connections.values()
-                if c.source_node_id == node_id
-            ]
+            outgoing_connections = [c for c in design.connections.values() if c.source_node_id == node_id]
 
             if len(outgoing_connections) == 1:
                 # Single connection
@@ -908,7 +870,7 @@ class AdvancedWorkflowDesigner:
                         branch = {
                             "name": conn.label or "Branch",
                             "conditions": [conn.condition],
-                            "next_step_id": conn.target_node_id
+                            "next_step_id": conn.target_node_id,
                         }
                         step["branches"].append(branch)
                     else:
@@ -937,10 +899,7 @@ class AdvancedWorkflowDesigner:
             result.append(current)
 
             # Find connected nodes and reduce their in-degree
-            connected = [
-                c.target_node_id for c in design.connections.values()
-                if c.source_node_id == current
-            ]
+            connected = [c.target_node_id for c in design.connections.values() if c.source_node_id == current]
 
             for node_id in connected:
                 in_degree[node_id] -= 1
@@ -953,15 +912,15 @@ class AdvancedWorkflowDesigner:
         """Map visual node type to engine action type"""
 
         mapping = {
-            'Smart Email': 'smart_email',
-            'Smart SMS': 'smart_sms',
-            'Lead Scoring': 'lead_scoring',
-            'Property Matching': 'property_matching',
-            'Wait/Delay': 'wait',
-            'Condition Check': 'conditional_split'
+            "Smart Email": "smart_email",
+            "Smart SMS": "smart_sms",
+            "Lead Scoring": "lead_scoring",
+            "Property Matching": "property_matching",
+            "Wait/Delay": "wait",
+            "Condition Check": "conditional_split",
         }
 
-        return mapping.get(node.name, 'generic_action')
+        return mapping.get(node.name, "generic_action")
 
     async def save_design(self, design_id: str) -> bool:
         """Save design to persistent storage"""
@@ -996,15 +955,15 @@ class AdvancedWorkflowDesigner:
             return None
 
         return {
-            'design_id': design_id,
-            'name': design.name,
-            'description': design.description,
-            'node_count': len(design.nodes),
-            'connection_count': len(design.connections),
-            'validation_status': design.metadata.get('validation_status', 'pending'),
-            'created_at': design.created_at.isoformat(),
-            'updated_at': design.updated_at.isoformat(),
-            'version': design.version
+            "design_id": design_id,
+            "name": design.name,
+            "description": design.description,
+            "node_count": len(design.nodes),
+            "connection_count": len(design.connections),
+            "validation_status": design.metadata.get("validation_status", "pending"),
+            "created_at": design.created_at.isoformat(),
+            "updated_at": design.updated_at.isoformat(),
+            "version": design.version,
         }
 
     async def duplicate_design(self, design_id: str, new_name: str) -> Optional[WorkflowDesign]:
@@ -1035,7 +994,7 @@ class AdvancedWorkflowDesigner:
                 config=node.config.copy(),
                 connections=[],
                 validation_status="pending",
-                validation_messages=[]
+                validation_messages=[],
             )
             new_nodes[new_node_id] = new_node
 
@@ -1050,7 +1009,7 @@ class AdvancedWorkflowDesigner:
                 source_node_id=new_source_id,
                 target_node_id=new_target_id,
                 condition=connection.condition.copy() if connection.condition else None,
-                label=connection.label
+                label=connection.label,
             )
             new_connections[new_conn_id] = new_connection
 
@@ -1064,7 +1023,7 @@ class AdvancedWorkflowDesigner:
             nodes=new_nodes,
             connections=new_connections,
             metadata=original.metadata.copy(),
-            version=1
+            version=1,
         )
 
         self.designs[new_design_id] = duplicated_design

@@ -16,29 +16,30 @@ Last Updated: 2026-01-18
 """
 
 import asyncio
-import json
-import pickle
-import time
-import logging
-from typing import Any, Callable, Optional, Dict, List, Tuple, TypeVar
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
 import hashlib
+import json
+import logging
+import pickle
 import threading
-from functools import wraps
+import time
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from enum import Enum
+from functools import wraps
+from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class CachePriority(Enum):
     """Cache priority levels for TTL adjustment"""
+
     CRITICAL = "critical"  # 2x TTL - Business critical data
-    HIGH = "high"          # 1.5x TTL - Frequently accessed
-    NORMAL = "normal"      # 1x TTL - Standard data
-    LOW = "low"            # 0.5x TTL - Rarely needed
+    HIGH = "high"  # 1.5x TTL - Frequently accessed
+    NORMAL = "normal"  # 1x TTL - Standard data
+    LOW = "low"  # 0.5x TTL - Rarely needed
 
     @classmethod
     def get_multiplier(cls, priority: str) -> float:
@@ -50,9 +51,11 @@ class CachePriority(Enum):
         }
         return multipliers.get(priority, 1.0)
 
+
 @dataclass
 class CacheStats:
     """Cache performance statistics"""
+
     l1_hits: int = 0
     l1_misses: int = 0
     l2_hits: int = 0
@@ -79,9 +82,11 @@ class CacheStats:
         total = hits + self.l3_misses
         return hits / max(total, 1)
 
+
 @dataclass
 class CacheItem:
     """Cache item with metadata"""
+
     value: Any
     created_at: float
     ttl: int
@@ -95,6 +100,7 @@ class CacheItem:
     def mark_accessed(self):
         self.access_count += 1
         self.last_accessed = time.time()
+
 
 class L1MemoryCache:
     """Level 1: In-memory cache with LRU eviction"""
@@ -117,17 +123,17 @@ class L1MemoryCache:
         async with lock:
             if key not in self.cache:
                 return None
-            
+
             item = self.cache[key]
             if item.is_expired():
                 await self._remove_item(key)
                 return None
-            
+
             # Update LRU order
             self.access_order.remove(key)
             self.access_order.append(key)
             item.mark_accessed()
-            
+
             return item.value
 
     async def set(self, key: str, value: Any, ttl: int = 300) -> bool:
@@ -149,22 +155,16 @@ class L1MemoryCache:
                 await self._remove_item(key)
 
             # Evict items if necessary
-            while (len(self.cache) >= self.max_size or 
-                   self.current_memory + size_bytes > self.max_memory_bytes):
+            while len(self.cache) >= self.max_size or self.current_memory + size_bytes > self.max_memory_bytes:
                 await self._evict_lru()
 
             # Add new item
-            item = CacheItem(
-                value=value,
-                created_at=time.time(),
-                ttl=ttl,
-                size_bytes=size_bytes
-            )
-            
+            item = CacheItem(value=value, created_at=time.time(), ttl=ttl, size_bytes=size_bytes)
+
             self.cache[key] = item
             self.access_order.append(key)
             self.current_memory += size_bytes
-            
+
             return True
 
     async def delete(self, key: str) -> bool:
@@ -200,12 +200,13 @@ class L1MemoryCache:
 
     def get_stats(self) -> Dict[str, Any]:
         return {
-            'size': len(self.cache),
-            'max_size': self.max_size,
-            'memory_used_mb': self.current_memory / (1024 * 1024),
-            'memory_limit_mb': self.max_memory_bytes / (1024 * 1024),
-            'memory_usage_percent': (self.current_memory / self.max_memory_bytes) * 100
+            "size": len(self.cache),
+            "max_size": self.max_size,
+            "memory_used_mb": self.current_memory / (1024 * 1024),
+            "memory_limit_mb": self.max_memory_bytes / (1024 * 1024),
+            "memory_usage_percent": (self.current_memory / self.max_memory_bytes) * 100,
         }
+
 
 class L2RedisCache:
     """Level 2: Redis cache with connection pooling"""
@@ -227,7 +228,7 @@ class L2RedisCache:
                 max_connections=self.max_connections,
                 socket_timeout=2,  # Fast timeout for cache
                 socket_connect_timeout=2,
-                decode_responses=False
+                decode_responses=False,
             )
 
             self.redis = redis.Redis(connection_pool=self.connection_pool)
@@ -240,7 +241,7 @@ class L2RedisCache:
     async def get(self, key: str) -> Optional[Any]:
         if not self.enabled:
             return None
-        
+
         try:
             # Add prefix for namespacing
             cache_key = f"l2:{key}"
@@ -255,7 +256,7 @@ class L2RedisCache:
     async def set(self, key: str, value: Any, ttl: int = 300) -> bool:
         if not self.enabled:
             return False
-        
+
         try:
             cache_key = f"l2:{key}"
             data = pickle.dumps(value)
@@ -268,7 +269,7 @@ class L2RedisCache:
     async def delete(self, key: str) -> bool:
         if not self.enabled:
             return False
-        
+
         try:
             cache_key = f"l2:{key}"
             await self.redis.delete(cache_key)
@@ -281,15 +282,15 @@ class L2RedisCache:
         """Batch get operation for efficiency"""
         if not self.enabled:
             return {}
-        
+
         try:
             cache_keys = [f"l2:{key}" for key in keys]
             pipeline = self.redis.pipeline()
             for cache_key in cache_keys:
                 pipeline.get(cache_key)
-            
+
             results = await pipeline.execute()
-            
+
             output = {}
             for key, data in zip(keys, results):
                 if data:
@@ -297,7 +298,7 @@ class L2RedisCache:
                         output[key] = pickle.loads(data)
                     except:
                         pass  # Skip corrupted entries
-            
+
             return output
         except Exception as e:
             logger.error(f"L2 cache get_many error: {e}")
@@ -307,19 +308,20 @@ class L2RedisCache:
         """Batch set operation for efficiency"""
         if not self.enabled:
             return False
-        
+
         try:
             pipeline = self.redis.pipeline()
             for key, (value, ttl) in items.items():
                 cache_key = f"l2:{key}"
                 data = pickle.dumps(value)
                 pipeline.set(cache_key, data, ex=ttl)
-            
+
             await pipeline.execute()
             return True
         except Exception as e:
             logger.error(f"L2 cache set_many error: {e}")
             return False
+
 
 class L3DatabaseCache:
     """Level 3: Database/computed values (fallback)"""
@@ -340,6 +342,7 @@ class L3DatabaseCache:
                 except Exception as e:
                     logger.error(f"L3 compute error for {key}: {e}")
         return None
+
 
 class OptimizedCacheService:
     """
@@ -364,15 +367,15 @@ class OptimizedCacheService:
     async def get(self, key: str) -> Optional[Any]:
         """Get value from cache with fallback through layers"""
         start_time = time.time()
-        
+
         try:
             # Try L1 (Memory) first
             value = await self.l1_cache.get(key)
             if value is not None:
-                await self._update_stats('l1_hit', start_time)
+                await self._update_stats("l1_hit", start_time)
                 return value
-            
-            await self._update_stats('l1_miss')
+
+            await self._update_stats("l1_miss")
 
             # Try L2 (Redis) second
             if self.l2_cache:
@@ -380,20 +383,20 @@ class OptimizedCacheService:
                 if value is not None:
                     # Backfill L1 with shorter TTL
                     await self.l1_cache.set(key, value, ttl=min(300, 60))
-                    await self._update_stats('l2_hit', start_time)
+                    await self._update_stats("l2_hit", start_time)
                     return value
-                
-                await self._update_stats('l2_miss')
+
+                await self._update_stats("l2_miss")
 
             # Try L3 (Compute) last
             value = await self.l3_cache.get(key)
             if value is not None:
                 # Backfill L2 and L1
                 await self.set(key, value, ttl=300)
-                await self._update_stats('l3_hit', start_time)
+                await self._update_stats("l3_hit", start_time)
                 return value
-            
-            await self._update_stats('l3_miss', start_time)
+
+            await self._update_stats("l3_miss", start_time)
             return None
 
         except Exception as e:
@@ -404,16 +407,16 @@ class OptimizedCacheService:
         """Set value in all appropriate cache layers"""
         try:
             success = True
-            
+
             # Set in L1 (Memory) with shorter TTL
             l1_ttl = min(ttl, 300)  # Max 5 minutes in memory
             await self.l1_cache.set(key, value, ttl=l1_ttl)
-            
+
             # Set in L2 (Redis) if available
             if self.l2_cache:
                 redis_success = await self.l2_cache.set(key, value, ttl=ttl)
                 success = success and redis_success
-            
+
             return success
 
         except Exception as e:
@@ -425,7 +428,7 @@ class OptimizedCacheService:
         try:
             l1_success = await self.l1_cache.delete(key)
             l2_success = await self.l2_cache.delete(key) if self.l2_cache else True
-            
+
             return l1_success or l2_success
 
         except Exception as e:
@@ -442,10 +445,10 @@ class OptimizedCacheService:
             value = await self.l1_cache.get(key)
             if value is not None:
                 results[key] = value
-                await self._update_stats('l1_hit')
+                await self._update_stats("l1_hit")
             else:
                 missing_keys.append(key)
-                await self._update_stats('l1_miss')
+                await self._update_stats("l1_miss")
 
         # Check L2 for missing keys
         if missing_keys and self.l2_cache:
@@ -454,12 +457,12 @@ class OptimizedCacheService:
                 results[key] = value
                 # Backfill L1
                 await self.l1_cache.set(key, value, ttl=60)
-                await self._update_stats('l2_hit')
-            
+                await self._update_stats("l2_hit")
+
             # Update missing keys
             missing_keys = [key for key in missing_keys if key not in l2_results]
             for _ in missing_keys:
-                await self._update_stats('l2_miss')
+                await self._update_stats("l2_miss")
 
         return results
 
@@ -492,7 +495,7 @@ class OptimizedCacheService:
         for key in self.l1_cache.cache.keys():
             if pattern in key:
                 keys_to_remove.append(key)
-        
+
         for key in keys_to_remove:
             await self.l1_cache.delete(key)
 
@@ -514,17 +517,17 @@ class OptimizedCacheService:
         """Update performance statistics"""
         lock = await self._get_lock()
         async with lock:
-            if stat_type == 'l1_hit':
+            if stat_type == "l1_hit":
                 self.stats.l1_hits += 1
-            elif stat_type == 'l1_miss':
+            elif stat_type == "l1_miss":
                 self.stats.l1_misses += 1
-            elif stat_type == 'l2_hit':
+            elif stat_type == "l2_hit":
                 self.stats.l2_hits += 1
-            elif stat_type == 'l2_miss':
+            elif stat_type == "l2_miss":
                 self.stats.l2_misses += 1
-            elif stat_type == 'l3_hit':
+            elif stat_type == "l3_hit":
                 self.stats.l3_hits += 1
-            elif stat_type == 'l3_miss':
+            elif stat_type == "l3_miss":
                 self.stats.l3_misses += 1
 
             self.stats.total_requests += 1
@@ -533,33 +536,33 @@ class OptimizedCacheService:
                 retrieval_time_ms = (time.time() - start_time) * 1000
                 current_avg = self.stats.avg_retrieval_time_ms
                 total = self.stats.total_requests
-                self.stats.avg_retrieval_time_ms = (
-                    (current_avg * (total - 1) + retrieval_time_ms) / total
-                )
+                self.stats.avg_retrieval_time_ms = (current_avg * (total - 1) + retrieval_time_ms) / total
 
     def get_performance_stats(self) -> Dict[str, Any]:
         """Get detailed cache performance statistics"""
         return {
-            'cache_stats': {
-                'l1_hit_rate': self.stats.l1_hit_rate,
-                'l2_hit_rate': self.stats.l2_hit_rate,
-                'overall_hit_rate': self.stats.overall_hit_rate,
-                'avg_retrieval_time_ms': self.stats.avg_retrieval_time_ms,
-                'total_requests': self.stats.total_requests
+            "cache_stats": {
+                "l1_hit_rate": self.stats.l1_hit_rate,
+                "l2_hit_rate": self.stats.l2_hit_rate,
+                "overall_hit_rate": self.stats.overall_hit_rate,
+                "avg_retrieval_time_ms": self.stats.avg_retrieval_time_ms,
+                "total_requests": self.stats.total_requests,
             },
-            'l1_stats': self.l1_cache.get_stats(),
-            'layer_breakdown': {
-                'l1_hits': self.stats.l1_hits,
-                'l1_misses': self.stats.l1_misses,
-                'l2_hits': self.stats.l2_hits,
-                'l2_misses': self.stats.l2_misses,
-                'l3_hits': self.stats.l3_hits,
-                'l3_misses': self.stats.l3_misses
-            }
+            "l1_stats": self.l1_cache.get_stats(),
+            "layer_breakdown": {
+                "l1_hits": self.stats.l1_hits,
+                "l1_misses": self.stats.l1_misses,
+                "l2_hits": self.stats.l2_hits,
+                "l2_misses": self.stats.l2_misses,
+                "l3_hits": self.stats.l3_hits,
+                "l3_misses": self.stats.l3_misses,
+            },
         }
+
 
 # Singleton instance
 _optimized_cache = None
+
 
 def get_optimized_cache_service(redis_url: Optional[str] = None) -> OptimizedCacheService:
     """Get singleton optimized cache service"""
@@ -567,6 +570,7 @@ def get_optimized_cache_service(redis_url: Optional[str] = None) -> OptimizedCac
     if _optimized_cache is None:
         _optimized_cache = OptimizedCacheService(redis_url)
     return _optimized_cache
+
 
 def get_cache_service(redis_url: Optional[str] = None) -> OptimizedCacheService:
     """Alias for get_optimized_cache_service for backward compatibility."""
@@ -576,6 +580,7 @@ def get_cache_service(redis_url: Optional[str] = None) -> OptimizedCacheService:
 # ============================================================================
 # ENHANCED CACHING METHODS FOR PERFORMANCE OPTIMIZATION
 # ============================================================================
+
 
 class EnhancedCacheService(OptimizedCacheService):
     """
@@ -596,11 +601,7 @@ class EnhancedCacheService(OptimizedCacheService):
         }
         logger.info("EnhancedCacheService initialized with performance optimizations")
 
-    async def set_with_priority(self,
-                                key: str,
-                                value: Any,
-                                ttl: int = 300,
-                                priority: str = "normal") -> bool:
+    async def set_with_priority(self, key: str, value: Any, ttl: int = 300, priority: str = "normal") -> bool:
         """
         Set cache value with priority-based TTL adjustment
 
@@ -617,11 +618,7 @@ class EnhancedCacheService(OptimizedCacheService):
         adjusted_ttl = int(ttl * multiplier)
         return await self.set(key, value, adjusted_ttl)
 
-    async def get_or_compute(self,
-                            key: str,
-                            compute_func: Callable,
-                            ttl: int = 300,
-                            priority: str = "normal") -> Any:
+    async def get_or_compute(self, key: str, compute_func: Callable, ttl: int = 300, priority: str = "normal") -> Any:
         """
         Get from cache or compute and cache the result
 
@@ -644,18 +641,16 @@ class EnhancedCacheService(OptimizedCacheService):
 
         return value
 
-    def register_warm_config(self,
-                            key_pattern: str,
-                            data_loader: Callable,
-                            ttl: int = 3600,
-                            priority: str = "high"):
+    def register_warm_config(self, key_pattern: str, data_loader: Callable, ttl: int = 3600, priority: str = "high"):
         """Register a cache warming configuration"""
-        self._warm_cache_configs.append({
-            "key_pattern": key_pattern,
-            "data_loader": data_loader,
-            "ttl": ttl,
-            "priority": priority,
-        })
+        self._warm_cache_configs.append(
+            {
+                "key_pattern": key_pattern,
+                "data_loader": data_loader,
+                "ttl": ttl,
+                "priority": priority,
+            }
+        )
 
     async def warm_all_registered(self) -> Dict[str, bool]:
         """Execute cache warming for all registered configurations"""
@@ -798,6 +793,7 @@ class EnhancedCacheService(OptimizedCacheService):
 # Enhanced singleton getter
 _enhanced_cache = None
 
+
 def get_enhanced_cache_service(redis_url: Optional[str] = None) -> EnhancedCacheService:
     """Get singleton enhanced cache service"""
     global _enhanced_cache
@@ -810,9 +806,8 @@ def get_enhanced_cache_service(redis_url: Optional[str] = None) -> EnhancedCache
 # CACHING DECORATOR FOR EASY FUNCTION CACHING
 # ============================================================================
 
-def cached(ttl: int = 300,
-           priority: str = "normal",
-           key_prefix: str = ""):
+
+def cached(ttl: int = 300, priority: str = "normal", key_prefix: str = ""):
     """
     Decorator for caching function results
 
@@ -822,6 +817,7 @@ def cached(ttl: int = 300,
             # Expensive computation...
             return score
     """
+
     def decorator(func: Callable):
         @wraps(func)
         async def async_wrapper(*args, **kwargs):
@@ -866,6 +862,7 @@ def cached(ttl: int = 300,
 # ============================================================================
 
 if __name__ == "__main__":
+
     async def test_enhanced_cache():
         """Test enhanced cache service"""
         cache = get_enhanced_cache_service()
@@ -901,9 +898,9 @@ if __name__ == "__main__":
         print(f"   Hit Rate: {health['metrics']['cache_stats']['overall_hit_rate']:.1%}")
         print(f"   Avg Response: {health['metrics']['cache_stats']['avg_retrieval_time_ms']:.2f}ms")
 
-        if health['issues']:
+        if health["issues"]:
             print(f"   Issues: {health['issues']}")
-        if health['recommendations']:
+        if health["recommendations"]:
             print(f"   Recommendations: {health['recommendations']}")
 
         print("\n" + "=" * 60)

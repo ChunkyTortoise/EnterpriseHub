@@ -6,13 +6,14 @@ Implements the validated 68% token reduction approach from Perplexity research.
 import json
 import os
 import re
-from typing import Dict, List, Any, Optional
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
+
 
 class ProgressiveSkillsManager:
     """
@@ -34,16 +35,20 @@ class ProgressiveSkillsManager:
         # Performance tracking
         self.skill_usage_stats = {}
 
-        logger.info(f"Progressive Skills Manager initialized: {len(self.skills_registry.get('jorge_progressive_skills', {}).get('core_skills', {}))} core skills available")
+        logger.info(
+            f"Progressive Skills Manager initialized: {len(self.skills_registry.get('jorge_progressive_skills', {}).get('core_skills', {}))} core skills available"
+        )
 
     def _load_skills_registry(self) -> Dict:
         """Load skill metadata for discovery phase"""
         try:
             registry_file = self.skills_path / "metadata" / "skills_registry.json"
-            with open(registry_file, 'r') as f:
+            with open(registry_file, "r") as f:
                 registry = json.load(f)
 
-            logger.info(f"Skills registry loaded: {registry.get('jorge_progressive_skills', {}).get('version', 'unknown')} ")
+            logger.info(
+                f"Skills registry loaded: {registry.get('jorge_progressive_skills', {}).get('version', 'unknown')} "
+            )
             return registry
 
         except FileNotFoundError:
@@ -53,7 +58,9 @@ class ProgressiveSkillsManager:
             logger.error(f"Invalid JSON in skills registry: {e}")
             return {"jorge_progressive_skills": {"core_skills": {}, "discovery_skills": {}}}
 
-    async def discover_skills(self, context: Dict[str, Any], task_type: str = "jorge_seller_qualification") -> Dict[str, Any]:
+    async def discover_skills(
+        self, context: Dict[str, Any], task_type: str = "jorge_seller_qualification"
+    ) -> Dict[str, Any]:
         """
         Phase 1: Discover which skills are needed (103 tokens)
 
@@ -68,7 +75,7 @@ class ProgressiveSkillsManager:
         # Load discovery skill content
         try:
             discovery_file = self.skills_path / "discovery" / "jorge_skill_router.md"
-            with open(discovery_file, 'r') as f:
+            with open(discovery_file, "r") as f:
                 discovery_content = f.read()
         except FileNotFoundError:
             logger.error(f"Discovery skill not found: {discovery_file}")
@@ -81,11 +88,11 @@ class ProgressiveSkillsManager:
         try:
             # Import here to avoid circular dependencies
             from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
+
             claude = ClaudeAssistant()
 
             response = await claude.analyze_with_context(
-                discovery_prompt,
-                context={"task": "skill_discovery", "minimal": True, "max_tokens": 150}
+                discovery_prompt, context={"task": "skill_discovery", "minimal": True, "max_tokens": 150}
             )
 
             # Parse skill selection result
@@ -109,7 +116,7 @@ class ProgressiveSkillsManager:
         # Try to extract JSON from response
         try:
             # Look for JSON in the response
-            json_match = re.search(r'\{.*?\}', content, re.DOTALL)
+            json_match = re.search(r"\{.*?\}", content, re.DOTALL)
             if json_match:
                 result = json.loads(json_match.group())
 
@@ -119,7 +126,7 @@ class ProgressiveSkillsManager:
                         "skills": [result["skill"]],  # Single skill only
                         "confidence": result.get("confidence", 0.8),
                         "reasoning": result.get("reasoning", "Parsed from discovery"),
-                        "detected_pattern": result.get("detected_pattern", "unknown")
+                        "detected_pattern": result.get("detected_pattern", "unknown"),
                     }
 
         except json.JSONDecodeError:
@@ -134,21 +141,21 @@ class ProgressiveSkillsManager:
                 "skills": ["jorge_stall_breaker"],
                 "confidence": 0.7,
                 "reasoning": "Stall pattern detected in response",
-                "detected_pattern": "stalling"
+                "detected_pattern": "stalling",
             }
         elif "disqualif" in content_lower or "unserious" in content_lower:
             return {
                 "skills": ["jorge_disqualifier"],
                 "confidence": 0.8,
                 "reasoning": "Disqualification pattern detected",
-                "detected_pattern": "disqualification"
+                "detected_pattern": "disqualification",
             }
         elif "confrontational" in content_lower or "qualified" in content_lower:
             return {
                 "skills": ["jorge_confrontational"],
                 "confidence": 0.7,
                 "reasoning": "Confrontational approach indicated",
-                "detected_pattern": "confrontational"
+                "detected_pattern": "confrontational",
             }
 
         # Default fallback
@@ -156,13 +163,15 @@ class ProgressiveSkillsManager:
 
     def _fallback_skill_selection(self) -> Dict[str, Any]:
         """Fallback when discovery fails"""
-        fallback_skill = self.skills_registry.get("jorge_progressive_skills", {}).get("fallback_skill", "jorge_stall_breaker")
+        fallback_skill = self.skills_registry.get("jorge_progressive_skills", {}).get(
+            "fallback_skill", "jorge_stall_breaker"
+        )
 
         return {
             "skills": [fallback_skill],
             "confidence": 0.5,
             "reasoning": "Fallback due to discovery failure",
-            "detected_pattern": "fallback"
+            "detected_pattern": "fallback",
         }
 
     async def load_skill(self, skill_name: str) -> str:
@@ -187,12 +196,14 @@ class ProgressiveSkillsManager:
         if not skill_file or not skill_file.exists():
             logger.warning(f"Skill file not found: {skill_name}, using fallback")
             # Use fallback skill
-            fallback_skill = self.skills_registry.get("jorge_progressive_skills", {}).get("fallback_skill", "jorge_stall_breaker")
+            fallback_skill = self.skills_registry.get("jorge_progressive_skills", {}).get(
+                "fallback_skill", "jorge_stall_breaker"
+            )
             skill_file = self._locate_skill_file(fallback_skill)
 
         # Load skill content
         try:
-            with open(skill_file, 'r') as f:
+            with open(skill_file, "r") as f:
                 skill_content = f.read()
 
             # Cache for reuse
@@ -256,11 +267,11 @@ class ProgressiveSkillsManager:
         # Execute via Claude (this would be called from jorge_seller_bot.py)
         try:
             from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
+
             claude = ClaudeAssistant()
 
             response = await claude.analyze_with_context(
-                templated_content,
-                context={**context, "skill_name": skill_name, "progressive": True}
+                templated_content, context={**context, "skill_name": skill_name, "progressive": True}
             )
 
             return {
@@ -268,7 +279,7 @@ class ProgressiveSkillsManager:
                 "response_content": response.get("content", ""),
                 "confidence": response.get("confidence", 0.8),
                 "tokens_estimated": self._estimate_tokens_used(skill_name),
-                "execution_successful": True
+                "execution_successful": True,
             }
 
         except Exception as e:
@@ -279,7 +290,7 @@ class ProgressiveSkillsManager:
                 "confidence": 0.3,
                 "tokens_estimated": 200,
                 "execution_successful": False,
-                "error": str(e)
+                "error": str(e),
             }
 
     def get_skill_metadata(self, skill_name: str) -> Dict[str, Any]:
@@ -297,12 +308,7 @@ class ProgressiveSkillsManager:
             return extended_skills[skill_name]
 
         # Default metadata
-        return {
-            "purpose": "Unknown skill",
-            "tokens": 150,
-            "confidence_threshold": 0.5,
-            "priority": 99
-        }
+        return {"purpose": "Unknown skill", "tokens": 150, "confidence_threshold": 0.5, "priority": 99}
 
     def _estimate_tokens_used(self, skill_name: str) -> int:
         """Estimate tokens used for skill execution"""
@@ -317,7 +323,7 @@ class ProgressiveSkillsManager:
                 "discovery_count": 0,
                 "execution_count": 0,
                 "total_confidence": 0,
-                "avg_confidence": 0
+                "avg_confidence": 0,
             }
 
         stats = self.skill_usage_stats[skill_name]
@@ -343,5 +349,5 @@ class ProgressiveSkillsManager:
             "usage_stats": self.skill_usage_stats,
             "expected_token_reduction": registry.get("expected_reduction", 0),
             "baseline_tokens": registry.get("baseline_tokens", 853),
-            "target_tokens": registry.get("target_tokens", 272)
+            "target_tokens": registry.get("target_tokens", 272),
         }

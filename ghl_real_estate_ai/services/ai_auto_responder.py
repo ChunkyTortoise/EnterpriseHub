@@ -108,9 +108,7 @@ class AIAutoResponderService:
             },
         }
 
-    def analyze_message(
-        self, message: str, context: ConversationContext
-    ) -> Dict[str, Any]:
+    def analyze_message(self, message: str, context: ConversationContext) -> Dict[str, Any]:
         """Analyze incoming message to understand intent and context"""
 
         # Detect intent
@@ -205,18 +203,14 @@ class AIAutoResponderService:
         else:
             return "nurture"
 
-    def generate_response(
-        self, message: str, context: ConversationContext, safety_mode: bool = True
-    ) -> AIResponse:
+    def generate_response(self, message: str, context: ConversationContext, safety_mode: bool = True) -> AIResponse:
         """Generate AI response to incoming message"""
 
         # Analyze the message
         analysis = self.analyze_message(message, context)
 
         # Generate response based on analysis
-        response_text, confidence, reasoning = self._generate_contextual_response(
-            message, context, analysis
-        )
+        response_text, confidence, reasoning = self._generate_contextual_response(message, context, analysis)
 
         # Determine if we should escalate
         escalate = confidence < 0.70 or analysis["requires_objection_handling"]
@@ -235,8 +229,7 @@ class AIAutoResponderService:
             metadata={
                 "analysis": analysis,
                 "safety_mode": safety_mode,
-                "auto_send_approved": confidence >= self.auto_send_threshold
-                and not escalate,
+                "auto_send_approved": confidence >= self.auto_send_threshold and not escalate,
             },
         )
 
@@ -293,9 +286,7 @@ class AIAutoResponderService:
 
         return response, min(confidence, 0.99), reasoning
 
-    def _respond_to_property_inquiry(
-        self, context: ConversationContext, analysis: Dict
-    ) -> str:
+    def _respond_to_property_inquiry(self, context: ConversationContext, analysis: Dict) -> str:
         """Generate response for property inquiries"""
 
         if context.properties_viewed:
@@ -328,9 +319,7 @@ class AIAutoResponderService:
             f"- {context.agent_name}"
         )
 
-    def _respond_to_availability(
-        self, context: ConversationContext, analysis: Dict
-    ) -> str:
+    def _respond_to_availability(self, context: ConversationContext, analysis: Dict) -> str:
         """Generate response for availability checks"""
 
         urgency_note = ""
@@ -344,9 +333,7 @@ class AIAutoResponderService:
             f"Looking forward to showing you around! - {context.agent_name}"
         )
 
-    def _handle_objection(
-        self, message: str, context: ConversationContext, analysis: Dict
-    ) -> str:
+    def _handle_objection(self, message: str, context: ConversationContext, analysis: Dict) -> str:
         """Handle objections with empathy"""
 
         return (
@@ -379,9 +366,7 @@ class AIAutoResponderService:
         ]
         return empathy_phrases[0] + response
 
-    def _suggest_actions(
-        self, analysis: Dict, context: ConversationContext
-    ) -> List[str]:
+    def _suggest_actions(self, analysis: Dict, context: ConversationContext) -> List[str]:
         """Suggest follow-up actions"""
 
         actions = []
@@ -415,10 +400,7 @@ class AIAutoResponderService:
             )
         else:
             # Normal mode uses confidence threshold
-            return (
-                response.confidence >= self.auto_send_threshold
-                and not response.escalate_to_human
-            )
+            return response.confidence >= self.auto_send_threshold and not response.escalate_to_human
 
     def get_conversation_history(self, lead_id: str) -> List[Dict]:
         """Get conversation history for a lead"""
@@ -462,8 +444,7 @@ class AIAutoResponderService:
         return {
             "total_conversations": total_conversations,
             "total_messages": total_messages,
-            "avg_messages_per_conversation": total_messages
-            / max(total_conversations, 1),
+            "avg_messages_per_conversation": total_messages / max(total_conversations, 1),
             "auto_send_threshold": self.auto_send_threshold,
         }
 

@@ -2,17 +2,20 @@
 Claude Intent Detector - Deep Behavioral Intent Analysis
 Provides high-fidelity intent detection using Claude's conversation understanding.
 """
+
 import asyncio
 import json
-from typing import Dict, List, Any, Optional
 from datetime import datetime
-from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator, ClaudeTaskType, ClaudeRequest
+from typing import Any, Dict, List, Optional
+
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+from ghl_real_estate_ai.services.claude_orchestrator import ClaudeRequest, ClaudeTaskType, get_claude_orchestrator
+
 
 class ClaudeIntentDetector:
     """
     Claude-powered intent analysis for lead intelligence.
-    
+
     Extracts structured signals:
     - Financial Readiness (0-1)
     - Timeline Urgency (0-1)
@@ -32,13 +35,15 @@ class ClaudeIntentDetector:
             self._orchestrator = get_claude_orchestrator()
         return self._orchestrator
 
-    async def analyze_property_intent(self, conversation_history: List[Dict[str, str]], lead_profile: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def analyze_property_intent(
+        self, conversation_history: List[Dict[str, str]], lead_profile: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """
         Deep intent analysis using Claude's conversation understanding.
         """
-        location_id = lead_profile.get('location_id', 'unknown') if lead_profile else 'unknown'
-        lead_id = lead_profile.get('lead_id', 'unknown') if lead_profile else 'unknown'
-        
+        location_id = lead_profile.get("location_id", "unknown") if lead_profile else "unknown"
+        lead_id = lead_profile.get("lead_id", "unknown") if lead_profile else "unknown"
+
         prompt = f"""
         As a real estate psychology expert, analyze this conversation for buying intent:
 
@@ -66,11 +71,11 @@ class ClaudeIntentDetector:
                 task_type=ClaudeTaskType.BEHAVIORAL_INSIGHT,
                 context={"task": "intent_detection"},
                 prompt=prompt,
-                temperature=0.3
+                temperature=0.3,
             )
-            
+
             response = await self.orchestrator.process_request(request)
-            
+
             # Record usage
             await self.analytics.track_llm_usage(
                 location_id=location_id,
@@ -79,7 +84,7 @@ class ClaudeIntentDetector:
                 input_tokens=response.input_tokens or 0,
                 output_tokens=response.output_tokens or 0,
                 cached=False,
-                contact_id=lead_id
+                contact_id=lead_id,
             )
 
             return self._parse_json_response(response.content)
@@ -97,8 +102,10 @@ class ClaudeIntentDetector:
         except:
             return {}
 
+
 # Singleton instance
 _intent_detector_instance = None
+
 
 def get_intent_detector() -> ClaudeIntentDetector:
     global _intent_detector_instance

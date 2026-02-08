@@ -3,6 +3,7 @@ Service Manager - Centralized management of background services.
 
 Provides utilities for starting and managing background services like the lead sequence scheduler.
 """
+
 import asyncio
 import logging
 from typing import Optional
@@ -10,6 +11,7 @@ from typing import Optional
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
+
 
 async def initialize_services():
     """Initialize all background services."""
@@ -29,6 +31,7 @@ async def initialize_services():
         logger.error(f"❌ Failed to initialize services: {e}")
         return False
 
+
 async def shutdown_services():
     """Gracefully shutdown all background services."""
     try:
@@ -39,6 +42,7 @@ async def shutdown_services():
 
     except Exception as e:
         logger.error(f"❌ Error during services shutdown: {e}")
+
 
 if __name__ == "__main__":
     # Allow running this module directly for testing

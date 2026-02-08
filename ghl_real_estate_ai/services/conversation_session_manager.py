@@ -3,15 +3,16 @@ Conversation Session Manager
 Manages persistent conversation state across chat interactions
 """
 
-from typing import Dict, List, Any, Optional
-from datetime import datetime, timedelta
-import uuid
 import json
+import uuid
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)
+
 
 class ConversationSessionManager:
     """
@@ -35,12 +36,7 @@ class ConversationSessionManager:
     def __init__(self):
         self.cache = get_cache_service()
 
-    async def create_session(
-        self,
-        bot_type: str,
-        lead_id: str,
-        lead_name: str
-    ) -> str:
+    async def create_session(self, bot_type: str, lead_id: str, lead_name: str) -> str:
         """Create new conversation session"""
         conversation_id = str(uuid.uuid4())
 
@@ -52,20 +48,13 @@ class ConversationSessionManager:
             "created_at": datetime.now().isoformat(),
             "last_activity": datetime.now().isoformat(),
             "history": [],
-            "bot_state": {}
+            "bot_state": {},
         }
 
-        await self.cache.set(
-            f"conversation:{conversation_id}",
-            session_data,
-            ttl=self.SESSION_TTL
-        )
+        await self.cache.set(f"conversation:{conversation_id}", session_data, ttl=self.SESSION_TTL)
 
         # Index by lead_id for lookup
-        await self.cache.sadd(
-            f"conversations:lead:{lead_id}",
-            conversation_id
-        )
+        await self.cache.sadd(f"conversations:lead:{lead_id}", conversation_id)
 
         logger.info(f"Created conversation session {conversation_id} for lead {lead_id} with bot {bot_type}")
         return conversation_id
@@ -79,22 +68,14 @@ class ConversationSessionManager:
         return session
 
     async def add_message(
-        self,
-        conversation_id: str,
-        role: str,
-        content: str,
-        metadata: Optional[Dict[str, Any]] = None
+        self, conversation_id: str, role: str, content: str, metadata: Optional[Dict[str, Any]] = None
     ) -> None:
         """Add message to conversation history"""
         session = await self.get_session(conversation_id)
         if not session:
             raise ValueError(f"Conversation {conversation_id} not found")
 
-        message = {
-            "role": role,
-            "content": content,
-            "timestamp": datetime.now().isoformat()
-        }
+        message = {"role": role, "content": content, "timestamp": datetime.now().isoformat()}
 
         if metadata:
             message["metadata"] = metadata
@@ -102,11 +83,7 @@ class ConversationSessionManager:
         session["history"].append(message)
         session["last_activity"] = datetime.now().isoformat()
 
-        await self.cache.set(
-            f"conversation:{conversation_id}",
-            session,
-            ttl=self.SESSION_TTL
-        )
+        await self.cache.set(f"conversation:{conversation_id}", session, ttl=self.SESSION_TTL)
 
         logger.debug(f"Added {role} message to conversation {conversation_id}")
 
@@ -117,10 +94,7 @@ class ConversationSessionManager:
             return []
 
         # Return in bot-compatible format (role + content only)
-        return [
-            {"role": msg["role"], "content": msg["content"]}
-            for msg in session.get("history", [])
-        ]
+        return [{"role": msg["role"], "content": msg["content"]} for msg in session.get("history", [])]
 
     async def get_full_history(self, conversation_id: str) -> List[Dict[str, Any]]:
         """Get full conversation history with metadata"""
@@ -130,11 +104,7 @@ class ConversationSessionManager:
 
         return session.get("history", [])
 
-    async def update_session_state(
-        self,
-        conversation_id: str,
-        state: Dict[str, Any]
-    ) -> None:
+    async def update_session_state(self, conversation_id: str, state: Dict[str, Any]) -> None:
         """Update bot workflow state for session"""
         session = await self.get_session(conversation_id)
         if not session:
@@ -143,11 +113,7 @@ class ConversationSessionManager:
         session["bot_state"] = state
         session["last_activity"] = datetime.now().isoformat()
 
-        await self.cache.set(
-            f"conversation:{conversation_id}",
-            session,
-            ttl=self.SESSION_TTL
-        )
+        await self.cache.set(f"conversation:{conversation_id}", session, ttl=self.SESSION_TTL)
 
     async def get_session_state(self, conversation_id: str) -> Dict[str, Any]:
         """Get bot workflow state for session"""
@@ -222,10 +188,9 @@ class ConversationSessionManager:
             "user_messages": len([msg for msg in history if msg["role"] == "user"]),
             "bot_messages": len([msg for msg in history if msg["role"] == "bot"]),
             "duration_minutes": self._calculate_duration_minutes(
-                session.get("created_at"),
-                session.get("last_activity")
+                session.get("created_at"), session.get("last_activity")
             ),
-            "bot_state": session.get("bot_state", {})
+            "bot_state": session.get("bot_state", {}),
         }
 
     def _calculate_duration_minutes(self, created_at: str, last_activity: str) -> Optional[float]:
@@ -254,8 +219,10 @@ class ConversationSessionManager:
         logger.debug(f"Cleaned up {cleaned_count} expired conversation sessions")
         return cleaned_count
 
+
 # Singleton instance
 _session_manager: Optional[ConversationSessionManager] = None
+
 
 def get_session_manager() -> ConversationSessionManager:
     """Get singleton instance of conversation session manager"""

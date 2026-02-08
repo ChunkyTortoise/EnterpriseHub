@@ -9,8 +9,8 @@ import random
 import pytest
 
 from ghl_real_estate_ai.services.jorge.performance_tracker import (
-    PerformanceTracker,
     SLA_CONFIG,
+    PerformanceTracker,
 )
 
 
@@ -84,11 +84,7 @@ class TestSLACompliance:
         # Record 200 operations: 80% cache hits
         for _ in range(200):
             cache_hit = rng.random() < 0.80
-            await tracker.track_operation(
-                "lead_bot", "process", rng.uniform(5, 50), cache_hit=cache_hit
-            )
+            await tracker.track_operation("lead_bot", "process", rng.uniform(5, 50), cache_hit=cache_hit)
 
         stats = await tracker.get_bot_stats("lead_bot")
-        assert stats["cache_hit_rate"] > 0.70, (
-            f"Cache hit rate {stats['cache_hit_rate']:.2%} <= 70%"
-        )
+        assert stats["cache_hit_rate"] > 0.70, f"Cache hit rate {stats['cache_hit_rate']:.2%} <= 70%"

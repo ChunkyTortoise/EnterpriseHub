@@ -13,22 +13,25 @@ Critical Missing Component: This was identified as 90% missing in production rea
 
 import asyncio
 import json
+import logging
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from decimal import Decimal
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import aiohttp
 import pandas as pd
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Union, Tuple
-from dataclasses import dataclass, asdict
-from enum import Enum
-import logging
-from decimal import Decimal
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)
 
+
 class DataSourceType(Enum):
     """Available real estate data sources"""
+
     MLS = "mls"
     ZILLOW = "zillow"
     REDFIN = "redfin"
@@ -36,17 +39,21 @@ class DataSourceType(Enum):
     COUNTY_RECORDS = "county_records"
     RENTAL_COMPS = "rental_comps"
 
+
 class PropertyStatus(Enum):
     """Property listing status"""
+
     ACTIVE = "active"
     PENDING = "pending"
     SOLD = "sold"
     OFF_MARKET = "off_market"
     COMING_SOON = "coming_soon"
 
+
 @dataclass
 class PropertyData:
     """Standardized property data structure"""
+
     # Basic Property Info
     property_id: str
     mls_number: Optional[str]
@@ -89,9 +96,11 @@ class PropertyData:
     last_updated: datetime
     data_quality_score: float
 
+
 @dataclass
 class MarketAnalytics:
     """Market trend and analytics data"""
+
     area_code: str
     area_name: str
 
@@ -122,9 +131,11 @@ class MarketAnalytics:
     analysis_date: datetime
     confidence_score: float
 
+
 @dataclass
 class LeadPropertyInteraction:
     """Tracks lead interactions with properties for attribution"""
+
     lead_id: str
     property_id: str
     interaction_type: str  # viewed, saved, inquired, toured, offered
@@ -133,6 +144,7 @@ class LeadPropertyInteraction:
     duration_seconds: Optional[int]
     device_type: Optional[str]
     referrer: Optional[str]
+
 
 class RealEstateDataPipeline:
     """Production-ready real estate data integration pipeline"""
@@ -147,20 +159,20 @@ class RealEstateDataPipeline:
                 "base_url": "https://api.bridge-mls.com",  # Example MLS API
                 "auth_required": True,
                 "rate_limit": 100,  # requests per minute
-                "cache_ttl": 300   # 5 minutes
+                "cache_ttl": 300,  # 5 minutes
             },
             DataSourceType.ZILLOW: {
                 "base_url": "https://api.bridgedataoutput.com/api/v2/zestimate_v2",
                 "auth_required": True,
                 "rate_limit": 60,
-                "cache_ttl": 3600  # 1 hour
+                "cache_ttl": 3600,  # 1 hour
             },
             DataSourceType.REDFIN: {
                 "base_url": "https://api.redfin.com",
                 "auth_required": True,
                 "rate_limit": 50,
-                "cache_ttl": 1800  # 30 minutes
-            }
+                "cache_ttl": 1800,  # 30 minutes
+            },
         }
 
         # Revenue attribution tracking
@@ -181,10 +193,7 @@ class RealEstateDataPipeline:
 
     # PROPERTY DATA METHODS
     async def get_property_data(
-        self,
-        property_id: str,
-        source: DataSourceType = DataSourceType.MLS,
-        use_cache: bool = True
+        self, property_id: str, source: DataSourceType = DataSourceType.MLS, use_cache: bool = True
     ) -> Optional[PropertyData]:
         """Get comprehensive property data from specified source"""
 
@@ -210,11 +219,7 @@ class RealEstateDataPipeline:
 
             if data:
                 # Cache the result
-                await self.cache.set(
-                    cache_key,
-                    asdict(data),
-                    ttl=self.data_sources[source]["cache_ttl"]
-                )
+                await self.cache.set(cache_key, asdict(data), ttl=self.data_sources[source]["cache_ttl"])
 
                 logger.info(f"Retrieved property data for {property_id} from {source.value}")
                 return data
@@ -225,10 +230,7 @@ class RealEstateDataPipeline:
         return None
 
     async def search_properties(
-        self,
-        criteria: Dict[str, Any],
-        max_results: int = 100,
-        source: DataSourceType = DataSourceType.MLS
+        self, criteria: Dict[str, Any], max_results: int = 100, source: DataSourceType = DataSourceType.MLS
     ) -> List[PropertyData]:
         """Search for properties matching criteria"""
 
@@ -247,11 +249,7 @@ class RealEstateDataPipeline:
 
             # Cache results for 5 minutes (searches change frequently)
             if results:
-                await self.cache.set(
-                    cache_key,
-                    [asdict(prop) for prop in results],
-                    ttl=300
-                )
+                await self.cache.set(cache_key, [asdict(prop) for prop in results], ttl=300)
 
             logger.info(f"Found {len(results)} properties matching criteria")
             return results
@@ -264,7 +262,7 @@ class RealEstateDataPipeline:
     async def get_market_analytics(
         self,
         area_code: str,  # ZIP code or city code
-        timeframe: str = "30d"  # 7d, 30d, 90d, 1y
+        timeframe: str = "30d",  # 7d, 30d, 90d, 1y
     ) -> Optional[MarketAnalytics]:
         """Get market analytics for specified area"""
 
@@ -295,9 +293,7 @@ class RealEstateDataPipeline:
 
     # COMPETITIVE INTELLIGENCE
     async def get_competitive_listings(
-        self,
-        target_property: PropertyData,
-        radius_miles: float = 0.5
+        self, target_property: PropertyData, radius_miles: float = 0.5
     ) -> List[PropertyData]:
         """Get competitive listings near target property"""
 
@@ -310,19 +306,14 @@ class RealEstateDataPipeline:
             "bathrooms_max": target_property.bathrooms + 0.5,
             "price_min": float(target_property.price * Decimal("0.8")),
             "price_max": float(target_property.price * Decimal("1.2")),
-            "status": ["active", "pending"]
+            "status": ["active", "pending"],
         }
 
         return await self.search_properties(criteria, max_results=50)
 
     # REVENUE ATTRIBUTION METHODS
     async def track_lead_property_interaction(
-        self,
-        lead_id: str,
-        property_id: str,
-        interaction_type: str,
-        source: str = "website",
-        **metadata
+        self, lead_id: str, property_id: str, interaction_type: str, source: str = "website", **metadata
     ):
         """Track lead property interactions for revenue attribution"""
 
@@ -334,7 +325,7 @@ class RealEstateDataPipeline:
             source=source,
             duration_seconds=metadata.get("duration_seconds"),
             device_type=metadata.get("device_type"),
-            referrer=metadata.get("referrer")
+            referrer=metadata.get("referrer"),
         )
 
         await self.revenue_attribution.track_interaction(interaction)
@@ -350,16 +341,10 @@ class RealEstateDataPipeline:
 
         await self.cache.set(cache_key, interactions, ttl=86400)  # 24 hours
 
-    async def calculate_lead_attribution_value(
-        self,
-        lead_id: str,
-        conversion_value: Decimal
-    ) -> Dict[str, Any]:
+    async def calculate_lead_attribution_value(self, lead_id: str, conversion_value: Decimal) -> Dict[str, Any]:
         """Calculate revenue attribution for a converted lead"""
 
-        return await self.revenue_attribution.calculate_attribution(
-            lead_id, conversion_value
-        )
+        return await self.revenue_attribution.calculate_attribution(lead_id, conversion_value)
 
     # PRIVATE DATA SOURCE METHODS
     async def _fetch_mls_property(self, property_id: str) -> Optional[PropertyData]:
@@ -393,14 +378,14 @@ class RealEstateDataPipeline:
             value_confidence=0.85,
             photos=[
                 f"https://photos.example.com/prop_{property_id}_1.jpg",
-                f"https://photos.example.com/prop_{property_id}_2.jpg"
+                f"https://photos.example.com/prop_{property_id}_2.jpg",
             ],
             description="Beautiful modern home in downtown Austin",
             features=["granite_counters", "hardwood_floors", "updated_kitchen"],
             school_district="Austin ISD",
             source=DataSourceType.MLS,
             last_updated=datetime.utcnow(),
-            data_quality_score=0.92
+            data_quality_score=0.92,
         )
 
     async def _fetch_zillow_property(self, property_id: str) -> Optional[PropertyData]:
@@ -416,11 +401,7 @@ class RealEstateDataPipeline:
         logger.warning("Redfin integration not yet implemented")
         return None
 
-    async def _search_mls_properties(
-        self,
-        criteria: Dict[str, Any],
-        max_results: int
-    ) -> List[PropertyData]:
+    async def _search_mls_properties(self, criteria: Dict[str, Any], max_results: int) -> List[PropertyData]:
         """Search MLS for properties matching criteria"""
         # For development, generate sample data matching criteria
         results = []
@@ -431,47 +412,46 @@ class RealEstateDataPipeline:
         for i in range(min(max_results, 20)):  # Limit to 20 for development
             property_id = f"MLS_{i:04d}_{int(datetime.utcnow().timestamp())}"
 
-            results.append(PropertyData(
-                property_id=property_id,
-                mls_number=f"MLS{property_id[-6:]}",
-                address=f"{100 + i * 10} Sample St",
-                city=criteria.get("city", "Austin"),
-                state="TX",
-                zip_code=criteria.get("zip_code", "78701"),
-                latitude=30.2672 + (i * 0.001),
-                longitude=-97.7431 + (i * 0.001),
-                price=Decimal(str(base_price + (i * 25000))),
-                list_price=Decimal(str(base_price + (i * 25000))),
-                square_feet=1800 + (i * 50),
-                bedrooms=bedrooms,
-                bathrooms=2.0 + (i * 0.5),
-                lot_size=6000 + (i * 200),
-                year_built=2010 + i,
-                property_type="single_family",
-                status=PropertyStatus.ACTIVE,
-                list_date=datetime.utcnow() - timedelta(days=i + 1),
-                last_price_change=None,
-                days_on_market=i + 1,
-                price_per_sqft=Decimal("200") + Decimal(str(i * 5)),
-                estimated_value=Decimal(str(base_price + (i * 25000) + 15000)),
-                value_confidence=0.80 + (i * 0.01),
-                photos=[f"https://photos.example.com/search_{i}_1.jpg"],
-                description=f"Property {i+1} matching your search criteria",
-                features=["updated_kitchen", "hardwood_floors"],
-                school_district="Austin ISD",
-                source=DataSourceType.MLS,
-                last_updated=datetime.utcnow(),
-                data_quality_score=0.85 + (i * 0.01)
-            ))
+            results.append(
+                PropertyData(
+                    property_id=property_id,
+                    mls_number=f"MLS{property_id[-6:]}",
+                    address=f"{100 + i * 10} Sample St",
+                    city=criteria.get("city", "Austin"),
+                    state="TX",
+                    zip_code=criteria.get("zip_code", "78701"),
+                    latitude=30.2672 + (i * 0.001),
+                    longitude=-97.7431 + (i * 0.001),
+                    price=Decimal(str(base_price + (i * 25000))),
+                    list_price=Decimal(str(base_price + (i * 25000))),
+                    square_feet=1800 + (i * 50),
+                    bedrooms=bedrooms,
+                    bathrooms=2.0 + (i * 0.5),
+                    lot_size=6000 + (i * 200),
+                    year_built=2010 + i,
+                    property_type="single_family",
+                    status=PropertyStatus.ACTIVE,
+                    list_date=datetime.utcnow() - timedelta(days=i + 1),
+                    last_price_change=None,
+                    days_on_market=i + 1,
+                    price_per_sqft=Decimal("200") + Decimal(str(i * 5)),
+                    estimated_value=Decimal(str(base_price + (i * 25000) + 15000)),
+                    value_confidence=0.80 + (i * 0.01),
+                    photos=[f"https://photos.example.com/search_{i}_1.jpg"],
+                    description=f"Property {i + 1} matching your search criteria",
+                    features=["updated_kitchen", "hardwood_floors"],
+                    school_district="Austin ISD",
+                    source=DataSourceType.MLS,
+                    last_updated=datetime.utcnow(),
+                    data_quality_score=0.85 + (i * 0.01),
+                )
+            )
 
         logger.info(f"Generated {len(results)} sample properties for development")
         return results
 
     async def _search_generic_properties(
-        self,
-        criteria: Dict[str, Any],
-        max_results: int,
-        source: DataSourceType
+        self, criteria: Dict[str, Any], max_results: int, source: DataSourceType
     ) -> List[PropertyData]:
         """Generic property search for other sources"""
         # Placeholder for other data source integrations
@@ -487,7 +467,7 @@ class RealEstateDataPipeline:
             "new_listings_7d": 85,
             "sold_listings_7d": 72,
             "avg_days_on_market": 28,
-            "sale_to_list_ratio": 0.97
+            "sale_to_list_ratio": 0.97,
         }
 
     async def _get_zillow_market_data(self, area_code: str, timeframe: str) -> Dict[str, Any]:
@@ -496,14 +476,11 @@ class RealEstateDataPipeline:
         return {
             "price_trend_1m": 0.025,  # 2.5% increase
             "price_trend_3m": 0.055,  # 5.5% increase
-            "rental_yield": 0.045     # 4.5% rental yield
+            "rental_yield": 0.045,  # 4.5% rental yield
         }
 
     async def _build_market_analytics(
-        self,
-        area_code: str,
-        mls_data: Dict[str, Any],
-        zillow_data: Dict[str, Any]
+        self, area_code: str, mls_data: Dict[str, Any], zillow_data: Dict[str, Any]
     ) -> MarketAnalytics:
         """Combine data sources into market analytics"""
 
@@ -529,7 +506,7 @@ class RealEstateDataPipeline:
             price_per_sqft_median=Decimal("195.50"),
             rental_yield_estimate=zillow_data.get("rental_yield", 0.045),
             analysis_date=current_time,
-            confidence_score=0.88
+            confidence_score=0.88,
         )
 
 
@@ -555,7 +532,7 @@ class RevenueAttributionTracker:
             "tours": 0,
             "first_interaction": None,
             "last_interaction": None,
-            "properties_viewed": set()
+            "properties_viewed": set(),
         }
 
         summary["total_interactions"] += 1
@@ -583,11 +560,7 @@ class RevenueAttributionTracker:
 
         await self.cache.set(summary_key, summary, ttl=2592000)
 
-    async def calculate_attribution(
-        self,
-        lead_id: str,
-        conversion_value: Decimal
-    ) -> Dict[str, Any]:
+    async def calculate_attribution(self, lead_id: str, conversion_value: Decimal) -> Dict[str, Any]:
         """Calculate revenue attribution for converted lead"""
 
         # Get lead interaction summary
@@ -603,7 +576,7 @@ class RevenueAttributionTracker:
                 "primary_source": "unknown",
                 "interaction_count": 0,
                 "journey_days": 0,
-                "error": "No interaction data available"
+                "error": "No interaction data available",
             }
 
         # Calculate attribution metrics
@@ -652,7 +625,7 @@ class RevenueAttributionTracker:
             "unique_properties_viewed": len(summary["properties_viewed"]),
             "journey_days": journey_days,
             "first_interaction": summary["first_interaction"],
-            "last_interaction": summary["last_interaction"]
+            "last_interaction": summary["last_interaction"],
         }
 
         # Store attribution result
@@ -666,6 +639,7 @@ class RevenueAttributionTracker:
 
 # Global accessor
 _pipeline_instance = None
+
 
 async def get_real_estate_pipeline() -> RealEstateDataPipeline:
     """Get global pipeline instance"""

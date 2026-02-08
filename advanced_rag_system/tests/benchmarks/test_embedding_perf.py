@@ -6,19 +6,20 @@ Tests embedding generation latency and throughput according to targets:
 - Batch processing: >50 texts/sec target
 """
 
-import pytest
 import asyncio
-import time
-import numpy as np
-from typing import List
-import sys
 import os
+import sys
+import time
+from typing import List
+
+import numpy as np
+import pytest
 
 # Add the project root to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
 
 try:
-    from ghl_real_estate_ai.core.embeddings import get_embedding_model, get_async_embedding_model
+    from ghl_real_estate_ai.core.embeddings import get_async_embedding_model, get_embedding_model
 except ImportError:
     # Fallback for testing environment
     class MockEmbedder:
@@ -113,11 +114,7 @@ class TestEmbeddingPerformance:
             elapsed = time.perf_counter() - start
 
             throughput = len(texts) / elapsed  # texts/sec
-            results[batch_size] = {
-                'throughput': throughput,
-                'elapsed': elapsed,
-                'text_count': len(texts)
-            }
+            results[batch_size] = {"throughput": throughput, "elapsed": elapsed, "text_count": len(texts)}
 
             print(f"\nBatch size {batch_size}:")
             print(f"  Throughput: {throughput:.1f} texts/sec")
@@ -127,8 +124,8 @@ class TestEmbeddingPerformance:
             assert throughput > 50, f"Throughput {throughput:.1f} < 50 texts/sec target"
 
         # Find optimal batch size
-        best_batch_size = max(results.keys(), key=lambda x: results[x]['throughput'])
-        best_throughput = results[best_batch_size]['throughput']
+        best_batch_size = max(results.keys(), key=lambda x: results[x]["throughput"])
+        best_throughput = results[best_batch_size]["throughput"]
 
         print(f"\nOptimal batch size: {best_batch_size} ({best_throughput:.1f} texts/sec)")
 
@@ -163,11 +160,7 @@ class TestEmbeddingPerformance:
             p95_latency = np.percentile(latencies, 95)
             throughput = concurrency / total_time
 
-            results[concurrency] = {
-                'avg_latency': avg_latency,
-                'p95_latency': p95_latency,
-                'throughput': throughput
-            }
+            results[concurrency] = {"avg_latency": avg_latency, "p95_latency": p95_latency, "throughput": throughput}
 
             print(f"\nConcurrency {concurrency}:")
             print(f"  Avg latency: {avg_latency:.2f}ms")
@@ -175,8 +168,8 @@ class TestEmbeddingPerformance:
             print(f"  Throughput: {throughput:.1f} requests/sec")
 
         # Check for performance degradation
-        baseline_latency = results[1]['avg_latency']
-        max_concurrent_latency = results[max(concurrent_levels)]['avg_latency']
+        baseline_latency = results[1]["avg_latency"]
+        max_concurrent_latency = results[max(concurrent_levels)]["avg_latency"]
 
         degradation_ratio = max_concurrent_latency / baseline_latency
         print(f"\nPerformance degradation: {degradation_ratio:.2f}x")
@@ -194,8 +187,9 @@ class TestEmbeddingPerformance:
 
         Target: Process large batches without excessive memory usage
         """
-        import psutil
         import gc
+
+        import psutil
 
         process = psutil.Process()
 
@@ -214,7 +208,7 @@ class TestEmbeddingPerformance:
         after_gc_memory = process.memory_info().rss / 1024 / 1024
 
         memory_used = end_memory - start_memory
-        memory_efficiency = len(large_texts) / memory_used if memory_used > 0 else float('inf')
+        memory_efficiency = len(large_texts) / memory_used if memory_used > 0 else float("inf")
 
         print(f"\nMemory Usage:")
         print(f"  Baseline: {baseline_memory:.1f}MB")
@@ -238,6 +232,7 @@ class TestEmbeddingPerformance:
         # Check for GPU availability
         try:
             import torch
+
             if torch.cuda.is_available():
                 devices.append("cuda")
         except ImportError:
@@ -245,7 +240,8 @@ class TestEmbeddingPerformance:
 
         try:
             import torch
-            if hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+
+            if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
                 devices.append("mps")
         except ImportError:
             pass
@@ -267,10 +263,7 @@ class TestEmbeddingPerformance:
 
                 throughput = len(test_texts) / elapsed
 
-                device_results[device] = {
-                    'throughput': throughput,
-                    'elapsed': elapsed
-                }
+                device_results[device] = {"throughput": throughput, "elapsed": elapsed}
 
                 print(f"\nDevice: {device}")
                 print(f"  Throughput: {throughput:.1f} texts/sec")
@@ -281,7 +274,7 @@ class TestEmbeddingPerformance:
                 continue
 
         if len(device_results) > 1:
-            best_device = max(device_results.keys(), key=lambda x: device_results[x]['throughput'])
+            best_device = max(device_results.keys(), key=lambda x: device_results[x]["throughput"])
             print(f"\nBest performing device: {best_device}")
 
         return device_results

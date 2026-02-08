@@ -1,10 +1,10 @@
-from io import BytesIO
-
-from ghl_real_estate_ai.models.cma import CMAReport
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 import base64
 import os
 import re
+from io import BytesIO
+
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.models.cma import CMAReport
 
 logger = get_logger(__name__)
 
@@ -14,6 +14,7 @@ DEFAULT_PDF_OUTPUT_DIR = os.path.join("data", "pdfs")
 
 class PDFGenerationError(Exception):
     """Raised when PDF generation fails."""
+
     pass
 
 
@@ -156,19 +157,26 @@ class PDFRenderer:
         """
         from reportlab.lib import colors
         from reportlab.lib.pagesizes import letter
-        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
         from reportlab.lib.units import inch
         from reportlab.platypus import (
-            SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
+            Paragraph,
+            SimpleDocTemplate,
+            Spacer,
+            Table,
+            TableStyle,
         )
 
         buffer = BytesIO()
 
         try:
             doc = SimpleDocTemplate(
-                buffer, pagesize=letter,
-                leftMargin=0.75 * inch, rightMargin=0.75 * inch,
-                topMargin=0.75 * inch, bottomMargin=0.75 * inch,
+                buffer,
+                pagesize=letter,
+                leftMargin=0.75 * inch,
+                rightMargin=0.75 * inch,
+                topMargin=0.75 * inch,
+                bottomMargin=0.75 * inch,
             )
 
             styles = getSampleStyleSheet()
@@ -177,52 +185,77 @@ class PDFRenderer:
 
             # Custom styles
             title_style = ParagraphStyle(
-                "CMATitle", parent=styles["Title"],
-                textColor=colors.white, fontSize=20, alignment=1,
+                "CMATitle",
+                parent=styles["Title"],
+                textColor=colors.white,
+                fontSize=20,
+                alignment=1,
                 spaceAfter=4,
             )
             subtitle_style = ParagraphStyle(
-                "CMASubtitle", parent=styles["Normal"],
-                textColor=colors.white, fontSize=10, alignment=1,
+                "CMASubtitle",
+                parent=styles["Normal"],
+                textColor=colors.white,
+                fontSize=10,
+                alignment=1,
             )
             heading_style = ParagraphStyle(
-                "CMAHeading", parent=styles["Heading2"],
-                textColor=brand_color, fontSize=14, spaceBefore=14,
+                "CMAHeading",
+                parent=styles["Heading2"],
+                textColor=brand_color,
+                fontSize=14,
+                spaceBefore=14,
                 spaceAfter=6,
             )
             body_style = styles["Normal"]
             small_style = ParagraphStyle(
-                "CMASmall", parent=styles["Normal"], fontSize=9,
+                "CMASmall",
+                parent=styles["Normal"],
+                fontSize=9,
             )
             value_style = ParagraphStyle(
-                "CMAValue", parent=styles["Title"],
-                textColor=colors.white, fontSize=28, alignment=1,
-                spaceAfter=2, spaceBefore=2,
+                "CMAValue",
+                parent=styles["Title"],
+                textColor=colors.white,
+                fontSize=28,
+                alignment=1,
+                spaceAfter=2,
+                spaceBefore=2,
             )
             center_white = ParagraphStyle(
-                "CenterWhite", parent=styles["Normal"],
-                textColor=colors.white, alignment=1, fontSize=10,
+                "CenterWhite",
+                parent=styles["Normal"],
+                textColor=colors.white,
+                alignment=1,
+                fontSize=10,
             )
 
             elements = []
 
             # --- Header ---
-            header_data = [[
-                Paragraph("Comparative Market Analysis (CMA)", title_style),
-            ], [
-                Paragraph(
-                    f"{report.subject_property.address} | {report.market_context.market_name}",
-                    subtitle_style,
-                ),
-            ]]
+            header_data = [
+                [
+                    Paragraph("Comparative Market Analysis (CMA)", title_style),
+                ],
+                [
+                    Paragraph(
+                        f"{report.subject_property.address} | {report.market_context.market_name}",
+                        subtitle_style,
+                    ),
+                ],
+            ]
             header_table = Table(header_data, colWidths=[7 * inch])
-            header_table.setStyle(TableStyle([
-                ("BACKGROUND", (0, 0), (-1, -1), brand_color),
-                ("TOPPADDING", (0, 0), (-1, 0), 14),
-                ("BOTTOMPADDING", (0, -1), (-1, -1), 14),
-                ("LEFTPADDING", (0, 0), (-1, -1), 12),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 12),
-            ]))
+            header_table.setStyle(
+                TableStyle(
+                    [
+                        ("BACKGROUND", (0, 0), (-1, -1), brand_color),
+                        ("TOPPADDING", (0, 0), (-1, 0), 14),
+                        ("BOTTOMPADDING", (0, -1), (-1, -1), 14),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 12),
+                        ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+                    ]
+                )
+            )
             elements.append(header_table)
             elements.append(Spacer(1, 14))
 
@@ -246,46 +279,61 @@ class PDFRenderer:
                 f"<b>Price Trend:</b> [{trend_label}] {mkt.price_trend}% YoY<br/>"
                 f"<b>Report Date:</b> {report.generated_at}"
             )
-            overview_data = [[
-                Paragraph(left_col, small_style),
-                Paragraph(right_col, small_style),
-            ]]
+            overview_data = [
+                [
+                    Paragraph(left_col, small_style),
+                    Paragraph(right_col, small_style),
+                ]
+            ]
             overview_table = Table(overview_data, colWidths=[3.4 * inch, 3.4 * inch])
-            overview_table.setStyle(TableStyle([
-                ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ("LEFTPADDING", (0, 0), (-1, -1), 8),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-                ("TOPPADDING", (0, 0), (-1, -1), 6),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-                ("LINEBELOW", (0, 0), (-1, -1), 0.5, colors.lightgrey),
-            ]))
+            overview_table.setStyle(
+                TableStyle(
+                    [
+                        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+                        ("TOPPADDING", (0, 0), (-1, -1), 6),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                        ("LINEBELOW", (0, 0), (-1, -1), 0.5, colors.lightgrey),
+                    ]
+                )
+            )
             elements.append(overview_table)
             elements.append(Spacer(1, 10))
 
             # --- Comparables table ---
             elements.append(Paragraph("Comparable Properties Analysis", heading_style))
 
-            comp_header = ["Address", "Sale Date", "Sale Price", "Sq Ft",
-                           "$/Sq Ft", "Adj %", "Adj Value"]
+            comp_header = ["Address", "Sale Date", "Sale Price", "Sq Ft", "$/Sq Ft", "Adj %", "Adj Value"]
             comp_data = [comp_header]
             for c in report.comparables:
-                comp_data.append([
-                    c.address, str(c.sale_date), f"${c.sale_price:,.0f}",
-                    str(c.sqft), f"${c.price_per_sqft:.0f}",
-                    f"{c.adjustment_percent}%", f"${c.adjusted_value:,.0f}",
-                ])
+                comp_data.append(
+                    [
+                        c.address,
+                        str(c.sale_date),
+                        f"${c.sale_price:,.0f}",
+                        str(c.sqft),
+                        f"${c.price_per_sqft:.0f}",
+                        f"{c.adjustment_percent}%",
+                        f"${c.adjusted_value:,.0f}",
+                    ]
+                )
 
             comp_table = Table(comp_data, repeatRows=1)
-            comp_table.setStyle(TableStyle([
-                ("BACKGROUND", (0, 0), (-1, 0), brand_color),
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-                ("FONTSIZE", (0, 0), (-1, -1), 8),
-                ("FONTSIZE", (0, 0), (-1, 0), 9),
-                ("BOTTOMPADDING", (0, 0), (-1, 0), 8),
-                ("TOPPADDING", (0, 0), (-1, 0), 8),
-                ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
-                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f8f9fa")]),
-            ]))
+            comp_table.setStyle(
+                TableStyle(
+                    [
+                        ("BACKGROUND", (0, 0), (-1, 0), brand_color),
+                        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                        ("FONTSIZE", (0, 0), (-1, -1), 8),
+                        ("FONTSIZE", (0, 0), (-1, 0), 9),
+                        ("BOTTOMPADDING", (0, 0), (-1, 0), 8),
+                        ("TOPPADDING", (0, 0), (-1, 0), 8),
+                        ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
+                        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f8f9fa")]),
+                    ]
+                )
+            )
             elements.append(comp_table)
             elements.append(Spacer(1, 14))
 
@@ -293,19 +341,25 @@ class PDFRenderer:
             val_data = [
                 [Paragraph("ESTIMATED MARKET VALUE", center_white)],
                 [Paragraph(f"${report.estimated_value:,.0f}", value_style)],
-                [Paragraph(
-                    f"Range: ${report.value_range_low:,.0f} - ${report.value_range_high:,.0f}"
-                    f"&nbsp;&nbsp;|&nbsp;&nbsp;Confidence: {report.confidence_score}%",
-                    center_white,
-                )],
+                [
+                    Paragraph(
+                        f"Range: ${report.value_range_low:,.0f} - ${report.value_range_high:,.0f}"
+                        f"&nbsp;&nbsp;|&nbsp;&nbsp;Confidence: {report.confidence_score}%",
+                        center_white,
+                    )
+                ],
             ]
             val_table = Table(val_data, colWidths=[7 * inch])
-            val_table.setStyle(TableStyle([
-                ("BACKGROUND", (0, 0), (-1, -1), brand_color),
-                ("TOPPADDING", (0, 0), (-1, 0), 12),
-                ("BOTTOMPADDING", (0, -1), (-1, -1), 12),
-                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-            ]))
+            val_table.setStyle(
+                TableStyle(
+                    [
+                        ("BACKGROUND", (0, 0), (-1, -1), brand_color),
+                        ("TOPPADDING", (0, 0), (-1, 0), 12),
+                        ("BOTTOMPADDING", (0, -1), (-1, -1), 12),
+                        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                    ]
+                )
+            )
             elements.append(val_table)
             elements.append(Spacer(1, 14))
 
@@ -320,12 +374,16 @@ class PDFRenderer:
             )
             zil_data = [[Paragraph(zillow_text, small_style)]]
             zil_table = Table(zil_data, colWidths=[7 * inch])
-            zil_table.setStyle(TableStyle([
-                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#fff3cd")),
-                ("LEFTPADDING", (0, 0), (-1, -1), 10),
-                ("TOPPADDING", (0, 0), (-1, -1), 8),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
-            ]))
+            zil_table.setStyle(
+                TableStyle(
+                    [
+                        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#fff3cd")),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                        ("TOPPADDING", (0, 0), (-1, -1), 8),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+                    ]
+                )
+            )
             elements.append(zil_table)
             elements.append(Spacer(1, 10))
 
@@ -336,14 +394,19 @@ class PDFRenderer:
 
             # --- Footer ---
             footer_style = ParagraphStyle(
-                "CMAFooter", parent=styles["Normal"],
-                fontSize=8, textColor=colors.grey, alignment=1,
+                "CMAFooter",
+                parent=styles["Normal"],
+                fontSize=8,
+                textColor=colors.grey,
+                alignment=1,
             )
-            elements.append(Paragraph(
-                "<b>EnterpriseHub Real Estate Intelligence</b><br/>"
-                "Powered by AI analysis of MLS data, public records, and comparable market sales.",
-                footer_style,
-            ))
+            elements.append(
+                Paragraph(
+                    "<b>EnterpriseHub Real Estate Intelligence</b><br/>"
+                    "Powered by AI analysis of MLS data, public records, and comparable market sales.",
+                    footer_style,
+                )
+            )
 
             doc.build(elements)
 
@@ -358,9 +421,7 @@ class PDFRenderer:
             raise PDFGenerationError("PDF generation produced empty output")
 
         if len(pdf_bytes) > MAX_PDF_SIZE_BYTES:
-            raise PDFGenerationError(
-                f"PDF size {len(pdf_bytes)} bytes exceeds {MAX_PDF_SIZE_BYTES} byte limit"
-            )
+            raise PDFGenerationError(f"PDF size {len(pdf_bytes)} bytes exceeds {MAX_PDF_SIZE_BYTES} byte limit")
 
         logger.info(f"Generated CMA PDF: {len(pdf_bytes)} bytes")
         return pdf_bytes
@@ -426,5 +487,5 @@ class PDFRenderer:
             return PDFRenderer.save_pdf_to_file(pdf_bytes, filename)
 
         html = PDFRenderer.render_cma_html(report)
-        b64_html = base64.b64encode(html.encode('utf-8')).decode('utf-8')
+        b64_html = base64.b64encode(html.encode("utf-8")).decode("utf-8")
         return f"data:text/html;base64,{b64_html}"

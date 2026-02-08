@@ -3,28 +3,29 @@ Jorge's Property Matching Models
 Data structures for intelligent property-lead matching system
 """
 
-from datetime import datetime
-from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
-from ghl_real_estate_ai.services.enhanced_smart_lead_scorer import (
-    LeadPriority, BuyingStage, LeadScoreBreakdown
-)
+from ghl_real_estate_ai.services.enhanced_smart_lead_scorer import BuyingStage, LeadPriority, LeadScoreBreakdown
 
 
 class ConfidenceLevel(Enum):
     """Confidence level for property matches."""
-    VERY_HIGH = "very_high"    # 90-100%
-    HIGH = "high"              # 75-90%
-    MEDIUM = "medium"          # 50-75%
-    LOW = "low"                # 25-50%
-    VERY_LOW = "very_low"      # 0-25%
+
+    VERY_HIGH = "very_high"  # 90-100%
+    HIGH = "high"  # 75-90%
+    MEDIUM = "medium"  # 50-75%
+    LOW = "low"  # 25-50%
+    VERY_LOW = "very_low"  # 0-25%
 
 
 class PropertyType(Enum):
     """Property types in Rancho Cucamonga market."""
+
     SINGLE_FAMILY = "single_family"
     TOWNHOME = "townhome"
     CONDO = "condo"
@@ -34,6 +35,7 @@ class PropertyType(Enum):
 
 class MatchingAlgorithm(Enum):
     """Matching algorithms used."""
+
     NEURAL_ONLY = "neural_only"
     RULES_ONLY = "rules_only"
     HYBRID = "hybrid"
@@ -42,6 +44,7 @@ class MatchingAlgorithm(Enum):
 
 class PropertyAddress(BaseModel):
     """Property address structure."""
+
     street: str
     city: str = "Rancho Cucamonga"
     state: str = "CA"
@@ -53,6 +56,7 @@ class PropertyAddress(BaseModel):
 
 class SchoolInfo(BaseModel):
     """School information for property."""
+
     name: str
     type: str  # elementary, middle, high
     rating: int  # 1-10 scale
@@ -62,6 +66,7 @@ class SchoolInfo(BaseModel):
 
 class PropertyFeatures(BaseModel):
     """Property features and amenities."""
+
     bedrooms: int
     bathrooms: float
     sqft: int
@@ -80,6 +85,7 @@ class PropertyFeatures(BaseModel):
 
 class Property(BaseModel):
     """Complete property information."""
+
     id: str
     tenant_id: str = Field(..., description="Tenant ID owning or managing this property")
     mls_number: Optional[str] = None
@@ -108,19 +114,20 @@ class Property(BaseModel):
     listing_date: datetime
     last_updated: datetime = Field(default_factory=datetime.now)
 
-    @field_validator('price_per_sqft', mode='before')
+    @field_validator("price_per_sqft", mode="before")
     @classmethod
     def calculate_price_per_sqft(cls, v, info: ValidationInfo):
         """Auto-calculate price per sqft."""
-        if v is None and 'price' in info.data and 'features' in info.data:
-            features = info.data['features']
-            if hasattr(features, 'sqft') and features.sqft > 0:
-                return round(info.data['price'] / features.sqft, 2)
+        if v is None and "price" in info.data and "features" in info.data:
+            features = info.data["features"]
+            if hasattr(features, "sqft") and features.sqft > 0:
+                return round(info.data["price"] / features.sqft, 2)
         return v
 
 
 class LeadPropertyPreferences(BaseModel):
     """Extracted property preferences from lead data."""
+
     budget_min: Optional[float] = None
     budget_max: Optional[float] = None
     preferred_bedrooms: Optional[int] = None
@@ -150,6 +157,7 @@ class LeadPropertyPreferences(BaseModel):
 
 class MatchReasoning(BaseModel):
     """AI-generated reasoning for property match."""
+
     primary_reasons: List[str] = Field(..., description="Top 3 reasons for match")
     financial_fit: str = Field(..., description="Why price/budget works")
     lifestyle_fit: str = Field(..., description="How property matches lifestyle")
@@ -161,6 +169,7 @@ class MatchReasoning(BaseModel):
 
 class PropertyMatch(BaseModel):
     """Property match result with scoring and explanation."""
+
     property: Property
     lead_id: str
 
@@ -184,14 +193,14 @@ class PropertyMatch(BaseModel):
     processing_time_ms: Optional[int] = None
     model_version: Optional[str] = None
 
-    @field_validator('confidence', mode='before')
+    @field_validator("confidence", mode="before")
     @classmethod
     def determine_confidence(cls, v, info: ValidationInfo):
         """Auto-determine confidence based on match score."""
         if v is not None:
             return v
 
-        score = info.data.get('match_score', 0)
+        score = info.data.get("match_score", 0)
         if score >= 90:
             return ConfidenceLevel.VERY_HIGH
         elif score >= 75:
@@ -206,6 +215,7 @@ class PropertyMatch(BaseModel):
 
 class PropertyMatchRequest(BaseModel):
     """Request for property matching."""
+
     lead_id: str
     tenant_id: str = Field(..., description="Tenant ID for the lead and matching context")
     lead_data: Dict[str, Any]
@@ -223,6 +233,7 @@ class PropertyMatchRequest(BaseModel):
 
 class PropertyMatchResponse(BaseModel):
     """Response from property matching service."""
+
     matches: List[PropertyMatch]
     total_considered: int
     processing_time_ms: int
@@ -241,6 +252,7 @@ class PropertyMatchResponse(BaseModel):
 
 class PropertyFilters(BaseModel):
     """Filters for property inventory queries."""
+
     min_price: Optional[float] = None
     max_price: Optional[float] = None
     bedrooms: Optional[List[int]] = None
@@ -265,6 +277,7 @@ class PropertyFilters(BaseModel):
 @dataclass
 class MatchingPerformanceMetrics:
     """Performance metrics for matching algorithms."""
+
     avg_processing_time_ms: float
     cache_hit_rate: float
     neural_inference_time_ms: float
@@ -276,6 +289,7 @@ class MatchingPerformanceMetrics:
 
 class PropertyInventoryStats(BaseModel):
     """Statistics about current property inventory."""
+
     total_active_listings: int
     avg_price: float
     median_price: float
@@ -300,9 +314,19 @@ class PropertyInventoryStats(BaseModel):
 
 # Export all models for easy importing
 __all__ = [
-    'ConfidenceLevel', 'PropertyType', 'MatchingAlgorithm',
-    'PropertyAddress', 'SchoolInfo', 'PropertyFeatures', 'Property',
-    'LeadPropertyPreferences', 'MatchReasoning', 'PropertyMatch',
-    'PropertyMatchRequest', 'PropertyMatchResponse', 'PropertyFilters',
-    'MatchingPerformanceMetrics', 'PropertyInventoryStats'
+    "ConfidenceLevel",
+    "PropertyType",
+    "MatchingAlgorithm",
+    "PropertyAddress",
+    "SchoolInfo",
+    "PropertyFeatures",
+    "Property",
+    "LeadPropertyPreferences",
+    "MatchReasoning",
+    "PropertyMatch",
+    "PropertyMatchRequest",
+    "PropertyMatchResponse",
+    "PropertyFilters",
+    "MatchingPerformanceMetrics",
+    "PropertyInventoryStats",
 ]

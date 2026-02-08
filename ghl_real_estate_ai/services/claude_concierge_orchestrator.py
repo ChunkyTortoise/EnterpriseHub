@@ -7,17 +7,22 @@ import asyncio
 import json
 import re
 import time
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, AsyncGenerator, Dict, List, Optional, Union
-from dataclasses import dataclass, field, asdict
 from enum import Enum
+from typing import Any, AsyncGenerator, Dict, List, Optional, Union
 
-from ghl_real_estate_ai.services.claude_orchestrator import ClaudeOrchestrator, ClaudeRequest, ClaudeResponse, ClaudeTaskType
-from ghl_real_estate_ai.services.memory_service import MemoryService
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.services.analytics_service import AnalyticsService
-from ghl_real_estate_ai.services.ghl_live_data_service import get_ghl_live_data_service, GHLLiveDataService
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.claude_orchestrator import (
+    ClaudeOrchestrator,
+    ClaudeRequest,
+    ClaudeResponse,
+    ClaudeTaskType,
+)
+from ghl_real_estate_ai.services.ghl_live_data_service import GHLLiveDataService, get_ghl_live_data_service
+from ghl_real_estate_ai.services.memory_service import MemoryService
 
 logger = get_logger(__name__)
 
@@ -25,13 +30,14 @@ logger = get_logger(__name__)
 # TRACK 2: Platform Context and Intelligence Types
 # ============================================================================
 
+
 @dataclass
 class PlatformContext:
     """Complete platform state for omnipresent concierge intelligence."""
 
     # Core Platform State
     current_page: str
-    user_role: str = "agent" # 'agent', 'executive', 'client'
+    user_role: str = "agent"  # 'agent', 'executive', 'client'
     session_id: str = "default_session"
     location_context: Dict[str, Any] = field(default_factory=dict)
 
@@ -53,9 +59,10 @@ class PlatformContext:
     commission_opportunities: List[Dict[str, Any]] = field(default_factory=list)
 
     # Technical Context
-    device_type: str = "desktop" # 'desktop', 'mobile', 'tablet'
-    connection_quality: str = "excellent" # 'excellent', 'good', 'poor'
+    device_type: str = "desktop"  # 'desktop', 'mobile', 'tablet'
+    connection_quality: str = "excellent"  # 'excellent', 'good', 'poor'
     offline_capabilities: bool = False
+
 
 @dataclass
 class ConciergeResponse:
@@ -81,7 +88,7 @@ class ConciergeResponse:
     risk_alerts: List[Dict[str, Any]] = field(default_factory=list)
     opportunity_highlights: List[Dict[str, Any]] = field(default_factory=list)
     learning_insights: List[Dict[str, Any]] = field(default_factory=list)
-    
+
     # Advanced Intelligence
     handoff_recommendation: Optional[Dict[str, Any]] = None
 
@@ -93,26 +100,29 @@ class ConciergeResponse:
 
 class ConciergeMode(Enum):
     """Different modes for concierge operation."""
-    PROACTIVE = "proactive"           # Continuous background intelligence
-    REACTIVE = "reactive"             # Response to user queries only
-    PRESENTATION = "presentation"     # Client-facing mode with talking points
-    FIELD_WORK = "field_work"        # Mobile field assistance
-    EXECUTIVE = "executive"           # High-level strategic guidance
-    EMERGENCY = "emergency"           # Crisis management and urgent decisions
+
+    PROACTIVE = "proactive"  # Continuous background intelligence
+    REACTIVE = "reactive"  # Response to user queries only
+    PRESENTATION = "presentation"  # Client-facing mode with talking points
+    FIELD_WORK = "field_work"  # Mobile field assistance
+    EXECUTIVE = "executive"  # High-level strategic guidance
+    EMERGENCY = "emergency"  # Crisis management and urgent decisions
 
 
 class IntelligenceScope(Enum):
     """Scope of intelligence analysis."""
-    PAGE_SPECIFIC = "page_specific"   # Current page/component only
-    WORKFLOW = "workflow"             # Current workflow/task
+
+    PAGE_SPECIFIC = "page_specific"  # Current page/component only
+    WORKFLOW = "workflow"  # Current workflow/task
     PLATFORM_WIDE = "platform_wide"  # Entire platform state
-    STRATEGIC = "strategic"           # Business strategy and goals
-    OPERATIONAL = "operational"       # Daily operations and efficiency
+    STRATEGIC = "strategic"  # Business strategy and goals
+    OPERATIONAL = "operational"  # Daily operations and efficiency
 
 
 # ============================================================================
 # TRACK 2: Main Concierge Orchestrator
 # ============================================================================
+
 
 class ClaudeConciergeOrchestrator:
     """
@@ -127,9 +137,9 @@ class ClaudeConciergeOrchestrator:
     🧠 Continuous learning from Jorge's decisions
     """
 
-    def __init__(self,
-                 claude_orchestrator: Optional[ClaudeOrchestrator] = None,
-                 memory_service: Optional[MemoryService] = None):
+    def __init__(
+        self, claude_orchestrator: Optional[ClaudeOrchestrator] = None, memory_service: Optional[MemoryService] = None
+    ):
 
         # Core Services
         self.claude = claude_orchestrator or self._get_claude_orchestrator()
@@ -147,35 +157,35 @@ class ClaudeConciergeOrchestrator:
         # Platform State Tracking
         self.context_cache = {}
         self.session_contexts = {}  # session_id -> context history
-        self.generated_suggestions = {} # suggestion_id -> suggestion_data
+        self.generated_suggestions = {}  # suggestion_id -> suggestion_data
 
         # Performance Optimization
         self.response_cache_ttl = 300  # 5 minutes for context-specific responses
-        self.context_cache_ttl = 60    # 1 minute for platform context
+        self.context_cache_ttl = 60  # 1 minute for platform context
 
         # Intelligence Configuration
         self.intelligence_config = {
             ConciergeMode.PROACTIVE: {
                 "update_frequency": 30,  # seconds
                 "intelligence_depth": IntelligenceScope.PLATFORM_WIDE,
-                "proactive_threshold": 0.7  # confidence threshold for proactive suggestions
+                "proactive_threshold": 0.7,  # confidence threshold for proactive suggestions
             },
             ConciergeMode.REACTIVE: {
                 "response_time_target": 2000,  # ms
                 "intelligence_depth": IntelligenceScope.WORKFLOW,
-                "context_window": 10  # previous interactions to consider
+                "context_window": 10,  # previous interactions to consider
             },
             ConciergeMode.PRESENTATION: {
                 "talking_points_count": 5,
                 "client_safety_mode": True,
-                "intelligence_depth": IntelligenceScope.STRATEGIC
+                "intelligence_depth": IntelligenceScope.STRATEGIC,
             },
             ConciergeMode.FIELD_WORK: {
                 "location_awareness": True,
                 "offline_fallback": True,
                 "quick_actions": True,
-                "intelligence_depth": IntelligenceScope.OPERATIONAL
-            }
+                "intelligence_depth": IntelligenceScope.OPERATIONAL,
+            },
         }
 
         logger.info("Claude Concierge Orchestrator initialized with omnipresent intelligence")
@@ -184,6 +194,7 @@ class ClaudeConciergeOrchestrator:
         """Get or create Claude orchestrator instance."""
         try:
             from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
+
             return get_claude_orchestrator()
         except ImportError:
             # Fallback if circular import issues
@@ -193,11 +204,13 @@ class ClaudeConciergeOrchestrator:
     # TRACK 3: LIVE DATA INTEGRATION METHODS
     # ========================================================================
 
-    async def generate_live_platform_context(self,
-                                           current_page: str,
-                                           user_role: str = "agent",
-                                           session_id: str = None,
-                                           location_context: Dict[str, Any] = None) -> PlatformContext:
+    async def generate_live_platform_context(
+        self,
+        current_page: str,
+        user_role: str = "agent",
+        session_id: str = None,
+        location_context: Dict[str, Any] = None,
+    ) -> PlatformContext:
         """
         Generate PlatformContext using real GHL data instead of demo data.
         This is the Track 3 integration that connects omnipresent intelligence to live business data.
@@ -205,9 +218,7 @@ class ClaudeConciergeOrchestrator:
         try:
             # Get real-time context from GHL Live Data Service
             live_context = await self.ghl_live_data.generate_omnipresent_context(
-                current_page=current_page,
-                user_role=user_role,
-                session_id=session_id
+                current_page=current_page, user_role=user_role, session_id=session_id
             )
 
             # Convert to PlatformContext object
@@ -216,24 +227,23 @@ class ClaudeConciergeOrchestrator:
                 user_role=user_role,
                 session_id=session_id or f"live_{int(time.time())}",
                 location_context=location_context or {},
-
                 # Real Business Intelligence from GHL
                 active_leads=live_context.get("active_leads", []),
                 bot_statuses=live_context.get("bot_statuses", {}),
                 user_activity=live_context.get("user_activity", []),
                 business_metrics=live_context.get("business_metrics", {}),
                 active_properties=live_context.get("active_properties", []),
-
                 # Real-time Market Context
                 market_conditions=live_context.get("market_conditions", {}),
                 priority_actions=live_context.get("priority_actions", []),
                 pending_notifications=live_context.get("pending_notifications", []),
-
                 # Jorge-specific Real Data
-                jorge_preferences=live_context.get("jorge_preferences", {})
+                jorge_preferences=live_context.get("jorge_preferences", {}),
             )
 
-            logger.info(f"Generated live platform context for {current_page} with {len(platform_context.active_leads)} leads")
+            logger.info(
+                f"Generated live platform context for {current_page} with {len(platform_context.active_leads)} leads"
+            )
             return platform_context
 
         except Exception as e:
@@ -241,11 +251,9 @@ class ClaudeConciergeOrchestrator:
             # Fallback to demo context if live data fails
             return self._generate_demo_platform_context(current_page, user_role, session_id, location_context)
 
-    def _generate_demo_platform_context(self,
-                                       current_page: str,
-                                       user_role: str,
-                                       session_id: str,
-                                       location_context: Dict[str, Any]) -> PlatformContext:
+    def _generate_demo_platform_context(
+        self, current_page: str, user_role: str, session_id: str, location_context: Dict[str, Any]
+    ) -> PlatformContext:
         """Fallback demo context when live data is unavailable."""
         return PlatformContext(
             current_page=current_page,
@@ -260,21 +268,23 @@ class ClaudeConciergeOrchestrator:
             market_conditions={},
             priority_actions=[{"action": "demo_mode_active", "priority": "info"}],
             pending_notifications=[],
-            jorge_preferences={"demo_mode": True}
+            jorge_preferences={"demo_mode": True},
         )
 
     # ========================================================================
     # CORE OMNIPRESENT INTELLIGENCE METHODS
     # ========================================================================
 
-    async def generate_contextual_guidance(self,
-                                         context: Optional[PlatformContext] = None,
-                                         mode: ConciergeMode = ConciergeMode.PROACTIVE,
-                                         scope: Optional[IntelligenceScope] = None,
-                                         use_live_data: bool = True,
-                                         current_page: str = None,
-                                         user_role: str = "agent",
-                                         session_id: str = None) -> ConciergeResponse:
+    async def generate_contextual_guidance(
+        self,
+        context: Optional[PlatformContext] = None,
+        mode: ConciergeMode = ConciergeMode.PROACTIVE,
+        scope: Optional[IntelligenceScope] = None,
+        use_live_data: bool = True,
+        current_page: str = None,
+        user_role: str = "agent",
+        session_id: str = None,
+    ) -> ConciergeResponse:
         """
         Generate intelligent guidance based on current platform state.
         This is the main entry point for Track 2 omnipresent intelligence.
@@ -289,9 +299,7 @@ class ClaudeConciergeOrchestrator:
                 if not current_page:
                     raise ValueError("current_page required when generating live context")
                 context = await self.generate_live_platform_context(
-                    current_page=current_page,
-                    user_role=user_role,
-                    session_id=session_id
+                    current_page=current_page, user_role=user_role, session_id=session_id
                 )
                 logger.info(f"Generated live platform context for guidance: {current_page}")
             elif context is None:
@@ -321,21 +329,19 @@ class ClaudeConciergeOrchestrator:
                     "jorge_preferences": jorge_preferences,
                     "concierge_mode": mode.value,
                     "intelligence_scope": scope.value,
-                    "session_history": self.session_contexts.get(context.session_id, [])
+                    "session_history": self.session_contexts.get(context.session_id, []),
                 },
                 prompt=intelligence_prompt,
                 max_tokens=4000,
                 temperature=0.6,  # Balanced creativity for guidance
-                system_prompt=self._get_concierge_system_prompt(mode)
+                system_prompt=self._get_concierge_system_prompt(mode),
             )
 
             # Get Claude's intelligent analysis
             claude_response = await self.claude.process_request(request)
 
             # Parse and structure the response
-            structured_response = await self._parse_concierge_response(
-                claude_response.content, context, mode, scope
-            )
+            structured_response = await self._parse_concierge_response(claude_response.content, context, mode, scope)
 
             # Add metadata
             structured_response.response_time_ms = int((time.time() - start_time) * 1000)
@@ -363,14 +369,16 @@ class ClaudeConciergeOrchestrator:
             # Fallback response to ensure platform reliability
             return self._generate_fallback_response(context, mode, str(e))
 
-    async def generate_contextual_guidance_stream(self,
-                                                context: Optional[PlatformContext] = None,
-                                                mode: ConciergeMode = ConciergeMode.PROACTIVE,
-                                                scope: Optional[IntelligenceScope] = None,
-                                                use_live_data: bool = True,
-                                                current_page: str = None,
-                                                user_role: str = "agent",
-                                                session_id: str = None) -> AsyncGenerator[str, None]:
+    async def generate_contextual_guidance_stream(
+        self,
+        context: Optional[PlatformContext] = None,
+        mode: ConciergeMode = ConciergeMode.PROACTIVE,
+        scope: Optional[IntelligenceScope] = None,
+        use_live_data: bool = True,
+        current_page: str = None,
+        user_role: str = "agent",
+        session_id: str = None,
+    ) -> AsyncGenerator[str, None]:
         """
         Streaming version of generate_contextual_guidance.
         Provides real-time feedback for better UX.
@@ -379,9 +387,7 @@ class ClaudeConciergeOrchestrator:
             # Generate live context if not provided
             if context is None and use_live_data:
                 context = await self.generate_live_platform_context(
-                    current_page=current_page or "Unknown",
-                    user_role=user_role,
-                    session_id=session_id
+                    current_page=current_page or "Unknown", user_role=user_role, session_id=session_id
                 )
 
             scope = scope or self.intelligence_config[mode]["intelligence_depth"]
@@ -394,13 +400,13 @@ class ClaudeConciergeOrchestrator:
                     "platform_context": asdict(context),
                     "jorge_preferences": jorge_preferences,
                     "concierge_mode": mode.value,
-                    "intelligence_scope": scope.value
+                    "intelligence_scope": scope.value,
                 },
                 prompt=intelligence_prompt,
                 max_tokens=4000,
                 temperature=0.6,
                 system_prompt=self._get_concierge_system_prompt(mode),
-                streaming=True
+                streaming=True,
             )
 
             # Stream from orchestrator
@@ -411,11 +417,13 @@ class ClaudeConciergeOrchestrator:
             logger.error(f"Error in streaming contextual guidance: {e}")
             yield f"Error: {str(e)}"
 
-    async def generate_live_guidance(self,
-                                   current_page: str,
-                                   mode: ConciergeMode = ConciergeMode.PROACTIVE,
-                                   user_role: str = "agent",
-                                   session_id: str = None) -> ConciergeResponse:
+    async def generate_live_guidance(
+        self,
+        current_page: str,
+        mode: ConciergeMode = ConciergeMode.PROACTIVE,
+        user_role: str = "agent",
+        session_id: str = None,
+    ) -> ConciergeResponse:
         """
         Convenience method for generating guidance with live GHL data.
         Track 3: Primary method for real-time omnipresent intelligence.
@@ -426,13 +434,12 @@ class ClaudeConciergeOrchestrator:
             use_live_data=True,
             current_page=current_page,
             user_role=user_role,
-            session_id=session_id
+            session_id=session_id,
         )
 
-    async def provide_real_time_coaching(self,
-                                       current_situation: Dict[str, Any],
-                                       context: PlatformContext,
-                                       urgency: str = "medium") -> ConciergeResponse:
+    async def provide_real_time_coaching(
+        self, current_situation: Dict[str, Any], context: PlatformContext, urgency: str = "medium"
+    ) -> ConciergeResponse:
         """
         Provide real-time coaching and guidance for specific situations.
         Used for immediate decision support and tactical guidance.
@@ -462,14 +469,10 @@ class ClaudeConciergeOrchestrator:
         """
 
         return await self.generate_contextual_guidance(
-            context=context,
-            mode=ConciergeMode.REACTIVE,
-            scope=IntelligenceScope.WORKFLOW
+            context=context, mode=ConciergeMode.REACTIVE, scope=IntelligenceScope.WORKFLOW
         )
 
-    async def orchestrate_bot_ecosystem(self,
-                                     context: PlatformContext,
-                                     desired_outcome: str) -> ConciergeResponse:
+    async def orchestrate_bot_ecosystem(self, context: PlatformContext, desired_outcome: str) -> ConciergeResponse:
         """
         Coordinate the bot ecosystem (Jorge Seller Bot, Lead Bot, etc.) for optimal outcomes.
         Provides bot orchestration recommendations and workflow optimization.
@@ -492,8 +495,8 @@ class ClaudeConciergeOrchestrator:
 
         Active Pipeline:
         - {len(context.active_leads)} active leads
-        - Current conversion metrics: {context.business_metrics.get('conversion_rate', 'unknown')}
-        - Revenue pipeline: {context.business_metrics.get('pipeline_value', 'unknown')}
+        - Current conversion metrics: {context.business_metrics.get("conversion_rate", "unknown")}
+        - Revenue pipeline: {context.business_metrics.get("pipeline_value", "unknown")}
 
         Provide specific bot coordination recommendations:
         1. Bot role optimization and handoffs
@@ -507,7 +510,7 @@ class ClaudeConciergeOrchestrator:
             task_type=ClaudeTaskType.INTERVENTION_STRATEGY,
             context={"platform_context": asdict(context), "bot_analysis": bot_analysis},
             prompt=coordination_prompt,
-            max_tokens=3000
+            max_tokens=3000,
         )
 
         claude_response = await self.claude.process_request(request)
@@ -528,19 +531,20 @@ class ClaudeConciergeOrchestrator:
                 return {"success": False, "error": "Suggestion not found or expired"}
 
             logger.info(f"Executing platform actions for suggestion: {suggestion.get('title')}")
-            
+
             # Initialize GHL service
             from ghl_real_estate_ai.services.ghl_service import GHLService
+
             ghl = GHLService()
-            
+
             actions_taken = []
-            
+
             # 1. Handle Bot Coordination Suggestions
             if suggestion.get("bot_type"):
                 bot_type = suggestion.get("bot_type")
                 # Trigger specific bot orchestration workflow
                 workflow_id = self.business_rules.get_workflow_id(bot_type) or "standard_bot_optimization"
-                
+
                 # If we have a target lead, apply there
                 target_lead_id = suggestion.get("lead_id")
                 if target_lead_id:
@@ -573,16 +577,16 @@ class ClaudeConciergeOrchestrator:
                 "success": True,
                 "suggestion_id": suggestion_id,
                 "actions_taken": actions_taken,
-                "message": f"Successfully applied {len(actions_taken)} actions"
+                "message": f"Successfully applied {len(actions_taken)} actions",
             }
 
         except Exception as e:
             logger.error(f"Failed to apply suggestion {suggestion_id}: {e}")
             return {"success": False, "error": str(e)}
 
-    async def generate_mobile_field_assistance(self,
-                                             location_data: Dict[str, Any],
-                                             context: PlatformContext) -> ConciergeResponse:
+    async def generate_mobile_field_assistance(
+        self, location_data: Dict[str, Any], context: PlatformContext
+    ) -> ConciergeResponse:
         """
         Generate mobile-specific field assistance for property visits and client meetings.
         Optimized for mobile field work with offline capabilities.
@@ -592,19 +596,19 @@ class ClaudeConciergeOrchestrator:
         field_prompt = f"""
         Jorge is in the field and needs mobile assistance:
 
-        Current Location: {location_data.get('address', 'Unknown')}
-        GPS Coordinates: {location_data.get('lat', 'N/A')}, {location_data.get('lng', 'N/A')}
-        Property Context: {location_data.get('property_info', {})}
+        Current Location: {location_data.get("address", "Unknown")}
+        GPS Coordinates: {location_data.get("lat", "N/A")}, {location_data.get("lng", "N/A")}
+        Property Context: {location_data.get("property_info", {})}
 
         Meeting Context:
-        - Client: {context.active_leads[0].get('name', 'Unknown') if context.active_leads else 'No active meeting'}
-        - Property Type: {location_data.get('property_type', 'Unknown')}
-        - Visit Purpose: {location_data.get('visit_purpose', 'showing')}
+        - Client: {context.active_leads[0].get("name", "Unknown") if context.active_leads else "No active meeting"}
+        - Property Type: {location_data.get("property_type", "Unknown")}
+        - Visit Purpose: {location_data.get("visit_purpose", "showing")}
 
         Market Intelligence:
-        - Neighborhood: {location_data.get('neighborhood', 'Unknown')}
-        - Recent Sales: {location_data.get('recent_sales', [])}
-        - Market Trends: {location_data.get('market_trends', {})}
+        - Neighborhood: {location_data.get("neighborhood", "Unknown")}
+        - Recent Sales: {location_data.get("recent_sales", [])}
+        - Market Trends: {location_data.get("market_trends", {})}
 
         Device: {context.device_type} | Connection: {context.connection_quality}
 
@@ -620,15 +624,12 @@ class ClaudeConciergeOrchestrator:
         """
 
         return await self.generate_contextual_guidance(
-            context=context,
-            mode=ConciergeMode.FIELD_WORK,
-            scope=IntelligenceScope.OPERATIONAL
+            context=context, mode=ConciergeMode.FIELD_WORK, scope=IntelligenceScope.OPERATIONAL
         )
 
-    async def provide_client_presentation_support(self,
-                                               client_profile: Dict[str, Any],
-                                               presentation_context: Dict[str, Any],
-                                               context: PlatformContext) -> ConciergeResponse:
+    async def provide_client_presentation_support(
+        self, client_profile: Dict[str, Any], presentation_context: Dict[str, Any], context: PlatformContext
+    ) -> ConciergeResponse:
         """
         Provide intelligent support for client presentations with talking points and strategies.
         Client-safe mode ensures no sensitive internal information is exposed.
@@ -642,15 +643,15 @@ class ClaudeConciergeOrchestrator:
         {json.dumps(client_profile, indent=2)}
 
         Presentation Context:
-        - Presentation Type: {presentation_context.get('type', 'general')}
-        - Duration: {presentation_context.get('duration', '30 minutes')}
-        - Objectives: {presentation_context.get('objectives', [])}
-        - Materials: {presentation_context.get('materials', [])}
+        - Presentation Type: {presentation_context.get("type", "general")}
+        - Duration: {presentation_context.get("duration", "30 minutes")}
+        - Objectives: {presentation_context.get("objectives", [])}
+        - Materials: {presentation_context.get("materials", [])}
 
         Market Positioning:
         - Jorge's Value Proposition: Premium service, data-driven insights, 6% commission structure
         - Competitive Advantages: AI-powered lead qualification, extensive market knowledge
-        - Success Metrics: {context.business_metrics.get('success_rate', 'industry-leading')}
+        - Success Metrics: {context.business_metrics.get("success_rate", "industry-leading")}
 
         **CLIENT-SAFE MODE**: Ensure all recommendations are appropriate for client visibility.
         No internal strategy, pricing details, or competitive intelligence should be exposed.
@@ -665,28 +666,23 @@ class ClaudeConciergeOrchestrator:
         """
 
         return await self.generate_contextual_guidance(
-            context=context,
-            mode=ConciergeMode.PRESENTATION,
-            scope=IntelligenceScope.STRATEGIC
+            context=context, mode=ConciergeMode.PRESENTATION, scope=IntelligenceScope.STRATEGIC
         )
 
     # ========================================================================
     # JORGE MEMORY & LEARNING SYSTEM INTEGRATION
     # ========================================================================
 
-    async def learn_from_user_decision(self,
-                                     context: PlatformContext,
-                                     decision: Dict[str, Any],
-                                     outcome: Dict[str, Any]) -> bool:
+    async def learn_from_user_decision(
+        self, context: PlatformContext, decision: Dict[str, Any], outcome: Dict[str, Any]
+    ) -> bool:
         """
         Learn from Jorge's decisions to improve future recommendations.
         This is a key part of the adaptive intelligence system.
         """
         return await self.jorge_memory.learn_from_decision(decision, outcome, context)
 
-    async def predict_jorge_preference(self,
-                                     situation: Dict[str, Any],
-                                     context: PlatformContext) -> Dict[str, Any]:
+    async def predict_jorge_preference(self, situation: Dict[str, Any], context: PlatformContext) -> Dict[str, Any]:
         """
         Predict what Jorge would prefer in a given situation based on learned patterns.
         """
@@ -696,11 +692,9 @@ class ClaudeConciergeOrchestrator:
     # PRIVATE HELPER METHODS
     # ========================================================================
 
-    def _build_intelligence_prompt(self,
-                                 context: PlatformContext,
-                                 mode: ConciergeMode,
-                                 scope: IntelligenceScope,
-                                 jorge_preferences: Dict[str, Any]) -> str:
+    def _build_intelligence_prompt(
+        self, context: PlatformContext, mode: ConciergeMode, scope: IntelligenceScope, jorge_preferences: Dict[str, Any]
+    ) -> str:
         """Build comprehensive intelligence prompt for Claude."""
 
         # Base prompt structure
@@ -716,10 +710,10 @@ class ClaudeConciergeOrchestrator:
         Active Leads: {len(context.active_leads)} leads
         {self._format_lead_intelligence(context.active_leads)}
         Bot Status: {context.bot_statuses}
-        Pipeline Value: {context.business_metrics.get('pipeline_value', 'Not available')}
+        Pipeline Value: {context.business_metrics.get("pipeline_value", "Not available")}
 
         JORGE'S LEARNED PREFERENCES:
-        {json.dumps(jorge_preferences, indent=2) if jorge_preferences else 'No specific preferences learned yet'}
+        {json.dumps(jorge_preferences, indent=2) if jorge_preferences else "No specific preferences learned yet"}
 
         MODE: {mode.value}
         SCOPE: {scope.value}
@@ -788,15 +782,15 @@ class ClaudeConciergeOrchestrator:
         """Format lead metrics including FRS/PCS for the prompt."""
         if not leads:
             return ""
-        
+
         intel_lines = ["Lead Intelligence:"]
-        for lead in leads[:5]: # Top 5 leads for context
+        for lead in leads[:5]:  # Top 5 leads for context
             name = lead.get("name", "Unknown")
             frs = lead.get("frs_score", "N/A")
             pcs = lead.get("pcs_score", "N/A")
             score = lead.get("score", "N/A")
             intel_lines.append(f"- {name}: Score={score}, FRS={frs}, PCS={pcs}")
-            
+
         return "\n        ".join(intel_lines)
 
     def _get_concierge_system_prompt(self, mode: ConciergeMode) -> str:
@@ -872,7 +866,6 @@ class ClaudeConciergeOrchestrator:
             - Suggest automation improvements
             - Highlight time-sensitive opportunities
             """,
-
             ConciergeMode.FIELD_WORK: """
 
             FIELD WORK MODE: Support mobile real estate activities.
@@ -881,7 +874,6 @@ class ClaudeConciergeOrchestrator:
             - Focus on immediate tactical needs
             - Include backup/contingency options
             """,
-
             ConciergeMode.PRESENTATION: """
 
             PRESENTATION MODE: Support client-facing presentations.
@@ -890,7 +882,6 @@ class ClaudeConciergeOrchestrator:
             - Provide professional talking points
             - Suggest success stories and case studies
             """,
-
             ConciergeMode.EXECUTIVE: """
 
             EXECUTIVE MODE: Strategic business guidance.
@@ -898,33 +889,33 @@ class ClaudeConciergeOrchestrator:
             - Provide market trends and competitive analysis
             - Suggest scaling and growth opportunities
             - Include risk assessments and mitigation
-            """
+            """,
         }
 
         return base_prompt + mode_specific.get(mode, "")
 
-    async def _parse_concierge_response(self,
-                                      content: str,
-                                      context: PlatformContext,
-                                      mode: ConciergeMode,
-                                      scope: IntelligenceScope) -> ConciergeResponse:
+    async def _parse_concierge_response(
+        self, content: str, context: PlatformContext, mode: ConciergeMode, scope: IntelligenceScope
+    ) -> ConciergeResponse:
         """Parse Claude's response into structured concierge response using tag-based extraction."""
 
         # Extract primary guidance
-        primary_guidance = self._extract_tag_content(content, "primary_guidance") or (content[:200] + "..." if len(content) > 200 else content)
-        
+        primary_guidance = self._extract_tag_content(content, "primary_guidance") or (
+            content[:200] + "..." if len(content) > 200 else content
+        )
+
         # Extract urgency
         urgency_level = self._extract_tag_content(content, "urgency_level") or self._extract_urgency_level(content)
-        
+
         # Extract reasoning
         reasoning = self._extract_tag_content(content, "reasoning")
 
         # Extract actions
         immediate_actions = self._extract_immediate_actions(content)
-        
+
         # Extract bot suggestions
         bot_suggestions = self._extract_bot_coordination(content)
-        
+
         # Extract risk alerts
         risk_alerts = self._extract_risk_alerts_tags(content)
 
@@ -934,26 +925,21 @@ class ClaudeConciergeOrchestrator:
         return ConciergeResponse(
             primary_guidance=primary_guidance,
             urgency_level=urgency_level,
-            confidence_score=0.92, # Higher confidence for structured output
+            confidence_score=0.92,  # Higher confidence for structured output
             reasoning=reasoning,
-
             immediate_actions=immediate_actions,
             background_tasks=self._extract_action_items(content, "background"),
             follow_up_reminders=self._extract_action_items(content, "follow_up"),
-
             page_specific_tips=self._extract_page_tips(content, context.current_page),
             bot_coordination_suggestions=bot_suggestions,
             revenue_optimization_ideas=self._extract_revenue_ideas(content),
-
             risk_alerts=risk_alerts,
             opportunity_highlights=self._extract_opportunities(content),
             learning_insights=self._extract_learning_insights(content),
-            
             handoff_recommendation=handoff,
-
             response_time_ms=0,  # Will be set by caller
             data_sources_used=[],  # Will be set by caller
-            generated_at=datetime.now()
+            generated_at=datetime.now(),
         )
 
     def _extract_tag_content(self, content: str, tag: str) -> Optional[str]:
@@ -968,17 +954,19 @@ class ClaudeConciergeOrchestrator:
         if block:
             matches = re.finditer(r'<action\s+priority="(.*?)"\s+category="(.*?)">(.*?)</action>', block, re.IGNORECASE)
             for m in matches:
-                actions.append({
-                    "priority": m.group(1),
-                    "category": m.group(2),
-                    "description": m.group(3).strip(),
-                    "estimated_time": "5 minutes"
-                })
-        
+                actions.append(
+                    {
+                        "priority": m.group(1),
+                        "category": m.group(2),
+                        "description": m.group(3).strip(),
+                        "estimated_time": "5 minutes",
+                    }
+                )
+
         # Fallback to existing logic if no tags found
         if not actions:
             actions = self._extract_action_items(content, "immediate")
-            
+
         return actions
 
     def _extract_bot_coordination(self, content: str) -> List[Dict[str, Any]]:
@@ -988,16 +976,13 @@ class ClaudeConciergeOrchestrator:
         if block:
             matches = re.finditer(r'<suggestion\s+bot_type="(.*?)">(.*?)</suggestion>', block, re.IGNORECASE)
             for m in matches:
-                suggestions.append({
-                    "bot_type": m.group(1),
-                    "suggestion": m.group(2).strip(),
-                    "impact": "high",
-                    "effort": "low"
-                })
-        
+                suggestions.append(
+                    {"bot_type": m.group(1), "suggestion": m.group(2).strip(), "impact": "high", "effort": "low"}
+                )
+
         if not suggestions:
             suggestions = self._extract_bot_suggestions(content)
-            
+
         return suggestions
 
     def _extract_risk_alerts_tags(self, content: str) -> List[Dict[str, Any]]:
@@ -1007,16 +992,18 @@ class ClaudeConciergeOrchestrator:
         if block:
             matches = re.finditer(r'<alert\s+severity="(.*?)">(.*?)</alert>', block, re.IGNORECASE)
             for m in matches:
-                alerts.append({
-                    "type": "operational_risk",
-                    "description": m.group(2).strip(),
-                    "severity": m.group(1),
-                    "mitigation": "Review and adjust strategy"
-                })
-        
+                alerts.append(
+                    {
+                        "type": "operational_risk",
+                        "description": m.group(2).strip(),
+                        "severity": m.group(1),
+                        "mitigation": "Review and adjust strategy",
+                    }
+                )
+
         if not alerts:
             alerts = self._extract_risk_alerts(content)
-            
+
         return alerts
 
     def _extract_handoff_tag(self, content: str) -> Optional[Dict[str, Any]]:
@@ -1027,7 +1014,7 @@ class ClaudeConciergeOrchestrator:
             confidence = self._extract_tag_content(block, "confidence")
             reasoning = self._extract_tag_content(block, "reasoning")
             context_str = self._extract_tag_content(block, "context")
-            
+
             try:
                 context_data = json.loads(context_str) if context_str else {}
             except:
@@ -1037,7 +1024,7 @@ class ClaudeConciergeOrchestrator:
                 "targetBot": bot,
                 "confidence": float(confidence) if confidence else 0.0,
                 "reasoning": reasoning,
-                "contextToTransfer": context_data
+                "contextToTransfer": context_data,
             }
         return None
 
@@ -1060,15 +1047,17 @@ class ClaudeConciergeOrchestrator:
 
         if action_type in content.lower():
             # Look for numbered lists or bullet points
-            lines = content.split('\n')
+            lines = content.split("\n")
             for line in lines:
-                if any(keyword in line.lower() for keyword in [action_type, 'action', 'todo', 'next']):
-                    actions.append({
-                        "description": line.strip(),
-                        "priority": "medium",
-                        "estimated_time": "5 minutes",
-                        "category": action_type
-                    })
+                if any(keyword in line.lower() for keyword in [action_type, "action", "todo", "next"]):
+                    actions.append(
+                        {
+                            "description": line.strip(),
+                            "priority": "medium",
+                            "estimated_time": "5 minutes",
+                            "category": action_type,
+                        }
+                    )
 
         return actions[:3]  # Limit to top 3 for UI performance
 
@@ -1078,90 +1067,100 @@ class ClaudeConciergeOrchestrator:
         # Look for page-specific guidance
         if current_page.lower() in content.lower():
             # Extract relevant sentences
-            sentences = content.split('.')
+            sentences = content.split(".")
             for sentence in sentences:
                 if current_page.lower() in sentence.lower():
-                    tips.append(sentence.strip() + '.')
+                    tips.append(sentence.strip() + ".")
 
         return tips[:3]  # Limit for UI
 
     def _extract_bot_suggestions(self, content: str) -> List[Dict[str, Any]]:
         """Extract bot coordination suggestions."""
         suggestions = []
-        bot_keywords = ['jorge bot', 'lead bot', 'automation', 'workflow']
+        bot_keywords = ["jorge bot", "lead bot", "automation", "workflow"]
 
         for keyword in bot_keywords:
             if keyword in content.lower():
-                suggestions.append({
-                    "bot_type": keyword,
-                    "suggestion": f"Optimize {keyword} configuration",
-                    "impact": "medium",
-                    "effort": "low"
-                })
+                suggestions.append(
+                    {
+                        "bot_type": keyword,
+                        "suggestion": f"Optimize {keyword} configuration",
+                        "impact": "medium",
+                        "effort": "low",
+                    }
+                )
 
         return suggestions
 
     def _extract_revenue_ideas(self, content: str) -> List[Dict[str, Any]]:
         """Extract revenue optimization ideas."""
         ideas = []
-        revenue_keywords = ['commission', 'revenue', 'pricing', 'conversion', 'pipeline']
+        revenue_keywords = ["commission", "revenue", "pricing", "conversion", "pipeline"]
 
         for keyword in revenue_keywords:
             if keyword in content.lower():
-                ideas.append({
-                    "idea": f"Optimize {keyword} strategy",
-                    "potential_impact": "medium",
-                    "implementation_effort": "low",
-                    "timeline": "1 week"
-                })
+                ideas.append(
+                    {
+                        "idea": f"Optimize {keyword} strategy",
+                        "potential_impact": "medium",
+                        "implementation_effort": "low",
+                        "timeline": "1 week",
+                    }
+                )
 
         return ideas[:2]  # Limit for UI
 
     def _extract_risk_alerts(self, content: str) -> List[Dict[str, Any]]:
         """Extract risk alerts from content."""
         alerts = []
-        risk_keywords = ['risk', 'warning', 'concern', 'problem', 'issue']
+        risk_keywords = ["risk", "warning", "concern", "problem", "issue"]
 
         for keyword in risk_keywords:
             if keyword in content.lower():
-                alerts.append({
-                    "type": "operational_risk",
-                    "description": f"Potential {keyword} identified",
-                    "severity": "medium",
-                    "mitigation": "Review and adjust strategy"
-                })
+                alerts.append(
+                    {
+                        "type": "operational_risk",
+                        "description": f"Potential {keyword} identified",
+                        "severity": "medium",
+                        "mitigation": "Review and adjust strategy",
+                    }
+                )
 
         return alerts[:2]  # Limit for UI
 
     def _extract_opportunities(self, content: str) -> List[Dict[str, Any]]:
         """Extract opportunity highlights."""
         opportunities = []
-        opp_keywords = ['opportunity', 'potential', 'optimize', 'improve', 'enhance']
+        opp_keywords = ["opportunity", "potential", "optimize", "improve", "enhance"]
 
         for keyword in opp_keywords:
             if keyword in content.lower():
-                opportunities.append({
-                    "type": "growth_opportunity",
-                    "description": f"Opportunity to {keyword}",
-                    "potential_value": "medium",
-                    "timeline": "2 weeks"
-                })
+                opportunities.append(
+                    {
+                        "type": "growth_opportunity",
+                        "description": f"Opportunity to {keyword}",
+                        "potential_value": "medium",
+                        "timeline": "2 weeks",
+                    }
+                )
 
         return opportunities[:2]  # Limit for UI
 
     def _extract_learning_insights(self, content: str) -> List[Dict[str, Any]]:
         """Extract learning insights for Jorge's preferences."""
         insights = []
-        learning_keywords = ['pattern', 'trend', 'preference', 'behavior', 'strategy']
+        learning_keywords = ["pattern", "trend", "preference", "behavior", "strategy"]
 
         for keyword in learning_keywords:
             if keyword in content.lower():
-                insights.append({
-                    "insight_type": "behavioral_pattern",
-                    "description": f"Jorge's {keyword} analysis",
-                    "confidence": 0.7,
-                    "impact": "long_term"
-                })
+                insights.append(
+                    {
+                        "insight_type": "behavioral_pattern",
+                        "description": f"Jorge's {keyword} analysis",
+                        "confidence": 0.7,
+                        "impact": "long_term",
+                    }
+                )
 
         return insights[:2]  # Limit for UI
 
@@ -1172,25 +1171,24 @@ class ClaudeConciergeOrchestrator:
             "performance_metrics": {},
             "coordination_opportunities": [],
             "bottlenecks": [],
-            "optimization_suggestions": []
+            "optimization_suggestions": [],
         }
 
         # Analyze each bot's status
         for bot_name, status in bot_statuses.items():
             if isinstance(status, dict):
-                performance = status.get('performance', {})
+                performance = status.get("performance", {})
                 analysis["performance_metrics"][bot_name] = {
-                    "status": status.get('status', 'unknown'),
-                    "last_activity": status.get('last_activity', 'unknown'),
-                    "success_rate": performance.get('success_rate', 0.8)
+                    "status": status.get("status", "unknown"),
+                    "last_activity": status.get("last_activity", "unknown"),
+                    "success_rate": performance.get("success_rate", 0.8),
                 }
 
         return analysis
 
-    def _generate_context_cache_key(self,
-                                  context: PlatformContext,
-                                  mode: ConciergeMode,
-                                  scope: IntelligenceScope) -> str:
+    def _generate_context_cache_key(
+        self, context: PlatformContext, mode: ConciergeMode, scope: IntelligenceScope
+    ) -> str:
         """Generate cache key for context-specific responses."""
         key_components = [
             context.current_page,
@@ -1198,7 +1196,7 @@ class ClaudeConciergeOrchestrator:
             mode.value,
             scope.value,
             str(len(context.active_leads)),
-            str(hash(json.dumps(context.bot_statuses, sort_keys=True)))
+            str(hash(json.dumps(context.bot_statuses, sort_keys=True))),
         ]
         return f"concierge_guidance::{':'.join(key_components)}"
 
@@ -1216,10 +1214,7 @@ class ClaudeConciergeOrchestrator:
 
         return None
 
-    async def _cache_response(self,
-                            cache_key: str,
-                            response: ConciergeResponse,
-                            ttl: int) -> bool:
+    async def _cache_response(self, cache_key: str, response: ConciergeResponse, ttl: int) -> bool:
         """Cache concierge response for performance."""
         try:
             response_data = asdict(response)
@@ -1233,7 +1228,7 @@ class ClaudeConciergeOrchestrator:
         """Determine appropriate cache TTL based on context dynamism."""
 
         # Dynamic contexts (frequent changes) get shorter TTL
-        if context.current_page in ['executive-dashboard', 'field-agent', 'live-deals']:
+        if context.current_page in ["executive-dashboard", "field-agent", "live-deals"]:
             return 60  # 1 minute
 
         # Proactive mode needs fresh data
@@ -1241,7 +1236,7 @@ class ClaudeConciergeOrchestrator:
             return 120  # 2 minutes
 
         # Static pages can cache longer
-        if context.current_page in ['presentation', 'reports', 'analytics']:
+        if context.current_page in ["presentation", "reports", "analytics"]:
             return 600  # 10 minutes
 
         # Default TTL
@@ -1265,11 +1260,9 @@ class ClaudeConciergeOrchestrator:
 
         return sources
 
-    async def _track_concierge_analytics(self,
-                                       context: PlatformContext,
-                                       mode: ConciergeMode,
-                                       scope: IntelligenceScope,
-                                       response: ConciergeResponse) -> None:
+    async def _track_concierge_analytics(
+        self, context: PlatformContext, mode: ConciergeMode, scope: IntelligenceScope, response: ConciergeResponse
+    ) -> None:
         """Track analytics for concierge interactions."""
         try:
             await self.analytics.track_event(
@@ -1284,16 +1277,13 @@ class ClaudeConciergeOrchestrator:
                     "response_time_ms": response.response_time_ms,
                     "confidence_score": response.confidence_score,
                     "immediate_actions_count": len(response.immediate_actions),
-                    "device_type": context.device_type
-                }
+                    "device_type": context.device_type,
+                },
             )
         except Exception as e:
             logger.warning(f"Analytics tracking failed: {e}")
 
-    def _update_session_context(self,
-                              session_id: str,
-                              context: PlatformContext,
-                              response: ConciergeResponse) -> None:
+    def _update_session_context(self, session_id: str, context: PlatformContext, response: ConciergeResponse) -> None:
         """Update session context for continuity."""
         if session_id not in self.session_contexts:
             self.session_contexts[session_id] = []
@@ -1304,7 +1294,7 @@ class ClaudeConciergeOrchestrator:
             "page": context.current_page,
             "primary_guidance": response.primary_guidance[:100],  # Truncate for storage
             "urgency_level": response.urgency_level,
-            "actions_count": len(response.immediate_actions)
+            "actions_count": len(response.immediate_actions),
         }
 
         self.session_contexts[session_id].append(interaction)
@@ -1313,53 +1303,59 @@ class ClaudeConciergeOrchestrator:
         if len(self.session_contexts[session_id]) > 10:
             self.session_contexts[session_id] = self.session_contexts[session_id][-10:]
 
-    def _generate_fallback_response(self,
-                                  context: PlatformContext,
-                                  mode: ConciergeMode,
-                                  error_msg: str) -> ConciergeResponse:
+    def _generate_fallback_response(
+        self, context: PlatformContext, mode: ConciergeMode, error_msg: str
+    ) -> ConciergeResponse:
         """Generate fallback response when main system fails."""
 
         fallback_guidance = {
             ConciergeMode.PROACTIVE: "Platform monitoring active. Recommend reviewing current pipeline and bot performance.",
             ConciergeMode.FIELD_WORK: "Field assistance available. Check location settings and ensure mobile data connection.",
             ConciergeMode.PRESENTATION: "Presentation support ready. Review client profile and prepare key talking points.",
-            ConciergeMode.EXECUTIVE: "Executive intelligence active. Focus on pipeline health and revenue optimization."
+            ConciergeMode.EXECUTIVE: "Executive intelligence active. Focus on pipeline health and revenue optimization.",
         }
 
         current_page = context.current_page if context else "Platform"
 
         return ConciergeResponse(
-            primary_guidance=fallback_guidance.get(mode, "AI guidance temporarily unavailable. Platform operating normally."),
+            primary_guidance=fallback_guidance.get(
+                mode, "AI guidance temporarily unavailable. Platform operating normally."
+            ),
             urgency_level="low",
             confidence_score=0.5,
-            immediate_actions=[{
-                "description": "Check system connectivity and retry",
-                "priority": "low",
-                "estimated_time": "2 minutes",
-                "category": "system"
-            }],
+            immediate_actions=[
+                {
+                    "description": "Check system connectivity and retry",
+                    "priority": "low",
+                    "estimated_time": "2 minutes",
+                    "category": "system",
+                }
+            ],
             background_tasks=[],
             follow_up_reminders=[],
             page_specific_tips=[f"Continue working with {current_page} functionality"],
             bot_coordination_suggestions=[],
             revenue_optimization_ideas=[],
-            risk_alerts=[{
-                "type": "system_degradation",
-                "description": f"Concierge intelligence temporarily degraded: {error_msg}",
-                "severity": "low",
-                "mitigation": "System will auto-recover"
-            }],
+            risk_alerts=[
+                {
+                    "type": "system_degradation",
+                    "description": f"Concierge intelligence temporarily degraded: {error_msg}",
+                    "severity": "low",
+                    "mitigation": "System will auto-recover",
+                }
+            ],
             opportunity_highlights=[],
             learning_insights=[],
             response_time_ms=0,
             data_sources_used=["fallback_system"],
-            generated_at=datetime.now()
+            generated_at=datetime.now(),
         )
 
 
 # ============================================================================
 # JORGE MEMORY & LEARNING SYSTEM
 # ============================================================================
+
 
 class JorgeMemorySystem:
     """
@@ -1379,10 +1375,9 @@ class JorgeMemorySystem:
 
         logger.info("Jorge Memory System initialized with preference learning")
 
-    async def learn_from_decision(self,
-                                decision: Dict[str, Any],
-                                outcome: Dict[str, Any],
-                                context: Optional[PlatformContext] = None) -> bool:
+    async def learn_from_decision(
+        self, decision: Dict[str, Any], outcome: Dict[str, Any], context: Optional[PlatformContext] = None
+    ) -> bool:
         """Learn from Jorge's decisions to improve recommendations."""
 
         try:
@@ -1400,14 +1395,14 @@ class JorgeMemorySystem:
                     "outcome": outcome,
                     "context": asdict(context) if context else {},
                     "pattern": pattern,
-                    "timestamp": datetime.now().isoformat()
+                    "timestamp": datetime.now().isoformat(),
                 }
 
                 # Use memory service to store learning
                 await self.memory.add_memory(
                     entity_id="jorge_preference_learning",
                     content=json.dumps(memory_entry),
-                    memory_type="business_preference"
+                    memory_type="business_preference",
                 )
 
                 logger.info(f"Learned from Jorge's decision: {pattern.get('pattern_type', 'general')}")
@@ -1419,9 +1414,7 @@ class JorgeMemorySystem:
             logger.error(f"Error learning from decision: {e}")
             return False
 
-    async def predict_jorge_preference(self,
-                                     situation: Dict[str, Any],
-                                     context: PlatformContext) -> Dict[str, Any]:
+    async def predict_jorge_preference(self, situation: Dict[str, Any], context: PlatformContext) -> Dict[str, Any]:
         """Predict what Jorge would prefer in this situation."""
 
         try:
@@ -1432,9 +1425,7 @@ class JorgeMemorySystem:
             similar_situations = await self.find_similar_situations(situation, context)
 
             # Use preference engine to predict
-            prediction = await self.preference_engine.predict_preference(
-                situation, similar_situations, preferences
-            )
+            prediction = await self.preference_engine.predict_preference(situation, similar_situations, preferences)
 
             return prediction
 
@@ -1455,9 +1446,7 @@ class JorgeMemorySystem:
 
             # Get from memory service
             memories = await self.memory.search_memories(
-                query=f"jorge preferences {context.current_page}",
-                memory_types=["business_preference"],
-                limit=10
+                query=f"jorge preferences {context.current_page}", memory_types=["business_preference"], limit=10
             )
 
             # Aggregate preferences
@@ -1472,9 +1461,9 @@ class JorgeMemorySystem:
             logger.error(f"Error getting preferences: {e}")
             return {}
 
-    async def find_similar_situations(self,
-                                    situation: Dict[str, Any],
-                                    context: PlatformContext) -> List[Dict[str, Any]]:
+    async def find_similar_situations(
+        self, situation: Dict[str, Any], context: PlatformContext
+    ) -> List[Dict[str, Any]]:
         """Find similar situations from Jorge's history."""
 
         try:
@@ -1482,9 +1471,7 @@ class JorgeMemorySystem:
             query = f"jorge decision {situation.get('type', 'general')} {context.current_page}"
 
             memories = await self.memory.search_memories(
-                query=query,
-                memory_types=["business_preference", "decision_history"],
-                limit=5
+                query=query, memory_types=["business_preference", "decision_history"], limit=5
             )
 
             # Process and rank by similarity
@@ -1493,17 +1480,17 @@ class JorgeMemorySystem:
                 try:
                     content = json.loads(memory.get("content", "{}"))
                     if content.get("decision") and content.get("outcome"):
-                        similarity_score = self._calculate_situation_similarity(
-                            situation, content["decision"]
-                        )
+                        similarity_score = self._calculate_situation_similarity(situation, content["decision"])
 
                         if similarity_score > 0.6:  # Threshold for relevance
-                            similar_situations.append({
-                                "situation": content["decision"],
-                                "outcome": content["outcome"],
-                                "similarity": similarity_score,
-                                "timestamp": content.get("timestamp")
-                            })
+                            similar_situations.append(
+                                {
+                                    "situation": content["decision"],
+                                    "outcome": content["outcome"],
+                                    "similarity": similarity_score,
+                                    "timestamp": content.get("timestamp"),
+                                }
+                            )
                 except Exception:
                     continue
 
@@ -1516,9 +1503,7 @@ class JorgeMemorySystem:
             logger.error(f"Error finding similar situations: {e}")
             return []
 
-    async def learn_from_context_interaction(self,
-                                          context: PlatformContext,
-                                          response: ConciergeResponse) -> None:
+    async def learn_from_context_interaction(self, context: PlatformContext, response: ConciergeResponse) -> None:
         """Learn from context interactions for better future guidance."""
 
         try:
@@ -1531,22 +1516,20 @@ class JorgeMemorySystem:
                 "urgency_level": response.urgency_level,
                 "confidence_score": response.confidence_score,
                 "actions_count": len(response.immediate_actions),
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
             # Store for pattern detection
             await self.memory.add_memory(
                 entity_id="jorge_context_learning",
                 content=json.dumps(interaction_learning),
-                memory_type="context_preference"
+                memory_type="context_preference",
             )
 
         except Exception as e:
             logger.error(f"Error learning from context interaction: {e}")
 
-    def _aggregate_preferences(self,
-                             memories: List[Dict[str, Any]],
-                             context: PlatformContext) -> Dict[str, Any]:
+    def _aggregate_preferences(self, memories: List[Dict[str, Any]], context: PlatformContext) -> Dict[str, Any]:
         """Aggregate preferences from memory entries."""
 
         preferences = {
@@ -1555,7 +1538,7 @@ class JorgeMemorySystem:
             "decision_speed": "fast",
             "risk_tolerance": "medium",
             "automation_preference": "high",
-            "context_specific": {}
+            "context_specific": {},
         }
 
         # Analyze memories for patterns
@@ -1580,9 +1563,7 @@ class JorgeMemorySystem:
 
         return preferences
 
-    def _calculate_situation_similarity(self,
-                                      situation1: Dict[str, Any],
-                                      situation2: Dict[str, Any]) -> float:
+    def _calculate_situation_similarity(self, situation1: Dict[str, Any], situation2: Dict[str, Any]) -> float:
         """Calculate similarity between two situations."""
 
         # Simple similarity based on shared keys and values
@@ -1611,10 +1592,9 @@ class JorgePreferenceEngine:
         # Implement preference learning logic
         return True
 
-    async def predict_preference(self,
-                               situation: Dict[str, Any],
-                               similar_situations: List[Dict[str, Any]],
-                               current_preferences: Dict[str, Any]) -> Dict[str, Any]:
+    async def predict_preference(
+        self, situation: Dict[str, Any], similar_situations: List[Dict[str, Any]], current_preferences: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Predict preference for given situation."""
 
         # Simple prediction based on similar situations
@@ -1624,24 +1604,23 @@ class JorgePreferenceEngine:
             return {
                 "confidence": best_match["similarity"],
                 "preference": best_match["outcome"],
-                "reasoning": f"Based on {len(similar_situations)} similar situations"
+                "reasoning": f"Based on {len(similar_situations)} similar situations",
             }
 
         # Fallback to general preferences
         return {
             "confidence": 0.5,
             "preference": current_preferences.get("priority_focus", "revenue_optimization"),
-            "reasoning": "Based on general preferences"
+            "reasoning": "Based on general preferences",
         }
 
 
 class PatternDetectionEngine:
     """Engine for detecting patterns in Jorge's decisions and outcomes."""
 
-    async def extract_pattern(self,
-                            decision: Dict[str, Any],
-                            outcome: Dict[str, Any],
-                            context: Optional[PlatformContext] = None) -> Optional[Dict[str, Any]]:
+    async def extract_pattern(
+        self, decision: Dict[str, Any], outcome: Dict[str, Any], context: Optional[PlatformContext] = None
+    ) -> Optional[Dict[str, Any]]:
         """Extract patterns from decision-outcome pairs."""
 
         # Analyze decision type
@@ -1655,7 +1634,7 @@ class PatternDetectionEngine:
                 "success_indicators": list(outcome.keys()),
                 "confidence": 0.8,
                 "context": context.current_page if context else "general",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
             return pattern
 
@@ -1671,7 +1650,7 @@ class JorgeBusinessRules:
             "qualification_threshold": 70,  # Jorge's minimum lead score
             "max_concurrent_deals": 15,
             "preferred_price_range": (300000, 1500000),
-            "target_markets": ["austin", "cedar_park", "round_rock"]
+            "target_markets": ["austin", "cedar_park", "round_rock"],
         }
 
     async def update_rule(self, pattern: Dict[str, Any]) -> bool:
@@ -1689,6 +1668,7 @@ class JorgeBusinessRules:
 # ============================================================================
 
 _concierge_orchestrator_instance = None
+
 
 def get_claude_concierge_orchestrator() -> ClaudeConciergeOrchestrator:
     """Get singleton concierge orchestrator instance."""

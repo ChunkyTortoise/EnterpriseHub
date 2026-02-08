@@ -12,25 +12,28 @@ Complete property matching system integrating:
 Built specifically for Jorge's GHL Real Estate AI system.
 """
 
-import streamlit as st
-from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import asyncio
 import json
+import os
+import sys
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import streamlit as st
 from plotly.subplots import make_subplots
-import numpy as np
-from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
-import sys
-import os
+
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 
 # Add the services directory to the path for imports
-sys.path.append(os.path.join(os.path.dirname(__file__), '../../services'))
+sys.path.append(os.path.join(os.path.dirname(__file__), "../../services"))
 
 try:
     import requests
+
     REQUESTS_AVAILABLE = True
 except ImportError:
     REQUESTS_AVAILABLE = False
@@ -38,9 +41,11 @@ except ImportError:
 # Import the property matching service
 try:
     from ghl_real_estate_ai.services.jorge_property_matching_service import JorgePropertyMatchingService
+
     PROPERTY_MATCHING_SERVICE_AVAILABLE = True
 except ImportError:
     PROPERTY_MATCHING_SERVICE_AVAILABLE = False
+
 
 # Mock Property Matching API Client for development
 class JorgePropertyMatchingAPIClient:
@@ -70,7 +75,7 @@ class JorgePropertyMatchingAPIClient:
                 "avg_match_score": random.uniform(78.5, 86.2),
                 "neural_model_accuracy": random.uniform(0.89, 0.96),
                 "rules_engine_accuracy": random.uniform(0.82, 0.91),
-                "hybrid_performance_boost": random.uniform(0.12, 0.18)
+                "hybrid_performance_boost": random.uniform(0.12, 0.18),
             },
             "inventory_metrics": {
                 "active_properties": random.randint(285, 325),
@@ -82,8 +87,8 @@ class JorgePropertyMatchingAPIClient:
                     "under_700k": random.randint(45, 75),
                     "700k_750k": random.randint(85, 125),
                     "750k_1m": random.randint(65, 95),
-                    "1m_plus": random.randint(35, 55)
-                }
+                    "1m_plus": random.randint(35, 55),
+                },
             },
             "lead_preferences": {
                 "avg_preferences_per_lead": random.uniform(6.2, 8.8),
@@ -91,29 +96,29 @@ class JorgePropertyMatchingAPIClient:
                 "preferred_bedrooms": "3-4 BR",
                 "preferred_areas": ["Rancho Cucamonga", "Upland", "Claremont"],
                 "search_pattern_accuracy": random.uniform(0.78, 0.89),
-                "preference_evolution_tracking": random.uniform(0.82, 0.94)
+                "preference_evolution_tracking": random.uniform(0.82, 0.94),
             },
             "market_intelligence": {
                 "market_velocity_score": random.uniform(72.5, 88.2),
                 "competitive_advantage": random.uniform(0.15, 0.28),
                 "price_prediction_accuracy": random.uniform(0.91, 0.97),
                 "neighborhood_expertise_score": random.uniform(0.86, 0.95),
-                "timing_optimization": random.uniform(0.22, 0.38)
+                "timing_optimization": random.uniform(0.22, 0.38),
             },
             "explanation_engine": {
                 "explanations_generated": random.randint(1450, 1850),
                 "explanation_quality_score": random.uniform(0.88, 0.96),
                 "client_understanding_rate": random.uniform(0.84, 0.93),
                 "jorge_talking_points": random.randint(3850, 4250),
-                "personalization_accuracy": random.uniform(0.89, 0.97)
+                "personalization_accuracy": random.uniform(0.89, 0.97),
             },
             "system_health": {
                 "matching_engine": "healthy",
                 "mls_integration": "healthy",
                 "neural_model": "healthy",
-                "overall_uptime": random.uniform(99.1, 99.8)
+                "overall_uptime": random.uniform(99.1, 99.8),
             },
-            "last_updated": datetime.now().isoformat()
+            "last_updated": datetime.now().isoformat(),
         }
 
     async def find_property_matches(self, lead_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -123,7 +128,7 @@ class JorgePropertyMatchingAPIClient:
         # Generate mock property matches
         properties = [
             {
-                "id": f"prop_{i+1:03d}",
+                "id": f"prop_{i + 1:03d}",
                 "address": f"{random.randint(10000, 99999)} {random.choice(['Oak', 'Maple', 'Pine', 'Elm', 'Cedar'])} {random.choice(['St', 'Ave', 'Dr', 'Ln', 'Ct'])}",
                 "city": random.choice(["Rancho Cucamonga", "Upland", "Ontario", "Claremont"]),
                 "price": random.randint(550000, 1200000),
@@ -140,13 +145,13 @@ class JorgePropertyMatchingAPIClient:
                 "days_on_market": random.randint(1, 45),
                 "listing_agent": f"Agent {random.randint(1, 20)}",
                 "school_rating": random.randint(7, 10),
-                "neighborhood_score": random.uniform(75, 95)
+                "neighborhood_score": random.uniform(75, 95),
             }
             for i in range(random.randint(8, 15))
         ]
 
         # Sort by match score
-        properties.sort(key=lambda x: x['match_score'], reverse=True)
+        properties.sort(key=lambda x: x["match_score"], reverse=True)
 
         return {
             "lead_id": lead_data.get("id", "lead_demo"),
@@ -157,11 +162,7 @@ class JorgePropertyMatchingAPIClient:
             "neural_weight": 0.6,
             "rules_weight": 0.4,
             "processing_time_ms": random.randint(450, 850),
-            "market_conditions": {
-                "inventory_level": "medium",
-                "competition": "high",
-                "price_trend": "stable_up"
-            }
+            "market_conditions": {"inventory_level": "medium", "competition": "high", "price_trend": "stable_up"},
         }
 
     async def explain_property_match(self, property_id: str, lead_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -176,29 +177,31 @@ class JorgePropertyMatchingAPIClient:
                     f"Perfect price point at ${random.randint(650000, 850000):,} within your ${lead_data.get('budget', '700K-900K')} range",
                     f"Located in {random.choice(['top-rated school district', 'family-friendly neighborhood', 'quiet cul-de-sac'])}",
                     f"Move-in ready with {random.choice(['recent updates', 'modern kitchen', 'new flooring'])}",
-                    f"{random.choice(['Large backyard', 'Open floor plan', 'Master suite'])} perfect for your lifestyle"
+                    f"{random.choice(['Large backyard', 'Open floor plan', 'Master suite'])} perfect for your lifestyle",
                 ],
                 "potential_concerns": [
                     f"Slightly {random.choice(['older construction', 'smaller lot', 'busy street'])} - Jorge can address this",
-                    f"Market is {random.choice(['competitive', 'moving fast'])} - quick action recommended"
+                    f"Market is {random.choice(['competitive', 'moving fast'])} - quick action recommended",
                 ],
                 "jorge_talking_points": [
                     f"🏠 'This is exactly what you've been looking for in {random.choice(['Rancho Cucamonga', 'Upland'])} - let's see it this week'",
                     f"💰 'At ${random.randint(650, 850)}K, you're getting incredible value compared to similar homes'",
                     f"🏫 'The schools here are {random.randint(8, 10)}/10 rated - perfect for your family'",
-                    f"⏰ 'Properties like this don't last long - I recommend we schedule a showing immediately'"
+                    f"⏰ 'Properties like this don't last long - I recommend we schedule a showing immediately'",
                 ],
                 "market_context": {
                     "comparable_sales": f"${random.randint(675, 875)}K average in area",
                     "market_velocity": f"{random.randint(15, 25)} days average time on market",
-                    "inventory_status": random.choice(["Low inventory - high demand", "Balanced market", "Seller's market"])
+                    "inventory_status": random.choice(
+                        ["Low inventory - high demand", "Balanced market", "Seller's market"]
+                    ),
                 },
                 "next_steps": [
                     "Schedule showing within 24-48 hours",
                     "Prepare competitive offer strategy",
                     "Review neighborhood comps",
-                    "Coordinate with Jorge for immediate action"
-                ]
+                    "Coordinate with Jorge for immediate action",
+                ],
             },
             "confidence_score": random.uniform(0.85, 0.98),
             "personalization_factors": [
@@ -206,8 +209,8 @@ class JorgePropertyMatchingAPIClient:
                 "Location preferences",
                 "Family size requirements",
                 "Lifestyle preferences",
-                "Investment goals"
-            ]
+                "Investment goals",
+            ],
         }
 
     async def get_property_inventory(self) -> Dict[str, Any]:
@@ -221,33 +224,33 @@ class JorgePropertyMatchingAPIClient:
                 "$400K-$600K": random.randint(25, 45),
                 "$600K-$800K": random.randint(85, 115),
                 "$800K-$1.2M": random.randint(65, 85),
-                "$1.2M+": random.randint(35, 55)
+                "$1.2M+": random.randint(35, 55),
             },
             "by_city": {
                 "Rancho Cucamonga": random.randint(95, 125),
                 "Upland": random.randint(55, 75),
                 "Ontario": random.randint(45, 65),
                 "Claremont": random.randint(25, 45),
-                "Other": random.randint(15, 35)
+                "Other": random.randint(15, 35),
             },
             "property_types": {
                 "Single Family": random.randint(180, 220),
                 "Townhome": random.randint(45, 65),
                 "Condo": random.randint(35, 55),
-                "Multi-Family": random.randint(15, 25)
+                "Multi-Family": random.randint(15, 25),
             },
             "market_metrics": {
                 "avg_days_on_market": random.randint(18, 28),
                 "median_price": random.randint(725000, 825000),
                 "price_per_sqft": random.randint(380, 450),
-                "inventory_turnover": random.uniform(0.68, 0.84)
+                "inventory_turnover": random.uniform(0.68, 0.84),
             },
             "trending_features": [
                 {"feature": "Pool", "demand_score": random.randint(85, 95)},
                 {"feature": "Home Office", "demand_score": random.randint(92, 98)},
                 {"feature": "3-Car Garage", "demand_score": random.randint(78, 88)},
-                {"feature": "Solar Panels", "demand_score": random.randint(82, 92)}
-            ]
+                {"feature": "Solar Panels", "demand_score": random.randint(82, 92)},
+            ],
         }
 
     async def get_match_performance_analytics(self) -> Dict[str, Any]:
@@ -262,45 +265,47 @@ class JorgePropertyMatchingAPIClient:
                 "hybrid_vs_neural_only": {
                     "hybrid_accuracy": random.uniform(0.89, 0.95),
                     "neural_only_accuracy": random.uniform(0.81, 0.87),
-                    "improvement": random.uniform(0.08, 0.14)
+                    "improvement": random.uniform(0.08, 0.14),
                 },
                 "hybrid_vs_rules_only": {
                     "hybrid_accuracy": random.uniform(0.89, 0.95),
                     "rules_only_accuracy": random.uniform(0.76, 0.82),
-                    "improvement": random.uniform(0.13, 0.19)
-                }
+                    "improvement": random.uniform(0.13, 0.19),
+                },
             },
             "performance_trends": {
                 "dates": dates,
                 "match_accuracy": [random.uniform(0.85, 0.95) for _ in dates],
                 "neural_scores": [random.uniform(0.80, 0.92) for _ in dates],
                 "rule_scores": [random.uniform(0.75, 0.88) for _ in dates],
-                "processing_times": [random.randint(400, 800) for _ in dates]
+                "processing_times": [random.randint(400, 800) for _ in dates],
             },
             "success_metrics": {
                 "client_satisfaction": random.uniform(0.91, 0.97),
                 "showing_conversion_rate": random.uniform(0.68, 0.82),
                 "offer_acceptance_rate": random.uniform(0.45, 0.65),
-                "time_to_match": random.uniform(1.2, 2.8)  # hours
+                "time_to_match": random.uniform(1.2, 2.8),  # hours
             },
             "optimization_opportunities": [
                 {
                     "area": "Price Sensitivity Calibration",
                     "potential_improvement": random.uniform(0.03, 0.08),
-                    "priority": "high"
+                    "priority": "high",
                 },
                 {
                     "area": "Neighborhood Preference Learning",
                     "potential_improvement": random.uniform(0.05, 0.12),
-                    "priority": "medium"
-                }
-            ]
+                    "priority": "medium",
+                },
+            ],
         }
+
 
 # Initialize clients
 @st.cache_resource
 def get_property_matching_api_client():
     return JorgePropertyMatchingAPIClient()
+
 
 @st.cache_resource
 def get_property_matching_service():
@@ -308,9 +313,11 @@ def get_property_matching_service():
         return JorgePropertyMatchingService()
     return None
 
+
 def render_property_matching_dashboard_css():
     """Inject custom CSS for property matching dashboard - Jorge Edition"""
-    st.markdown("""
+    st.markdown(
+        """
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap');
 
@@ -505,7 +512,10 @@ def render_property_matching_dashboard_css():
         font-style: italic;
     }
     </style>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
+
 
 def render_property_search_section(api_client: JorgePropertyMatchingAPIClient):
     """Render the Property Search and Matching section."""
@@ -536,13 +546,13 @@ def render_property_search_section(api_client: JorgePropertyMatchingAPIClient):
             preferred_cities = st.multiselect(
                 "Preferred Areas",
                 ["Rancho Cucamonga", "Upland", "Ontario", "Claremont", "San Dimas", "Pomona"],
-                default=["Rancho Cucamonga", "Upland"]
+                default=["Rancho Cucamonga", "Upland"],
             )
 
             property_types = st.multiselect(
                 "Property Types",
                 ["Single Family", "Townhome", "Condo", "Multi-Family"],
-                default=["Single Family", "Townhome"]
+                default=["Single Family", "Townhome"],
             )
 
             col_features1, col_features2 = st.columns(2)
@@ -569,80 +579,88 @@ def render_property_search_section(api_client: JorgePropertyMatchingAPIClient):
                     "property_types": property_types,
                     "must_haves": must_haves,
                     "nice_to_haves": nice_to_haves,
-                    "timeline": timeline
+                    "timeline": timeline,
                 },
-                "budget": f"${min_budget:,}-${max_budget:,}"
+                "budget": f"${min_budget:,}-${max_budget:,}",
             }
 
             # Find matches
             with st.spinner("🧠 Finding perfect property matches with AI..."):
                 matches = run_async(api_client.find_property_matches(lead_data))
-                st.session_state['property_matches'] = matches
-                st.session_state['search_lead_data'] = lead_data
+                st.session_state["property_matches"] = matches
+                st.session_state["search_lead_data"] = lead_data
                 st.success(f"✅ Found {matches['total_matches']} property matches for {lead_name}!")
 
     with col2:
         st.subheader("🏡 Property Matches")
 
         # Display matches if available
-        if 'property_matches' in st.session_state:
-            matches = st.session_state['property_matches']
-            lead_data = st.session_state['search_lead_data']
+        if "property_matches" in st.session_state:
+            matches = st.session_state["property_matches"]
+            lead_data = st.session_state["search_lead_data"]
 
             # Matching summary
-            st.info(f"**Algorithm**: {matches['algorithm_used']} | **Processing Time**: {matches['processing_time_ms']}ms | **Neural Weight**: {matches['neural_weight']:.0%}")
+            st.info(
+                f"**Algorithm**: {matches['algorithm_used']} | **Processing Time**: {matches['processing_time_ms']}ms | **Neural Weight**: {matches['neural_weight']:.0%}"
+            )
 
             # Display top properties
-            for i, property_data in enumerate(matches['matches'][:5]):
+            for i, property_data in enumerate(matches["matches"][:5]):
                 with st.container():
-                    st.markdown(f"""
+                    st.markdown(
+                        f"""
                     <div class="holographic-card property-card">
                         <div class="property-header">
-                            <div class="property-address">{property_data['address']}, {property_data['city']}</div>
-                            <div class="property-price">${property_data['price']:,}</div>
+                            <div class="property-address">{property_data["address"]}, {property_data["city"]}</div>
+                            <div class="property-price">${property_data["price"]:,}</div>
                         </div>
 
                         <div class="property-specs">
-                            <div><strong>🛏️</strong> {property_data['bedrooms']} BR</div>
-                            <div><strong>🚿</strong> {property_data['bathrooms']} BA</div>
-                            <div><strong>📐</strong> {property_data['sqft']:,} sqft</div>
-                            <div><strong>🏗️</strong> {property_data['year_built']}</div>
-                            <div><strong>📅</strong> {property_data['days_on_market']} DOM</div>
-                            <div><strong>⭐</strong> {property_data['school_rating']}/10 schools</div>
+                            <div><strong>🛏️</strong> {property_data["bedrooms"]} BR</div>
+                            <div><strong>🚿</strong> {property_data["bathrooms"]} BA</div>
+                            <div><strong>📐</strong> {property_data["sqft"]:,} sqft</div>
+                            <div><strong>🏗️</strong> {property_data["year_built"]}</div>
+                            <div><strong>📅</strong> {property_data["days_on_market"]} DOM</div>
+                            <div><strong>⭐</strong> {property_data["school_rating"]}/10 schools</div>
                         </div>
 
                         <div style="margin: 1rem 0;">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                                 <span style="font-size: 0.9rem; color: #8B949E;">Match Score</span>
-                                <span style="font-weight: 700; color: #3498DB;">{property_data['match_score']:.1f}/100</span>
+                                <span style="font-weight: 700; color: #3498DB;">{property_data["match_score"]:.1f}/100</span>
                             </div>
                             <div class="match-score-bar">
-                                <div class="match-score-fill" style="width: {property_data['match_score']:.1f}%;"></div>
+                                <div class="match-score-fill" style="width: {property_data["match_score"]:.1f}%;"></div>
                             </div>
                             <div style="font-size: 0.8rem; color: #8B949E; display: flex; justify-content: space-between;">
-                                <span>Neural: {property_data['neural_score']:.0f}</span>
-                                <span>Rules: {property_data['rule_score']:.0f}</span>
-                                <span>Confidence: {property_data['confidence'].title()}</span>
+                                <span>Neural: {property_data["neural_score"]:.0f}</span>
+                                <span>Rules: {property_data["rule_score"]:.0f}</span>
+                                <span>Confidence: {property_data["confidence"].title()}</span>
                             </div>
                         </div>
                     </div>
-                    """, unsafe_allow_html=True)
+                    """,
+                        unsafe_allow_html=True,
+                    )
 
                     # Explanation button
                     if st.button(f"💬 Explain Match", key=f"explain_{i}", use_container_width=True):
-                        explanation = run_async(api_client.explain_property_match(property_data['id'], lead_data))
-                        st.session_state[f'explanation_{i}'] = explanation
+                        explanation = run_async(api_client.explain_property_match(property_data["id"], lead_data))
+                        st.session_state[f"explanation_{i}"] = explanation
 
                     # Show explanation if available
-                    if f'explanation_{i}' in st.session_state:
-                        explanation = st.session_state[f'explanation_{i}']
-                        exp_data = explanation['explanation']
+                    if f"explanation_{i}" in st.session_state:
+                        explanation = st.session_state[f"explanation_{i}"]
+                        exp_data = explanation["explanation"]
 
-                        st.markdown("""
+                        st.markdown(
+                            """
                         <div class="explanation-panel">
                             <h4 style="color: #3498DB; margin: 0 0 1rem 0;">🎯 Why This Property Matches</h4>
                         </div>
-                        """, unsafe_allow_html=True)
+                        """,
+                            unsafe_allow_html=True,
+                        )
 
                         st.markdown(f"**Overall Reasoning**: {exp_data['overall_reasoning']}")
 
@@ -650,26 +668,30 @@ def render_property_search_section(api_client: JorgePropertyMatchingAPIClient):
 
                         with col_strengths:
                             st.markdown("**✅ Key Strengths**")
-                            for strength in exp_data['key_strengths']:
+                            for strength in exp_data["key_strengths"]:
                                 st.markdown(f"• {strength}")
 
                         with col_concerns:
                             st.markdown("**⚠️ Considerations**")
-                            for concern in exp_data['potential_concerns']:
+                            for concern in exp_data["potential_concerns"]:
                                 st.markdown(f"• {concern}")
 
                         st.markdown("**💬 Jorge's Talking Points**")
-                        for point in exp_data['jorge_talking_points']:
-                            st.markdown(f"""
+                        for point in exp_data["jorge_talking_points"]:
+                            st.markdown(
+                                f"""
                             <div class="talking-point">
                                 {point}
                             </div>
-                            """, unsafe_allow_html=True)
+                            """,
+                                unsafe_allow_html=True,
+                            )
 
                     st.divider()
 
         else:
             st.info("👆 Enter lead information and search to see AI-powered property matches")
+
 
 def render_inventory_analytics_section(api_client: JorgePropertyMatchingAPIClient):
     """Render the Property Inventory Analytics section."""
@@ -697,22 +719,19 @@ def render_inventory_analytics_section(api_client: JorgePropertyMatchingAPIClien
 
         # Price distribution chart
         st.subheader("💰 Price Distribution")
-        price_dist = inventory_data['price_distribution']
+        price_dist = inventory_data["price_distribution"]
 
         fig_price = px.bar(
             x=list(price_dist.keys()),
             y=list(price_dist.values()),
             title="Properties by Price Range",
-            labels={'x': 'Price Range', 'y': 'Number of Properties'},
+            labels={"x": "Price Range", "y": "Number of Properties"},
             color=list(price_dist.values()),
-            color_continuous_scale='Blues'
+            color_continuous_scale="Blues",
         )
 
         fig_price.update_layout(
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white'),
-            showlegend=False
+            plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", font=dict(color="white"), showlegend=False
         )
 
         st.plotly_chart(fig_price, use_container_width=True)
@@ -721,36 +740,29 @@ def render_inventory_analytics_section(api_client: JorgePropertyMatchingAPIClien
         st.subheader("🗺️ Geographic Distribution")
 
         # City distribution chart
-        city_dist = inventory_data['by_city']
+        city_dist = inventory_data["by_city"]
 
-        fig_city = px.pie(
-            names=list(city_dist.keys()),
-            values=list(city_dist.values()),
-            title="Properties by City"
-        )
+        fig_city = px.pie(names=list(city_dist.keys()), values=list(city_dist.values()), title="Properties by City")
 
-        fig_city.update_layout(
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white')
-        )
+        fig_city.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", font=dict(color="white"))
 
         st.plotly_chart(fig_city, use_container_width=True)
 
         # Property types
         st.subheader("🏘️ Property Types")
-        type_dist = inventory_data['property_types']
+        type_dist = inventory_data["property_types"]
 
         for prop_type, count in type_dist.items():
-            percentage = (count / inventory_data['total_properties']) * 100
+            percentage = (count / inventory_data["total_properties"]) * 100
             st.markdown(f"**{prop_type}**: {count} ({percentage:.1f}%)")
 
         # Trending features
         st.subheader("🔥 Trending Features")
-        trending = inventory_data['trending_features']
+        trending = inventory_data["trending_features"]
 
         for feature in trending:
             st.markdown(f"**{feature['feature']}**: {feature['demand_score']}/100 demand")
+
 
 def render_matching_performance_section(api_client: JorgePropertyMatchingAPIClient):
     """Render the Matching Performance Analytics section."""
@@ -765,61 +777,67 @@ def render_matching_performance_section(api_client: JorgePropertyMatchingAPIClie
     with col1:
         st.subheader("🧠 Algorithm Comparison")
 
-        algorithm_perf = performance_data['algorithm_performance']
+        algorithm_perf = performance_data["algorithm_performance"]
 
         # Hybrid vs Neural only
-        hybrid_neural = algorithm_perf['hybrid_vs_neural_only']
+        hybrid_neural = algorithm_perf["hybrid_vs_neural_only"]
         st.metric(
             "Hybrid vs Neural-Only",
             f"+{hybrid_neural['improvement']:.1%}",
-            delta=f"Hybrid: {hybrid_neural['hybrid_accuracy']:.1%} vs Neural: {hybrid_neural['neural_only_accuracy']:.1%}"
+            delta=f"Hybrid: {hybrid_neural['hybrid_accuracy']:.1%} vs Neural: {hybrid_neural['neural_only_accuracy']:.1%}",
         )
 
         # Hybrid vs Rules only
-        hybrid_rules = algorithm_perf['hybrid_vs_rules_only']
+        hybrid_rules = algorithm_perf["hybrid_vs_rules_only"]
         st.metric(
             "Hybrid vs Rules-Only",
             f"+{hybrid_rules['improvement']:.1%}",
-            delta=f"Hybrid: {hybrid_rules['hybrid_accuracy']:.1%} vs Rules: {hybrid_rules['rules_only_accuracy']:.1%}"
+            delta=f"Hybrid: {hybrid_rules['hybrid_accuracy']:.1%} vs Rules: {hybrid_rules['rules_only_accuracy']:.1%}",
         )
 
         # Performance trends chart
         st.subheader("📈 Performance Trends")
-        trends = performance_data['performance_trends']
+        trends = performance_data["performance_trends"]
 
         fig_trends = go.Figure()
 
-        fig_trends.add_trace(go.Scatter(
-            x=trends['dates'],
-            y=[acc * 100 for acc in trends['match_accuracy']],
-            mode='lines+markers',
-            name='Match Accuracy',
-            line=dict(color='#3498DB', width=3)
-        ))
+        fig_trends.add_trace(
+            go.Scatter(
+                x=trends["dates"],
+                y=[acc * 100 for acc in trends["match_accuracy"]],
+                mode="lines+markers",
+                name="Match Accuracy",
+                line=dict(color="#3498DB", width=3),
+            )
+        )
 
-        fig_trends.add_trace(go.Scatter(
-            x=trends['dates'],
-            y=[score * 100 for score in trends['neural_scores']],
-            mode='lines',
-            name='Neural Scores',
-            line=dict(color='#2ECC71', width=2)
-        ))
+        fig_trends.add_trace(
+            go.Scatter(
+                x=trends["dates"],
+                y=[score * 100 for score in trends["neural_scores"]],
+                mode="lines",
+                name="Neural Scores",
+                line=dict(color="#2ECC71", width=2),
+            )
+        )
 
-        fig_trends.add_trace(go.Scatter(
-            x=trends['dates'],
-            y=[score * 100 for score in trends['rule_scores']],
-            mode='lines',
-            name='Rule Scores',
-            line=dict(color='#F39C12', width=2)
-        ))
+        fig_trends.add_trace(
+            go.Scatter(
+                x=trends["dates"],
+                y=[score * 100 for score in trends["rule_scores"]],
+                mode="lines",
+                name="Rule Scores",
+                line=dict(color="#F39C12", width=2),
+            )
+        )
 
         fig_trends.update_layout(
             title="Algorithm Performance Over Time",
             xaxis_title="Date",
             yaxis_title="Performance Score (%)",
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white')
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="white"),
         )
 
         st.plotly_chart(fig_trends, use_container_width=True)
@@ -827,7 +845,7 @@ def render_matching_performance_section(api_client: JorgePropertyMatchingAPIClie
     with col2:
         st.subheader("🎯 Success Metrics")
 
-        success_metrics = performance_data['success_metrics']
+        success_metrics = performance_data["success_metrics"]
 
         # Key success metrics
         st.metric("Client Satisfaction", f"{success_metrics['client_satisfaction']:.1%}")
@@ -839,16 +857,14 @@ def render_matching_performance_section(api_client: JorgePropertyMatchingAPIClie
         st.subheader("⚡ Processing Performance")
 
         fig_processing = px.line(
-            x=trends['dates'],
-            y=trends['processing_times'],
+            x=trends["dates"],
+            y=trends["processing_times"],
             title="Processing Time Trends (ms)",
-            labels={'x': 'Date', 'y': 'Processing Time (ms)'}
+            labels={"x": "Date", "y": "Processing Time (ms)"},
         )
 
         fig_processing.update_layout(
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white')
+            plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", font=dict(color="white")
         )
 
         st.plotly_chart(fig_processing, use_container_width=True)
@@ -856,12 +872,13 @@ def render_matching_performance_section(api_client: JorgePropertyMatchingAPIClie
         # Optimization opportunities
         st.subheader("🎯 Optimization Opportunities")
 
-        opportunities = performance_data['optimization_opportunities']
+        opportunities = performance_data["optimization_opportunities"]
         for opp in opportunities:
             priority_color = {"high": "🔴", "medium": "🟡", "low": "🟢"}
             st.markdown(f"{priority_color[opp['priority']]} **{opp['area']}**")
             st.markdown(f"Potential improvement: +{opp['potential_improvement']:.1%}")
             st.divider()
+
 
 def render_property_matching_integration_dashboard(api_client: JorgePropertyMatchingAPIClient):
     """Render the unified property matching dashboard."""
@@ -898,69 +915,72 @@ def render_property_matching_integration_dashboard(api_client: JorgePropertyMatc
     # Property Matching KPI Grid
     st.subheader("🎯 Matching Intelligence Overview")
 
-    matching_perf = metrics['matching_performance']
-    inventory_metrics = metrics['inventory_metrics']
-    market_intel = metrics['market_intelligence']
-    explanation_engine = metrics['explanation_engine']
+    matching_perf = metrics["matching_performance"]
+    inventory_metrics = metrics["inventory_metrics"]
+    market_intel = metrics["market_intelligence"]
+    explanation_engine = metrics["explanation_engine"]
 
     st.markdown('<div class="property-kpi-grid">', unsafe_allow_html=True)
 
     kpis = [
         {
-            'icon': '🎯',
-            'label': 'Match Accuracy',
-            'value': f"{matching_perf['match_accuracy']:.1%}",
-            'change': 2.3,
-            'trend': 'positive'
+            "icon": "🎯",
+            "label": "Match Accuracy",
+            "value": f"{matching_perf['match_accuracy']:.1%}",
+            "change": 2.3,
+            "trend": "positive",
         },
         {
-            'icon': '🏠',
-            'label': 'Active Properties',
-            'value': f"{inventory_metrics['active_properties']:,}",
-            'change': inventory_metrics['new_listings_today'],
-            'trend': 'positive'
+            "icon": "🏠",
+            "label": "Active Properties",
+            "value": f"{inventory_metrics['active_properties']:,}",
+            "change": inventory_metrics["new_listings_today"],
+            "trend": "positive",
         },
         {
-            'icon': '🧠',
-            'label': 'Neural Performance',
-            'value': f"{matching_perf['neural_model_accuracy']:.1%}",
-            'change': 1.8,
-            'trend': 'positive'
+            "icon": "🧠",
+            "label": "Neural Performance",
+            "value": f"{matching_perf['neural_model_accuracy']:.1%}",
+            "change": 1.8,
+            "trend": "positive",
         },
         {
-            'icon': '📊',
-            'label': 'Avg Match Score',
-            'value': f"{matching_perf['avg_match_score']:.0f}/100",
-            'change': 3.2,
-            'trend': 'positive'
+            "icon": "📊",
+            "label": "Avg Match Score",
+            "value": f"{matching_perf['avg_match_score']:.0f}/100",
+            "change": 3.2,
+            "trend": "positive",
         },
         {
-            'icon': '⚡',
-            'label': 'Hybrid Boost',
-            'value': f"+{matching_perf['hybrid_performance_boost']:.1%}",
-            'change': 0.8,
-            'trend': 'positive'
+            "icon": "⚡",
+            "label": "Hybrid Boost",
+            "value": f"+{matching_perf['hybrid_performance_boost']:.1%}",
+            "change": 0.8,
+            "trend": "positive",
         },
         {
-            'icon': '💬',
-            'label': 'Explanations Generated',
-            'value': f"{explanation_engine['explanations_generated']:,}",
-            'change': 125,
-            'trend': 'positive'
-        }
+            "icon": "💬",
+            "label": "Explanations Generated",
+            "value": f"{explanation_engine['explanations_generated']:,}",
+            "change": 125,
+            "trend": "positive",
+        },
     ]
 
     for kpi in kpis:
-        trend = kpi.get('trend', 'neutral')
-        trend_icon = '📈' if trend == 'positive' else '📉' if trend == 'negative' else '📊'
-        change_sign = '+' if kpi['change'] > 0 else ''
-        change_display = f"{change_sign}{kpi['change']:.1f}" if isinstance(kpi['change'], float) else f"{change_sign}{kpi['change']}"
+        trend = kpi.get("trend", "neutral")
+        trend_icon = "📈" if trend == "positive" else "📉" if trend == "negative" else "📊"
+        change_sign = "+" if kpi["change"] > 0 else ""
+        change_display = (
+            f"{change_sign}{kpi['change']:.1f}" if isinstance(kpi["change"], float) else f"{change_sign}{kpi['change']}"
+        )
 
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="property-kpi-card">
-            <div class="property-kpi-icon">{kpi['icon']}</div>
-            <div class="property-kpi-label">{kpi['label']}</div>
-            <div class="property-kpi-value">{kpi['value']}</div>
+            <div class="property-kpi-icon">{kpi["icon"]}</div>
+            <div class="property-kpi-label">{kpi["label"]}</div>
+            <div class="property-kpi-value">{kpi["value"]}</div>
             <div style="
                 font-family: 'Inter', sans-serif;
                 font-size: 0.8rem;
@@ -978,9 +998,12 @@ def render_property_matching_integration_dashboard(api_client: JorgePropertyMatc
                 {trend_icon} {change_display}
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
 
 def render_jorge_property_matching_dashboard():
     """Main function to render Jorge's Property Matching Dashboard."""
@@ -992,12 +1015,15 @@ def render_jorge_property_matching_dashboard():
     st.markdown('<div class="property-container">', unsafe_allow_html=True)
 
     # Header
-    st.markdown("""
+    st.markdown(
+        """
     <div class="property-dashboard-header">
         <h1 class="property-dashboard-title">🏠 Property Matching AI</h1>
         <p class="property-dashboard-subtitle">Intelligent property recommendations powered by hybrid neural + rules matching for Jorge's real estate empire</p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     # Initialize API client
     api_client = get_property_matching_api_client()
@@ -1006,12 +1032,9 @@ def render_jorge_property_matching_dashboard():
     render_property_matching_integration_dashboard(api_client)
 
     # Tab navigation for different sections
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "🔍 Property Search",
-        "📊 Inventory Analytics",
-        "⚡ Algorithm Performance",
-        "🎯 Match Intelligence"
-    ])
+    tab1, tab2, tab3, tab4 = st.tabs(
+        ["🔍 Property Search", "📊 Inventory Analytics", "⚡ Algorithm Performance", "🎯 Match Intelligence"]
+    )
 
     with tab1:
         render_property_search_section(api_client)
@@ -1032,19 +1055,19 @@ def render_jorge_property_matching_dashboard():
 
         with col1:
             st.subheader("📈 Lead Preferences Analytics")
-            preferences = metrics['lead_preferences']
+            preferences = metrics["lead_preferences"]
 
             st.metric("Avg Preferences per Lead", f"{preferences['avg_preferences_per_lead']:.1f}")
-            st.metric("Most Common Price Range", preferences['most_common_price_range'])
-            st.metric("Preferred Bedroom Count", preferences['preferred_bedrooms'])
+            st.metric("Most Common Price Range", preferences["most_common_price_range"])
+            st.metric("Preferred Bedroom Count", preferences["preferred_bedrooms"])
 
             st.markdown("**Top Preferred Areas:**")
-            for area in preferences['preferred_areas']:
+            for area in preferences["preferred_areas"]:
                 st.markdown(f"• {area}")
 
         with col2:
             st.subheader("🧠 Market Intelligence")
-            market_intel = metrics['market_intelligence']
+            market_intel = metrics["market_intelligence"]
 
             st.metric("Market Velocity Score", f"{market_intel['market_velocity_score']:.0f}/100")
             st.metric("Competitive Advantage", f"{market_intel['competitive_advantage']:.1%}")
@@ -1074,7 +1097,8 @@ def render_jorge_property_matching_dashboard():
             st.info("⚙️ Advanced matching algorithm configuration")
 
     # Close main container
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
 
 # Main function call
 if __name__ == "__main__":

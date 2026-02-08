@@ -61,9 +61,7 @@ class SmartDocumentGenerator:
     Automated document generation and e-signature workflow management.
     """
 
-    def __init__(
-        self, ghl_api_key: Optional[str] = None, ghl_location_id: Optional[str] = None
-    ):
+    def __init__(self, ghl_api_key: Optional[str] = None, ghl_location_id: Optional[str] = None):
         """Initialize the Smart Document Generator service"""
         self.ghl_api_key = ghl_api_key
         self.ghl_location_id = ghl_location_id
@@ -90,16 +88,17 @@ class SmartDocumentGenerator:
         # --- PHASE 2: ROI PROFORMA GENERATION ---
         if document_type == DocumentType.ROI_PROFORMA:
             from ghl_real_estate_ai.services.national_market_intelligence import get_national_market_intelligence
+
             market_intel = get_national_market_intelligence()
-            
+
             location = data.get("property_address") or data.get("market_id", "austin")
             market_metrics = await market_intel.get_market_metrics(location)
-            
+
             if market_metrics:
                 # Populate estimated profit fields based on market intelligence
                 data["market_appreciation"] = f"{market_metrics.price_appreciation_1y}%"
                 data["opportunity_score"] = market_metrics.opportunity_score
-                
+
                 # Calculate estimated profit (Example: 15% of median price adjusted by opportunity)
                 base_profit = market_metrics.median_home_price * 0.15
                 adjusted_profit = base_profit * (market_metrics.opportunity_score / 100)
@@ -133,9 +132,7 @@ class SmartDocumentGenerator:
         document = self._auto_populate_fields(document, data)
 
         # Apply legal requirements based on jurisdiction
-        document = self._apply_legal_requirements(
-            document, data.get("jurisdiction", "")
-        )
+        document = self._apply_legal_requirements(document, data.get("jurisdiction", ""))
 
         # Store in GHL
         if self.ghl_api_key:
@@ -143,9 +140,7 @@ class SmartDocumentGenerator:
 
         return document
 
-    async def generate_disclosure_packet(
-        self, property_data: Dict[str, Any], jurisdiction: str
-    ) -> Dict[str, Any]:
+    async def generate_disclosure_packet(self, property_data: Dict[str, Any], jurisdiction: str) -> Dict[str, Any]:
         """
         Generate complete disclosure packet based on jurisdiction requirements.
 
@@ -193,9 +188,7 @@ class SmartDocumentGenerator:
         # Add optional documents
         optional_docs = self._get_optional_disclosures(property_data)
         for doc_type in optional_docs:
-            doc = await self.generate_document(
-                DocumentType[doc_type.upper()], f"template_{doc_type}", property_data
-            )
+            doc = await self.generate_document(DocumentType[doc_type.upper()], f"template_{doc_type}", property_data)
             packet["documents"].append(
                 {
                     "type": doc_type,
@@ -246,8 +239,8 @@ class SmartDocumentGenerator:
 
         # Generate signing URLs for each signer
         for signer in signature_request["signers"]:
-            signature_request["signature_urls"][signer["email"]] = (
-                self._generate_signature_url(document_id, signer, provider)
+            signature_request["signature_urls"][signer["email"]] = self._generate_signature_url(
+                document_id, signer, provider
             )
 
         # Send notifications
@@ -281,9 +274,7 @@ class SmartDocumentGenerator:
         # Get signer statuses
         request = self._get_signature_request(signature_request_id)
         for signer in request.get("signers", []):
-            signer_status = self._get_signer_status(
-                signature_request_id, signer["email"]
-            )
+            signer_status = self._get_signer_status(signature_request_id, signer["email"])
             status["signers"].append(signer_status)
 
         # Update overall status
@@ -338,9 +329,7 @@ class SmartDocumentGenerator:
 
         # Validate legal compliance if jurisdiction specified
         if jurisdiction:
-            template["compliance_check"] = self._check_legal_compliance(
-                template, jurisdiction
-            )
+            template["compliance_check"] = self._check_legal_compliance(template, jurisdiction)
 
         return template
 
@@ -425,9 +414,7 @@ class SmartDocumentGenerator:
 
         return content
 
-    def _auto_populate_fields(
-        self, document: Dict[str, Any], data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _auto_populate_fields(self, document: Dict[str, Any], data: Dict[str, Any]) -> Dict[str, Any]:
         """Auto-populate common fields"""
         document["auto_populated_fields"] = {
             "current_date": datetime.now().strftime("%Y-%m-%d"),
@@ -437,9 +424,7 @@ class SmartDocumentGenerator:
         }
         return document
 
-    def _apply_legal_requirements(
-        self, document: Dict[str, Any], jurisdiction: str
-    ) -> Dict[str, Any]:
+    def _apply_legal_requirements(self, document: Dict[str, Any], jurisdiction: str) -> Dict[str, Any]:
         """Apply jurisdiction-specific legal requirements"""
         document["legal_requirements"] = {
             "jurisdiction": jurisdiction,
@@ -481,9 +466,7 @@ class SmartDocumentGenerator:
             )
         return prepared
 
-    def _generate_signature_url(
-        self, document_id: str, signer: Dict[str, Any], provider: SignatureProvider
-    ) -> str:
+    def _generate_signature_url(self, document_id: str, signer: Dict[str, Any], provider: SignatureProvider) -> str:
         """Generate signing URL for signer"""
         return f"https://{provider.value}.com/sign/{document_id}/{signer['email']}"
 
@@ -495,9 +478,7 @@ class SmartDocumentGenerator:
         """Get signature request details"""
         return {"id": signature_request_id, "signers": []}
 
-    def _get_signer_status(
-        self, signature_request_id: str, email: str
-    ) -> Dict[str, Any]:
+    def _get_signer_status(self, signature_request_id: str, email: str) -> Dict[str, Any]:
         """Get individual signer status"""
         return {
             "email": email,
@@ -506,15 +487,11 @@ class SmartDocumentGenerator:
             "ip_address": "192.168.1.1",
         }
 
-    def _validate_template_fields(
-        self, fields: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+    def _validate_template_fields(self, fields: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Validate template field definitions"""
         return fields
 
-    def _check_legal_compliance(
-        self, template: Dict[str, Any], jurisdiction: str
-    ) -> Dict[str, Any]:
+    def _check_legal_compliance(self, template: Dict[str, Any], jurisdiction: str) -> Dict[str, Any]:
         """Check template legal compliance"""
         return {
             "compliant": True,
@@ -562,9 +539,7 @@ class SmartDocumentGenerator:
         """Store document in GHL"""
         pass
 
-    def _track_signature_request_in_ghl(
-        self, signature_request: Dict[str, Any]
-    ) -> None:
+    def _track_signature_request_in_ghl(self, signature_request: Dict[str, Any]) -> None:
         """Track signature request in GHL"""
         pass
 

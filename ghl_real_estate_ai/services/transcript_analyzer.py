@@ -126,9 +126,7 @@ class TranscriptAnalyzer:
                     self.transcripts.append(transcript)
                     imported_count += 1
                 else:
-                    logger.warning(
-                        f"Skipped invalid transcript: {transcript.get('id', 'unknown')}"
-                    )
+                    logger.warning(f"Skipped invalid transcript: {transcript.get('id', 'unknown')}")
 
             logger.info(f"Imported {imported_count} transcripts from {filepath}")
             return imported_count
@@ -235,10 +233,7 @@ class TranscriptAnalyzer:
                 logger.warning(f"Transcript missing required field: {field}")
                 return False
 
-        if (
-            not isinstance(transcript["messages"], list)
-            or len(transcript["messages"]) == 0
-        ):
+        if not isinstance(transcript["messages"], list) or len(transcript["messages"]) == 0:
             logger.warning(f"Transcript {transcript['id']} has no messages")
             return False
 
@@ -264,9 +259,7 @@ class TranscriptAnalyzer:
         logger.info(f"Calculated metrics for {len(self.metrics)} transcripts")
         return self.metrics
 
-    def _calculate_single_metrics(
-        self, transcript: Dict[str, Any]
-    ) -> ConversationMetrics:
+    def _calculate_single_metrics(self, transcript: Dict[str, Any]) -> ConversationMetrics:
         """
         Calculate metrics for a single transcript.
 
@@ -280,36 +273,24 @@ class TranscriptAnalyzer:
 
         # Duration calculation
         if len(messages) >= 2:
-            start_time = datetime.fromisoformat(
-                messages[0]["timestamp"].replace("Z", "+00:00")
-            )
-            end_time = datetime.fromisoformat(
-                messages[-1]["timestamp"].replace("Z", "+00:00")
-            )
+            start_time = datetime.fromisoformat(messages[0]["timestamp"].replace("Z", "+00:00"))
+            end_time = datetime.fromisoformat(messages[-1]["timestamp"].replace("Z", "+00:00"))
             duration_minutes = (end_time - start_time).total_seconds() / 60
         else:
             duration_minutes = 0.0
 
         # Count questions asked by bot
-        questions_asked = sum(
-            1 for msg in messages if msg["speaker"] == "bot" and "?" in msg["message"]
-        )
+        questions_asked = sum(1 for msg in messages if msg["speaker"] == "bot" and "?" in msg["message"])
 
         # Calculate average response time
         response_times = []
         for i in range(1, len(messages)):
             if messages[i]["speaker"] != messages[i - 1]["speaker"]:
-                prev_time = datetime.fromisoformat(
-                    messages[i - 1]["timestamp"].replace("Z", "+00:00")
-                )
-                curr_time = datetime.fromisoformat(
-                    messages[i]["timestamp"].replace("Z", "+00:00")
-                )
+                prev_time = datetime.fromisoformat(messages[i - 1]["timestamp"].replace("Z", "+00:00"))
+                curr_time = datetime.fromisoformat(messages[i]["timestamp"].replace("Z", "+00:00"))
                 response_times.append((curr_time - prev_time).total_seconds())
 
-        avg_response_time = (
-            sum(response_times) / len(response_times) if response_times else 0.0
-        )
+        avg_response_time = sum(response_times) / len(response_times) if response_times else 0.0
 
         # Detect pathway if present
         pathway = self._detect_pathway(messages)
@@ -439,9 +420,7 @@ class TranscriptAnalyzer:
         logger.info("Pattern analysis complete")
         return insights
 
-    def _extract_winning_questions(
-        self, metrics: List[ConversationMetrics]
-    ) -> List[Dict[str, Any]]:
+    def _extract_winning_questions(self, metrics: List[ConversationMetrics]) -> List[Dict[str, Any]]:
         """
         Extract questions that appear in successful conversations.
 
@@ -464,9 +443,7 @@ class TranscriptAnalyzer:
 
                 # Extract question types from metadata
                 for msg in transcript["messages"]:
-                    if msg["speaker"] == "bot" and msg.get("metadata", {}).get(
-                        "question_type"
-                    ):
+                    if msg["speaker"] == "bot" and msg.get("metadata", {}).get("question_type"):
                         q_type = msg["metadata"]["question_type"]
                         question_counter[q_type] += 1
 
@@ -477,11 +454,8 @@ class TranscriptAnalyzer:
                 {
                     "question_type": q_type,
                     "frequency": count,
-                    "appears_in_percent": (
-                        (count / total_closed) * 100 if total_closed > 0 else 0
-                    ),
-                    "recommended": count / total_closed
-                    > 0.5,  # Appears in >50% of successful convos
+                    "appears_in_percent": ((count / total_closed) * 100 if total_closed > 0 else 0),
+                    "recommended": count / total_closed > 0.5,  # Appears in >50% of successful convos
                 }
             )
 
@@ -507,8 +481,7 @@ class TranscriptAnalyzer:
                 closing_messages = [
                     msg["message"]
                     for msg in messages
-                    if msg["speaker"] == "bot"
-                    and msg.get("metadata", {}).get("stage") == "closing"
+                    if msg["speaker"] == "bot" and msg.get("metadata", {}).get("stage") == "closing"
                 ]
 
                 closing_phrases.extend(closing_messages)
@@ -517,9 +490,7 @@ class TranscriptAnalyzer:
         phrase_counter = Counter(closing_phrases)
         return [phrase for phrase, count in phrase_counter.most_common(10)]
 
-    def _determine_question_order(
-        self, metrics: List[ConversationMetrics]
-    ) -> List[str]:
+    def _determine_question_order(self, metrics: List[ConversationMetrics]) -> List[str]:
         """
         Determine the optimal order of qualifying questions.
 
@@ -535,9 +506,7 @@ class TranscriptAnalyzer:
             if transcript["outcome"] == "closed":
                 sequence = []
                 for msg in transcript["messages"]:
-                    if msg["speaker"] == "bot" and msg.get("metadata", {}).get(
-                        "question_type"
-                    ):
+                    if msg["speaker"] == "bot" and msg.get("metadata", {}).get("question_type"):
                         q_type = msg["metadata"]["question_type"]
                         if q_type not in sequence:  # Only track first occurrence
                             sequence.append(q_type)
@@ -595,9 +564,7 @@ class TranscriptAnalyzer:
 
         for transcript in self.transcripts:
             if transcript["outcome"] == "closed":
-                text = " ".join(
-                    msg["message"].lower() for msg in transcript["messages"]
-                )
+                text = " ".join(msg["message"].lower() for msg in transcript["messages"])
 
                 for keyword in tracked_keywords:
                     if keyword in text:
@@ -616,21 +583,13 @@ class TranscriptAnalyzer:
 
         # By lead type
         buyer_total = sum(1 for m in self.metrics if m.lead_type == "buyer")
-        buyer_closed = sum(
-            1 for m in self.metrics if m.lead_type == "buyer" and m.outcome == "closed"
-        )
+        buyer_closed = sum(1 for m in self.metrics if m.lead_type == "buyer" and m.outcome == "closed")
 
         seller_total = sum(1 for m in self.metrics if m.lead_type == "seller")
-        seller_closed = sum(
-            1 for m in self.metrics if m.lead_type == "seller" and m.outcome == "closed"
-        )
+        seller_closed = sum(1 for m in self.metrics if m.lead_type == "seller" and m.outcome == "closed")
 
-        close_rates["buyer"] = (
-            (buyer_closed / buyer_total * 100) if buyer_total > 0 else 0.0
-        )
-        close_rates["seller"] = (
-            (seller_closed / seller_total * 100) if seller_total > 0 else 0.0
-        )
+        close_rates["buyer"] = (buyer_closed / buyer_total * 100) if buyer_total > 0 else 0.0
+        close_rates["seller"] = (seller_closed / seller_total * 100) if seller_total > 0 else 0.0
         close_rates["overall"] = (
             ((buyer_closed + seller_closed) / (buyer_total + seller_total) * 100)
             if (buyer_total + seller_total) > 0
@@ -692,9 +651,7 @@ class TranscriptAnalyzer:
     # INSIGHTS GENERATION
     # ==============================================================================
 
-    def generate_insights_report(
-        self, output_path: Optional[str] = None
-    ) -> Dict[str, Any]:
+    def generate_insights_report(self, output_path: Optional[str] = None) -> Dict[str, Any]:
         """
         Generate comprehensive insights report.
 
@@ -714,9 +671,7 @@ class TranscriptAnalyzer:
             "generated_at": datetime.utcnow().isoformat(),
             "summary": {
                 "total_transcripts": len(self.transcripts),
-                "successful_closes": len(
-                    [m for m in self.metrics if m.outcome == "closed"]
-                ),
+                "successful_closes": len([m for m in self.metrics if m.outcome == "closed"]),
                 "close_rate": patterns.close_rate_by_lead_type.get("overall", 0.0),
                 "avg_questions_to_close": patterns.avg_questions_to_close,
                 "avg_conversation_duration_minutes": patterns.avg_conversation_duration,
@@ -755,9 +710,7 @@ class TranscriptAnalyzer:
             "total": len(self.metrics),
         }
 
-    def _generate_recommendations(
-        self, patterns: PatternInsights
-    ) -> List[Dict[str, str]]:
+    def _generate_recommendations(self, patterns: PatternInsights) -> List[Dict[str, str]]:
         """
         Generate actionable recommendations based on patterns.
 
@@ -818,11 +771,7 @@ class TranscriptAnalyzer:
 
         # Closing phrases
         if patterns.successful_closing_phrases:
-            top_phrase = (
-                patterns.successful_closing_phrases[0]
-                if patterns.successful_closing_phrases
-                else ""
-            )
+            top_phrase = patterns.successful_closing_phrases[0] if patterns.successful_closing_phrases else ""
             recommendations.append(
                 {
                     "category": "Closing Language",
@@ -890,14 +839,10 @@ if __name__ == "__main__":
         print(f"\nPattern Analysis:")
         print(f"  - Average questions to close: {patterns.avg_questions_to_close:.1f}")
         print(f"  - Average duration: {patterns.avg_conversation_duration:.1f} minutes")
-        print(
-            f"  - Optimal question order: {', '.join(patterns.optimal_question_order[:3])}"
-        )
+        print(f"  - Optimal question order: {', '.join(patterns.optimal_question_order[:3])}")
 
         # Generate report
-        report = analyzer.generate_insights_report(
-            output_path="data/insights_report.json"
-        )
+        report = analyzer.generate_insights_report(output_path="data/insights_report.json")
         print(f"\nInsights report generated: data/insights_report.json")
         print(f"\nTop Recommendations:")
         for i, rec in enumerate(report["recommendations"][:3], 1):

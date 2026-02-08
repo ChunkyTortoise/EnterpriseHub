@@ -2,8 +2,10 @@
 Premium Property Cards Component
 Enterprise-grade property display with enhanced visual design
 """
+
+from typing import Any, Dict, List
+
 import streamlit as st
-from typing import Dict, List, Any
 
 
 def render_property_matches():
@@ -11,7 +13,7 @@ def render_property_matches():
     st.markdown("### 🏠 Property Matches")
 
     # Check if we have preferences to match against
-    prefs = st.session_state.get('extracted_data', {})
+    prefs = st.session_state.get("extracted_data", {})
     if not prefs:
         st.info("Share your preferences in the chat to see property matches!")
         return
@@ -56,22 +58,23 @@ def render_premium_property_card(property: Dict[str, Any], index: int = 0):
     Uses CSS classes defined in styles.css for high-impact visual appeal.
     """
     # Extract property details with fallbacks
-    price = property.get('price', 0)
-    beds = property.get('beds', property.get('bedrooms', 3))
-    baths = property.get('baths', property.get('bathrooms', 2))
-    sqft = property.get('sqft', 2000)
-    address = property.get('address', 'Address TBD')
-    neighborhood = property.get('neighborhood', 'Austin Area')
-    match_score = property.get('match_score', 85)
-    
+    price = property.get("price", 0)
+    beds = property.get("beds", property.get("bedrooms", 3))
+    baths = property.get("baths", property.get("bathrooms", 2))
+    sqft = property.get("sqft", 2000)
+    address = property.get("address", "Address TBD")
+    neighborhood = property.get("neighborhood", "Austin Area")
+    match_score = property.get("match_score", 85)
+
     # AI reasoning fallback
-    ai_insight = property.get('match_reasons', ["Matches your budget and location preferences."])[0]
+    ai_insight = property.get("match_reasons", ["Matches your budget and location preferences."])[0]
 
     # Map match score to confidence level
     confidence = "High" if match_score >= 90 else "Medium" if match_score >= 80 else "Low"
-    
+
     # Use the sophisticated HTML structure from styles.css
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div class="holographic-card premium-property-card">
         <div class="property-image-container">
             <div class="match-score-badge">
@@ -104,7 +107,9 @@ def render_premium_property_card(property: Dict[str, Any], index: int = 0):
             </div>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     # Action buttons using Streamlit columns for interactivity
     col1, col2 = st.columns(2)
@@ -114,7 +119,7 @@ def render_premium_property_card(property: Dict[str, Any], index: int = 0):
     with col2:
         if st.button("📅 Schedule Tour", key=f"premium_schedule_{index}", use_container_width=True):
             st.toast("Opening calendar...", icon="📅")
-    
+
     st.markdown("<br>", unsafe_allow_html=True)
 
 
@@ -123,22 +128,23 @@ def render_property_card(property: dict):
     Legacy property card renderer for backward compatibility.
     Enhanced with improved styling.
     """
-    neighborhood = property.get('neighborhood', '')
+    neighborhood = property.get("neighborhood", "")
     if not neighborhood:
-        address = property.get('address', {})
+        address = property.get("address", {})
         if isinstance(address, dict):
-            neighborhood = address.get('neighborhood', 'Unknown')
+            neighborhood = address.get("neighborhood", "Unknown")
         else:
-            neighborhood = 'Unknown'
+            neighborhood = "Unknown"
 
-    price = property.get('price', 0)
-    bedrooms = property.get('bedrooms', 0)
-    bathrooms = property.get('bathrooms', 0)
-    sqft = property.get('sqft', 0)
-    match_score = property.get('match_score', 0)
+    price = property.get("price", 0)
+    bedrooms = property.get("bedrooms", 0)
+    bathrooms = property.get("bathrooms", 0)
+    sqft = property.get("sqft", 0)
+    match_score = property.get("match_score", 0)
 
     # Enhanced card styling - Obsidian Edition
-    st.markdown(f"""
+    st.markdown(
+        f"""
 
         <div class="holographic-card" style='
 
@@ -224,6 +230,6 @@ def render_property_card(property: dict):
 
         </div>
 
-        """, unsafe_allow_html=True)
-
-    
+        """,
+        unsafe_allow_html=True,
+    )

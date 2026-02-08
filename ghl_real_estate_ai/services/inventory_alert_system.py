@@ -16,27 +16,29 @@ Integration: GHL webhooks, email, SMS delivery
 """
 
 import asyncio
+import hashlib
 import json
 import logging
-import numpy as np
-import pandas as pd
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Callable, Union, Set
-from dataclasses import dataclass, asdict
-from enum import Enum
-import hashlib
 import statistics
 from collections import defaultdict, deque
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Set, Union
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
+import numpy as np
+import pandas as pd
+
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)
 
 
 class AlertType(Enum):
     """Types of inventory alerts."""
+
     INVENTORY_DROP = "inventory_drop"
     INVENTORY_SURGE = "inventory_surge"
     PRICE_SPIKE = "price_spike"
@@ -51,6 +53,7 @@ class AlertType(Enum):
 
 class AlertSeverity(Enum):
     """Alert severity levels."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -59,6 +62,7 @@ class AlertSeverity(Enum):
 
 class AlertChannel(Enum):
     """Alert delivery channels."""
+
     EMAIL = "email"
     SMS = "sms"
     WEBHOOK = "webhook"
@@ -69,6 +73,7 @@ class AlertChannel(Enum):
 
 class AlertStatus(Enum):
     """Alert lifecycle status."""
+
     PENDING = "pending"
     SENT = "sent"
     ACKNOWLEDGED = "acknowledged"
@@ -80,6 +85,7 @@ class AlertStatus(Enum):
 @dataclass
 class AlertRule:
     """Configuration for an alert rule."""
+
     rule_id: str
     name: str
     description: str
@@ -118,6 +124,7 @@ class AlertRule:
 @dataclass
 class MarketDataPoint:
     """Single market data point for trend analysis."""
+
     timestamp: datetime
     neighborhood_id: str
     metric_type: str  # inventory, price, velocity, etc.
@@ -128,6 +135,7 @@ class MarketDataPoint:
 @dataclass
 class AlertInstance:
     """Individual alert instance."""
+
     alert_id: str
     rule_id: str
     alert_type: AlertType
@@ -170,6 +178,7 @@ class AlertInstance:
 @dataclass
 class TrendAnalysis:
     """Trend analysis for alert generation."""
+
     metric_name: str
     current_value: float
     trend_direction: str  # up, down, stable
@@ -215,7 +224,7 @@ class InventoryAlertSystem:
             AlertChannel.WEBHOOK: self._send_webhook_alert,
             AlertChannel.IN_APP: self._send_in_app_alert,
             AlertChannel.PUSH_NOTIFICATION: self._send_push_alert,
-            AlertChannel.SLACK: self._send_slack_alert
+            AlertChannel.SLACK: self._send_slack_alert,
         }
 
         # Performance tracking
@@ -224,7 +233,7 @@ class InventoryAlertSystem:
             "alerts_sent": 0,
             "false_positives": 0,
             "acknowledged_alerts": 0,
-            "avg_response_time": 0
+            "avg_response_time": 0,
         }
 
         self.is_initialized = False
@@ -317,10 +326,12 @@ class InventoryAlertSystem:
             logger.error(f"Failed to update alert rule {rule_id}: {e}")
             return False
 
-    async def get_active_alerts(self,
-                               severity_filter: Optional[AlertSeverity] = None,
-                               type_filter: Optional[AlertType] = None,
-                               area_filter: Optional[str] = None) -> List[AlertInstance]:
+    async def get_active_alerts(
+        self,
+        severity_filter: Optional[AlertSeverity] = None,
+        type_filter: Optional[AlertType] = None,
+        area_filter: Optional[str] = None,
+    ) -> List[AlertInstance]:
         """Get active alerts with optional filtering."""
         alerts = list(self.active_alerts.values())
 
@@ -339,7 +350,7 @@ class InventoryAlertSystem:
             AlertSeverity.CRITICAL: 4,
             AlertSeverity.HIGH: 3,
             AlertSeverity.MEDIUM: 2,
-            AlertSeverity.LOW: 1
+            AlertSeverity.LOW: 1,
         }
 
         alerts.sort(key=lambda x: (severity_order[x.severity], x.triggered_at), reverse=True)
@@ -357,12 +368,14 @@ class InventoryAlertSystem:
             alert.acknowledged_at = datetime.now()
 
             # Add to action history
-            alert.action_history.append({
-                "action": "acknowledged",
-                "user_id": user_id,
-                "timestamp": datetime.now(),
-                "notes": "Alert acknowledged by user"
-            })
+            alert.action_history.append(
+                {
+                    "action": "acknowledged",
+                    "user_id": user_id,
+                    "timestamp": datetime.now(),
+                    "notes": "Alert acknowledged by user",
+                }
+            )
 
             self.alert_metrics["acknowledged_alerts"] += 1
 
@@ -384,12 +397,9 @@ class InventoryAlertSystem:
             alert.resolved_at = datetime.now()
 
             # Add to action history
-            alert.action_history.append({
-                "action": "resolved",
-                "user_id": user_id,
-                "timestamp": datetime.now(),
-                "notes": resolution_notes
-            })
+            alert.action_history.append(
+                {"action": "resolved", "user_id": user_id, "timestamp": datetime.now(), "notes": resolution_notes}
+            )
 
             # Move to history
             self.alert_history.append(alert)
@@ -402,8 +412,7 @@ class InventoryAlertSystem:
             logger.error(f"Failed to resolve alert {alert_id}: {e}")
             return False
 
-    async def get_alert_analytics(self,
-                                 period_days: int = 30) -> Dict[str, Any]:
+    async def get_alert_analytics(self, period_days: int = 30) -> Dict[str, Any]:
         """Get analytics for alert system performance."""
         try:
             cutoff_date = datetime.now() - timedelta(days=period_days)
@@ -429,21 +438,17 @@ class InventoryAlertSystem:
                 "false_positive_rate": 0,
                 "most_active_areas": [],
                 "trending_alert_types": [],
-                "system_performance": self.alert_metrics.copy()
+                "system_performance": self.alert_metrics.copy(),
             }
 
             if recent_alerts:
                 # Group by type
                 for alert in recent_alerts:
                     alert_type = alert.alert_type.value
-                    analytics["alerts_by_type"][alert_type] = (
-                        analytics["alerts_by_type"].get(alert_type, 0) + 1
-                    )
+                    analytics["alerts_by_type"][alert_type] = analytics["alerts_by_type"].get(alert_type, 0) + 1
 
                     severity = alert.severity.value
-                    analytics["alerts_by_severity"][severity] = (
-                        analytics["alerts_by_severity"].get(severity, 0) + 1
-                    )
+                    analytics["alerts_by_severity"][severity] = analytics["alerts_by_severity"].get(severity, 0) + 1
 
                 # Calculate response times
                 response_times = []
@@ -468,9 +473,7 @@ class InventoryAlertSystem:
                     for area in alert.affected_areas:
                         area_counts[area] += 1
 
-                analytics["most_active_areas"] = sorted(
-                    area_counts.items(), key=lambda x: x[1], reverse=True
-                )[:5]
+                analytics["most_active_areas"] = sorted(area_counts.items(), key=lambda x: x[1], reverse=True)[:5]
 
             return analytics
 
@@ -516,7 +519,7 @@ class InventoryAlertSystem:
                 comparison_period="24h",
                 severity=AlertSeverity.HIGH,
                 delivery_channels=[AlertChannel.EMAIL, AlertChannel.WEBHOOK],
-                throttle_minutes=120
+                throttle_minutes=120,
             ),
             AlertRule(
                 rule_id="price_spike_critical",
@@ -529,7 +532,7 @@ class InventoryAlertSystem:
                 comparison_period="7d",
                 severity=AlertSeverity.CRITICAL,
                 delivery_channels=[AlertChannel.EMAIL, AlertChannel.SMS, AlertChannel.WEBHOOK],
-                throttle_minutes=60
+                throttle_minutes=60,
             ),
             AlertRule(
                 rule_id="velocity_change_medium",
@@ -542,7 +545,7 @@ class InventoryAlertSystem:
                 comparison_period="30d",
                 severity=AlertSeverity.MEDIUM,
                 delivery_channels=[AlertChannel.EMAIL],
-                throttle_minutes=180
+                throttle_minutes=180,
             ),
             AlertRule(
                 rule_id="new_listing_flood",
@@ -555,8 +558,8 @@ class InventoryAlertSystem:
                 comparison_period="30d",
                 severity=AlertSeverity.MEDIUM,
                 delivery_channels=[AlertChannel.EMAIL, AlertChannel.IN_APP],
-                throttle_minutes=240
-            )
+                throttle_minutes=240,
+            ),
         ]
 
         for rule in default_rules:
@@ -572,7 +575,7 @@ class InventoryAlertSystem:
             "inventory": self._analyze_inventory_trends,
             "price": self._analyze_price_trends,
             "velocity": self._analyze_velocity_trends,
-            "absorption": self._analyze_absorption_trends
+            "absorption": self._analyze_absorption_trends,
         }
 
         logger.info("Trend analyzers initialized")
@@ -616,7 +619,7 @@ class InventoryAlertSystem:
                     "active_listings": 150,
                     "median_price": 650000,
                     "sales_velocity": 0.75,
-                    "new_listings_daily": 12
+                    "new_listings_daily": 12,
                 }
 
                 base_value = base_values[metric]
@@ -633,7 +636,7 @@ class InventoryAlertSystem:
                     neighborhood_id=neighborhood,
                     metric_type=metric,
                     value=value,
-                    metadata={"source": "simulation", "confidence": 0.9}
+                    metadata={"source": "simulation", "confidence": 0.9},
                 )
 
                 sample_data.append(data_point)
@@ -666,9 +669,7 @@ class InventoryAlertSystem:
         except Exception as e:
             logger.error(f"Alert condition evaluation failed: {e}")
 
-    async def _evaluate_rule_conditions(self,
-                                      rule: AlertRule,
-                                      data_points: List[MarketDataPoint]) -> bool:
+    async def _evaluate_rule_conditions(self, rule: AlertRule, data_points: List[MarketDataPoint]) -> bool:
         """Evaluate if a rule's conditions are met."""
         try:
             # Filter relevant data points
@@ -704,9 +705,7 @@ class InventoryAlertSystem:
             logger.error(f"Rule condition evaluation failed for {rule.rule_id}: {e}")
             return False
 
-    async def _evaluate_percentage_change(self,
-                                        rule: AlertRule,
-                                        data_points: List[MarketDataPoint]) -> bool:
+    async def _evaluate_percentage_change(self, rule: AlertRule, data_points: List[MarketDataPoint]) -> bool:
         """Evaluate percentage change conditions."""
         if len(data_points) < 2:
             return False
@@ -742,9 +741,7 @@ class InventoryAlertSystem:
             threshold = rule.threshold_values.get("change_percentage", 15.0)
             return change_percent >= threshold
 
-    async def _evaluate_statistical_deviation(self,
-                                            rule: AlertRule,
-                                            data_points: List[MarketDataPoint]) -> bool:
+    async def _evaluate_statistical_deviation(self, rule: AlertRule, data_points: List[MarketDataPoint]) -> bool:
         """Evaluate statistical deviation conditions."""
         metric_key = f"{data_points[0].neighborhood_id}:{data_points[0].metric_type}"
         historical_data = list(self.market_data_buffer[metric_key])
@@ -770,9 +767,7 @@ class InventoryAlertSystem:
         threshold = rule.threshold_values.get("deviation_threshold", 2.0)
         return z_score >= threshold
 
-    async def _evaluate_anomaly_detection(self,
-                                        rule: AlertRule,
-                                        data_points: List[MarketDataPoint]) -> bool:
+    async def _evaluate_anomaly_detection(self, rule: AlertRule, data_points: List[MarketDataPoint]) -> bool:
         """Evaluate anomaly detection conditions."""
         # Simplified anomaly detection
         metric_key = f"{data_points[0].neighborhood_id}:{data_points[0].metric_type}"
@@ -809,9 +804,7 @@ class InventoryAlertSystem:
         throttle_period = timedelta(minutes=rule.throttle_minutes)
         return datetime.now() - rule.last_triggered < throttle_period
 
-    async def _generate_alert(self,
-                            rule: AlertRule,
-                            data_points: List[MarketDataPoint]) -> Optional[AlertInstance]:
+    async def _generate_alert(self, rule: AlertRule, data_points: List[MarketDataPoint]) -> Optional[AlertInstance]:
         """Generate an alert instance from triggered rule."""
         try:
             # Create alert ID
@@ -856,7 +849,7 @@ class InventoryAlertSystem:
                 delivery_status={},
                 triggered_at=datetime.now(),
                 expires_at=expires_at,
-                recommended_actions=self._generate_recommended_actions(rule, analysis)
+                recommended_actions=self._generate_recommended_actions(rule, analysis),
             )
 
             return alert
@@ -905,13 +898,10 @@ class InventoryAlertSystem:
                 alert.delivery_status[channel.value] = {
                     "status": "failed",
                     "error": str(result),
-                    "timestamp": datetime.now()
+                    "timestamp": datetime.now(),
                 }
             else:
-                alert.delivery_status[channel.value] = {
-                    "status": "sent",
-                    "timestamp": datetime.now()
-                }
+                alert.delivery_status[channel.value] = {"status": "sent", "timestamp": datetime.now()}
 
         # Update metrics
         successful_deliveries = sum(1 for result in delivery_results if not isinstance(result, Exception))
@@ -961,9 +951,7 @@ class InventoryAlertSystem:
 
     # Helper methods
 
-    def _matches_geographic_filter(self,
-                                 data_point: MarketDataPoint,
-                                 geographic_filters: Dict[str, Any]) -> bool:
+    def _matches_geographic_filter(self, data_point: MarketDataPoint, geographic_filters: Dict[str, Any]) -> bool:
         """Check if data point matches geographic filters."""
         # Simplified geographic filtering
         included_areas = geographic_filters.get("included_areas", [])
@@ -977,28 +965,28 @@ class InventoryAlertSystem:
 
         return True
 
-    async def _analyze_triggering_data(self,
-                                     rule: AlertRule,
-                                     data_points: List[MarketDataPoint]) -> Dict[str, Any]:
+    async def _analyze_triggering_data(self, rule: AlertRule, data_points: List[MarketDataPoint]) -> Dict[str, Any]:
         """Analyze the data that triggered the alert."""
         analysis = {
             "trigger_timestamp": datetime.now(),
             "data_points_count": len(data_points),
             "neighborhoods_affected": list(set([p.neighborhood_id for p in data_points])),
-            "metrics_involved": list(set([p.metric_type for p in data_points]))
+            "metrics_involved": list(set([p.metric_type for p in data_points])),
         }
 
         # Calculate statistical measures
         values = [point.value for point in data_points]
         if values:
-            analysis.update({
-                "current_value": values[-1],
-                "min_value": min(values),
-                "max_value": max(values),
-                "mean_value": statistics.mean(values),
-                "median_value": statistics.median(values),
-                "value_range": max(values) - min(values)
-            })
+            analysis.update(
+                {
+                    "current_value": values[-1],
+                    "min_value": min(values),
+                    "max_value": max(values),
+                    "mean_value": statistics.mean(values),
+                    "median_value": statistics.median(values),
+                    "value_range": max(values) - min(values),
+                }
+            )
 
         # Add rule-specific analysis
         if rule.alert_type == AlertType.INVENTORY_DROP:
@@ -1053,7 +1041,7 @@ class InventoryAlertSystem:
             AlertSeverity.LOW: 0.8,
             AlertSeverity.MEDIUM: 1.0,
             AlertSeverity.HIGH: 1.3,
-            AlertSeverity.CRITICAL: 1.6
+            AlertSeverity.CRITICAL: 1.6,
         }
 
         base_score *= severity_multipliers[rule.severity]
@@ -1061,7 +1049,7 @@ class InventoryAlertSystem:
         # Neighborhood count adjustment
         neighborhood_count = len(analysis["neighborhoods_affected"])
         if neighborhood_count > 1:
-            base_score *= (1 + 0.1 * neighborhood_count)
+            base_score *= 1 + 0.1 * neighborhood_count
 
         # Value magnitude adjustment
         if "value_range" in analysis and analysis["value_range"] > 0:
@@ -1091,7 +1079,7 @@ class InventoryAlertSystem:
             AlertSeverity.LOW: 30,
             AlertSeverity.MEDIUM: 50,
             AlertSeverity.HIGH: 75,
-            AlertSeverity.CRITICAL: 95
+            AlertSeverity.CRITICAL: 95,
         }
 
         base_urgency = severity_urgency[rule.severity]
@@ -1121,33 +1109,41 @@ class InventoryAlertSystem:
         actions = []
 
         if rule.alert_type == AlertType.INVENTORY_DROP:
-            actions.extend([
-                "Review pricing strategies for competitive positioning",
-                "Increase marketing efforts to attract new listings",
-                "Prepare buyers for potential competition",
-                "Monitor market for additional inventory changes"
-            ])
+            actions.extend(
+                [
+                    "Review pricing strategies for competitive positioning",
+                    "Increase marketing efforts to attract new listings",
+                    "Prepare buyers for potential competition",
+                    "Monitor market for additional inventory changes",
+                ]
+            )
         elif rule.alert_type == AlertType.PRICE_SPIKE:
-            actions.extend([
-                "Advise sellers to consider listing timing",
-                "Review buyer financing options and alternatives",
-                "Assess impact on affordability metrics",
-                "Monitor for market correction signals"
-            ])
+            actions.extend(
+                [
+                    "Advise sellers to consider listing timing",
+                    "Review buyer financing options and alternatives",
+                    "Assess impact on affordability metrics",
+                    "Monitor for market correction signals",
+                ]
+            )
         elif rule.alert_type == AlertType.VELOCITY_CHANGE:
-            actions.extend([
-                "Analyze underlying causes of velocity change",
-                "Adjust marketing strategies accordingly",
-                "Review pricing recommendations",
-                "Communicate changes to stakeholders"
-            ])
+            actions.extend(
+                [
+                    "Analyze underlying causes of velocity change",
+                    "Adjust marketing strategies accordingly",
+                    "Review pricing recommendations",
+                    "Communicate changes to stakeholders",
+                ]
+            )
 
         # Add general actions
-        actions.extend([
-            "Monitor situation for continued trends",
-            "Prepare client communications",
-            "Document market conditions for reporting"
-        ])
+        actions.extend(
+            [
+                "Monitor situation for continued trends",
+                "Prepare client communications",
+                "Document market conditions for reporting",
+            ]
+        )
 
         return actions
 
@@ -1206,7 +1202,7 @@ class InventoryAlertSystem:
             seasonal_adjustment=1.0,
             confidence_interval=(current_value * 0.95, current_value * 1.05),
             analysis_period="24h",
-            data_quality=0.9
+            data_quality=0.9,
         )
 
     async def _analyze_price_trends(self, data_points: List[MarketDataPoint]) -> TrendAnalysis:

@@ -4,12 +4,13 @@ Focused 4-tab delivery dashboard for Jorge Salas.
 Run: streamlit run ghl_real_estate_ai/streamlit_demo/jorge_delivery_dashboard.py
 """
 
-import streamlit as st
+import random
+from datetime import datetime, timedelta
+
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import pandas as pd
-from datetime import datetime, timedelta
-import random
+import streamlit as st
 
 # ---------------------------------------------------------------------------
 # Data layer: try real services, fall back to sample data
@@ -20,12 +21,14 @@ _conversation_manager = None
 
 try:
     from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+
     _analytics_service = AnalyticsService()
 except ImportError:
     pass
 
 try:
     from ghl_real_estate_ai.core.conversation_manager import ConversationManager
+
     _conversation_manager = ConversationManager()
 except ImportError:
     pass
@@ -37,6 +40,7 @@ def _has_live_data() -> bool:
         return False
     try:
         import asyncio
+
         summary = asyncio.run(_analytics_service.get_daily_summary("all"))
         return summary.get("total_messages", 0) > 0
     except Exception:
@@ -57,30 +61,49 @@ def _sample_pipeline_data() -> dict:
 def _sample_conversations() -> pd.DataFrame:
     """Sample recent conversations."""
     names = [
-        "Maria Lopez", "Carlos Rivera", "Susan Chen", "James Wilson",
-        "Ana Garcia", "Robert Kim", "Linda Tran", "David Morales",
-        "Patricia Nguyen", "Michael Brown", "Jennifer Lee", "Thomas Clark",
-        "Sandra Hernandez", "Kevin Patel", "Donna Martinez", "Brian Taylor",
-        "Nancy White", "Mark Anderson", "Laura Jackson", "Steven Robinson",
+        "Maria Lopez",
+        "Carlos Rivera",
+        "Susan Chen",
+        "James Wilson",
+        "Ana Garcia",
+        "Robert Kim",
+        "Linda Tran",
+        "David Morales",
+        "Patricia Nguyen",
+        "Michael Brown",
+        "Jennifer Lee",
+        "Thomas Clark",
+        "Sandra Hernandez",
+        "Kevin Patel",
+        "Donna Martinez",
+        "Brian Taylor",
+        "Nancy White",
+        "Mark Anderson",
+        "Laura Jackson",
+        "Steven Robinson",
     ]
     temps = ["Hot", "Warm", "Cold"]
     now = datetime.now()
     rows = []
     for i, name in enumerate(names):
-        rows.append({
-            "Contact": name,
-            "Last Message": random.choice([
-                "Yes, 30 days works for us",
-                "We're still thinking about it",
-                "What price range are you seeing?",
-                "Our home is move-in ready",
-                "Not sure about the timeline yet",
-                "We'd need at least $750k",
-                "Can you tell me more?",
-            ]),
-            "Timestamp": (now - timedelta(hours=random.randint(1, 72))).strftime("%b %d %I:%M %p"),
-            "Temperature": random.choice(temps),
-        })
+        rows.append(
+            {
+                "Contact": name,
+                "Last Message": random.choice(
+                    [
+                        "Yes, 30 days works for us",
+                        "We're still thinking about it",
+                        "What price range are you seeing?",
+                        "Our home is move-in ready",
+                        "Not sure about the timeline yet",
+                        "We'd need at least $750k",
+                        "Can you tell me more?",
+                    ]
+                ),
+                "Timestamp": (now - timedelta(hours=random.randint(1, 72))).strftime("%b %d %I:%M %p"),
+                "Temperature": random.choice(temps),
+            }
+        )
     return pd.DataFrame(rows)
 
 
@@ -104,37 +127,69 @@ def _sample_temperature_trend() -> pd.DataFrame:
 
 def _sample_hot_leads() -> pd.DataFrame:
     """Sample hot leads requiring action."""
-    return pd.DataFrame([
-        {"Name": "Maria Lopez", "Phone": "(909) 555-1234", "Questions Answered": 4, "Last Contact": "Jan 31 2:15 PM"},
-        {"Name": "Carlos Rivera", "Phone": "(909) 555-5678", "Questions Answered": 4, "Last Contact": "Jan 31 10:30 AM"},
-        {"Name": "Susan Chen", "Phone": "(626) 555-9012", "Questions Answered": 4, "Last Contact": "Jan 30 4:45 PM"},
-        {"Name": "James Wilson", "Phone": "(909) 555-3456", "Questions Answered": 3, "Last Contact": "Jan 30 11:00 AM"},
-        {"Name": "Ana Garcia", "Phone": "(951) 555-7890", "Questions Answered": 4, "Last Contact": "Jan 29 3:20 PM"},
-    ])
+    return pd.DataFrame(
+        [
+            {
+                "Name": "Maria Lopez",
+                "Phone": "(909) 555-1234",
+                "Questions Answered": 4,
+                "Last Contact": "Jan 31 2:15 PM",
+            },
+            {
+                "Name": "Carlos Rivera",
+                "Phone": "(909) 555-5678",
+                "Questions Answered": 4,
+                "Last Contact": "Jan 31 10:30 AM",
+            },
+            {
+                "Name": "Susan Chen",
+                "Phone": "(626) 555-9012",
+                "Questions Answered": 4,
+                "Last Contact": "Jan 30 4:45 PM",
+            },
+            {
+                "Name": "James Wilson",
+                "Phone": "(909) 555-3456",
+                "Questions Answered": 3,
+                "Last Contact": "Jan 30 11:00 AM",
+            },
+            {
+                "Name": "Ana Garcia",
+                "Phone": "(951) 555-7890",
+                "Questions Answered": 4,
+                "Last Contact": "Jan 29 3:20 PM",
+            },
+        ]
+    )
 
 
 def _sample_followups() -> tuple[pd.DataFrame, pd.DataFrame]:
     """Sample follow-up data: (upcoming, overdue)."""
-    upcoming = pd.DataFrame([
-        {"Name": "Linda Tran", "Temperature": "Warm", "Scheduled": "Feb 3", "Follow-Up #": 2},
-        {"Name": "David Morales", "Temperature": "Cold", "Scheduled": "Feb 4", "Follow-Up #": 4},
-        {"Name": "Patricia Nguyen", "Temperature": "Warm", "Scheduled": "Feb 5", "Follow-Up #": 1},
-        {"Name": "Michael Brown", "Temperature": "Hot", "Scheduled": "Feb 5", "Follow-Up #": 3},
-        {"Name": "Jennifer Lee", "Temperature": "Cold", "Scheduled": "Feb 6", "Follow-Up #": 5},
-        {"Name": "Thomas Clark", "Temperature": "Warm", "Scheduled": "Feb 7", "Follow-Up #": 2},
-        {"Name": "Kevin Patel", "Temperature": "Cold", "Scheduled": "Feb 8", "Follow-Up #": 6},
-    ])
-    overdue = pd.DataFrame([
-        {"Name": "Sandra Hernandez", "Days Overdue": 3, "Last Contact": "Jan 28"},
-        {"Name": "Brian Taylor", "Days Overdue": 5, "Last Contact": "Jan 26"},
-        {"Name": "Nancy White", "Days Overdue": 1, "Last Contact": "Jan 30"},
-    ])
+    upcoming = pd.DataFrame(
+        [
+            {"Name": "Linda Tran", "Temperature": "Warm", "Scheduled": "Feb 3", "Follow-Up #": 2},
+            {"Name": "David Morales", "Temperature": "Cold", "Scheduled": "Feb 4", "Follow-Up #": 4},
+            {"Name": "Patricia Nguyen", "Temperature": "Warm", "Scheduled": "Feb 5", "Follow-Up #": 1},
+            {"Name": "Michael Brown", "Temperature": "Hot", "Scheduled": "Feb 5", "Follow-Up #": 3},
+            {"Name": "Jennifer Lee", "Temperature": "Cold", "Scheduled": "Feb 6", "Follow-Up #": 5},
+            {"Name": "Thomas Clark", "Temperature": "Warm", "Scheduled": "Feb 7", "Follow-Up #": 2},
+            {"Name": "Kevin Patel", "Temperature": "Cold", "Scheduled": "Feb 8", "Follow-Up #": 6},
+        ]
+    )
+    overdue = pd.DataFrame(
+        [
+            {"Name": "Sandra Hernandez", "Days Overdue": 3, "Last Contact": "Jan 28"},
+            {"Name": "Brian Taylor", "Days Overdue": 5, "Last Contact": "Jan 26"},
+            {"Name": "Nancy White", "Days Overdue": 1, "Last Contact": "Jan 30"},
+        ]
+    )
     return upcoming, overdue
 
 
 # ---------------------------------------------------------------------------
 # Tab renderers
 # ---------------------------------------------------------------------------
+
 
 @st.cache_data(ttl=30)
 def _get_live_pipeline_data() -> dict | None:
@@ -143,6 +198,7 @@ def _get_live_pipeline_data() -> dict | None:
         return None
     try:
         import asyncio
+
         metrics = asyncio.run(_analytics_service.get_jorge_bot_metrics("all", days=30))
         seller = metrics.get("seller", {})
         temps = seller.get("temp_breakdown", {})
@@ -189,17 +245,19 @@ def _render_lead_pipeline():
         else:
             rate = 0
         col.metric(
-            label=f"{stages[i]} → {stages[i+1]}",
+            label=f"{stages[i]} → {stages[i + 1]}",
             value=f"{rate:.0f}%",
         )
 
     # Funnel chart
-    fig = go.Figure(go.Funnel(
-        y=stages,
-        x=counts,
-        textinfo="value+percent initial",
-        marker=dict(color=["#4A90D9", "#5BA0E0", "#E74C3C", "#F39C12", "#95A5A6"]),
-    ))
+    fig = go.Figure(
+        go.Funnel(
+            y=stages,
+            x=counts,
+            textinfo="value+percent initial",
+            marker=dict(color=["#4A90D9", "#5BA0E0", "#E74C3C", "#F39C12", "#95A5A6"]),
+        )
+    )
     fig.update_layout(
         margin=dict(l=20, r=20, t=10, b=10),
         height=350,
@@ -216,6 +274,7 @@ def _get_live_bot_metrics() -> dict | None:
         return None
     try:
         import asyncio
+
         summary = asyncio.run(_analytics_service.get_daily_summary("all"))
         if summary.get("total_messages", 0) > 0:
             return summary
@@ -260,6 +319,7 @@ def _get_live_temperature() -> dict | None:
         return None
     try:
         import asyncio
+
         metrics = asyncio.run(_analytics_service.get_jorge_bot_metrics("all", days=30))
         temps = metrics.get("seller", {}).get("temp_breakdown", {})
         if sum(temps.values()) > 0:
@@ -352,6 +412,7 @@ def _render_followup_queue():
 # Main
 # ---------------------------------------------------------------------------
 
+
 def main():
     st.set_page_config(
         page_title="Jorge AI Bot — Command Center",
@@ -362,12 +423,14 @@ def main():
     st.title("Jorge AI Bot — Command Center")
     st.caption("Lead qualification & follow-up dashboard for Jorge Salas")
 
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "Lead Pipeline",
-        "Bot Activity",
-        "Temperature Map",
-        "Follow-Up Queue",
-    ])
+    tab1, tab2, tab3, tab4 = st.tabs(
+        [
+            "Lead Pipeline",
+            "Bot Activity",
+            "Temperature Map",
+            "Follow-Up Queue",
+        ]
+    )
 
     with tab1:
         _render_lead_pipeline()

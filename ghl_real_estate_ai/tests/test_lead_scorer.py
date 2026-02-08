@@ -3,7 +3,9 @@ Unit tests for lead scorer service.
 
 Tests the lead qualification scoring algorithm using Jorge's Question Count methodology.
 """
+
 import pytest
+
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 
 
@@ -17,25 +19,14 @@ class TestLeadScorer:
 
     def test_calculate_hot_lead_score(self, scorer):
         """Test that 3+ questions answered results in a hot score."""
-        context = {
-            "extracted_preferences": {
-                "budget": 400000,
-                "location": "Austin",
-                "timeline": "ASAP"
-            }
-        }
+        context = {"extracted_preferences": {"budget": 400000, "location": "Austin", "timeline": "ASAP"}}
         score = scorer.calculate(context)
         assert score == 3
         assert scorer.classify(score) == "hot"
 
     def test_calculate_warm_lead_score(self, scorer):
         """Test that 2 questions answered results in a warm score."""
-        context = {
-            "extracted_preferences": {
-                "budget": 350000,
-                "location": "Austin"
-            }
-        }
+        context = {"extracted_preferences": {"budget": 350000, "location": "Austin"}}
         score = scorer.calculate(context)
         assert score == 2
         assert scorer.classify(score) == "warm"
@@ -56,13 +47,7 @@ class TestLeadScorer:
 
     def test_property_requirements_scoring(self, scorer):
         """Test that property requirements (beds/baths/must_haves) count as 1 question."""
-        context = {
-            "extracted_preferences": {
-                "bedrooms": 3,
-                "bathrooms": 2,
-                "must_haves": ["pool"]
-            }
-        }
+        context = {"extracted_preferences": {"bedrooms": 3, "bathrooms": 2, "must_haves": ["pool"]}}
         # Multiple property requirements still only count as ONE qualifying category (Question 4)
         score = scorer.calculate(context)
         assert score == 1
@@ -77,7 +62,7 @@ class TestLeadScorer:
                 "bedrooms": 3,
                 "financing": "pre-approved",
                 "motivation": "relocating",
-                "home_condition": "excellent"
+                "home_condition": "excellent",
             }
         }
         score = scorer.calculate(context)
@@ -97,23 +82,18 @@ class TestLeadScorer:
         # Hot
         actions = scorer.get_recommended_actions(3)
         assert any("Hot Lead" in action for action in actions)
-        
+
         # Warm
         actions = scorer.get_recommended_actions(2)
         assert any("Warm Lead" in action for action in actions)
-        
+
         # Cold
         actions = scorer.get_recommended_actions(1)
         assert any("Cold Lead" in action for action in actions)
 
     def test_calculate_with_reasoning(self, scorer):
         """Test reasoning breakdown for partial qualification."""
-        context = {
-            "extracted_preferences": {
-                "budget": 400000,
-                "location": "Austin"
-            }
-        }
+        context = {"extracted_preferences": {"budget": 400000, "location": "Austin"}}
         result = scorer.calculate_with_reasoning(context)
         assert result["score"] == 2
         assert "Budget: $400,000" in result["reasoning"]

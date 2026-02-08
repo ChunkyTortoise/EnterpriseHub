@@ -1,14 +1,15 @@
 """Tests for XGBoost Life-Event Propensity Engine."""
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
 
 from ghl_real_estate_ai.services.xgboost_propensity_engine import (
-    XGBoostPropensityEngine,
-    LifeEventType,
-    LifeEventSignal,
-    PropensityScore,
     LIFE_EVENT_CONVERSION_RATES,
+    LifeEventSignal,
+    LifeEventType,
+    PropensityScore,
+    XGBoostPropensityEngine,
 )
 
 
@@ -41,12 +42,11 @@ def mock_attom_triggers():
 # Life event detection
 # -------------------------------------------------------------------------
 
+
 class TestLifeEventDetection:
     @pytest.mark.asyncio
     async def test_probate_detected(self, engine, mock_attom_dna, mock_attom_triggers):
-        with patch(
-            "ghl_real_estate_ai.services.attom_client.get_attom_client"
-        ) as mock_get:
+        with patch("ghl_real_estate_ai.services.attom_client.get_attom_client") as mock_get:
             client = MagicMock()
             client.get_property_dna = AsyncMock(return_value=mock_attom_dna)
             client.get_life_event_triggers = AsyncMock(return_value=mock_attom_triggers)
@@ -59,9 +59,7 @@ class TestLifeEventDetection:
 
     @pytest.mark.asyncio
     async def test_absentee_owner_detected(self, engine, mock_attom_dna, mock_attom_triggers):
-        with patch(
-            "ghl_real_estate_ai.services.attom_client.get_attom_client"
-        ) as mock_get:
+        with patch("ghl_real_estate_ai.services.attom_client.get_attom_client") as mock_get:
             client = MagicMock()
             client.get_property_dna = AsyncMock(return_value=mock_attom_dna)
             client.get_life_event_triggers = AsyncMock(return_value=mock_attom_triggers)
@@ -73,9 +71,7 @@ class TestLifeEventDetection:
 
     @pytest.mark.asyncio
     async def test_long_ownership_detected(self, engine, mock_attom_dna, mock_attom_triggers):
-        with patch(
-            "ghl_real_estate_ai.services.attom_client.get_attom_client"
-        ) as mock_get:
+        with patch("ghl_real_estate_ai.services.attom_client.get_attom_client") as mock_get:
             client = MagicMock()
             client.get_property_dna = AsyncMock(return_value=mock_attom_dna)
             client.get_life_event_triggers = AsyncMock(return_value=mock_attom_triggers)
@@ -91,9 +87,7 @@ class TestLifeEventDetection:
         dna = {"summary": {"absentee_owner": False, "years_owned": 3}}
         triggers = {"probate": False, "tax_delinquent": False, "liens": 3}
 
-        with patch(
-            "ghl_real_estate_ai.services.attom_client.get_attom_client"
-        ) as mock_get:
+        with patch("ghl_real_estate_ai.services.attom_client.get_attom_client") as mock_get:
             client = MagicMock()
             client.get_property_dna = AsyncMock(return_value=dna)
             client.get_life_event_triggers = AsyncMock(return_value=triggers)
@@ -114,12 +108,11 @@ class TestLifeEventDetection:
 # Scoring
 # -------------------------------------------------------------------------
 
+
 class TestPropensityScoring:
     @pytest.mark.asyncio
     async def test_score_with_life_events(self, engine, mock_attom_dna, mock_attom_triggers):
-        with patch(
-            "ghl_real_estate_ai.services.attom_client.get_attom_client"
-        ) as mock_get:
+        with patch("ghl_real_estate_ai.services.attom_client.get_attom_client") as mock_get:
             client = MagicMock()
             client.get_property_dna = AsyncMock(return_value=mock_attom_dna)
             client.get_life_event_triggers = AsyncMock(return_value=mock_attom_triggers)
@@ -165,12 +158,15 @@ class TestPropensityScoring:
 # Timeline prediction
 # -------------------------------------------------------------------------
 
+
 class TestTimelinePrediction:
     def test_urgent_events_immediate(self, engine):
         events = [
             LifeEventSignal(
                 event_type=LifeEventType.PROBATE,
-                detected=True, confidence=0.9, source="attom",
+                detected=True,
+                confidence=0.9,
+                source="attom",
             )
         ]
         assert engine._predict_timeline(0.5, events) == "immediate"
@@ -188,6 +184,7 @@ class TestTimelinePrediction:
 # -------------------------------------------------------------------------
 # Recommended approach
 # -------------------------------------------------------------------------
+
 
 class TestApproachRecommendation:
     def test_probate_approach(self, engine):
@@ -211,13 +208,17 @@ class TestApproachRecommendation:
 # Heuristic scoring
 # -------------------------------------------------------------------------
 
+
 class TestHeuristicScoring:
     def test_heuristic_with_probate(self, engine):
         import numpy as np
+
         events = [
             LifeEventSignal(
                 event_type=LifeEventType.PROBATE,
-                detected=True, confidence=0.90, source="attom",
+                detected=True,
+                confidence=0.90,
+                source="attom",
             )
         ]
         features = np.zeros(26)
@@ -226,10 +227,13 @@ class TestHeuristicScoring:
 
     def test_heuristic_bounded(self, engine):
         import numpy as np
+
         events = [
             LifeEventSignal(
                 event_type=LifeEventType.PROBATE,
-                detected=True, confidence=1.0, source="attom",
+                detected=True,
+                confidence=1.0,
+                source="attom",
             )
         ]
         features = np.ones(26)
@@ -238,6 +242,7 @@ class TestHeuristicScoring:
 
     def test_heuristic_minimum(self, engine):
         import numpy as np
+
         score = engine._heuristic_score([], np.zeros(26))
         assert score >= 0.05
 
@@ -246,12 +251,15 @@ class TestHeuristicScoring:
 # Feature construction
 # -------------------------------------------------------------------------
 
+
 class TestFeatureConstruction:
     def test_feature_vector_length(self, engine):
         events = [
             LifeEventSignal(
                 event_type=LifeEventType.PROBATE,
-                detected=True, confidence=0.9, source="attom",
+                detected=True,
+                confidence=0.9,
+                source="attom",
             )
         ]
         vec = engine._build_feature_vector(events, {}, {})
@@ -266,11 +274,14 @@ class TestFeatureConstruction:
 # Cache
 # -------------------------------------------------------------------------
 
+
 class TestCacheManagement:
     def test_clear_cache(self, engine):
         engine._cache["propensity:x"] = PropensityScore(
-            contact_id="x", conversion_probability=0.5,
-            confidence=0.5, temperature="warm",
+            contact_id="x",
+            conversion_probability=0.5,
+            confidence=0.5,
+            temperature="warm",
         )
         engine.clear_cache()
         assert len(engine._cache) == 0

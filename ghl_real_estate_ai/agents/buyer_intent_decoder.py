@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import List, Dict, Any, Optional, TYPE_CHECKING
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
     from ghl_real_estate_ai.services.enhanced_ghl_client import EnhancedGHLClient, GHLContact
@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 from ghl_real_estate_ai.models.lead_scoring import BuyerIntentProfile
 
 logger = logging.getLogger(__name__)
+
 
 class BuyerIntentDecoder:
     """
@@ -28,7 +29,13 @@ class BuyerIntentDecoder:
         self.ghl_client = ghl_client
 
         # Financial Readiness Markers
-        self.high_finance_readiness = ["pre-approved", "cash buyer", "loan approved", "down payment ready", "financing secured"]
+        self.high_finance_readiness = [
+            "pre-approved",
+            "cash buyer",
+            "loan approved",
+            "down payment ready",
+            "financing secured",
+        ]
         self.medium_finance_readiness = ["getting pre-approved", "working with lender", "checking financing"]
         self.low_finance_readiness = ["need to talk to bank", "not sure about financing", "what's my budget"]
 
@@ -70,11 +77,9 @@ class BuyerIntentDecoder:
         """
         try:
             # Extract text content
-            conversation_text = " ".join([
-                msg.get("content", "").lower()
-                for msg in conversation_history
-                if msg.get("role") == "user"
-            ])
+            conversation_text = " ".join(
+                [msg.get("content", "").lower() for msg in conversation_history if msg.get("role") == "user"]
+            )
 
             # Calculate component scores
             financial_readiness = self._score_financial_readiness(conversation_text)
@@ -91,9 +96,9 @@ class BuyerIntentDecoder:
 
             # Calculate overall buyer temperature
             overall_score = (
-                (financial_readiness + budget_clarity + financing_status) / 3 * 0.4 +
-                (urgency_score + timeline_pressure + consequence_awareness) / 3 * 0.35 +
-                (preference_clarity + market_realism + decision_authority) / 3 * 0.25
+                (financial_readiness + budget_clarity + financing_status) / 3 * 0.4
+                + (urgency_score + timeline_pressure + consequence_awareness) / 3 * 0.35
+                + (preference_clarity + market_realism + decision_authority) / 3 * 0.25
             )
 
             buyer_temperature = self._classify_buyer_temperature(overall_score)
@@ -115,7 +120,7 @@ class BuyerIntentDecoder:
                 confidence_level=min(95.0, len(conversation_history) * 10),
                 conversation_turns=len(conversation_history),
                 key_insights=self._extract_key_insights(conversation_text),
-                next_qualification_step=next_step
+                next_qualification_step=next_step,
             )
 
         except Exception as e:
@@ -149,8 +154,7 @@ class BuyerIntentDecoder:
                 ghl_contact = await self.ghl_client.get_contact(contact_id)
             except Exception as e:
                 logger.warning(
-                    f"Failed to fetch GHL contact {contact_id}: {e}. "
-                    "Falling back to conversation-only analysis."
+                    f"Failed to fetch GHL contact {contact_id}: {e}. Falling back to conversation-only analysis."
                 )
 
         # Fall back to standard analysis if no GHL data available
@@ -277,9 +281,9 @@ class BuyerIntentDecoder:
 
         # Recalculate overall score with boosted components
         overall_score = (
-            (financial_readiness + budget_clarity + financing_status) / 3 * 0.4 +
-            (urgency + timeline_pressure + profile.consequence_awareness) / 3 * 0.35 +
-            (preference_clarity + profile.market_realism + profile.decision_authority) / 3 * 0.25
+            (financial_readiness + budget_clarity + financing_status) / 3 * 0.4
+            + (urgency + timeline_pressure + profile.consequence_awareness) / 3 * 0.35
+            + (preference_clarity + profile.market_realism + profile.decision_authority) / 3 * 0.25
         )
 
         buyer_temperature = self._classify_buyer_temperature(overall_score)
@@ -327,7 +331,7 @@ class BuyerIntentDecoder:
         score = 20  # Base score
 
         # Look for specific dollar amounts
-        dollar_pattern = r'\$[\d,]+'
+        dollar_pattern = r"\$[\d,]+"
         dollar_mentions = len(re.findall(dollar_pattern, text))
         score += min(dollar_mentions * 15, 45)  # Max 3 mentions
 
@@ -379,7 +383,7 @@ class BuyerIntentDecoder:
         score = 30  # Base score
 
         # Look for specific dates or deadlines
-        date_pattern = r'\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b|\b(january|february|march|april|may|june|july|august|september|october|november|december)\b'
+        date_pattern = r"\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b|\b(january|february|march|april|may|june|july|august|september|october|november|december)\b"
         date_mentions = len(re.findall(date_pattern, text, re.IGNORECASE))
         score += min(date_mentions * 20, 40)
 
@@ -459,8 +463,9 @@ class BuyerIntentDecoder:
         else:
             return "ice_cold"
 
-    def _determine_next_qualification_step(self, financial: float, urgency: float,
-                                         preferences: float, authority: float) -> str:
+    def _determine_next_qualification_step(
+        self, financial: float, urgency: float, preferences: float, authority: float
+    ) -> str:
         """Determine next qualification step based on scores."""
         if financial < 50:
             return "budget"
@@ -477,10 +482,12 @@ class BuyerIntentDecoder:
         """Extract key insights from conversation."""
         insights = {
             "has_specific_timeline": any(marker in text for marker in self.committed_timeline),
-            "mentions_financing": any(marker in text for marker in self.high_finance_readiness + self.medium_finance_readiness),
+            "mentions_financing": any(
+                marker in text for marker in self.high_finance_readiness + self.medium_finance_readiness
+            ),
             "has_clear_preferences": len([f for f in ["bedroom", "bathroom", "garage"] if f in text]) >= 2,
             "shows_urgency": any(marker in text for marker in self.immediate_urgency),
-            "decision_maker_identified": any(marker in text for marker in self.full_authority + self.shared_authority)
+            "decision_maker_identified": any(marker in text for marker in self.full_authority + self.shared_authority),
         }
         return insights
 
@@ -500,5 +507,5 @@ class BuyerIntentDecoder:
             confidence_level=10.0,
             conversation_turns=0,
             key_insights={},
-            next_qualification_step="budget"
+            next_qualification_step="budget",
         )

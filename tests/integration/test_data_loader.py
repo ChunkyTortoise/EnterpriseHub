@@ -1,11 +1,12 @@
 """Tests for data_loader module."""
 
-import pytest
-import pandas as pd
 from unittest.mock import patch
 
-from utils.data_loader import get_stock_data, calculate_indicators
-from utils.exceptions import InvalidTickerError, DataFetchError, DataProcessingError
+import pandas as pd
+import pytest
+
+from utils.data_loader import calculate_indicators, get_stock_data
+from utils.exceptions import DataFetchError, DataProcessingError, InvalidTickerError
 
 
 class TestGetStockData:
@@ -104,9 +105,7 @@ class TestCalculateIndicators:
         df = pd.DataFrame(data, index=dates)
 
         # Flatten the MultiIndex columns (mimicking what get_stock_data does)
-        df.columns = [
-            "_".join(col).strip() if isinstance(col, tuple) else col for col in df.columns
-        ]
+        df.columns = ["_".join(col).strip() if isinstance(col, tuple) else col for col in df.columns]
         df.columns = [col.split("_")[1] if "_" in col else col for col in df.columns]
 
         result = calculate_indicators(df)

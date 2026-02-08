@@ -8,18 +8,19 @@ Comprehensive test suite for Jorge's voice AI capabilities:
 - Error handling and fallbacks
 """
 
+import asyncio
+from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 import pytest_asyncio
-import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime
 
 from ghl_real_estate_ai.services.voice_ai_service import (
     VoiceAIService,
-    VoiceInteractionType,
-    VoiceInteraction,
     VoiceAnalytics,
-    get_voice_ai_service
+    VoiceInteraction,
+    VoiceInteractionType,
+    get_voice_ai_service,
 )
 
 
@@ -50,12 +51,8 @@ def sample_interaction_context():
         "lead_id": "test_lead_123",
         "interaction_type": VoiceInteractionType.LEAD_QUALIFICATION,
         "context": {
-            "lead_preferences": {
-                "budget_max": 500000,
-                "location": "Austin, TX",
-                "property_type": "Single Family"
-            }
-        }
+            "lead_preferences": {"budget_max": 500000, "location": "Austin, TX", "property_type": "Single Family"}
+        },
     }
 
 
@@ -79,7 +76,7 @@ class TestVoiceAIService:
             agent_id=context["agent_id"],
             interaction_type=context["interaction_type"],
             lead_id=context["lead_id"],
-            context=context["context"]
+            context=context["context"],
         )
 
         assert interaction_id is not None
@@ -103,9 +100,7 @@ class TestVoiceAIService:
 
         # Start a session first
         interaction_id = await voice_ai_service.start_voice_interaction(
-            agent_id=context["agent_id"],
-            interaction_type=context["interaction_type"],
-            lead_id=context["lead_id"]
+            agent_id=context["agent_id"], interaction_type=context["interaction_type"], lead_id=context["lead_id"]
         )
 
         # Mock Claude response
@@ -118,10 +113,7 @@ class TestVoiceAIService:
         test_transcript = "Hi, I'm looking for a 3-bedroom house in Austin under $500k"
 
         # Process the voice input
-        result = await voice_ai_service.process_voice_input(
-            interaction_id=interaction_id,
-            transcript=test_transcript
-        )
+        result = await voice_ai_service.process_voice_input(interaction_id=interaction_id, transcript=test_transcript)
 
         # Verify result structure
         assert "ai_response" in result
@@ -142,8 +134,7 @@ class TestVoiceAIService:
         """Test processing voice input with invalid session ID."""
         with pytest.raises(ValueError, match="No active session found"):
             await voice_ai_service.process_voice_input(
-                interaction_id="invalid_session_id",
-                transcript="Test transcript"
+                interaction_id="invalid_session_id", transcript="Test transcript"
             )
 
     async def test_end_voice_interaction(self, voice_ai_service, sample_interaction_context):
@@ -152,16 +143,12 @@ class TestVoiceAIService:
 
         # Start a session
         interaction_id = await voice_ai_service.start_voice_interaction(
-            agent_id=context["agent_id"],
-            interaction_type=context["interaction_type"]
+            agent_id=context["agent_id"], interaction_type=context["interaction_type"]
         )
 
         # Process some input to have conversation data
         voice_ai_service.claude_assistant.chat_with_claude.return_value = "Test response"
-        await voice_ai_service.process_voice_input(
-            interaction_id=interaction_id,
-            transcript="Test input"
-        )
+        await voice_ai_service.process_voice_input(interaction_id=interaction_id, transcript="Test input")
 
         # Mock summary generation
         voice_ai_service.claude_assistant.chat_with_claude.return_value = (
@@ -197,16 +184,14 @@ class TestVoiceAIService:
 
         # Start session and process input
         interaction_id = await voice_ai_service.start_voice_interaction(
-            agent_id=context["agent_id"],
-            interaction_type=context["interaction_type"]
+            agent_id=context["agent_id"], interaction_type=context["interaction_type"]
         )
 
         # Mock Claude analysis response
         voice_ai_service.claude_assistant.chat_with_claude.return_value = "Mock analysis response"
 
         await voice_ai_service.process_voice_input(
-            interaction_id=interaction_id,
-            transcript="I'm very excited about finding a home in Austin!"
+            interaction_id=interaction_id, transcript="I'm very excited about finding a home in Austin!"
         )
 
         # Verify analytics were cached
@@ -221,10 +206,7 @@ class TestVoiceAIService:
 
     async def test_get_voice_analytics_dashboard(self, voice_ai_service):
         """Test getting voice analytics dashboard data."""
-        dashboard_data = await voice_ai_service.get_voice_analytics_dashboard(
-            agent_id="test_agent",
-            days=7
-        )
+        dashboard_data = await voice_ai_service.get_voice_analytics_dashboard(agent_id="test_agent", days=7)
 
         # Verify dashboard data structure
         required_fields = [
@@ -235,7 +217,7 @@ class TestVoiceAIService:
             "top_intents",
             "sentiment_distribution",
             "conversion_by_type",
-            "ai_performance"
+            "ai_performance",
         ]
 
         for field in required_fields:
@@ -248,24 +230,20 @@ class TestVoiceAIService:
         assert isinstance(dashboard_data["top_intents"], list)
         assert isinstance(dashboard_data["sentiment_distribution"], dict)
 
-    @patch('ghl_real_estate_ai.services.voice_ai_service.logger')
+    @patch("ghl_real_estate_ai.services.voice_ai_service.logger")
     async def test_error_handling_claude_failure(self, mock_logger, voice_ai_service, sample_interaction_context):
         """Test error handling when Claude AI fails."""
         context = sample_interaction_context
 
         interaction_id = await voice_ai_service.start_voice_interaction(
-            agent_id=context["agent_id"],
-            interaction_type=context["interaction_type"]
+            agent_id=context["agent_id"], interaction_type=context["interaction_type"]
         )
 
         # Make Claude fail
         voice_ai_service.claude_assistant.chat_with_claude.side_effect = Exception("Claude API error")
 
         # Process voice input should still work with fallbacks
-        result = await voice_ai_service.process_voice_input(
-            interaction_id=interaction_id,
-            transcript="Test input"
-        )
+        result = await voice_ai_service.process_voice_input(interaction_id=interaction_id, transcript="Test input")
 
         # Verify fallback response was provided
         assert "ai_response" in result
@@ -299,8 +277,7 @@ class TestVoiceAIService:
         session_ids = []
         for i in range(3):
             interaction_id = await voice_ai_service.start_voice_interaction(
-                agent_id=f"agent_{i}",
-                interaction_type=VoiceInteractionType.LEAD_QUALIFICATION
+                agent_id=f"agent_{i}", interaction_type=VoiceInteractionType.LEAD_QUALIFICATION
             )
             session_ids.append(interaction_id)
 
@@ -312,8 +289,7 @@ class TestVoiceAIService:
 
         for session_id in session_ids:
             result = await voice_ai_service.process_voice_input(
-                interaction_id=session_id,
-                transcript=f"Test input for {session_id}"
+                interaction_id=session_id, transcript=f"Test input for {session_id}"
             )
             assert result["interaction_status"] == "active"
 
@@ -337,7 +313,7 @@ class TestVoiceInteraction:
             agent_id="agent_001",
             interaction_type=VoiceInteractionType.PROPERTY_SEARCH,
             start_time=datetime.now(),
-            lead_id="lead_456"
+            lead_id="lead_456",
         )
 
         assert interaction.interaction_id == "test_123"
@@ -355,7 +331,7 @@ class TestVoiceInteraction:
             agent_id="agent_001",
             lead_id=None,
             interaction_type=VoiceInteractionType.GENERAL_INQUIRY,
-            start_time=datetime.now()
+            start_time=datetime.now(),
         )
 
         assert interaction.ai_responses == []
@@ -381,7 +357,7 @@ class TestVoiceAnalytics:
             concerns_identified=["location_concerns"],
             recommended_actions=["schedule_viewing", "send_listings"],
             call_quality_score=0.85,
-            next_best_action="Schedule property viewing within 48 hours"
+            next_best_action="Schedule property viewing within 48 hours",
         )
 
         assert analytics.interaction_id == "test_123"
@@ -407,7 +383,7 @@ class TestGlobalServiceInstance:
         assert service1 is service2
         assert isinstance(service1, VoiceAIService)
 
-    @patch('ghl_real_estate_ai.services.voice_ai_service._voice_ai_service', None)
+    @patch("ghl_real_estate_ai.services.voice_ai_service._voice_ai_service", None)
     def test_get_voice_ai_service_creates_new_instance(self):
         """Test that get_voice_ai_service creates new instance when needed."""
         service = get_voice_ai_service()

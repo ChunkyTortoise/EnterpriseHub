@@ -14,12 +14,13 @@ import asyncio
 import json
 import time
 from collections import defaultdict, deque
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Set
-from enum import Enum
-from dataclasses import dataclass, asdict
-import redis.asyncio as redis
 from contextlib import asynccontextmanager
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta, timezone
+from enum import Enum
+from typing import Any, Dict, List, Optional, Set
+
+import redis.asyncio as redis
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import CacheService
@@ -29,6 +30,7 @@ logger = get_logger(__name__)
 
 class ThreatLevel(str, Enum):
     """Security threat levels."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -37,6 +39,7 @@ class ThreatLevel(str, Enum):
 
 class EventType(str, Enum):
     """Security event types for monitoring."""
+
     AUTHENTICATION = "authentication"
     AUTHORIZATION = "authorization"
     DATA_ACCESS = "data_access"
@@ -50,6 +53,7 @@ class EventType(str, Enum):
 @dataclass
 class SecurityEvent:
     """Security event data structure."""
+
     event_id: str
     event_type: EventType
     threat_level: ThreatLevel
@@ -67,7 +71,7 @@ class SecurityEvent:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         data = asdict(self)
-        data['timestamp'] = self.timestamp.isoformat()
+        data["timestamp"] = self.timestamp.isoformat()
         return data
 
 
@@ -76,58 +80,56 @@ class SecurityMetrics:
 
     def __init__(self):
         self.metrics = {
-            'total_events': 0,
-            'events_by_type': defaultdict(int),
-            'events_by_threat_level': defaultdict(int),
-            'blocked_requests': 0,
-            'authentication_failures': 0,
-            'rate_limit_violations': 0,
-            'suspicious_activities': 0,
-            'unique_ips': set(),
-            'top_threat_sources': defaultdict(int),
-            'average_response_time': 0.0,
-            'last_reset': datetime.now(timezone.utc)
+            "total_events": 0,
+            "events_by_type": defaultdict(int),
+            "events_by_threat_level": defaultdict(int),
+            "blocked_requests": 0,
+            "authentication_failures": 0,
+            "rate_limit_violations": 0,
+            "suspicious_activities": 0,
+            "unique_ips": set(),
+            "top_threat_sources": defaultdict(int),
+            "average_response_time": 0.0,
+            "last_reset": datetime.now(timezone.utc),
         }
         self.recent_events = deque(maxlen=1000)  # Keep last 1000 events
 
     def record_event(self, event: SecurityEvent):
         """Record a security event in metrics."""
-        self.metrics['total_events'] += 1
-        self.metrics['events_by_type'][event.event_type] += 1
-        self.metrics['events_by_threat_level'][event.threat_level] += 1
-        self.metrics['unique_ips'].add(event.source_ip)
-        self.metrics['top_threat_sources'][event.source_ip] += 1
+        self.metrics["total_events"] += 1
+        self.metrics["events_by_type"][event.event_type] += 1
+        self.metrics["events_by_threat_level"][event.threat_level] += 1
+        self.metrics["unique_ips"].add(event.source_ip)
+        self.metrics["top_threat_sources"][event.source_ip] += 1
 
         # Track specific event types
         if event.threat_level in [ThreatLevel.HIGH, ThreatLevel.CRITICAL]:
-            self.metrics['suspicious_activities'] += 1
+            self.metrics["suspicious_activities"] += 1
 
         if event.event_type == EventType.AUTHENTICATION and "failed" in event.description:
-            self.metrics['authentication_failures'] += 1
+            self.metrics["authentication_failures"] += 1
 
         if event.event_type == EventType.RATE_LIMITING:
-            self.metrics['rate_limit_violations'] += 1
+            self.metrics["rate_limit_violations"] += 1
 
         self.recent_events.append(event)
 
     def get_metrics_summary(self) -> Dict[str, Any]:
         """Get current security metrics summary."""
         return {
-            'total_events': self.metrics['total_events'],
-            'events_by_type': dict(self.metrics['events_by_type']),
-            'events_by_threat_level': dict(self.metrics['events_by_threat_level']),
-            'blocked_requests': self.metrics['blocked_requests'],
-            'authentication_failures': self.metrics['authentication_failures'],
-            'rate_limit_violations': self.metrics['rate_limit_violations'],
-            'suspicious_activities': self.metrics['suspicious_activities'],
-            'unique_ips_count': len(self.metrics['unique_ips']),
-            'top_threat_sources': dict(sorted(
-                self.metrics['top_threat_sources'].items(),
-                key=lambda x: x[1],
-                reverse=True
-            )[:10]),
-            'last_reset': self.metrics['last_reset'].isoformat(),
-            'uptime_hours': (datetime.now(timezone.utc) - self.metrics['last_reset']).total_seconds() / 3600
+            "total_events": self.metrics["total_events"],
+            "events_by_type": dict(self.metrics["events_by_type"]),
+            "events_by_threat_level": dict(self.metrics["events_by_threat_level"]),
+            "blocked_requests": self.metrics["blocked_requests"],
+            "authentication_failures": self.metrics["authentication_failures"],
+            "rate_limit_violations": self.metrics["rate_limit_violations"],
+            "suspicious_activities": self.metrics["suspicious_activities"],
+            "unique_ips_count": len(self.metrics["unique_ips"]),
+            "top_threat_sources": dict(
+                sorted(self.metrics["top_threat_sources"].items(), key=lambda x: x[1], reverse=True)[:10]
+            ),
+            "last_reset": self.metrics["last_reset"].isoformat(),
+            "uptime_hours": (datetime.now(timezone.utc) - self.metrics["last_reset"]).total_seconds() / 3600,
         }
 
 
@@ -152,10 +154,13 @@ class ThreatDetector:
 
         # Failed authentication analysis
         if event.event_type == EventType.AUTHENTICATION and "failed" in event.description:
-            recent_failures = len([
-                attempt for attempt in self.failed_attempts[event.source_ip]
-                if attempt > datetime.now(timezone.utc) - timedelta(minutes=15)
-            ])
+            recent_failures = len(
+                [
+                    attempt
+                    for attempt in self.failed_attempts[event.source_ip]
+                    if attempt > datetime.now(timezone.utc) - timedelta(minutes=15)
+                ]
+            )
             self.failed_attempts[event.source_ip].append(datetime.now(timezone.utc))
 
             if recent_failures > 5:
@@ -169,7 +174,7 @@ class ThreatDetector:
 
         # SQL injection or XSS attempts
         if event.event_type == EventType.INPUT_VALIDATION:
-            if any(keyword in event.description.lower() for keyword in ['sql', 'xss', 'script']):
+            if any(keyword in event.description.lower() for keyword in ["sql", "xss", "script"]):
                 threat_score += 50
 
         # Determine threat level
@@ -208,10 +213,10 @@ class SecurityMonitor:
         self.threat_detector = ThreatDetector()
         self.event_handlers = []
         self.alert_thresholds = {
-            'authentication_failures': 10,
-            'rate_limit_violations': 20,
-            'suspicious_activities': 5,
-            'unique_threat_ips': 5
+            "authentication_failures": 10,
+            "rate_limit_violations": 20,
+            "suspicious_activities": 5,
+            "unique_threat_ips": 5,
         }
         self._running = False
         self._monitor_task = None
@@ -247,7 +252,7 @@ class SecurityMonitor:
         user_id: Optional[str] = None,
         user_agent: Optional[str] = None,
         session_id: Optional[str] = None,
-        request_id: Optional[str] = None
+        request_id: Optional[str] = None,
     ) -> SecurityEvent:
         """Log a security event."""
         # Create security event
@@ -264,7 +269,7 @@ class SecurityMonitor:
             details=details,
             user_agent=user_agent,
             session_id=session_id,
-            request_id=request_id
+            request_id=request_id,
         )
 
         # Analyze threat level
@@ -287,8 +292,8 @@ class SecurityMonitor:
                 "threat_level": event.threat_level,
                 "event_id": event.event_id,
                 "source_ip": event.source_ip,
-                "endpoint": event.endpoint
-            }
+                "endpoint": event.endpoint,
+            },
         )
 
         return event
@@ -302,7 +307,7 @@ class SecurityMonitor:
                 await self.cache_service.set(
                     key,
                     json.dumps(event.to_dict()),
-                    ttl=30 * 24 * 3600  # 30 days
+                    ttl=30 * 24 * 3600,  # 30 days
                 )
 
                 # Add to daily index for reporting
@@ -317,11 +322,7 @@ class SecurityMonitor:
         """Check if event triggers any alerts."""
         # Critical events always trigger alerts
         if event.threat_level == ThreatLevel.CRITICAL:
-            await self._send_alert(
-                f"CRITICAL Security Event: {event.description}",
-                event,
-                level="critical"
-            )
+            await self._send_alert(f"CRITICAL Security Event: {event.description}", event, level="critical")
 
         # Check threshold-based alerts
         current_metrics = self.metrics.get_metrics_summary()
@@ -329,9 +330,7 @@ class SecurityMonitor:
         for metric, threshold in self.alert_thresholds.items():
             if current_metrics.get(metric, 0) >= threshold:
                 await self._send_alert(
-                    f"Security threshold exceeded: {metric} = {current_metrics[metric]}",
-                    event,
-                    level="warning"
+                    f"Security threshold exceeded: {metric} = {current_metrics[metric]}", event, level="warning"
                 )
 
     async def _send_alert(self, message: str, event: SecurityEvent, level: str = "warning"):
@@ -341,7 +340,7 @@ class SecurityMonitor:
             "level": level,
             "event": event.to_dict(),
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "metrics_summary": self.metrics.get_metrics_summary()
+            "metrics_summary": self.metrics.get_metrics_summary(),
         }
 
         # Log alert
@@ -351,8 +350,8 @@ class SecurityMonitor:
                 "security_alert": True,
                 "alert_level": level,
                 "event_id": event.event_id,
-                "source_ip": event.source_ip
-            }
+                "source_ip": event.source_ip,
+            },
         )
 
         # In production, send to monitoring system (PagerDuty, Slack, etc.)
@@ -394,36 +393,30 @@ class SecurityMonitor:
         metrics = self.metrics.get_metrics_summary()
         logger.info(
             "Security monitoring report",
-            extra={
-                "security_report": True,
-                "metrics": metrics,
-                "timestamp": datetime.now(timezone.utc).isoformat()
-            }
+            extra={"security_report": True, "metrics": metrics, "timestamp": datetime.now(timezone.utc).isoformat()},
         )
 
     async def get_security_dashboard_data(self) -> Dict[str, Any]:
         """Get data for security dashboard."""
         return {
             "metrics": self.metrics.get_metrics_summary(),
-            "recent_events": [
-                event.to_dict() for event in list(self.metrics.recent_events)[-10:]
-            ],
+            "recent_events": [event.to_dict() for event in list(self.metrics.recent_events)[-10:]],
             "threat_analysis": {
                 "blocked_ips": len(self.threat_detector.blocked_ips),
-                "high_risk_ips": len([
-                    ip for ip, score in self.threat_detector.ip_reputation.items()
-                    if score > 50
-                ]),
-                "active_threats": len([
-                    event for event in self.metrics.recent_events
-                    if event.threat_level in [ThreatLevel.HIGH, ThreatLevel.CRITICAL]
-                    and (datetime.now(timezone.utc) - event.timestamp).total_seconds() < 3600
-                ])
+                "high_risk_ips": len([ip for ip, score in self.threat_detector.ip_reputation.items() if score > 50]),
+                "active_threats": len(
+                    [
+                        event
+                        for event in self.metrics.recent_events
+                        if event.threat_level in [ThreatLevel.HIGH, ThreatLevel.CRITICAL]
+                        and (datetime.now(timezone.utc) - event.timestamp).total_seconds() < 3600
+                    ]
+                ),
             },
             "system_health": {
                 "monitoring_active": self._running,
-                "uptime": (datetime.now(timezone.utc) - self.metrics.metrics['last_reset']).total_seconds()
-            }
+                "uptime": (datetime.now(timezone.utc) - self.metrics.metrics["last_reset"]).total_seconds(),
+            },
         }
 
     async def search_events(
@@ -433,7 +426,7 @@ class SecurityMonitor:
         event_type: Optional[EventType] = None,
         threat_level: Optional[ThreatLevel] = None,
         source_ip: Optional[str] = None,
-        limit: int = 100
+        limit: int = 100,
     ) -> List[SecurityEvent]:
         """Search security events with filters."""
         # This would implement a full search in a production system
@@ -467,6 +460,7 @@ async def get_security_monitor() -> SecurityMonitor:
     global _security_monitor
     if _security_monitor is None:
         from ghl_real_estate_ai.services.cache_service import CacheService
+
         cache_service = CacheService()
         _security_monitor = SecurityMonitor(cache_service)
         await _security_monitor.start_monitoring()

@@ -14,10 +14,12 @@ Features:
 """
 
 import re
-from typing import Any, Dict, List, Optional, Union
-from decimal import Decimal
 from datetime import datetime, timezone
+from decimal import Decimal
+from typing import Any, Dict, List, Optional, Union
+
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
+
 try:
     from pydantic.types import EmailStr
 except ImportError:
@@ -33,8 +35,8 @@ class JorgeCommissionValidator:
     """Validator for Jorge's commission rates and calculations."""
 
     STANDARD_RATE = Decimal("0.06")  # 6%
-    MIN_RATE = Decimal("0.05")       # 5%
-    MAX_RATE = Decimal("0.08")       # 8%
+    MIN_RATE = Decimal("0.05")  # 5%
+    MAX_RATE = Decimal("0.08")  # 8%
 
     @classmethod
     def validate_commission_rate(cls, rate: Union[float, Decimal, str]) -> Decimal:
@@ -68,8 +70,8 @@ class JorgeCommissionValidator:
 class JorgePropertyValidator:
     """Validator for Jorge's property criteria and requirements."""
 
-    MIN_VALUE = 100_000      # $100K
-    MAX_VALUE = 2_000_000    # $2M
+    MIN_VALUE = 100_000  # $100K
+    MAX_VALUE = 2_000_000  # $2M
     SUPPORTED_TYPES = ["single_family", "condo", "townhouse", "duplex"]
     SUPPORTED_MARKETS = ["rancho_cucamonga", "san_antonio", "houston", "dallas"]
 
@@ -108,8 +110,7 @@ class JorgePropertyValidator:
 
         if normalized_type not in cls.SUPPORTED_TYPES:
             raise ValueError(
-                f"Property type '{property_type}' is not supported. "
-                f"Jorge handles: {', '.join(cls.SUPPORTED_TYPES)}."
+                f"Property type '{property_type}' is not supported. Jorge handles: {', '.join(cls.SUPPORTED_TYPES)}."
             )
 
         return normalized_type
@@ -145,8 +146,7 @@ class JorgeLeadValidator:
 
         if not cls.PHONE_PATTERN.match(phone):
             raise ValueError(
-                f"Invalid phone number format: '{phone}'. "
-                "Please provide a valid US phone number (e.g., 555-123-4567)."
+                f"Invalid phone number format: '{phone}'. Please provide a valid US phone number (e.g., 555-123-4567)."
             )
 
         # Extract digits only for storage
@@ -154,10 +154,7 @@ class JorgeLeadValidator:
         if len(digits_only) == 11 and digits_only.startswith("1"):
             digits_only = digits_only[1:]  # Remove country code
         elif len(digits_only) != 10:
-            raise ValueError(
-                f"Phone number must be 10 digits: '{phone}'. "
-                "Format: (555) 123-4567 or 555-123-4567."
-            )
+            raise ValueError(f"Phone number must be 10 digits: '{phone}'. Format: (555) 123-4567 or 555-123-4567.")
 
         # Return formatted version
         return f"({digits_only[:3]}) {digits_only[3:6]}-{digits_only[6:]}"
@@ -169,9 +166,7 @@ class JorgeLeadValidator:
             return None
 
         if not isinstance(score, int) or score < 300 or score > 850:
-            raise ValueError(
-                f"Invalid credit score: {score}. Must be between 300 and 850."
-            )
+            raise ValueError(f"Invalid credit score: {score}. Must be between 300 and 850.")
 
         if score < cls.MIN_CREDIT_SCORE:
             raise ValueError(
@@ -200,6 +195,7 @@ class JorgeLeadValidator:
 
 
 # Pydantic Models with Jorge Validators
+
 
 class JorgePropertyRequest(BaseModel):
     """Property request with Jorge's business validation."""
@@ -231,15 +227,17 @@ class JorgePropertyRequest(BaseModel):
     def validate_commission(cls, v):
         return JorgeCommissionValidator.validate_commission_rate(v)
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "address": "123 Main St, Rancho Cucamonga, CA 78701",
                 "property_type": "single_family",
                 "market": "rancho_cucamonga",
                 "estimated_value": 450000,
-                "commission_rate": 0.06
+                "commission_rate": 0.06,
             }
-        })
+        }
+    )
 
 
 class JorgeLeadRequest(BaseModel):
@@ -277,7 +275,8 @@ class JorgeLeadRequest(BaseModel):
             raise ValueError("Preapproval amount must be positive")
         return v
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "first_name": "John",
                 "last_name": "Smith",
@@ -286,9 +285,10 @@ class JorgeLeadRequest(BaseModel):
                 "annual_income": 75000,
                 "credit_score": 720,
                 "preapproval_amount": 400000,
-                "lead_source": "website"
+                "lead_source": "website",
             }
-        })
+        }
+    )
 
 
 class JorgeCommissionCalculation(BaseModel):
@@ -326,13 +326,9 @@ class JorgeCommissionCalculation(BaseModel):
         """Calculate Jorge's commission amount."""
         return self.total_commission * self.split_percentage
 
-    model_config = ConfigDict(json_schema_extra={
-            "example": {
-                "property_value": 700000,
-                "commission_rate": 0.06,
-                "split_percentage": 1.0
-            }
-        })
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"property_value": 700000, "commission_rate": 0.06, "split_percentage": 1.0}}
+    )
 
 
 class JorgeBotMessage(BaseModel):
@@ -351,30 +347,28 @@ class JorgeBotMessage(BaseModel):
         message_type = info.data.get("message_type")
 
         if message_type == "sms" and len(v) > 160:
-            raise ValueError(
-                f"SMS content too long ({len(v)} chars). "
-                "Maximum 160 characters for SMS compliance."
-            )
+            raise ValueError(f"SMS content too long ({len(v)} chars). Maximum 160 characters for SMS compliance.")
 
         # Check for professional tone
         unprofessional_words = ["dude", "bro", "whatever", "wtf", "omg"]
         if any(word in v.lower() for word in unprofessional_words):
             raise ValueError(
-                "Message content must maintain professional tone. "
-                "Jorge requires professional communication standards."
+                "Message content must maintain professional tone. Jorge requires professional communication standards."
             )
 
         return v
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "message_type": "sms",
                 "content": "Hi John! Jorge here. Saw your interest in Rancho Cucamonga properties. Free to chat about your home search? Quick 5-min call.",
                 "lead_id": "123e4567-e89b-12d3-a456-426614174000",
                 "bot_type": "buyer",
-                "temperature": "warm"
+                "temperature": "warm",
             }
-        })
+        }
+    )
 
 
 class JorgeAnalyticsQuery(BaseModel):
@@ -390,30 +384,36 @@ class JorgeAnalyticsQuery(BaseModel):
     def validate_metrics(cls, v):
         """Validate metrics are supported."""
         supported_metrics = [
-            "revenue", "leads", "conversion", "commission", "properties",
-            "bot_performance", "response_time", "qualification_rate"
+            "revenue",
+            "leads",
+            "conversion",
+            "commission",
+            "properties",
+            "bot_performance",
+            "response_time",
+            "qualification_rate",
         ]
 
         invalid_metrics = [m for m in v if m not in supported_metrics]
         if invalid_metrics:
-            raise ValueError(
-                f"Unsupported metrics: {invalid_metrics}. "
-                f"Supported: {supported_metrics}"
-            )
+            raise ValueError(f"Unsupported metrics: {invalid_metrics}. Supported: {supported_metrics}")
 
         return v
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "timeframe": "7d",
                 "metrics": ["revenue", "leads", "conversion", "commission"],
                 "location_id": "jorge_rancho_cucamonga",
-                "include_commission": True
+                "include_commission": True,
             }
-        })
+        }
+    )
 
 
 # Error response models
+
 
 class JorgeValidationError(BaseModel):
     """Jorge-specific validation error response."""
@@ -425,23 +425,26 @@ class JorgeValidationError(BaseModel):
     correlation_id: str
     timestamp: datetime
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "success": False,
                 "error": {
                     "type": "validation_error",
                     "message": "Commission rate validation failed",
-                    "retryable": False
+                    "retryable": False,
                 },
                 "field_errors": ["commission_rate: Commission rate 0.12 exceeds Jorge's maximum of 8%"],
                 "guidance": "Jorge's commission rate must be between 5% and 8%. Standard rate is 6%.",
                 "correlation_id": "jorge_1234567890_abc123",
-                "timestamp": "2026-01-25T12:00:00Z"
+                "timestamp": "2026-01-25T12:00:00Z",
             }
-        })
+        }
+    )
 
 
 # Convenience functions for validation
+
 
 def validate_jorge_commission(rate: Union[float, str, Decimal]) -> Decimal:
     """Standalone commission validation function."""

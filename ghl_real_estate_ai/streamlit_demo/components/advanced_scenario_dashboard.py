@@ -8,26 +8,32 @@ Implements research recommendations for sophisticated BI capabilities.
 Author: Enhanced from research recommendations - January 2026
 """
 
-import streamlit as st
-import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
-import pandas as pd
-import numpy as np
 import asyncio
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
+
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import streamlit as st
+from plotly.subplots import make_subplots
 
 # Import services
 try:
-    from ghl_real_estate_ai.services.scenario_simulation_engine import (
-        get_scenario_simulation_engine, ScenarioInput, ScenarioType, ScenarioResults
-    )
     from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+    from ghl_real_estate_ai.services.scenario_simulation_engine import (
+        ScenarioInput,
+        ScenarioResults,
+        ScenarioType,
+        get_scenario_simulation_engine,
+    )
+
     SERVICES_AVAILABLE = True
 except ImportError:
     SERVICES_AVAILABLE = False
     st.warning("Scenario simulation services not available")
+
 
 def render_advanced_scenario_dashboard():
     """Render the main scenario simulation dashboard."""
@@ -40,12 +46,9 @@ def render_advanced_scenario_dashboard():
         return
 
     # Create tabs for different scenarios
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "💰 Commission Analysis",
-        "🎯 Lead Qualification",
-        "📈 Growth Scenarios",
-        "📊 Portfolio Analysis"
-    ])
+    tab1, tab2, tab3, tab4 = st.tabs(
+        ["💰 Commission Analysis", "🎯 Lead Qualification", "📈 Growth Scenarios", "📊 Portfolio Analysis"]
+    )
 
     with tab1:
         render_commission_scenario_panel()
@@ -58,6 +61,7 @@ def render_advanced_scenario_dashboard():
 
     with tab4:
         render_portfolio_analysis_panel()
+
 
 def render_commission_scenario_panel():
     """Render commission adjustment scenario analysis."""
@@ -77,32 +81,19 @@ def render_commission_scenario_panel():
             max_value=8.0,
             value=6.0,
             step=0.1,
-            key="current_commission_rate"
+            key="current_commission_rate",
         )
 
         # New commission rate
         new_rate = st.number_input(
-            "Proposed Commission Rate (%)",
-            min_value=4.0,
-            max_value=8.0,
-            value=5.5,
-            step=0.1,
-            key="new_commission_rate"
+            "Proposed Commission Rate (%)", min_value=4.0, max_value=8.0, value=5.5, step=0.1, key="new_commission_rate"
         )
 
         # Analysis period
-        period = st.selectbox(
-            "Analysis Period",
-            ["12M", "6M", "18M", "24M"],
-            index=0
-        )
+        period = st.selectbox("Analysis Period", ["12M", "6M", "18M", "24M"], index=0)
 
         # Confidence level
-        confidence = st.slider(
-            "Confidence Level",
-            85, 99, 95,
-            help="Statistical confidence level for projections"
-        )
+        confidence = st.slider("Confidence Level", 85, 99, 95, help="Statistical confidence level for projections")
 
         run_analysis = st.button("Run Commission Analysis", key="run_commission_analysis")
 
@@ -111,6 +102,7 @@ def render_commission_scenario_panel():
             render_commission_analysis_results(current_rate, new_rate, period, confidence)
         else:
             st.info("👈 Configure parameters and click 'Run Analysis' to see results")
+
 
 def render_commission_analysis_results(current_rate, new_rate, period, confidence):
     """Render commission analysis results with visualizations."""
@@ -136,66 +128,48 @@ def render_commission_analysis_results(current_rate, new_rate, period, confidenc
         col1, col2, col3, col4 = st.columns(4)
 
         with col1:
-            st.metric(
-                "Revenue Impact",
-                f"{revenue_change:+.1f}%",
-                f"${(new_revenue - baseline_revenue):+,.0f}"
-            )
+            st.metric("Revenue Impact", f"{revenue_change:+.1f}%", f"${(new_revenue - baseline_revenue):+,.0f}")
 
         with col2:
-            st.metric(
-                "Deal Volume",
-                f"{new_deals} deals",
-                f"{new_deals - baseline_deals:+d}"
-            )
+            st.metric("Deal Volume", f"{new_deals} deals", f"{new_deals - baseline_deals:+d}")
 
         with col3:
             margin_change = (new_rate - current_rate) * new_deals * 40000  # Avg deal value
-            st.metric(
-                "Margin Impact",
-                f"${margin_change:+,.0f}",
-                f"{margin_change/baseline_revenue*100:+.1f}%"
-            )
+            st.metric("Margin Impact", f"${margin_change:+,.0f}", f"{margin_change / baseline_revenue * 100:+.1f}%")
 
         with col4:
             satisfaction = 50 + (commission_change * 1000)
-            st.metric(
-                "Agent Satisfaction",
-                f"{satisfaction:.0f}/100",
-                f"{satisfaction-50:+.0f}"
-            )
+            st.metric("Agent Satisfaction", f"{satisfaction:.0f}/100", f"{satisfaction - 50:+.0f}")
 
         # Waterfall chart for revenue impact
         st.subheader("Revenue Impact Breakdown")
 
         fig = go.Figure()
 
-        categories = ['Current Revenue', 'Commission Rate Effect', 'Agent Response', 'Market Dynamics', 'New Revenue']
+        categories = ["Current Revenue", "Commission Rate Effect", "Agent Response", "Market Dynamics", "New Revenue"]
         values = [
             baseline_revenue,
             baseline_revenue * rate_impact,
             baseline_revenue * (buyer_agent_impact - 1),
             0,  # Market dynamics (neutral for this example)
-            new_revenue
+            new_revenue,
         ]
 
         # Create waterfall chart
-        fig.add_trace(go.Waterfall(
-            name="Revenue Impact",
-            orientation="v",
-            measure=["absolute", "relative", "relative", "relative", "total"],
-            x=categories,
-            textposition="outside",
-            text=[f"${v:,.0f}" for v in values],
-            y=values,
-            connector={"line": {"color": "rgb(63, 63, 63)"}},
-        ))
-
-        fig.update_layout(
-            title="Revenue Waterfall Analysis",
-            showlegend=False,
-            height=400
+        fig.add_trace(
+            go.Waterfall(
+                name="Revenue Impact",
+                orientation="v",
+                measure=["absolute", "relative", "relative", "relative", "total"],
+                x=categories,
+                textposition="outside",
+                text=[f"${v:,.0f}" for v in values],
+                y=values,
+                connector={"line": {"color": "rgb(63, 63, 63)"}},
+            )
         )
+
+        fig.update_layout(title="Revenue Waterfall Analysis", showlegend=False, height=400)
 
         st.plotly_chart(fig, use_container_width=True)
 
@@ -234,6 +208,7 @@ def render_commission_analysis_results(current_rate, new_rate, period, confidenc
             for opp in opportunities[:4]:
                 st.markdown(opp)
 
+
 def render_qualification_scenario_panel():
     """Render lead qualification threshold scenario analysis."""
 
@@ -246,47 +221,28 @@ def render_qualification_scenario_panel():
         st.markdown("### Scenario Parameters")
 
         current_threshold = st.number_input(
-            "Current Qualification Score Threshold",
-            min_value=30,
-            max_value=90,
-            value=50,
-            key="current_threshold"
+            "Current Qualification Score Threshold", min_value=30, max_value=90, value=50, key="current_threshold"
         )
 
         new_threshold = st.number_input(
-            "Proposed Qualification Score Threshold",
-            min_value=30,
-            max_value=90,
-            value=60,
-            key="new_threshold"
+            "Proposed Qualification Score Threshold", min_value=30, max_value=90, value=60, key="new_threshold"
         )
 
         # Current metrics for context
         st.markdown("### Current Performance")
 
-        current_leads = st.number_input(
-            "Monthly Qualified Leads",
-            min_value=50,
-            max_value=500,
-            value=150
-        )
+        current_leads = st.number_input("Monthly Qualified Leads", min_value=50, max_value=500, value=150)
 
-        current_conversion = st.number_input(
-            "Current Conversion Rate (%)",
-            min_value=50.0,
-            max_value=95.0,
-            value=71.0
-        )
+        current_conversion = st.number_input("Current Conversion Rate (%)", min_value=50.0, max_value=95.0, value=71.0)
 
         run_qual_analysis = st.button("Analyze Qualification Impact", key="run_qual_analysis")
 
     with col2:
         if run_qual_analysis:
-            render_qualification_analysis_results(
-                current_threshold, new_threshold, current_leads, current_conversion
-            )
+            render_qualification_analysis_results(current_threshold, new_threshold, current_leads, current_conversion)
         else:
             st.info("👈 Set parameters and click 'Analyze' to see impact projections")
+
 
 def render_qualification_analysis_results(current_threshold, new_threshold, current_leads, current_conversion):
     """Render qualification threshold analysis results."""
@@ -317,33 +273,17 @@ def render_qualification_analysis_results(current_threshold, new_threshold, curr
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.metric(
-            "Monthly Leads",
-            f"{new_lead_volume}",
-            f"{new_lead_volume - current_leads:+d}"
-        )
+        st.metric("Monthly Leads", f"{new_lead_volume}", f"{new_lead_volume - current_leads:+d}")
 
     with col2:
-        st.metric(
-            "Conversion Rate",
-            f"{new_conversion_rate:.1f}%",
-            f"{new_conversion_rate - current_conversion:+.1f}%"
-        )
+        st.metric("Conversion Rate", f"{new_conversion_rate:.1f}%", f"{new_conversion_rate - current_conversion:+.1f}%")
 
     with col3:
-        st.metric(
-            "Monthly Closes",
-            f"{new_closes:.1f}",
-            f"{new_closes - current_closes:+.1f}"
-        )
+        st.metric("Monthly Closes", f"{new_closes:.1f}", f"{new_closes - current_closes:+.1f}")
 
     with col4:
         revenue_change = ((new_revenue - current_revenue) / current_revenue) * 100
-        st.metric(
-            "Revenue Impact",
-            f"{revenue_change:+.1f}%",
-            f"${new_revenue - current_revenue:+,.0f}"
-        )
+        st.metric("Revenue Impact", f"{revenue_change:+.1f}%", f"${new_revenue - current_revenue:+,.0f}")
 
     # Lead funnel visualization
     st.subheader("Lead Funnel Comparison")
@@ -351,31 +291,32 @@ def render_qualification_analysis_results(current_threshold, new_threshold, curr
     fig = go.Figure()
 
     # Current funnel
-    fig.add_trace(go.Funnel(
-        y=['Total Inquiries', 'Qualified Leads', 'Closed Deals'],
-        x=[200, current_leads, current_closes],
-        name='Current Process',
-        text=[f"{200}", f"{current_leads}", f"{current_closes:.0f}"],
-        textposition="inside",
-        opacity=0.65,
-        marker=dict(color="lightblue")
-    ))
+    fig.add_trace(
+        go.Funnel(
+            y=["Total Inquiries", "Qualified Leads", "Closed Deals"],
+            x=[200, current_leads, current_closes],
+            name="Current Process",
+            text=[f"{200}", f"{current_leads}", f"{current_closes:.0f}"],
+            textposition="inside",
+            opacity=0.65,
+            marker=dict(color="lightblue"),
+        )
+    )
 
     # New funnel
-    fig.add_trace(go.Funnel(
-        y=['Total Inquiries', 'Qualified Leads', 'Closed Deals'],
-        x=[200, new_lead_volume, new_closes],
-        name='Proposed Process',
-        text=[f"{200}", f"{new_lead_volume}", f"{new_closes:.0f}"],
-        textposition="inside",
-        opacity=0.85,
-        marker=dict(color="darkblue")
-    ))
-
-    fig.update_layout(
-        title="Lead Funnel: Current vs Proposed Threshold",
-        height=400
+    fig.add_trace(
+        go.Funnel(
+            y=["Total Inquiries", "Qualified Leads", "Closed Deals"],
+            x=[200, new_lead_volume, new_closes],
+            name="Proposed Process",
+            text=[f"{200}", f"{new_lead_volume}", f"{new_closes:.0f}"],
+            textposition="inside",
+            opacity=0.85,
+            marker=dict(color="darkblue"),
+        )
     )
+
+    fig.update_layout(title="Lead Funnel: Current vs Proposed Threshold", height=400)
 
     st.plotly_chart(fig, use_container_width=True)
 
@@ -403,24 +344,20 @@ def render_qualification_analysis_results(current_threshold, new_threshold, curr
             y=qualities,
             title="Quality vs Volume Trade-off",
             labels={"x": "Monthly Lead Volume", "y": "Conversion Rate (%)"},
-            hover_data={"threshold": thresholds}
+            hover_data={"threshold": thresholds},
         )
 
         # Highlight current and proposed points
         fig.add_scatter(
-            x=[current_leads],
-            y=[current_conversion],
-            mode='markers',
-            marker=dict(size=15, color='red'),
-            name='Current'
+            x=[current_leads], y=[current_conversion], mode="markers", marker=dict(size=15, color="red"), name="Current"
         )
 
         fig.add_scatter(
             x=[new_lead_volume],
             y=[new_conversion_rate],
-            mode='markers',
-            marker=dict(size=15, color='green'),
-            name='Proposed'
+            mode="markers",
+            marker=dict(size=15, color="green"),
+            name="Proposed",
         )
 
         st.plotly_chart(fig, use_container_width=True)
@@ -435,7 +372,7 @@ def render_qualification_analysis_results(current_threshold, new_threshold, curr
 
         st.markdown(f"Current Annual Revenue: ${annual_current:,.0f}")
         st.markdown(f"Projected Annual Revenue: ${annual_new:,.0f}")
-        st.markdown(f"**Annual Impact: {annual_change:+,.0f}** ({annual_change/annual_current*100:+.1f}%)")
+        st.markdown(f"**Annual Impact: {annual_change:+,.0f}** ({annual_change / annual_current * 100:+.1f}%)")
 
         st.markdown("---")
 
@@ -452,6 +389,7 @@ def render_qualification_analysis_results(current_threshold, new_threshold, curr
             st.markdown("• Market share expansion potential")
             st.markdown("• Revenue growth through volume")
 
+
 def render_growth_scenario_panel():
     """Render business growth scenario analysis."""
 
@@ -464,32 +402,29 @@ def render_growth_scenario_panel():
             "description": "Expand to adjacent markets (Round Rock, Cedar Park)",
             "investment": 75000,
             "timeframe": 6,
-            "risk_level": "Medium"
+            "risk_level": "Medium",
         },
         "Team Scaling": {
             "description": "Add 2 additional agent team members",
             "investment": 120000,
             "timeframe": 3,
-            "risk_level": "Low"
+            "risk_level": "Low",
         },
         "Premium Services": {
             "description": "Launch luxury property specialization",
             "investment": 45000,
             "timeframe": 4,
-            "risk_level": "Medium-High"
+            "risk_level": "Medium-High",
         },
         "Technology Investment": {
             "description": "Enhanced AI and automation platform",
             "investment": 85000,
             "timeframe": 2,
-            "risk_level": "Low-Medium"
-        }
+            "risk_level": "Low-Medium",
+        },
     }
 
-    selected_scenario = st.selectbox(
-        "Select Growth Scenario",
-        list(growth_scenarios.keys())
-    )
+    selected_scenario = st.selectbox("Select Growth Scenario", list(growth_scenarios.keys()))
 
     scenario_info = growth_scenarios[selected_scenario]
 
@@ -506,16 +441,10 @@ def render_growth_scenario_panel():
 
         # Customization parameters
         market_confidence = st.slider(
-            "Market Confidence",
-            0.7, 1.0, 0.85,
-            help="Confidence in market conditions supporting growth"
+            "Market Confidence", 0.7, 1.0, 0.85, help="Confidence in market conditions supporting growth"
         )
 
-        execution_quality = st.slider(
-            "Execution Quality",
-            0.7, 1.0, 0.9,
-            help="Expected quality of strategy execution"
-        )
+        execution_quality = st.slider("Execution Quality", 0.7, 1.0, 0.9, help="Expected quality of strategy execution")
 
         analyze_growth = st.button("Analyze Growth Scenario", key="analyze_growth")
 
@@ -531,11 +460,12 @@ def render_growth_scenario_panel():
                 "Monthly Deal Volume": "20-25 deals",
                 "Market Share (Austin)": "2.8%",
                 "Team Size": "3 agents",
-                "Operating Margin": "22%"
+                "Operating Margin": "22%",
             }
 
             for metric, value in baseline_metrics.items():
                 st.markdown(f"**{metric}:** {value}")
+
 
 def render_growth_analysis_results(scenario_name, scenario_info, market_confidence, execution_quality):
     """Render growth scenario analysis results."""
@@ -551,26 +481,16 @@ def render_growth_analysis_results(scenario_name, scenario_info, market_confiden
             "revenue_growth": 0.45,
             "deal_growth": 0.40,
             "margin_impact": -0.03,
-            "timeline_months": 8
+            "timeline_months": 8,
         },
-        "Team Scaling": {
-            "revenue_growth": 0.65,
-            "deal_growth": 0.70,
-            "margin_impact": -0.02,
-            "timeline_months": 4
-        },
-        "Premium Services": {
-            "revenue_growth": 0.35,
-            "deal_growth": 0.20,
-            "margin_impact": 0.05,
-            "timeline_months": 6
-        },
+        "Team Scaling": {"revenue_growth": 0.65, "deal_growth": 0.70, "margin_impact": -0.02, "timeline_months": 4},
+        "Premium Services": {"revenue_growth": 0.35, "deal_growth": 0.20, "margin_impact": 0.05, "timeline_months": 6},
         "Technology Investment": {
             "revenue_growth": 0.25,
             "deal_growth": 0.15,
             "margin_impact": 0.08,
-            "timeline_months": 3
-        }
+            "timeline_months": 3,
+        },
     }
 
     multipliers = scenario_multipliers[scenario_name]
@@ -588,47 +508,31 @@ def render_growth_analysis_results(scenario_name, scenario_info, market_confiden
     # ROI calculation
     annual_revenue_increase = projected_revenue - base_annual_revenue
     annual_profit_increase = annual_revenue_increase * projected_margin
-    roi = (annual_profit_increase - scenario_info['investment']) / scenario_info['investment']
-    payback_months = scenario_info['investment'] / (annual_profit_increase / 12)
+    roi = (annual_profit_increase - scenario_info["investment"]) / scenario_info["investment"]
+    payback_months = scenario_info["investment"] / (annual_profit_increase / 12)
 
     # Display key metrics
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
         revenue_change = ((projected_revenue - base_annual_revenue) / base_annual_revenue) * 100
-        st.metric(
-            "Revenue Growth",
-            f"{revenue_change:.1f}%",
-            f"${projected_revenue - base_annual_revenue:+,.0f}"
-        )
+        st.metric("Revenue Growth", f"{revenue_change:.1f}%", f"${projected_revenue - base_annual_revenue:+,.0f}")
 
     with col2:
         deal_change = projected_deals - base_deals_per_month
-        st.metric(
-            "Monthly Deal Volume",
-            f"{projected_deals:.1f}",
-            f"{deal_change:+.1f}"
-        )
+        st.metric("Monthly Deal Volume", f"{projected_deals:.1f}", f"{deal_change:+.1f}")
 
     with col3:
-        st.metric(
-            "Operating Margin",
-            f"{projected_margin:.1%}",
-            f"{(projected_margin - base_margin):+.1%}"
-        )
+        st.metric("Operating Margin", f"{projected_margin:.1%}", f"{(projected_margin - base_margin):+.1%}")
 
     with col4:
-        st.metric(
-            "Annual ROI",
-            f"{roi:.1%}",
-            f"Payback: {payback_months:.1f}mo"
-        )
+        st.metric("Annual ROI", f"{roi:.1%}", f"Payback: {payback_months:.1f}mo")
 
     # Growth trajectory visualization
     st.subheader("Projected Growth Trajectory")
 
     months = list(range(1, 25))  # 24 months
-    current_trajectory = [base_annual_revenue * (month/12) for month in months]
+    current_trajectory = [base_annual_revenue * (month / 12) for month in months]
 
     # Growth scenario trajectory with ramp-up period
     ramp_months = multipliers["timeline_months"]
@@ -642,33 +546,37 @@ def render_growth_analysis_results(scenario_name, scenario_info, market_confiden
             # Full growth achieved
             growth_factor = adjusted_revenue_growth
 
-        monthly_revenue = base_annual_revenue * (1 + growth_factor) * (month/12)
+        monthly_revenue = base_annual_revenue * (1 + growth_factor) * (month / 12)
         growth_trajectory.append(monthly_revenue)
 
     fig = go.Figure()
 
-    fig.add_trace(go.Scatter(
-        x=months,
-        y=[x/1000 for x in current_trajectory],
-        mode='lines',
-        name='Current Trajectory',
-        line=dict(dash='dash', color='gray')
-    ))
+    fig.add_trace(
+        go.Scatter(
+            x=months,
+            y=[x / 1000 for x in current_trajectory],
+            mode="lines",
+            name="Current Trajectory",
+            line=dict(dash="dash", color="gray"),
+        )
+    )
 
-    fig.add_trace(go.Scatter(
-        x=months,
-        y=[x/1000 for x in growth_trajectory],
-        mode='lines',
-        name=f'{scenario_name} Scenario',
-        line=dict(color='green', width=3),
-        fill='tonexty'
-    ))
+    fig.add_trace(
+        go.Scatter(
+            x=months,
+            y=[x / 1000 for x in growth_trajectory],
+            mode="lines",
+            name=f"{scenario_name} Scenario",
+            line=dict(color="green", width=3),
+            fill="tonexty",
+        )
+    )
 
     fig.update_layout(
         title="Revenue Growth Trajectory (24 Months)",
         xaxis_title="Months",
         yaxis_title="Cumulative Revenue ($K)",
-        height=400
+        height=400,
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -685,7 +593,7 @@ def render_growth_analysis_results(scenario_name, scenario_info, market_confiden
 
         # Risk assessment
         risk_color = {"Low": "green", "Low-Medium": "orange", "Medium": "orange", "Medium-High": "red", "High": "red"}
-        risk_level = scenario_info['risk_level']
+        risk_level = scenario_info["risk_level"]
         st.markdown(f"**Risk Level:** :{risk_color.get(risk_level, 'gray')}[{risk_level}]")
 
     with col2:
@@ -696,31 +604,32 @@ def render_growth_analysis_results(scenario_name, scenario_info, market_confiden
                 "Market demand in new territories",
                 "Local partnership development",
                 "Brand recognition transfer",
-                "Regulatory compliance"
+                "Regulatory compliance",
             ],
             "Team Scaling": [
                 "Quality talent recruitment",
                 "Training and integration",
                 "Lead distribution systems",
-                "Performance management"
+                "Performance management",
             ],
             "Premium Services": [
                 "High-net-worth client acquisition",
                 "Service differentiation",
                 "Marketing positioning",
-                "Luxury market expertise"
+                "Luxury market expertise",
             ],
             "Technology Investment": [
                 "User adoption and training",
                 "Integration with existing systems",
                 "Competitive differentiation",
-                "Scalability and reliability"
-            ]
+                "Scalability and reliability",
+            ],
         }
 
         factors = success_factors.get(scenario_name, [])
         for factor in factors[:4]:
             st.markdown(f"• {factor}")
+
 
 def render_portfolio_analysis_panel():
     """Render comprehensive portfolio performance analysis."""
@@ -733,14 +642,12 @@ def render_portfolio_analysis_panel():
 
     with col1:
         time_period = st.selectbox(
-            "Analysis Period",
-            ["Last 12 Months", "Last 6 Months", "Last 3 Months", "Year to Date"]
+            "Analysis Period", ["Last 12 Months", "Last 6 Months", "Last 3 Months", "Year to Date"]
         )
 
     with col2:
         comparison_period = st.selectbox(
-            "Compare Against",
-            ["Previous Period", "Same Period Last Year", "Market Benchmark"]
+            "Compare Against", ["Previous Period", "Same Period Last Year", "Market Benchmark"]
         )
 
     with col3:
@@ -755,46 +662,22 @@ def render_portfolio_analysis_panel():
     col1, col2, col3, col4, col5, col6 = st.columns(6)
 
     with col1:
-        st.metric(
-            "Total Revenue",
-            f"${metrics['revenue']:,.0f}",
-            f"{metrics['revenue_change']:+.1f}%"
-        )
+        st.metric("Total Revenue", f"${metrics['revenue']:,.0f}", f"{metrics['revenue_change']:+.1f}%")
 
     with col2:
-        st.metric(
-            "Deal Volume",
-            f"{metrics['deals']}",
-            f"{metrics['deals_change']:+d}"
-        )
+        st.metric("Deal Volume", f"{metrics['deals']}", f"{metrics['deals_change']:+d}")
 
     with col3:
-        st.metric(
-            "Avg Deal Value",
-            f"${metrics['avg_deal_value']:,.0f}",
-            f"{metrics['avg_deal_change']:+.1f}%"
-        )
+        st.metric("Avg Deal Value", f"${metrics['avg_deal_value']:,.0f}", f"{metrics['avg_deal_change']:+.1f}%")
 
     with col4:
-        st.metric(
-            "Conversion Rate",
-            f"{metrics['conversion_rate']:.1f}%",
-            f"{metrics['conversion_change']:+.1f}%"
-        )
+        st.metric("Conversion Rate", f"{metrics['conversion_rate']:.1f}%", f"{metrics['conversion_change']:+.1f}%")
 
     with col5:
-        st.metric(
-            "Client Satisfaction",
-            f"{metrics['satisfaction']:.1f}/5.0",
-            f"{metrics['satisfaction_change']:+.1f}"
-        )
+        st.metric("Client Satisfaction", f"{metrics['satisfaction']:.1f}/5.0", f"{metrics['satisfaction_change']:+.1f}")
 
     with col6:
-        st.metric(
-            "Market Share",
-            f"{metrics['market_share']:.2f}%",
-            f"{metrics['share_change']:+.2f}%"
-        )
+        st.metric("Market Share", f"{metrics['market_share']:.2f}%", f"{metrics['share_change']:+.2f}%")
 
     # Performance breakdown charts
     st.subheader("Performance Breakdown")
@@ -807,36 +690,24 @@ def render_portfolio_analysis_panel():
             "Buyer Representation": 1440000,
             "Seller Representation": 720000,
             "Referral Fees": 180000,
-            "Consultation Services": 60000
+            "Consultation Services": 60000,
         }
 
         fig = px.pie(
-            values=list(revenue_sources.values()),
-            names=list(revenue_sources.keys()),
-            title="Revenue by Source"
+            values=list(revenue_sources.values()), names=list(revenue_sources.keys()), title="Revenue by Source"
         )
 
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
         # Deal volume by property type
-        property_types = {
-            "Single Family": 85,
-            "Condos": 35,
-            "Townhomes": 18,
-            "Luxury ($1M+)": 12
-        }
+        property_types = {"Single Family": 85, "Condos": 35, "Townhomes": 18, "Luxury ($1M+)": 12}
 
         fig = px.bar(
-            x=list(property_types.keys()),
-            y=list(property_types.values()),
-            title="Deal Volume by Property Type"
+            x=list(property_types.keys()), y=list(property_types.values()), title="Deal Volume by Property Type"
         )
 
-        fig.update_layout(
-            xaxis_title="Property Type",
-            yaxis_title="Number of Deals"
-        )
+        fig.update_layout(xaxis_title="Property Type", yaxis_title="Number of Deals")
 
         st.plotly_chart(fig, use_container_width=True)
 
@@ -844,55 +715,49 @@ def render_portfolio_analysis_panel():
     st.subheader("Performance Trends")
 
     # Generate monthly data
-    months = pd.date_range(start='2025-01-01', end='2025-12-01', freq='M')
+    months = pd.date_range(start="2025-01-01", end="2025-12-01", freq="M")
     monthly_revenue = np.random.normal(200000, 25000, len(months))
     monthly_deals = np.random.poisson(20, len(months))
 
-    trend_data = pd.DataFrame({
-        'Month': months,
-        'Revenue': monthly_revenue,
-        'Deals': monthly_deals,
-        'Avg_Deal_Value': monthly_revenue / monthly_deals
-    })
+    trend_data = pd.DataFrame(
+        {
+            "Month": months,
+            "Revenue": monthly_revenue,
+            "Deals": monthly_deals,
+            "Avg_Deal_Value": monthly_revenue / monthly_deals,
+        }
+    )
 
     col1, col2 = st.columns(2)
 
     with col1:
-        fig = px.line(
-            trend_data,
-            x='Month',
-            y='Revenue',
-            title="Monthly Revenue Trend"
-        )
+        fig = px.line(trend_data, x="Month", y="Revenue", title="Monthly Revenue Trend")
         fig.update_layout(yaxis_title="Revenue ($)")
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
-        fig = px.line(
-            trend_data,
-            x='Month',
-            y='Deals',
-            title="Monthly Deal Volume Trend"
-        )
+        fig = px.line(trend_data, x="Month", y="Deals", title="Monthly Deal Volume Trend")
         fig.update_layout(yaxis_title="Number of Deals")
         st.plotly_chart(fig, use_container_width=True)
+
 
 def generate_portfolio_metrics():
     """Generate sample portfolio metrics for demonstration."""
     return {
-        'revenue': 2400000,
-        'revenue_change': 12.5,
-        'deals': 150,
-        'deals_change': 8,
-        'avg_deal_value': 16000,
-        'avg_deal_change': 4.2,
-        'conversion_rate': 73.5,
-        'conversion_change': 3.1,
-        'satisfaction': 4.7,
-        'satisfaction_change': 0.2,
-        'market_share': 2.84,
-        'share_change': 0.15
+        "revenue": 2400000,
+        "revenue_change": 12.5,
+        "deals": 150,
+        "deals_change": 8,
+        "avg_deal_value": 16000,
+        "avg_deal_change": 4.2,
+        "conversion_rate": 73.5,
+        "conversion_change": 3.1,
+        "satisfaction": 4.7,
+        "satisfaction_change": 0.2,
+        "market_share": 2.84,
+        "share_change": 0.15,
     }
+
 
 if __name__ == "__main__":
     render_advanced_scenario_dashboard()

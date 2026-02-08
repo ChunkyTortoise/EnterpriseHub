@@ -19,29 +19,31 @@ Date: 2026-01-18
 """
 
 import asyncio
+import json
 import time
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Union
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query, Header
+from typing import Any, Dict, List, Optional, Union
+
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
-import json
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.api.middleware.jwt_auth import verify_jwt_token
-
-# Import V2 components
-from ghl_real_estate_ai.services.realtime_inference_engine_v2 import (
-    RealTimeInferenceEngineV2, InferenceRequest, InferenceMode, MarketSegment
-)
-from ghl_real_estate_ai.services.intelligent_lead_router import (
-    IntelligentLeadRouter, RoutingStrategy, PriorityLevel
-)
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ml.behavioral_signal_processor import BehavioralSignalProcessor
 from ghl_real_estate_ai.ml.market_specific_models import MarketSpecificModelRouter
 
 # Backward compatibility imports
 from ghl_real_estate_ai.services.ai_predictive_lead_scoring import PredictiveLeadScorer
+from ghl_real_estate_ai.services.intelligent_lead_router import IntelligentLeadRouter, PriorityLevel, RoutingStrategy
+
+# Import V2 components
+from ghl_real_estate_ai.services.realtime_inference_engine_v2 import (
+    InferenceMode,
+    InferenceRequest,
+    MarketSegment,
+    RealTimeInferenceEngineV2,
+)
 
 logger = get_logger(__name__)
 
@@ -62,43 +64,33 @@ def _get_legacy_scorer():
         _legacy_scorer = PredictiveLeadScorer()
     return _legacy_scorer
 
+
 router = APIRouter(prefix="/api/v2/predictive-scoring", tags=["Predictive Scoring V2"])
 
 
 # Request/Response Models
 class LeadScoringRequest(BaseModel):
     """Enhanced lead scoring request model"""
+
     lead_id: str = Field(..., description="Unique lead identifier")
     lead_data: Dict[str, Any] = Field(..., description="Lead information and metadata")
     conversation_history: List[Dict[str, Any]] = Field(
         default_factory=list, description="Conversation messages and interactions"
     )
-    market_context: Optional[Dict[str, Any]] = Field(
-        default=None, description="Market-specific context data"
-    )
+    market_context: Optional[Dict[str, Any]] = Field(default=None, description="Market-specific context data")
 
     # Processing options
-    include_routing: bool = Field(
-        default=True, description="Include intelligent routing recommendation"
-    )
-    include_behavioral_analysis: bool = Field(
-        default=True, description="Include detailed behavioral signal analysis"
-    )
-    include_market_insights: bool = Field(
-        default=True, description="Include market-specific insights"
-    )
+    include_routing: bool = Field(default=True, description="Include intelligent routing recommendation")
+    include_behavioral_analysis: bool = Field(default=True, description="Include detailed behavioral signal analysis")
+    include_market_insights: bool = Field(default=True, description="Include market-specific insights")
 
     # A/B testing
-    ab_test_group: Optional[str] = Field(
-        default=None, description="A/B testing group identifier"
-    )
+    ab_test_group: Optional[str] = Field(default=None, description="A/B testing group identifier")
 
     # Performance options
-    inference_mode: str = Field(
-        default="real_time", description="Inference processing mode"
-    )
+    inference_mode: str = Field(default="real_time", description="Inference processing mode")
 
-    @field_validator('inference_mode')
+    @field_validator("inference_mode")
     @classmethod
     def validate_inference_mode(cls, v):
         valid_modes = ["real_time", "batch_fast", "batch_bulk", "background"]
@@ -124,9 +116,7 @@ class EnhancedScoringResponse(BaseModel):
     behavioral_signals: Optional[Dict[str, float]] = Field(
         default=None, description="Extracted behavioral signals (0-1)"
     )
-    signal_summary: Optional[Dict[str, Any]] = Field(
-        default=None, description="Behavioral signal summary and insights"
-    )
+    signal_summary: Optional[Dict[str, Any]] = Field(default=None, description="Behavioral signal summary and insights")
 
     # Routing recommendation
     routing_recommendation: Optional[Dict[str, Any]] = Field(
@@ -139,47 +129,31 @@ class EnhancedScoringResponse(BaseModel):
     model_version: str = Field(..., description="Model version used for scoring")
 
     # Legacy compatibility
-    qualification_score: Optional[int] = Field(
-        default=None, description="Legacy qualification score (0-7)"
-    )
-    conversion_probability: Optional[float] = Field(
-        default=None, description="Legacy conversion probability (0-1)"
-    )
+    qualification_score: Optional[int] = Field(default=None, description="Legacy qualification score (0-7)")
+    conversion_probability: Optional[float] = Field(default=None, description="Legacy conversion probability (0-1)")
 
     # Recommendations
-    recommended_actions: List[str] = Field(
-        default_factory=list, description="Prioritized action recommendations"
-    )
-    risk_factors: List[str] = Field(
-        default_factory=list, description="Identified risk factors"
-    )
-    positive_signals: List[str] = Field(
-        default_factory=list, description="Strong positive indicators"
-    )
+    recommended_actions: List[str] = Field(default_factory=list, description="Prioritized action recommendations")
+    risk_factors: List[str] = Field(default_factory=list, description="Identified risk factors")
+    positive_signals: List[str] = Field(default_factory=list, description="Strong positive indicators")
 
     # Metadata
     scored_at: datetime = Field(..., description="Scoring timestamp")
     api_version: str = Field(default="2.0", description="API version used")
-    ab_test_group: Optional[str] = Field(
-        default=None, description="A/B testing group"
-    )
+    ab_test_group: Optional[str] = Field(default=None, description="A/B testing group")
 
 
 class BatchScoringRequest(BaseModel):
     """Batch scoring request for multiple leads"""
-    leads: List[LeadScoringRequest] = Field(
-        ..., max_items=100, description="List of leads to score (max 100)"
-    )
-    processing_mode: str = Field(
-        default="batch_fast", description="Batch processing mode"
-    )
-    include_performance_summary: bool = Field(
-        default=True, description="Include batch performance summary"
-    )
+
+    leads: List[LeadScoringRequest] = Field(..., max_items=100, description="List of leads to score (max 100)")
+    processing_mode: str = Field(default="batch_fast", description="Batch processing mode")
+    include_performance_summary: bool = Field(default=True, description="Include batch performance summary")
 
 
 class BatchScoringResponse(BaseModel):
     """Batch scoring response"""
+
     results: List[EnhancedScoringResponse]
     summary: Dict[str, Any]
     processing_time_ms: float
@@ -189,6 +163,7 @@ class BatchScoringResponse(BaseModel):
 
 class PerformanceMetricsResponse(BaseModel):
     """Performance monitoring response"""
+
     p95_latency_ms: float
     p99_latency_ms: float
     average_latency_ms: float
@@ -202,12 +177,13 @@ class PerformanceMetricsResponse(BaseModel):
 
 # API Endpoints
 
+
 @router.post("/score", response_model=EnhancedScoringResponse)
 async def score_lead_v2(
     request: LeadScoringRequest,
     x_api_version: Optional[str] = Header(default="2.0"),
     x_client_version: Optional[str] = Header(default=None),
-    current_user: dict = Depends(verify_jwt_token)
+    current_user: dict = Depends(verify_jwt_token),
 ) -> EnhancedScoringResponse:
     """
     Enhanced lead scoring with real-time inference and behavioral analysis.
@@ -229,7 +205,7 @@ async def score_lead_v2(
             "real_time": InferenceMode.REAL_TIME,
             "batch_fast": InferenceMode.BATCH_FAST,
             "batch_bulk": InferenceMode.BATCH_BULK,
-            "background": InferenceMode.BACKGROUND
+            "background": InferenceMode.BACKGROUND,
         }
 
         inference_request = InferenceRequest(
@@ -238,7 +214,7 @@ async def score_lead_v2(
             conversation_history=request.conversation_history,
             market_context=request.market_context,
             mode=inference_mode_map.get(request.inference_mode, InferenceMode.REAL_TIME),
-            ab_test_group=request.ab_test_group
+            ab_test_group=request.ab_test_group,
         )
 
         # Run inference
@@ -284,7 +260,7 @@ async def score_lead_v2(
             risk_factors=risk_factors,
             positive_signals=positive_signals,
             scored_at=result.timestamp,
-            ab_test_group=result.ab_test_group
+            ab_test_group=result.ab_test_group,
         )
 
         logger.info(f"V2 scoring completed for {request.lead_id} in {result.inference_time_ms:.1f}ms")
@@ -313,25 +289,20 @@ async def score_lead_v2(
                 recommended_actions=legacy_result.recommendations or [],
                 risk_factors=[],
                 positive_signals=[],
-                scored_at=datetime.now()
+                scored_at=datetime.now(),
             )
         except Exception as fallback_error:
             logger.error(f"Legacy fallback also failed: {fallback_error}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Scoring system unavailable: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Scoring system unavailable: {str(e)}")
 
 
 @router.post("/swarm-analysis", response_model=Dict[str, Any])
 async def get_swarm_analysis(
-    lead_id: str,
-    lead_data: Dict[str, Any],
-    current_user: dict = Depends(verify_jwt_token)
+    lead_id: str, lead_data: Dict[str, Any], current_user: dict = Depends(verify_jwt_token)
 ) -> Dict[str, Any]:
     """
     Perform deep multi-agent swarm analysis on a lead.
-    
+
     Provides collaborative intelligence from multiple specialized agents:
     - Demographic Analyzer
     - Behavioral Profiler
@@ -339,9 +310,9 @@ async def get_swarm_analysis(
     - Market Analyst (Predator Mode)
     """
     from ghl_real_estate_ai.agents.lead_intelligence_swarm import lead_intelligence_swarm
-    
+
     consensus = await lead_intelligence_swarm.analyze_lead_comprehensive(lead_id, lead_data)
-    
+
     # Format consensus for Next.js frontend
     return {
         "lead_id": consensus.lead_id,
@@ -357,18 +328,17 @@ async def get_swarm_analysis(
                 "finding": insight.primary_finding,
                 "confidence": insight.confidence,
                 "urgency": insight.urgency_level,
-                "metadata": insight.metadata
+                "metadata": insight.metadata,
             }
             for insight in consensus.agent_insights
         ],
-        "processing_time_ms": consensus.processing_time_ms
+        "processing_time_ms": consensus.processing_time_ms,
     }
 
 
 @router.post("/score-batch", response_model=BatchScoringResponse)
 async def score_leads_batch(
-    request: BatchScoringRequest,
-    current_user: dict = Depends(verify_jwt_token)
+    request: BatchScoringRequest, current_user: dict = Depends(verify_jwt_token)
 ) -> BatchScoringResponse:
     """
     Batch lead scoring with optimized processing.
@@ -382,10 +352,7 @@ async def score_leads_batch(
         logger.info(f"Batch scoring request for {len(request.leads)} leads")
 
         if len(request.leads) > 100:
-            raise HTTPException(
-                status_code=400,
-                detail="Maximum 100 leads per batch request"
-            )
+            raise HTTPException(status_code=400, detail="Maximum 100 leads per batch request")
 
         # Convert to inference requests
         inference_requests = []
@@ -394,7 +361,7 @@ async def score_leads_batch(
                 "real_time": InferenceMode.REAL_TIME,
                 "batch_fast": InferenceMode.BATCH_FAST,
                 "batch_bulk": InferenceMode.BATCH_BULK,
-                "background": InferenceMode.BACKGROUND
+                "background": InferenceMode.BACKGROUND,
             }
 
             inference_req = InferenceRequest(
@@ -403,7 +370,7 @@ async def score_leads_batch(
                 conversation_history=lead_req.conversation_history,
                 market_context=lead_req.market_context,
                 mode=inference_mode_map.get(request.processing_mode, InferenceMode.BATCH_FAST),
-                ab_test_group=lead_req.ab_test_group
+                ab_test_group=lead_req.ab_test_group,
             )
             inference_requests.append(inference_req)
 
@@ -443,7 +410,7 @@ async def score_leads_batch(
                     risk_factors=_identify_risk_factors(result, behavioral_signals),
                     positive_signals=_identify_positive_signals(result, behavioral_signals),
                     scored_at=result.timestamp,
-                    ab_test_group=result.ab_test_group
+                    ab_test_group=result.ab_test_group,
                 )
                 response_results.append(response_result)
                 successful += 1
@@ -471,7 +438,7 @@ async def score_leads_batch(
                 "cache_hit_rate": round(cache_hit_rate, 3),
                 "tier_distribution": tier_counts,
                 "processing_mode": request.processing_mode,
-                "leads_per_second": round(len(request.leads) / (processing_time_ms / 1000), 2)
+                "leads_per_second": round(len(request.leads) / (processing_time_ms / 1000), 2),
             }
         else:
             summary = {
@@ -480,7 +447,7 @@ async def score_leads_batch(
                 "cache_hit_rate": 0,
                 "tier_distribution": {},
                 "processing_mode": request.processing_mode,
-                "leads_per_second": 0
+                "leads_per_second": 0,
             }
 
         return BatchScoringResponse(
@@ -488,15 +455,12 @@ async def score_leads_batch(
             summary=summary,
             processing_time_ms=processing_time_ms,
             successful_predictions=successful,
-            failed_predictions=failed
+            failed_predictions=failed,
         )
 
     except Exception as e:
         logger.error(f"Batch scoring failed: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Batch scoring failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Batch scoring failed: {str(e)}")
 
 
 @router.get("/behavioral-signals/{lead_id}")
@@ -504,7 +468,7 @@ async def get_behavioral_signals(
     lead_id: str,
     lead_data: Dict[str, Any],
     conversation_history: List[Dict[str, Any]] = None,
-    current_user: dict = Depends(verify_jwt_token)
+    current_user: dict = Depends(verify_jwt_token),
 ) -> Dict[str, Any]:
     """
     Extract detailed behavioral signals for a lead.
@@ -534,18 +498,15 @@ async def get_behavioral_signals(
             "signal_categorization": {
                 "strong_signals": strong_signals,
                 "moderate_signals": moderate_signals,
-                "weak_signals": weak_signals
+                "weak_signals": weak_signals,
             },
             "recommendations": _generate_behavioral_recommendations(signals),
-            "extracted_at": datetime.now().isoformat()
+            "extracted_at": datetime.now().isoformat(),
         }
 
     except Exception as e:
         logger.error(f"Behavioral signal extraction failed for {lead_id}: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Signal extraction failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Signal extraction failed: {str(e)}")
 
 
 @router.post("/routing-recommendation")
@@ -555,7 +516,7 @@ async def get_routing_recommendation(
     behavioral_signals: Dict[str, float],
     lead_data: Dict[str, Any],
     routing_strategy: Optional[str] = None,
-    current_user: dict = Depends(verify_jwt_token)
+    current_user: dict = Depends(verify_jwt_token),
 ) -> Dict[str, Any]:
     """
     Get intelligent lead routing recommendation.
@@ -570,7 +531,7 @@ async def get_routing_recommendation(
             "performance_based": RoutingStrategy.PERFORMANCE_BASED,
             "specialization_match": RoutingStrategy.SPECIALIZATION_MATCH,
             "capacity_optimized": RoutingStrategy.CAPACITY_OPTIMIZED,
-            "hybrid_intelligent": RoutingStrategy.HYBRID_INTELLIGENT
+            "hybrid_intelligent": RoutingStrategy.HYBRID_INTELLIGENT,
         }
 
         strategy = strategy_map.get(routing_strategy) if routing_strategy else None
@@ -580,23 +541,18 @@ async def get_routing_recommendation(
             lead_score=lead_score,
             behavioral_signals=behavioral_signals,
             lead_data=lead_data,
-            strategy=strategy
+            strategy=strategy,
         )
 
         return recommendation
 
     except Exception as e:
         logger.error(f"Routing recommendation failed for {lead_id}: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Routing recommendation failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Routing recommendation failed: {str(e)}")
 
 
 @router.get("/performance-metrics", response_model=PerformanceMetricsResponse)
-async def get_performance_metrics(
-    current_user: dict = Depends(verify_jwt_token)
-) -> PerformanceMetricsResponse:
+async def get_performance_metrics(current_user: dict = Depends(verify_jwt_token)) -> PerformanceMetricsResponse:
     """
     Get comprehensive performance metrics for the V2 system.
 
@@ -637,7 +593,7 @@ async def get_performance_metrics(
             "behavioral_processor": "healthy",
             "market_router": "healthy",
             "lead_router": "healthy",
-            "cache_system": "healthy" if cache_hit_rate > 0.3 else "degraded"
+            "cache_system": "healthy" if cache_hit_rate > 0.3 else "degraded",
         }
 
         return PerformanceMetricsResponse(
@@ -649,22 +605,19 @@ async def get_performance_metrics(
             error_rate=error_rate,
             throughput_per_minute=throughput_per_minute,
             model_health=model_health,
-            system_status=system_status
+            system_status=system_status,
         )
 
     except Exception as e:
         logger.error(f"Performance metrics retrieval failed: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Performance metrics unavailable: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Performance metrics unavailable: {str(e)}")
 
 
 @router.post("/warm-cache")
 async def warm_cache(
     sample_leads: List[Dict[str, Any]],
     background_tasks: BackgroundTasks,
-    current_user: dict = Depends(verify_jwt_token)
+    current_user: dict = Depends(verify_jwt_token),
 ) -> Dict[str, Any]:
     """
     Warm the inference cache with sample leads.
@@ -674,16 +627,10 @@ async def warm_cache(
     """
     try:
         if current_user.get("role") not in ["admin", "manager"]:
-            raise HTTPException(
-                status_code=403,
-                detail="Cache warming requires admin or manager privileges"
-            )
+            raise HTTPException(status_code=403, detail="Cache warming requires admin or manager privileges")
 
         if len(sample_leads) > 50:
-            raise HTTPException(
-                status_code=400,
-                detail="Maximum 50 sample leads for cache warming"
-            )
+            raise HTTPException(status_code=400, detail="Maximum 50 sample leads for cache warming")
 
         # Convert to inference requests
         sample_requests = []
@@ -692,7 +639,7 @@ async def warm_cache(
                 lead_id=lead.get("lead_id", f"warmup_{hash(str(lead))}"),
                 lead_data=lead,
                 conversation_history=lead.get("conversation_history", []),
-                mode=InferenceMode.REAL_TIME
+                mode=InferenceMode.REAL_TIME,
             )
             sample_requests.append(request)
 
@@ -703,23 +650,20 @@ async def warm_cache(
             "status": "warming_initiated",
             "sample_count": len(sample_leads),
             "estimated_completion": "1-2 minutes",
-            "initiated_at": datetime.now().isoformat()
+            "initiated_at": datetime.now().isoformat(),
         }
 
     except Exception as e:
         logger.error(f"Cache warming failed: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Cache warming failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Cache warming failed: {str(e)}")
 
 
 # Backward Compatibility Endpoints
 
+
 @router.post("/legacy/score")
 async def legacy_score_endpoint(
-    lead_data: Dict[str, Any],
-    current_user: dict = Depends(verify_jwt_token)
+    lead_data: Dict[str, Any], current_user: dict = Depends(verify_jwt_token)
 ) -> Dict[str, Any]:
     """
     Legacy scoring endpoint for backward compatibility.
@@ -734,7 +678,7 @@ async def legacy_score_endpoint(
             lead_id=lead_id,
             lead_data=lead_data,
             conversation_history=lead_data.get("conversation_history", []),
-            mode=InferenceMode.REAL_TIME
+            mode=InferenceMode.REAL_TIME,
         )
 
         result = await inference_engine.predict(request)
@@ -748,18 +692,16 @@ async def legacy_score_endpoint(
             "conversion_probability": result.score / 100.0,
             "qualification_score": min(int(result.score / 14.3), 7),
             "recommendations": _generate_action_recommendations(result, result.behavioral_signals),
-            "scored_at": result.timestamp.isoformat()
+            "scored_at": result.timestamp.isoformat(),
         }
 
     except Exception as e:
         logger.error(f"Legacy scoring failed: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Legacy scoring failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Legacy scoring failed: {str(e)}")
 
 
 # Helper Functions
+
 
 def _generate_action_recommendations(result, behavioral_signals: Optional[Dict[str, float]]) -> List[str]:
     """Generate action recommendations based on scoring result"""
@@ -872,7 +814,7 @@ async def health_check():
             lead_id="health_check",
             lead_data={"budget": 500000, "location": "Test"},
             conversation_history=[],
-            mode=InferenceMode.REAL_TIME
+            mode=InferenceMode.REAL_TIME,
         )
 
         result = await inference_engine.predict(test_request)
@@ -888,12 +830,8 @@ async def health_check():
             "cache_hit_rate": metrics.get("cache_hit_rate", 0),
             "p95_latency_ms": metrics.get("p95_latency_ms", 0),
             "system_load": "normal",
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     except Exception as e:
-        return {
-            "status": "unhealthy",
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
+        return {"status": "unhealthy", "error": str(e), "timestamp": datetime.now().isoformat()}

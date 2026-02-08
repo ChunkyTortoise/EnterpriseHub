@@ -5,11 +5,12 @@ Modular feature extraction components for different aspects of user behavior.
 Each extractor focuses on a specific domain of features.
 """
 
-import numpy as np
-from typing import Dict, List, Optional, Any
-from datetime import datetime, timedelta
-from collections import defaultdict, Counter
 import logging
+from collections import Counter, defaultdict
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+import numpy as np
 
 from ..interfaces import BehavioralEvent, EventType
 
@@ -23,9 +24,9 @@ class PropertyFeatureExtractor:
 
     def __init__(self, config: Dict[str, Any] = None):
         self.config = config or {}
-        self.price_ranges = self.config.get("price_ranges", [
-            (0, 300000), (300000, 600000), (600000, 1000000), (1000000, float('inf'))
-        ])
+        self.price_ranges = self.config.get(
+            "price_ranges", [(0, 300000), (300000, 600000), (600000, 1000000), (1000000, float("inf"))]
+        )
 
     def extract_features(self, events: List[BehavioralEvent]) -> Dict[str, float]:
         """Extract property-related features"""
@@ -37,16 +38,20 @@ class PropertyFeatureExtractor:
             return self._empty_property_features()
 
         # Property type preferences
-        property_types = [e.event_data.get("property_type") for e in property_events
-                         if e.event_data.get("property_type")]
+        property_types = [
+            e.event_data.get("property_type") for e in property_events if e.event_data.get("property_type")
+        ]
         if property_types:
             type_counter = Counter(property_types)
             features["property_type_diversity"] = len(type_counter) / len(property_types)
             features["most_viewed_type_ratio"] = type_counter.most_common(1)[0][1] / len(property_types)
 
         # Price range analysis
-        prices = [e.event_data.get("price") for e in property_events
-                 if e.event_data.get("price") and isinstance(e.event_data.get("price"), (int, float))]
+        prices = [
+            e.event_data.get("price")
+            for e in property_events
+            if e.event_data.get("price") and isinstance(e.event_data.get("price"), (int, float))
+        ]
 
         if prices:
             features["avg_price_viewed"] = np.mean(prices)
@@ -62,22 +67,27 @@ class PropertyFeatureExtractor:
                 features[f"price_range_{i}_ratio"] = count / total_views
 
         # Location preferences
-        locations = [e.event_data.get("location") for e in property_events
-                    if e.event_data.get("location")]
+        locations = [e.event_data.get("location") for e in property_events if e.event_data.get("location")]
         if locations:
             location_counter = Counter(locations)
             features["location_diversity"] = len(location_counter) / len(locations)
             features["location_concentration"] = location_counter.most_common(1)[0][1] / len(locations)
 
         # Property size preferences
-        sizes = [e.event_data.get("square_feet") for e in property_events
-                if e.event_data.get("square_feet") and isinstance(e.event_data.get("square_feet"), (int, float))]
+        sizes = [
+            e.event_data.get("square_feet")
+            for e in property_events
+            if e.event_data.get("square_feet") and isinstance(e.event_data.get("square_feet"), (int, float))
+        ]
         if sizes:
             features["avg_size_preference"] = np.mean(sizes)
             features["size_preference_std"] = np.std(sizes)
 
-        bedrooms = [e.event_data.get("bedrooms") for e in property_events
-                   if e.event_data.get("bedrooms") and isinstance(e.event_data.get("bedrooms"), int)]
+        bedrooms = [
+            e.event_data.get("bedrooms")
+            for e in property_events
+            if e.event_data.get("bedrooms") and isinstance(e.event_data.get("bedrooms"), int)
+        ]
         if bedrooms:
             features["avg_bedrooms_preference"] = np.mean(bedrooms)
             features["bedroom_preference_std"] = np.std(bedrooms)
@@ -112,7 +122,7 @@ class PropertyFeatureExtractor:
             "property_type_diversity": 0.0,
             "avg_price_viewed": 0.0,
             "location_diversity": 0.0,
-            "avg_size_preference": 0.0
+            "avg_size_preference": 0.0,
         }
 
 
@@ -123,14 +133,17 @@ class BehaviorFeatureExtractor:
 
     def __init__(self, config: Dict[str, Any] = None):
         self.config = config or {}
-        self.engagement_weights = self.config.get("engagement_weights", {
-            EventType.PROPERTY_VIEW.value: 1.0,
-            EventType.PROPERTY_SWIPE.value: 2.0,
-            EventType.PROPERTY_SAVE.value: 3.0,
-            EventType.PROPERTY_SHARE.value: 2.5,
-            EventType.BOOKING_REQUEST.value: 5.0,
-            EventType.BOOKING_COMPLETED.value: 7.0
-        })
+        self.engagement_weights = self.config.get(
+            "engagement_weights",
+            {
+                EventType.PROPERTY_VIEW.value: 1.0,
+                EventType.PROPERTY_SWIPE.value: 2.0,
+                EventType.PROPERTY_SAVE.value: 3.0,
+                EventType.PROPERTY_SHARE.value: 2.5,
+                EventType.BOOKING_REQUEST.value: 5.0,
+                EventType.BOOKING_COMPLETED.value: 7.0,
+            },
+        )
 
     def extract_features(self, events: List[BehavioralEvent]) -> Dict[str, float]:
         """Extract behavioral pattern features"""
@@ -170,8 +183,7 @@ class BehaviorFeatureExtractor:
         features["max_engagement_event"] = max(engagement_scores)
 
         # High-value action ratio
-        high_value_actions = sum(1 for e in events
-                               if self.engagement_weights.get(e.event_type.value, 1.0) >= 3.0)
+        high_value_actions = sum(1 for e in events if self.engagement_weights.get(e.event_type.value, 1.0) >= 3.0)
         features["high_value_action_ratio"] = high_value_actions / len(events)
 
         return features
@@ -190,7 +202,7 @@ class BehaviorFeatureExtractor:
         # Calculate time between consecutive events
         time_deltas = []
         for i in range(1, len(sorted_events)):
-            delta = (sorted_events[i].timestamp - sorted_events[i-1].timestamp).total_seconds()
+            delta = (sorted_events[i].timestamp - sorted_events[i - 1].timestamp).total_seconds()
             time_deltas.append(delta)
 
         if time_deltas:
@@ -264,7 +276,7 @@ class BehaviorFeatureExtractor:
             "avg_engagement_per_event": 0.0,
             "interaction_velocity": 0.0,
             "like_ratio": 0.5,
-            "exploration_ratio": 0.0
+            "exploration_ratio": 0.0,
         }
 
 
@@ -345,7 +357,7 @@ class SessionFeatureExtractor:
         current_session = [sorted_events[0]]
 
         for i in range(1, len(sorted_events)):
-            time_gap = (sorted_events[i].timestamp - sorted_events[i-1].timestamp).total_seconds()
+            time_gap = (sorted_events[i].timestamp - sorted_events[i - 1].timestamp).total_seconds()
 
             if time_gap > self.session_timeout_minutes * 60:
                 # Start new session
@@ -395,8 +407,9 @@ class SessionFeatureExtractor:
         # Weekly patterns
         weekday_counts = Counter(event.timestamp.weekday() for event in events)
         if weekday_counts:
-            features["weekday_consistency"] = 1.0 - (np.std(list(weekday_counts.values())) /
-                                                    np.mean(list(weekday_counts.values())))
+            features["weekday_consistency"] = 1.0 - (
+                np.std(list(weekday_counts.values())) / np.mean(list(weekday_counts.values()))
+            )
 
         # Time of day patterns
         hourly_counts = Counter(event.timestamp.hour for event in events)
@@ -411,7 +424,7 @@ class SessionFeatureExtractor:
             "explicit_sessions_count": 0.0,
             "avg_session_length": 0.0,
             "inferred_sessions_count": 0.0,
-            "active_days": 0.0
+            "active_days": 0.0,
         }
 
 
@@ -479,7 +492,7 @@ class TimeFeatureExtractor:
             # Calculate gaps between active days
             date_gaps = []
             for i in range(1, len(unique_dates)):
-                gap = (unique_dates[i] - unique_dates[i-1]).days
+                gap = (unique_dates[i] - unique_dates[i - 1]).days
                 date_gaps.append(gap)
 
             if date_gaps:
@@ -517,8 +530,7 @@ class TimeFeatureExtractor:
                 segment_start = sorted_events[0].timestamp.timestamp() + (i * segment_duration)
                 segment_end = segment_start + segment_duration
 
-                count = sum(1 for event in sorted_events
-                          if segment_start <= event.timestamp.timestamp() < segment_end)
+                count = sum(1 for event in sorted_events if segment_start <= event.timestamp.timestamp() < segment_end)
                 segment_counts.append(count)
 
             # Calculate trend slope
@@ -572,5 +584,5 @@ class TimeFeatureExtractor:
             "activity_time_span_hours": 0.0,
             "events_per_hour": 0.0,
             "hours_since_last_activity": 999.0,
-            "recent_activity_count": 0.0
+            "recent_activity_count": 0.0,
         }

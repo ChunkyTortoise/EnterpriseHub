@@ -10,50 +10,58 @@ lead qualification system in real estate.
 
 import asyncio
 import json
-from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
 # Mock imports - would be real in production
 try:
     from anthropic import Anthropic
+
     ANTHROPIC_AVAILABLE = True
 except ImportError:
     ANTHROPIC_AVAILABLE = False
 
+
 class LeadPriority(Enum):
     """Lead priority levels for Jorge's attention."""
-    IMMEDIATE = "immediate"      # Call within 5 minutes
-    HIGH = "high"               # Call within 1 hour
-    MEDIUM = "medium"           # Call within 24 hours
-    LOW = "low"                 # Nurture sequence
-    DISQUALIFIED = "disqualified" # Archive
+
+    IMMEDIATE = "immediate"  # Call within 5 minutes
+    HIGH = "high"  # Call within 1 hour
+    MEDIUM = "medium"  # Call within 24 hours
+    LOW = "low"  # Nurture sequence
+    DISQUALIFIED = "disqualified"  # Archive
+
 
 class BuyingStage(Enum):
     """Where the lead is in their buying journey."""
+
     JUST_LOOKING = "just_looking"
     GETTING_SERIOUS = "getting_serious"
     READY_TO_BUY = "ready_to_buy"
     UNDER_CONTRACT = "under_contract"
 
+
 @dataclass
 class LeadScoreBreakdown:
     """Detailed breakdown of lead scoring components."""
-    intent_score: float          # 0-100
-    financial_readiness: float   # 0-100
-    timeline_urgency: float      # 0-100
-    engagement_quality: float    # 0-100
-    referral_potential: float    # 0-100
-    local_connection: float      # 0-100
 
-    overall_score: float         # 0-100
+    intent_score: float  # 0-100
+    financial_readiness: float  # 0-100
+    timeline_urgency: float  # 0-100
+    engagement_quality: float  # 0-100
+    referral_potential: float  # 0-100
+    local_connection: float  # 0-100
+
+    overall_score: float  # 0-100
     priority_level: LeadPriority
     buying_stage: BuyingStage
 
     recommended_actions: List[str]
     jorge_talking_points: List[str]
     risk_factors: List[str]
+
 
 class EnhancedSmartLeadScorer:
     """
@@ -73,14 +81,11 @@ class EnhancedSmartLeadScorer:
             "price_appreciation_rate": 0.08,
             "days_on_market_avg": 21,
             "inventory_level": "low",
-            "best_neighborhoods": [
-                "Alta Loma", "North Rancho Cucamonga",
-                "Victoria Arbors", "Red Hill Country Club"
-            ],
+            "best_neighborhoods": ["Alta Loma", "North Rancho Cucamonga", "Victoria Arbors", "Red Hill Country Club"],
             "school_districts": {
                 "Chaffey Joint Union": {"rating": 8, "desirability": "high"},
-                "Cucamonga Elementary": {"rating": 9, "desirability": "very_high"}
-            }
+                "Cucamonga Elementary": {"rating": 9, "desirability": "very_high"},
+            },
         }
 
     async def calculate_comprehensive_score(self, lead_data: Dict[str, Any]) -> LeadScoreBreakdown:
@@ -105,26 +110,24 @@ class EnhancedSmartLeadScorer:
         local_connection = await self._assess_local_connection(lead_data)
 
         # Calculate weighted overall score
-        overall_score = self._calculate_weighted_score({
-            "intent": intent_score,
-            "financial": financial_readiness,
-            "timeline": timeline_urgency,
-            "engagement": engagement_quality,
-            "referral": referral_potential,
-            "local": local_connection
-        })
+        overall_score = self._calculate_weighted_score(
+            {
+                "intent": intent_score,
+                "financial": financial_readiness,
+                "timeline": timeline_urgency,
+                "engagement": engagement_quality,
+                "referral": referral_potential,
+                "local": local_connection,
+            }
+        )
 
         # Determine priority and stage
         priority_level = self._determine_priority_level(overall_score, lead_data)
         buying_stage = self._identify_buying_stage(lead_data)
 
         # Generate Jorge-specific recommendations
-        recommendations = await self._generate_action_recommendations(
-            lead_data, overall_score, priority_level
-        )
-        talking_points = await self._create_jorge_talking_points(
-            lead_data, buying_stage
-        )
+        recommendations = await self._generate_action_recommendations(lead_data, overall_score, priority_level)
+        talking_points = await self._create_jorge_talking_points(lead_data, buying_stage)
         risk_factors = self._identify_risk_factors(lead_data)
 
         return LeadScoreBreakdown(
@@ -139,7 +142,7 @@ class EnhancedSmartLeadScorer:
             buying_stage=buying_stage,
             recommended_actions=recommendations,
             jorge_talking_points=talking_points,
-            risk_factors=risk_factors
+            risk_factors=risk_factors,
         )
 
     async def _analyze_intent_signals(self, lead_data: Dict[str, Any]) -> float:
@@ -338,8 +341,15 @@ class EnhancedSmartLeadScorer:
         # Professional network influence (40 points)
         profession = referral_indicators["profession"].lower()
         high_influence_jobs = [
-            "doctor", "lawyer", "teacher", "pastor", "coach",
-            "manager", "director", "executive", "consultant"
+            "doctor",
+            "lawyer",
+            "teacher",
+            "pastor",
+            "coach",
+            "manager",
+            "director",
+            "executive",
+            "consultant",
         ]
         if any(job in profession for job in high_influence_jobs):
             score += 25
@@ -429,18 +439,15 @@ class EnhancedSmartLeadScorer:
         """Calculate weighted overall score based on Jorge's priorities."""
 
         weights = {
-            "intent": 0.25,      # 25% - Most important for immediate action
-            "financial": 0.25,   # 25% - Must be able to buy
-            "timeline": 0.20,    # 20% - Urgency drives priority
+            "intent": 0.25,  # 25% - Most important for immediate action
+            "financial": 0.25,  # 25% - Must be able to buy
+            "timeline": 0.20,  # 20% - Urgency drives priority
             "engagement": 0.15,  # 15% - Quality of interaction
-            "local": 0.10,       # 10% - Local connection helps
-            "referral": 0.05,    # 5% - Future value
+            "local": 0.10,  # 10% - Local connection helps
+            "referral": 0.05,  # 5% - Future value
         }
 
-        weighted_score = sum(
-            score * weights[dimension]
-            for dimension, score in dimension_scores.items()
-        )
+        weighted_score = sum(score * weights[dimension] for dimension, score in dimension_scores.items())
 
         return round(weighted_score, 1)
 
@@ -499,43 +506,48 @@ class EnhancedSmartLeadScorer:
             return BuyingStage.JUST_LOOKING
 
     async def _generate_action_recommendations(
-        self,
-        lead_data: Dict[str, Any],
-        overall_score: float,
-        priority_level: LeadPriority
+        self, lead_data: Dict[str, Any], overall_score: float, priority_level: LeadPriority
     ) -> List[str]:
         """Generate specific action recommendations for Jorge."""
 
         recommendations = []
 
         if priority_level == LeadPriority.IMMEDIATE:
-            recommendations.extend([
-                "🚨 CALL IMMEDIATELY - High-value lead ready to buy",
-                "📱 Send pre-approved property matches within 2 hours",
-                "📅 Schedule showing for this week",
-                "💼 Prepare Jorge's success stories for this client type"
-            ])
+            recommendations.extend(
+                [
+                    "🚨 CALL IMMEDIATELY - High-value lead ready to buy",
+                    "📱 Send pre-approved property matches within 2 hours",
+                    "📅 Schedule showing for this week",
+                    "💼 Prepare Jorge's success stories for this client type",
+                ]
+            )
         elif priority_level == LeadPriority.HIGH:
-            recommendations.extend([
-                "📞 Call within 1 hour during business hours",
-                "📧 Send personalized follow-up email with market insights",
-                "🏠 Curate 3-5 property matches based on criteria",
-                "📊 Share relevant market data for their area of interest"
-            ])
+            recommendations.extend(
+                [
+                    "📞 Call within 1 hour during business hours",
+                    "📧 Send personalized follow-up email with market insights",
+                    "🏠 Curate 3-5 property matches based on criteria",
+                    "📊 Share relevant market data for their area of interest",
+                ]
+            )
         elif priority_level == LeadPriority.MEDIUM:
-            recommendations.extend([
-                "📞 Call within 24 hours",
-                "📧 Add to nurture sequence with weekly valuable content",
-                "🎯 Invite to Jorge's buyer seminar",
-                "📱 Connect on social media for relationship building"
-            ])
+            recommendations.extend(
+                [
+                    "📞 Call within 24 hours",
+                    "📧 Add to nurture sequence with weekly valuable content",
+                    "🎯 Invite to Jorge's buyer seminar",
+                    "📱 Connect on social media for relationship building",
+                ]
+            )
         elif priority_level == LeadPriority.LOW:
-            recommendations.extend([
-                "📧 Add to monthly newsletter",
-                "🎓 Send home buyer's guide and resources",
-                "📊 Share quarterly market reports",
-                "🔄 Re-score in 30 days for status change"
-            ])
+            recommendations.extend(
+                [
+                    "📧 Add to monthly newsletter",
+                    "🎓 Send home buyer's guide and resources",
+                    "📊 Share quarterly market reports",
+                    "🔄 Re-score in 30 days for status change",
+                ]
+            )
 
         # Add specific recommendations based on lead characteristics
         if lead_data.get("first_time_buyer", True):
@@ -549,37 +561,39 @@ class EnhancedSmartLeadScorer:
 
         return recommendations
 
-    async def _create_jorge_talking_points(
-        self,
-        lead_data: Dict[str, Any],
-        buying_stage: BuyingStage
-    ) -> List[str]:
+    async def _create_jorge_talking_points(self, lead_data: Dict[str, Any], buying_stage: BuyingStage) -> List[str]:
         """Create Jorge-specific talking points for this lead."""
 
         talking_points = []
 
         # Stage-specific talking points
         if buying_stage == BuyingStage.JUST_LOOKING:
-            talking_points.extend([
-                "🏠 'I help people find their perfect home in Rancho Cucamonga'",
-                "📈 Share current market opportunities and timing insights",
-                "🎯 'Let me set you up with auto-notifications for properties that match your criteria'",
-                "📞 'I'm always available for questions - real estate is all about timing'"
-            ])
+            talking_points.extend(
+                [
+                    "🏠 'I help people find their perfect home in Rancho Cucamonga'",
+                    "📈 Share current market opportunities and timing insights",
+                    "🎯 'Let me set you up with auto-notifications for properties that match your criteria'",
+                    "📞 'I'm always available for questions - real estate is all about timing'",
+                ]
+            )
         elif buying_stage == BuyingStage.GETTING_SERIOUS:
-            talking_points.extend([
-                "🎯 'Based on your search, I have 3 properties you should see this week'",
-                "💡 'Here's what other buyers like you are doing in this market'",
-                "🏦 'Let me connect you with my preferred lender for pre-approval'",
-                "📊 'I can show you exactly what homes are selling for in your target area'"
-            ])
+            talking_points.extend(
+                [
+                    "🎯 'Based on your search, I have 3 properties you should see this week'",
+                    "💡 'Here's what other buyers like you are doing in this market'",
+                    "🏦 'Let me connect you with my preferred lender for pre-approval'",
+                    "📊 'I can show you exactly what homes are selling for in your target area'",
+                ]
+            )
         elif buying_stage == BuyingStage.READY_TO_BUY:
-            talking_points.extend([
-                "⚡ 'In this market, we need to act fast on the right property'",
-                "🎯 'I have insider knowledge on homes coming to market soon'",
-                "💪 'My negotiation strategy has saved clients an average of $15K'",
-                "🏆 'Let's schedule a strategy session to position your offer to win'"
-            ])
+            talking_points.extend(
+                [
+                    "⚡ 'In this market, we need to act fast on the right property'",
+                    "🎯 'I have insider knowledge on homes coming to market soon'",
+                    "💪 'My negotiation strategy has saved clients an average of $15K'",
+                    "🏆 'Let's schedule a strategy session to position your offer to win'",
+                ]
+            )
 
         # Personalized talking points based on lead data
         budget = lead_data.get("budget", 0)
@@ -626,10 +640,12 @@ class EnhancedSmartLeadScorer:
         """Check if a date string is within the specified number of days."""
         try:
             from datetime import datetime
+
             target_date = datetime.strptime(date_str, "%Y-%m-%d")
             return (target_date - datetime.now()).days <= days
         except:
             return False
+
 
 # Example usage for Jorge
 async def example_enhanced_scoring():
@@ -696,6 +712,7 @@ async def example_enhanced_scoring():
         print("⚠️ RISK FACTORS:")
         for risk in score_breakdown.risk_factors:
             print(f"  • {risk}")
+
 
 if __name__ == "__main__":
     # Run example

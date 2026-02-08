@@ -15,26 +15,27 @@ Date: 2026-01-17
 """
 
 import asyncio
-import pytest
-import time
 import pickle
-from unittest.mock import AsyncMock, MagicMock, patch
+import time
 from typing import Any, Dict
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from ghl_real_estate_ai.services.tiered_cache_service import (
-    TieredCacheService,
-    CacheMetrics,
     CacheItem,
+    CacheMetrics,
     LRUCache,
     RedisBackend,
-    tiered_cache,
-    get_tiered_cache,
-    cache_get,
-    cache_set,
-    cache_delete,
+    TieredCacheContext,
+    TieredCacheService,
     cache_clear,
+    cache_delete,
+    cache_get,
     cache_metrics,
-    TieredCacheContext
+    cache_set,
+    get_tiered_cache,
+    tiered_cache,
 )
 
 
@@ -78,9 +79,9 @@ class TestCacheMetrics:
 
         # Mix of hits and misses
         metrics.update_l1_hit(1.0)  # Hit
-        metrics.update_l1_miss(2.0) # Miss
+        metrics.update_l1_miss(2.0)  # Miss
         metrics.update_l2_hit(3.0)  # Hit
-        metrics.update_l2_miss(4.0) # Miss
+        metrics.update_l2_miss(4.0)  # Miss
 
         assert metrics.total_requests == 4
         assert metrics.cache_hit_ratio == 0.5  # 2 hits / 4 requests
@@ -120,11 +121,7 @@ class TestCacheItem:
     def test_cache_item_creation(self):
         """Test cache item creation."""
         now = time.time()
-        item = CacheItem(
-            value="test_value",
-            created_at=now,
-            expires_at=now + 300
-        )
+        item = CacheItem(value="test_value", created_at=now, expires_at=now + 300)
 
         assert item.value == "test_value"
         assert item.access_count == 0
@@ -135,28 +132,16 @@ class TestCacheItem:
         now = time.time()
 
         # Non-expired item
-        fresh_item = CacheItem(
-            value="fresh",
-            created_at=now,
-            expires_at=now + 300
-        )
+        fresh_item = CacheItem(value="fresh", created_at=now, expires_at=now + 300)
         assert not fresh_item.is_expired
 
         # Expired item
-        expired_item = CacheItem(
-            value="expired",
-            created_at=now - 300,
-            expires_at=now - 100
-        )
+        expired_item = CacheItem(value="expired", created_at=now - 300, expires_at=now - 100)
         assert expired_item.is_expired
 
     def test_promotion_logic(self):
         """Test promotion decision logic."""
-        item = CacheItem(
-            value="test",
-            created_at=time.time(),
-            expires_at=time.time() + 300
-        )
+        item = CacheItem(value="test", created_at=time.time(), expires_at=time.time() + 300)
 
         # Should not promote initially
         assert not item.should_promote
@@ -170,11 +155,7 @@ class TestCacheItem:
 
     def test_access_tracking(self):
         """Test access count and timestamp tracking."""
-        item = CacheItem(
-            value="test",
-            created_at=time.time(),
-            expires_at=time.time() + 300
-        )
+        item = CacheItem(value="test", created_at=time.time(), expires_at=time.time() + 300)
 
         initial_access = item.last_access
 
@@ -218,7 +199,7 @@ class TestLRUCache:
         cache.set("key3", "value3")
 
         assert cache.get("key1") == "value1"  # Still there
-        assert cache.get("key2") is None      # Evicted
+        assert cache.get("key2") is None  # Evicted
         assert cache.get("key3") == "value3"  # New item
 
     def test_ttl_expiration(self):
@@ -271,7 +252,7 @@ class TestRedisBackend:
     @pytest.fixture
     def mock_redis(self):
         """Mock Redis for testing."""
-        with patch('redis.asyncio.Redis') as mock_redis_class:
+        with patch("redis.asyncio.Redis") as mock_redis_class:
             mock_instance = AsyncMock()
             mock_redis_class.return_value = mock_instance
             yield mock_instance
@@ -279,7 +260,7 @@ class TestRedisBackend:
     @pytest.mark.asyncio
     async def test_redis_initialization(self, mock_redis):
         """Test Redis backend initialization."""
-        with patch('redis.asyncio.connection.ConnectionPool') as mock_pool:
+        with patch("redis.asyncio.connection.ConnectionPool") as mock_pool:
             mock_pool.from_url.return_value = MagicMock()
 
             backend = RedisBackend("redis://localhost:6379")
@@ -638,12 +619,7 @@ if __name__ == "__main__":
     import sys
 
     # Simple test runner
-    pytest_args = [
-        __file__,
-        "-v",
-        "--tb=short",
-        "--asyncio-mode=auto"
-    ]
+    pytest_args = [__file__, "-v", "--tb=short", "--asyncio-mode=auto"]
 
     if "--performance" in sys.argv:
         pytest_args.extend(["-m", "performance"])

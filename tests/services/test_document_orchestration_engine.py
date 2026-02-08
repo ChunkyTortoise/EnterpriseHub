@@ -3,21 +3,22 @@ Comprehensive tests for Document Orchestration Engine.
 Tests cover document collection, validation, template generation, and lifecycle management.
 """
 
-import pytest
 import asyncio
-from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, List, Any
 import base64
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from ghl_real_estate_ai.services.document_orchestration_engine import (
-    DocumentOrchestrationEngine,
-    DocumentType,
-    DocumentStatus,
     DeliveryChannel,
-    ValidationLevel,
+    DocumentOrchestrationEngine,
     DocumentRequest,
+    DocumentStatus,
     DocumentTemplate,
+    DocumentType,
+    ValidationLevel,
     ValidationResult,
 )
 
@@ -110,24 +111,35 @@ class TestDocumentOrchestrationEngine:
     def mock_dependencies(self):
         """Create mock dependencies for document engine."""
         return {
-            'cache_service': MagicMock(),
-            'ghl_client': MagicMock(),
-            'claude_assistant': MagicMock(),
+            "cache_service": MagicMock(),
+            "ghl_client": MagicMock(),
+            "claude_assistant": MagicMock(),
         }
 
     @pytest.fixture
     def engine(self, mock_dependencies):
         """Create document engine instance with mocked dependencies."""
-        with patch('ghl_real_estate_ai.services.document_orchestration_engine.ClaudeAssistant', return_value=mock_dependencies['claude_assistant']), \
-             patch('ghl_real_estate_ai.services.document_orchestration_engine.GHLClient', return_value=mock_dependencies['ghl_client']), \
-             patch('ghl_real_estate_ai.services.document_orchestration_engine.get_cache_service', return_value=mock_dependencies['cache_service']), \
-             patch('ghl_real_estate_ai.services.document_orchestration_engine.get_llm_client') as mock_llm:
+        with (
+            patch(
+                "ghl_real_estate_ai.services.document_orchestration_engine.ClaudeAssistant",
+                return_value=mock_dependencies["claude_assistant"],
+            ),
+            patch(
+                "ghl_real_estate_ai.services.document_orchestration_engine.GHLClient",
+                return_value=mock_dependencies["ghl_client"],
+            ),
+            patch(
+                "ghl_real_estate_ai.services.document_orchestration_engine.get_cache_service",
+                return_value=mock_dependencies["cache_service"],
+            ),
+            patch("ghl_real_estate_ai.services.document_orchestration_engine.get_llm_client") as mock_llm,
+        ):
             mock_llm_instance = MagicMock()
             mock_llm.return_value = mock_llm_instance
             engine = DocumentOrchestrationEngine(
-                cache_service=mock_dependencies['cache_service'],
-                ghl_client=mock_dependencies['ghl_client'],
-                claude_assistant=mock_dependencies['claude_assistant'],
+                cache_service=mock_dependencies["cache_service"],
+                ghl_client=mock_dependencies["ghl_client"],
+                claude_assistant=mock_dependencies["claude_assistant"],
             )
             return engine
 
@@ -177,9 +189,7 @@ class TestDocumentOrchestrationEngine:
         assert len(request_ids) > 0
 
         # Should include proof of funds for cash purchases
-        doc_types = [
-            engine.active_requests[rid].document_type for rid in request_ids
-        ]
+        doc_types = [engine.active_requests[rid].document_type for rid in request_ids]
         assert DocumentType.PROOF_OF_FUNDS in doc_types
 
     @pytest.mark.asyncio
@@ -453,8 +463,8 @@ class TestDocumentOrchestrationEngine:
     def test_engine_configuration_defaults(self, engine):
         """Test engine default configuration values."""
         assert engine.max_file_size_mb == 25
-        assert '.pdf' in engine.allowed_file_types
-        assert '.doc' in engine.allowed_file_types
+        assert ".pdf" in engine.allowed_file_types
+        assert ".doc" in engine.allowed_file_types
         assert engine.ai_validation_confidence_threshold == 0.8
         assert engine.auto_approve_threshold == 0.95
         assert engine.processing_interval_seconds == 180

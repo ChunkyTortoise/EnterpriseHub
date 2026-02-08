@@ -8,8 +8,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Optional, Dict, Any, Tuple
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
 from src.core.types import SearchResult
 
@@ -143,7 +143,7 @@ class BaseReRanker(ABC):
         filtered = [r for r in results if r.score >= self.config.score_threshold]
 
         # Apply top-k limit
-        return filtered[:self.config.top_k]
+        return filtered[: self.config.top_k]
 
     def _normalize_scores(self, results: List[SearchResult]) -> List[SearchResult]:
         """Normalize scores to [0, 1] range.
@@ -178,7 +178,7 @@ class BaseReRanker(ABC):
                 score=normalized_score,
                 rank=result.rank,
                 distance=result.distance,
-                explanation=f"{original_explanation} | original_score={result.score:.4f}".strip(" |")
+                explanation=f"{original_explanation} | original_score={result.score:.4f}".strip(" |"),
             )
             normalized_results.append(normalized_result)
 
@@ -188,7 +188,7 @@ class BaseReRanker(ABC):
         self,
         original_results: List[SearchResult],
         reranked_scores: List[float],
-        strategy: Optional[ReRankingStrategy] = None
+        strategy: Optional[ReRankingStrategy] = None,
     ) -> List[SearchResult]:
         """Combine original scores with re-ranking scores.
 
@@ -216,10 +216,7 @@ class BaseReRanker(ABC):
 
             elif strategy == ReRankingStrategy.WEIGHTED:
                 # Weighted combination
-                final_score = (
-                    self.config.original_weight * original_score +
-                    self.config.reranker_weight * rerank_score
-                )
+                final_score = self.config.original_weight * original_score + self.config.reranker_weight * rerank_score
 
             elif strategy == ReRankingStrategy.RECIPROCAL_RANK:
                 # Use reciprocal rank fusion
@@ -246,7 +243,7 @@ class BaseReRanker(ABC):
                 score=final_score,
                 rank=i + 1,  # Will be updated after sorting
                 distance=result.distance,
-                explanation=f"Reranked with {strategy.value} strategy"
+                explanation=f"Reranked with {strategy.value} strategy",
             )
             combined_results.append(combined_result)
 
@@ -268,7 +265,7 @@ class BaseReRanker(ABC):
                 score=result.score,
                 rank=i + 1,
                 distance=result.distance,
-                explanation=result.explanation
+                explanation=result.explanation,
             )
             updated_results.append(updated_result)
 
@@ -281,17 +278,17 @@ class BaseReRanker(ABC):
             Dictionary with statistics
         """
         return {
-            'config': {
-                'strategy': self.config.strategy.value,
-                'original_weight': self.config.original_weight,
-                'reranker_weight': self.config.reranker_weight,
-                'top_k': self.config.top_k,
-                'score_threshold': self.config.score_threshold,
-                'normalize_scores': self.config.normalize_scores,
-                'batch_size': self.config.batch_size,
-                'timeout_seconds': self.config.timeout_seconds
+            "config": {
+                "strategy": self.config.strategy.value,
+                "original_weight": self.config.original_weight,
+                "reranker_weight": self.config.reranker_weight,
+                "top_k": self.config.top_k,
+                "score_threshold": self.config.score_threshold,
+                "normalize_scores": self.config.normalize_scores,
+                "batch_size": self.config.batch_size,
+                "timeout_seconds": self.config.timeout_seconds,
             },
-            'model_info': self.get_model_info()
+            "model_info": self.get_model_info(),
         }
 
 
@@ -318,10 +315,10 @@ class MockReRanker(BaseReRanker):
     def get_model_info(self) -> Dict[str, Any]:
         """Get mock model information."""
         return {
-            'name': 'MockReRanker',
-            'version': '1.0.0',
-            'type': 'rule-based',
-            'description': 'Mock re-ranker for testing'
+            "name": "MockReRanker",
+            "version": "1.0.0",
+            "type": "rule-based",
+            "description": "Mock re-ranker for testing",
         }
 
     async def rerank(self, query: str, results: List[SearchResult]) -> ReRankingResult:
@@ -345,7 +342,7 @@ class MockReRanker(BaseReRanker):
                 reranked_count=0,
                 processing_time_ms=0.0,
                 model_info=self.get_model_info(),
-                scores_changed=False
+                scores_changed=False,
             )
 
         # Filter results
@@ -360,7 +357,7 @@ class MockReRanker(BaseReRanker):
                 reranked_count=0,
                 processing_time_ms=(time.time() - start_time) * 1000,
                 model_info=self.get_model_info(),
-                scores_changed=False
+                scores_changed=False,
             )
 
         # Simple mock re-ranking based on text matching
@@ -395,7 +392,7 @@ class MockReRanker(BaseReRanker):
 
         # Add back any results that were filtered out (at the end)
         if len(filtered_results) < len(results):
-            remaining_results = results[len(filtered_results):]
+            remaining_results = results[len(filtered_results) :]
             final_results.extend(remaining_results)
 
         processing_time = (time.time() - start_time) * 1000
@@ -406,5 +403,5 @@ class MockReRanker(BaseReRanker):
             reranked_count=working_count,
             processing_time_ms=processing_time,
             model_info=self.get_model_info(),
-            scores_changed=working_count > 0
+            scores_changed=working_count > 0,
         )
