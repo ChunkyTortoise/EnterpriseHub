@@ -7,35 +7,88 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+No unreleased changes.
+
+## [8.0.0] - 2026-02-07
+
+### MAJOR RELEASE: Advanced RAG, Jorge Bot Audit, Pydantic V2, CI Overhaul
+
+#### Added
+- **Advanced RAG System (Phases 1-5)**:
+  - Phase 1: Foundation layer with document ingestion and vector store
+  - Phase 2: Hybrid retrieval with BM25 and Reciprocal Rank Fusion
+  - Phase 3: Query enhancement and re-ranking implementation
+  - Phase 3.5: InMemoryVectorStore and benchmark suites
+  - Phase 4: Self-querying retriever and contextual compression
+  - Phase 5: Agentic RAG, query processing, caching, and personalization
+- **Jorge Bot Audit (4 phases)**:
+  - Unified public API entry points: `process_lead_conversation()`, `process_buyer_conversation()`, `process_seller_message()`
+  - GHL-enhanced intent decoders: `analyze_lead_with_ghl()`, `analyze_buyer_with_ghl()`
+  - Cross-bot handoff service with circular prevention, rate limiting (3/hr, 10/day), pattern learning, and conflict resolution
+  - A/B testing service with deterministic variant assignment and z-test significance
+  - Performance tracker with P50/P95/P99 latency and SLA compliance
+  - Alerting service with 7 default rules and email/Slack/webhook channels
+  - Bot metrics collector with per-bot stats and alerting integration
+  - Buyer budget configuration and dynamic thresholds
+  - 51 new tests for jorge services (alerting, A/B testing, handoff, perf, budget)
+  - Alert channel migrations, deployment docs, and integration guide
+- **Jorge Bot Production Hardening**:
+  - Escalation workflows, PDF storage, cross-bot handoff, MLS integration
+  - Lead bot routing and compliance enhancement
+  - Buyer bot routing wired into webhook handler
+  - Lead mode routing with SHAP explanations
+  - Monitoring services wired into lead/buyer bots
+- **Weeks 5-8 ROI Enhancement Services**: Market intelligence, exports, forecasting, API routes
+- **17 Genericized Agents**: All agents refactored to be domain-agnostic, adapted via CLAUDE.md and reference files
+- **4 MCP Servers**: memory, postgres, redis, stripe (+ playwright for testing)
+- **6 Specialized Agents** added to complement the 17 existing agents
+- **Demo Mode**: `DEMO_MODE` env var, `make demo` target, `/demo/leads` and `/demo/pipeline` API routes
+- **Beads Task Tracker**: Git-backed issue tracking for agent workflows
+- **LinkedIn Optimization Spec**: 14-gap analysis, 8 section rewrites, 90-day content strategy, 5 post drafts
+- **Security Scan Workflow**: 6 parallel jobs — secrets detection, Bandit static analysis, pip-audit dependency scan, SQL injection check, infrastructure config (checkov), compliance check
+- **Portfolio Overhaul**: Honest README rewrite, Upwork profile (19 certs, 8 services, 7 repos), platform overview screenshot
 - OpenRouter multi-LLM provider integration with automatic fallbacks
 - Supermemory AI universal memory service integration
-- JorgeConfig backward-compatible alias in jorge_config.py (supports 19 modules)
-- **Jorge Bot v8.2 Services**:
-  - [`ghl_real_estate_ai/services/jorge/ab_testing_service.py`](ghl_real_estate_ai/services/jorge/ab_testing_service.py) - A/B testing with deterministic assignment and z-test significance
-  - [`ghl_real_estate_ai/services/jorge/performance_tracker.py`](ghl_real_estate_ai/services/jorge/performance_tracker.py) - P50/P95/P99 latency tracking and SLA compliance
-  - [`ghl_real_estate_ai/services/jorge/alerting_service.py`](ghl_real_estate_ai/services/jorge/alerting_service.py) - 7 default alert rules with email/Slack/webhook channels
-  - [`ghl_real_estate_ai/services/jorge/bot_metrics_collector.py`](ghl_real_estate_ai/services/jorge/bot_metrics_collector.py) - Per-bot metrics aggregation
-  - [`ghl_real_estate_ai/services/jorge/buyer_budget_config.py`](ghl_real_estate_ai/services/jorge/buyer_budget_config.py) - Dynamic budget configuration
-- **Jorge Bot v8.2 Documentation**:
-  - [`ghl_real_estate_ai/docs/JORGE_BOT_DEPLOYMENT_CHECKLIST.md`](ghl_real_estate_ai/docs/JORGE_BOT_DEPLOYMENT_CHECKLIST.md) - Complete deployment procedures
-  - [`ghl_real_estate_ai/docs/JORGE_BOT_INTEGRATION_GUIDE.md`](ghl_real_estate_ai/docs/JORGE_BOT_INTEGRATION_GUIDE.md) - API endpoints and usage examples
+- JorgeConfig backward-compatible alias (supports 19 modules)
+- Fly.io configuration and slim production dependencies
+- Railway deployment guide for production setup
 
-### Fixed
+#### Changed
+- **Pydantic V1 → V2 Migration**: All schemas across billing, api/schemas, services, api/routes migrated to Pydantic V2 (breaking change)
+- **CI Pipeline**: 6 deploy workflows consolidated into 1 unified pipeline; 8 broken workflows removed (referenced non-existent infrastructure)
+- **Linting**: Replaced black/isort/flake8 with ruff for faster, unified linting
+- **LLM References**: All bot LLM references migrated to Claude Sonnet 4.5
+- **Market Focus**: Corrected all Austin market references to Rancho Cucamonga
+- SMS compliance service: expanded STOP keywords, cache integration, event publishing, error boundaries
+- README overhauled with problem statement, screenshots, and cross-links
+- Archived 369 stale root docs and consolidated subdir artifacts
+
+#### Fixed
 - 11 dashboard component import errors resolved (0 failures across 137 components)
 - Dataclass field ordering in client_expansion_intelligence, consulting_delivery_service, and revenue_attribution_engine
-- Python 3.14 compatibility: replaced deprecated asyncio.Iterator with collections.abc.AsyncIterator
-- Relative import beyond top-level package in business_forecasting_engine (triple-dot to absolute)
-- Missing obsidian_cards primitive module reference in SHAP dashboards (pointed to card.py)
-- Wrong class name ExecutivePortfolioManager (actual: PortfolioManagerAgent) with graceful fallback
-- Bare import path for lead_dashboard_optimized (components.primitives to absolute path)
-- Missing run_async in utils/async_utils (pointed to streamlit_demo.async_utils)
-- Optional seaborn import in customer_segmentation_dashboard
+- Python 3.14/3.16 compatibility: replaced deprecated asyncio.Iterator, Claude API tools parameter
+- Relative import beyond top-level package in business_forecasting_engine
+- Missing obsidian_cards primitive module reference in SHAP dashboards
+- Wrong class name ExecutivePortfolioManager (actual: PortfolioManagerAgent)
 - Protected business_intelligence_command_center against pydantic v1/v2 ConfigError
+- Buyer bot crash resolved and monitoring services wired in
+- SMS length guard (320 char truncation) and retry on add_tags
+- Webhook auth failure: static shared secret for GHL Custom Webhook verification
+- Path traversal vulnerability in memory service
+- Auth manager import, memory singleton keying, dashboard sequence analytics
+- 40+ test collection errors resolved, 51+ test file fixes across track1 and ecosystem suites
+- Competitor intelligence: broken regex patterns, enum ordering, deduplication
+- RiskLevel enum made orderable for max() comparisons
+- Opt-out path now sends farewell SMS before adding AI-Off tag
+- Startup error message, scheduler duplicate lock, webhook fallback SMS
+- Constructor mismatches and settings.get() errors across services
 
-### Changed
-- SMS compliance service: expanded STOP keywords, added cache integration, event publishing, and error boundaries
-- README overhauled for professional portfolio presentation
+#### Security
+- MCP command injection fix and agent mesh resource leak patched
+- Admin API key guard added to CRM, bulk ops, and bot management routes
+- Input length guards and request ID uniqueness enforcement
+- Webhook security hardening for production deployment
+- Security scan CI workflow with weekly scheduled runs
 
 ---
 
@@ -396,10 +449,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Links
 
-- [Repository](https://github.com/ChunkyTortoise/enterprise-hub)
-- [Issues](https://github.com/ChunkyTortoise/enterprise-hub/issues)
-- [Latest Release](https://github.com/ChunkyTortoise/enterprise-hub/releases)
+- [Repository](https://github.com/ChunkyTortoise/EnterpriseHub)
+- [Issues](https://github.com/ChunkyTortoise/EnterpriseHub/issues)
+- [Latest Release](https://github.com/ChunkyTortoise/EnterpriseHub/releases)
 
 ---
 
-Last Updated: December 6, 2025
+Last Updated: February 7, 2026
