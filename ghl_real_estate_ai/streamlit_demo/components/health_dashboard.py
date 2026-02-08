@@ -635,12 +635,8 @@ class HealthDashboard:
                 if self._performance_tracker is not None:
                     try:
                         loop = _asyncio.new_event_loop()
-                        stats_1h = loop.run_until_complete(
-                            self._performance_tracker.get_bot_stats(bot_name, "1h")
-                        )
-                        stats_24h = loop.run_until_complete(
-                            self._performance_tracker.get_bot_stats(bot_name, "24h")
-                        )
+                        stats_1h = loop.run_until_complete(self._performance_tracker.get_bot_stats(bot_name, "1h"))
+                        stats_24h = loop.run_until_complete(self._performance_tracker.get_bot_stats(bot_name, "24h"))
                         loop.close()
                     except Exception:
                         stats_1h = {}
