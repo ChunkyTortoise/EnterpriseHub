@@ -185,3 +185,141 @@ What provider mix are you running in production?
 - Add a personal photo or architecture diagram to Posts 2 and 4 for higher engagement
 - Reply to EVERY comment within 1 hour of posting
 - After posting, immediately comment on 3-5 other posts in your feed to boost algorithmic reach
+
+---
+
+## Week 2 Posts
+
+### Post 6: Case Study / Results
+
+**Theme**: Cross-bot handoff system with measurable safeguards
+
+**Best day/time**: Tuesday, February 10, 8:30am PT
+
+```
+3 chatbots. 1 contact. Zero dropped conversations.
+
+Last month I shipped a cross-bot handoff system for a real estate AI platform where 3 specialized chatbots (lead qualification, buyer, seller) need to pass contacts between each other mid-conversation.
+
+Sounds simple until you hit the edge cases:
+
+- Contact bounces lead -> buyer -> lead in an infinite loop
+- Two bots try to claim the same contact simultaneously
+- A bad intent signal fires 6 handoffs in an hour
+
+Here's what I built to stop all of that:
+
+1. Circular prevention — same source-to-target pair blocked within a 30-min window
+2. Rate limiting — 3 handoffs/hr, 10/day per contact (hard caps)
+3. Contact-level locking — prevents concurrent handoff collisions
+4. Pattern learning — threshold adjusts dynamically after 10+ outcome data points
+
+The confidence threshold is 0.7 for most routes, but buyer-to-seller requires 0.8 (higher stakes) and seller-to-buyer only needs 0.6 (lower friction).
+
+Before these safeguards: handoff loops were our #1 support complaint.
+After: zero circular handoffs in production. Rate limit blocks caught 12 false-positive intent signals in the first week alone.
+
+The lesson: the hard part of multi-agent AI isn't making the bots smart. It's making the transitions between them reliable.
+
+What's the gnarliest edge case you've hit in a multi-agent system?
+
+#MultiAgentAI #AIEngineering #Chatbots #Python #LLMOps
+```
+
+**Why it works**: Continues the multi-agent thread from Week 1 Post 2, but goes deeper with specific numbers (0.7 threshold, 30-min window, 3/hr limit). The before/after framing makes the outcome concrete, and the edge case details signal real production experience.
+
+**Engagement hook**: "What's the gnarliest edge case you've hit in a multi-agent system?" -- invites war stories from engineers, which generates long comments that boost algorithmic reach.
+
+---
+
+### Post 7: Industry Insight / Trend
+
+**Theme**: The real bottleneck in production AI is not model quality
+
+**Best day/time**: Wednesday, February 11, 9:00am PT
+
+```
+Hot take from someone running 3 LLM providers in production:
+
+The model is never the bottleneck. The plumbing is.
+
+I maintain a platform that routes requests across Claude, Gemini, and Perplexity depending on task complexity. The actual LLM call takes 1-3 seconds. Everything else — caching, parsing, fallback logic, error handling — that's where 80% of the engineering time goes.
+
+Here's what I mean:
+
+Response parsing alone has multiple strategies because LLMs don't return structured data consistently. One model wraps JSON in markdown code fences. Another adds a preamble. A third sometimes returns valid JSON, sometimes doesn't.
+
+Then there's the cache layer. We run L1 (in-memory), L2 (Redis), and L3 (persistent) caching because a single missed cache hit on a repeated query costs $0.003-0.01. Multiply that by 10,000 daily requests and you're burning $30-100/day on questions you already answered.
+
+And SLA compliance? We track P50, P95, and P99 latency per bot, per operation type, with rolling 1h/24h/7d windows. Not because we want dashboards. Because when a seller bot's P95 crosses 2500ms, something upstream broke and we need to know in minutes, not days.
+
+Everyone's debating which model is best.
+
+Meanwhile, the engineers actually shipping AI products are spending their days writing cache invalidation logic and retry policies.
+
+The model is a solved problem. The infrastructure around it is not.
+
+What's the most underrated part of your AI stack?
+
+#AIEngineering #LLMOps #ProductionAI #SoftwareEngineering
+```
+
+**Why it works**: This is a builder's observation, not a pundit's prediction. The specific details (L1/L2/L3 cache tiers, P50/P95/P99 tracking, $0.003-0.01 per missed cache hit) are too granular to fake and signal genuine production experience.
+
+**Engagement hook**: "What's the most underrated part of your AI stack?" -- low-friction question that lets infrastructure engineers share their own overlooked work.
+
+---
+
+### Post 8: Tool/Framework Review
+
+**Theme**: Honest review of Ruff after migrating from black + isort + flake8
+
+**Best day/time**: Thursday, February 12, 8:30am PT
+
+```
+I replaced 3 Python tools with 1 and my CI pipeline got 10x faster.
+
+The tools I dropped: black, isort, flake8.
+The replacement: Ruff.
+
+I've now migrated 7 repositories to Ruff (totaling 800+ Python files) and here's my honest take after 3 months.
+
+What's great:
+- Speed. Ruff lints my entire monorepo in under 2 seconds. The old stack took 20-30 seconds. In CI, that compounds fast across matrix builds.
+- One config block. Instead of [tool.black], [tool.isort], [tool.flake8] scattered across pyproject.toml, it's just [tool.ruff] and [tool.ruff.lint]. Select the rule codes you want, done.
+- Auto-fix. Ruff can fix most import sorting and unused import issues on save. I have it wired as a post-tool hook in my editor — every file save auto-formats.
+
+What's not perfect:
+- Rule parity isn't 100%. A few flake8 plugins I relied on (like flake8-bugbear's B950 line length) don't have exact equivalents. You adapt.
+- The error messages are sometimes less descriptive than flake8's. When a rule fires that you haven't seen before, you're reading docs more often.
+- If your team has muscle memory around black's opinionated formatting, Ruff's formatter makes slightly different choices in edge cases. Minor, but it can cause noisy diffs during migration.
+
+Bottom line: I'd never go back. The speed alone justifies the switch, and consolidating 3 config sections into 1 removes a real source of drift.
+
+If you're still running black + isort + flake8 separately, try `ruff check . --fix` on your repo. You'll feel the difference immediately.
+
+Have you switched to Ruff yet? What held you back (or convinced you)?
+
+#Python #DevTools #Ruff #DeveloperExperience #CodeQuality
+```
+
+**Why it works**: Tool reviews with honest pros AND cons outperform pure hype posts. The specific migration scope (7 repos, 800+ files) and concrete before/after (20-30s vs 2s) make this credible.
+
+**Engagement hook**: "Have you switched to Ruff yet? What held you back (or convinced you)?" -- binary question with follow-up that invites explanation.
+
+---
+
+### Week 2 Posting Schedule
+
+| Post | Day | Time (PT) | Theme | Content Type |
+|------|-----|-----------|-------|-------------|
+| 6 | Tue Feb 10 | 8:30am | Cross-bot handoff safeguards | Case Study |
+| 7 | Wed Feb 11 | 9:00am | Model isn't the bottleneck, plumbing is | Industry Insight |
+| 8 | Thu Feb 12 | 8:30am | Ruff replaces black+isort+flake8 | Tool Review |
+
+### Week 2 Strategy Notes
+
+- **Callback to Week 1**: Post 6 builds on the handoff topic from Post 2, and Post 7 references the caching strategy from Post 1. This creates continuity for repeat viewers.
+- **Engagement targets**: Reply to every comment within 1 hour. For Post 8 especially, expect "what about X?" questions from flake8 plugin users.
+- **Cross-promotion**: If Post 7 gains traction, reshare Post 1 (token cost reduction) in a comment as supporting evidence.
+- **Comment seeding**: After posting, immediately comment on 3-5 related posts from others in the AI/Python space.
