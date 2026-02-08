@@ -21,6 +21,9 @@ from ghl_real_estate_ai.services.client_demo_service import (
     DemoScenario,
     DemoEnvironment
 )
+from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
+    JorgeHandoffService,
+)
 
 # Configure logging
 logging.basicConfig(
@@ -332,6 +335,18 @@ async def main():
         if args.cleanup:
             logger.info("Cleaning up created demo sessions...")
             await seeder.cleanup_created_sessions()
+
+        # Seed Jorge handoff history for pattern learning
+        logger.info("Seeding Jorge handoff outcome history...")
+        JorgeHandoffService.reset_analytics()
+        handoff_result = JorgeHandoffService.seed_historical_data(
+            num_samples=20, seed=42
+        )
+        logger.info(
+            "Seeded %d handoff records across %d routes",
+            handoff_result["total_records"],
+            len(handoff_result["routes_seeded"]),
+        )
 
         logger.info("Demo environment seeding completed successfully")
 

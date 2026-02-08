@@ -132,6 +132,7 @@ class PerformanceTracker:
         self._operations: Dict[str, Dict[str, Dict[str, deque]]] = {}
         self._sla_targets: Dict[str, Dict[str, _SLATarget]] = {}
         self._data_lock = threading.Lock()
+        self._repository: Any = None  # Optional MetricsRepository for DB persistence
         self._initialized = True
 
         # Initialize data structures for each bot and window
@@ -157,6 +158,46 @@ class PerformanceTracker:
                     target_p99_ms=targets.get("p99_target", 0.0),
                 )
         logger.info("Registered %d SLA targets", sum(len(v) for v in self._sla_targets.values()))
+
+    # ── Persistence Configuration ─────────────────────────────────────
+
+    def set_repository(self, repository: Any) -> None:
+        """Attach a repository for write-through PostgreSQL persistence.
+
+        The repository object must implement:
+            - ``save_performance_operation(bot_name, operation, duration_ms,
+              success, cache_hit, metadata, timestamp)`` (async, returns None)
+            - ``load_performance_operations(since_timestamp)``
+              (async, returns list of dicts)
+
+        Args:
+            repository: A repository instance (or None to disable persistence).
+        """
+        self._repository = repository
+        logger.info(
+            "PerformanceTracker persistence %s",
+            "enabled" if repository else "disabled",
+        )
+
+    async def _persist_operation(
+        self,
+        entry: "_OperationEntry",
+        bot_name: str,
+        operation: str,
+    ) -> None:
+        """Write a single performance operation to the database repository."""
+        try:
+            await self._repository.save_performance_operation(
+                bot_name=bot_name,
+                operation=operation,
+                duration_ms=entry.duration_ms,
+                success=entry.success,
+                cache_hit=entry.cache_hit,
+                metadata=entry.metadata,
+                timestamp=entry.timestamp,
+            )
+        except Exception as exc:
+            logger.debug("DB write-through failed for performance op: %s", exc)
 
     # ── Core Tracking Methods ───────────────────────────────────────────
 
@@ -198,6 +239,15 @@ class PerformanceTracker:
             # Add to all rolling windows
             for window_name in WINDOWS:
                 self._operations[bot_name][window_name].append(entry)
+
+        # Write-through to DB (fire-and-forget on error)
+        if self._repository is not None:
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    asyncio.ensure_future(self._persist_operation(entry, bot_name, operation))
+            except RuntimeError:
+                logger.debug("No event loop for performance DB write-through")
 
         logger.debug(
             "Recorded %s.%s: %.2fms (success=%s, cache_hit=%s)",
@@ -493,6 +543,7 @@ class PerformanceTracker:
             if cls._instance is not None:
                 cls._instance._operations.clear()
                 cls._instance._sla_targets.clear()
+                cls._instance._repository = None
                 cls._instance._initialized = False
             cls._instance = None
 

@@ -102,7 +102,7 @@ If automation fails:
    - **Firefox**: F12 → ... menu → "Take a screenshot"
 5. Save to this directory
 
-See [docs/SCREENSHOT_GUIDE.md](../SCREENSHOT_GUIDE.md) for detailed manual instructions.
+See [docs/screenshots/MODULE_SCREENSHOTS.md](MODULE_SCREENSHOTS.md) for complete screenshot documentation.
 
 ## Optimization
 
@@ -181,11 +181,10 @@ Example GitHub Actions workflow:
 
 ## Documentation
 
-- **Quick Start**: `/QUICK_START_SCREENSHOTS.md`
-- **Comprehensive Guide**: `/docs/SCREENSHOTS.md`
-- **Manual Instructions**: `/docs/SCREENSHOT_GUIDE.md`
-- **Asset Documentation**: `/assets/README.md`
-- **Implementation Summary**: `/SCREENSHOT_AUTOMATION_SUMMARY.md`
+- **Quick Start**: See [README.md](../README.md) for project setup
+- **Comprehensive Guide**: [MODULE_SCREENSHOTS.md](MODULE_SCREENSHOTS.md) - Complete screenshot documentation
+- **Asset Documentation**: [../../assets/README.md](../../assets/README.md) - Screenshot guidelines
+- **Implementation Summary**: [SCREENSHOT_FIX_SUMMARY.md](SCREENSHOT_FIX_SUMMARY.md) - Screenshot creation report
 
 ## Verification
 

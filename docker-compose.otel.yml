@@ -1,0 +1,52 @@
+version: "3.8"
+
+# =============================================================================
+# OpenTelemetry Local Development Stack
+# =============================================================================
+# Usage:
+#   docker compose -f docker-compose.otel.yml up -d
+#
+# Then set environment variables for the app:
+#   OTEL_ENABLED=true
+#   OTEL_EXPORTER_TYPE=otlp
+#   OTEL_ENDPOINT=http://localhost:4317
+#
+# Jaeger UI: http://localhost:16686
+# OTel Collector metrics: http://localhost:8888/metrics
+# =============================================================================
+
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:1.55
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "4317:4317"    # OTLP gRPC
+      - "4318:4318"    # OTLP HTTP
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - otel
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:16686"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.96.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "4319:4317"   # Alternative OTLP gRPC (when Jaeger uses 4317)
+      - "4320:4318"   # Alternative OTLP HTTP
+      - "8888:8888"   # Prometheus metrics endpoint
+    depends_on:
+      jaeger:
+        condition: service_healthy
+    networks:
+      - otel
+
+networks:
+  otel:
+    driver: bridge
