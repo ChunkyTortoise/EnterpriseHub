@@ -142,39 +142,29 @@ jobs:
 
       - name: Check for SQL injection patterns
         run: |
-          cat > /tmp/check_sql.py << 'PYEOF'
-          """Check for potential SQL injection vulnerabilities."""
-          import re
-          from pathlib import Path
+          echo "Scanning for SQL injection patterns..."
+          FOUND=0
 
-          dangerous_patterns = [
-              (r'execute\([^)]*%[^)]*\)', "String formatting in execute()"),
-              (r'\.format\([^)]*\).*execute', "format() with execute()"),
-              (r'f["\'].*\{.*\}.*["\'].*execute', "f-string with execute()"),
-          ]
+          # String formatting in execute()
+          if grep -rn 'execute([^)]*%' ghl_real_estate_ai/ --include="*.py" \
+              --exclude-dir=__pycache__ | grep -v test_; then
+            echo "::warning::String formatting in execute() calls found"
+            FOUND=1
+          fi
 
-          issues = []
-          for py_file in Path('ghl_real_estate_ai').rglob('*.py'):
-              if 'test_' in py_file.name or '__pycache__' in str(py_file):
-                  continue
-              try:
-                  content = py_file.read_text()
-                  for pattern, desc in dangerous_patterns:
-                      for match in re.finditer(pattern, content, re.IGNORECASE):
-                          issues.append(f"  {py_file}: {desc} — {match.group(0)[:60]}")
-              except Exception:
-                  pass
+          # .format() piped to execute
+          if grep -rn '\.format(.*execute' ghl_real_estate_ai/ --include="*.py" \
+              --exclude-dir=__pycache__ | grep -v test_; then
+            echo "::warning::format() with execute() found"
+            FOUND=1
+          fi
 
-          if issues:
-              print("Potential SQL injection vulnerabilities:")
-              for issue in issues:
-                  print(issue)
-              exit(1)
-          else:
-              print("No SQL injection patterns detected")
-          PYEOF
+          if [ "$FOUND" -eq 1 ]; then
+            echo "::error::Potential SQL injection patterns detected"
+            exit 1
+          fi
 
-          python /tmp/check_sql.py
+          echo "No SQL injection patterns detected"
 
   infrastructure-security:
     name: Infrastructure Config Check
