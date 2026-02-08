@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Enterprise AI Architecture Design",
+    "category": "strategic",
+    "estimated_hours": 32,
+    "description": "Complete enterprise AI platform architecture with scalability planning",
+    "acceptance_criteria": [
+      "Enterprise architecture documented",
+      "Scalability roadmap delivered",
+      "Integration strategy validated"
+    ],
+    "client_value": "Foundation for $2M+ revenue scaling"
+  },
+  {
+    "name": "Predictive Analytics Engine",
+    "category": "technical",
+    "estimated_hours": 120,
+    "description": "Advanced ML models for lead scoring, churn prediction, and revenue forecasting",
+    "acceptance_criteria": [
+      "ML models deployed with 90%+ accuracy",
+      "Real-time prediction dashboard operational",
+      "Historical validation completed"
+    ],
+    "client_value": "40% churn reduction, $1M+ revenue retention"
+  },
+  {
+    "name": "Executive Intelligence Dashboard",
+    "category": "technical",
+    "estimated_hours": 64,
+    "description": "C-suite dashboard with strategic insights and ROI attribution",
+    "acceptance_criteria": [
+      "Executive dashboard deployed",
+      "Real-time KPI monitoring active",
+      "Mobile optimization completed"
+    ],
+    "client_value": "C-suite decision making acceleration, strategic visibility"
+  },
+  {
+    "name": "Advanced Team Certification",
+    "category": "training",
+    "estimated_hours": 40,
+    "description": "Advanced AI platform management and optimization training",
+    "acceptance_criteria": [
+      "Advanced certification program completed",
+      "Internal champions identified and trained",
+      "Optimization playbooks delivered"
+    ],
+    "client_value": "Internal capability building, reduced dependency"
+  }
+]
