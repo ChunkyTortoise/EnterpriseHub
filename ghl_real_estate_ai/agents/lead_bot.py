@@ -2482,6 +2482,14 @@ class LeadBotWorkflow:
             if len(conversation_history) > self.MAX_CONVERSATION_HISTORY:
                 conversation_history = conversation_history[-self.MAX_CONVERSATION_HISTORY:]
 
+            # Get A/B test variant for response tone
+            try:
+                _tone_variant = await self.ab_testing.get_variant(
+                    ABTestingService.RESPONSE_TONE_EXPERIMENT, conversation_id
+                )
+            except (KeyError, ValueError):
+                _tone_variant = "empathetic"
+
             # Create initial state for the workflow
             initial_state = {
                 "lead_id": conversation_id,
@@ -2491,13 +2499,14 @@ class LeadBotWorkflow:
                 "engagement_status": "responsive",
                 "cma_generated": False,
                 "user_message": user_message,
-                
+                "tone_variant": _tone_variant,
+
                 # Enhanced fields
                 "response_pattern": None,
                 "personality_type": None,
                 "temperature_prediction": None,
                 "sequence_optimization": None,
-                
+
                 # Track 3.1 fields
                 "journey_analysis": None,
                 "conversion_analysis": None,
@@ -2505,7 +2514,7 @@ class LeadBotWorkflow:
                 "enhanced_optimization": None,
                 "critical_scenario": None,
                 "track3_applied": False,
-                
+
                 # Phase 3.3 Intelligence Enhancement fields
                 "intelligence_context": None,
                 "intelligence_performance_ms": 0.0,
@@ -2538,6 +2547,12 @@ class LeadBotWorkflow:
 
             result["handoff_signals"] = handoff_signals
 
+            # Tag response with A/B experiment metadata
+            result["ab_test"] = {
+                "experiment_id": ABTestingService.RESPONSE_TONE_EXPERIMENT,
+                "variant": _tone_variant,
+            }
+
             # Record performance metrics
             await self.performance_tracker.track_operation(
                 "lead_bot", "process", _workflow_duration_ms, success=True
@@ -2550,6 +2565,17 @@ class LeadBotWorkflow:
             try:
                 self.metrics_collector.feed_to_alerting(self.alerting_service)
             except Exception:
+                pass
+
+            # Record A/B test outcome
+            try:
+                await self.ab_testing.record_outcome(
+                    ABTestingService.RESPONSE_TONE_EXPERIMENT,
+                    conversation_id,
+                    _tone_variant,
+                    "response",
+                )
+            except (KeyError, ValueError):
                 pass
 
             # Emit conversation processed event

@@ -770,6 +770,17 @@ class JorgeSellerBot:
             "supportive": "Provide comfort and reassurance. Help them feel confident in their decisions."
         }
 
+        # Use A/B test variant from state (assigned in process_seller_message)
+        tone_variant = state.get("tone_variant")
+        if not tone_variant:
+            seller_id = state.get("lead_id", "unknown")
+            try:
+                tone_variant = await self.ab_testing.get_variant(
+                    ABTestingService.RESPONSE_TONE_EXPERIMENT, seller_id
+                )
+            except (KeyError, ValueError):
+                tone_variant = "empathetic"
+
         # Base prompt for Jorge Persona
         prompt = f"""
         You are Jorge Salas, a caring and knowledgeable real estate professional.
@@ -786,6 +797,7 @@ class JorgeSellerBot:
         CURRENT CONTEXT:
         Lead: {state['lead_name']}
         Tone Mode: {state['current_tone']} ({tone_instructions.get(state['current_tone'], 'Be helpful and professional')})
+        Tone style: {tone_variant}
         Conversation Context: {state['detected_stall_type'] or 'None'}
         FRS Classification: {state['intent_profile'].frs.classification}
 
@@ -954,6 +966,17 @@ class JorgeSellerBot:
         next_question = await self.question_engine.select_next_question(state, context)
         self.workflow_stats["adaptive_question_selections"] += 1
 
+        # Use A/B test variant from state (assigned in process_seller_message)
+        tone_variant = state.get("tone_variant")
+        if not tone_variant:
+            seller_id = state.get("lead_id", "unknown")
+            try:
+                tone_variant = await self.ab_testing.get_variant(
+                    ABTestingService.RESPONSE_TONE_EXPERIMENT, seller_id
+                )
+            except (KeyError, ValueError):
+                tone_variant = "empathetic"
+
         # Enhanced prompt with adaptive context
         prompt = f"""
         You are Jorge Salas, helpful real estate advisor and relationship builder.
@@ -962,6 +985,7 @@ class JorgeSellerBot:
         Lead: {state['lead_name']}
         Adaptive Mode: {state.get('adaptive_mode', 'standard')}
         Tone: {state['current_tone']}
+        Tone style: {tone_variant}
         PCS Score: {state['psychological_commitment']}
         FRS Classification: {state['intent_profile'].frs.classification}
         Previous Adaptations: {context.get('adaptation_count', 0)}
@@ -1522,6 +1546,14 @@ class JorgeSellerBot:
                 "timestamp": datetime.now(timezone.utc).isoformat()
             })
 
+            # Get A/B test variant for response tone (before workflow)
+            try:
+                _tone_variant = await self.ab_testing.get_variant(
+                    ABTestingService.RESPONSE_TONE_EXPERIMENT, conversation_id
+                )
+            except (KeyError, ValueError):
+                _tone_variant = "empathetic"
+
             initial_state = {
                 "lead_id": conversation_id,
                 "lead_name": seller_name or f"Seller {conversation_id}",
@@ -1537,7 +1569,8 @@ class JorgeSellerBot:
                 "is_qualified": False,
                 "current_journey_stage": "qualification",
                 "follow_up_count": 0,
-                "last_action_timestamp": None
+                "last_action_timestamp": None,
+                "tone_variant": _tone_variant,
             }
 
             if seller_phone:
@@ -1579,6 +1612,17 @@ class JorgeSellerBot:
             except Exception:
                 pass
 
+            # Record A/B test outcome (reuse variant from pre-workflow assignment)
+            try:
+                await self.ab_testing.record_outcome(
+                    ABTestingService.RESPONSE_TONE_EXPERIMENT,
+                    conversation_id,
+                    _tone_variant,
+                    "response",
+                )
+            except (KeyError, ValueError):
+                pass
+
             await self.event_publisher.publish_bot_status_update(
                 bot_type="seller-bot",
                 contact_id=conversation_id,
@@ -1593,7 +1637,11 @@ class JorgeSellerBot:
                 "engagement_status": result.get("current_journey_stage", "qualification"),
                 "frs_score": frs_score,
                 "pcs_score": pcs_score,
-                "handoff_signals": handoff_signals
+                "handoff_signals": handoff_signals,
+                "ab_test": {
+                    "experiment_id": ABTestingService.RESPONSE_TONE_EXPERIMENT,
+                    "variant": _tone_variant,
+                },
             }
 
         except Exception as e:

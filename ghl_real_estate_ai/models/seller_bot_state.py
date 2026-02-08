@@ -33,6 +33,9 @@ class JorgeSellerState(TypedDict):
     follow_up_count: int
     last_action_timestamp: Optional[datetime]
 
+    # A/B testing
+    tone_variant: Optional[str]  # A/B experiment variant: "formal", "casual", "empathetic"
+
     # Adaptive extension fields
     adaptive_mode: str
     adaptive_question_used: Optional[str]
