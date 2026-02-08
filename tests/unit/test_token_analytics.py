@@ -16,7 +16,6 @@ from ghl_real_estate_ai.streamlit_demo.components.token_analytics import (
     _generate_demo_data,
 )
 
-
 # ============================================================================
 # Fixtures
 # ============================================================================
@@ -231,12 +230,8 @@ class TestDemoData:
         early_dates = set(dates[:mid])
         late_dates = set(dates[mid:])
 
-        early_cost = sum(
-            r.cost_usd for r in data if r.timestamp.strftime("%Y-%m-%d") in early_dates
-        )
-        late_cost = sum(
-            r.cost_usd for r in data if r.timestamp.strftime("%Y-%m-%d") in late_dates
-        )
+        early_cost = sum(r.cost_usd for r in data if r.timestamp.strftime("%Y-%m-%d") in early_dates)
+        late_cost = sum(r.cost_usd for r in data if r.timestamp.strftime("%Y-%m-%d") in late_dates)
 
         # Late period should be cheaper due to Gemini migration
         assert late_cost < early_cost, f"Late cost {late_cost} should be < early cost {early_cost}"
