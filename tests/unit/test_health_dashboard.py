@@ -16,7 +16,6 @@ from ghl_real_estate_ai.streamlit_demo.components.health_dashboard import (
     _generate_demo_endpoints,
 )
 
-
 # ============================================================================
 # Fixtures
 # ============================================================================
