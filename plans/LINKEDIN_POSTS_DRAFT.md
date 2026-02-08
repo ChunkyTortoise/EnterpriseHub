@@ -335,7 +335,7 @@ Have you switched to Ruff yet? What held you back (or convinced you)?
 **Best day/time**: Tuesday, February 17, 8:30am PT
 
 ```
-I run 7 Python repos, 3 live Streamlit apps, and 750+ tests from a single MacBook.
+I run 7 Python repos, 3 live Streamlit apps, and 5,200+ tests from a single MacBook.
 
 No team. No DevOps hire. No Kubernetes cluster. Here's exactly how it works.
 
@@ -349,7 +349,7 @@ The repos:
 - scrape-and-serve — web scraping + Excel-to-web + SEO tools
 
 The CI setup:
-Every repo has GitHub Actions running on every push. Ruff for linting and formatting. Pytest with coverage. Some repos run matrix builds across Python 3.10-3.12. Total across all 7: 750+ tests, all green.
+Every repo has GitHub Actions running on every push. Ruff for linting and formatting. Pytest with coverage. Some repos run matrix builds across Python 3.10-3.12. Total across all 7: 5,200+ tests, all green.
 
 The live demos:
 - ct-insight-engine.streamlit.app — upload a CSV, get auto-profiled dashboards
@@ -367,7 +367,7 @@ What does your solo deployment stack look like?
 #DevOps #CI #Python #Streamlit #BuildInPublic
 ```
 
-**Why it works**: Concrete numbers (7 repos, 750+ tests, 3 live URLs) make this verifiable -- anyone can click the demo links and check the GitHub repos. The "no team, no DevOps hire" framing resonates with solo builders and small-team engineers who feel the infrastructure burden. Listing every repo by name with a one-line description doubles as a portfolio showcase without reading like a resume.
+**Why it works**: Concrete numbers (7 repos, 5,200+ tests, 3 live URLs) make this verifiable -- anyone can click the demo links and check the GitHub repos. The "no team, no DevOps hire" framing resonates with solo builders and small-team engineers who feel the infrastructure burden. Listing every repo by name with a one-line description doubles as a portfolio showcase without reading like a resume.
 
 **Engagement hook**: "What does your solo deployment stack look like?" -- invites other solo devs and small-team leads to share their setups, which tends to generate long, detailed comments that boost reach.
 
@@ -380,7 +380,7 @@ What does your solo deployment stack look like?
 **Best day/time**: Wednesday, February 18, 9:00am PT
 
 ```
-3 months ago I started building AI products full-time. 7 repos, 750+ tests, 3 live demos later, here's what I'd do differently if I started over.
+3 months ago I started building AI products full-time. 7 repos, 5,200+ tests, 3 live demos later, here's what I'd do differently if I started over.
 
 What worked:
 
