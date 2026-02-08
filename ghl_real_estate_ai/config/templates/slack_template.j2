@@ -1,0 +1,93 @@
+{# 
+  Jorge Bot Slack Alert Template
+  Used for Slack webhook notifications
+  
+  Variables available:
+  - alert_id: Unique alert identifier
+  - rule_name: Name of the triggered rule
+  - severity: Alert severity (critical, warning, info)
+  - message: Alert message
+  - triggered_at: ISO timestamp of when alert was triggered
+  - environment: Deployment environment (development, staging, production)
+  - performance_stats: Dictionary of performance metrics
+  - rule_description: Description of the alert rule
+#}
+{
+  "attachments": [
+    {
+      "color": {% if severity == "critical" %}"#FF0000"{% elif severity == "warning" %}"#FFA500"{% else %}"#00FF00"{% endif %},
+      "blocks": [
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": {% if severity == "critical" %}"🚨 [CRITICAL] {{ rule_name }}"{% elif severity == "warning" %}"⚠️ [WARNING] {{ rule_name }}"{% else %}"ℹ️ [INFO] {{ rule_name }}"{% endif %},
+            "emoji": true
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*Description:*\n{{ rule_description }}"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*Details:*\n```\n{{ message }}\n```"
+          }
+        },
+        {% if performance_stats %}
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*Performance Metrics:*\n{% if performance_stats.error_rate is defined %}• Error Rate: {{ "%.2f"|format(performance_stats.error_rate * 100) }}%\n{% endif %}{% if performance_stats.cache_hit_rate is defined %}• Cache Hit Rate: {{ "%.2f"|format(performance_stats.cache_hit_rate * 100) }}%\n{% endif %}{% if performance_stats.handoff_success_rate is defined %}• Handoff Success: {{ "%.2f"|format(performance_stats.handoff_success_rate * 100) }}%\n{% endif %}{% if performance_stats.blocked_handoffs_last_hour is defined %}• Blocked Handoffs (1h): {{ performance_stats.blocked_handoffs_last_hour }}\n{% endif %}{% if performance_stats.rate_limit_error_rate is defined %}• Rate Limit Errors: {{ "%.2f"|format(performance_stats.rate_limit_error_rate * 100) }}%\n{% endif %}"
+          }
+        },
+        {% endif %}
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Alert ID:* `{{ alert_id }}` | *Environment:* `{{ environment|upper }}` | *Time:* {{ triggered_at }}"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "View Dashboard",
+                "emoji": true
+              },
+              "url": "https://dashboard.enterprisehub.com/jorge/alerts",
+              "style": "primary"
+            },
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "Acknowledge",
+                "emoji": true
+              },
+              "action_id": "acknowledge_alert",
+              "value": "{{ alert_id }}"
+            }
+          ]
+        }
+      ],
+      "footer": "Jorge Bot Alerting",
+      "footer_icon": ":rotating_light:",
+      "ts": {{ (triggered_at | int) }}
+    }
+  ],
+  "username": "Jorge Bot Alert",
+  "icon_emoji": {% if severity == "critical" %}":rotating_light:"{% elif severity == "warning" %}":warning:"{% else %}":information_source:"{% endif %}
+}

@@ -148,4 +148,4 @@ Cross-bot handoff via [`JorgeHandoffService.evaluate_handoff()`](ghl_real_estate
 ## Task Tracking
 Uses **Beads** (`bd`) for task tracking. `bd ready` for available work, `bd close` when done, `bd sync` + `git push` before ending sessions. See `bd prime` for full command reference.
 
-**Version**: 8.1 | **Last Updated**: February 6, 2026
+**Version**: 8.2 | **Last Updated**: February 7, 2026

@@ -1,0 +1,122 @@
+{#
+  Jorge Bot Webhook Alert Template
+  Used for custom webhook notifications (PagerDuty, Opsgenie, etc.)
+  
+  Variables available:
+  - alert_id: Unique alert identifier
+  - rule_name: Name of the triggered rule
+  - severity: Alert severity (critical, warning, info)
+  - message: Alert message
+  - triggered_at: ISO timestamp of when alert was triggered
+  - environment: Deployment environment (development, staging, production)
+  - performance_stats: Dictionary of performance metrics
+  - rule_description: Description of the alert rule
+  - webhook_type: Type of webhook (pagerduty, opsgenie, custom)
+#}
+
+{# PagerDuty Payload Format #}
+{% if webhook_type == "pagerduty" %}
+{
+  "routing_key": "{{ pagerduty_routing_key|default('') }}",
+  "event_action": "trigger",
+  "dedup_key": "jorge_{{ rule_name }}_{{ triggered_at|timestamp_to_unix }}",
+  "payload": {
+    "summary": "[{{ severity|upper }}] {{ rule_name }} - Jorge Bot Alert",
+    "severity": {% if severity == "critical" %}"critical"{% elif severity == "warning" %}"warning"{% else %}"info"{% endif %},
+    "source": "jorge-bot-{{ environment }}",
+    "timestamp": "{{ triggered_at }}",
+    "component": "jorge-bot",
+    "group": "alerts",
+    "class": "alert",
+    "custom_details": {
+      "alert_id": "{{ alert_id }}",
+      "rule_name": "{{ rule_name }}",
+      "message": "{{ message }}",
+      "description": "{{ rule_description }}",
+      "environment": "{{ environment }}",
+      "performance_stats": {{ performance_stats|to_json }}
+    }
+  },
+  "links": [
+    {
+      "href": "https://dashboard.enterprisehub.com/jorge/alerts/{{ alert_id }}",
+      "text": "View Alert in Dashboard"
+    }
+  ]
+}
+
+{# Opsgenie Payload Format #}
+{% elif webhook_type == "opsgenie" %}
+{
+  "message": "[{{ severity|upper }}] {{ rule_name }}",
+  "alias": "jorge-alert-{{ alert_id }}",
+  "description": "{{ rule_description }}\n\n{{ message }}",
+  "priority": {% if severity == "critical" %}"P1"{% elif severity == "warning" %}"P2"{% else %}"P3"{% endif %},
+  "tags": ["jorge", "{{ rule_name }}", "{{ environment }}"],
+  "entity": "jorge-bot-{{ environment }}",
+  "source": "Jorge Bot Alerting System",
+  "timestamp": {{ triggered_at|timestamp_to_unix }},
+  "extra_details": {
+    "alert_id": "{{ alert_id }}",
+    "rule_name": "{{ rule_name }}",
+    "severity": "{{ severity }}",
+    "message": "{{ message }}",
+    "environment": "{{ environment }}",
+    "performance_stats": {{ performance_stats|to_json }}
+  },
+  "actions": ["ViewDashboard", "Acknowledge"],
+  "links": [
+    {
+      "title": "View in Dashboard",
+      "url": "https://dashboard.enterprisehub.com/jorge/alerts/{{ alert_id }}"
+    }
+  ]
+}
+
+{# Custom Webhook Payload Format #}
+{% else %}
+{
+  "version": "1.0",
+  "type": "alert",
+  "timestamp": "{{ triggered_at }}",
+  "service": "jorge-bot",
+  "environment": "{{ environment }}",
+  "alert": {
+    "id": "{{ alert_id }}",
+    "rule_name": "{{ rule_name }}",
+    "severity": "{{ severity }}",
+    "message": "{{ message }}",
+    "description": "{{ rule_description }}",
+    "status": "firing"
+  },
+  "metrics": {
+    "error_rate": {{ performance_stats.error_rate|default(0) }},
+    "cache_hit_rate": {{ performance_stats.cache_hit_rate|default(0) }},
+    "handoff_success_rate": {{ performance_stats.handoff_success_rate|default(0) }},
+    "blocked_handoffs": {{ performance_stats.blocked_handoffs_last_hour|default(0) }},
+    "rate_limit_error_rate": {{ performance_stats.rate_limit_error_rate|default(0) }}
+  },
+  "bots": {
+    "lead": {
+      "p50_latency_ms": {{ performance_stats.lead_bot.p50_latency_ms|default(0) }},
+      "p95_latency_ms": {{ performance_stats.lead_bot.p95_latency_ms|default(0) }},
+      "p99_latency_ms": {{ performance_stats.lead_bot.p99_latency_ms|default(0) }}
+    },
+    "buyer": {
+      "p50_latency_ms": {{ performance_stats.buyer_bot.p50_latency_ms|default(0) }},
+      "p95_latency_ms": {{ performance_stats.buyer_bot.p95_latency_ms|default(0) }},
+      "p99_latency_ms": {{ performance_stats.buyer_bot.p99_latency_ms|default(0) }}
+    },
+    "seller": {
+      "p50_latency_ms": {{ performance_stats.seller_bot.p50_latency_ms|default(0) }},
+      "p95_latency_ms": {{ performance_stats.seller_bot.p95_latency_ms|default(0) }},
+      "p99_latency_ms": {{ performance_stats.seller_bot.p99_latency_ms|default(0) }}
+    }
+  },
+  "labels": ["jorge", "bot", "alert", "{{ severity }}", "{{ rule_name }}"],
+  "actions": {
+    "dashboard": "https://dashboard.enterprisehub.com/jorge/alerts/{{ alert_id }}",
+    "acknowledge": "https://api.enterprisehub.com/v1/alerts/{{ alert_id }}/acknowledge"
+  }
+}
+{% endif %}
