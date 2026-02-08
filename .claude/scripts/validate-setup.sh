@@ -50,7 +50,7 @@ if [ -f "$HOME/.claude/CLAUDE.md" ]; then
         warn "Global CLAUDE.md exists but may be too large ($SIZE words)"
     fi
 else
-    fail "Global CLAUDE.md not found at ~/.claude/CLAUDE.md"
+    warn "Global CLAUDE.md not found at ~/.claude/CLAUDE.md (expected in CI)"
 fi
 
 # Project CLAUDE.md
@@ -77,7 +77,7 @@ echo ""
 REFERENCE_DIR="$HOME/.claude/reference"
 
 if [ ! -d "$REFERENCE_DIR" ]; then
-    fail "Reference directory not found: $REFERENCE_DIR"
+    warn "Reference directory not found: $REFERENCE_DIR (expected in CI)"
 else
     pass "Reference directory exists"
 

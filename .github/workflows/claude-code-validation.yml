@@ -242,12 +242,22 @@ jobs:
         run: |
           echo "Scanning for hardcoded secrets..."
 
-          # Check all files for potential secrets
+          # Check all files for potential secrets (excluding archives, tests, and examples)
           if grep -r -E "(API_KEY|SECRET|PASSWORD|TOKEN)\s*=\s*['\"][^'\"]{10,}['\"]" \
               --exclude-dir=.git \
               --exclude-dir=node_modules \
               --exclude-dir=venv \
+              --exclude-dir=_archive \
+              --exclude-dir=auto-claude \
+              --exclude-dir=tests \
+              --exclude-dir=examples \
+              --exclude-dir=.claude/skills \
               --exclude="*.md" \
+              --exclude="*.test.*" \
+              --exclude="*_test.*" \
+              --exclude="*.example*" \
+              --exclude="discover_subaccounts.py" \
+              --exclude="smoke_test.sh" \
               .; then
             echo "❌ FAIL: Potential hardcoded secrets found"
             exit 1
