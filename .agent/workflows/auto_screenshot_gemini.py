@@ -18,7 +18,7 @@ from PIL import Image
 import google.generativeai as genai
 
 # Configuration
-DEMO_URL = "https://staging-enterprise-hub.streamlit.app/"
+DEMO_URL = "https://ct-enterprise-ai.streamlit.app/"
 SCREENSHOTS_DIR = Path(__file__).parent / "screenshots"
 VIEWPORT_SIZE = {"width": 1920, "height": 1080}
 

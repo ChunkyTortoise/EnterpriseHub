@@ -2,7 +2,7 @@
 
 > **Fundamental Analysis & Company Metrics** - Deep dive into company financials with AI-powered insights
 
-[![Status](https://img.shields.io/badge/Status-Active-success)](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)
+[![Status](https://img.shields.io/badge/Status-Active-success)](https://ct-enterprise-ai.streamlit.app/)
 [![AI Powered](https://img.shields.io/badge/AI-Claude%203.5-purple)](https://www.anthropic.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue)](../LICENSE)
 

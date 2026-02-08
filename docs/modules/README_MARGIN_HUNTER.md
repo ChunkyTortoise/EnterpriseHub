@@ -2,7 +2,7 @@
 
 **Break-even analysis and profit optimization for business leaders**
 
-[![Module Status](https://img.shields.io/badge/status-production-brightgreen.svg)](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)
+[![Module Status](https://img.shields.io/badge/status-production-brightgreen.svg)](https://ct-enterprise-ai.streamlit.app/)
 [![Use Case](https://img.shields.io/badge/use_case-profitability_analysis-blue.svg)]()
 
 ---
@@ -76,7 +76,7 @@ Whether you're launching a new product, negotiating supplier contracts, or setti
 ## 🚀 Quick Start
 
 ### Live Demo
-Try it now at **[enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)**
+Try it now at **[ct-enterprise-ai.streamlit.app](https://ct-enterprise-ai.streamlit.app/)**
 
 ### Quick Start in 60 Seconds
 
@@ -352,7 +352,7 @@ No complex spreadsheets, no error-prone formulas - just input your numbers and g
 Have a feature request or found a bug?
 
 - **GitHub Issues**: [github.com/ChunkyTortoise/enterprise-hub/issues](https://github.com/ChunkyTortoise/enterprise-hub/issues)
-- **Live Demo**: [Try it now](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)
+- **Live Demo**: [Try it now](https://ct-enterprise-ai.streamlit.app/)
 
 ---
 

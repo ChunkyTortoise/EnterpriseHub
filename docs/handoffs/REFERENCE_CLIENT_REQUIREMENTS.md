@@ -279,7 +279,7 @@
 ### **They Asked Applicants To:**
 
 1. ✅ "Share relevant project with AI agent and tool use"
-   - We have: Live demo at enterprise-demo.streamlit.app
+   - We have: Live demo at ct-enterprise-ai.streamlit.app
 
 2. ✅ "Describe approach to project"
    - We have: Detailed proposal document

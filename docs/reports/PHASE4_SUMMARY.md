@@ -201,7 +201,7 @@ make all
 **Required Screenshots:**
 
 1. **Margin Hunter Dashboard** (`docs/screenshots/margin_hunter_dashboard.png`)
-   - Navigate to live demo: https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/
+   - Navigate to live demo: https://ct-enterprise-ai.streamlit.app/
    - Select "📊 Margin Hunter" module
    - Capture full-page screenshot showing sensitivity heatmap
    - Dimensions: 1920x1080 recommended

@@ -260,7 +260,7 @@ Merge → Decision Logging → Pattern Learning → Self-Improvement
 
 ## Proof of Concept: EnterpriseHub
 
-**Live Demo:** [enterprisehub-demo.streamlit.app](https://enterprisehub.streamlit.app)
+**Live Demo:** [ct-enterprise-ai.streamlit.app](https://ct-enterprise-ai.streamlit.app)
 
 **GitHub:** [github.com/yourusername/EnterpriseHub](link)
 

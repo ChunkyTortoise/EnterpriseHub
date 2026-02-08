@@ -374,7 +374,7 @@ def get_stock_data(ticker: str, period: str = "1y", interval: str = "1d") -> Opt
    ```
 
 3. **Capture Screenshots** (15 minutes)
-   - Navigate to live demo: https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/
+   - Navigate to live demo: https://ct-enterprise-ai.streamlit.app/
    - Capture Margin Hunter, Market Pulse, Home dashboards
    - Save to `docs/screenshots/`
 
