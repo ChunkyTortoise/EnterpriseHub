@@ -250,10 +250,17 @@ class AlertingService:
         self._alerts: List[Alert] = []
         self._last_fired: Dict[str, float] = {}  # rule_name -> last fire timestamp
         self._recorded_metrics: Dict[str, float] = {}
+        self.channel_config = AlertChannelConfig.from_environment()
+        self.escalation_policy = EscalationPolicy()
         self._initialized = True
 
         # Load default rules
         self._load_default_rules()
+
+        # Validate channel configuration on startup
+        warnings = self.channel_config.validate()
+        for w in warnings:
+            logger.warning("Alert channel config: %s", w)
 
         logger.info(
             "AlertingService initialized with %d default rules",
@@ -275,7 +282,7 @@ class AlertingService:
             ),
             severity="critical",
             cooldown_seconds=300,
-            channels=["email", "slack"],
+            channels=["email", "slack", "webhook"],
             description="P95 latency exceeds SLA target (Lead: 2000ms, Buyer/Seller: 2500ms)",
         )
 
