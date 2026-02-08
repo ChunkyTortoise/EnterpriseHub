@@ -48,6 +48,9 @@ class BuyerBotState(TypedDict):
     buyer_temperature: Optional[str]
     is_qualified: bool
 
+    # A/B testing
+    tone_variant: Optional[str]  # A/B experiment variant: "formal", "casual", "empathetic"
+
     # Journey Tracking
     current_journey_stage: str  # "discovery", "qualification", "property_search", "offer_prep", "under_contract"
     properties_viewed_count: int

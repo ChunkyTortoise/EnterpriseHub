@@ -323,3 +323,154 @@ Have you switched to Ruff yet? What held you back (or convinced you)?
 - **Engagement targets**: Reply to every comment within 1 hour. For Post 8 especially, expect "what about X?" questions from flake8 plugin users.
 - **Cross-promotion**: If Post 7 gains traction, reshare Post 1 (token cost reduction) in a comment as supporting evidence.
 - **Comment seeding**: After posting, immediately comment on 3-5 related posts from others in the AI/Python space.
+
+---
+
+## Week 3 Posts
+
+### Post 9: Deployment Showcase
+
+**Theme**: I deploy 3 Streamlit apps and 7 repos from a single dev machine. Here's the stack.
+
+**Best day/time**: Tuesday, February 17, 8:30am PT
+
+```
+I run 7 Python repos, 3 live Streamlit apps, and 750+ tests from a single MacBook.
+
+No team. No DevOps hire. No Kubernetes cluster. Here's exactly how it works.
+
+The repos:
+- EnterpriseHub — AI-powered real estate platform (FastAPI + Streamlit + PostgreSQL + Redis)
+- jorge_real_estate_bots — 3 specialized chatbots with cross-bot handoff
+- Revenue-Sprint — 3 security/AI products (injection tester, RAG cost optimizer, agent orchestrator)
+- ai-orchestrator — unified async LLM interface across 4 providers
+- insight-engine — automated data profiling and dashboard generation
+- docqa-engine — RAG document Q&A with prompt engineering lab
+- scrape-and-serve — web scraping + Excel-to-web + SEO tools
+
+The CI setup:
+Every repo has GitHub Actions running on every push. Ruff for linting and formatting. Pytest with coverage. Some repos run matrix builds across Python 3.10-3.12. Total across all 7: 750+ tests, all green.
+
+The live demos:
+- ct-insight-engine.streamlit.app — upload a CSV, get auto-profiled dashboards
+- ct-document-engine.streamlit.app — drop in a PDF, ask questions, get cited answers
+- ct-scrape-and-serve.streamlit.app — paste a URL, get structured data back
+
+Streamlit Cloud handles hosting for the demos. Free tier. Zero infrastructure management. I push to main, it deploys.
+
+For the heavier services (PostgreSQL, Redis, the full FastAPI stack), Docker Compose spins up everything locally in one command. Same compose file works in CI.
+
+The trick isn't any single tool. It's that every repo follows the same pattern: pyproject.toml for config, Makefile for common tasks, GitHub Actions for CI, Streamlit Cloud for demos. Once you standardize the skeleton, adding a new repo takes 30 minutes instead of a full day.
+
+What does your solo deployment stack look like?
+
+#DevOps #CI #Python #Streamlit #BuildInPublic
+```
+
+**Why it works**: Concrete numbers (7 repos, 750+ tests, 3 live URLs) make this verifiable -- anyone can click the demo links and check the GitHub repos. The "no team, no DevOps hire" framing resonates with solo builders and small-team engineers who feel the infrastructure burden. Listing every repo by name with a one-line description doubles as a portfolio showcase without reading like a resume.
+
+**Engagement hook**: "What does your solo deployment stack look like?" -- invites other solo devs and small-team leads to share their setups, which tends to generate long, detailed comments that boost reach.
+
+---
+
+### Post 10: Lessons Learned
+
+**Theme**: 3 months of building AI products solo. Here's what I'd do differently.
+
+**Best day/time**: Wednesday, February 18, 9:00am PT
+
+```
+3 months ago I started building AI products full-time. 7 repos, 750+ tests, 3 live demos later, here's what I'd do differently if I started over.
+
+What worked:
+
+1. TDD from day one. Not "I'll add tests later" TDD. Actually writing the failing test first. When I shipped the cross-bot handoff system, tests caught a circular handoff bug before it ever hit production. That single catch saved me a weekend of debugging.
+
+2. Multi-provider AI from the start. I built a routing layer that sends simple tasks to cheaper models and complex reasoning to expensive ones. 89% token cost reduction. If I'd locked into a single provider, I'd be paying 9x more right now.
+
+3. Three-tier caching. L1 in-memory, L2 Redis, L3 PostgreSQL. Most LLM queries are repetitive. The cache hit rate means the majority of "AI calls" never actually call an AI. This was the single highest-ROI decision I made.
+
+What I'd do differently:
+
+1. I over-engineered early. I built a full agent mesh coordinator with governance policies and auto-scaling before I had 10 users. That was 800+ lines of code serving zero people. Should have shipped a simple router first and added complexity when the load demanded it.
+
+2. Premature performance optimization. I spent a week building P50/P95/P99 latency tracking with rolling windows before I had enough traffic to make those percentiles meaningful. The system was tracking sub-millisecond differences on 50 requests/day. That week would have been better spent on user-facing features.
+
+3. Not writing documentation early enough. My first 3 repos had minimal READMEs and no demo commands. When I went back to make them portfolio-ready, I'd forgotten half the design decisions. Now every repo gets a README, a Makefile with `make demo`, and inline docstrings on day one.
+
+The meta-lesson: Build for the user count you have today, not the user count you hope for next year. You can always add caching tiers and performance tracking later. You can't get back the weeks you spent building infrastructure nobody needed yet.
+
+What's the most expensive lesson you've learned building solo?
+
+#AIEngineering #LessonsLearned #SoloFounder #Python #BuildInPublic
+```
+
+**Why it works**: Vulnerability and honesty outperform pure success stories on LinkedIn. Admitting specific mistakes (800+ lines of premature agent mesh, P99 tracking on 50 req/day) shows self-awareness that resonates with experienced builders. The "what worked" section reinforces technical credibility while the "what I'd change" section makes it human. The meta-lesson gives readers a takeaway they can apply immediately.
+
+**Engagement hook**: "What's the most expensive lesson you've learned building solo?" -- the word "expensive" (time, money, or opportunity cost) invites stories with stakes, which generates substantive comments.
+
+---
+
+### Post 11: Open Source / Community
+
+**Theme**: I open-sourced 7 Python repos. Here's what happened.
+
+**Best day/time**: Thursday, February 19, 8:30am PT
+
+```
+Two months ago I made every repo I own public on GitHub.
+
+7 Python repositories. All open source. All with CI pipelines, tests, and documentation.
+
+Here's what I expected: nothing. Maybe a few stars from friends.
+
+Here's what actually happened:
+
+The repos that got the most attention weren't the ones I thought were most impressive technically. The simple, focused tools outperformed the complex platforms.
+
+docqa-engine (RAG document Q&A) — people could understand what it does in 10 seconds. Drop a PDF in, ask a question, get a cited answer. 94 tests. Live demo at ct-document-engine.streamlit.app. This got more interest than my 3,000+ line enterprise platform.
+
+scrape-and-serve (web scraping + Excel-to-web) — solves a problem people Google every week. "How do I turn this spreadsheet into a web app?" 62 tests. Live demo at ct-scrape-and-serve.streamlit.app.
+
+insight-engine (data profiling) — upload a CSV, get automated analysis. People who work with data immediately get it. 63 tests. Live demo at ct-insight-engine.streamlit.app.
+
+Meanwhile, EnterpriseHub (the full real estate AI platform with 3 chatbots, CRM integration, and BI dashboards) — technically the deepest work I've done — gets less engagement because it takes 5 minutes to explain what it does.
+
+What I learned about open source:
+
+1. Solve one problem well. A focused tool beats a platform every time for community adoption.
+2. A live demo is worth 1,000 lines of README. If people can try it in 30 seconds without cloning anything, they will.
+3. Tests are trust signals. "94 tests passing" in the README badge tells a stranger this isn't abandoned weekend code.
+4. The Makefile matters. `make demo` as the first command in every README removes the "how do I even run this" friction that kills most open source discovery.
+
+All 7 repos: github.com/ChunkyTortoise
+
+If you're sitting on private repos wondering whether to open-source them — just do it. The downside is zero. The upside is a public portfolio that speaks louder than any resume.
+
+What's the repo you're most proud of but nobody's seen yet?
+
+#OpenSource #Python #GitHub #AIEngineering #Community
+```
+
+**Why it works**: The counterintuitive insight (simple tools outperform complex platforms) is genuinely useful for anyone considering open-sourcing their work. Listing specific repos with test counts and live demo URLs makes this a functional portfolio post disguised as a story. The call-to-action at the end ("just do it") combined with the GitHub profile link drives traffic. The closing question invites engineers to share their own hidden work, which creates engagement and potential networking opportunities.
+
+**Engagement hook**: "What's the repo you're most proud of but nobody's seen yet?" -- taps into a universal developer feeling (underappreciated work) and gives people permission to self-promote in the comments, which they'll appreciate.
+
+---
+
+### Week 3 Posting Schedule
+
+| Post | Day | Time (PT) | Theme | Content Type |
+|------|-----|-----------|-------|-------------|
+| 9 | Tue Feb 17 | 8:30am | Solo deployment stack with 7 repos and 3 live demos | Deployment Showcase |
+| 10 | Wed Feb 18 | 9:00am | 3 months building solo: what worked, what didn't | Lessons Learned |
+| 11 | Thu Feb 19 | 8:30am | Open-sourced 7 repos, here's what happened | Open Source / Community |
+
+### Week 3 Strategy Notes
+
+- **Callback to Weeks 1-2**: Post 9 references the CI migration from Post 8 (Ruff) and the caching strategy from Posts 1 and 7. Post 10 ties together themes from the entire series (TDD, caching, multi-provider routing). This rewards repeat readers.
+- **Demo URLs are live links**: Post 9 and Post 11 include clickable Streamlit demo URLs. Verify all 3 apps are up before posting. If any are down, remove that URL and mention it's "available on GitHub" instead.
+- **GitHub traffic tracking**: After Post 11, monitor github.com/ChunkyTortoise traffic analytics for 48 hours. If referral traffic spikes from LinkedIn, reshare Post 5 (AgentForge benchmark) as a comment follow-up.
+- **Engagement targets**: Post 10 (lessons learned) will likely generate the most comments — vulnerability posts outperform showcases. Block 2 hours after posting to reply to every comment.
+- **Cross-promotion**: If any post crosses 50 reactions, write a follow-up comment with a link to a related post from Weeks 1-2.
+- **Comment seeding**: After each post, comment on 3-5 related posts from others in the Python/AI/open-source space. For Post 11 specifically, find and comment on other "I open-sourced X" posts to build reciprocal engagement.
