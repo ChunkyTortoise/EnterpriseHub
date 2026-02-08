@@ -14,6 +14,7 @@ from .jorge_followup_engine import JorgeFollowUpEngine
 from .jorge_seller_engine import JorgeSellerEngine
 from .jorge_tone_engine import JorgeToneEngine
 from .performance_tracker import PerformanceTracker
+from .telemetry import is_otel_available, optional_span, trace_operation
 
 __all__ = [
     "JorgeSellerEngine",
@@ -26,4 +27,7 @@ __all__ = [
     "check_and_send_alerts",
     "BotMetricsCollector",
     "PerformanceTracker",
+    "trace_operation",
+    "optional_span",
+    "is_otel_available",
 ]

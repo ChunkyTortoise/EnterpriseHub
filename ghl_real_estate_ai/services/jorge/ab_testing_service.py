@@ -34,6 +34,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+from ghl_real_estate_ai.services.jorge.telemetry import trace_operation
+
 logger = logging.getLogger(__name__)
 
 
@@ -232,6 +234,7 @@ class ABTestingService:
 
     # ── Experiment Management ─────────────────────────────────────────
 
+    @trace_operation("jorge.ab_testing", "create_experiment")
     def create_experiment(
         self,
         experiment_id: str,
@@ -341,6 +344,7 @@ class ABTestingService:
 
     # ── Variant Assignment ────────────────────────────────────────────
 
+    @trace_operation("jorge.ab_testing", "get_variant")
     async def get_variant(self, experiment_id: str, contact_id: str) -> str:
         """Deterministically assign a contact to a variant.
 
@@ -404,6 +408,7 @@ class ABTestingService:
 
     # ── Outcome Tracking ──────────────────────────────────────────────
 
+    @trace_operation("jorge.ab_testing", "record_outcome")
     async def record_outcome(
         self,
         experiment_id: str,
@@ -477,6 +482,7 @@ class ABTestingService:
 
     # ── Statistical Analysis ──────────────────────────────────────────
 
+    @trace_operation("jorge.ab_testing", "get_experiment_results")
     def get_experiment_results(self, experiment_id: str) -> ExperimentResult:
         """Compute per-variant statistics and overall significance.
 

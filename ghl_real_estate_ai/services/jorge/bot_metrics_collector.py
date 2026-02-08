@@ -6,19 +6,32 @@ handoff events. Designed to be called inline from bot workflows with
 minimal overhead. Accumulated metrics can be pushed to the AlertingService
 for threshold evaluation.
 
+Supports optional PostgreSQL persistence via a repository object so that
+metrics survive process restarts.  When a repository is configured (via
+``set_repository``), recorded interactions and handoffs are written through
+to the database.  In-memory state is always authoritative; DB failures are
+logged but never block the caller.
+
 Usage:
     collector = BotMetricsCollector()
     collector.record_bot_interaction("lead", duration_ms=450.0, success=True, cache_hit=True)
     collector.record_handoff("lead", "buyer", success=True, duration_ms=120.0)
     summary = collector.get_bot_summary("lead")
     collector.feed_to_alerting(alerting_service)
+
+    # Optional: enable DB persistence
+    collector.set_repository(repo)
+    await collector.load_from_db(since_minutes=60)
 """
 
+import asyncio
 import logging
 import threading
 import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
+
+from ghl_real_estate_ai.services.jorge.telemetry import trace_operation
 
 logger = logging.getLogger(__name__)
 
@@ -71,11 +84,96 @@ class BotMetricsCollector:
         self._interactions: List[_BotInteraction] = []
         self._handoffs: List[_HandoffRecord] = []
         self._data_lock = threading.Lock()
+        self._repository: Any = None  # Optional MetricsRepository for DB persistence
         self._initialized = True
         logger.info("BotMetricsCollector initialized")
 
+    # ── Persistence Configuration ─────────────────────────────────────
+
+    def set_repository(self, repository: Any) -> None:
+        """Attach a repository for write-through PostgreSQL persistence.
+
+        The repository object must implement:
+            - ``save_interaction(bot_type, duration_ms, success, cache_hit, timestamp)``
+              (async, returns None)
+            - ``save_handoff(source, target, success, duration_ms, timestamp)``
+              (async, returns None)
+            - ``load_interactions(since_timestamp)``
+              (async, returns list of dicts with keys matching _BotInteraction fields)
+            - ``load_handoffs(since_timestamp)``
+              (async, returns list of dicts with keys matching _HandoffRecord fields)
+
+        Args:
+            repository: A repository instance (or None to disable persistence).
+        """
+        self._repository = repository
+        logger.info(
+            "BotMetricsCollector persistence %s",
+            "enabled" if repository else "disabled",
+        )
+
+    async def load_from_db(self, since_minutes: int = 60) -> int:
+        """Hydrate in-memory metrics from the database.
+
+        Loads interactions and handoffs recorded within the last
+        ``since_minutes`` and merges them into in-memory storage,
+        deduplicating by timestamp.
+
+        Args:
+            since_minutes: How far back to load (default 60 minutes).
+
+        Returns:
+            Total number of records loaded from DB.
+        """
+        if self._repository is None:
+            return 0
+
+        cutoff = time.time() - (since_minutes * 60)
+        loaded = 0
+
+        try:
+            db_interactions = await self._repository.load_interactions(cutoff)
+            existing_timestamps = {i.timestamp for i in self._interactions}
+            for row in db_interactions:
+                if row["timestamp"] not in existing_timestamps:
+                    interaction = _BotInteraction(
+                        bot_type=row["bot_type"],
+                        duration_ms=row["duration_ms"],
+                        success=row["success"],
+                        cache_hit=row.get("cache_hit", False),
+                        timestamp=row["timestamp"],
+                    )
+                    with self._data_lock:
+                        self._interactions.append(interaction)
+                    loaded += 1
+        except Exception as exc:
+            logger.warning("Failed to load interactions from DB: %s", exc)
+
+        try:
+            db_handoffs = await self._repository.load_handoffs(cutoff)
+            existing_ho_timestamps = {h.timestamp for h in self._handoffs}
+            for row in db_handoffs:
+                if row["timestamp"] not in existing_ho_timestamps:
+                    handoff = _HandoffRecord(
+                        source=row["source"],
+                        target=row["target"],
+                        success=row["success"],
+                        duration_ms=row["duration_ms"],
+                        timestamp=row["timestamp"],
+                    )
+                    with self._data_lock:
+                        self._handoffs.append(handoff)
+                    loaded += 1
+        except Exception as exc:
+            logger.warning("Failed to load handoffs from DB: %s", exc)
+
+        if loaded:
+            logger.info("Loaded %d metric records from database", loaded)
+        return loaded
+
     # ── Recording ─────────────────────────────────────────────────────
 
+    @trace_operation("jorge.metrics", "record_bot_interaction")
     def record_bot_interaction(
         self,
         bot_type: str,
@@ -84,6 +182,9 @@ class BotMetricsCollector:
         cache_hit: bool = False,
     ) -> None:
         """Record a single bot interaction.
+
+        If a repository is configured, the interaction is also persisted
+        to PostgreSQL (fire-and-forget; DB errors are logged, not raised).
 
         Args:
             bot_type: One of "lead", "buyer", "seller".
@@ -108,6 +209,17 @@ class BotMetricsCollector:
         with self._data_lock:
             self._interactions.append(interaction)
 
+        # Write-through to DB (fire-and-forget on error)
+        if self._repository is not None:
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    asyncio.ensure_future(self._persist_interaction(interaction))
+                else:
+                    loop.run_until_complete(self._persist_interaction(interaction))
+            except RuntimeError:
+                logger.debug("No event loop available for DB write-through of interaction")
+
         logger.debug(
             "Recorded %s bot interaction: %sms, success=%s, cache_hit=%s",
             bot_type,
@@ -116,6 +228,7 @@ class BotMetricsCollector:
             cache_hit,
         )
 
+    @trace_operation("jorge.metrics", "record_handoff")
     def record_handoff(
         self,
         source: str,
@@ -124,6 +237,9 @@ class BotMetricsCollector:
         duration_ms: float,
     ) -> None:
         """Record a cross-bot handoff event.
+
+        If a repository is configured, the handoff is also persisted
+        to PostgreSQL (fire-and-forget; DB errors are logged, not raised).
 
         Args:
             source: Source bot type (e.g. "lead").
@@ -142,6 +258,17 @@ class BotMetricsCollector:
         with self._data_lock:
             self._handoffs.append(record)
 
+        # Write-through to DB (fire-and-forget on error)
+        if self._repository is not None:
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    asyncio.ensure_future(self._persist_handoff(record))
+                else:
+                    loop.run_until_complete(self._persist_handoff(record))
+            except RuntimeError:
+                logger.debug("No event loop available for DB write-through of handoff")
+
         logger.debug(
             "Recorded handoff %s->%s: %sms, success=%s",
             source,
@@ -152,6 +279,7 @@ class BotMetricsCollector:
 
     # ── Summaries ─────────────────────────────────────────────────────
 
+    @trace_operation("jorge.metrics", "get_bot_summary")
     def get_bot_summary(self, bot_type: str, window_minutes: int = 60) -> Dict[str, Any]:
         """Get aggregated metrics for a specific bot type.
 
@@ -176,6 +304,7 @@ class BotMetricsCollector:
 
         return self._compute_interaction_summary(relevant)
 
+    @trace_operation("jorge.metrics", "get_system_summary")
     def get_system_summary(self, window_minutes: int = 60) -> Dict[str, Any]:
         """Get aggregated metrics across all bots.
 
@@ -223,6 +352,7 @@ class BotMetricsCollector:
 
     # ── Alerting Integration ──────────────────────────────────────────
 
+    @trace_operation("jorge.metrics", "feed_to_alerting")
     def feed_to_alerting(self, alerting_service: Any) -> None:
         """Push current metric aggregates to the AlertingService.
 
@@ -258,6 +388,34 @@ class BotMetricsCollector:
         alerting_service.record_metric("handoff.failure_rate", handoff["failure_rate"])
 
         logger.info("Fed %d metrics to AlertingService", 7)
+
+    # ── DB Write-Through Helpers ─────────────────────────────────────
+
+    async def _persist_interaction(self, interaction: _BotInteraction) -> None:
+        """Write a single interaction to the database repository."""
+        try:
+            await self._repository.save_interaction(
+                bot_type=interaction.bot_type,
+                duration_ms=interaction.duration_ms,
+                success=interaction.success,
+                cache_hit=interaction.cache_hit,
+                timestamp=interaction.timestamp,
+            )
+        except Exception as exc:
+            logger.debug("DB write-through failed for interaction: %s", exc)
+
+    async def _persist_handoff(self, record: _HandoffRecord) -> None:
+        """Write a single handoff record to the database repository."""
+        try:
+            await self._repository.save_handoff(
+                source=record.source,
+                target=record.target,
+                success=record.success,
+                duration_ms=record.duration_ms,
+                timestamp=record.timestamp,
+            )
+        except Exception as exc:
+            logger.debug("DB write-through failed for handoff: %s", exc)
 
     # ── Internal Helpers ──────────────────────────────────────────────
 
@@ -337,5 +495,6 @@ class BotMetricsCollector:
             if cls._instance is not None:
                 cls._instance._interactions.clear()
                 cls._instance._handoffs.clear()
+                cls._instance._repository = None
                 cls._instance._initialized = False
             cls._instance = None
