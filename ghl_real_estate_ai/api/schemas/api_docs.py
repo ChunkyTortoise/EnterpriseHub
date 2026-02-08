@@ -10,7 +10,6 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 # ── Leads ───────────────────────────────────────────────────────────────
 
 
@@ -103,9 +102,7 @@ class PipelineSummary(BaseModel):
     conversion_rate: float = Field(..., ge=0.0, le=1.0, description="Overall conversion rate")
     avg_days_to_close: float = Field(..., ge=0.0, description="Average days to close")
     pipeline_value: int = Field(..., ge=0, description="Total estimated pipeline value in USD")
-    temperature_distribution: Dict[str, int] = Field(
-        ..., description="Count of leads per temperature tag"
-    )
+    temperature_distribution: Dict[str, int] = Field(..., description="Count of leads per temperature tag")
 
 
 class PipelineResponse(BaseModel):
