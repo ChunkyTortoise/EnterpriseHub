@@ -1,0 +1,38 @@
+[
+  {
+    "name": "AI Strategy Assessment",
+    "category": "strategic",
+    "estimated_hours": 16,
+    "description": "Comprehensive analysis of current AI readiness and opportunity identification",
+    "acceptance_criteria": [
+      "Current state analysis completed",
+      "AI opportunity matrix delivered",
+      "ROI projections validated"
+    ],
+    "client_value": "Strategic clarity on $500K+ revenue opportunities"
+  },
+  {
+    "name": "Multi-Agent Swarm Implementation",
+    "category": "technical",
+    "estimated_hours": 80,
+    "description": "Deploy and configure 10+ specialized AI agents with consensus intelligence",
+    "acceptance_criteria": [
+      "10+ agents deployed and tested",
+      "Consensus scoring above 85% accuracy",
+      "Integration with existing CRM validated"
+    ],
+    "client_value": "85+ hours/month automation with 25% conversion improvement"
+  },
+  {
+    "name": "Team Training Program",
+    "category": "training",
+    "estimated_hours": 24,
+    "description": "Comprehensive training on AI-assisted workflows",
+    "acceptance_criteria": [
+      "Training materials delivered",
+      "All team members certified",
+      "Performance benchmarks established"
+    ],
+    "client_value": "Team productivity increase of 40%+"
+  }
+]
