@@ -12,11 +12,14 @@ The next inbound message routes to Bot B via existing tag-based routing.
 """
 
 import logging
+import random
 import re
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
+
+from ghl_real_estate_ai.services.jorge.telemetry import trace_operation
 
 logger = logging.getLogger(__name__)
 
@@ -305,6 +308,101 @@ class JorgeHandoffService:
         }
         cls._active_handoffs = {}
 
+    @classmethod
+    def seed_historical_data(
+        cls,
+        num_samples: int = 20,
+        seed: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """Seed handoff outcome history with realistic sample data.
+
+        Populates ``_handoff_outcomes`` with enough data points for each
+        route so that ``get_learned_adjustments`` can compute meaningful
+        threshold adjustments (requires >= MIN_LEARNING_SAMPLES).
+
+        The generated data reflects realistic Rancho Cucamonga market
+        patterns:
+        - lead->buyer: ~80% success rate (most common, well-qualified)
+        - lead->seller: ~70% success rate (moderate qualification)
+        - buyer->seller: ~60% success rate (cross-intent, harder)
+        - seller->buyer: ~75% success rate (sell-first-then-buy)
+
+        Args:
+            num_samples: Number of outcome records per route
+                         (default 20, must be >= MIN_LEARNING_SAMPLES).
+            seed: Optional random seed for reproducible data generation.
+
+        Returns:
+            Dict summarizing what was seeded:
+                routes_seeded, samples_per_route, total_records,
+                per_route_success_rates.
+
+        Raises:
+            ValueError: If num_samples < MIN_LEARNING_SAMPLES.
+        """
+        if num_samples < cls.MIN_LEARNING_SAMPLES:
+            raise ValueError(f"num_samples must be >= {cls.MIN_LEARNING_SAMPLES}, got {num_samples}")
+
+        rng = random.Random(seed)
+        now = time.time()
+
+        # Route configurations: (source, target, success_probability)
+        route_configs = [
+            ("lead", "buyer", 0.80),
+            ("lead", "seller", 0.70),
+            ("buyer", "seller", 0.60),
+            ("seller", "buyer", 0.75),
+        ]
+
+        per_route_rates: Dict[str, float] = {}
+        total_records = 0
+
+        for source, target, success_prob in route_configs:
+            pair_key = f"{source}->{target}"
+            if pair_key not in cls._handoff_outcomes:
+                cls._handoff_outcomes[pair_key] = []
+
+            successes = 0
+            for i in range(num_samples):
+                is_success = rng.random() < success_prob
+                if is_success:
+                    outcome = "successful"
+                    successes += 1
+                else:
+                    # Distribute failures across failure types
+                    outcome = rng.choice(["failed", "reverted", "timeout"])
+
+                # Spread timestamps over the last 7 days
+                hours_ago = rng.uniform(0, 168)  # 7 days in hours
+                ts = now - (hours_ago * 3600)
+
+                cls._handoff_outcomes[pair_key].append(
+                    {
+                        "contact_id": f"seed_{source}_{target}_{i:03d}",
+                        "outcome": outcome,
+                        "timestamp": ts,
+                        "metadata": {"seeded": True, "batch": "historical_seed"},
+                    }
+                )
+                total_records += 1
+
+            per_route_rates[pair_key] = round(successes / num_samples, 4)
+
+        logger.info(
+            "Seeded %d handoff outcome records across %d routes (per_route=%d)",
+            total_records,
+            len(route_configs),
+            num_samples,
+        )
+
+        return {
+            "routes_seeded": [f"{s}->{t}" for s, t, _ in route_configs],
+            "samples_per_route": num_samples,
+            "total_records": total_records,
+            "per_route_success_rates": per_route_rates,
+        }
+
+    @trace_operation("jorge.handoff", "evaluate_handoff")
     async def evaluate_handoff(
         self,
         current_bot: str,
@@ -381,6 +479,7 @@ class JorgeHandoffService:
             },
         )
 
+    @trace_operation("jorge.handoff", "execute_handoff")
     async def execute_handoff(
         self,
         decision: HandoffDecision,

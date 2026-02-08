@@ -40,6 +40,8 @@ from dataclasses import dataclass, field
 from functools import wraps
 from typing import Any, AsyncIterator, Callable, Dict, List, Optional, Tuple
 
+from ghl_real_estate_ai.services.jorge.telemetry import trace_operation
+
 logger = logging.getLogger(__name__)
 
 
@@ -158,6 +160,7 @@ class PerformanceTracker:
 
     # ── Core Tracking Methods ───────────────────────────────────────────
 
+    @trace_operation("jorge.performance", "track_operation")
     async def track_operation(
         self,
         bot_name: str,
@@ -273,6 +276,7 @@ class PerformanceTracker:
         sorted_durations = sorted(durations)
         return self._percentile(sorted_durations, percentile)
 
+    @trace_operation("jorge.performance", "get_bot_stats")
     async def get_bot_stats(
         self,
         bot_name: str,
@@ -359,6 +363,7 @@ class PerformanceTracker:
 
         return stats
 
+    @trace_operation("jorge.performance", "check_sla_compliance")
     async def check_sla_compliance(self, window: str = "1h") -> List[Dict[str, Any]]:
         """Check SLA compliance for all registered SLAs.
 
