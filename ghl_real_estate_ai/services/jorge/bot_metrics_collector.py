@@ -347,6 +347,17 @@ class BotMetricsCollector:
         idx = max(0, int(len(sorted_vals) * pct / 100) - 1)
         return round(sorted_vals[idx], 2)
 
+    def last_interaction_time(self) -> float:
+        """Return the timestamp of the most recent bot interaction.
+
+        Returns:
+            Unix timestamp of the last interaction, or current time if none recorded.
+        """
+        with self._data_lock:
+            if self._interactions:
+                return max(i.timestamp for i in self._interactions)
+        return time.time()
+
     # ── Testing Support ───────────────────────────────────────────────
 
     @classmethod

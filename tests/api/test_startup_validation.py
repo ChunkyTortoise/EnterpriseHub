@@ -1,14 +1,16 @@
-"""Tests for Jorge Bot services startup validation.
+"""Tests for Jorge Bot services startup validation and periodic alert stats.
 
 Validates that _validate_jorge_services_config() correctly warns about
-misconfigured environment variables without raising exceptions.
+misconfigured environment variables without raising exceptions, and that
+_build_alert_stats() produces the correct flat dict for AlertingService rules.
 """
 
 import logging
+import time
 
 import pytest
 
-from ghl_real_estate_ai.api.main import _validate_jorge_services_config
+from ghl_real_estate_ai.api.main import _build_alert_stats, _validate_jorge_services_config
 
 
 @pytest.fixture(autouse=True)
@@ -178,3 +180,144 @@ class TestNeverRaises:
         with caplog.at_level(logging.WARNING):
             _validate_jorge_services_config(logging.getLogger("test"))
         # Should have warnings but no exceptions
+
+
+# =====================================================================
+# _build_alert_stats tests
+# =====================================================================
+
+
+@pytest.fixture(autouse=True)
+def _reset_singletons():
+    """Reset singleton services between tests."""
+    from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
+    from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
+    from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+
+    BotMetricsCollector.reset()
+    PerformanceTracker.reset()
+    JorgeHandoffService._handoff_history.clear()
+    JorgeHandoffService._handoff_outcomes.clear()
+    JorgeHandoffService._active_handoffs.clear()
+    JorgeHandoffService.reset_analytics()
+    yield
+    BotMetricsCollector.reset()
+    PerformanceTracker.reset()
+    JorgeHandoffService._handoff_history.clear()
+    JorgeHandoffService._handoff_outcomes.clear()
+    JorgeHandoffService._active_handoffs.clear()
+    JorgeHandoffService.reset_analytics()
+
+
+class TestBuildAlertStats:
+    """Tests for _build_alert_stats() used by the periodic alerting loop."""
+
+    @pytest.mark.asyncio
+    async def test_returns_all_required_keys(self):
+        """Stats dict has all keys the 7 alert rules check."""
+        from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
+        from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
+
+        stats = await _build_alert_stats(BotMetricsCollector(), PerformanceTracker())
+
+        assert "lead_bot" in stats
+        assert "p95_latency_ms" in stats["lead_bot"]
+        assert "buyer_bot" in stats
+        assert "seller_bot" in stats
+        assert "error_rate" in stats
+        assert "cache_hit_rate" in stats
+        assert "handoff_success_rate" in stats
+        assert "last_response_time" in stats
+        assert "blocked_handoffs_last_hour" in stats
+        assert "rate_limit_error_rate" in stats
+
+    @pytest.mark.asyncio
+    async def test_p95_values_from_performance_tracker(self):
+        """P95 latencies come from PerformanceTracker, not BotMetricsCollector."""
+        from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
+        from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
+
+        tracker = PerformanceTracker()
+        for _ in range(50):
+            await tracker.track_operation("lead_bot", "process", 100.0)
+        # Add one slow request to push P95 up
+        await tracker.track_operation("lead_bot", "process", 5000.0)
+
+        stats = await _build_alert_stats(BotMetricsCollector(), tracker)
+        # P95 should be > 0 since we added data
+        assert stats["lead_bot"]["p95_latency_ms"] > 0
+
+    @pytest.mark.asyncio
+    async def test_error_rate_from_metrics_collector(self):
+        """Error rate comes from BotMetricsCollector system summary."""
+        from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
+        from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
+
+        mc = BotMetricsCollector()
+        # Record 8 successes and 2 failures → 20% error rate
+        for _ in range(8):
+            mc.record_bot_interaction("lead", duration_ms=100, success=True)
+        for _ in range(2):
+            mc.record_bot_interaction("lead", duration_ms=100, success=False)
+
+        stats = await _build_alert_stats(mc, PerformanceTracker())
+        assert stats["error_rate"] == pytest.approx(0.2, abs=0.01)
+
+    @pytest.mark.asyncio
+    async def test_no_data_returns_safe_defaults(self):
+        """With no recorded data, all values are safe defaults (no alerts fire)."""
+        from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
+        from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
+
+        stats = await _build_alert_stats(BotMetricsCollector(), PerformanceTracker())
+
+        # P95 latencies should be 0 (no data)
+        assert stats["lead_bot"]["p95_latency_ms"] == 0.0
+        # Error rate should be 0
+        assert stats["error_rate"] == 0.0
+        # Cache hit rate defaults to safe value (won't trigger low_cache_hit_rate)
+        assert stats["cache_hit_rate"] >= 0.0
+        # Handoff success rate safe
+        assert stats["handoff_success_rate"] >= 0.0
+        # No blocked handoffs
+        assert stats["blocked_handoffs_last_hour"] == 0
+        assert stats["rate_limit_error_rate"] == 0.0
+
+    @pytest.mark.asyncio
+    async def test_handoff_analytics_integration(self):
+        """Blocked handoff counts come from JorgeHandoffService analytics."""
+        from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
+        from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
+            HandoffDecision,
+            JorgeHandoffService,
+        )
+        from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
+
+        svc = JorgeHandoffService()
+        # Execute a handoff, then try the same route (should be blocked as circular)
+        decision = HandoffDecision(
+            source_bot="lead", target_bot="buyer",
+            reason="buyer_intent", confidence=0.9,
+        )
+        await svc.execute_handoff(decision, "contact-1")
+        await svc.execute_handoff(decision, "contact-1")  # blocked
+
+        stats = await _build_alert_stats(BotMetricsCollector(), PerformanceTracker())
+        assert stats["blocked_handoffs_last_hour"] >= 1
+
+
+class TestLastInteractionTime:
+    """Tests for BotMetricsCollector.last_interaction_time()."""
+
+    def test_returns_current_time_when_no_interactions(self):
+        from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
+        mc = BotMetricsCollector()
+        t = mc.last_interaction_time()
+        assert abs(t - time.time()) < 2
+
+    def test_returns_latest_interaction_timestamp(self):
+        from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
+        mc = BotMetricsCollector()
+        mc.record_bot_interaction("lead", duration_ms=50, success=True)
+        t = mc.last_interaction_time()
+        assert abs(t - time.time()) < 2
